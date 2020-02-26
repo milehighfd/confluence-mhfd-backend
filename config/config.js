@@ -1,0 +1,11 @@
+const MONGODB_DB = process.env.MONGODB_DB || 'mhfd';
+const MONGODB_HOST = process.env.MONGODB_HOST || 'localhost';
+const JWT_KEY = process.env.JWT_KEY || 'jwtkey';
+const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://' + MONGODB_HOST + '/' + MONGODB_DB;
+const JWT_EXPIRANCY = process.env.JWT_EXPIRANCY || 60 * 60;
+
+module.exports = {
+  JWT_KEY,
+  MONGODB_URL,
+  JWT_EXPIRANCY,
+};
