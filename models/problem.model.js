@@ -63,7 +63,11 @@ var ProblemSchema = new Schema({
    jurisdiction: String,
    streamName: String,
    MHFDCode: mhdfCode,
-   LegacyCode: String
+   LegacyCode: String,
+   projects: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Project'
+   }]
 });
 
 const Problem = mongoose.model('Problem', ProblemSchema);
