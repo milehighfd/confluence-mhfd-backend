@@ -10,8 +10,14 @@ var UserSchema = new Schema({
     type: Boolean,
     default: false
   },
-  firstName: String,
-  lastName: String,
+  firstName: {
+    type: String,
+    default: ''
+  },
+  lastName: {
+    type: String,
+    default: ''
+  },
   email: {
     type: String,
     lowercase: true
@@ -22,14 +28,20 @@ var UserSchema = new Schema({
   },
   password: String,
   organization: String,
-  designation: String,
+  //designation: String,
 
   city: String,
   country: String,
   serviceArea: String,
 
-  changePasswordId: String,
-  changePasswordExpiration: Date,
+  changePasswordId: {
+    type: String,
+    default: ''
+  },
+  changePasswordExpiration: {
+    type: Date,
+    default: null
+  },
 
   tokens: [{
     token: {

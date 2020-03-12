@@ -1,25 +1,27 @@
 const mongoose = require('mongoose');
+const { ProjectStatus, ProjectType, ProjectSubtype, ServiceArea } = require('../lib/enumConstants');
+const user = require('../models/user.model');
 
 const Schema = mongoose.Schema;
 
-const ProjectType = Object.freeze({ 
-   Capital: 'capital',
-   Maintenance: 'maintenance',
-   Study: 'study',
-   PropertyAcquisition: 'propertyAcquisition',
-   Special: 'special'
-});
+// const ProjectType = Object.freeze({ 
+//    Capital: 'capital',
+//    Maintenance: 'maintenance',
+//    Study: 'study',
+//    PropertyAcquisition: 'propertyAcquisition',
+//    Special: 'special'
+// });
 
-const ProjectSubtype = Object.freeze({
-   DebrisManagement: 'debrisManagement',
-   VegetationManagement: 'vegetationManagement',
-   MinorRepairs: 'minorRepairs',
-   SedimentRemoval: 'sedimentRemoval',
-   Restoration: 'restoration',
+// const ProjectSubtype = Object.freeze({
+//    DebrisManagement: 'debrisManagement',
+//    VegetationManagement: 'vegetationManagement',
+//    MinorRepairs: 'minorRepairs',
+//    SedimentRemoval: 'sedimentRemoval',
+//    Restoration: 'restoration',
 
-   MasterPlan: 'masterPlan',
-   FHAD: 'fhad'
-});
+//    MasterPlan: 'masterPlan',
+//    FHAD: 'fhad'
+// });
 
 const Goal = Object.freeze({
    ReducefloodriskStructures: 'ReducefloodriskStructures',
@@ -59,27 +61,27 @@ const Recurrence = Object.freeze({
    Multiple: 'multiple'
 });
 
-const ProjectStatus = Object.freeze({
-   Draft: 'draft',
-   Requested: 'requested',
-   Approved: 'approved',
-   Idle: 'idle',
-   Initiated: 'initiated',
-   PrelimDesign: 'prelimDesign',
-   Construction: 'construction',
-   FinalDesign: 'finalDesign'
-});
+// const ProjectStatus = Object.freeze({
+//    Draft: 'draft',
+//    Requested: 'requested',
+//    Approved: 'approved',
+//    Idle: 'idle',
+//    Initiated: 'initiated',
+//    PrelimDesign: 'prelimDesign',
+//    Construction: 'construction',
+//    FinalDesign: 'finalDesign'
+// });
 
-const ServiceArea = Object.freeze({
-   BoulderCreek: 'boulderCreek',
-   CherryCreek: 'cherryCreek',
-   North: 'north',
-   Northeast: 'northeast',
-   SandCreek: 'sandCreek',
-   South: 'south',
-   Southwest: 'southwest',
-   West: 'west'
-});
+// const ServiceArea = Object.freeze({
+//    BoulderCreek: 'boulderCreek',
+//    CherryCreek: 'cherryCreek',
+//    North: 'north',
+//    Northeast: 'northeast',
+//    SandCreek: 'sandCreek',
+//    South: 'south',
+//    Southwest: 'southwest',
+//    West: 'west'
+// });
 
 const County = Object.freeze({
    Arapahoe: 'arapahoe',
@@ -93,7 +95,7 @@ const County = Object.freeze({
 
 const Frecuency = Object.freeze({
    CyclePerYear: 'cyclePerYear'
-})
+});
 
 var ProjectSchema = new Schema({
    objectId: Number,
@@ -137,8 +139,8 @@ var ProjectSchema = new Schema({
    additionalCostDescription: String,
    overheadCost: Number,
    estimatedCost: Number,
-   mhfdDollarRequest: String,
-   localDollarsContributed: String,
+   mhfdDollarRequest: Number,
+   localDollarsContributed: Number,
    requestedStartyear: Number,
    requestedRank: Number,
    onbaseId: String,
@@ -186,8 +188,18 @@ var ProjectSchema = new Schema({
       type: Schema.Types.ObjectId,
       ref: 'User'
    }],
-   lastModifiedDate: Date
+   lastModifiedDate: Date,
+   image: {
+      data: Buffer, contentType: String
+   }
 });
+
+ProjectSchema.virtual("nameCreator")
+   .get(function() {
+      const user = User.findOne({_id});
+      console.log(user);
+      return "usuario de pruebas"
+   });
 
 const Project = mongoose.model('Project', ProjectSchema);
 

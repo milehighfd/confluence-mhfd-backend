@@ -8,9 +8,10 @@ router.get('/', async (req, res, next) => {
   res.send(users);
 });
 
-router.post('/', auth, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const user = new User(req.body);
+    var user = new User(req.body);
+    user.activated = false;
     await user.save();
     const token = await user.generateAuthToken();
     res.status(201).send({
@@ -19,6 +20,17 @@ router.post('/', auth, async (req, res) => {
     });
   } catch (error) {
     res.status(400).send(error);
+  }
+});
+
+router.put('/', auth, async (req, res) => {
+  try {
+    const user = new User();
+    user.status(201).send({
+      user
+    });
+  } catch(error) {
+    res.status(500).send(error);
   }
 });
 
