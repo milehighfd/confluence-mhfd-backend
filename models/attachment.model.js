@@ -13,4 +13,4 @@ var AttachmentSchema = new Schema({
 
 const Attachment = mongoose.model('Attachment', AttachmentSchema);
 
-model.exports = Attachment;
+module.exports = Attachment;

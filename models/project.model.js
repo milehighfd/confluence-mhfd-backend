@@ -1,87 +1,8 @@
 const mongoose = require('mongoose');
-const { ProjectStatus, ProjectType, ProjectSubtype, ServiceArea } = require('../lib/enumConstants');
+const { ProjectStatus, ProjectType, ProjectSubtype, Goal, MaintenanceEligibility, ServiceArea, Frequency, Recurrence, Task } = require('../lib/enumConstants');
 const user = require('../models/user.model');
 
 const Schema = mongoose.Schema;
-
-// const ProjectType = Object.freeze({ 
-//    Capital: 'capital',
-//    Maintenance: 'maintenance',
-//    Study: 'study',
-//    PropertyAcquisition: 'propertyAcquisition',
-//    Special: 'special'
-// });
-
-// const ProjectSubtype = Object.freeze({
-//    DebrisManagement: 'debrisManagement',
-//    VegetationManagement: 'vegetationManagement',
-//    MinorRepairs: 'minorRepairs',
-//    SedimentRemoval: 'sedimentRemoval',
-//    Restoration: 'restoration',
-
-//    MasterPlan: 'masterPlan',
-//    FHAD: 'fhad'
-// });
-
-const Goal = Object.freeze({
-   ReducefloodriskStructures: 'ReducefloodriskStructures',
-   StreamBankBedStabilization: 'streamBankBedStabilization',
-   CreateSharedusePathsRecreation: 'createSharedusePathsRecreation',
-   VegetationEnhancements: 'vegetationEnhancements',
-   IncludepermanentWaterQuality: 'includepermanentWaterQuality',
-
-   ReduceFloodRiskStructures: 'reduceFloodRiskStructures',
-   Stabilization: 'stabilization',
-   EliminateRoadwayOvertopping: 'eliminateRoadwayOvertopping',
-   IncreasedConveyance: 'increasedConveyance',
-   PeakFlowReduction: 'peakFlowReduction',
-   WaterQuality: 'waterQuality',
-   GuideDevelopment: 'guideDevelopment'
-});
-
-const MaintenanceEligibility = Object.freeze({
-   CapitalProject: 'capitalProject',
-   MEP: 'mep',
-   Grandfathered: 'grandfathered',
-   NotEligible: 'notEligible',
-   IdontKnow: 'idontKnow'
-});
-
-const Task = Object.freeze({
-   SedimentRemoval: 'sedimentRemoval',
-   TreeThinning: 'treeThinning',
-   BankStabilization: 'bankStabilization',
-   DrainageStructure: 'drainageStructure',
-   RegionalDetention: 'regionalDetention'
-});
-
-const Recurrence = Object.freeze({
-   OneTime: 'oneTime',
-   Annually: 'annually',
-   Multiple: 'multiple'
-});
-
-// const ProjectStatus = Object.freeze({
-//    Draft: 'draft',
-//    Requested: 'requested',
-//    Approved: 'approved',
-//    Idle: 'idle',
-//    Initiated: 'initiated',
-//    PrelimDesign: 'prelimDesign',
-//    Construction: 'construction',
-//    FinalDesign: 'finalDesign'
-// });
-
-// const ServiceArea = Object.freeze({
-//    BoulderCreek: 'boulderCreek',
-//    CherryCreek: 'cherryCreek',
-//    North: 'north',
-//    Northeast: 'northeast',
-//    SandCreek: 'sandCreek',
-//    South: 'south',
-//    Southwest: 'southwest',
-//    West: 'west'
-// });
 
 const County = Object.freeze({
    Arapahoe: 'arapahoe',
@@ -91,10 +12,6 @@ const County = Object.freeze({
    Denver: 'denver',
    Douglas: 'douglas',
    Jefferson: 'jefferson'
-});
-
-const Frecuency = Object.freeze({
-   CyclePerYear: 'cyclePerYear'
 });
 
 var ProjectSchema = new Schema({
@@ -131,7 +48,7 @@ var ProjectSchema = new Schema({
    },
    frecuency: {
       type: String,
-      enum: Object.values(Frecuency)
+      enum: Object.values(Frequency)
    },
    sponsor: String,
    coSponsor: String,
@@ -139,6 +56,8 @@ var ProjectSchema = new Schema({
    additionalCostDescription: String,
    overheadCost: Number,
    estimatedCost: Number,
+   mhfdFundingRequest: String,
+   requestFundingYear: String,
    mhfdDollarRequest: Number,
    localDollarsContributed: Number,
    requestedStartyear: Number,

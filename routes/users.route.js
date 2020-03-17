@@ -11,13 +11,19 @@ router.get('/', async (req, res, next) => {
 router.post('/', async (req, res) => {
   try {
     var user = new User(req.body);
-    user.activated = false;
-    await user.save();
-    const token = await user.generateAuthToken();
-    res.status(201).send({
-      user,
-      token
-    });
+    const userRegistered = User.findByEmail(user.email); //async User.findByEmail(user.email);
+    //console.log(existeEmail);
+    if(!userRegistered) {
+      res.status(500).send({message: 'The e-mail has already been registered'});
+    } else {
+      user.activated = true;
+      await user.save();
+      const token = await user.generateAuthToken();
+      res.status(201).send({
+        user,
+        token
+      });
+    }
   } catch (error) {
     res.status(400).send(error);
   }

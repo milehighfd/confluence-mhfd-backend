@@ -3,7 +3,11 @@ const router = express.Router();
 const Project = require('../models/project.model');
 const { check, validationResult } = require('express-validator');
 const auth = require('../auth/auth');
-const { ProjectStatus, ProjectType, ProjectSubtype } = require('../lib/enumConstants');
+const { ProjectStatus, ProjectType, ProjectSubtype, GoalCapital, GoalStudy, MaintenanceEligibility, Frequency, Recurrence, Task } = require('../lib/enumConstants');
+const cors = require('cors');
+const multer = require('multer');
+
+router.use(cors());
 
 router.post('/', async (req, res) => {
    try {
@@ -17,21 +21,47 @@ router.post('/', async (req, res) => {
 
 router.post('/createCapital', auth, [
    check('requestName', 'Request Name is required').not().isEmpty(),
-   ], async (req, res) => {});
+   check('description', 'Description is required').not().isEmpty(),
+   check('mhfdFundingRequest', 'MHFD Funding Request is required').not().isEmpty(),
+   check('localDollarsContributed', 'Local Dollars Contributed is required').not().isEmpty(),
+   check('requestFundingYear', 'Request Funding Year is required').not().isEmpty(),
+   check('goal', 'Goal is required').not().isEmpty()
+   ], async (req, res) => {
+      try {
+         const result = validationResult(req);
+         var errors = result.errors;
+   
+         for (var key in errors) {
+            console.log(errors[key]);
+         }
+         if(!result.isEmpty()) {
+            res.status(500).send({
+               message: 'Existen campos requeridos'
+            });
+         } else {
+            // console.log(req.body);
+            var project = new Project(req.body);
+            project.projectType = ProjectType.Capital;
+            project.status = ProjectStatus.Draft;
+            project.dateCreated = new Date();
+            project.creator = req.user;
+            await project.save();
+            res.status(201).send(project);
+         }
+         
+      } catch(error) {
+         res.status(500).send(error);
+      }
+   });
 
 router.post('/createMaintenanceDebris', auth, [
    check('requestName', 'Request Name is required').not().isEmpty(),
-   // check('projectType', 'Project Type is required').not().isEmpty(),
-   // check('projectSubType', 'Project Sub Type is required').not().isEmpty(),
    check('description', 'Description is required').not().isEmpty(),
    check('mhfdDollarRequest', 'MHFD Dolllar Request is required').not().isEmpty(),
    check('maintenanceEligility', 'Maintenance Eligility is required').not().isEmpty(),
    check('frecuency', 'Frecuency is required').not().isEmpty()
    ], async (req, res) => {
    try {
-      // console.log(auth);
-      // console.log('user ' + req.user);
-      // check validate data
       const result = validationResult(req);
       var errors = result.errors;
 
@@ -61,8 +91,6 @@ router.post('/createMaintenanceDebris', auth, [
 
 router.post('/createMaintenanceVegetation', auth, [
    check('requestName', 'Request Name is required').not().isEmpty(),
-   // check('projectType', 'Project Type is required').not().isEmpty(),
-   // check('projectSubType', 'Project Sub Type is required').not().isEmpty(),
    check('description', 'Description is required').not().isEmpty(),
    check('mhfdDollarRequest', 'MHFD Dolllar Request is required').not().isEmpty(),
    check('recurrence', 'Recurrence is required').not().isEmpty(),
@@ -99,8 +127,6 @@ router.post('/createMaintenanceVegetation', auth, [
 
 router.post('/createMaintenanceSediment', auth, [
    check('requestName', 'Request Name is required').not().isEmpty(),
-   // check('projectType', 'Project Type is required').not().isEmpty(),
-   // check('projectSubType', 'Project Sub Type is required').not().isEmpty(),
    check('description', 'Description is required').not().isEmpty(),
    check('mhfdDollarRequest', 'MHFD Dolllar Request is required').not().isEmpty(),
    check('recurrence', 'Recurrence is required').not().isEmpty(),
@@ -137,8 +163,6 @@ router.post('/createMaintenanceSediment', auth, [
 
 router.post('/createMaintenanceMinorRepair', auth, [
    check('requestName', 'Request Name is required').not().isEmpty(),
-   // check('projectType', 'Project Type is required').not().isEmpty(),
-   // check('projectSubType', 'Project Sub Type is required').not().isEmpty(),
    check('description', 'Description is required').not().isEmpty(),
    check('mhfdDollarRequest', 'MHFD Dolllar Request is required').not().isEmpty(),
    check('maintenanceEligility', 'Maintenance Eligility is required').not().isEmpty()
@@ -173,8 +197,6 @@ router.post('/createMaintenanceMinorRepair', auth, [
 
 router.post('/createMaintenanceRestoration', auth, [
    check('requestName', 'Request Name is required').not().isEmpty(),
-   // check('projectType', 'Project Type is required').not().isEmpty(),
-   // check('projectSubType', 'Project Sub Type is required').not().isEmpty(),
    check('description', 'Description is required').not().isEmpty(),
    check('mhfdDollarRequest', 'MHFD Dolllar Request is required').not().isEmpty(),
    check('maintenanceEligility', 'Maintenance Eligility is required').not().isEmpty()
@@ -209,8 +231,6 @@ router.post('/createMaintenanceRestoration', auth, [
 
 router.post('/createStudyMasterPlan', auth, [
    check('requestName', 'Request Name is required').not().isEmpty(),
-   // check('projectType', 'Project Type is required').not().isEmpty(),
-   // check('projectSubType', 'Project Sub Type is required').not().isEmpty(),
    check('sponsor', 'Sponsor is required').not().isEmpty(),
    check('coSponsor', 'Co-Sponsor is required').not().isEmpty(),
    check('requestedStartyear', 'Request Start Year is required').not().isEmpty(),
@@ -246,8 +266,6 @@ router.post('/createStudyMasterPlan', auth, [
 
 router.post('/createStudyFHAD', auth, [
    check('requestName', 'Request Name is required').not().isEmpty(),
-   // check('projectType', 'Project Type is required').not().isEmpty(),
-   // check('projectSubType', 'Project Sub Type is required').not().isEmpty(),
    check('sponsor', 'Sponsor is required').not().isEmpty(),
    check('coSponsor', 'Co-Sponsor is required').not().isEmpty(),
    check('requestedStartyear', 'Request Start Year is required').not().isEmpty()
@@ -282,7 +300,6 @@ router.post('/createStudyFHAD', auth, [
 
 router.post('/createAcquisition', auth, [
    check('requestName', 'Request Name is required').not().isEmpty(),
-   // check('projectType', 'Project Type is required').not().isEmpty(),
    check('description', 'Description is required').not().isEmpty(),
    check('mhfdDollarRequest', 'MHFD Dollar Request is required').not().isEmpty(),
    check('localDollarsContributed', 'Local Dollar Contribution is required').not().isEmpty()
@@ -316,7 +333,6 @@ router.post('/createAcquisition', auth, [
 
 router.post('/createSpecial', auth, [
    check('requestName', 'Request Name is required').not().isEmpty(),
-   // check('projectType', 'Project Type is required').not().isEmpty(),
    check('description', 'Description is required').not().isEmpty()
 ], async (req, res) => {
    try {
@@ -375,6 +391,62 @@ router.get('/', async (req, res) => {
          message: err.message || 'Some error ocurred while retrieving Project'
       });
    });
+});
+
+var storage = multer.diskStorage({
+   destination: function (req, res, cb) {
+      cb(null, 'public/files')
+   }, 
+   filename: function (req, file, cb) {
+      cb(null, Date.now() + '-' + file.originalname);
+   }
+})
+
+var upload = multer({ storage: storage}).single('file');
+
+router.post('/upload', function (req, res) {
+   upload(req, res, function(err) {
+      if (err instanceof multer.MulterError) {
+         console.log('error 1');
+         return res.status(500).json(err);
+      } else {
+         if (err) {
+            console.log('error 2');
+            return res.status(500).json(err);
+         } 
+      }
+      return res.status(200).send(req.file);
+   });
+});
+
+router.get('/getEnumerator/:enumerator', function (req, res) {
+   var data;
+   switch(req.params.enumerator) {
+      case 'projectStatus':
+         data = Object.values(ProjectStatus);
+         break;
+      case 'goalCapital':
+         data = Object.values(GoalCapital);
+         break;
+      case 'goalStudy':
+         data = Object.values(GoalStudy)
+         break;
+      case 'maintenanceEligibility':
+         data = Object.values(MaintenanceEligibility);
+         break;
+      case 'frequency':
+         data = Object.values(Frequency);
+         break;
+      case 'recurrence':
+         data = Object.values(Recurrence);
+         break;
+      case 'task':
+         data = Object.values(Task);
+         break;
+      default:
+         data = [];
+   }
+   res.status(200).send(data);
 });
 
 module.exports = router;
