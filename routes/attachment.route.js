@@ -2,11 +2,64 @@ const express = require('express');
 const router = express.Router();
 const Attachement = require('../models/attachment.model');
 const uploadFile = require('express-fileupload');
+const path = require('path');
+const { createWriteStream, existsSync, mkdirSync } = require('fs');
+const { ApolloServer, gql } = require('apollo-server-express');
+const { Storage } = require('@google-cloud/storage');
+
+const files = [];
+const typeDefs = gql`
+type Query {
+  files: [String]
+}
+
+type Mutation {
+  uploadFile(file: Upload!): Boolean
+}
+`;
+
+const gc = new Storage({
+   keyFilename: path.join(__dirname, '../config/develop-test-271312-20b199f0adbe.json'),
+   projectId: 'develop-test-271312'
+});
+
+const mhfdBucket = gc.bucket('mhfd2-test');
+
+const resolvers = {
+   Query: {
+      files: () => files
+   },
+   Mutation: {
+      uploadFile: async (_, { file }) => {
+         const { createReadStream, filename } = await file;
+         await new Promise(res => 
+            createReadStream()
+               .pipe(
+                  mhfdBucket.file(filename).createWriteStream({
+                     resumable: false,
+                     gzip: true
+                  })
+               )
+               .on("finish", res)
+            );
+
+            files.push(filename);
+            return true;
+      }
+   }
+}
+
+/*existsSync(path.join(__dirname, "../images")) || mkdirSync(path.join(__dirname, "../images"));
+
+const server = new ApolloServer({ typeDefs, resolvers});
+const app1 = express();
+app1.use("/images", express.static(path.join(__dirname, "../images")));
+server.applyMiddleware({router});*/
 //const GridFsStorage = require("multer-gridfs-storage");
 //const cors = require("cors");
 //const Grid = require("gridfs-stream");
 
-router.use(uploadFile());
+// router.use(uploadFile());
 
 var upload = require('./upload');
 var fs = require('fs');
@@ -85,17 +138,5 @@ router.post('/uploadFile', async (req, res) => {
       console.log(file);
    }
 });
-// router.post("/upload", {
-//    upload(req, res, (err) => {
-//    console.log("Request ---", req.body);
-//    console.log("Request file ---", req.file);//Here you get file.
-//    /*Now do where ever you want to do*/
-//    if(!err)
-//          return res.send(200).end();
-// });
-// };
-// );
-// router.get('/:idProject', async (req, res) => {
-// });
 
 module.exports = router;

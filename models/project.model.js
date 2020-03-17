@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { ProjectStatus, ProjectType, ProjectSubtype, Goal, MaintenanceEligibility, ServiceArea, Frequency, Recurrence, Task } = require('../lib/enumConstants');
+const { ProjectStatus, ProjectType, ProjectSubtype, Goal, MaintenanceEligibility, ServiceArea, Frequency, Recurrence, Task, Priority } = require('../lib/enumConstants');
 const user = require('../models/user.model');
 
 const Schema = mongoose.Schema;
@@ -110,7 +110,11 @@ var ProjectSchema = new Schema({
    lastModifiedDate: Date,
    image: {
       data: Buffer, contentType: String
-   }
+   },
+   priority: {
+      type: String,
+      enum: Object.values(Priority)
+   },
 });
 
 ProjectSchema.virtual("nameCreator")

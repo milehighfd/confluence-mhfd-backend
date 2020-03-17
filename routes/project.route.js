@@ -3,7 +3,7 @@ const router = express.Router();
 const Project = require('../models/project.model');
 const { check, validationResult } = require('express-validator');
 const auth = require('../auth/auth');
-const { ProjectStatus, ProjectType, ProjectSubtype, GoalCapital, GoalStudy, MaintenanceEligibility, Frequency, Recurrence, Task } = require('../lib/enumConstants');
+const { ProjectStatus, ProjectType, ProjectSubtype, GoalCapital, GoalStudy, MaintenanceEligibility, Frequency, Recurrence, Task, Priority } = require('../lib/enumConstants');
 const cors = require('cors');
 const multer = require('multer');
 
@@ -45,6 +45,8 @@ router.post('/createCapital', auth, [
             project.status = ProjectStatus.Draft;
             project.dateCreated = new Date();
             project.creator = req.user;
+            project.priority = Priority.High;
+            project.estimatedCost = 1200000;
             await project.save();
             res.status(201).send(project);
          }
@@ -80,6 +82,8 @@ router.post('/createMaintenanceDebris', auth, [
          project.status = ProjectStatus.Draft;
          project.dateCreated = new Date();
          project.creator = req.user;
+         project.priority = Priority.High;
+         project.estimatedCost = 1200000;
          await project.save();
          res.status(201).send(project);
       }
@@ -116,6 +120,8 @@ router.post('/createMaintenanceVegetation', auth, [
          project.status = ProjectStatus.Draft;
          project.dateCreated = new Date();
          project.creator = req.user;
+         project.priority = Priority.High;
+         project.estimatedCost = 1200000;
          await project.save();
          res.status(201).send(project);
       }
@@ -152,6 +158,8 @@ router.post('/createMaintenanceSediment', auth, [
          project.status = ProjectStatus.Draft;
          project.dateCreated = new Date();
          project.creator = req.user;
+         project.priority = Priority.High;
+         project.estimatedCost = 1200000;
          await project.save();
          res.status(201).send(project);
       }
@@ -186,6 +194,8 @@ router.post('/createMaintenanceMinorRepair', auth, [
          project.status = ProjectStatus.Draft;
          project.dateCreated = new Date();
          project.creator = req.user;
+         project.priority = Priority.High;
+         project.estimatedCost = 1200000;
          await project.save();
          res.status(201).send(project);
       }
@@ -220,6 +230,8 @@ router.post('/createMaintenanceRestoration', auth, [
          project.status = ProjectStatus.Draft;
          project.dateCreated = new Date();
          project.creator = req.user;
+         project.priority = Priority.High;
+         project.estimatedCost = 1200000;
          await project.save();
          res.status(201).send(project);
       }
@@ -255,6 +267,8 @@ router.post('/createStudyMasterPlan', auth, [
          project.status = ProjectStatus.Draft;
          project.dateCreated = new Date();
          project.creator = req.user;
+         project.priority = Priority.High;
+         project.estimatedCost = 1200000;
          await project.save();
          res.status(201).send(project);
       }
@@ -289,6 +303,8 @@ router.post('/createStudyFHAD', auth, [
          project.status = ProjectStatus.Draft;
          project.dateCreated = new Date();
          project.creator = req.user;
+         project.priority = Priority.High;
+         project.estimatedCost = 1200000;
          await project.save();
          res.status(201).send(project);
       }
@@ -322,6 +338,8 @@ router.post('/createAcquisition', auth, [
          project.status = ProjectStatus.Draft;
          project.dateCreated = new Date();
          project.creator = req.user;
+         project.priority = Priority.High;
+         project.estimatedCost = 1200000;
          await project.save();
          res.status(201).send(project);
       }
@@ -353,6 +371,8 @@ router.post('/createSpecial', auth, [
          project.status = ProjectStatus.Draft;
          project.dateCreated = new Date();
          project.creator = req.user;
+         project.priority = Priority.High;
+         project.estimatedCost = 1200000;
          await project.save();
          res.status(201).send(project);
       }

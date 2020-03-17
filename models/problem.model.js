@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { Priority } = require('../lib/enumConstants');
 
 const Schema = mongoose.Schema;
 
@@ -8,12 +9,6 @@ const ProblemType = Object.freeze({
    Vegetation: 'vegetation',
    Geomorphology: 'geomorphology',
    HumanConnection: 'humanConnection'
-});
-
-const ProblemPriority = Object.freeze({
-   High: 'high',
-   Medium: 'medium',
-   Low: 'low'
 });
 
 const Source = Object.freeze({
@@ -45,7 +40,7 @@ var ProblemSchema = new Schema({
    },
    problemPriority: {
       type: String,
-      enum: Object.values(ProblemPriority)
+      enum: Object.values(Priority)
    },
    source: {
       type: String,
