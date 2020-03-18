@@ -61,7 +61,7 @@ server.applyMiddleware({router});*/
 
 // router.use(uploadFile());
 
-var upload = require('./upload');
+// var upload = require('./upload');
 var fs = require('fs');
 var multer = require('multer');
 
@@ -96,19 +96,6 @@ router.get('/:id', async (req, res, next) => {
 });
 
 
-// const storage = multer.diskStorage({
-//    destination: './public/uploads/',
-//    filename: function (req, file, cb) {
-//       cb(null, "IMAGE-" + Date.now() +
-//          path.extname(file.originalname));
-//    }
-// });
-
-// const upload = multer({
-//    storage: storage,
-//    limits: { fieldSize: 1000000 },
-// }).single("myFile");
-
 router.post('/upload', function(req, res) {
    upload(req, res, (error) => {
       if(error) {
@@ -118,13 +105,11 @@ router.post('/upload', function(req, res) {
             res.status(500).send({message: 'File no attached'});
          } else {
             var fullPath = 'files/' +  req.file.filename;
-            console.log('msg 4');
             var document = {
                path: fullPath,
                caption: req.body.caption
             };
             var attachment = new Attachement(document);
-            console.log('msg 5');
             attachment.save();
             res.status(200).send({message: 'file attached successfully'});
          }
@@ -135,7 +120,6 @@ router.post('/upload', function(req, res) {
 router.post('/uploadFile', async (req, res) => {
    if(req.files) {
       var file = req.files.filename;
-      console.log(file);
    }
 });
 

@@ -7,7 +7,6 @@ var logger = require('morgan');
 const { createWriteStream, existsSync, mkdirSync } = require('fs');
 const { ApolloServer, gql } = require('apollo-server-express');
 const { Storage } = require('@google-cloud/storage');
-//const expressValidator = require('express-validator');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users.route');
@@ -55,7 +54,6 @@ const resolvers = {
                )
                .on("finish", res)
             );
-            console.log("filename " + filename);
             files.push(filename);
             return true;
       }
@@ -72,7 +70,6 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-// app.use(expressValidator());
 // app.use(express.static(path.join(__dirname, 'public')));
 // add CORS headers
 app.use(function(res, res, next) {

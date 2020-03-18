@@ -1,34 +1,24 @@
 const mongoose = require('mongoose');
-const { ProjectStatus, ProjectType, ProjectSubtype, Goal, MaintenanceEligibility, ServiceArea, Frequency, Recurrence, Task, Priority } = require('../lib/enumConstants');
+const { PROJECT_STATUS, PROJECT_TYPE, PROJECT_SUBTYPE, GOAL, MAINTENANCE_ELIGIBILITY, SERVICE_AREA, FRECUENCY, RECURRENCE, TASK, PRIORITY } = require('../lib/enumConstants');
 const user = require('../models/user.model');
 
 const Schema = mongoose.Schema;
-
-const County = Object.freeze({
-   Arapahoe: 'arapahoe',
-   Adams: 'adams',
-   Boulder: 'boulder',
-   Broomfield: 'broomfield',
-   Denver: 'denver',
-   Douglas: 'douglas',
-   Jefferson: 'jefferson'
-});
 
 var ProjectSchema = new Schema({
    objectId: Number,
    requestName: String,
    projectType: {
       type: String,
-      enum: Object.values(ProjectType)
+      enum: Object.values(PROJECT_TYPE)
    },
-   projectSubType: {
+   projectSubtype: {
       type: String,
-      enum: Object.values(ProjectSubtype)
+      enum: Object.values(PROJECT_SUBTYPE)
    },
    description: String,
    goal: {
       type: String,
-      enum: Object.values(Goal)
+      enum: Object.values(GOAL)
    },
    publicAccess: {
       type: Boolean,
@@ -36,19 +26,19 @@ var ProjectSchema = new Schema({
    },
    maintenanceEligility: {
       type: String,
-      enum: Object.values(MaintenanceEligibility)
+      enum: Object.values(MAINTENANCE_ELIGIBILITY)
    },
    task: {
       type: String,
-      enum: Object.values(Task)
+      enum: Object.values(TASK)
    },
    recurrence: {
       type: String,
-      enum: Object.values(Recurrence)
+      enum: Object.values(RECURRENCE)
    },
    frecuency: {
       type: String,
-      enum: Object.values(Frequency)
+      enum: Object.values(FRECUENCY)
    },
    sponsor: String,
    coSponsor: String,
@@ -66,7 +56,7 @@ var ProjectSchema = new Schema({
    projectName: String,
    status: {
       type: String,
-      enum: Object.values(ProjectStatus)
+      enum: Object.values(PROJECT_STATUS)
    },
    workPlainYear: Number,
    mhfdDollarAllocated: Number,
@@ -88,12 +78,9 @@ var ProjectSchema = new Schema({
    }],
    serviceArea: {
       type: String,
-      enum: Object.values(ServiceArea)
+      enum: Object.values(SERVICE_AREA)
    },
-   county: {
-      type: String,
-      enum: Object.values(County)
-   },
+   county: String,
    jurisdiction: String,
    streamName: String,
    mhfdCode: String,
@@ -113,14 +100,13 @@ var ProjectSchema = new Schema({
    },
    priority: {
       type: String,
-      enum: Object.values(Priority)
+      enum: Object.values(PRIORITY)
    },
 });
 
 ProjectSchema.virtual("nameCreator")
    .get(function() {
       const user = User.findOne({_id});
-      console.log(user);
       return "usuario de pruebas"
    });
 
