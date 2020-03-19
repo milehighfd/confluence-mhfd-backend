@@ -6,16 +6,13 @@ const {ROLES} = require('../lib/enumConstants');
 const User = require('../models/user.model')
 const NUMBER_PER_PAGE = 20;
 
-router.get('/change-user-state', auth, async (req, res, next) => {
+router.put('/change-user-state/:id', auth, async (req, res, next) => {
   if (req.user.designation === ROLES.MFHD_ADMIN || req.user.designation ===  ROLES.MFHD_STAFF) {
-    const id = req.query.id;
-    if (!id) {
-      return res.status(400).send('The id is required');
-    }
+    const id = req.params.id;
     try{
       const user = await User.findById(id);
       if (!user) {
-        return res.status(422).send( 'Email not found');
+        return res.status(404).send( 'User not found');
       }
       user.activated = !user.activated;
       await user.save();
@@ -28,13 +25,13 @@ router.get('/change-user-state', auth, async (req, res, next) => {
   }
 });
 
-router.put('/:id', auth, async(req, res, next) => {
+router.put('/edit-user/:id', auth, async(req, res, next) => {
   if (req.user.designation === ROLES.MFHD_ADMIN || req.user.designation ===  ROLES.MFHD_STAFF) {
     const id = req.params.id;
     try {
       const user = await User.findById(id);
       if (!user) {
-        return res.status(422).send( 'Email not found');
+        return res.status(404).send( 'User not found');
       }
       const updateable_fields = ['firstName', 'lastName', 'email', 'organization', 'designation', 'city', 'county', 'serviceArea'];
       for (const field of updateable_fields) {
