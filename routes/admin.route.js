@@ -81,8 +81,8 @@ router.get('/list', auth, async(req, res, next) => {
       const array_name = name.split(' ');
       const options_to_search = [];
       for (const part of array_name) {
-        options_to_search.push({firstName: {"$regex": part, "$options": "i"}});
-        options_to_search.push({lastName: {"$regex": part, "$options": "i"}});
+        options_to_search.push({firstName: {"$regex": "^" + part, "$options": "im"}});
+        options_to_search.push({lastName: {"$regex": "^" + part, "$options": "im"}});
       }
       search_obj['$or'] = options_to_search;
     }
