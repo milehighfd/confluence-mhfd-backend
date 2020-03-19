@@ -31,7 +31,7 @@ var UserSchema = new Schema({
   //designation: String,
 
   city: String,
-  country: String,
+  county: String,
   serviceArea: String,
 
   changePasswordId: {
