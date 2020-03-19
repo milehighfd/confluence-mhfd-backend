@@ -3,8 +3,11 @@ const router = express.Router();
 const auth = require('../auth/auth');
 
 const {ROLES} = require('../lib/enumConstants');
-const User = require('../models/user.model')
+const User = require('../models/user.model');
+const { validator } = require('../utils/utils');
+
 const NUMBER_PER_PAGE = 20;
+const updateable_fields = ['firstName', 'lastName', 'email', 'organization', 'designation', 'city', 'county', 'serviceArea'];
 
 router.put('/change-user-state/:id', auth, async (req, res, next) => {
   if (req.user.designation === ROLES.MFHD_ADMIN || req.user.designation ===  ROLES.MFHD_STAFF) {
@@ -25,7 +28,7 @@ router.put('/change-user-state/:id', auth, async (req, res, next) => {
   }
 });
 
-router.put('/edit-user/:id', auth, async(req, res, next) => {
+router.put('/edit-user/:id', [auth, validator(updateable_fields)], async(req, res, next) => {
   if (req.user.designation === ROLES.MFHD_ADMIN || req.user.designation ===  ROLES.MFHD_STAFF) {
     const id = req.params.id;
     try {
@@ -33,11 +36,7 @@ router.put('/edit-user/:id', auth, async(req, res, next) => {
       if (!user) {
         return res.status(404).send( 'User not found');
       }
-      const updateable_fields = ['firstName', 'lastName', 'email', 'organization', 'designation', 'city', 'county', 'serviceArea'];
       for (const field of updateable_fields) {
-        if (!req.body[field]) {
-          return res.status(400).send('Missing field ' + field);
-        }
         user[field] = req.body[field];
       }
       user['name'] = user.firstName + " " + user.lastName;
