@@ -13,6 +13,7 @@ var usersRouter = require('./routes/users.route');
 var authRouter = require('./routes/auth.route');
 var projectRouter = require('./routes/project.route');
 var attachmentRouter = require('./routes/attachment.route');
+var adminRouter = require('./routes/admin.route');
 
 require('./config/db');
 require('./config/seed');
@@ -86,6 +87,7 @@ app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 app.use('/projects', projectRouter);
 app.use('/attachmments', attachmentRouter);
+app.use('/admin', adminRouter);
 
 app.listen(3003, () => {
   console.log("Server is listening on port 3003");
