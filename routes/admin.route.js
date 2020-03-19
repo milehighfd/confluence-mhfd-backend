@@ -56,7 +56,6 @@ router.put('/edit-user', auth, async(req, res, next) => {
   }
 });
 router.get('/list', auth, async(req, res, next) => {
-  console.log(req.user);
   if (req.user.designation === ROLES.MFHD_ADMIN || req.user.designation ===  ROLES.MFHD_STAFF) {
     const isPending = req.query.pending || false;
     try {
