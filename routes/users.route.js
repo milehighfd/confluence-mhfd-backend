@@ -16,7 +16,6 @@ router.post('/', async (req, res) => {
     if(!userRegistered) {
       res.status(500).send({message: 'The e-mail has already been registered'});
     } else {
-      user.activated = true;
       await user.save();
       const token = await user.generateAuthToken();
       res.status(201).send({
