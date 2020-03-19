@@ -28,30 +28,27 @@ router.get('/change-user-state', auth, async (req, res, next) => {
   }
 });
 
-router.put('/edit-user', auth, async(req, res, next) => {
+router.put('/:id', auth, async(req, res, next) => {
   if (req.user.designation === ROLES.MFHD_ADMIN || req.user.designation ===  ROLES.MFHD_STAFF) {
-    const id = req.body._id;
-    if (!id) {
-      return res.status(400).send('The id is required');
-    }
+    const id = req.params.id;
     try {
-
-    } catch (error) {
-        return res.status(500).send(error);
-    }
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(422).send( 'Email not found');
-    }
-    const updateable_fields = ['firstName', 'lastName', 'email', 'organization', 'designation', 'city', 'county', 'serviceArea'];
-    for (const field of updateable_fields) {
-      if (!req.body[field]) {
-        return res.status(400).send('Missing field ' + field);
+      const user = await User.findById(id);
+      if (!user) {
+        return res.status(422).send( 'Email not found');
       }
-      user[field] = req.body[field];
+      const updateable_fields = ['firstName', 'lastName', 'email', 'organization', 'designation', 'city', 'county', 'serviceArea'];
+      for (const field of updateable_fields) {
+        if (!req.body[field]) {
+          return res.status(400).send('Missing field ' + field);
+        }
+        user[field] = req.body[field];
+      }
+      user['name'] = user.firstName + " " + user.lastName;
+      await user.save();
+      return res.status(200).send(user);
+    }  catch (error) {
+      return res.status(500).send(error);
     }
-    await user.save();
-    return res.status(200).send(user);
   } else {
     return res.status(403).send( `You're not allowed to do that`);
   }
