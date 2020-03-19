@@ -18,6 +18,10 @@ var UserSchema = new Schema({
     type: String,
     default: ''
   },
+  name: {
+    type: String,
+    default: ''
+  },
   email: {
     type: String,
     lowercase: true
