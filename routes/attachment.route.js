@@ -121,11 +121,11 @@ router.post('/', async (req, res) => {
 //    })
 // });
 
-router.post('/upload-file', auth, 
+router.post('/upload-file', [auth, 
    files.multer.single('file'),
-   files.sendToUploadToGCS,
+   files.sendToUploadToGCS],
    async (req, res, next) => {
-   console.log(req);
+   //console.log(req);
    let data = req.body;
    console.log(data);
    var attachment = new Attachement();
