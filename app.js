@@ -20,52 +20,52 @@ require('./config/seed');
 
 var app = express();
 
-const files = [];
-const typeDefs = gql`
-type Query {
-  files: [String]
-}
+// const files = [];
+// const typeDefs = gql`
+// type Query {
+//   files: [String]
+// }
 
-type Mutation {
-  uploadFile(file: Upload!): Boolean
-}
-`;
+// type Mutation {
+//   uploadFile(file: Upload!): Boolean
+// }
+// `;
 
-const gc = new Storage({
-   keyFilename: path.join(__dirname, './config/develop-test-271312-20b199f0adbe.json'),
-   projectId: 'develop-test-271312'
-});
+// const gc = new Storage({
+//    keyFilename: path.join(__dirname, './config/develop-test-271312-20b199f0adbe.json'),
+//    projectId: 'develop-test-271312'
+// });
 
-const mhfdBucket = gc.bucket('mhfd2-test');
+// const mhfdBucket = gc.bucket('mhfd2-test');
 
-const resolvers = {
-   Query: {
-      files: () => files
-   },
-   Mutation: {
-      uploadFile: async (_, { file }) => {
-         const { createReadStream, filename } = await file;
-         await new Promise(res => 
-            createReadStream()
-               .pipe(
-                  mhfdBucket.file(filename).createWriteStream({
-                     resumable: false,
-                     gzip: true
-                  })
-               )
-               .on("finish", res)
-            );
-            files.push(filename);
-            return true;
-      }
-   }
-}
+// const resolvers = {
+//    Query: {
+//       files: () => files
+//    },
+//    Mutation: {
+//       uploadFile: async (_, { file }) => {
+//          const { createReadStream, filename } = await file;
+//          await new Promise(res => 
+//             createReadStream()
+//                .pipe(
+//                   mhfdBucket.file(filename).createWriteStream({
+//                      resumable: false,
+//                      gzip: true
+//                   })
+//                )
+//                .on("finish", res)
+//             );
+//             files.push(filename);
+//             return true;
+//       }
+//    }
+// }
 
-existsSync(path.join(__dirname, "../images")) || mkdirSync(path.join(__dirname, "../images"));
+// existsSync(path.join(__dirname, "../images")) || mkdirSync(path.join(__dirname, "../images"));
 
-const server = new ApolloServer({ typeDefs, resolvers});
-app.use("/images", express.static(path.join(__dirname, "../images")));
-server.applyMiddleware({ app });
+// const server = new ApolloServer({ typeDefs, resolvers});
+// app.use("/images", express.static(path.join(__dirname, "../images")));
+// server.applyMiddleware({ app });
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -86,7 +86,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 app.use('/projects', projectRouter);
-app.use('/attachmments', attachmentRouter);
+app.use('/attachments', attachmentRouter);
 app.use('/admin', adminRouter);
 
 app.listen(3003, () => {

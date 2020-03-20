@@ -17,6 +17,8 @@ router.post('/', async (req, res) => {
 router.post('/create', auth, validate, async(req, res) => {
    try {
       var project = new Project(req.body);
+      console.log('project');
+      console.log(project);
       project.status = PROJECT_STATUS.DRAFT;
       project.dateCreated = new Date();
       project.creator = req.user;
@@ -94,7 +96,7 @@ function validate(req, res, next) {
    if(isValid) {
       next();
    } else {
-      res.status(500).send({message: "There are required fields: " + missingFields});
+      res.status(400).send({message: "There are required fields: " + missingFields});
    }
 }
 

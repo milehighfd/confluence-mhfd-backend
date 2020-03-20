@@ -7,6 +7,7 @@ const Schema = mongoose.Schema;
 var ProjectSchema = new Schema({
    objectId: Number,
    requestName: String,
+   imageName: String,
    projectType: {
       type: String,
       enum: Object.values(PROJECT_TYPE)
@@ -102,6 +103,14 @@ var ProjectSchema = new Schema({
       type: String,
       enum: Object.values(PRIORITY)
    },
+   imageProject: {
+      type: Schema.Types.ObjectId,
+      ref: 'Attachment'
+   },
+   listDocuments: {
+      type: Array,
+      ref: 'Attachment'
+   }
 });
 
 ProjectSchema.virtual("nameCreator")
