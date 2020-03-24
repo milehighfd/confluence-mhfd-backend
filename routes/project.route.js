@@ -190,6 +190,28 @@ router.get('/', async (req, res) => {
    });
 });
 
+router.post('/filters', async(req, res) => {
+   const data = req.body;
+   var query = Project.find();
+   for(const key in req.body) {
+      if(key == 'requestName' && req.body[key] != null) {
+         query.where(key).equals(new RegExp(req.body[key], 'i'));
+      } else if(key == 'estimatedCost' && req.body[key] != null) {
+         const initValue = req.body[key];
+         const range = initValue.split(",");
+         query.find({"estimatedCost": {
+            "$gte" : Number(range[0]),
+            "$lt": Number(range[0])
+         }});
+      } else {
+         query.where(key).equals(req.body[key]);
+      }
+   }
+   query.exec(function(err, data) {
+      res.send(data);
+   });
+});
+
 router.get('/get-enumerator/:enumerator', function (req, res) {
    var data;
    switch(req.params.enumerator) {
