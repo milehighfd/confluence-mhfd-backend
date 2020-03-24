@@ -201,7 +201,7 @@ router.post('/filters', async(req, res) => {
          const range = initValue.split(",");
          query.find({"estimatedCost": {
             "$gte" : Number(range[0]),
-            "$lt": Number(range[0])
+            "$lt": Number(range[1])
          }});
       } else {
          query.where(key).equals(req.body[key]);
