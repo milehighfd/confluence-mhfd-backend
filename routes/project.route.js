@@ -1,8 +1,29 @@
 const express = require('express');
 const router = express.Router();
+const Multer = require('multer');
+const {Storage} = require('@google-cloud/storage');
+var path = require('path');
+
 const Project = require('../models/project.model');
 const auth = require('../auth/auth');
 const { PROJECT_STATUS, PROJECT_TYPE, PROJECT_SUBTYPE, GOAL_CAPITAL, GOAL_STUDY, MAINTENANCE_ELIGIBILITY, FRECUENCY, RECURRENCE, TASK, PRIORITY } = require('../lib/enumConstants');
+
+const MAIN_IMAGE_POSTION = 0;
+
+function getPublicUrl (filename) {
+   return `https://storage.googleapis.com/mhfd2-test/${filename}`;
+}
+
+const multer = Multer({
+   storage: Multer.MemoryStorage,
+   limits: {
+      fileSize: 50 * 1024 * 1024
+   }
+});
+const storage = new Storage({
+   keyFilename: path.join(__dirname, '../config/develop-test-271312-20b199f0adbe.json'),
+   projectId: 'develop-test-271312'
+});
 
 router.post('/', async (req, res) => {
    try {
@@ -14,18 +35,55 @@ router.post('/', async (req, res) => {
    }
 });
 
-router.post('/create', auth, validate, async(req, res) => {
+router.post('/create', [auth, multer.array('file', 5), validate], async(req, res) => {
    try {
       var project = new Project(req.body);
       console.log('project');
-      console.log(project);
       project.status = PROJECT_STATUS.DRAFT;
       project.dateCreated = new Date();
       project.creator = req.user;
       project.priority = PRIORITY.HIGH;
       project.estimatedCost = 1200000;
-      await project.save();
-      res.status(201).send(project);
+      if (project.projectType === PROJECT_TYPE.CAPITAL || project.projectType === PROJECT_TYPE.MAINTENANCE) {
+         if (!req.files) {
+            return res.status(400).send('You must send the image logo');
+         }
+         const bucket = storage.bucket('mhfd2-test');
+         const promises = [];
+         const files = req.files;
+         const logoMimetype = files[MAIN_IMAGE_POSTION].mimetype.includes('png') || 
+         files[MAIN_IMAGE_POSTION].mimetype.includes('jpeg') || files[MAIN_IMAGE_POSTION].mimetype.includes('jpg');
+         if (!logoMimetype) {
+            return res.status(400).send('You must send the image logo');
+         }
+         files.forEach(file => {
+            const name = Date.now() + file.originalname;
+            const blob = bucket.file(name);
+            const newPromise =  new Promise((resolve, reject) => {
+               blob.createWriteStream({
+                  metadata: { contentType: file.mimetype }
+               }).on('finish', async response => {
+                  await blob.makePublic();
+                  resolve(getPublicUrl(name));
+               }).on('error', err => {
+                  reject('upload error: ', err);
+               }).end(file.buffer);
+            });
+          promises.push(newPromise);
+         });    
+         Promise.all(promises).then(async response => {
+            project.mainImage = response[0];
+            project.attachList = response.slice(1);
+            await project.save();
+            return res.status(201).send(project);
+         }).catch((err) => {
+            return res.status(400).send(err.message)
+         });
+      }
+      else {
+         await project.save();
+         res.status(201).send(project);
+      }
    } catch(error) {
       res.status(500).send(error);
    }

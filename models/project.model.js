@@ -110,7 +110,12 @@ var ProjectSchema = new Schema({
    listDocuments: {
       type: Array,
       ref: 'Attachment'
-   }
+   },
+   // main image of the project
+   mainImage: String,
+   // attachments list
+   attachList: Array
+   
 });
 
 ProjectSchema.virtual("nameCreator")
