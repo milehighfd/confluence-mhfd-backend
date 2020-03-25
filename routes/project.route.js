@@ -207,6 +207,7 @@ router.post('/filters', async(req, res) => {
          query.where(key).equals(req.body[key]);
       }
    }
+   query.sort({"dateCreated": -1})
    query.exec(function(err, data) {
       res.send(data);
    });
