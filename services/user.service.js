@@ -27,7 +27,6 @@ const sendRecoverPasswordEmail = async (user) => {
   const template = fs.readFileSync(__dirname + '/templates/email_reset-pass-MHFD.html', 'utf8');
   console.log("Type:" + (typeof template));
   const emailToSend = template.split('{{url}}').join(redirectUrl);
-  fs.writeFileSync(__dirname + '/tmp/email_reset-pass-MHFD.html', emailToSend);
 
   const transporter = getTransporter();
   const options = {
