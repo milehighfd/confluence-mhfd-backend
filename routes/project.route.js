@@ -190,19 +190,33 @@ router.get('/', async (req, res) => {
    });
 });
 
-router.post('/filters', async(req, res) => {
+router.post('/filters', auth, async(req, res) => {
    const data = req.body;
+   console.log(data);
    var query = Project.find();
    for(const key in req.body) {
-      if(key == 'requestName' && req.body[key] != null) {
+      if(key === 'requestName' && req.body[key] != null) {
          query.where(key).equals(new RegExp(req.body[key], 'i'));
       } else if(key == 'estimatedCost' && req.body[key] != null) {
-         const initValue = req.body[key];
+         var initValue = req.body[key];
+         initValue = initValue.split('[').join("");
+         initValue = initValue.split(']').join("");
          const range = initValue.split(",");
          query.find({"estimatedCost": {
             "$gte" : Number(range[0]),
             "$lt": Number(range[1])
          }});
+      } else if(key == 'mhfdDollarRequest' && req.body[key] != null ){
+         var initValue = req.body[key];
+         initValue = initValue.split('[').join("");
+         initValue = initValue.split(']').join("");
+         const range = initValue.split(",");
+         query.find({"mhfdDollarRequest": {
+            "$gte" : Number(range[0]),
+            "$lt": Number(range[1])
+         }});
+      } else if(key === 'capitalStatus') {
+         query.find({status: req.body[key]}) // {$in: 
       } else {
          query.where(key).equals(req.body[key]);
       }
