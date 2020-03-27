@@ -6,6 +6,7 @@ const JWT_EXPIRANCY = process.env.JWT_EXPIRANCY || 60 * 60;
 const MHFD_FRONTEND = process.env.MHFD_FRONTEND || 'http://localhost/';
 const MHFD_EMAIL = process.env.MHFD_EMAIL || 'email';
 const MHFD_PASSWORD = process.env.MHFD_PASSWORD || 'password';
+const CARTO_TOKEN = process.env.CARTO_TOKEN || 'key';
 
 module.exports = {
   JWT_KEY,
@@ -14,4 +15,5 @@ module.exports = {
   MHFD_FRONTEND,
   MHFD_EMAIL,
   MHFD_PASSWORD,
+  CARTO_TOKEN
 };
