@@ -114,7 +114,9 @@ var ProjectSchema = new Schema({
    // main image of the project
    mainImage: String,
    // attachments list
-   attachList: Array
+   attachList: Array,
+   components: Array,
+   coordinates: String
    
 });
 
