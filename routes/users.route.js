@@ -18,7 +18,6 @@ router.post('/signup', validator(['firstName', 'lastName', 'designation', 'email
       res.status(422).send({message: 'The e-mail has already been registered'});
     } else {
       if (/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/.test(user.email)) {
-        user.name = user.firstName + " " + user.lastName;
         await user.save();
         const token = await user.generateAuthToken();
         res.status(201).send({

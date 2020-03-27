@@ -7,8 +7,15 @@ const User = require('../models/user.model');
 const { validator } = require('../utils/utils');
 
 const NUMBER_PER_PAGE = 20;
+const INITIAL_PAGE = 1;
 const updateable_fields = ['firstName', 'lastName', 'email', 'organization', 'designation', 'city', 'county', 'serviceArea'];
-
+const isAdminAccount = (req, res, next) => {
+  if (req.user.designation === ROLES.MFHD_ADMIN || req.user.designation ===  ROLES.MFHD_STAFF) {
+    next();
+  } else {
+    return res.status(403).send( `You're not allowed to do that`);
+  }
+}
 router.put('/change-user-state/:id', auth, async (req, res, next) => {
   if (req.user.designation === ROLES.MFHD_ADMIN || req.user.designation ===  ROLES.MFHD_STAFF) {
     const id = req.params.id;
@@ -39,7 +46,6 @@ router.put('/edit-user/:id', [auth, validator(updateable_fields)], async(req, re
       for (const field of updateable_fields) {
         user[field] = req.body[field];
       }
-      user['name'] = user.firstName + " " + user.lastName;
       await user.save();
       return res.status(200).send(user);
     }  catch (error) {
@@ -57,7 +63,7 @@ router.get('/list', auth, async(req, res, next) => {
     const designation = req.query.designation;
     const search_obj = {activated: !isPending};
     const limit = +req.query.limit || NUMBER_PER_PAGE;
-    const page = +req.query.page || 1;
+    const page = +req.query.page || INITIAL_PAGE;
     const name = req.query.name;
     const sort = req.query.sort;
     const sortObject = {};
