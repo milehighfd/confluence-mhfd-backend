@@ -10,7 +10,7 @@ router.get('/', async (req, res, next) => {
   res.send(users);
 });
 
-router.post('/signup', validator(['firstName', 'lastName', 'designation', 'email', 'organization', 'password']), async (req, res) => {
+router.post('/signup', validator(userService.requiredFields('signup')), async (req, res) => {
   try {
     const user = new User(req.body);
     const foundUser = await User.count({email: user.email}); 

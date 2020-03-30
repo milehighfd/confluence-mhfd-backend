@@ -5,10 +5,11 @@ const auth = require('../auth/auth');
 const {ROLES} = require('../lib/enumConstants');
 const User = require('../models/user.model');
 const { validator } = require('../utils/utils');
-
+const userService = require('../services/user.service');
+//TODO move to config
 const NUMBER_PER_PAGE = 20;
 const INITIAL_PAGE = 1;
-const updateable_fields = ['firstName', 'lastName', 'email', 'organization', 'designation', 'city', 'county', 'serviceArea'];
+const UPDATEABLE_FIELDS = userService.requiredFields('edit');
 const isAdminAccount = (req, res, next) => {
   if (req.user.designation === ROLES.MFHD_ADMIN || req.user.designation ===  ROLES.MFHD_STAFF) {
     next();
@@ -30,15 +31,15 @@ router.put('/change-user-state/:id', [auth, isAdminAccount], async (req, res, ne
       return res.status(500).send(error);
   }
 });
-
-router.put('/edit-user/:id', [auth, isAdminAccount, validator(updateable_fields)], async(req, res, next) => {
+// TODO verify email 
+router.put('/edit-user/:id', [auth, isAdminAccount, validator(UPDATEABLE_FIELDS)], async(req, res, next) => {
   const id = req.params.id;
   try {
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).send( 'User not found');
     }
-    for (const field of updateable_fields) {
+    for (const field of UPDATEABLE_FIELDS) {
       user[field] = req.body[field];
     }
     await user.save();
