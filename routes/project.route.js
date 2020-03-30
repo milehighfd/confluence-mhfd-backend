@@ -40,8 +40,7 @@ router.post('/create', [auth, multer.array('file', 5), validate], async(req, res
             return res.status(400).send('You must send the image logo');
          }
       }
-      project = await projectService.saveProject(project, req.files);
-      console.log(project);
+      await projectService.saveProject(project, req.files);
       res.status(201).send(project);
    } catch (error) {
       console.log('Error: ' + error)
@@ -108,7 +107,6 @@ function validate(req, res, next) {
          } else {
             missingFields += ', ' + field;
          }
-
       }
    }
    if (isValid) {
@@ -121,7 +119,7 @@ function validate(req, res, next) {
 router.post('/filters', auth, async (req, res) => {
    const data = req.body;
    const result = await projectService.filterProject(data);
-   res.send(result);
+   res.status(200).send(result);
 });
 
 router.get('/:id', async (req, res, next) => {
