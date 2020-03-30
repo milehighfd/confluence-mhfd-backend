@@ -31,13 +31,17 @@ router.put('/change-user-state/:id', [auth, isAdminAccount], async (req, res, ne
       return res.status(500).send(error);
   }
 });
-// TODO verify email 
 router.put('/edit-user/:id', [auth, isAdminAccount, validator(UPDATEABLE_FIELDS)], async(req, res, next) => {
   const id = req.params.id;
   try {
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).send( 'User not found');
+    }
+    if (user.email !== req.body.email) {
+     if (User.count({email: user.email}) ) {
+       return res.status(422).send('the email has already been registered');
+     }
     }
     for (const field of UPDATEABLE_FIELDS) {
       user[field] = req.body[field];
