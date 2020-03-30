@@ -30,6 +30,8 @@ router.post('/', async (req, res) => {
         const tiles = JSON.parse(str).metadata.tilejson.vector.tiles;
         return res.send(tiles);
       });
+    } else {
+      return res.status(response.statusCode).send('error');
     }
   }).on('error', err => {
     console.log('failed call to ', url, 'with error ', err);
