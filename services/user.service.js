@@ -6,6 +6,7 @@ const {
   MHFD_PASSWORD,
 } = require('../config/config');
 const nodemailer = require('nodemailer');
+const {FIELDS} = require('../lib/enumConstants');
 
 const getTransporter = () => {
   const transporter = nodemailer.createTransport({
@@ -18,7 +19,7 @@ const getTransporter = () => {
     }
   });
   return transporter;
-};
+};  
 
 const sendRecoverPasswordEmail = async (user) => {
   const email = user.email;
@@ -61,8 +62,28 @@ const changePassword = async (changePasswordId, password) => {
   await user.save();
   return user;
 };
+const requiredFields = (type) => {
+  const {
+    FIRST_NAME,
+    LAST_NAME,
+    DESIGNATION,
+    EMAIL,
+    ORGANIZATION,
+    PASSWORD,
+    CITY,
+    COUNTY,
+    SERVICE_AREA
+  } = FIELDS;
+  if (type === 'signup') {
+    return [FIRST_NAME, LAST_NAME, DESIGNATION, EMAIL, ORGANIZATION, PASSWORD];
+  }
+  if (type === 'edit') {
+    return [FIRST_NAME, LAST_NAME, EMAIL, ORGANIZATION, DESIGNATION, CITY, COUNTY, SERVICE_AREA]; 
+  }
+}
 
 module.exports = {
   sendRecoverPasswordEmail,
   changePassword,
+  requiredFields
 };
