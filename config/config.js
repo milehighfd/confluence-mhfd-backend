@@ -7,6 +7,8 @@ const MHFD_FRONTEND = process.env.MHFD_FRONTEND || 'http://localhost/';
 const MHFD_EMAIL = process.env.MHFD_EMAIL || 'email';
 const MHFD_PASSWORD = process.env.MHFD_PASSWORD || 'password';
 const CARTO_TOKEN = process.env.CARTO_TOKEN || 'key';
+const STORAGE_NAME = process.env.STORAGE_NAME || 'mhfd2-test'
+const STORAGE_URL = process.env.STORAGE_URL || 'https://storage.googleapis.com'
 
 module.exports = {
   JWT_KEY,
@@ -15,5 +17,7 @@ module.exports = {
   MHFD_FRONTEND,
   MHFD_EMAIL,
   MHFD_PASSWORD,
-  CARTO_TOKEN
+  CARTO_TOKEN,
+  STORAGE_NAME,
+  STORAGE_URL
 };
