@@ -6,10 +6,11 @@ const {ROLES} = require('../lib/enumConstants');
 const User = require('../models/user.model');
 const { validator } = require('../utils/utils');
 const userService = require('../services/user.service');
-//TODO move to config
-const NUMBER_PER_PAGE = 20;
-const INITIAL_PAGE = 1;
+
+const {NUMBER_PER_PAGE, INITIAL_PAGE } = require('../config/config');
 const UPDATEABLE_FIELDS = userService.requiredFields('edit');
+
+
 const isAdminAccount = (req, res, next) => {
   if (req.user.designation === ROLES.MFHD_ADMIN || req.user.designation ===  ROLES.MFHD_STAFF) {
     next();
