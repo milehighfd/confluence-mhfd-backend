@@ -58,6 +58,15 @@ var UserSchema = new Schema({
 
 UserSchema.pre('save', async function (next) {
   const user = this;
+  const fields = Object.keys(user.schema.paths);
+  for (const field of fields) {
+    if (user.schema.path(field) instanceof mongoose.Schema.Types.String) {
+      if (user[field] && field !== 'password') {
+        user[field] = user[field].trim();
+      }
+    }
+  }
+
   user.name = user.firstName + ' ' + user.lastName;
   if (user.isModified('password')) {
     user.password = await bcrypt.hash(user.password, 8);
