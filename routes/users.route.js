@@ -1,8 +1,10 @@
 const express = require('express');
-const User = require('../models/user.model');
 const router = express.Router();
+
+const User = require('../models/user.model');
 const auth = require('../auth/auth');
 const { validator } = require('../utils/utils');
+const {EMAIL_VALIDATOR} = require('../lib/enumConstants');
 const userService = require('../services/user.service');
 
 router.get('/', async (req, res, next) => {
@@ -17,7 +19,7 @@ router.post('/signup', validator(userService.requiredFields('signup')), async (r
     if(foundUser) {
       res.status(422).send({message: 'The e-mail has already been registered'});
     } else {
-      if (/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/.test(user.email)) {
+      if (EMAIL_VALIDATOR.test(user.email)) {
         await user.save();
         const token = await user.generateAuthToken();
         res.status(201).send({

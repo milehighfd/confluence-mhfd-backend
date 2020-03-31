@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../auth/auth');
 
-const {ROLES} = require('../lib/enumConstants');
+const {ROLES, EMAIL_VALIDATOR} = require('../lib/enumConstants');
 const User = require('../models/user.model');
 const { validator } = require('../utils/utils');
 const userService = require('../services/user.service');
@@ -42,6 +42,9 @@ router.put('/edit-user/:id', [auth, isAdminAccount, validator(UPDATEABLE_FIELDS)
     if (user.email !== req.body.email) {
      if (User.count({email: user.email}) ) {
        return res.status(422).send('the email has already been registered');
+     }
+     if (EMAIL_VALIDATOR.test(user.email)) {
+       return res.status(400).send('the email must be valid');
      }
     }
     for (const field of UPDATEABLE_FIELDS) {
