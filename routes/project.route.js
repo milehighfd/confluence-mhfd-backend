@@ -8,6 +8,7 @@ const auth = require('../auth/auth');
 const { PROJECT_TYPE, PROJECT_SUBTYPE } = require('../lib/enumConstants');
 
 const MAIN_IMAGE_POSITION = 0;
+const QUANTITY_FILES_ALLOWED = 6;
 
 const multer = Multer({
    storage: Multer.MemoryStorage,
@@ -26,7 +27,7 @@ router.post('/', async (req, res) => {
    }
 });
 
-router.post('/create', [auth, multer.array('file', 5), validate], async(req, res) => {
+router.post('/create', [auth, multer.array('file', QUANTITY_FILES_ALLOWED), validate], async(req, res) => {
    try {
       var project = new Project(req.body);
       project.creator = req.user;
@@ -49,17 +50,17 @@ router.post('/create', [auth, multer.array('file', 5), validate], async(req, res
 });
 
 function validate(req, res, next) {
-   var fields = [];
-   var requiredFields = [];
-   var missingFields = '';
+   const fields = [];
+   let requiredFields = [];
+   let missingFields = '';
    for (const key in req.body) {
       fields.push(key);
    }
-   if (req.body.projectType == PROJECT_TYPE.CAPITAL) {
+   if (req.body.projectType === PROJECT_TYPE.CAPITAL) {
       requiredFields = ['requestName', 'description', 'mhfdFundingRequest',
          'localDollarsContributed', 'requestFundingYear', 'goal'];
    } else {
-      if (req.body.projectType == PROJECT_TYPE.MAINTENANCE) {
+      if (req.body.projectType === PROJECT_TYPE.MAINTENANCE) {
          switch (req.body.projectSubtype) {
             case PROJECT_SUBTYPE.DEBRIS_MANAGEMENT:
                requiredFields = ['requestName', 'description', 'mhfdDollarRequest',
@@ -83,10 +84,10 @@ function validate(req, res, next) {
                break;
          }
       } else {
-         if (req.body.projectType == PROJECT_TYPE.PROPERTY_ACQUISITION) {
+         if (req.body.projectType === PROJECT_TYPE.PROPERTY_ACQUISITION) {
             requiredFields = ['requestName', 'description', 'mhfdDollarRequest', 'localDollarsContributed'];
          } else {
-            if (req.body.projectType == PROJECT_TYPE.STUDY) {
+            if (req.body.projectType === PROJECT_TYPE.STUDY) {
                if (req.body.projectSubType == PROJECT_SUBTYPE.MASTER_PLAN) {
                   requiredFields = ['requestName', 'sponsor', 'coSponsor', 'requestedStartyear', 'goal'];
                } else {

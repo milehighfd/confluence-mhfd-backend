@@ -46,6 +46,7 @@ var ProjectSchema = new Schema({
    additionalCost: Number,
    additionalCostDescription: String,
    overheadCost: Number,
+   overheadCostDescription: String,
    estimatedCost: Number,
    mhfdFundingRequest: String,
    requestFundingYear: String,
