@@ -1,7 +1,9 @@
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+var morgan = require('morgan');
+
+const logger = require('./config/logger');
 
 // 
 const { createWriteStream, existsSync, mkdirSync } = require('fs');
@@ -68,7 +70,7 @@ var app = express();
 // app.use("/images", express.static(path.join(__dirname, "../images")));
 // server.applyMiddleware({ app });
 
-app.use(logger('dev'));
+app.use(morgan('dev', {stream: logger.stream}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
