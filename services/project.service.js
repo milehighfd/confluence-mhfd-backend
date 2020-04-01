@@ -42,7 +42,16 @@ const saveProject = async (project, files) => {
   project.priority = PRIORITY.HIGH;
   project.estimatedCost = 0;
 
+  if (project.tasks) {
+    project.tasks = project.tasks[0].split(',');
+  }
+
   if (project.projectType === PROJECT_TYPE.CAPITAL || project.projectType === PROJECT_TYPE.MAINTENANCE) {
+
+    if(project.projectType === PROJECT_TYPE.CAPITAL) {
+      console.log(project.components);
+      project.components = JSON.parse(project.components);
+    }
     const bucket = storage.bucket(STORAGE_NAME);
     const promises = [];
 
