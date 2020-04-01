@@ -1,7 +1,7 @@
 const Project = require('../models/project.model');
 const {Storage} = require('@google-cloud/storage');
 const path = require('path');
-const { PROJECT_STATUS, PROJECT_TYPE, PRIORITY } = require('../lib/enumConstants');
+const { PROJECT_STATUS, PROJECT_TYPE, PRIORITY, FIELDS } = require('../lib/enumConstants');
 const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
 
 const storage = new Storage({
@@ -14,29 +14,26 @@ function getPublicUrl (filename) {
 }
 
 const filterProject = async (filters) => {
-  var query = Project.find();
+  let data = {};
   for (const key in filters) {
-    if (key === 'requestName' && filters[key] != null) {
-         query.where(key).equals(new RegExp(filters[key], 'i'));
-    } else if ((key == 'estimatedCost' || key == 'mhfdDollarRequest') && filters[key] != null) {
-         var initValue = filters[key];
-         initValue = initValue.split('[').join("");
-         initValue = initValue.split(']').join("");
-         const range = initValue.split(",");
-         query.find({
-            key: {
-               "$gte": Number(range[0]),
-               "$lt": Number(range[1])
-            }
-         });
-    } else if (key === 'capitalStatus') {
-      query.find({ status: filters[key] })
+    if (key === FIELDS.REQUEST_NAME && filters[key] != null) {
+      data[key] = new RegExp(filters[key], 'i');
+    } else if ((key === FIELDS.ESTIMATED_COST || key === FIELDS.MHFD_DOLLAR_REQUEST) && filters[key] != null) {
+      let initValue = filters[key];
+      initValue = initValue.split('[').join("");
+      initValue = initValue.split(']').join("");
+      const range = initValue.split(",");
+      data[key] = {
+        "$gte": +range[0],
+        "$lte": +range[1]
+      }
+    } else if (key === FIELDS.CAPITAL_STATUS) {
+      data['status'] = filters[key];
     } else {
-      query.where(key).equals(filters[key]);
+      data[key] = filters[key];
     }
-   }
-  query.sort({ "dateCreated": -1 });
-  return await query.exec();
+  }
+  return await Project.find(data).sort({ "dateCreated": -1 });
 }
 
 const saveProject = async (project, files) => {

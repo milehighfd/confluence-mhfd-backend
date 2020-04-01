@@ -29,10 +29,7 @@ var ProjectSchema = new Schema({
       type: String,
       enum: Object.values(MAINTENANCE_ELIGIBILITY)
    },
-   task: {
-      type: String,
-      enum: Object.values(TASK)
-   },
+   tasks: Array,
    recurrence: {
       type: String,
       enum: Object.values(RECURRENCE)
