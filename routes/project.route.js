@@ -6,6 +6,7 @@ const Project = require('../models/project.model');
 const projectService = require('../services/project.service');
 const auth = require('../auth/auth');
 const { PROJECT_TYPE, PROJECT_SUBTYPE } = require('../lib/enumConstants');
+const logger = require('../config/logger');
 
 const MAIN_IMAGE_POSITION = 0;
 const QUANTITY_FILES_ALLOWED = 6;
@@ -33,18 +34,20 @@ router.post('/create', [auth, multer.array('file', QUANTITY_FILES_ALLOWED), vali
       project.creator = req.user;
       if (project.projectType === PROJECT_TYPE.CAPITAL || project.projectType === PROJECT_TYPE.MAINTENANCE) {
          if (!req.files) {
+            logger.error('You must send the image logo');
             return res.status(400).send('You must send the image logo');
          }
          const logoMimetype = req.files[MAIN_IMAGE_POSITION].mimetype.includes('png') ||
             req.files[MAIN_IMAGE_POSITION].mimetype.includes('jpeg') || req.files[MAIN_IMAGE_POSITION].mimetype.includes('jpg');
          if (!logoMimetype) {
+            logger.error('You must send the image logo');
             return res.status(400).send('You must send the image logo');
          }
       }
       await projectService.saveProject(project, req.files);
       res.status(201).send(project);
    } catch (error) {
-      console.log('Error: ' + error)
+      logger.error(error);
       res.status(500).send(error);
    }
 });
@@ -118,9 +121,14 @@ function validate(req, res, next) {
 }
 
 router.post('/filters', auth, async (req, res) => {
-   const data = req.body;
-   const result = await projectService.filterProject(data);
-   res.status(200).send(result);
+   try {
+      const data = req.body;
+      const result = await projectService.filterProject(data);
+      res.status(200).send(result);
+   } catch(error) {
+      logger.error(error);
+      res.status(500).send(error);
+   }
 });
 
 router.get('/:id', async (req, res, next) => {

@@ -5,11 +5,6 @@ var morgan = require('morgan');
 
 const logger = require('./config/logger');
 
-// 
-const { createWriteStream, existsSync, mkdirSync } = require('fs');
-const { ApolloServer, gql } = require('apollo-server-express');
-const { Storage } = require('@google-cloud/storage');
-
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users.route');
 var authRouter = require('./routes/auth.route');
@@ -23,58 +18,11 @@ require('./config/seed');
 
 var app = express();
 
-// const files = [];
-// const typeDefs = gql`
-// type Query {
-//   files: [String]
-// }
-
-// type Mutation {
-//   uploadFile(file: Upload!): Boolean
-// }
-// `;
-
-// const gc = new Storage({
-//    keyFilename: path.join(__dirname, './config/develop-test-271312-20b199f0adbe.json'),
-//    projectId: 'develop-test-271312'
-// });
-
-// const mhfdBucket = gc.bucket('mhfd2-test');
-
-// const resolvers = {
-//    Query: {
-//       files: () => files
-//    },
-//    Mutation: {
-//       uploadFile: async (_, { file }) => {
-//          const { createReadStream, filename } = await file;
-//          await new Promise(res => 
-//             createReadStream()
-//                .pipe(
-//                   mhfdBucket.file(filename).createWriteStream({
-//                      resumable: false,
-//                      gzip: true
-//                   })
-//                )
-//                .on("finish", res)
-//             );
-//             files.push(filename);
-//             return true;
-//       }
-//    }
-// }
-
-// existsSync(path.join(__dirname, "../images")) || mkdirSync(path.join(__dirname, "../images"));
-
-// const server = new ApolloServer({ typeDefs, resolvers});
-// app.use("/images", express.static(path.join(__dirname, "../images")));
-// server.applyMiddleware({ app });
-
 app.use(morgan('dev', {stream: logger.stream}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-// app.use(express.static(path.join(__dirname, 'public')));
+
 // add CORS headers
 app.use(function(res, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
