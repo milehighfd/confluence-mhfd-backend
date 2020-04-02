@@ -42,8 +42,14 @@ const saveProject = async (project, files) => {
   project.priority = PRIORITY.HIGH;
   project.estimatedCost = 0;
 
-  if (project.tasks) {
-    project.tasks = project.tasks[0].split(',');
+  // console.log(project.tasks);
+  if (project.tasks.length > 0) {
+    if (project.tasks[0] !== "") {
+      project.tasks = project.tasks[0].split(',');
+    }
+    console.log('hay datos');
+  } else {
+    console.log('no tiene datos');
   }
 
   if (project.projectType === PROJECT_TYPE.CAPITAL || project.projectType === PROJECT_TYPE.MAINTENANCE) {
