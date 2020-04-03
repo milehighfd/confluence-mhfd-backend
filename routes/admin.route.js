@@ -15,7 +15,7 @@ const isAdminAccount = (req, res, next) => {
   if (req.user.designation === ROLES.MFHD_ADMIN || req.user.designation ===  ROLES.MFHD_STAFF) {
     next();
   } else {
-    return res.status(403).send( `You're not allowed to do that`);
+    return res.status(403).send({error: `You're not allowed to do that`} );
   }
 }
 router.put('/change-user-state/:id', [auth, isAdminAccount], async (req, res, next) => {
@@ -23,7 +23,7 @@ router.put('/change-user-state/:id', [auth, isAdminAccount], async (req, res, ne
   try{
     const user = await User.findById(id);
     if (!user) {
-      return res.status(404).send( 'User not found');
+      return res.status(404).send({error: 'User not found'});
     }
     user.activated = !user.activated;
     await user.save();
@@ -37,14 +37,14 @@ router.put('/edit-user/:id', [auth, isAdminAccount, validator(UPDATEABLE_FIELDS)
   try {
     const user = await User.findById(id);
     if (!user) {
-      return res.status(404).send( 'User not found');
+      return res.status(404).send({error: 'User not found'} );
     }
     if (user.email !== req.body.email) {
      if (User.count({email: user.email}) ) {
-       return res.status(422).send('the email has already been registered');
+       return res.status(422).send({error: 'the email has already been registered'});
      }
      if (EMAIL_VALIDATOR.test(user.email)) {
-       return res.status(400).send('the email must be valid');
+       return res.status(400).send({error: 'the email must be valid'});
      }
     }
     for (const field of UPDATEABLE_FIELDS) {
@@ -53,7 +53,7 @@ router.put('/edit-user/:id', [auth, isAdminAccount, validator(UPDATEABLE_FIELDS)
     await user.save();
     return res.status(200).send(user);
   }  catch (error) {
-    return res.status(500).send(error);
+    return res.status(500).send({error: error});
   }
 });
 router.get('/list', [auth, isAdminAccount], async(req, res, next) => {
@@ -95,7 +95,7 @@ router.get('/list', [auth, isAdminAccount], async(req, res, next) => {
     const numberOfPages = Math.ceil(userCount / limit);
     return res.status(200).send({users: userList, pages: numberOfPages});
   } catch(error) {
-    return res.status(500).send(error);
+    return res.status(500).send({error: error});
   }  
 });
 module.exports = router;

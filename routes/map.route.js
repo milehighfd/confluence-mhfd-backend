@@ -31,12 +31,12 @@ router.post('/', async (req, res) => {
         return res.send(tiles);
       });
     } else {
-      return res.status(response.statusCode).send('error');
+      return res.status(response.statusCode).send({error: 'error'});
     }
   }).on('error', err => {
     console.log('failed call to ', url, 'with error ', err);
     logger.error(`failed call to ${url}  with error  ${err}`)
-    res.status(500).send(err);
+    res.status(500).send({error: err});
   });
 });
 module.exports = (router);

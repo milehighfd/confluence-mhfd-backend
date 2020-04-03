@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
       const attachment = new Attachement(req.body);
       await attachment.save();
    } catch (error) {
-      res.status(500).send(error);
+      res.status(500).send({error: error});
    }
 });
 

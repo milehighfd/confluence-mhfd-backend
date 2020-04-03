@@ -35,13 +35,13 @@ router.post('/create', [auth, multer.array('file', QUANTITY_FILES_ALLOWED), vali
       if (project.projectType === PROJECT_TYPE.CAPITAL || project.projectType === PROJECT_TYPE.MAINTENANCE) {
          if (!req.files) {
             logger.error('You must send the image logo');
-            return res.status(400).send('You must send the image logo');
+            return res.status(400).send({error: 'You must send the image logo'});
          }
          const logoMimetype = req.files[MAIN_IMAGE_POSITION].mimetype.includes('png') ||
             req.files[MAIN_IMAGE_POSITION].mimetype.includes('jpeg') || req.files[MAIN_IMAGE_POSITION].mimetype.includes('jpg');
          if (!logoMimetype) {
             logger.error('You must send the image logo');
-            return res.status(400).send('You must send the image logo');
+            return res.status(400).send({error: 'You must send the image logo'});
          }
       }
       await projectService.saveProject(project, req.files);
@@ -116,7 +116,7 @@ function validate(req, res, next) {
    if (isValid) {
       next();
    } else {
-      res.status(400).send({ message: "There are required fields: " + missingFields });
+      res.status(400).send({ error: "There are required fields: " + missingFields });
    }
 }
 
@@ -127,7 +127,7 @@ router.post('/filters', auth, async (req, res) => {
     res.status(200).send(result);
   } catch(error) {
     logger.error(error);
-  	res.status(500).send(error);
+  	res.status(500).send({error: error});
   }
 });
 
@@ -136,18 +136,18 @@ router.get('/:id', async (req, res, next) => {
       .then(project => {
          if (!project) {
             return res.status(404).send({
-               message: 'Project not found with id ' + req.params.id
+               error: 'Project not found with id ' + req.params.id
             });
          }
          res.send(project);
       }).catch(err => {
          if (err.kind === 'ObjectId') {
             return res.status(404).send({
-               message: 'Project not found with id ' + req.params.id
+               error: 'Project not found with id ' + req.params.id
             });
          }
          return err.status(500).send({
-            message: 'Error retrieving Project with id ' + req.params.id
+            error: 'Error retrieving Project with id ' + req.params.id
          });
       });
 });
@@ -158,7 +158,7 @@ router.get('/', async (req, res) => {
          res.send(projects);
       }).catch(err => {
          res.status(500).send({
-            message: err.message || 'Some error ocurred while retrieving Project'
+            error: err.message || 'Some error ocurred while retrieving Project'
          });
       });
 });

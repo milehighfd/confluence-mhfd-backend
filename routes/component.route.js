@@ -9,6 +9,6 @@ router.get('/', async (req, res, next) => {
       await component.save();
       res.status(201).send(component);
    } catch(error) {
-      res.status(500).send(error);
+      res.status(500).send({error: error});
    }
 })
