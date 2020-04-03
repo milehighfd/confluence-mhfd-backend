@@ -17,7 +17,7 @@ router.post('/signup', validator(userService.requiredFields('signup')), async (r
     const user = new User(req.body);
     const foundUser = await User.count({email: user.email}); 
     if(foundUser) {
-      res.status(422).send({message: 'The e-mail has already been registered'});
+      res.status(422).send({errror: 'The e-mail has already been registered'});
     } else {
       if (EMAIL_VALIDATOR.test(user.email)) {
         await user.save();
@@ -27,7 +27,7 @@ router.post('/signup', validator(userService.requiredFields('signup')), async (r
           token
         });
       } else {
-        return res.status(400).send('You entered an invalid email direction');
+        return res.status(400).send({error: 'You entered an invalid email direction'});
       }
     }
   } catch (error) {
@@ -52,7 +52,14 @@ router.get('/me', auth, async(req, res) => {
 
 router.post('/recovery-password', async(req, res) => {
   const email = req.body.email;
+  if (!EMAIL_VALIDATOR.test(email)) { 
+    return res.status(400).send({error: 'You entered an invalid email direction'});
+  }
   const user = await User.findOne({email});
+  if (!user) {
+    return res.status(422).send({error: 'E-mail not found!'});
+  }
+  console.log(user);
   console.log("ID: " + user._id);
   await user.generateChangePassword();
   await userService.sendRecoverPasswordEmail(user);
