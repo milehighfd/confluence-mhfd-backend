@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken')
 const config = require('../config/config');
 const crypto = require('crypto');
+const logger = require('../config/logger');
 
 const Schema = mongoose.Schema;
 
@@ -78,8 +79,7 @@ UserSchema.pre('save', async function (next) {
         validTokens.push(token);
       }
     } catch(error) {
-      console.log(token);
-      console.log(error);
+      logger.error('Token validation error: ' + token + ' - ' + error);
     }
   }
   user.tokens = validTokens;
@@ -107,7 +107,7 @@ UserSchema.statics.findByEmail = async (email) => {
 
   if(!user) {
     throw new Error({
-      error: 'E-mail not exist'
+      error: 'Email does not exist'
     });
   }
 
@@ -137,12 +137,14 @@ UserSchema.statics.findByCredentials = async (email, password) => {
     email
   });
   if (!user) {
+    logger.error('Invalid login email: ' + email);
     throw new Error({
       error: 'Invalid login credentials'
     });
   }
   const isPasswordMatch = await bcrypt.compare(password, user.password);
   if (!isPasswordMatch) {
+    logger.error('Invalid login password for email: ' + email);
     throw new Error({
       error: 'Invalid login credentials'
     });

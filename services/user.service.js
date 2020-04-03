@@ -7,6 +7,7 @@ const {
 } = require('../config/config');
 const nodemailer = require('nodemailer');
 const {FIELDS} = require('../lib/enumConstants');
+const logger = require('../config/logger');
 
 const getTransporter = () => {
   const transporter = nodemailer.createTransport({
@@ -26,7 +27,6 @@ const sendRecoverPasswordEmail = async (user) => {
   const changePasswordId = user.changePasswordId;
   const redirectUrl = MHFD_FRONTEND + '/confirm-password/' + changePasswordId;
   const template = fs.readFileSync(__dirname + '/templates/email_reset-pass-MHFD.html', 'utf8');
-  console.log("Type:" + (typeof template));
   const emailToSend = template.split('{{url}}').join(redirectUrl);
 
   const transporter = getTransporter();
@@ -38,7 +38,7 @@ const sendRecoverPasswordEmail = async (user) => {
   };
 
   const info = await transporter.sendMail(options);
-  console.log('INFO: ' + JSON.stringify(info, null, 2));
+  logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 };
 
 const changePassword = async (changePasswordId, password) => {
@@ -46,12 +46,14 @@ const changePassword = async (changePasswordId, password) => {
     changePasswordId
   });
   if (!user) {
+    logger.error('Invalid recovery password id: ' + changePasswordId);
     throw new Error({
       error: 'Invalid recovery password id'
     });
   }
   const now = new Date();
   if (now.getTime() > user.changePasswordExpiration.getTime()) {
+    logger.error('Recovery password id expired: ' + changePasswordId + ', ' + user.changePasswordExpiration);
     throw new Error({
       error: 'Recovery password id expired'
     });
@@ -62,6 +64,7 @@ const changePassword = async (changePasswordId, password) => {
   await user.save();
   return user;
 };
+
 const requiredFields = (type) => {
   const {
     FIRST_NAME,
