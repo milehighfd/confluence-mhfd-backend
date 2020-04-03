@@ -17,7 +17,7 @@ router.post('/signup', validator(userService.requiredFields('signup')), async (r
     const user = new User(req.body);
     const foundUser = await User.count({email: user.email}); 
     if(foundUser) {
-      res.status(422).send({errror: 'The e-mail has already been registered'});
+      res.status(422).send({error: 'The e-mail has already been registered'});
     } else {
       if (EMAIL_VALIDATOR.test(user.email)) {
         await user.save();
