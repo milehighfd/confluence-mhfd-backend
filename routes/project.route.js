@@ -121,14 +121,14 @@ function validate(req, res, next) {
 }
 
 router.post('/filters', auth, async (req, res) => {
-   // try {
-      const data = req.body;
-      const result = await projectService.filterProject(data);
-      res.status(200).send(result);
-   // } catch(error) {
-   //    logger.error(error);
-   //    res.status(500).send(error);
-   // }
+  try {
+    const data = req.body;
+    const result = await projectService.filterProject(data);
+    res.status(200).send(result);
+  } catch(error) {
+    logger.error(error);
+  	res.status(500).send(error);
+  }
 });
 
 router.get('/:id', async (req, res, next) => {

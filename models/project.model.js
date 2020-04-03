@@ -56,7 +56,7 @@ var ProjectSchema = new Schema({
       type: String,
       enum: Object.values(PROJECT_STATUS)
    },
-   workPlainYear: Number,
+   workPlanYear: Number,
    mhfdDollarAllocated: Number,
    finalCost: Number,
    startYear: Number,
