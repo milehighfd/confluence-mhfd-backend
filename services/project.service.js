@@ -89,7 +89,39 @@ const saveProject = async (project, files) => {
   }
 }
 
+const userCreators = async () => {
+  const users = await Project.aggregate([
+    {
+        $lookup: {
+            from: "users",
+            localField: "creator",
+            foreignField: "_id",
+            as: "users"
+        }
+    }, 
+    {
+        $group: { 
+            _id: "$users"
+        }
+    }
+  ]);
+  return users;
+}
+
+const filterByField = async (field) => {
+  const data = await Project.aggregate([
+    {
+      $group: {
+        _id: "$" + field
+      }
+    }
+  ]);
+  return data;
+}
+
 module.exports = {
   saveProject,
-  filterProject
+  filterProject,
+  userCreators,
+  filterByField
 };

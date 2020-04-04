@@ -131,6 +131,22 @@ router.post('/filters', auth, async (req, res) => {
   }
 });
 
+router.get('/creators', async (req, res) => {
+	try {
+		const users = await projectService.userCreators();
+		res.status(200).send(users);
+	} catch(error) {
+		logger.error(error);
+  	res.status(500).send(error);
+	}
+});
+
+router.get('/filter-by-field/:field', async (req, res) => {
+	//console.log(req);
+	const data = await projectService.filterByField(req.params.field);
+	res.status(200).send(data);
+})
+
 router.get('/:id', async (req, res, next) => {
    Project.findById(req.params.id)
       .then(project => {
