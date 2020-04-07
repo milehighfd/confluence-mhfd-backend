@@ -142,10 +142,9 @@ router.get('/creators', async (req, res) => {
 });
 
 router.get('/filter-by-field/:field', async (req, res) => {
-	//console.log(req);
-	const data = await projectService.filterByField(req.params.field);
-	res.status(200).send(data);
-})
+   const data = await projectService.filterByFieldDistinct(req.params.field);
+   res.status(200).send(data);
+});
 
 router.get('/:id', async (req, res, next) => {
    Project.findById(req.params.id)

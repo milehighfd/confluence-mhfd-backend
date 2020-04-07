@@ -119,9 +119,15 @@ const filterByField = async (field) => {
   return data;
 }
 
+const filterByFieldDistinct = async (field) => {
+  const data = await Project.collection.distinct(field);
+  return data;
+}
+
 module.exports = {
   saveProject,
   filterProject,
   userCreators,
-  filterByField
+  filterByField,
+  filterByFieldDistinct
 };
