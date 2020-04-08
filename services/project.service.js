@@ -18,8 +18,9 @@ const filterProject = async (filters) => {
   for (const key in filters) {
     if (key === FIELDS.REQUEST_NAME && filters[key] != null) {
       data[key] = new RegExp(filters[key], 'i');
-    } else if ((key === FIELDS.ESTIMATED_COST || key === FIELDS.MHFD_DOLLAR_REQUEST) && filters[key] != null) {
+    } else if ((key === FIELDS.ESTIMATED_COST || key === FIELDS.MHFD_DOLLAR_ALLOCATED) && filters[key] != null) {
       let initValue = filters[key];
+
       initValue = initValue.split('[').join("");
       initValue = initValue.split(']').join("");
       const range = initValue.split(",");
@@ -120,6 +121,7 @@ const filterByField = async (field) => {
 }
 
 const filterByFieldDistinct = async (field) => {
+  console.log(field);
   const data = await Project.collection.distinct(field);
   return data;
 }
