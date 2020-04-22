@@ -120,6 +120,21 @@ const filterByField = async (field) => {
   return data;
 }
 
+const counterProjectByCreator = async (creator) => {
+  const data = await Project.aggregate([
+    {
+      $match : {"creator": creator._id}
+    },
+    {
+      $group : {
+        _id: '$projectType',
+        count: { $sum: 1}
+      }
+    }
+  ]);
+  return data;
+}
+
 const filterByFieldDistinct = async (field) => {
   console.log(field);
   const data = await Project.collection.distinct(field);
@@ -131,5 +146,6 @@ module.exports = {
   filterProject,
   userCreators,
   filterByField,
-  filterByFieldDistinct
+  filterByFieldDistinct,
+  counterProjectByCreator
 };

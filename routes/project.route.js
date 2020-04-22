@@ -143,6 +143,16 @@ router.post('/filters-by-creator', auth, async (req, res) => {
    }
 });
 
+router.get('/counter-projects-by-creator', auth, async (req, res) => {
+   try {
+      const result = await projectService.counterProjectByCreator(req.user);
+      res.status(200).send(result);
+   } catch(error) {
+      logger.error(error);
+      res.status(500).send({error: error});
+   }
+});
+
 router.get('/creators', async (req, res) => {
 	try {
 		const users = await projectService.userCreators();
