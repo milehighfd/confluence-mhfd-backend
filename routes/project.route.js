@@ -127,8 +127,20 @@ router.post('/filters', auth, async (req, res) => {
     res.status(200).send(result);
   } catch(error) {
     logger.error(error);
-  	res.status(500).send({error: error});
+  	 res.status(500).send({error: error});
   }
+});
+
+router.post('/filters-by-creator', auth, async (req, res) => {
+   try {
+      const data = req.body;
+      data.creator = req.user;
+      const result = await projectService.filterProject(data);
+      res.status(200).send(result);
+   } catch(error) {
+      logger.error(error);
+      res.status(500).send({error: error});
+   }
 });
 
 router.get('/creators', async (req, res) => {
