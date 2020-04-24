@@ -6,8 +6,20 @@ const {
   MHFD_PASSWORD,
 } = require('../config/config');
 const nodemailer = require('nodemailer');
+const path = require('path');
+const {Storage} = require('@google-cloud/storage');
 const {FIELDS} = require('../lib/enumConstants');
 const logger = require('../config/logger');
+const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
+
+const storage = new Storage({
+  keyFilename: path.join(__dirname, '../config/develop-test-271312-20b199f0adbe.json'),
+  projectId: 'develop-test-271312'
+});
+
+function getPublicUrl (filename) {
+  return `${STORAGE_URL}/${STORAGE_NAME}/${filename}`;
+}
 
 const getTransporter = () => {
   const transporter = nodemailer.createTransport({
@@ -40,6 +52,35 @@ const sendRecoverPasswordEmail = async (user) => {
   const info = await transporter.sendMail(options);
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 };
+
+const uploadPhoto = async (user, files) => {
+  const bucket = storage.bucket(STORAGE_NAME);
+  
+  const newPromise = new Promise((resolve, reject) => {
+    files.forEach(file => {
+      const name = Date.now() + file.originalname;
+      console.log(name);
+      const blob = bucket.file(name);
+      blob.createWriteStream({
+        metadata: { contentType: file.mimetype}
+      }).on('finish', async response => {
+        await blob.makePublic();
+        resolve(getPublicUrl(name));
+      }).on('error', err => {
+        reject('upload error: ', err);
+      }).end(file.buffer);
+    });
+  });
+  newPromise.then(async response => {
+    user.photo = response;
+    await user.save();
+  }).catch((err) => {
+    throw new Error({
+      error: err.message
+    });
+  });
+  //user.photo
+}
 
 const changePassword = async (changePasswordId, password) => {
   const user = await User.findOne({
@@ -88,5 +129,6 @@ const requiredFields = (type) => {
 module.exports = {
   sendRecoverPasswordEmail,
   changePassword,
-  requiredFields
+  requiredFields,
+  uploadPhoto
 };

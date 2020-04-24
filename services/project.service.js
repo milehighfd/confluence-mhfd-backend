@@ -42,7 +42,6 @@ const saveProject = async (project, files) => {
   project.dateCreated = new Date();
   project.priority = PRIORITY.HIGH;
   project.estimatedCost = 0;
-  console.log(files.length);
 
   if (project.tasks.length > 0) {
     if (project.tasks[0] !== "") {

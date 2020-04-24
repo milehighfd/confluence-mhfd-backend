@@ -48,7 +48,7 @@ var UserSchema = new Schema({
     type: Date,
     default: null
   },
-
+  photo: String,
   tokens: [{
     token: {
       type: String,

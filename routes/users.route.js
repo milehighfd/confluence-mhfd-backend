@@ -1,11 +1,20 @@
 const express = require('express');
 const router = express.Router();
+const Multer = require('multer');
 
 const User = require('../models/user.model');
 const auth = require('../auth/auth');
 const { validator } = require('../utils/utils');
 const {EMAIL_VALIDATOR} = require('../lib/enumConstants');
 const userService = require('../services/user.service');
+const logger = require('../config/logger');
+
+const multer = Multer({
+  storage: Multer.MemoryStorage,
+  limits: {
+     fileSize: 50 * 1024 * 1024
+  }
+});
 
 router.get('/', async (req, res, next) => {
   const users = await User.find({});
@@ -48,6 +57,17 @@ router.put('/', auth, async (req, res) => {
 
 router.get('/me', auth, async(req, res) => {
   res.send(req.user);
+});
+
+router.post('/upload-photo', [auth, multer.array('file')], async(req, res) => {
+  try {
+    console.log(req.files);
+    await userService.uploadPhoto(req.user, req.files);
+    res.status(200).send({message: 'photo updated'});
+  } catch(error) {
+    logger.error(error);
+    res.status(500).send(error);
+  }
 });
 
 router.post('/recovery-password', async(req, res) => {
