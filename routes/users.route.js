@@ -61,7 +61,10 @@ router.get('/me', auth, async(req, res) => {
 
 router.post('/upload-photo', [auth, multer.array('file')], async(req, res) => {
   try {
-    console.log(req.files);
+    if (!req.files) {
+      logger.error('You must send user photo');
+      return res.status(400).send({error: 'You must send user photo'});
+    }
     await userService.uploadPhoto(req.user, req.files);
     res.status(200).send({message: 'photo updated'});
   } catch(error) {

@@ -79,7 +79,10 @@ const uploadPhoto = async (user, files) => {
       error: err.message
     });
   });
-  //user.photo
+}
+
+const findById = async (userId) => {
+  return await User.find({_id: userId});
 }
 
 const changePassword = async (changePasswordId, password) => {
@@ -130,5 +133,6 @@ module.exports = {
   sendRecoverPasswordEmail,
   changePassword,
   requiredFields,
-  uploadPhoto
+  uploadPhoto,
+  findById
 };

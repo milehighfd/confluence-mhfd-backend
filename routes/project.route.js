@@ -4,6 +4,7 @@ const Multer = require('multer');
 
 const Project = require('../models/project.model');
 const projectService = require('../services/project.service');
+const userService = require('../services/user.service');
 const auth = require('../auth/auth');
 const { PROJECT_TYPE, PROJECT_SUBTYPE } = require('../lib/enumConstants');
 const logger = require('../config/logger');
@@ -119,6 +120,16 @@ function validate(req, res, next) {
       res.status(400).send({ error: "There are required fields: " + missingFields });
    }
 }
+
+router.get('/get-project-collaborators', auth, async (req, res) => {
+   try {
+      const result = await projectService.getCollaboratorsByProject(req.user);
+      res.status(200).send(result);
+   } catch(error) {
+      logger.error(error);
+  	   res.status(500).send({error: error});
+   }
+})
 
 router.post('/filters', auth, async (req, res) => {
   try {

@@ -113,8 +113,8 @@ var ProjectSchema = new Schema({
    // attachments list
    attachList: Array,
    components: Array,
-   coordinates: String
-   
+   coordinates: String,
+   collaborators: Array
 });
 
 ProjectSchema.virtual("nameCreator")

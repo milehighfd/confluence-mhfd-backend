@@ -1,6 +1,8 @@
-const Project = require('../models/project.model');
 const {Storage} = require('@google-cloud/storage');
 const path = require('path');
+
+const Project = require('../models/project.model');
+const userService = require('../services/user.service');
 const { PROJECT_STATUS, PROJECT_TYPE, PRIORITY, FIELDS } = require('../lib/enumConstants');
 const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
 
@@ -37,11 +39,36 @@ const filterProject = async (filters) => {
   return await Project.find(data).sort({ "dateCreated": -1 });
 }
 
+const getCollaboratorsByProject = async (user) => {
+  let result = [];
+  const projects = await Project.find({
+    collaborators: {"$in": user._id}
+  });
+  for(const project of projects) {
+    const listCollaborators = [];
+    for(const collaborator of project.collaborators) {
+      // const user = 
+      await userService.findById(collaborator).then(
+        (user) => {
+          listCollaborators.push(user[0]);
+        }
+      );
+    }
+    let data = project;
+    data.collaborators = listCollaborators;
+    result.push(data);
+    //result.userCollaborators = listCollaborators;
+  }
+  
+  return result;
+}
+
 const saveProject = async (project, files) => {
   project.status = PROJECT_STATUS.DRAFT;
   project.dateCreated = new Date();
   project.priority = PRIORITY.HIGH;
   project.estimatedCost = 0;
+  project.collaborators = project.creator;
 
   if (project.tasks.length > 0) {
     if (project.tasks[0] !== "") {
@@ -146,5 +173,6 @@ module.exports = {
   userCreators,
   filterByField,
   filterByFieldDistinct,
-  counterProjectByCreator
+  counterProjectByCreator,
+  getCollaboratorsByProject
 };
