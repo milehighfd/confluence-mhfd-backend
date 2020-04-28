@@ -5,6 +5,9 @@ const auth = require('../auth/auth');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const config = require('../config/config');
+const logActivityService = require('../services/logActivity.service');
+const LogActivity = require('../models/logActivity.model');
+const { ACTIVITY_TYPE } = require('../lib/enumConstants');
 
 router.post('/login', async (req, res) => {
   try {
@@ -24,6 +27,13 @@ router.post('/login', async (req, res) => {
       });
     }
     const token = await user.generateAuthToken();
+    
+    let logActivity = new LogActivity();
+    logActivity.userId = user._id;
+    logActivity.activityTpe = ACTIVITY_TYPE.USER_LOGIN;
+    logActivity.city = '';
+    logActivityService.saveLogActivity(logActivity);
+    
     res.send({
       userResult,
       token
