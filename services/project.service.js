@@ -47,7 +47,6 @@ const getCollaboratorsByProject = async (user) => {
   for(const project of projects) {
     const listCollaborators = [];
     for(const collaborator of project.collaborators) {
-      // const user = 
       await userService.findById(collaborator).then(
         (user) => {
           listCollaborators.push(user[0]);
@@ -57,7 +56,6 @@ const getCollaboratorsByProject = async (user) => {
     let data = project;
     data.collaborators = listCollaborators;
     result.push(data);
-    //result.userCollaborators = listCollaborators;
   }
   
   return result;

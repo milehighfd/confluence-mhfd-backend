@@ -59,7 +59,6 @@ const uploadPhoto = async (user, files) => {
   const newPromise = new Promise((resolve, reject) => {
     files.forEach(file => {
       const name = Date.now() + file.originalname;
-      console.log(name);
       const blob = bucket.file(name);
       blob.createWriteStream({
         metadata: { contentType: file.mimetype}
@@ -71,9 +70,10 @@ const uploadPhoto = async (user, files) => {
       }).end(file.buffer);
     });
   });
-  newPromise.then(async response => {
+  await newPromise.then(async response => {
     user.photo = response;
     await user.save();
+    return user;
   }).catch((err) => {
     throw new Error({
       error: err.message

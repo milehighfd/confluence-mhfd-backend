@@ -1,6 +1,6 @@
 const LogActivity = require('../models/logActivity.model');
 
-const getLogActivities = async () => {
+const getLogActivities = async (page, limit, sortByField, sortType) => {
   const result = await LogActivity.aggregate([
     {
       $lookup: {
@@ -10,9 +10,15 @@ const getLogActivities = async () => {
         as: "user"
       }
     },
-  ]);
+  ]).limit(limit * page)
+  .skip(limit * (page - 1))
+  .sort({"registerDate": sortType});
 
   return result;
+}
+
+const countLogActivities = async () => {
+  return await LogActivity.count();
 }
 
 const saveLogActivity = async (logActivity) => {
@@ -23,5 +29,6 @@ const saveLogActivity = async (logActivity) => {
 
 module.exports = {
   saveLogActivity,
-  getLogActivities
+  getLogActivities,
+  countLogActivities
 }
