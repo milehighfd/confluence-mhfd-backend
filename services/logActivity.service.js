@@ -1,7 +1,17 @@
 const LogActivity = require('../models/logActivity.model');
 
 const getLogActivities = async () => {
-  const result = await LogActivity.find();
+  const result = await LogActivity.aggregate([
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId", 
+        foreignField: "_id",
+        as: "user"
+      }
+    },
+  ]);
+
   return result;
 }
 
