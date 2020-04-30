@@ -18,6 +18,7 @@ const isAdminAccount = (req, res, next) => {
     return res.status(403).send({error: `You're not allowed to do that`} );
   }
 }
+
 router.put('/change-user-state/:id', [auth, isAdminAccount], async (req, res, next) => {
   const id = req.params.id;
   try{
@@ -32,6 +33,7 @@ router.put('/change-user-state/:id', [auth, isAdminAccount], async (req, res, ne
       return res.status(500).send(error);
   }
 });
+
 router.put('/edit-user/:id', [auth, isAdminAccount, validator(UPDATEABLE_FIELDS)], async(req, res, next) => {
   const id = req.params.id;
   try {
@@ -56,6 +58,7 @@ router.put('/edit-user/:id', [auth, isAdminAccount, validator(UPDATEABLE_FIELDS)
     return res.status(500).send({error: error});
   }
 });
+
 router.get('/list', [auth, isAdminAccount], async(req, res, next) => {
   const isPending = req.query.pending || false;
   const organization = req.query.organization;
