@@ -39,13 +39,11 @@ router.get('/get-all', auth, async (req, res) => {
 router.get('/csv', auth, async (req, res) => {
   try {
     let activity = await logActivityService.getLogActivities(1, 1000000, 'registerDate', '-1');
-    console.log(activity)
       //TODO Bladi fix please 
     activity = activity.map(element => {
       element.user = element.user.length ? element.user[0].name : element.userId[0];
       return element;
     });
-      console.log(activity);
     res.set('Content-Type', 'application/octet-stream');
     //TODO Bladi put cool names
     const fields = ['registerDate', 'city', 'user'];
