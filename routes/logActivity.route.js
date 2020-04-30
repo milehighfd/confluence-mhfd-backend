@@ -36,6 +36,7 @@ router.get('/get-all', auth, async (req, res) => {
   	res.status(500).send({error: error});
   }
 });
+
 router.get('/csv', auth, async (req, res) => {
   try {
     let activity = await logActivityService.getLogActivities(1, 1000000, 'registerDate', '-1');
