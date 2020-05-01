@@ -4,6 +4,7 @@ const auth = require('../auth/auth');
 const logActivityService = require('../services/logActivity.service');
 const logger = require('../config/logger');
 const json2csv = require('json2csv');
+const { isAdminAccount } = require('../utils/utils');
 
 router.post('/save', auth, async (req, res) => {
   try {
@@ -17,14 +18,14 @@ router.post('/save', auth, async (req, res) => {
   }
 });
 
-router.get('/get-all', auth, async (req, res) => {
+router.get('/get-all', [auth, isAdminAccount], async (req, res) => {
   try {
     const { page = 1, limit = 10, sortby = 'registerDate',
           sorttype = '-1' } = req.query;
-    //console.log('pagina ', page, ' limit ', limit, ' sortby ', sortby, ' sorttype ', sorttype);
+    
     const activities = await logActivityService.getLogActivities(page, limit, sortby, sorttype);
     const count = await logActivityService.countLogActivities();
-    console.log(count);
+    
     const result = {
       data: activities,
       totalPages: Math.ceil(count / limit),
@@ -36,19 +37,14 @@ router.get('/get-all', auth, async (req, res) => {
   	res.status(500).send({error: error});
   }
 });
-router.get('/csv', auth, async (req, res) => {
+
+router.get('/csv', [auth, isAdminAccount], async (req, res) => {
   try {
     let activity = await logActivityService.getLogActivities(1, 1000000, 'registerDate', '-1');
-      //TODO Bladi fix please 
-    activity = activity.map(element => {
-      element.user = element.user.length ? element.user[0].name : element.userId[0];
-      return element;
-    });
     res.set('Content-Type', 'application/octet-stream');
-    //TODO Bladi put cool names
-    const fields = ['registerDate', 'city', 'user'];
+    const fields = ['registerDate', 'city', 'activityType', 'firstName', 'lastName'];
     const data = json2csv.parse(activity, {fields});
-    console.log(activity);
+    
     res.attachment('activity.csv');
     res.send(data);
   } catch(error) {

@@ -41,7 +41,7 @@ app.use('/projects', projectRouter);
 app.use('/attachments', attachmentRouter);
 app.use('/admin', adminRouter);
 app.use('/map', mapRouter);
-app.use('/log-activity', logActivityRouter);
+app.use('/admin/user-activity', logActivityRouter);
 
 app.listen(3003, () => {
   console.log("Server is listening on port 3003");

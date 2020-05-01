@@ -30,7 +30,7 @@ router.post('/login', async (req, res) => {
     
     let logActivity = new LogActivity();
     logActivity.userId = user._id;
-    logActivity.activityTpe = ACTIVITY_TYPE.USER_LOGIN;
+    logActivity.activityType = ACTIVITY_TYPE.USER_LOGIN;
     logActivity.city = '';
     logActivityService.saveLogActivity(logActivity);
     

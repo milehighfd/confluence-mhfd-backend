@@ -9,15 +9,9 @@ const userService = require('../services/user.service');
 
 const {NUMBER_PER_PAGE, INITIAL_PAGE } = require('../config/config');
 const UPDATEABLE_FIELDS = userService.requiredFields('edit');
+const { isAdminAccount } = require('../utils/utils');
 
 
-const isAdminAccount = (req, res, next) => {
-  if (req.user.designation === ROLES.MFHD_ADMIN || req.user.designation ===  ROLES.MFHD_STAFF) {
-    next();
-  } else {
-    return res.status(403).send({error: `You're not allowed to do that`} );
-  }
-}
 router.put('/change-user-state/:id', [auth, isAdminAccount], async (req, res, next) => {
   const id = req.params.id;
   try{
@@ -93,7 +87,7 @@ router.get('/list', [auth, isAdminAccount], async(req, res, next) => {
     const userCount = await User.count(search_obj);
     const userList = await User.find(search_obj).limit(limit).skip(limit * (page - 1)).sort(sortObject);
     const numberOfPages = Math.ceil(userCount / limit);
-    return res.status(200).send({users: userList, pages: numberOfPages});
+    return res.status(200).send({users: userList, totalPages: numberOfPages, currentPage: page});
   } catch(error) {
     return res.status(500).send({error: error});
   }  

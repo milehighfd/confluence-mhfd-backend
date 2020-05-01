@@ -5,11 +5,33 @@ const getLogActivities = async (page, limit, sortByField, sortType) => {
     {
       $lookup: {
         from: "users",
-        localField: "userId", 
+        localField: "userId",
         foreignField: "_id",
         as: "user"
       }
     },
+    {
+      $project: {
+        "_id": 1,
+        "activityType": 1,
+        "registerDate": 1,
+        "user": {"firstName":1,"lastName":1}
+      }
+    },
+    {
+      $replaceRoot: {
+        newRoot: {
+          $mergeObjects: [ {
+            $arrayElemAt: [ "$user", 0]
+          }, "$$ROOT"]
+        }
+      }
+    },
+    {
+      $project: {
+        user: 0
+      }
+    }
   ]).limit(limit * page)
   .skip(limit * (page - 1))
   .sort({"registerDate": sortType});
