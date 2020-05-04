@@ -11,6 +11,8 @@ const logger = require('../config/logger');
 
 const MAIN_IMAGE_POSITION = 0;
 const QUANTITY_FILES_ALLOWED = 6;
+const SORT_BY_FIELD_DEFAULT = 'dateCreated';
+const SORT_TYPE_DEFAULT = '-1';
 
 const multer = Multer({
    storage: Multer.MemoryStorage,
@@ -134,7 +136,8 @@ router.get('/get-project-collaborators', auth, async (req, res) => {
 router.post('/filters', auth, async (req, res) => {
   try {
     const data = req.body;
-    const result = await projectService.filterProject(data);
+    const { fieldsort = 'dateCreated', sorttype = '-1' } = req.query;
+    const result = await projectService.filterProject(data, fieldsort, sorttype);
     res.status(200).send(result);
   } catch(error) {
     logger.error(error);
@@ -146,7 +149,8 @@ router.post('/filters-by-creator', auth, async (req, res) => {
    try {
       const data = req.body;
       data.creator = req.user;
-      const result = await projectService.filterProject(data);
+      const result = await projectService.filterProject(data, 
+                           SORT_BY_FIELD_DEFAULT, SORT_TYPE_DEFAULT);
       res.status(200).send(result);
    } catch(error) {
       logger.error(error);

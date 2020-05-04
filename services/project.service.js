@@ -15,7 +15,7 @@ function getPublicUrl (filename) {
   return `${STORAGE_URL}/${STORAGE_NAME}/${filename}`;
 }
 
-const filterProject = async (filters) => {
+const filterProject = async (filters, fieldSort, sortType) => {
   let data = {};
   for (const key in filters) {
     if (key === FIELDS.REQUEST_NAME && filters[key] != null) {
@@ -36,7 +36,7 @@ const filterProject = async (filters) => {
       data[key] = filters[key];
     }
   }
-  return await Project.find(data).sort({ "dateCreated": -1 });
+  return await Project.find(data).sort([[fieldSort, sortType]]);
 }
 
 const getCollaboratorsByProject = async (user) => {
