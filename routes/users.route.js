@@ -31,6 +31,7 @@ router.post('/signup', validator(userService.requiredFields('signup')), async (r
       if (EMAIL_VALIDATOR.test(user.email)) {
         await user.save();
         const token = await user.generateAuthToken();
+        userService.sendConfirmAccount(user);
         res.status(201).send({
           user,
           token

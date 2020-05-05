@@ -53,6 +53,23 @@ const sendRecoverPasswordEmail = async (user) => {
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 };
 
+const sendConfirmAccount = async (user) => {
+  const email = user.email; // registered_account
+  const template = fs.readFileSync(__dirname + '/templates/email_confirm-MHFD.html', 'utf8');
+  const emailToSend = template.split('{{url}}'); // .join(redirectUrl);
+
+  const transporter = getTransporter();
+  const options = {
+    from: MHFD_EMAIL,
+    to: email,
+    subject: "MHFD Confluence App - Account created",
+    html: emailToSend
+  };
+
+  const info = await transporter.sendMail(options);
+  logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
+}
+
 const uploadPhoto = async (user, files) => {
   const bucket = storage.bucket(STORAGE_NAME);
   
@@ -127,5 +144,6 @@ module.exports = {
   changePassword,
   requiredFields,
   uploadPhoto,
-  findById
+  findById,
+  sendConfirmAccount
 };

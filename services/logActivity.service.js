@@ -1,7 +1,6 @@
 const LogActivity = require('../models/logActivity.model');
 
 const getLogActivities = async (page, limit, sortByField, sortType) => {
-  //sortByField = 'users.' + sortByField;
 
   const result = await LogActivity.aggregate([
     {
@@ -11,20 +10,11 @@ const getLogActivities = async (page, limit, sortByField, sortType) => {
         foreignField: "_id",
         as: "user"
       }
-      /* $lookup: {
-        from: 'users',
-        let: {
-          'userId': '$_id',
-        },
-        'pipeline': [{
-          '$match': {'$expr': { 
-            '$eq': ['$userId', '$$userId']
-          }}
-        }, {
-          '$sort': { sortByField: parseInt(sortType)}
-        }],
-        'as': 'user'
-      } */
+    }, 
+    {
+      $sort: {
+        sortByField: parseInt(sortType)
+      }
     },
     {
       $project: {
@@ -47,12 +37,7 @@ const getLogActivities = async (page, limit, sortByField, sortType) => {
       $project: {
         user: 0
       }
-    },
-    /* {
-      $sort: {
-        sortByField: parseInt(sortType)
-      }
-    } */
+    }
   ]).limit(limit * page)
   .skip(limit * (page - 1));
   return result;
