@@ -1,14 +1,12 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-
-var AttachmentSchema = new Schema({
-   file: String,
-   projectId: [{
-      type: Schema.Types.ObjectId,
-      ref: 'Project'
-   }]
-});
-
-const Attachment = mongoose.model('Attachment', AttachmentSchema);
-
-module.exports = Attachment;
+module.exports = (sequelize, DataType) => {
+   const Attachment = sequelize.define('attachment', {
+     name: {
+       type: DataType.STRING
+     },
+     projectId: {
+       type: DataType.UUID,
+       allowNull: false
+     }
+   });
+   return Attachment;
+ }

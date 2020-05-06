@@ -4,60 +4,54 @@ const jwt = require('jsonwebtoken')
 const config = require('../config/config');
 const crypto = require('crypto');
 const logger = require('../config/logger');
-
-const Schema = mongoose.Schema;
-
-var UserSchema = new Schema({
-  activated: {
-    type: Boolean,
-    default: false
-  },
-  firstName: {
-    type: String,
-    default: ''
-  },
-  lastName: {
-    type: String,
-    default: ''
-  },
-  name: {
-    type: String,
-    default: ''
-  },
-  email: {
-    type: String,
-    lowercase: true
-  },
-  designation: {
-    type: String,
-    default: 'other'
-  },
-  password: String,
-  organization: String,
-  //designation: String,
-
-  city: String,
-  county: String,
-  serviceArea: String,
-
-  changePasswordId: {
-    type: String,
-    default: ''
-  },
-  changePasswordExpiration: {
-    type: Date,
-    default: null
-  },
-  photo: String,
-  tokens: [{
-    token: {
-      type: String,
-      required: true
+module.exports = (sequelize, Sequelize) => {
+  const User = sequelize.define('user', {
+    activated: {
+      type: Sequelize.BOOLEAN
+    },
+    firstName: {
+      type: Sequelize.STRING
+    },
+    lastName: {
+      type: Sequelize.STRING
+    },
+    name: {
+      type: Sequelize.STRING
+    },
+    email: {
+      type: Sequelize.STRING
+    },
+    designation: {
+      type: Sequelize.STRING
+    },
+    password: {
+      type: Sequelize.STRING
+    },
+    organization: {
+      type: Sequelize.STRING
+    },
+    city: {
+      type: Sequelize.STRING
+    },
+    county: {
+      type: Sequelize.STRING
+    },
+    serviceArea: {
+      type: Sequelize.STRING
+    },
+    changePasswordId: {
+      type: Sequelize.STRING
+    },
+    changePasswordExpiration: {
+      type: Sequelize.DATE
+    },
+    photo: {
+      type: Sequelize.STRING
     }
-  }],
-});
+  });
+}
 
-UserSchema.pre('save', async function (next) {
+/* UserSchema.pre('save', async function (next) {
   const user = this;
   const fields = Object.keys(user.schema.paths);
   for (const field of fields) {
@@ -155,3 +149,4 @@ UserSchema.statics.findByCredentials = async (email, password) => {
 const User = mongoose.model('User', UserSchema);
 
 module.exports = User;
+ */

@@ -1,7 +1,7 @@
 const User = require('../models/user.model');
 
 const seed = async () => {
-  const count = await User.count();
+  const count = 0; //await User.count(); TODO
   if (count == 0) {
     const userAdmin = {
       email: "admin@admin.com",
@@ -9,7 +9,7 @@ const seed = async () => {
       designation: "admin",
       activated: "true"
     };
-    User.create(userAdmin);
+    //User.create(userAdmin); TODO
   }
 };
 seed();
