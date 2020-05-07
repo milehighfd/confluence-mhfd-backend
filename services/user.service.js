@@ -1,4 +1,5 @@
-const User = require('../models/user.model');
+const db = require('../config/db');
+const User = db.User; // require('../models/user.model');
 const fs = require('fs');
 const {
   MHFD_FRONTEND,
@@ -33,6 +34,17 @@ const getTransporter = () => {
   });
   return transporter;
 };  
+
+const findAllUsers = () => {
+  const users = User.findAll()
+  .then(data => {
+    console.log(data);
+  })
+  .catch(err => {
+    console.log(err);
+  })
+  return users;
+}
 
 const sendRecoverPasswordEmail = async (user) => {
   const email = user.email;
@@ -145,5 +157,6 @@ module.exports = {
   requiredFields,
   uploadPhoto,
   findById,
-  sendConfirmAccount
+  sendConfirmAccount,
+  findAllUsers
 };

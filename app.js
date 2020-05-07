@@ -7,7 +7,7 @@ const logger = require('./config/logger');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users.route');
-//var authRouter = require('./routes/auth.route');
+var authRouter = require('./routes/auth.route');
 var projectRouter = require('./routes/project.route');
 /* var attachmentRouter = require('./routes/attachment.route');
 var adminRouter = require('./routes/admin.route');
@@ -39,7 +39,7 @@ app.use(function(res, res, next) {
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-//app.use('/auth', authRouter);
+app.use('/auth', authRouter);
 app.use('/projects', projectRouter);
 /* app.use('/attachments', attachmentRouter);
 app.use('/admin', adminRouter);

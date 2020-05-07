@@ -49,6 +49,76 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.STRING
     }
   });
+
+  User.generateAuthToken = async function () {
+    const user = this;
+    const token = jwt.sign({
+      _id: user._id
+    }, config.JWT_KEY, {
+      expiresIn: config.JWT_EXPIRANCY
+    });
+    user.tokens = user.tokens.concat({
+      token
+    });
+    await user.save();
+    return token;
+  };
+
+  User.findByEmail = async (email) => {
+    const user = await User.findOne({
+      email
+    });
+  
+    if(!user) {
+      throw new Error({
+        error: 'Email does not exist'
+      });
+    }
+  
+    return user;
+  }
+
+  User.generateChangePassword = async function () {
+    const user = this;
+    const random = crypto.randomBytes(16).toString('base64');
+    const salt = new Buffer(random, 'base64');
+    const newId = this._id + (new Date().getTime());
+    const result = crypto.pbkdf2Sync(newId, salt, 10000, 64, 'sha512').toString('base64');
+    user.changePasswordId = "";
+    for (var i = 0; i < result.length; i++) {
+      if (result.charAt(i) == '/') {
+        this.changePasswordId = this.changePasswordId + '-';
+      } else {
+        this.changePasswordId = this.changePasswordId + result.charAt(i);
+      }
+    }
+    this.changePasswordExpiration = new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
+    this.save();
+  };
+
+  User.findByCredentials = async (email, password) => {
+    const user = await User.findOne({
+      email
+    });
+    if (!user) {
+      logger.error('Invalid login email: ' + email);
+      throw new Error({
+        error: 'Invalid login credentials'
+      });
+    }
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      logger.error('Invalid login password for email: ' + email);
+      throw new Error({
+        error: 'Invalid login credentials'
+      });
+    }
+    return user;
+  };
+
+  User.beforeValidate(function(user) {})
+
+  return User;
 }
 
 /* UserSchema.pre('save', async function (next) {

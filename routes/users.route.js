@@ -3,6 +3,7 @@ const router = express.Router();
 const Multer = require('multer');
 
 const User = require('../models/user.model');
+const UserService = require('../services/user.service');
 const auth = require('../auth/auth');
 const { validator } = require('../utils/utils');
 const {EMAIL_VALIDATOR} = require('../lib/enumConstants');
@@ -17,7 +18,7 @@ const multer = Multer({
 });
 
 router.get('/', async (req, res, next) => {
-  const users = await User.find({});
+  const users = await UserService.findAllUsers();
   res.send(users);
 });
 
