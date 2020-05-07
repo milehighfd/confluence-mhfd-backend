@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataType) => {
    const Attachment = sequelize.define('attachment', {
-     name: {
+     value: {
        type: DataType.STRING
      },
      projectId: {

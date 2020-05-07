@@ -28,5 +28,8 @@ db.projects = require('../models/project.model.js')(sequelize, Sequelize);
 db.users = require('../models/user.model.js')(sequelize, Sequelize);
 db.components = require('../models/component.model.js')(sequelize, Sequelize);
 db.attachments = require('../models/attachment.model.js')(sequelize, Sequelize);
+db.tasks = require('../models/task.model.js')(sequelize, Sequelize);
+db.coordinates = require('../models/coordinate.model.js')(sequelize, Sequelize);
+
 
 module.exports = db;
