@@ -56,7 +56,8 @@ const sendRecoverPasswordEmail = async (user) => {
 const sendConfirmAccount = async (user) => {
   const email = user.email; // registered_account
   const template = fs.readFileSync(__dirname + '/templates/email_confirm-MHFD.html', 'utf8');
-  const emailToSend = template.split('{{url}}'); // .join(redirectUrl);
+  let completeName = user.firstName + ' ' + user.lastName;
+  const emailToSend = template.split('{{completeName}}').join(completeName);
 
   const transporter = getTransporter();
   const options = {
