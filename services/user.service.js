@@ -55,8 +55,11 @@ const sendRecoverPasswordEmail = async (user) => {
 
 const sendConfirmAccount = async (user) => {
   const email = user.email; // registered_account
-  const template = fs.readFileSync(__dirname + '/templates/email_confirm-MHFD.html', 'utf8');
-  const emailToSend = template.split('{{url}}'); // .join(redirectUrl);
+  const template = fs.readFileSync(__dirname + '/templates/email_registered-MHFD.html', 'utf8');
+  const completeName = user.firstName + ' ' + user.lastName;
+  //console.log('nombre', completeName);
+  const emailToSend = template.split('{{completeName}}').join(completeName);
+  //console.log('email', emailToSend);
 
   const transporter = getTransporter();
   const options = {
@@ -65,7 +68,7 @@ const sendConfirmAccount = async (user) => {
     subject: "MHFD Confluence App - Account created",
     html: emailToSend
   };
-
+  //console.log('options', options);
   const info = await transporter.sendMail(options);
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 }
