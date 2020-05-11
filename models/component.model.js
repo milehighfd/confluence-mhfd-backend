@@ -1,5 +1,10 @@
 module.exports = (sequelize, DataType) => {
    const Component = sequelize.define('component', {
+      id: {
+        type: DataType.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+      },
      componentName: {
        type: DataType.STRING
      },
@@ -20,17 +25,25 @@ module.exports = (sequelize, DataType) => {
      },
      projectId: {
        type: DataType.UUID,
-       allowNull: false
+       allowNull: false,
+      //  references: {
+      //    model: 'Project',
+      //    key: 'id'
+      //  }
      }
    });
  
    /* Component.associate = models => {
-     Component.belongsTo(models.Project, {
-       foreignKey: {
-         allowNull: false
-       }
-     });
+     Component.belongsTo(models.Project);
+     {
+        allowNull: false
+      }
    }; */
+   /* Component.associate = models => {
+    Component.belongsTo(models.Project, {
+      foreignKey: "projectId"
+    });
+  }; */
  
    return Component;
  }

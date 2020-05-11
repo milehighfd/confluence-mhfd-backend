@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken')
-const User = require('../models/user.model')
+//const User = require('../models/user.model')
+const db = require('../config/db');
+const User = db.user;
 const config = require('../config/config');
 
 const auth = async (req, res, next) => {
@@ -7,8 +9,9 @@ const auth = async (req, res, next) => {
     const token = req.header('Authorization').replace('Bearer ', '');
     const data = jwt.verify(token, config.JWT_KEY);
     const user = await User.findOne({
-      _id: data._id,
-      'tokens.token': token
+      where: {
+        token: token
+      }
     });
     if (!user) {
       throw new Error();

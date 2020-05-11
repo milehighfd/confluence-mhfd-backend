@@ -30,12 +30,12 @@ router.post('/', async (req, res) => {
       res.status(500).send(error);
    }
 });
-
+// auth, 
 router.post('/create', [auth, multer.array('file', QUANTITY_FILES_ALLOWED), validate], async(req, res) => {
    try {
-      var project = new Project(req.body);
-      project.creator = req.user;
-      if (project.projectType === PROJECT_TYPE.CAPITAL || project.projectType === PROJECT_TYPE.MAINTENANCE) {
+      var project = req.body;
+      project.creator = req.user.id;
+      /* if (project.projectType === PROJECT_TYPE.CAPITAL || project.projectType === PROJECT_TYPE.MAINTENANCE) {
          if (!req.files) {
             logger.error('You must send the image logo');
             return res.status(400).send({error: 'You must send the image logo'});
@@ -46,7 +46,8 @@ router.post('/create', [auth, multer.array('file', QUANTITY_FILES_ALLOWED), vali
             logger.error('You must send the image logo');
             return res.status(400).send({error: 'You must send the image logo'});
          }
-      }
+      } */
+      //let project = '';
       await projectService.saveProject(project, req.files);
       res.status(201).send(project);
    } catch (error) {
@@ -205,14 +206,16 @@ router.get('/:id', async (req, res, next) => {
 });
 
 router.get('/', async (req, res) => {
-   Project.find()
+   const projects = await projectService.findAll();
+   res.send(projects);
+   /* Project.find()
       .then(projects => {
          res.send(projects);
       }).catch(err => {
          res.status(500).send({
             error: err.message || 'Some error ocurred while retrieving Project'
          });
-      });
+      }); */
 });
 
 module.exports = router;

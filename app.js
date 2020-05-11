@@ -9,8 +9,9 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users.route');
 var authRouter = require('./routes/auth.route');
 var projectRouter = require('./routes/project.route');
-/* var attachmentRouter = require('./routes/attachment.route');
 var adminRouter = require('./routes/admin.route');
+/* var attachmentRouter = require('./routes/attachment.route');
+
 const mapRouter = require('./routes/map.route');
 const logActivityRouter = require('./routes/logActivity.route'); */
 
@@ -41,8 +42,9 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 app.use('/projects', projectRouter);
-/* app.use('/attachments', attachmentRouter);
 app.use('/admin', adminRouter);
+/* app.use('/attachments', attachmentRouter);
+
 app.use('/map', mapRouter);
 app.use('/admin/user-activity', logActivityRouter);
  */

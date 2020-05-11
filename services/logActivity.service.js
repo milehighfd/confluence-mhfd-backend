@@ -1,4 +1,6 @@
-const LogActivity = require('../models/logActivity.model');
+//const LogActivity = require('../models/logActivity.model');
+const db = require('../config/db');
+const LogActivity = db.logActivity;
 
 const getLogActivities = async (page, limit, sortByField, sortType) => {
 
@@ -49,7 +51,8 @@ const countLogActivities = async () => {
 
 const saveLogActivity = async (logActivity) => {
   logActivity.registerDate = new Date();
-  await logActivity.save();
+  await LogActivity.create(logActivity); // logActivity.save();
+  console.log('activity save');
   return logActivity;
 }
 

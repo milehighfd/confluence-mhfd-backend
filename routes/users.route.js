@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Multer = require('multer');
 
-const User = require('../models/user.model');
+//const User = require('../models/user.model');
+const db = require('../config/db');
+const User = db.user;
 const UserService = require('../services/user.service');
 const auth = require('../auth/auth');
 const { validator } = require('../utils/utils');
@@ -24,20 +26,31 @@ router.get('/', async (req, res, next) => {
 
 router.post('/signup', validator(userService.requiredFields('signup')), async (req, res) => {
   try {
-    const user = new User(req.body);
-    const foundUser = await User.count({email: user.email}); 
+    console.log('uno', req.body);
+    const user = req.body; // new User(
+    const foundUser = await User.count({
+      where: {
+        email: user.email
+      }
+    }); 
+    console.log('count', foundUser);
     if(foundUser) {
       res.status(422).send({error: 'The email has already been registered'});
     } else {
+      console.log('test');
       if (EMAIL_VALIDATOR.test(user.email)) {
-        await user.save();
-        const token = await user.generateAuthToken();
-        userService.sendConfirmAccount(user);
+        console.log('dos');
+        const user1 = await User.create(user); //user.save();
+        console.log('tres');
+        const token = await user1.generateAuthToken();
+        console.log('token111', token);
+        //userService.sendConfirmAccount(user);
         res.status(201).send({
           user,
           token
         });
       } else {
+        console.log('wrong email');
         return res.status(400).send({error: 'You entered an invalid email direction'});
       }
     }
@@ -58,6 +71,7 @@ router.put('/', auth, async (req, res) => {
 });
 
 router.get('/me', auth, async(req, res) => {
+  //console.log(req.user);
   res.send(req.user);
 });
 

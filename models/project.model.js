@@ -1,14 +1,10 @@
 module.exports = (sequelize, Sequelize) => {
    const Project = sequelize.define('project', {
-     /* projectId: {
-       type: Sequelize.UUID,
-       allowNull: false,
-       primaryKey: true,
-       references: {
-         model: 'project',
-         key: 'projectId'
-       }
-     }, */
+    id: {
+      type: Sequelize.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
      requestName: {
        type: Sequelize.STRING
      },
@@ -112,19 +108,19 @@ module.exports = (sequelize, Sequelize) => {
        type: Sequelize.INTEGER
      },
      consultant: {
-       type: Sequelize.UUID,
-       allowNull: false
+       type: Sequelize.INTEGER,
+       allowNull: true
      },
      contractor: {
-       type: Sequelize.UUID,
-       allowNull: false
+       type: Sequelize.INTEGER,
+       allowNull: true
      },
      localGovernmentManager: {
        type: Sequelize.STRING
      },
      mhfdManager: {
-       type: Sequelize.UUID,
-       allowNull: false
+       type: Sequelize.INTEGER,
+       allowNull: true
      },
      serviceArea: {
        type: Sequelize.ENUM,
@@ -147,15 +143,15 @@ module.exports = (sequelize, Sequelize) => {
        type: Sequelize.STRING
      },
      creator: {
-       type: Sequelize.UUID,
-       allowNull: false
+       type: Sequelize.INTEGER,
+       allowNull: true
      },
      dateCreated: {
        type: Sequelize.DATE
      },
      lastModifiedUser: {
-       type: Sequelize.UUID,
-       allowNull: false
+       type: Sequelize.INTEGER,
+       allowNull: true
      },
      priority: {
        type: Sequelize.ENUM,
@@ -166,11 +162,15 @@ module.exports = (sequelize, Sequelize) => {
      },
    });
  
-   /* Project.associate = models => {
-     Project.hasMany(models.Component, {
+   /*
+   {
        onDelete: "cascade"
+     }*/
+   Project.associate = models => {
+     Project.hasMany(models.Component, {
+      onDelete: "cascade"
      });
-   }; */
+   };
  
    return Project;
  }

@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const User = db.User; // require('../models/user.model');
+const User = db.user; // require('../models/user.model');
 const fs = require('fs');
 const {
   MHFD_FRONTEND,
@@ -36,13 +36,14 @@ const getTransporter = () => {
 };  
 
 const findAllUsers = () => {
-  const users = User.findAll()
-  .then(data => {
+  const users = User.findAll();
+  /* .then(data => {
     console.log(data);
   })
   .catch(err => {
     console.log(err);
-  })
+  }) */
+  console.log(users);
   return users;
 }
 

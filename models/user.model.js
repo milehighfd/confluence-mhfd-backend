@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const mongoose = require('mongoose');
+//const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken')
 const config = require('../config/config');
 const crypto = require('crypto');
@@ -47,20 +47,27 @@ module.exports = (sequelize, Sequelize) => {
     },
     photo: {
       type: Sequelize.STRING
+    },
+    token: {
+      type: Sequelize.STRING
     }
   });
 
-  User.generateAuthToken = async function () {
+  User.prototype.generateAuthToken = async function () {
     const user = this;
+    console.log('user', user);
     const token = jwt.sign({
       _id: user._id
     }, config.JWT_KEY, {
       expiresIn: config.JWT_EXPIRANCY
     });
-    user.tokens = user.tokens.concat({
+    user.token = token;
+    console.log('token', token);
+    /* user.tokens = user.tokens.concat({
       token
-    });
+    }); */
     await user.save();
+    console.log('guardado')
     return token;
   };
 
@@ -98,7 +105,9 @@ module.exports = (sequelize, Sequelize) => {
 
   User.findByCredentials = async (email, password) => {
     const user = await User.findOne({
-      email
+      where: {
+        email: email
+      }
     });
     if (!user) {
       logger.error('Invalid login email: ' + email);
@@ -116,7 +125,31 @@ module.exports = (sequelize, Sequelize) => {
     return user;
   };
 
-  User.beforeValidate(function(user) {})
+  User.beforeValidate(async function(user) {
+    for (let field in user.dataValues) {
+      if (field instanceof String) {
+        if (user[field] && field !== 'password') {
+          user[field] = user[field].trim();
+        }
+      }
+    }
+    
+    user.name = user.firstName + ' ' + user.lastName;
+    //if (user.isModified('password')) {
+      user.password = await bcrypt.hash(user.password, 8);
+    //}
+    const validTokens = [];
+    /* for (let token of user.tokens) {
+      try {
+        if (jwt.verify(token.token, config.JWT_KEY)) {
+          validTokens.push(token);
+        }
+      } catch(error) {
+        logger.error('Token validation error: ' + token + ' - ' + error);
+      }
+    }
+    user.tokens = validTokens; */
+  });
 
   return User;
 }

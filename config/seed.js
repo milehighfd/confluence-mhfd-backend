@@ -1,7 +1,9 @@
-const User = require('../models/user.model');
+//const User = require('../models/user.model');
+const db = require('../config/db');
+const User = db.user;
 
 const seed = async () => {
-  const count = 0; //await User.count(); TODO
+  const count = await User.count(); 
   if (count == 0) {
     const userAdmin = {
       email: "admin@admin.com",
@@ -9,7 +11,7 @@ const seed = async () => {
       designation: "admin",
       activated: "true"
     };
-    //User.create(userAdmin); TODO
+    User.create(userAdmin);
   }
 };
 seed();

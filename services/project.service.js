@@ -1,7 +1,9 @@
 const {Storage} = require('@google-cloud/storage');
 const path = require('path');
 
-const Project = require('../models/project.model');
+//const Project = require('../models/project.model');
+const db = require('../config/db');
+const Project = db.project;
 const userService = require('../services/user.service');
 const { PROJECT_STATUS, PROJECT_TYPE, PRIORITY, FIELDS } = require('../lib/enumConstants');
 const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
@@ -17,7 +19,7 @@ function getPublicUrl (filename) {
 
 const filterProject = async (filters, fieldSort, sortType) => {
   let data = {};
-  for (const key in filters) {
+  /*for (const key in filters) {
     if (key === FIELDS.REQUEST_NAME && filters[key] != null) {
       data[key] = new RegExp(filters[key], 'i');
     } else if ((key === FIELDS.ESTIMATED_COST || key === FIELDS.MHFD_DOLLAR_ALLOCATED) && filters[key] != null) {
@@ -35,8 +37,8 @@ const filterProject = async (filters, fieldSort, sortType) => {
     } else {
       data[key] = filters[key];
     }
-  }
-  return await Project.find(data).sort([[fieldSort, sortType]]);
+  }*/
+  return await Project.findAll(data); //.sort([[fieldSort, sortType]]);
 }
 
 const getCollaboratorsByProject = async (user) => {
@@ -62,17 +64,19 @@ const getCollaboratorsByProject = async (user) => {
 }
 
 const saveProject = async (project, files) => {
+  
   project.status = PROJECT_STATUS.DRAFT;
   project.dateCreated = new Date();
   project.priority = PRIORITY.HIGH;
   project.estimatedCost = 0;
-  project.collaborators = project.creator;
+  //project.collaborators = project.creator;
+  //console.log('project ', project);
 
-  if (project.tasks.length > 0) {
+  /* if (project.tasks.length > 0) {
     if (project.tasks[0] !== "") {
       project.tasks = project.tasks[0].split(',');
     }
-  }
+  } */
 
   if (project.projectType === PROJECT_TYPE.CAPITAL || project.projectType === PROJECT_TYPE.MAINTENANCE) {
 
@@ -109,7 +113,8 @@ const saveProject = async (project, files) => {
       });
     });
   } else {
-    await project.save();
+    Project.create(project);
+    //await project.save();
     return project;
   }
 }
@@ -145,7 +150,15 @@ const filterByField = async (field) => {
 }
 
 const counterProjectByCreator = async (creator) => {
-  const data = await Project.aggregate([
+  const data = await Project.findAll();
+  /*
+  {
+    attributes: ['projectType', sequelize.fn('count', sequelize.col('projectType'))
+    ],
+    group: ['Project.projectType']
+  }*/
+  console.log(data);
+  /* const data = await Project.aggregate([
     {
       $match : {"creator": creator._id}
     },
@@ -155,7 +168,7 @@ const counterProjectByCreator = async (creator) => {
         count: { $sum: 1}
       }
     }
-  ]);
+  ]); */
   return data;
 }
 
@@ -165,6 +178,11 @@ const filterByFieldDistinct = async (field) => {
   return data;
 }
 
+const findAll = () => {
+  const projects = Project.findAll();
+  return projects;
+}
+
 module.exports = {
   saveProject,
   filterProject,
@@ -172,5 +190,6 @@ module.exports = {
   filterByField,
   filterByFieldDistinct,
   counterProjectByCreator,
-  getCollaboratorsByProject
+  getCollaboratorsByProject,
+  findAll
 };
