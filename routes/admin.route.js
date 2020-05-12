@@ -3,7 +3,9 @@ const router = express.Router();
 const auth = require('../auth/auth');
 
 const {ROLES, EMAIL_VALIDATOR} = require('../lib/enumConstants');
-const User = require('../models/user.model');
+//const User = require('../models/user.model');
+const db = require('../config/db');
+const User = db.user;
 const { validator } = require('../utils/utils');
 const userService = require('../services/user.service');
 
@@ -85,8 +87,21 @@ router.get('/list', [auth, isAdminAccount], async(req, res, next) => {
   }
   try {
     console.log(search_obj, limit, page, sort);
-    const userCount = await User.count(search_obj);
-    const userList = await User.find(search_obj).limit(limit).skip(limit * (page - 1)).sort(sortObject);
+    //console.log('search', search_obj);
+    const userCount = await User.count({
+      where: search_obj
+    });
+    console.log('count', userCount, sortObject);
+    // console.log('limit', limit, page);
+
+    const userList = await User.findAll({
+      where: search_obj,
+      //limit: limit * (page), //  - 1
+      order: [
+        [sort, "asc"]
+      ]
+    }); //.limit(limit).skip(limit * (page - 1)).sort(sortObject);
+    console.log('user list', userList.length);
     const numberOfPages = Math.ceil(userCount / limit);
     return res.status(200).send({users: userList, totalPages: numberOfPages, currentPage: page});
   } catch(error) {

@@ -32,6 +32,8 @@ db.task = require('../models/task.model.js')(sequelize, Sequelize);
 db.coordinate = require('../models/coordinate.model.js')(sequelize, Sequelize);
 db.logActivity = require('../models/logActivity.model.js')(sequelize, Sequelize);
 
+db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
+db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.components.belongsTo(db.projects);
 // db.projects.hasMany(db.components);
 

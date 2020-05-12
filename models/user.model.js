@@ -53,6 +53,8 @@ module.exports = (sequelize, Sequelize) => {
     }
   });
 
+  //User.hasMany()
+
   User.prototype.generateAuthToken = async function () {
     const user = this;
     console.log('user', user);

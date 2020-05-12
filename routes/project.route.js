@@ -33,6 +33,7 @@ router.post('/', async (req, res) => {
 // auth, 
 router.post('/create', [auth, multer.array('file', QUANTITY_FILES_ALLOWED), validate], async(req, res) => {
    try {
+      console.log(req.body);
       var project = req.body;
       project.creator = req.user.id;
       /* if (project.projectType === PROJECT_TYPE.CAPITAL || project.projectType === PROJECT_TYPE.MAINTENANCE) {

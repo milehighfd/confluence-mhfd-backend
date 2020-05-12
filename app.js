@@ -10,10 +10,10 @@ var usersRouter = require('./routes/users.route');
 var authRouter = require('./routes/auth.route');
 var projectRouter = require('./routes/project.route');
 var adminRouter = require('./routes/admin.route');
-/* var attachmentRouter = require('./routes/attachment.route');
-
+const logActivityRouter = require('./routes/logActivity.route');
 const mapRouter = require('./routes/map.route');
-const logActivityRouter = require('./routes/logActivity.route'); */
+/* var attachmentRouter = require('./routes/attachment.route');
+ */
 
 const db = require('./config/db');
 db.sequelize.sync();
@@ -43,10 +43,9 @@ app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 app.use('/projects', projectRouter);
 app.use('/admin', adminRouter);
-/* app.use('/attachments', attachmentRouter);
-
-app.use('/map', mapRouter);
 app.use('/admin/user-activity', logActivityRouter);
+app.use('/map', mapRouter);
+/* app.use('/attachments', attachmentRouter);
  */
 app.listen(3003, () => {
   console.log("Server is listening on port 3003");

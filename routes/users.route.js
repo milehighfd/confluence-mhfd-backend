@@ -26,31 +26,24 @@ router.get('/', async (req, res, next) => {
 
 router.post('/signup', validator(userService.requiredFields('signup')), async (req, res) => {
   try {
-    console.log('uno', req.body);
-    const user = req.body; // new User(
+    const user = req.body; 
     const foundUser = await User.count({
       where: {
         email: user.email
       }
     }); 
-    console.log('count', foundUser);
     if(foundUser) {
       res.status(422).send({error: 'The email has already been registered'});
     } else {
-      console.log('test');
       if (EMAIL_VALIDATOR.test(user.email)) {
-        console.log('dos');
-        const user1 = await User.create(user); //user.save();
-        console.log('tres');
+        user['activated'] = false;
+        const user1 = await User.create(user); 
         const token = await user1.generateAuthToken();
-        console.log('token111', token);
-        //userService.sendConfirmAccount(user);
         res.status(201).send({
           user,
           token
         });
       } else {
-        console.log('wrong email');
         return res.status(400).send({error: 'You entered an invalid email direction'});
       }
     }
@@ -71,8 +64,12 @@ router.put('/', auth, async (req, res) => {
 });
 
 router.get('/me', auth, async(req, res) => {
-  //console.log(req.user);
-  res.send(req.user);
+  // Disable caching for content files
+  // res.header("Cache-Control", "no-cache, no-store, must-revalidate");
+  // res.header("Pragma", "no-cache");
+  // res.header("Expires", 0);
+
+  res.status(200).send(req.user);
 });
 
 router.post('/upload-photo', [auth, multer.array('file')], async(req, res) => {

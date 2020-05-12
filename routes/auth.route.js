@@ -32,7 +32,7 @@ router.post('/login', async (req, res) => {
     const token = await user.generateAuthToken();
     console.log('TOKEN', token)
     let logActivity = {}; //new LogActivity(); 
-    logActivity.userId = user.id;
+    logActivity.user_id = user.id;
     logActivity.activityType = ACTIVITY_TYPE.USER_LOGIN;
     console.log(logActivity);
     logActivityService.saveLogActivity(logActivity);
