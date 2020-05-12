@@ -4,52 +4,57 @@ const jwt = require('jsonwebtoken')
 const config = require('../config/config');
 const crypto = require('crypto');
 const logger = require('../config/logger');
-module.exports = (sequelize, Sequelize) => {
+module.exports = (sequelize, DataType) => {
   const User = sequelize.define('user', {
+    _id: {
+      type: DataType.UUID,
+      defaultValue: DataType.UUIDV4,
+      primaryKey: true
+    },
     activated: {
-      type: Sequelize.BOOLEAN
+      type: DataType.BOOLEAN
     },
     firstName: {
-      type: Sequelize.STRING
+      type: DataType.STRING
     },
     lastName: {
-      type: Sequelize.STRING
+      type: DataType.STRING
     },
     name: {
-      type: Sequelize.STRING
+      type: DataType.STRING
     },
     email: {
-      type: Sequelize.STRING
+      type: DataType.STRING
     },
     designation: {
-      type: Sequelize.STRING
+      type: DataType.STRING
     },
     password: {
-      type: Sequelize.STRING
+      type: DataType.STRING
     },
     organization: {
-      type: Sequelize.STRING
+      type: DataType.STRING
     },
     city: {
-      type: Sequelize.STRING
+      type: DataType.STRING
     },
     county: {
-      type: Sequelize.STRING
+      type: DataType.STRING
     },
     serviceArea: {
-      type: Sequelize.STRING
+      type: DataType.STRING
     },
     changePasswordId: {
-      type: Sequelize.STRING
+      type: DataType.STRING
     },
     changePasswordExpiration: {
-      type: Sequelize.DATE
+      type: DataType.DATE
     },
     photo: {
-      type: Sequelize.STRING
+      type: DataType.STRING
     },
     token: {
-      type: Sequelize.STRING
+      type: DataType.STRING
     }
   });
 
@@ -57,19 +62,16 @@ module.exports = (sequelize, Sequelize) => {
 
   User.prototype.generateAuthToken = async function () {
     const user = this;
-    console.log('user', user);
     const token = jwt.sign({
       _id: user._id
     }, config.JWT_KEY, {
       expiresIn: config.JWT_EXPIRANCY
     });
     user.token = token;
-    console.log('token', token);
     /* user.tokens = user.tokens.concat({
       token
     }); */
     await user.save();
-    console.log('guardado')
     return token;
   };
 

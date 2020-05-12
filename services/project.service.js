@@ -1,5 +1,6 @@
 const {Storage} = require('@google-cloud/storage');
 const path = require('path');
+const { Op } = require("sequelize");
 
 //const Project = require('../models/project.model');
 const db = require('../config/db');
@@ -18,7 +19,24 @@ function getPublicUrl (filename) {
 }
 
 const filterProject = async (filters, fieldSort, sortType) => {
-  let data = {};
+  let queryObject = {};
+  queryObject.where = {};
+  for (const key in filters) {
+    if (key === FIELDS.REQUEST_NAME && filters[key] != null) { 
+      queryObject.where.requestName = {[Op.like]: '%' + filters[key] + '%'}
+    } else if ((key === FIELDS.ESTIMATED_COST || key === FIELDS.MHFD_DOLLAR_ALLOCATED) && filters[key] != null) {
+      let initValue = filters[key];
+
+      initValue = initValue.split('[').join("");
+      initValue = initValue.split(']').join("");
+      const range = initValue.split(",");
+    } else if (key === FIELDS.CAPITAL_STATUS) {
+      //data['status'] = filters[key];
+    } else {
+      //queryObject.where.
+      //data[key] = filters[key];
+    }
+  }
   /*for (const key in filters) {
     if (key === FIELDS.REQUEST_NAME && filters[key] != null) {
       data[key] = new RegExp(filters[key], 'i');
@@ -38,7 +56,7 @@ const filterProject = async (filters, fieldSort, sortType) => {
       data[key] = filters[key];
     }
   }*/
-  return await Project.findAll(data); //.sort([[fieldSort, sortType]]);
+  return await Project.findAll(queryObject); //.sort([[fieldSort, sortType]]);
 }
 
 const getCollaboratorsByProject = async (user) => {

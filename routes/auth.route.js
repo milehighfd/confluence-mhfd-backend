@@ -30,11 +30,11 @@ router.post('/login', async (req, res) => {
       });
     }
     const token = await user.generateAuthToken();
-    console.log('TOKEN', token)
+    //console.log('TOKEN', token)
     let logActivity = {}; //new LogActivity(); 
-    logActivity.user_id = user.id;
+    logActivity.user_id = user._id;
     logActivity.activityType = ACTIVITY_TYPE.USER_LOGIN;
-    console.log(logActivity);
+    //console.log(logActivity);
     logActivityService.saveLogActivity(logActivity);
     
     res.send({

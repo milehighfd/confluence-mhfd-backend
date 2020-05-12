@@ -43,7 +43,6 @@ const findAllUsers = () => {
   .catch(err => {
     console.log(err);
   }) */
-  console.log(users);
   return users;
 }
 

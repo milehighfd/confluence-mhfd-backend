@@ -1,13 +1,16 @@
-// const mongoose = require('mongoose');
-// const Schema = mongoose.Schema;
-//const { ACTIVITY_TYPE } = require('../lib/enumConstants');
+
 module.exports = (sequelize, DataType) => {
   const LogActivity = sequelize.define('log_activity', {
+    _id: {
+      type: DataType.UUID,
+      defaultValue: DataType.UUIDV4,
+      primaryKey: true
+    },
     registerDate: {
       type: DataType.DATE
     },
     user_id: {
-      type: DataType.INTEGER,
+      type: DataType.UUID,
       allowNull: false
     },
     activityType: {
