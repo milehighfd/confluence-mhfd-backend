@@ -79,13 +79,13 @@ module.exports = (sequelize, DataType) => {
     const user = await User.findOne({
       email
     });
-  
-    if(!user) {
+
+    if (!user) {
       throw new Error({
         error: 'Email does not exist'
       });
     }
-  
+
     return user;
   }
   // prototype.
@@ -131,7 +131,7 @@ module.exports = (sequelize, DataType) => {
     return user;
   };
 
-  User.beforeValidate(async function(user) {
+  User.beforeValidate(async function (user) {
     for (let field in user.dataValues) {
       if (field instanceof String) {
         if (user[field] && field !== 'password') {
@@ -139,9 +139,9 @@ module.exports = (sequelize, DataType) => {
         }
       }
     }
-    
+    //console.log('CHANGE PASSWORD', user.password, 'ID', user._id);
     user.name = user.firstName + ' ' + user.lastName;
-      user.password = await bcrypt.hash(user.password, 8);
+    //user.password = await bcrypt.hash(user.password, 8);
     //}
     //const validTokens = [];
   });

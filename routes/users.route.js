@@ -38,6 +38,7 @@ router.post('/signup', validator(userService.requiredFields('signup')), async (r
     } else {
       if (EMAIL_VALIDATOR.test(user.email)) {
         user['activated'] = false;
+        user.password = await bcrypt.hash(user.password, 8);
         const user1 = await User.create(user); 
         const token = await user1.generateAuthToken();
         res.status(201).send({

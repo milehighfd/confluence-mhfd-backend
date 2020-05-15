@@ -20,7 +20,7 @@ function getPublicUrl(filename) {
 }
 
 const filterProject = async (filters) => {
-  console.log(CARTO_TOKEN);// where cartodb_id in (1,2)
+  //console.log(CARTO_TOKEN);// where cartodb_id in (1,2)
   const sql = `SELECT * FROM problems `;
   const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
   let result = [];
@@ -33,7 +33,7 @@ const filterProject = async (filters) => {
       });
       response.on('end', function () {
         result = JSON.parse(str).rows;
-        console.log('ending', result);
+        //console.log('ending', result);
       });
     }
   });
@@ -297,7 +297,7 @@ const counterProjectByCreator = async (creator) => {
     ],
     group: ['Project.projectType']
   }*/
-  console.log(data);
+  //console.log(data);
   /* const data = await Project.aggregate([
     {
       $match : {"creator": creator._id}
