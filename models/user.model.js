@@ -89,7 +89,7 @@ module.exports = (sequelize, DataType) => {
     return user;
   }
 
-  User.generateChangePassword = async function () {
+  User.prototype.generateChangePassword = async function () {
     const user = this;
     const random = crypto.randomBytes(16).toString('base64');
     const salt = new Buffer(random, 'base64');

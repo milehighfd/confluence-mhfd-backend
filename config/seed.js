@@ -9,7 +9,10 @@ const seed = async () => {
       email: "admin@admin.com",
       password: "admin",
       designation: "admin",
-      activated: "true"
+      activated: "true",
+      firstName: "admin",
+      lastName: "admin",
+      name: "admin"
     };
     User.create(userAdmin);
   }

@@ -108,6 +108,7 @@ router.post('/reset-password', validator(['id', 'password']), async (req, res) =
     const user = await userService.changePassword(req.body.id, req.body.password);
     res.send(user);
   } catch (error) {
+    logger.error(error);
     res.status(500).send(error);
   }
 });

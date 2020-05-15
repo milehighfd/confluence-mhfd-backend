@@ -39,4 +39,25 @@ router.post('/', async (req, res) => {
     res.status(500).send({error: err});
   });
 });
+
+router.post('/project', async(req, res) => {
+  console.log(CARTO_TOKEN);
+  //const table = req.query.table;
+  const table = req.body.table;
+  console.log('table',table);
+  const sql = `SELECT * FROM ${table}`;
+
+  const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
+  console.log(URL);
+  
+  https.get(URL, response => {
+    console.log('status ' + response.statusCode);
+    //console.log(response);
+    if (response.statusCode === 200) {
+      let str = '';
+      //response.on('')
+    }
+  });
+  res.status(200).send({message: 'tudo bem'});
+})
 module.exports = (router);
