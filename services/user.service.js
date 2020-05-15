@@ -12,6 +12,8 @@ const {Storage} = require('@google-cloud/storage');
 const {FIELDS} = require('../lib/enumConstants');
 const logger = require('../config/logger');
 const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
+//const userService = require('../services/u')
+//const UPDATEABLE_FIELDS = userService.requiredFields('edit');
 
 const storage = new Storage({
   keyFilename: path.join(__dirname, '../config/develop-test-271312-20b199f0adbe.json'),

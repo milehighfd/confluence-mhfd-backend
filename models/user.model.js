@@ -88,8 +88,8 @@ module.exports = (sequelize, DataType) => {
   
     return user;
   }
-
-  User.prototype.generateChangePassword = async function () {
+  // prototype.
+  User.generateChangePassword = async function () {
     const user = this;
     const random = crypto.randomBytes(16).toString('base64');
     const salt = new Buffer(random, 'base64');
@@ -108,11 +108,13 @@ module.exports = (sequelize, DataType) => {
   };
 
   User.findByCredentials = async (email, password) => {
+    //console.log('login');
     const user = await User.findOne({
       where: {
         email: email
       }
     });
+    console.log(!user, !!user)
     if (!user) {
       logger.error('Invalid login email: ' + email);
       throw new Error({
@@ -139,20 +141,9 @@ module.exports = (sequelize, DataType) => {
     }
     
     user.name = user.firstName + ' ' + user.lastName;
-    //if (user.isModified('password')) {
       user.password = await bcrypt.hash(user.password, 8);
     //}
-    const validTokens = [];
-    /* for (let token of user.tokens) {
-      try {
-        if (jwt.verify(token.token, config.JWT_KEY)) {
-          validTokens.push(token);
-        }
-      } catch(error) {
-        logger.error('Token validation error: ' + token + ' - ' + error);
-      }
-    }
-    user.tokens = validTokens; */
+    //const validTokens = [];
   });
 
   return User;

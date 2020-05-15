@@ -10,6 +10,7 @@ const auth = require('../auth/auth');
 const { validator } = require('../utils/utils');
 const {EMAIL_VALIDATOR} = require('../lib/enumConstants');
 const userService = require('../services/user.service');
+const UPDATEABLE_FIELDS = userService.requiredFields('edit');
 const logger = require('../config/logger');
 
 const multer = Multer({
@@ -52,13 +53,36 @@ router.post('/signup', validator(userService.requiredFields('signup')), async (r
   }
 });
 
-router.put('/', auth, async (req, res) => {
+router.put('/update', auth, async (req, res) => {
   try {
-    const user = new User();
-    user.status(201).send({
-      user
+    let user = await User.findByPk(req.user._id, { raw: true });
+
+    if (!user) {
+      return res.status(404).send({ error: 'User not found' });
+    }
+
+    if (user.email !== req.body.email) {
+      /* if (User.count({ email: user.email })) {
+        return res.status(422).send({ error: 'the email has already been registered' });
+      } */
+      if (EMAIL_VALIDATOR.test(user.email)) {
+        return res.status(400).send({ error: 'the email must be valid' });
+      }
+    }
+    for (const key in req.body) {
+      if (key !== '_id') {
+        console.log(key, req.body[key]);
+        user[key] = req.body[key];
+      }
+    }
+    await User.update(user, {
+      where: {
+        _id: req.user._id
+      }
     });
+    return res.status(200).send(user);
   } catch(error) {
+    logger.error(error);
     res.status(500).send(error);
   }
 });
