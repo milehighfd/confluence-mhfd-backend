@@ -12,7 +12,8 @@ var projectRouter = require('./routes/project.route');
 var adminRouter = require('./routes/admin.route');
 const logActivityRouter = require('./routes/logActivity.route');
 const mapRouter = require('./routes/map.route');
-const problemRouter = require('./routes/problem.route')
+const problemRouter = require('./routes/problem.route');
+const driveRouter = require('./routes/drive.route');
 /* var attachmentRouter = require('./routes/attachment.route');
  */
 
@@ -47,6 +48,7 @@ app.use('/admin', adminRouter);
 app.use('/admin/user-activity', logActivityRouter);
 app.use('/map', mapRouter);
 app.use('/problems', problemRouter);
+app.use('/drive', driveRouter);
 /* app.use('/attachments', attachmentRouter);
  */
 app.listen(3003, () => {

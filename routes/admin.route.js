@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const auth = require('../auth/auth');
 
 const { ROLES, EMAIL_VALIDATOR } = require('../lib/enumConstants');

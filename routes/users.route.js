@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Multer = require('multer');
+const bcrypt = require('bcryptjs');
 
 //const User = require('../models/user.model');
 const db = require('../config/db');
@@ -32,14 +33,15 @@ router.post('/signup', validator(userService.requiredFields('signup')), async (r
       where: {
         email: user.email
       }
-    }); 
+    });
     if(foundUser) {
       res.status(422).send({error: 'The email has already been registered'});
     } else {
+
       if (EMAIL_VALIDATOR.test(user.email)) {
         user['activated'] = false;
         user.password = await bcrypt.hash(user.password, 8);
-        const user1 = await User.create(user); 
+        const user1 = await User.create(user);
         const token = await user1.generateAuthToken();
         res.status(201).send({
           user,
@@ -50,6 +52,7 @@ router.post('/signup', validator(userService.requiredFields('signup')), async (r
       }
     }
   } catch (error) {
+    logger.error(error);
     res.status(500).send({error: error});
   }
 });

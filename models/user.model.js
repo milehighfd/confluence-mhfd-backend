@@ -131,7 +131,7 @@ module.exports = (sequelize, DataType) => {
     return user;
   };
 
-  User.beforeValidate(async function (user) {
+  /* User.beforeValidate(async function (user) {
     for (let field in user.dataValues) {
       if (field instanceof String) {
         if (user[field] && field !== 'password') {
@@ -144,7 +144,7 @@ module.exports = (sequelize, DataType) => {
     //user.password = await bcrypt.hash(user.password, 8);
     //}
     //const validTokens = [];
-  });
+  }); */
 
   return User;
 }
