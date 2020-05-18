@@ -6,6 +6,8 @@ const User = db.user;
 const getLogActivities = async (page, limit, sortByField, sortType) => {
   let result = [];
   await LogActivity.findAll({
+    offset: (page - 1),
+    limit: limit,
     include: [{
       model: User,
       require: true

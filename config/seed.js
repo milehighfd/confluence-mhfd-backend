@@ -1,6 +1,7 @@
 //const User = require('../models/user.model');
 const db = require('../config/db');
 const User = db.user;
+const bcrypt = require('bcryptjs');
 
 const seed = async () => {
   const count = await User.count(); 
@@ -14,6 +15,7 @@ const seed = async () => {
       lastName: "admin",
       name: "admin"
     };
+    userAdmin.password = await bcrypt.hash('admin', 8);
     User.create(userAdmin);
   }
 };

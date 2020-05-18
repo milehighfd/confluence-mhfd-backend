@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const { Op } = require("sequelize");
 const auth = require('../auth/auth');
 
 const { ROLES, EMAIL_VALIDATOR } = require('../lib/enumConstants');
@@ -78,38 +79,38 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
   const sort = req.query.sort;
   const sortObject = {};
   if (organization) {
-    search_obj['organization'] = organization;
+    search_obj['organization'] = String(organization);
   }
   if (serviceArea) {
-    search_obj['serviceArea'] = serviceArea;
+    search_obj['serviceArea'] = String(serviceArea);
   }
   if (designation) {
-    search_obj['designation'] = designation;
+    search_obj['designation'] = String(designation);
   }
   if (name) {
     const array_name = name.split(' ');
     const options_to_search = [];
     for (const part of array_name) {
-      options_to_search.push({ firstName: { "$regex": "^" + part, "$options": "im" } });
-      options_to_search.push({ lastName: { "$regex": "^" + part, "$options": "im" } });
+      console.log('part', part);
+      options_to_search.push({ firstName: part});
+      options_to_search.push({ lastName: part});
     }
-    search_obj['$or'] = options_to_search;
+    search_obj[Op.or] = options_to_search;
   }
   if (sort) {
     sortObject[sort] = 1;
   }
   try {
     console.log(search_obj, limit, page, sort);
-    //console.log('search', search_obj);
     const userCount = await User.count({
       where: search_obj
     });
-    console.log('count', userCount, sortObject);
-    // console.log('limit', limit, page);
+    //console.log('count', userCount, sortObject);
 
     const userList = await User.findAll({
       where: search_obj,
-      //limit: limit * (page), //  - 1
+      offset: (page - 1),
+      limit: limit,
       order: [
         [sort, "asc"]
       ]
@@ -118,6 +119,7 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
     const numberOfPages = Math.ceil(userCount / limit);
     return res.status(200).send({ users: userList, totalPages: numberOfPages, currentPage: page });
   } catch (error) {
+    logger.error(error);
     return res.status(500).send({ error: error });
   }
 });

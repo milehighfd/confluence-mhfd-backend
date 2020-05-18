@@ -120,12 +120,15 @@ router.post('/recovery-password', async(req, res) => {
   if (!EMAIL_VALIDATOR.test(email)) { 
     return res.status(400).send({error: 'You entered an invalid email direction'});
   }
-  const user = await User.findOne({email});
+  const user = await User.findOne({
+    where: {
+      email: email
+    }
+  });
   if (!user) {
     return res.status(422).send({error: 'Email not found!'});
   }
-  console.log(user);
-  console.log("ID: " + user._id);
+  //console.log("ID: " + user._id);
   await user.generateChangePassword();
   await userService.sendRecoverPasswordEmail(user);
   res.send(user);

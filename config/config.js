@@ -1,4 +1,4 @@
-const POSTGRESQL_DB = process.env.POSTGRESQL_DB || 'mhfd';
+const POSTGRESQL_DB = process.env.POSTGRESQL_DB || 'mhfd2';
 const POSTGRESQL_HOST = process.env.POSTGRESQL_HOST || 'localhost';
 const POSTGRESQL_USER = process.env.POSTGRESQL_USER || 'userdb';
 const POSTGRESQL_PASSWORD = process.env.POSTGRESQL_PASSWORD || 'userdb';
