@@ -22,7 +22,10 @@ router.get('/get-all', [auth, isAdminAccount], async (req, res) => {
   try {
     console.log('all');
     const { page = 1, limit = 10, sortby = 'registerDate',
-          sorttype = '-1' } = req.query;
+          sorttype = 'desc' } = req.query;
+    /* if (sorttype === '-1') {
+      sorttype = 'desc';
+    } */
     
     const activities = await logActivityService.getLogActivities(page, limit, sortby, sorttype);
     //console.log('activities',activities);

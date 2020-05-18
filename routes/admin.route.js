@@ -5,7 +5,6 @@ const { Op } = require("sequelize");
 const auth = require('../auth/auth');
 
 const { ROLES, EMAIL_VALIDATOR } = require('../lib/enumConstants');
-//const User = require('../models/user.model');
 const db = require('../config/db');
 const User = db.user;
 const { validator } = require('../utils/utils');
@@ -55,6 +54,7 @@ router.put('/edit-user/:id', [auth, isAdminAccount, validator(UPDATEABLE_FIELDS)
     for (const field of UPDATEABLE_FIELDS) {
       user[field] = req.body[field];
     }
+    user.name = user.firstName + ' ' + user.lastName;
     await User.update(user, {
       where: {
         _id: id
@@ -105,7 +105,6 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
     const userCount = await User.count({
       where: search_obj
     });
-    //console.log('count', userCount, sortObject);
 
     const userList = await User.findAll({
       where: search_obj,
@@ -114,7 +113,7 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
       order: [
         [sort, "asc"]
       ]
-    }); //.limit(limit).skip(limit * (page - 1)).sort(sortObject);
+    });
     console.log('user list', userList.length);
     const numberOfPages = Math.ceil(userCount / limit);
     return res.status(200).send({ users: userList, totalPages: numberOfPages, currentPage: page });

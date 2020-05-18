@@ -41,6 +41,7 @@ router.post('/signup', validator(userService.requiredFields('signup')), async (r
       if (EMAIL_VALIDATOR.test(user.email)) {
         user['activated'] = false;
         user.password = await bcrypt.hash(user.password, 8);
+        user.name = user.firstName + ' ' + user.lastName;
         const user1 = await User.create(user);
         const token = await user1.generateAuthToken();
         res.status(201).send({
@@ -66,9 +67,12 @@ router.put('/update', auth, async (req, res) => {
     }
 
     if (user.email !== req.body.email) {
-      /* if (User.count({ email: user.email })) {
+      if (User.count({ where: {
+        email: user.email,
+        _id: { $not: user._id}
+      } })) {
         return res.status(422).send({ error: 'the email has already been registered' });
-      } */
+      }
       if (EMAIL_VALIDATOR.test(user.email)) {
         return res.status(400).send({ error: 'the email must be valid' });
       }
@@ -79,6 +83,7 @@ router.put('/update', auth, async (req, res) => {
         user[key] = req.body[key];
       }
     }
+    user.name = user.firstName + ' ' + user.lastName;
     await User.update(user, {
       where: {
         _id: req.user._id
