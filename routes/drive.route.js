@@ -14,6 +14,7 @@ const CREDENTIALS_PATH = __dirname + '/credentials.json';
 
 router.get('/get-images', async (req, res) => {
   try {
+    let files = ['uno'];
     fs.readFile(CREDENTIALS_PATH, (err, content) => {
       if (err) {
         logger.error('Error loading client secret file: ' + err);
@@ -33,7 +34,7 @@ function getFiles(credentials) {
 
 }
 
-function authorize(credentials, callback) {
+function authorize(credentials, callback, listFiles) {
   const { client_secret, client_id, redirect_uris } = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
     client_id, client_secret, redirect_uris[0]
@@ -43,9 +44,10 @@ function authorize(credentials, callback) {
     if (err) {
       return getAccessToken(oAuth2Client, callback);
     }
+    console.log('data', listFiles);
     oAuth2Client.setCredentials(JSON.parse(token));
-    const data = callback(oAuth2Client);
-    console.log(data);
+    callback(oAuth2Client, listFiles);
+    console.log('result', listFiles);
   })
 }
 
@@ -79,9 +81,11 @@ function getAccessToken(oAuth2Client, callback) {
   });
 }
 
-function listFiles(auth) {
+function listFiles(auth, listFiles) {
   const drive = google.drive({version: 'v3', auth});
-  let files = [];
+  listFiles = [];
+  console.log('listado', listFiles);
+  //let files = [];
   drive.files.list({
     pageSize: 10,
     fields: 'nextPageToken, files(id, name)',
@@ -89,21 +93,22 @@ function listFiles(auth) {
     if (err) {
       return console.log('The API returned an error: ' + err);
     }
-    const files = res.data.files;
-    if(files.length) {
+    listFiles = res.data.files;
+    if(listFiles.length) {
       console.log('Files:');
-      files.map((file) => {
-        files.push({
+      listFiles.map((file) => {
+        logger.info(`${file.name} (${file.id})`);
+        listFiles.push({
           name: file.name,
           id: file.id
         });
-        logger.info(`${file.name} (${file.id})`);
+        //logger.info(`${file.name} (${file.id})`);
       });
     } else {
       logger.info('No files found.');
     }
   });
-  return files;
+  //return files;
 }
 
 module.exports = router;

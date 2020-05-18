@@ -108,7 +108,7 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
 
     const userList = await User.findAll({
       where: search_obj,
-      offset: (page - 1),
+      offset: limit * (page - 1),
       limit: limit,
       order: [
         [sort, "asc"]

@@ -92,6 +92,7 @@ const uploadPhoto = async (user, files) => {
       const name = Date.now() + file.originalname;
       user.photo = getPublicUrl(name);
       user.save();
+      console.log(user);
       const blob = bucket.file(name);
       blob.createWriteStream({
         metadata: { contentType: file.mimetype}
