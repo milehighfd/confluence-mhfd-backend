@@ -84,6 +84,7 @@ router.put('/update', auth, async (req, res) => {
       }
     }
     user.name = user.firstName + ' ' + user.lastName;
+    user.password = req.user.password;
     await User.update(user, {
       where: {
         _id: req.user._id

@@ -20,6 +20,7 @@ router.get('/get-images-drive', async (req, res) => {
         logger.error('Error loading client secret file: ' + err);
       }
       files = await authorize(JSON.parse(content), listFiles);
+
       res.status(200).send(files);
     });
   } catch (error) {
@@ -33,19 +34,23 @@ async function authorize(credentials, callback) {
   const oAuth2Client = new google.auth.OAuth2(
     client_id, client_secret, redirect_uris[0]
   );
-  const newProm = new Promise((resolve, reject) => {
-    fs.readFile(TOKEN_PATH, async (err, token) => {
-      if (err) {
-        return getAccessToken(oAuth2Client, callback);
-      }
-      oAuth2Client.setCredentials(JSON.parse(token));
-      const files = await listFiles(oAuth2Client);
-      resolve(files);
-    })
-    
-  })
-
-  const filesfinal = await newProm;
+  let filesfinal = [];
+  try {
+    const newProm = new Promise((resolve, reject) => {
+      fs.readFile(TOKEN_PATH, async (err, token) => {
+        if (err) {
+          return getAccessToken(oAuth2Client, callback);
+        }
+        oAuth2Client.setCredentials(JSON.parse(token));
+        const files = await listFiles(oAuth2Client);
+        resolve(files);
+      });
+    });
+    filesfinal = await newProm;
+  } catch (error) {
+    logger.error(error);
+  }
+  
   return filesfinal;
 }
 
@@ -81,20 +86,45 @@ function getAccessToken(oAuth2Client, callback) {
 
 async function listFiles(auth) {
   const drive = google.drive({ version: 'v3', auth });
-
-  const newProm = new Promise((resolve, reject) => {
-    drive.files.list({
-      pageSize: 10,
-      fields: 'nextPageToken, files(id, name)',
-    }, (err, res) => {
-      if (err) {
-        return console.log('The API returned an error: ' + err);
+  let files = [];
+  try {
+    const newProm = new Promise((resolve, reject) => {
+      drive.files.list({
+        pageSize: 10,
+        fields: 'nextPageToken, files(id, name)',
+      }, (err, res) => {
+        if (err) {
+          return console.log('The API returned an error: ' + err);
+        }
+        resolve(res.data.files);
+      });
+    })
+    const respuesta = await newProm;
+    
+    respuesta.map((resp) => {
+      if (isImage(resp.name) ) {
+        files.push({
+          image: 'https://drive.google.com/uc?id=' + resp.id,
+          name: resp.name
+        });
       }
-      resolve(res.data.files);
     });
-  })
-  const respuesta = await newProm;
-  return respuesta;
+  } catch(error) {
+    logger.error(error);
+  }
+  
+  return files;
+}
+
+function isImage(name) {
+  if (name.search('.jpg') > 0 || name.search('.JPG') > 0 ||
+      name.search('.jepg') > 0 || name.search('.JEPG') > 0 ||
+      name.search('.png') > 0 || name.search('.PNG') > 0
+  ) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 module.exports = router;
