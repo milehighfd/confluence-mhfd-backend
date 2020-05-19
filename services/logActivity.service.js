@@ -5,7 +5,7 @@ const User = db.user;
 
 const getLogActivities = async (page, limit, sortByField, sortType) => {
   let result = [];
-  //console.log('page', page, 'limit', limit);
+  //console.log('page', page, 'limit', limit); 'DESC'
   await LogActivity.findAll({
     include: [{
       model: User,
@@ -14,7 +14,7 @@ const getLogActivities = async (page, limit, sortByField, sortType) => {
     offset: limit * (page - 1),
     limit: limit,
     order: [
-      [sortByField, 'DESC']
+      [sortByField, sortType] 
     ]
   }).then(logs => {
     result = logs.map(log => {
