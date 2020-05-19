@@ -104,6 +104,7 @@ const uploadPhoto = async (user, files) => {
       }).end(file.buffer);
     });
   });
+  await newPromise;
 }
 
 const findById = async (userId) => {
