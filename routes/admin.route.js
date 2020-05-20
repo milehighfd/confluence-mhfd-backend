@@ -28,6 +28,11 @@ router.put('/change-user-state/:id', [auth, isAdminAccount], async (req, res, ne
         _id: id
       }
     });
+
+    if (user.activated) {
+      userService.sendApprovedAccount(user);
+    }
+    
     return res.status(200).send(user);
   } catch (error) {
     return res.status(500).send(error);

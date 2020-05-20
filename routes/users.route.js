@@ -44,6 +44,7 @@ router.post('/signup', validator(userService.requiredFields('signup')), async (r
         user.name = user.firstName + ' ' + user.lastName;
         const user1 = await User.create(user);
         const token = await user1.generateAuthToken();
+        userService.sendConfirmAccount(user);
         res.status(201).send({
           user,
           token
@@ -98,10 +99,6 @@ router.put('/update', auth, async (req, res) => {
 });
 
 router.get('/me', auth, async(req, res) => {
-  // Disable caching for content files
-  // res.header("Cache-Control", "no-cache, no-store, must-revalidate");
-  // res.header("Pragma", "no-cache");
-  // res.header("Expires", 0);
 
   res.status(200).send(req.user);
 });
