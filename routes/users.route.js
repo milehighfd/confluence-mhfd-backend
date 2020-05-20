@@ -137,6 +137,10 @@ router.post('/recovery-password', async(req, res) => {
   res.send(user);
 });
 
+router.get('/get-position', auth, async(req, res) => {
+  res.send({message: 'position'});
+});
+
 router.post('/reset-password', validator(['id', 'password']), async (req, res) => {
   try {
     const user = await userService.changePassword(req.body.id, req.body.password);

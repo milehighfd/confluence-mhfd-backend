@@ -170,7 +170,7 @@ router.post('/filters', async (req, res) => {
   }
 });
 
-router.post('/filters2', auth, async (req, res) => {
+/*router.post('/project', auth, async (req, res) => {
   try {
     console.log(CARTO_TOKEN);
     const sql = `SELECT ST_Envelope(the_geom) FROM counties WHERE name = '${req.user.organization}' `;
@@ -200,7 +200,7 @@ router.post('/filters2', auth, async (req, res) => {
     logger.error(error);
     res.status(500).send({ error: error });
   }
-});
+});*/
 
 router.post('/filters-by-creator', auth, async (req, res) => {
   try {
