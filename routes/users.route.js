@@ -9,15 +9,16 @@ const User = db.user;
 const UserService = require('../services/user.service');
 const auth = require('../auth/auth');
 const { validator } = require('../utils/utils');
-const {EMAIL_VALIDATOR} = require('../lib/enumConstants');
+const { EMAIL_VALIDATOR, ROLES } = require('../lib/enumConstants');
 const userService = require('../services/user.service');
 const UPDATEABLE_FIELDS = userService.requiredFields('edit');
 const logger = require('../config/logger');
+const ORGANIZATION_DEFAULT = 'Mile High Flood Control District Boundary';
 
 const multer = Multer({
   storage: Multer.MemoryStorage,
   limits: {
-     fileSize: 50 * 1024 * 1024
+    fileSize: 50 * 1024 * 1024
   }
 });
 
@@ -28,14 +29,14 @@ router.get('/', async (req, res, next) => {
 
 router.post('/signup', validator(userService.requiredFields('signup')), async (req, res) => {
   try {
-    const user = req.body; 
+    const user = req.body;
     const foundUser = await User.count({
       where: {
         email: user.email
       }
     });
-    if(foundUser) {
-      res.status(422).send({error: 'The email has already been registered'});
+    if (foundUser) {
+      res.status(422).send({ error: 'The email has already been registered' });
     } else {
 
       if (EMAIL_VALIDATOR.test(user.email)) {
@@ -50,12 +51,12 @@ router.post('/signup', validator(userService.requiredFields('signup')), async (r
           token
         });
       } else {
-        return res.status(400).send({error: 'You entered an invalid email direction'});
+        return res.status(400).send({ error: 'You entered an invalid email direction' });
       }
     }
   } catch (error) {
     logger.error(error);
-    res.status(500).send({error: error});
+    res.status(500).send({ error: error });
   }
 });
 
@@ -68,10 +69,12 @@ router.put('/update', auth, async (req, res) => {
     }
 
     if (user.email !== req.body.email) {
-      if (User.count({ where: {
-        email: user.email,
-        _id: { $not: user._id}
-      } })) {
+      if (User.count({
+        where: {
+          email: user.email,
+          _id: { $not: user._id }
+        }
+      })) {
         return res.status(422).send({ error: 'the email has already been registered' });
       }
       if (EMAIL_VALIDATOR.test(user.email)) {
@@ -92,36 +95,36 @@ router.put('/update', auth, async (req, res) => {
       }
     });
     return res.status(200).send(user);
-  } catch(error) {
+  } catch (error) {
     logger.error(error);
     res.status(500).send(error);
   }
 });
 
-router.get('/me', auth, async(req, res) => {
+router.get('/me', auth, async (req, res) => {
 
   res.status(200).send(req.user);
 });
 
-router.post('/upload-photo', [auth, multer.array('file')], async(req, res) => {
+router.post('/upload-photo', [auth, multer.array('file')], async (req, res) => {
   try {
     if (!req.files) {
       logger.error('You must send user photo');
-      return res.status(400).send({error: 'You must send user photo'});
+      return res.status(400).send({ error: 'You must send user photo' });
     }
     let user = req.user;
     await userService.uploadPhoto(user, req.files);
     res.status(200).send(user);
-  } catch(error) {
+  } catch (error) {
     logger.error(error);
     res.status(500).send(error);
   }
 });
 
-router.post('/recovery-password', async(req, res) => {
+router.post('/recovery-password', async (req, res) => {
   const email = req.body.email;
-  if (!EMAIL_VALIDATOR.test(email)) { 
-    return res.status(400).send({error: 'You entered an invalid email direction'});
+  if (!EMAIL_VALIDATOR.test(email)) {
+    return res.status(400).send({ error: 'You entered an invalid email direction' });
   }
   const user = await User.findOne({
     where: {
@@ -129,7 +132,7 @@ router.post('/recovery-password', async(req, res) => {
     }
   });
   if (!user) {
-    return res.status(422).send({error: 'Email not found!'});
+    return res.status(422).send({ error: 'Email not found!' });
   }
   //console.log("ID: " + user._id);
   await user.generateChangePassword();
@@ -137,8 +140,15 @@ router.post('/recovery-password', async(req, res) => {
   res.send(user);
 });
 
-router.get('/get-position', auth, async(req, res) => {
-  res.send({message: 'position'});
+router.get('/get-position', auth, async (req, res) => {
+  let organization_query = '';
+  if (req.user.designation === ROLES.MFHD_ADMIN ||
+    req.user.designation === ROLES.OTHER) {
+    organization_query = ORGANIZATION_DEFAULT;
+  } else {
+    organization_query = req.user.organization;
+  }
+  res.send({ message: 'position ' + organization_query });
 });
 
 router.post('/reset-password', validator(['id', 'password']), async (req, res) => {
