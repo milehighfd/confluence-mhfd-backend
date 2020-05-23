@@ -8,6 +8,16 @@ module.exports = (sequelize, DataType) => {
     value: {
       type: DataType.STRING
     },
+    filename: {
+      type: DataType.STRING
+    },
+    user_id: {
+      type: DataType.UUID,
+      allowNull: false
+    },
+    filesize: {
+      type: DataType.FLOAT
+    },
     project_id: {
       type: DataType.UUID,
       allowNull: false

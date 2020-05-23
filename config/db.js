@@ -10,7 +10,7 @@ const Sequelize = require('sequelize');
 const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, config.POSTGRESQL_PASSWORD, {
   host: config.POSTGRESQL_HOST,
   dialect: "postgres",
-  operatorAliases: false,
+  //operatorAliases: false,
 
   pool: {
     max: 5,
