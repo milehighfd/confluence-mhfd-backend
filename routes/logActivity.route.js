@@ -40,7 +40,8 @@ router.get('/get-all', [auth, isAdminAccount], async (req, res) => {
 
 router.get('/csv', [auth, isAdminAccount], async (req, res) => {
   try {
-    let activity = await logActivityService.getLogActivities(1, 1000000, 'registerDate', '-1');
+    let activity = await logActivityService.getLogActivities(1, 1000000, 'registerDate', 'desc');
+    //console.log(activity);
     res.set('Content-Type', 'application/octet-stream');
     const fields = ['registerDate', 'city', 'activityType', 'firstName', 'lastName'];
     const data = json2csv.parse(activity, {fields});

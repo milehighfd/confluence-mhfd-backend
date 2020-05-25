@@ -31,15 +31,24 @@ const countAttachments = async () => {
   return await Attachment.count();
 }
 
+const removeAttachment = async (id) => {
+  const attach = await Attachment.findByPk(id, {raw: true});
+  await storage.bucket(STORAGE_NAME).file(attach.filename).delete();
+  await Attachment.destroy({
+    where: {
+      _id: attach._id
+    }
+  });
+}
+
 const uploadFiles = async (user, files) => {
-  //console.log(files);
   const bucket = storage.bucket(STORAGE_NAME);
 
   files.forEach(file => {
-    console.log(file);
     const name = file.originalname;
     const blob = bucket.file(name);
     let attach = {};
+    attach.value = getPublicUrl(name);
     attach.user_id = user._id;
     attach.filename = file.originalname;
     attach.mimetype = file.mimetype;
@@ -62,5 +71,6 @@ const uploadFiles = async (user, files) => {
 module.exports = {
   listAttachments,
   uploadFiles,
-  countAttachments
+  countAttachments,
+  removeAttachment
 }

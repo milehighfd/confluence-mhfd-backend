@@ -8,28 +8,6 @@ var fs = require('fs');
 const Multer = require('multer');
 const attachmentService = require('../services/attachment.service');
 const logger = require('../config/logger');
-/* const { createWriteStream, existsSync, mkdirSync } = require('fs');
-const { ApolloServer, gql } = require('apollo-server-express');
-const { Storage } = require('@google-cloud/storage');
-const files = require('../lib/files');
- */
-// const files = [];
-// const typeDefs = gql`
-// type Query {
-//   files: [String]
-// }
-
-// type Mutation {
-//   uploadFile(file: Upload!): Boolean
-// }
-// `;
-
-/* const gc = new Storage({
-   keyFilename: path.join(__dirname, '../config/develop-test-271312-20b199f0adbe.json'),
-   projectId: 'develop-test-271312'
-});
-
-const mhfdBucket = gc.bucket('mhfd2-test'); */
 
 const multer = Multer({
    storage: Multer.MemoryStorage,
@@ -45,8 +23,7 @@ router.post('/upload-file', [auth, multer.array('file')], async (req, res) => {
          return res.status(400).send({ error: 'You must send user photo' });
       }
       const user = req.user;
-      //console.log('attach', req.files);
-      res.send({message: "ok"});
+      res.send({message: "upload files"});
       await attachmentService.uploadFiles(user, req.files);
    } catch (error) {
       logger.error(error);
@@ -72,9 +49,11 @@ router.get('/get-files', auth, async (req, res) => {
    }
 });
 
-router.delete('/remove', auth, async (req, res) => {
+router.get('/remove/:id', auth, async (req, res) => {
    try {
-      res.send({message: "ok"});
+      const id = req.params.id;
+      attachmentService.removeAttachment(id)
+      res.send({message: "Attachment remove successfully."});
    } catch (error) {
       logger.error(error);
       res.status(500).send(error);
