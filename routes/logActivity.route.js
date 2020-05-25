@@ -20,13 +20,11 @@ router.post('/save', auth, async (req, res) => {
 
 router.get('/get-all', [auth, isAdminAccount], async (req, res) => {
   try {
-    console.log('all');
     const { page = 1, limit = 10, sortby = 'registerDate',
           sorttype = 'desc' } = req.query;
     
     const activities = await logActivityService.getLogActivities(page, limit, sortby, sorttype);
     const count = await logActivityService.countLogActivities();
-    //console.log('count', count);
     
     const result = {
       data: activities,

@@ -1,12 +1,6 @@
-//const mongoose = require('mongoose');
 const config = require('./config');
 const Sequelize = require('sequelize');
 
-/* mongoose.connect(config.MONGODB_URL, {
-  useNewUrlParser: true,
-  useCreateIndex: true,
-});
- */
 const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, config.POSTGRESQL_PASSWORD, {
   host: config.POSTGRESQL_HOST,
   dialect: "postgres",
@@ -34,6 +28,8 @@ db.logActivity = require('../models/logActivity.model.js')(sequelize, Sequelize)
 
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
 db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
+db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
+db.attachment.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.components.belongsTo(db.projects);
 // db.projects.hasMany(db.components);
 

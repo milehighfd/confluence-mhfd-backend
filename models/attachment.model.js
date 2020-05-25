@@ -11,16 +11,22 @@ module.exports = (sequelize, DataType) => {
     filename: {
       type: DataType.STRING
     },
+    mimetype: {
+      type: DataType.STRING
+    },
     user_id: {
       type: DataType.UUID,
       allowNull: false
+    },
+    register_date: {
+      type: DataType.DATE
     },
     filesize: {
       type: DataType.FLOAT
     },
     project_id: {
       type: DataType.UUID,
-      allowNull: false
+      allowNull: true
     }
   });
   return Attachment;

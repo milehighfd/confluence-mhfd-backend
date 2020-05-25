@@ -41,7 +41,7 @@ const countLogActivities = async () => {
 
 const saveLogActivity = async (logActivity) => {
   logActivity.registerDate = new Date();
-  await LogActivity.create(logActivity); // logActivity.save();
+  await LogActivity.create(logActivity);
   console.log('activity save');
   return logActivity;
 }

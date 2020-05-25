@@ -16,8 +16,8 @@ const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
 //const UPDATEABLE_FIELDS = userService.requiredFields('edit');
 
 const storage = new Storage({
-  keyFilename: path.join(__dirname, '../config/develop-test-271312-20b199f0adbe.json'),
-  projectId: 'develop-test-271312'
+  keyFilename: path.join(__dirname, '../config/mhfd-dev-14f5db72ccee.json'),
+  projectId: 'mhfd-dev'
 });
 
 function getPublicUrl (filename) {
