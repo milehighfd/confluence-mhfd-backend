@@ -49,7 +49,7 @@ router.get('/get-files', auth, async (req, res) => {
    }
 });
 
-router.get('/remove/:id', auth, async (req, res) => {
+router.delete('/remove/:id', auth, async (req, res) => {
    try {
       const id = req.params.id;
       attachmentService.removeAttachment(id)
