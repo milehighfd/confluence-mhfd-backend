@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const User = db.user; // require('../models/user.model');
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
 const {
   MHFD_FRONTEND,
   MHFD_EMAIL,
@@ -8,8 +9,8 @@ const {
 } = require('../config/config');
 const nodemailer = require('nodemailer');
 const path = require('path');
-const {Storage} = require('@google-cloud/storage');
-const {FIELDS} = require('../lib/enumConstants');
+const { Storage } = require('@google-cloud/storage');
+const { FIELDS } = require('../lib/enumConstants');
 const logger = require('../config/logger');
 const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
 //const userService = require('../services/u')
@@ -20,7 +21,7 @@ const storage = new Storage({
   projectId: 'mhfd-dev'
 });
 
-function getPublicUrl (filename) {
+function getPublicUrl(filename) {
   return `${STORAGE_URL}/${STORAGE_NAME}/${filename}`;
 }
 
@@ -35,7 +36,7 @@ const getTransporter = () => {
     }
   });
   return transporter;
-};  
+};
 
 const findAllUsers = () => {
   const users = User.findAll();
@@ -103,7 +104,7 @@ const sendConfirmAccount = async (user) => {
 
 const uploadPhoto = async (user, files) => {
   const bucket = storage.bucket(STORAGE_NAME);
-  
+
   const newPromise = new Promise((resolve, reject) => {
     files.forEach(file => {
       const name = Date.now() + file.originalname;
@@ -112,7 +113,7 @@ const uploadPhoto = async (user, files) => {
       console.log(user);
       const blob = bucket.file(name);
       blob.createWriteStream({
-        metadata: { contentType: file.mimetype}
+        metadata: { contentType: file.mimetype }
       }).on('finish', async response => {
         await blob.makePublic();
         resolve(getPublicUrl(name));
@@ -125,13 +126,14 @@ const uploadPhoto = async (user, files) => {
 }
 
 const findById = async (userId) => {
-  return await User.find({_id: userId});
+  return await User.find({ _id: userId });
 }
 
 const changePassword = async (changePasswordId, password) => {
   const user = await User.findOne({
     changePasswordId
   });
+  console.log(user);
   if (!user) {
     logger.error('Invalid recovery password id: ' + changePasswordId);
     throw new Error({
@@ -139,16 +141,25 @@ const changePassword = async (changePasswordId, password) => {
     });
   }
   const now = new Date();
+  /* console.log(user.changePasswordExpiration);
+  console.log(typeof user.changePasswordExpiration);
   if (now.getTime() > user.changePasswordExpiration.getTime()) {
     logger.error('Recovery password id expired: ' + changePasswordId + ', ' + user.changePasswordExpiration);
     throw new Error({
       error: 'Recovery password id expired'
     });
-  }
-  user.password = password;
+  } */
+  console.log('password', password);
+  user.password = await bcrypt.hash(password, 8);
   user.changePasswordId = '';
   user.changePasswordExpiration = new Date();
-  await user.save();
+  //await user.save();
+  user.password = req.user.password;
+  await User.update(user, {
+    where: {
+      _id: user._id
+    }
+  });
   return user;
 };
 
@@ -168,7 +179,7 @@ const requiredFields = (type) => {
     return [FIRST_NAME, LAST_NAME, DESIGNATION, EMAIL, ORGANIZATION, PASSWORD];
   }
   if (type === 'edit') {
-    return [FIRST_NAME, LAST_NAME, EMAIL, ORGANIZATION, DESIGNATION, CITY, COUNTY, SERVICE_AREA]; 
+    return [FIRST_NAME, LAST_NAME, EMAIL, ORGANIZATION, DESIGNATION, CITY, COUNTY, SERVICE_AREA];
   }
 }
 

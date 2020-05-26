@@ -149,13 +149,13 @@ router.get('/get-position', auth, async (req, res) => {
   } else {
     organization_query = req.user.organization;
   }
-  //console.log('organ', organization_query);
+  console.log('organ', organization_query);
   try {
     //console.log(CARTO_TOKEN);
     const sql = `SELECT ST_AsGeoJSON(the_geom) FROM organizations WHERE name = '${organization_query}' `;
     const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
     let result = [];
-    //console.log('URL', URL);
+    console.log('URL', URL);
     https.get(URL, response => {
       console.log('status ' + response.statusCode);
       if (response.statusCode === 200) {
@@ -165,27 +165,40 @@ router.get('/get-position', auth, async (req, res) => {
         });
         response.on('end', function () {
           result = JSON.parse(str).rows;
-          const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
+          //console.log(result);
+          if (result.length > 0) {
+            console.log('datos');
+            const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
           
-          let latitude_array = [];
-          let longitude_array = [];
-          for(const key in all_coordinates[0][0]) {
-            const coordinates = JSON.stringify(all_coordinates[0][0][key]).replace("[","").replace("]", "").split(',');
-            longitude_array.push(parseFloat(coordinates[0]));
-            latitude_array.push(parseFloat(coordinates[1]));
-          } 
-          let latitude_min = Math.min.apply(Math, latitude_array);
-          let latitude_max = Math.max.apply(Math, latitude_array);
-          let longitude_min = Math.min.apply(Math, longitude_array);
-          let longitude_max = Math.max.apply(Math, longitude_array);
-          /* console.log('latitude', latitude_max, latitude_min);
-          console.log('longitude', longitude_max, longitude_min) */
-          const final_coordinates = {
-            longitude: (longitude_max + longitude_min) / 2,
-            latitude: (latitude_max + latitude_min) / 2
-          };
-          //console.log('final', final_coordinates);
-          return res.status(200).send(final_coordinates);
+            let latitude_array = [];
+            let longitude_array = [];
+            for(const key in all_coordinates[0][0]) {
+              const coordinates = JSON.stringify(all_coordinates[0][0][key]).replace("[","").replace("]", "").split(',');
+              longitude_array.push(parseFloat(coordinates[0]));
+              latitude_array.push(parseFloat(coordinates[1]));
+            } 
+            let latitude_min = Math.min.apply(Math, latitude_array);
+            let latitude_max = Math.max.apply(Math, latitude_array);
+            let longitude_min = Math.min.apply(Math, longitude_array);
+            let longitude_max = Math.max.apply(Math, longitude_array);
+            /* console.log('latitude', latitude_max, latitude_min);
+            console.log('longitude', longitude_max, longitude_min) */
+            const final_coordinates = {
+              longitude: (longitude_max + longitude_min) / 2,
+              latitude: (latitude_max + latitude_min) / 2
+            };
+            //console.log('final', final_coordinates);
+            return res.status(200).send(final_coordinates);
+          } else {
+            
+            const final_coordinates = {
+              longitude: -105.28208041754,
+              latitude: 40.087323445772
+            }
+            console.log('no hay datos', final_coordinates);
+            return res.status(200).send(final_coordinates);
+          }
+          
         });
       }
     }).on('error', err => {
