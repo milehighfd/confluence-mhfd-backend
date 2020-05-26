@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Multer = require('multer');
 const bcrypt = require('bcryptjs');
+const https = require('https');
 
 //const User = require('../models/user.model');
 const db = require('../config/db');
@@ -148,7 +149,54 @@ router.get('/get-position', auth, async (req, res) => {
   } else {
     organization_query = req.user.organization;
   }
-  res.send({ message: 'position ' + organization_query });
+  console.log('organ', organization_query);
+  try {
+    //console.log(CARTO_TOKEN);
+    const sql = `SELECT ST_AsGeoJSON(the_geom) FROM organizations WHERE name = '${organization_query}' `;
+    const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
+    let result = [];
+    console.log('URL', URL);
+    https.get(URL, response => {
+      console.log('status ' + response.statusCode);
+      if (response.statusCode === 200) {
+        let str = '';
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+        response.on('end', function () {
+          result = JSON.parse(str).rows;
+          const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
+          
+          let latitude_array = [];
+          let longitude_array = [];
+          for(const key in all_coordinates[0][0]) {
+            const coordinates = JSON.stringify(all_coordinates[0][0][key]).replace("[","").replace("]", "").split(',');
+            longitude_array.push(parseFloat(coordinates[0]));
+            latitude_array.push(parseFloat(coordinates[1]));
+          } 
+          let latitude_min = Math.min.apply(Math, latitude_array);
+          let latitude_max = Math.max.apply(Math, latitude_array);
+          let longitude_min = Math.min.apply(Math, longitude_array);
+          let longitude_max = Math.max.apply(Math, longitude_array);
+          /* console.log('latitude', latitude_max, latitude_min);
+          console.log('longitude', longitude_max, longitude_min) */
+          const final_coordinates = {
+            longitude: (longitude_max + longitude_min) / 2,
+            latitude: (latitude_max + latitude_min) / 2
+          };
+          //console.log('final', final_coordinates);
+          return res.status(200).send(final_coordinates);
+        });
+      }
+    }).on('error', err => {
+      console.log('failed call to ', url, 'with error ', err);
+      logger.error(`failed call to ${url}  with error  ${err}`)
+      res.status(500).send({ error: err });
+    });
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send({ error: error });
+  }
 });
 
 router.post('/reset-password', validator(['id', 'password']), async (req, res) => {

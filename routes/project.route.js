@@ -170,38 +170,6 @@ router.post('/filters', async (req, res) => {
   }
 });
 
-/*router.post('/project', auth, async (req, res) => {
-  try {
-    console.log(CARTO_TOKEN);
-    const sql = `SELECT ST_Envelope(the_geom) FROM counties WHERE name = '${req.user.organization}' `;
-    const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
-    let result = [];
-    console.log(URL);
-    https.get(URL, response => {
-      console.log('status ' + response.statusCode);
-      if (response.statusCode === 200) {
-        let str = '';
-        response.on('data', function (chunk) {
-          str += chunk;
-        });
-        response.on('end', function () {
-          console.log('STR', str);
-          result = JSON.parse(str).rows;
-          console.log('result', result);
-          return res.status(200).send(result);
-        });
-      }
-    }).on('error', err => {
-      console.log('failed call to ', url, 'with error ', err);
-      logger.error(`failed call to ${url}  with error  ${err}`)
-      res.status(500).send({ error: err });
-    });
-  } catch (error) {
-    logger.error(error);
-    res.status(500).send({ error: error });
-  }
-});*/
-
 router.post('/filters-by-creator', auth, async (req, res) => {
   try {
     const data = req.body;
