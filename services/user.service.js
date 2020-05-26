@@ -133,7 +133,7 @@ const changePassword = async (changePasswordId, password) => {
   const user = await User.findOne({
     changePasswordId
   });
-  console.log(user);
+  //console.log(user);
   if (!user) {
     logger.error('Invalid recovery password id: ' + changePasswordId);
     throw new Error({
@@ -149,17 +149,18 @@ const changePassword = async (changePasswordId, password) => {
       error: 'Recovery password id expired'
     });
   } */
-  console.log('password', password);
+  //console.log('password', password);
   user.password = await bcrypt.hash(password, 8);
   user.changePasswordId = '';
   user.changePasswordExpiration = new Date();
-  //await user.save();
-  user.password = req.user.password;
-  await User.update(user, {
+  await user.save();
+  //user.password = req.user.password;
+
+  /* await User.update(user, {
     where: {
       _id: user._id
     }
-  });
+  }); */
   return user;
 };
 

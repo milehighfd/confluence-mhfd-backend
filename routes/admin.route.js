@@ -81,8 +81,11 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
   const limit = +req.query.limit || NUMBER_PER_PAGE;
   const page = +req.query.page || INITIAL_PAGE;
   const name = req.query.name;
-  const sort = req.query.sort;
+  const sort = req.query.sort ? req.query.sort : 'name';
   const sortObject = {};
+  /* if (!sort) {
+    sort = 'name';
+  } */
   if (organization) {
     search_obj['organization'] = String(organization);
   }
@@ -93,14 +96,7 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
     search_obj['designation'] = String(designation);
   }
   if (name) {
-    const array_name = name.split(' ');
-    const options_to_search = [];
-    for (const part of array_name) {
-      console.log('part', part);
-      options_to_search.push({ firstName: part});
-      options_to_search.push({ lastName: part});
-    }
-    search_obj[Op.or] = options_to_search;
+    search_obj[Op.or] = { firstName: { [Op.iLike]: '%'+name+'%' }, lastName: {[Op.iLike]: '%'+name+'%'}};
   }
   if (sort) {
     sortObject[sort] = 1;
