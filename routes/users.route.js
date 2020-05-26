@@ -149,13 +149,13 @@ router.get('/get-position', auth, async (req, res) => {
   } else {
     organization_query = req.user.organization;
   }
-  console.log('organ', organization_query);
+  //console.log('organ', organization_query);
   try {
     //console.log(CARTO_TOKEN);
     const sql = `SELECT ST_AsGeoJSON(the_geom) FROM organizations WHERE name = '${organization_query}' `;
     const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
     let result = [];
-    console.log('URL', URL);
+    //console.log('URL', URL);
     https.get(URL, response => {
       console.log('status ' + response.statusCode);
       if (response.statusCode === 200) {
