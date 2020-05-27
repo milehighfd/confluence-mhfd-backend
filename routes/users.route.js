@@ -135,6 +135,11 @@ router.get('/me', auth, async (req, res) => {
   let organization_query = '';
   let user = req.user
   let result1 = {};
+  let polygon = [];
+  let coordinates = {
+    longitude: -105.28208041754,
+    latitude: 40.087323445772
+  };
   result1['_id'] = user._id;
   result1['firstName'] = user.firstName;
   result1['lastName'] = user.lastName;
@@ -150,7 +155,12 @@ router.get('/me', auth, async (req, res) => {
   result1['activated'] = user.activated;
   result1['designation'] = user.designation;
   result1['photo'] = user.photo;
-  
+  /* result1['coordinates'] = {
+    longitude: -105.28208041754,
+    latitude: 40.087323445772
+  };
+  result1['polygon'] = []; */
+
   if (req.user.designation === ROLES.MFHD_ADMIN ||
     req.user.designation === ROLES.OTHER) {
     organization_query = ORGANIZATION_DEFAULT;
@@ -159,70 +169,88 @@ router.get('/me', auth, async (req, res) => {
   }
   //console.log('organ', organization_query);
   try {
-    const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM organizations WHERE name = '${organization_query}' `;
-    const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
-    let result = [];
-    console.log('URL', URL);
-    https.get(URL, response => {
-      console.log('status ' + response.statusCode);
-      if (response.statusCode === 200) {
-        let str = '';
-        response.on('data', function (chunk) {
-          str += chunk;
-        });
-        response.on('end', function () {
-          result = JSON.parse(str).rows;
-          if (result.length > 0) {
-            //console.log('datos');
-            const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
-            let coordinates = [];
-            let latitude_array = [];
-            let longitude_array = [];
-            for (const key in all_coordinates[0]) {
-              const row = JSON.stringify(all_coordinates[0][key]).replace("[", "").replace("]", "").split(',')
-              let coordinate_num = [];
-              coordinate_num.push(parseFloat(row[0]));
-              coordinate_num.push(parseFloat(row[1]));
-              longitude_array.push(parseFloat(row[0]));
-              latitude_array.push(parseFloat(row[1]));
-              coordinates.push(coordinate_num);
+    const newProm = new Promise((resolve, reject) => {
+      const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM organizations WHERE name = '${organization_query}' `;
+      const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
+      let result = [];
+      console.log('URL', URL);
+      https.get(URL, response => {
+        console.log('status ' + response.statusCode);
+        if (response.statusCode === 200) {
+          let str = '';
+          response.on('data', function (chunk) {
+            str += chunk;
+          });
+          response.on('end', function () {
+            result = JSON.parse(str).rows;
+            if (result.length > 0) {
+              //console.log('datos');
+              const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
+              //let coordinates = [];
+              let latitude_array = [];
+              let longitude_array = [];
+              for (const key in all_coordinates[0]) {
+                const row = JSON.stringify(all_coordinates[0][key]).replace("[", "").replace("]", "").split(',')
+                let coordinate_num = [];
+                coordinate_num.push(parseFloat(row[0]));
+                coordinate_num.push(parseFloat(row[1]));
+                longitude_array.push(parseFloat(row[0]));
+                latitude_array.push(parseFloat(row[1]));
+                polygon.push(coordinate_num);
+              }
+              console.log(polygon);
+              const latitude_min = Math.min.apply(Math, latitude_array);
+              const latitude_max = Math.max.apply(Math, latitude_array);
+              const longitude_min = Math.min.apply(Math, longitude_array);
+              const longitude_max = Math.max.apply(Math, longitude_array);
+              //console.log('max', maxvalue, 'min', minvalue);
+              coordinates = {
+                longitude: (longitude_max + longitude_min) / 2,
+                latitude: (latitude_max + latitude_min) / 2
+              };
+              // result1['coordinates'] = coordinates1;
+              // result1['polygon'] = coordinates;
+
+              //user.coordinates_array = coordinates;
+              //return res.status(200).send(result1);
+            } else {
+              coordinates = {
+                longitude: -105.28208041754,
+                latitude: 40.087323445772
+              };
+              polygon = [];
+
+              // result1['coordinates'] = coordinates;
+              // result1['polygon'] = [];
+              //return res.status(200).send(result1);
             }
-            //console.log(coordinates);
-            const latitude_min = Math.min.apply(Math, latitude_array);
-            const latitude_max = Math.max.apply(Math, latitude_array);
-            const longitude_min = Math.min.apply(Math, longitude_array);
-            const longitude_max = Math.max.apply(Math, longitude_array);
-            //console.log('max', maxvalue, 'min', minvalue);
-            let coordinates1 = {
-              longitude: (longitude_max + longitude_min) / 2,
-              latitude: (latitude_max + latitude_min) / 2
-            };
-            result1['coordinates'] = coordinates1;
-            result1['polygon'] = coordinates;
 
-            //user.coordinates_array = coordinates;
-            //return res.status(200).send(result1);
-          } else {
-            let coordinates = {
-              longitude: -105.28208041754,
-              latitude: 40.087323445772
-            };
-            result1['coordinates'] = coordinates;
-            result1['polygon'] = [];
-            //return res.status(200).send(result1);
-          }
+            resolve({
+              polygon: polygon,
+              coordinates: coordinates
+            });
 
-        });
-      }
-    }).on('error', err => {
-      console.log('failed call to ', url, 'with error ', err);
-      logger.error(`failed call to ${url}  with error  ${err}`)
-      //res.status(500).send({ error: err });
+          });
+        }
+      }).on('error', err => {
+        console.log('failed call to ', url, 'with error ', err);
+        logger.error(`failed call to ${url}  with error  ${err}`)
+        //res.status(500).send({ error: err });
+      });
     });
+
+    const respuesta = await newProm;
+
+    /* respuesta.map((resp) => {
+      console.log(resp);
+    }); */
+
   } catch (error) {
     logger.error(error);
     //res.status(500).send({ error: error });
   }
+  result1['coordinates'] = coordinates;
+  result1['polygon'] = polygon;
   res.status(200).send(result1);
 });
 
