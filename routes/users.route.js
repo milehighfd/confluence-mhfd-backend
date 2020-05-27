@@ -155,11 +155,6 @@ router.get('/me', auth, async (req, res) => {
   result1['activated'] = user.activated;
   result1['designation'] = user.designation;
   result1['photo'] = user.photo;
-  /* result1['coordinates'] = {
-    longitude: -105.28208041754,
-    latitude: 40.087323445772
-  };
-  result1['polygon'] = []; */
 
   if (req.user.designation === ROLES.MFHD_ADMIN ||
     req.user.designation === ROLES.OTHER) {
@@ -198,7 +193,6 @@ router.get('/me', auth, async (req, res) => {
                 latitude_array.push(parseFloat(row[1]));
                 polygon.push(coordinate_num);
               }
-              console.log(polygon);
               const latitude_min = Math.min.apply(Math, latitude_array);
               const latitude_max = Math.max.apply(Math, latitude_array);
               const longitude_min = Math.min.apply(Math, longitude_array);
@@ -208,11 +202,7 @@ router.get('/me', auth, async (req, res) => {
                 longitude: (longitude_max + longitude_min) / 2,
                 latitude: (latitude_max + latitude_min) / 2
               };
-              // result1['coordinates'] = coordinates1;
-              // result1['polygon'] = coordinates;
-
-              //user.coordinates_array = coordinates;
-              //return res.status(200).send(result1);
+              
             } else {
               coordinates = {
                 longitude: -105.28208041754,
@@ -220,9 +210,6 @@ router.get('/me', auth, async (req, res) => {
               };
               polygon = [];
 
-              // result1['coordinates'] = coordinates;
-              // result1['polygon'] = [];
-              //return res.status(200).send(result1);
             }
 
             resolve({
@@ -241,13 +228,8 @@ router.get('/me', auth, async (req, res) => {
 
     const respuesta = await newProm;
 
-    /* respuesta.map((resp) => {
-      console.log(resp);
-    }); */
-
   } catch (error) {
     logger.error(error);
-    //res.status(500).send({ error: error });
   }
   result1['coordinates'] = coordinates;
   result1['polygon'] = polygon;

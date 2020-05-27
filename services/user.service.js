@@ -110,7 +110,7 @@ const uploadPhoto = async (user, files) => {
       const name = Date.now() + file.originalname;
       user.photo = getPublicUrl(name);
       user.save();
-      console.log(user);
+      //console.log(user);
       const blob = bucket.file(name);
       blob.createWriteStream({
         metadata: { contentType: file.mimetype }
@@ -149,18 +149,10 @@ const changePassword = async (changePasswordId, password) => {
       error: 'Recovery password id expired'
     });
   } */
-  //console.log('password', password);
   user.password = await bcrypt.hash(password, 8);
   user.changePasswordId = '';
   user.changePasswordExpiration = new Date();
   await user.save();
-  //user.password = req.user.password;
-
-  /* await User.update(user, {
-    where: {
-      _id: user._id
-    }
-  }); */
   return user;
 };
 
@@ -180,7 +172,7 @@ const requiredFields = (type) => {
     return [FIRST_NAME, LAST_NAME, DESIGNATION, EMAIL, ORGANIZATION, PASSWORD];
   }
   if (type === 'edit') {
-    return [FIRST_NAME, LAST_NAME, EMAIL, ORGANIZATION, DESIGNATION, CITY, COUNTY, SERVICE_AREA];
+    return [FIRST_NAME, LAST_NAME, EMAIL];
   }
 }
 
