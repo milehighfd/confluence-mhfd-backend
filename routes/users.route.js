@@ -134,6 +134,23 @@ router.put('/update', auth, async (req, res) => {
 router.get('/me', auth, async (req, res) => {
   let organization_query = '';
   let user = req.user
+  let result1 = {};
+  result1['_id'] = user._id;
+  result1['firstName'] = user.firstName;
+  result1['lastName'] = user.lastName;
+  result1['name'] = user.name;
+  result1['email'] = user.email;
+  result1['organization'] = user.organization;
+  result1['city'] = user.city;
+  result1['county'] = user.county;
+  result1['serviceArea'] = user.serviceArea;
+  result1['phone'] = user.phone;
+  result1['zipCode'] = user.zipCode;
+  result1['title'] = user.title;
+  result1['activated'] = user.activated;
+  result1['designation'] = user.designation;
+  result1['photo'] = user.photo;
+  
   if (req.user.designation === ROLES.MFHD_ADMIN ||
     req.user.designation === ROLES.OTHER) {
     organization_query = ORGANIZATION_DEFAULT;
@@ -159,51 +176,40 @@ router.get('/me', auth, async (req, res) => {
             //console.log('datos');
             const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
             let coordinates = [];
+            let latitude_array = [];
+            let longitude_array = [];
             for (const key in all_coordinates[0]) {
               const row = JSON.stringify(all_coordinates[0][key]).replace("[", "").replace("]", "").split(',')
               let coordinate_num = [];
               coordinate_num.push(parseFloat(row[0]));
               coordinate_num.push(parseFloat(row[1]));
+              longitude_array.push(parseFloat(row[0]));
+              latitude_array.push(parseFloat(row[1]));
               coordinates.push(coordinate_num);
             }
             //console.log(coordinates);
-            const maxvalue = Math.min.apply(Math, coordinates);
-            const minvalue = Math.max.apply(Math, coordinates);
-            console.log('max', maxvalue, 'min', minvalue);
+            const latitude_min = Math.min.apply(Math, latitude_array);
+            const latitude_max = Math.max.apply(Math, latitude_array);
+            const longitude_min = Math.min.apply(Math, longitude_array);
+            const longitude_max = Math.max.apply(Math, longitude_array);
+            //console.log('max', maxvalue, 'min', minvalue);
             let coordinates1 = {
-              longitude: coordinates[0][0],
-              latitude: coordinates[0][1]
+              longitude: (longitude_max + longitude_min) / 2,
+              latitude: (latitude_max + latitude_min) / 2
             };
-            let result1 = {};
-            result1['_id'] = user._id;
-            result1['firstName'] = user.firstName;
-            result1['lastName'] = user.lastName;
-            result1['name'] = user.name;
-            result1['email'] = user.email;
-            result1['organization'] = user.organization;
-            result1['city'] = user.city;
-            result1['county'] = user.county;
-            result1['serviceArea'] = user.serviceArea;
-            result1['phone'] = user.phone;
-            result1['zipCode'] = user.zipCode;
-            result1['title'] = user.title;
-            result1['activated'] = user.activated;
-            result1['designation'] = user.designation;
-            result1['photo'] = user.photo;
             result1['coordinates'] = coordinates1;
             result1['polygon'] = coordinates;
+
             //user.coordinates_array = coordinates;
-            return res.status(200).send(result1);
+            //return res.status(200).send(result1);
           } else {
             let coordinates = {
               longitude: -105.28208041754,
               latitude: 40.087323445772
             };
-            user.coordinates = coordinates;
-            user.coordinates_array = coordinates;
-            /* let coordinates = [];
-            coordinates.push([-105.28208041754, 40.087323445772]); */
-            return res.status(200).send(user);
+            result1['coordinates'] = coordinates;
+            result1['polygon'] = [];
+            //return res.status(200).send(result1);
           }
 
         });
@@ -211,13 +217,13 @@ router.get('/me', auth, async (req, res) => {
     }).on('error', err => {
       console.log('failed call to ', url, 'with error ', err);
       logger.error(`failed call to ${url}  with error  ${err}`)
-      res.status(500).send({ error: err });
+      //res.status(500).send({ error: err });
     });
   } catch (error) {
     logger.error(error);
-    res.status(500).send({ error: error });
+    //res.status(500).send({ error: error });
   }
-  //res.status(200).send(req.user);
+  res.status(200).send(result1);
 });
 
 router.post('/upload-photo', [auth, multer.array('file')], async (req, res) => {
