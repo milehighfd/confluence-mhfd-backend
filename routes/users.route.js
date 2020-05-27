@@ -194,7 +194,7 @@ router.get('/get-position', auth, async (req, res) => {
         response.on('end', function () {
           result = JSON.parse(str).rows;
           if (result.length > 0) {
-            console.log('datos');
+            //console.log('datos');
             const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
             let coordinates = [];
             for (const key in all_coordinates[0]) {
@@ -203,11 +203,19 @@ router.get('/get-position', auth, async (req, res) => {
               coordinate_num.push(parseFloat(row[0]));
               coordinate_num.push(parseFloat(row[1]));
               coordinates.push(coordinate_num);
-            } 
-            return res.status(200).send(coordinates);
+            }
+            let coordinates1 = {
+              longitude: coordinates[0][0],
+              latitude: coordinates[0][1]
+            };
+            return res.status(200).send(coordinates1);
           } else {
-            let coordinates = [];
-            coordinates.push([-105.28208041754, 40.087323445772]);
+            let coordinates = {
+              longitude: -105.28208041754,
+              latitude: 40.087323445772
+            };
+            /* let coordinates = [];
+            coordinates.push([-105.28208041754, 40.087323445772]); */
             return res.status(200).send(coordinates);
           }
 
