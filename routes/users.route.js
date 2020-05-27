@@ -132,8 +132,89 @@ router.put('/update', auth, async (req, res) => {
 });
 
 router.get('/me', auth, async (req, res) => {
+  let organization_query = '';
+  let user = req.user
+  if (req.user.designation === ROLES.MFHD_ADMIN ||
+    req.user.designation === ROLES.OTHER) {
+    organization_query = ORGANIZATION_DEFAULT;
+  } else {
+    organization_query = req.user.organization;
+  }
+  //console.log('organ', organization_query);
+  try {
+    const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM organizations WHERE name = '${organization_query}' `;
+    const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
+    let result = [];
+    console.log('URL', URL);
+    https.get(URL, response => {
+      console.log('status ' + response.statusCode);
+      if (response.statusCode === 200) {
+        let str = '';
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+        response.on('end', function () {
+          result = JSON.parse(str).rows;
+          if (result.length > 0) {
+            //console.log('datos');
+            const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
+            let coordinates = [];
+            for (const key in all_coordinates[0]) {
+              const row = JSON.stringify(all_coordinates[0][key]).replace("[", "").replace("]", "").split(',')
+              let coordinate_num = [];
+              coordinate_num.push(parseFloat(row[0]));
+              coordinate_num.push(parseFloat(row[1]));
+              coordinates.push(coordinate_num);
+            }
+            //console.log(coordinates);
+            const maxvalue = Math.min.apply(Math, coordinates);
+            const minvalue = Math.max.apply(Math, coordinates);
+            console.log('max', maxvalue, 'min', minvalue);
+            let coordinates1 = {
+              longitude: coordinates[0][0],
+              latitude: coordinates[0][1]
+            };
+            let result1 = {};
+            result1['_id'] = user._id;
+            result1['firstName'] = user.firstName;
+            result1['lastName'] = user.lastName;
+            result1['name'] = user.name;
+            result1['email'] = user.email;
+            result1['organization'] = user.organization;
+            result1['city'] = user.city;
+            result1['county'] = user.county;
+            result1['serviceArea'] = user.serviceArea;
+            result1['phone'] = user.phone;
+            result1['zipCode'] = user.zipCode;
+            result1['title'] = user.title;
+            result1['coordinates'] = coordinates1;
+            result1['polygon'] = coordinates;
+            //user.coordinates_array = coordinates;
+            return res.status(200).send(result1);
+          } else {
+            let coordinates = {
+              longitude: -105.28208041754,
+              latitude: 40.087323445772
+            };
+            user.coordinates = coordinates;
+            user.coordinates_array = coordinates;
+            /* let coordinates = [];
+            coordinates.push([-105.28208041754, 40.087323445772]); */
+            return res.status(200).send(user);
+          }
 
-  res.status(200).send(req.user);
+        });
+      }
+    }).on('error', err => {
+      console.log('failed call to ', url, 'with error ', err);
+      logger.error(`failed call to ${url}  with error  ${err}`)
+      res.status(500).send({ error: err });
+    });
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send({ error: error });
+  }
+  //res.status(200).send(req.user);
 });
 
 router.post('/upload-photo', [auth, multer.array('file')], async (req, res) => {
