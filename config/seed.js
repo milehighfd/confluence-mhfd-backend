@@ -2,6 +2,7 @@
 const db = require('../config/db');
 const User = db.user;
 const bcrypt = require('bcryptjs');
+const attachmentService = require('../services/attachment.service');
 
 const seed = async () => {
   const count = await User.count(); 
@@ -17,6 +18,8 @@ const seed = async () => {
     };
     userAdmin.password = await bcrypt.hash('admin', 8);
     User.create(userAdmin);
+    
   }
+  attachmentService.migrateFilesFromCloud();
 };
 seed();

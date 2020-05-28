@@ -31,11 +31,22 @@ router.post('/upload-file', [auth, multer.array('file')], async (req, res) => {
    }
 });
 
+router.get('/list-files', async (req, res) => {
+   try {
+      attachmentService.migrateFilesFromCloud();
+      res.send({message: "list files"});
+   } catch (error) {
+      logger.error(error);
+      res.status(500).send(error);
+   }
+})
+
 router.get('/get-files', auth, async (req, res) => {
    try {
-      const { page = 1, limit = 10, sortby = 'register_date',
+      const { page = 1, limit = 10, sort = 'register_date',
           sorttype = 'desc' } = req.query;
-      const files = await attachmentService.listAttachments(page, limit, sortby, sorttype);
+      //console.log('sort', sortby);
+      const files = await attachmentService.listAttachments(page, limit, sort, sorttype);
       const count = await attachmentService.countAttachments();
       const result = {
          data: files,
