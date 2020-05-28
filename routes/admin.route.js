@@ -39,7 +39,7 @@ router.put('/change-user-state/:id', [auth, isAdminAccount], async (req, res, ne
   }
 });
 
-router.put('/edit-user/:id', [auth, isAdminAccount, validator(UPDATEABLE_FIELDS)], async (req, res, next) => {
+router.put('/edit-user/:id', [auth, isAdminAccount], async (req, res, next) => {
   const id = req.params.id;
   try {
     const user = await User.findByPk(id, { raw: true });
@@ -55,8 +55,11 @@ router.put('/edit-user/:id', [auth, isAdminAccount, validator(UPDATEABLE_FIELDS)
         return res.status(400).send({ error: 'the email must be valid' });
       }
     }
+    console.log('update', UPDATEABLE_FIELDS);
+    //console.log('body', req.body);
     for (const field of UPDATEABLE_FIELDS) {
       user[field] = req.body[field];
+      console.log(field, req.body[field]);
     }
     user.name = user.firstName + ' ' + user.lastName;
     await User.update(user, {
