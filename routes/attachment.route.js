@@ -23,8 +23,8 @@ router.post('/upload-file', [auth, multer.array('file')], async (req, res) => {
          return res.status(400).send({ error: 'You must send user photo' });
       }
       const user = req.user;
-      res.send({message: "upload files"});
       await attachmentService.uploadFiles(user, req.files);
+      res.send({message: "upload files"});
    } catch (error) {
       logger.error(error);
       res.status(500).send(error);

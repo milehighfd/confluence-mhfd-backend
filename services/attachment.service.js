@@ -41,25 +41,17 @@ const listAttachments = async (page, limit, sortByField, sortType) => {
       'createdAt': resp.createdAt
     }
   });
-  /*
-  respuesta.map((resp) => {*/
 }
 
 const migrateFilesFromCloud = async () => {
 
   const attachments = await Attachment.findAll();
-  //console.log('attach', attachments.size);
   if (attachments.length === 0) {
     const [files] = await storage.bucket(STORAGE_NAME).getFiles();
     const users = await User.findAll();
 
     const user = users[0];
-    //console.log('Files:');
     files.forEach(file => {
-      //if (file.name.includes('projects/') && file.name !== 'projects/') {
-      //console.log('file', file);
-      //console.log(file.name.lastIndexOf('/'));
-      //console.log(file.name.substring(file.name.lastIndexOf('/') + 1, file.name.length));
       let attach = {};
       attach.value = getPublicUrl(file.name);
       attach.user_id = user._id;
@@ -68,8 +60,6 @@ const migrateFilesFromCloud = async () => {
       attach.register_date = new Date();
       attach.filesize = file.metadata.size;
       Attachment.create(attach);
-      //}
-      //console.log(file.name);
     });
   }
 
@@ -91,8 +81,9 @@ const removeAttachment = async (id) => {
 
 const uploadFiles = async (user, files) => {
   const bucket = storage.bucket(STORAGE_NAME);
-
-  files.forEach(file => {
+  console.log('iniciando attach');
+  
+  files.forEach(async file => {
     const name = file.originalname;
     const blob = bucket.file(name);
     let attach = {};
@@ -101,19 +92,25 @@ const uploadFiles = async (user, files) => {
     attach.filename = file.originalname;
     attach.mimetype = file.mimetype;
     attach.register_date = new Date();
-    attach.filesize = file.size;
+    attach.filesize = file.size; 
     Attachment.create(attach);
+    console.log('adjuntos')
     const newPromise = new Promise((resolve, reject) => {
       blob.createWriteStream({
         metadata: { contentType: file.mimetype }
-      }).on('finish', async response => {
-        await blob.makePublic();
-        resolve(getPublicUrl(name));
+      }).on('finish', response => {
+        console.log('finish');
+        blob.makePublic();
+        resolve(attach);
       }).on('error', err => {
+        console.log('errrp');
         reject('upload error: ', err);
       }).end(file.buffer);
     });
+    await newPromise;
+    console.log('FILE: ', file.originalname);
   });
+  
 }
 
 module.exports = {
