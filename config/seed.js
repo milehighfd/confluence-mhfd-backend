@@ -20,6 +20,6 @@ const seed = async () => {
     User.create(userAdmin);
     
   }
-  //attachmentService.migrateFilesFromCloud();
+  attachmentService.migrateFilesFromCloud();
 };
 seed();
