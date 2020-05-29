@@ -25,7 +25,24 @@ const listAttachments = async (page, limit, sortByField, sortType) => {
       [sortByField, sortType]
     ]
   });
-  return attachments;
+  return attachments.map((resp) => {
+    return {
+      '_id': resp._id,
+      'filename': {
+        'filename': resp.filename,
+        'mimetype': resp.mimetype,
+        'value': resp.value
+      },
+      'mimetype': resp.mimetype,
+      'user_id': resp.user_id,
+      'value': resp.value,
+      'register_date': resp.register_date,
+      'filesize': resp.filesize,
+      'createdAt': resp.createdAt
+    }
+  });
+  /*
+  respuesta.map((resp) => {*/
 }
 
 const migrateFilesFromCloud = async () => {
