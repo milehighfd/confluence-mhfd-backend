@@ -136,9 +136,9 @@ router.get('/me', auth, async (req, res) => {
   let user = req.user
   let result1 = {};
   let polygon = [];
-  let coordinates = {
-    longitude: -105.28208041754,
-    latitude: 40.087323445772
+  let coordinates = { 
+    longitude: -104.9063129121965, 
+    latitude: 39.768682416183
   };
   result1['_id'] = user._id;
   result1['firstName'] = user.firstName;
@@ -156,13 +156,13 @@ router.get('/me', auth, async (req, res) => {
   result1['designation'] = user.designation;
   result1['photo'] = user.photo;
 
-  if (req.user.designation === ROLES.MFHD_ADMIN ||
-    req.user.designation === ROLES.OTHER) {
-    organization_query = ORGANIZATION_DEFAULT;
-  } else {
+  if (req.user.designation === ROLES.GOVERNMENT_STAFF ||
+    req.user.designation === ROLES.GOVERNMENT_ADMIN ) {
     organization_query = req.user.organization;
+  } else {
+    organization_query = ORGANIZATION_DEFAULT;
   }
-  //console.log('organ', organization_query);
+  console.log('organ', organization_query);
   try {
     const newProm = new Promise((resolve, reject) => {
       const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM organizations WHERE name = '${organization_query}' `;
@@ -202,11 +202,11 @@ router.get('/me', auth, async (req, res) => {
                 longitude: (longitude_max + longitude_min) / 2,
                 latitude: (latitude_max + latitude_min) / 2
               };
-              
+
             } else {
               coordinates = {
-                longitude: -105.28208041754,
-                latitude: 40.087323445772
+                longitude: -104.9063129121965, 
+                latitude: 39.768682416183
               };
               polygon = [];
 
@@ -233,6 +233,7 @@ router.get('/me', auth, async (req, res) => {
   }
   result1['coordinates'] = coordinates;
   result1['polygon'] = polygon;
+  console.log(result1);
   res.status(200).send(result1);
 });
 
