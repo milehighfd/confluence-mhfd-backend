@@ -149,11 +149,32 @@ const changePassword = async (changePasswordId, password) => {
       error: 'Recovery password id expired'
     });
   } */
-  user.password = await bcrypt.hash(password, 8);
+  /* user.password = await bcrypt.hash(password, 8);
+  console.log('password', password, user.password);
   user.changePasswordId = '';
   user.changePasswordExpiration = new Date();
-  await user.save();
-  return user;
+  await user.save(); */
+
+  const user1 = await User.findByPk(user._id, { raw: true });
+  //console.log('USEEEEEER', user1);
+
+  const newPwd = await bcrypt.hash(password, 8);
+  user1.password = newPwd;
+  user1.changePasswordId = '';
+  user1.changePasswordExpiration = null;
+  console.log('PASSWORD', password, user.password);
+  //user1.save();
+  await User.update(user1, {
+    where: {
+      _id: user._id
+    }
+  }).then(function () {
+    console.log('guardando');
+  }).catch(err1 => {
+    console.log(err1);
+  }); 
+
+  return user1;
 };
 
 const requiredFields = (type) => {
@@ -174,7 +195,7 @@ const requiredFields = (type) => {
     return [FIRST_NAME, LAST_NAME, DESIGNATION, EMAIL, ORGANIZATION, PASSWORD];
   }
   if (type === 'edit') {
-    return [FIRST_NAME, LAST_NAME, EMAIL, CITY, COUNTY, SERVICE_AREA, PHONE, TITLE, DESIGNATION];
+    return [FIRST_NAME, LAST_NAME, EMAIL, CITY, COUNTY, SERVICE_AREA, PHONE, TITLE, ORGANIZATION, DESIGNATION];
   }
 }
 

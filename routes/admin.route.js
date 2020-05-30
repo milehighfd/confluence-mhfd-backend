@@ -87,6 +87,7 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
     sort = 'name';
   } */
   if (organization) {
+    console.log(organization)
     search_obj['organization'] = String(organization);
   }
   if (serviceArea) {

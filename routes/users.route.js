@@ -136,8 +136,8 @@ router.get('/me', auth, async (req, res) => {
   let user = req.user
   let result1 = {};
   let polygon = [];
-  let coordinates = { 
-    longitude: -104.9063129121965, 
+  let coordinates = {
+    longitude: -104.9063129121965,
     latitude: 39.768682416183
   };
   result1['_id'] = user._id;
@@ -157,7 +157,7 @@ router.get('/me', auth, async (req, res) => {
   result1['photo'] = user.photo;
 
   if (req.user.designation === ROLES.GOVERNMENT_STAFF ||
-    req.user.designation === ROLES.GOVERNMENT_ADMIN ) {
+    req.user.designation === ROLES.GOVERNMENT_ADMIN) {
     organization_query = req.user.organization;
   } else {
     organization_query = ORGANIZATION_DEFAULT;
@@ -205,7 +205,7 @@ router.get('/me', auth, async (req, res) => {
 
             } else {
               coordinates = {
-                longitude: -104.9063129121965, 
+                longitude: -104.9063129121965,
                 latitude: 39.768682416183
               };
               polygon = [];
@@ -233,7 +233,7 @@ router.get('/me', auth, async (req, res) => {
   }
   result1['coordinates'] = coordinates;
   result1['polygon'] = polygon;
-  console.log(result1);
+  //console.log(result1);
   res.status(200).send(result1);
 });
 
@@ -335,7 +335,33 @@ router.get('/get-position', auth, async (req, res) => {
 
 router.post('/reset-password', validator(['id', 'password']), async (req, res) => {
   try {
-    const user = await userService.changePassword(req.body.id, req.body.password);
+    //const user = await userService.changePassword(req.body.id, req.body.password);
+    const chgId = req.body.id;
+    const user = await User.findOne({
+      where: {
+        changePasswordId: chgId,
+      },
+    });
+    if (!user) {
+      logger.error('Invalid recovery password id: ' + changePasswordId);
+      throw new Error({
+        error: 'Invalid recovery password id'
+      });
+    }
+    const now = new Date();
+    console.log(user.changePasswordExpiration);
+    console.log(typeof user.changePasswordExpiration);
+    if (now.getTime() > user.changePasswordExpiration.getTime()) {
+      logger.error('Recovery password id expired: ' + changePasswordId + ', ' + user.changePasswordExpiration);
+      throw new Error({
+        error: 'Recovery password id expired'
+      });
+    }
+    const newPwd = await bcrypt.hash(req.body.password, 8);
+    user.password = newPwd;
+    user.changePasswordId = '';
+    user.changePasswordExpiration = null;
+    user.save();
     res.send(user);
   } catch (error) {
     logger.error(error);
