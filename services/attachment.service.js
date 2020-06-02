@@ -70,20 +70,27 @@ const countAttachments = async () => {
 }
 
 const removeAttachment = async (id) => {
-  const attach = await Attachment.findByPk(id, { raw: true }); // 'projects/' + 
-  await storage.bucket(STORAGE_NAME).file(attach.filename).delete();
-  await Attachment.destroy({
-    where: {
-      _id: attach._id
-    }
-  });
+  //const newPromise = new Promise((resolve, reject) => {
+    const attach = await Attachment.findByPk(id, { raw: true }); // 'projects/' + 
+    await storage.bucket(STORAGE_NAME).file(attach.filename).delete();
+    console.log(attach.filename);
+    await Attachment.destroy({
+      where: {
+        _id: attach._id
+      }
+    });
+    //resolve(id);
+  //});
+  //await newPromise;
+  
 }
 
 const uploadFiles = async (user, files) => {
   const bucket = storage.bucket(STORAGE_NAME);
   console.log('iniciando attach');
   
-  files.forEach(async file => {
+  //files.forEach(async file => {
+  for(const file of files ) {
     const name = file.originalname;
     const blob = bucket.file(name);
     let attach = {};
@@ -94,22 +101,23 @@ const uploadFiles = async (user, files) => {
     attach.register_date = new Date();
     attach.filesize = file.size; 
     Attachment.create(attach);
-    console.log('adjuntos')
+    //console.log('adjuntos')
     const newPromise = new Promise((resolve, reject) => {
       blob.createWriteStream({
         metadata: { contentType: file.mimetype }
-      }).on('finish', response => {
-        console.log('finish');
-        blob.makePublic();
+      }).on('finish', async response => {
+        //console.log('finish');
+        await blob.makePublic();
         resolve(attach);
+        
       }).on('error', err => {
-        console.log('errrp');
+        //console.log('errrp');
         reject('upload error: ', err);
       }).end(file.buffer);
     });
     await newPromise;
-    console.log('FILE: ', file.originalname);
-  });
+    //console.log('FILE: ', file.originalname);
+  }
   
 }
 

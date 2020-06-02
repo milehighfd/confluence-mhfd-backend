@@ -23,7 +23,9 @@ router.post('/upload-file', [auth, multer.array('file')], async (req, res) => {
          return res.status(400).send({ error: 'You must send user photo' });
       }
       const user = req.user;
+      //console.log('LLAMANDO METODO')
       await attachmentService.uploadFiles(user, req.files);
+      //console.log('FIN UPLOAD');
       res.send({message: "upload files"});
    } catch (error) {
       logger.error(error);
@@ -63,7 +65,7 @@ router.get('/get-files', auth, async (req, res) => {
 router.delete('/remove/:id', auth, async (req, res) => {
    try {
       const id = req.params.id;
-      attachmentService.removeAttachment(id)
+      await attachmentService.removeAttachment(id);
       res.send({message: "Attachment remove successfully."});
    } catch (error) {
       logger.error(error);

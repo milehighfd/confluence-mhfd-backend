@@ -98,8 +98,8 @@ const sendConfirmAccount = async (user) => {
     html: emailToSend
   };
 
-  const info = await transporter.sendMail(options);
-  logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
+  await transporter.sendMail(options); // const info = 
+  //logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 }
 
 const uploadPhoto = async (user, files) => {

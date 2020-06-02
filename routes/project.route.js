@@ -136,14 +136,14 @@ router.get('/get-project-collaborators', auth, async (req, res) => {
     res.status(500).send({ error: error });
   }
 })
-// auth, 
-router.post('/filters', async (req, res) => {
+
+router.post('/filters', auth, async (req, res) => {
   try {
     console.log(CARTO_TOKEN);
-    const sql = `SELECT * FROM problems `;
-    const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
-    let result = [];
-    https.get(URL, response => {
+    //const sql = `SELECT * FROM problems `;
+    //const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
+    //let result = [];
+    /* https.get(URL, response => {
       console.log('status ' + response.statusCode);
       if (response.statusCode === 200) {
         let str = '';
@@ -159,11 +159,11 @@ router.post('/filters', async (req, res) => {
       console.log('failed call to ', url, 'with error ', err);
       logger.error(`failed call to ${url}  with error  ${err}`)
       res.status(500).send({ error: err });
-    });
-    /* const data = req.body;
-    const { fieldsort = 'dateCreated', sorttype = '-1' } = req.query;
+    }); */
+    const data = req.body;
+    const { fieldsort = 'dateCreated', sorttype = 'desc' } = req.query;
     const result = await projectService.filterProject(data, fieldsort, sorttype);
-    res.status(200).send(result); */
+    res.status(200).send(result);
   } catch (error) {
     logger.error(error);
     res.status(500).send({ error: error });
