@@ -83,10 +83,6 @@ router.put('/update', auth, async (req, res) => {
       }
     }
     for (const key in req.body) {
-      /* if (key !== '_id') {
-        console.log(key, req.body[key]);
-        user[key] = req.body[key];
-      } */
       switch (key) {
         case 'firstName':
           user[key] = req.body[key];
@@ -162,7 +158,6 @@ router.get('/me', auth, async (req, res) => {
   } else {
     organization_query = ORGANIZATION_DEFAULT;
   }
-  console.log('organ', organization_query);
   try {
     const newProm = new Promise((resolve, reject) => {
       const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM organizations WHERE name = '${organization_query}' `;
@@ -179,9 +174,7 @@ router.get('/me', auth, async (req, res) => {
           response.on('end', function () {
             result = JSON.parse(str).rows;
             if (result.length > 0) {
-              //console.log('datos');
               const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
-              //let coordinates = [];
               let latitude_array = [];
               let longitude_array = [];
               for (const key in all_coordinates[0]) {
@@ -197,7 +190,6 @@ router.get('/me', auth, async (req, res) => {
               const latitude_max = Math.max.apply(Math, latitude_array);
               const longitude_min = Math.min.apply(Math, longitude_array);
               const longitude_max = Math.max.apply(Math, longitude_array);
-              //console.log('max', maxvalue, 'min', minvalue);
               coordinates = {
                 longitude: (longitude_max + longitude_min) / 2,
                 latitude: (latitude_max + latitude_min) / 2
@@ -222,7 +214,7 @@ router.get('/me', auth, async (req, res) => {
       }).on('error', err => {
         console.log('failed call to ', url, 'with error ', err);
         logger.error(`failed call to ${url}  with error  ${err}`)
-        //res.status(500).send({ error: err });
+        
       });
     });
 
@@ -233,7 +225,6 @@ router.get('/me', auth, async (req, res) => {
   }
   result1['coordinates'] = coordinates;
   result1['polygon'] = polygon;
-  //console.log(result1);
   res.status(200).send(result1);
 });
 
@@ -265,7 +256,6 @@ router.post('/recovery-password', async (req, res) => {
   if (!user) {
     return res.status(422).send({ error: 'Email not found!' });
   }
-  //console.log("ID: " + user._id);
   await user.generateChangePassword();
   await userService.sendRecoverPasswordEmail(user);
   res.send(user);
@@ -279,11 +269,11 @@ router.get('/get-position', auth, async (req, res) => {
   } else {
     organization_query = req.user.organization;
   }
-  //console.log('organ', organization_query);
+  
   try {
     const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM organizations WHERE name = '${organization_query}' `;
     const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
-    let result = [];// stenvelope
+    let result = [];
     console.log('URL', URL);
     https.get(URL, response => {
       console.log('status ' + response.statusCode);
@@ -315,8 +305,6 @@ router.get('/get-position', auth, async (req, res) => {
               longitude: -105.28208041754,
               latitude: 40.087323445772
             };
-            /* let coordinates = [];
-            coordinates.push([-105.28208041754, 40.087323445772]); */
             return res.status(200).send(coordinates);
           }
 
@@ -335,7 +323,6 @@ router.get('/get-position', auth, async (req, res) => {
 
 router.post('/reset-password', validator(['id', 'password']), async (req, res) => {
   try {
-    //const user = await userService.changePassword(req.body.id, req.body.password);
     const chgId = req.body.id;
     const user = await User.findOne({
       where: {

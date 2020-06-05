@@ -1,5 +1,4 @@
 const express = require('express');
-//const User = require('../models/user.model');
 const db = require('../config/db');
 const User = db.user;
 const router = express.Router();
@@ -17,9 +16,8 @@ router.post('/login', async (req, res) => {
       email,
       password
     } = req.body;
-    console.log('uno')
     const user = await User.findByCredentials(email, password);
-    //console.log('USER', user)
+    
     const userResult = {
       email: user.email,
       designation: user.designation
@@ -30,11 +28,11 @@ router.post('/login', async (req, res) => {
       });
     }
     const token = await user.generateAuthToken();
-    //console.log('TOKEN', token)
-    let logActivity = {}; //new LogActivity(); 
+    
+    let logActivity = {}; 
     logActivity.user_id = user._id;
     logActivity.activityType = ACTIVITY_TYPE.USER_LOGIN;
-    //console.log(logActivity);
+    
     logActivityService.saveLogActivity(logActivity);
     
     res.send({

@@ -2,8 +2,6 @@ const { Storage } = require('@google-cloud/storage');
 const path = require('path');
 const https = require('https');
 const { Op } = require("sequelize");
-
-//const Project = require('../models/project.model');
 const db = require('../config/db');
 const Project = db.project;
 const userService = require('../services/user.service');
@@ -21,46 +19,8 @@ function getPublicUrl(filename) {
 
 const filterProject = async (filters) => {
   const projects  = await Project.findAll();
-  /* const sql = `SELECT * FROM problems `;
-  const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
-  let result = [];
-  https.get(URL, response => {
-    console.log('status ' + response.statusCode);
-    if (response.statusCode === 200) {
-      let str = '';
-      response.on('data', function (chunk) {
-        str += chunk;
-      });
-      response.on('end', function () {
-        result = JSON.parse(str).rows;
-        //console.log('ending', result);
-      });
-    }
-  }); */
   return projects;
 }
-/* const filterProject = async (filters, fieldSort, sortType) => {
-  let queryObject = {};
-  queryObject.where = {};
-  for (const key in filters) {
-    if (key === FIELDS.REQUEST_NAME && filters[key] != null) { 
-      queryObject.where.requestName = {[Op.like]: '%' + filters[key] + '%'}
-    } else if ((key === FIELDS.ESTIMATED_COST || key === FIELDS.MHFD_DOLLAR_ALLOCATED) && filters[key] != null) {
-      let initValue = filters[key];
-
-      initValue = initValue.split('[').join("");
-      initValue = initValue.split(']').join("");
-      const range = initValue.split(",");
-      //queryObject.where[key] = 
-    } else if (key === FIELDS.CAPITAL_STATUS) {
-      queryObject.where.status = filters[key]
-    } else {
-      queryObject.where[key] = filters[key];
-    }
-  }
-  console.log(queryObject);
-  return await Project.findAll(queryObject);
-} */
 
 const getCollaboratorsByProject = async (user) => {
   let result = [];
@@ -87,8 +47,6 @@ const getCollaboratorsByProject = async (user) => {
 const buildJsonData = async (project) => {
   let data = {};
   if (project.projectType === PROJECT_TYPE.CAPITAL) {
-    // requiredFields = ['requestName', 'description', 'mhfdFundingRequest',
-    //   'localDollarsContributed', 'requestFundingYear', 'goal'];
     data['projectType'] = project.projectType;
     data['requestName'] = project.requestName;
     data['description'] = project.description;
@@ -101,8 +59,6 @@ const buildJsonData = async (project) => {
     if (project.projectType === PROJECT_TYPE.MAINTENANCE) {
       switch (project.projectSubtype) {
         case PROJECT_SUBTYPE.DEBRIS_MANAGEMENT:
-          // requiredFields = ['requestName', 'description', 'mhfdDollarRequest',
-          //   'maintenanceEligility', 'frecuency'];
           data['projectType'] = project.projectType;
           data['projectSubtype'] = project.projectSubtype;
           data['requestName'] = project.requestName;
@@ -112,8 +68,6 @@ const buildJsonData = async (project) => {
           data['maintenanceEligility'] = project.maintenanceEligility;
           break;
         case PROJECT_SUBTYPE.VEGETATION_MANAGEMENT:
-          // requiredFields = ['requestName', 'description', 'mhfdDollarRequest',
-          //   'recurrence', 'frecuency', 'maintenanceEligility'];
           data['projectType'] = project.projectType;
           data['projectSubtype'] = project.projectSubtype;
           data['requestName'] = project.requestName;
@@ -124,20 +78,15 @@ const buildJsonData = async (project) => {
           data['maintenanceEligility'] = project.maintenanceEligility;
           break;
         case PROJECT_SUBTYPE.SEDIMENT_REMOVAL:
-          // requiredFields = ['requestName', 'description', 'mhfdDollarRequest',
-          //   'recurrence', 'frecuency', 'maintenanceEligility'];
           data['projectType'] = project.projectType;
           data['projectSubtype'] = project.projectSubtype;
           data['requestName'] = project.requestName;
-          //data['description'] = project.description;
           data['mhfdDollarRequest'] = project.mhfdDollarRequest;
           data['recurrence'] = project.recurrence;
           data['frecuency'] = project.frecuency;
           data['maintenanceEligility'] = project.maintenanceEligility;
           break;
         case PROJECT_SUBTYPE.MINOR_REPAIRS:
-          // requiredFields = ['requestName', 'description', 'mhfdDollarRequest',
-          //   'maintenanceEligility'];
           data['projectType'] = project.projectType;
           data['projectSubtype'] = project.projectSubtype;
           data['requestName'] = project.requestName;
@@ -146,8 +95,6 @@ const buildJsonData = async (project) => {
           data['maintenanceEligility'] = project.maintenanceEligility;
           break;
         case PROJECT_SUBTYPE.RESTORATION:
-          // requiredFields = ['requestName', 'description', 'mhfdDollarRequest',
-          //   'maintenanceEligility'];
           data['projectType'] = project.projectType;
           data['projectSubtype'] = project.projectSubtype;
           data['requestName'] = project.requestName;
@@ -158,7 +105,6 @@ const buildJsonData = async (project) => {
       }
     } else {
       if (project.projectType === PROJECT_TYPE.PROPERTY_ACQUISITION) {
-        // requiredFields = ['requestName', 'description', 'mhfdDollarRequest', 'localDollarsContributed'];
         data['projectType'] = project.projectType;
         data['requestName'] = project.requestName;
         data['description'] = project.description;
@@ -167,7 +113,6 @@ const buildJsonData = async (project) => {
       } else {
         if (project.projectType == PROJECT_TYPE.STUDY) {
           if (project.projectSubType == PROJECT_SUBTYPE.MASTER_PLAN) {
-            // requiredFields = ['requestName', 'sponsor', 'coSponsor', 'requestedStartyear', 'goal'];
             data['projectType'] = project.projectType;
             data['projectSubtype'] = project.projectSubtype;
             data['requestName'] = project.requestName;
@@ -176,7 +121,6 @@ const buildJsonData = async (project) => {
             data['requestedStartyear'] = project.requestedStartyear;
             data['goal'] = project.goal;
           } else {
-            // requiredFields = ['requestName', 'sponsor', 'coSponsor', 'requestedStartyear'];
             data['projectType'] = project.projectType;
             data['projectSubtype'] = project.projectSubtype;
             data['requestName'] = project.requestName;
@@ -185,7 +129,6 @@ const buildJsonData = async (project) => {
             data['requestedStartyear'] = project.requestedStartyear;
           }
         } else {
-          // requiredFields = ['requestName', 'description'];
           data['projectType'] = project.projectType;
           data['requestName'] = project.requestName;
           data['description'] = project.description;
@@ -199,29 +142,15 @@ const buildJsonData = async (project) => {
 
 const saveProject = async (project, files) => {
 
-  // project.status = PROJECT_STATUS.DRAFT;
-  // project.dateCreated = new Date();
-  // project.priority = PRIORITY.HIGH;
-  // project.estimatedCost = 0;
   let data = this.buildJsonData(project);
   data.status = PROJECT_STATUS.DRAFT;
   data.dateCreated = new Date();
   data.priority = PRIORITY.HIGH;
   data.estimatedCost = 0;
-  console.log('log', data);
-  //project.collaborators = project.creator;
-  //console.log('project ', project);
-
-  /* if (project.tasks.length > 0) {
-    if (project.tasks[0] !== "") {
-      project.tasks = project.tasks[0].split(',');
-    }
-  } */
-
+  
   if (project.projectType === PROJECT_TYPE.CAPITAL || project.projectType === PROJECT_TYPE.MAINTENANCE) {
 
     if (project.projectType === PROJECT_TYPE.CAPITAL) {
-      //console.log(project.components);
       project.components = JSON.parse(project.components);
     }
     const bucket = storage.bucket(STORAGE_NAME);
@@ -254,7 +183,6 @@ const saveProject = async (project, files) => {
     });
   } else {
     Project.create(project);
-    //await project.save();
     return project;
   }
 }
@@ -291,29 +219,11 @@ const filterByField = async (field) => {
 
 const counterProjectByCreator = async (creator) => {
   const data = await Project.findAll();
-  /*
-  {
-    attributes: ['projectType', sequelize.fn('count', sequelize.col('projectType'))
-    ],
-    group: ['Project.projectType']
-  }*/
-  //console.log(data);
-  /* const data = await Project.aggregate([
-    {
-      $match : {"creator": creator._id}
-    },
-    {
-      $group : {
-        _id: '$projectType',
-        count: { $sum: 1}
-      }
-    }
-  ]); */
   return data;
 }
 
 const filterByFieldDistinct = async (field) => {
-  console.log(field);
+  
   const data = await Project.collection.distinct(field);
   return data;
 }

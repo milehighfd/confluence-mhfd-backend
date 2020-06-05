@@ -32,25 +32,12 @@ router.post('/', async (req, res) => {
     res.status(500).send(error);
   }
 });
-// auth, 
+
 router.post('/create', [auth, multer.array('file', QUANTITY_FILES_ALLOWED), validate], async (req, res) => {
   try {
     console.log(req.body);
     var project = req.body;
     project.creator = req.user.id;
-    /* if (project.projectType === PROJECT_TYPE.CAPITAL || project.projectType === PROJECT_TYPE.MAINTENANCE) {
-       if (!req.files) {
-          logger.error('You must send the image logo');
-          return res.status(400).send({error: 'You must send the image logo'});
-       }
-       const logoMimetype = req.files[MAIN_IMAGE_POSITION].mimetype.includes('png') ||
-          req.files[MAIN_IMAGE_POSITION].mimetype.includes('jpeg') || req.files[MAIN_IMAGE_POSITION].mimetype.includes('jpg');
-       if (!logoMimetype) {
-          logger.error('You must send the image logo');
-          return res.status(400).send({error: 'You must send the image logo'});
-       }
-    } */
-    //let project = '';
     await projectService.saveProject(project, req.files);
     res.status(201).send(project);
   } catch (error) {
@@ -139,27 +126,6 @@ router.get('/get-project-collaborators', auth, async (req, res) => {
 
 router.post('/filters', auth, async (req, res) => {
   try {
-    console.log(CARTO_TOKEN);
-    //const sql = `SELECT * FROM problems `;
-    //const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
-    //let result = [];
-    /* https.get(URL, response => {
-      console.log('status ' + response.statusCode);
-      if (response.statusCode === 200) {
-        let str = '';
-        response.on('data', function (chunk) {
-          str += chunk;
-        });
-        response.on('end', function () {
-          result = JSON.parse(str).rows;
-          return res.status(200).send(result);
-        });
-      }
-    }).on('error', err => {
-      console.log('failed call to ', url, 'with error ', err);
-      logger.error(`failed call to ${url}  with error  ${err}`)
-      res.status(500).send({ error: err });
-    }); */
     const data = req.body;
     const { fieldsort = 'dateCreated', sorttype = 'desc' } = req.query;
     const result = await projectService.filterProject(data, fieldsort, sorttype);
@@ -232,14 +198,6 @@ router.get('/:id', async (req, res, next) => {
 router.get('/', async (req, res) => {
   const projects = await projectService.findAll();
   res.send(projects);
-  /* Project.find()
-     .then(projects => {
-        res.send(projects);
-     }).catch(err => {
-        res.status(500).send({
-           error: err.message || 'Some error ocurred while retrieving Project'
-        });
-     }); */
 });
 
 module.exports = router;

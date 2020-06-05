@@ -1,11 +1,9 @@
-//const LogActivity = require('../models/logActivity.model');
 const db = require('../config/db');
 const LogActivity = db.logActivity;
 const User = db.user;
 
 const getLogActivities = async (page, limit, sortByField, sortType) => {
   let result = [];
-  //console.log('page', page, 'limit', limit); 'DESC'
   await LogActivity.findAll({
     include: [{
       model: User,

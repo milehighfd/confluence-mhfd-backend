@@ -55,7 +55,7 @@ const migrateFilesFromCloud = async () => {
       let attach = {};
       attach.value = getPublicUrl(file.name);
       attach.user_id = user._id;
-      attach.filename = file.name; //.substring(file.name.lastIndexOf('/') + 1, file.name.length);
+      attach.filename = file.name; 
       attach.mimetype = file.metadata.contentType;
       attach.register_date = new Date();
       attach.filesize = file.metadata.size;
@@ -70,8 +70,7 @@ const countAttachments = async () => {
 }
 
 const removeAttachment = async (id) => {
-  //const newPromise = new Promise((resolve, reject) => {
-    const attach = await Attachment.findByPk(id, { raw: true }); // 'projects/' + 
+    const attach = await Attachment.findByPk(id, { raw: true }); 
     await storage.bucket(STORAGE_NAME).file(attach.filename).delete();
     console.log(attach.filename);
     await Attachment.destroy({
@@ -79,9 +78,6 @@ const removeAttachment = async (id) => {
         _id: attach._id
       }
     });
-    //resolve(id);
-  //});
-  //await newPromise;
   
 }
 
@@ -89,7 +85,6 @@ const uploadFiles = async (user, files) => {
   const bucket = storage.bucket(STORAGE_NAME);
   console.log('iniciando attach');
   
-  //files.forEach(async file => {
   for(const file of files ) {
     const name = file.originalname;
     const blob = bucket.file(name);
@@ -101,22 +96,18 @@ const uploadFiles = async (user, files) => {
     attach.register_date = new Date();
     attach.filesize = file.size; 
     Attachment.create(attach);
-    //console.log('adjuntos')
     const newPromise = new Promise((resolve, reject) => {
       blob.createWriteStream({
         metadata: { contentType: file.mimetype }
       }).on('finish', async response => {
-        //console.log('finish');
         await blob.makePublic();
         resolve(attach);
         
       }).on('error', err => {
-        //console.log('errrp');
         reject('upload error: ', err);
       }).end(file.buffer);
     });
     await newPromise;
-    //console.log('FILE: ', file.originalname);
   }
   
 }

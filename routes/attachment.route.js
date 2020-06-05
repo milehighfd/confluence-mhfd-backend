@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const Attachement = require('../models/attachment.model');
-//const uploadFile = require('express-fileupload');
 const path = require('path');
 const auth = require('../auth/auth');
 var fs = require('fs');
@@ -23,9 +22,7 @@ router.post('/upload-file', [auth, multer.array('file')], async (req, res) => {
          return res.status(400).send({ error: 'You must send user photo' });
       }
       const user = req.user;
-      //console.log('LLAMANDO METODO')
       await attachmentService.uploadFiles(user, req.files);
-      //console.log('FIN UPLOAD');
       res.send({message: "upload files"});
    } catch (error) {
       logger.error(error);

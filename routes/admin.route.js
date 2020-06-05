@@ -83,9 +83,7 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
   const name = req.query.name;
   const sort = req.query.sort ? req.query.sort : 'name';
   const sortObject = {};
-  /* if (!sort) {
-    sort = 'name';
-  } */
+  
   if (organization) {
     console.log(organization)
     search_obj['organization'] = String(organization);

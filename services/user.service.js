@@ -13,8 +13,6 @@ const { Storage } = require('@google-cloud/storage');
 const { FIELDS } = require('../lib/enumConstants');
 const logger = require('../config/logger');
 const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
-//const userService = require('../services/u')
-//const UPDATEABLE_FIELDS = userService.requiredFields('edit');
 
 const storage = new Storage({
   keyFilename: path.join(__dirname, '../config/mhfd-dev-14f5db72ccee.json'),
@@ -40,12 +38,6 @@ const getTransporter = () => {
 
 const findAllUsers = () => {
   const users = User.findAll();
-  /* .then(data => {
-    console.log(data);
-  })
-  .catch(err => {
-    console.log(err);
-  }) */
   return users;
 }
 
@@ -85,7 +77,7 @@ const sendApprovedAccount = async (user) => {
 }
 
 const sendConfirmAccount = async (user) => {
-  const email = user.email; // registered_account
+  const email = user.email; 
   const template = fs.readFileSync(__dirname + '/templates/email_registered-MHFD.html', 'utf8');
   const completeName = user.firstName + ' ' + user.lastName;
   const emailToSend = template.split('{{completeName}}').join(completeName);
@@ -98,8 +90,8 @@ const sendConfirmAccount = async (user) => {
     html: emailToSend
   };
 
-  await transporter.sendMail(options); // const info = 
-  //logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
+  const info = await transporter.sendMail(options); 
+  logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 }
 
 const uploadPhoto = async (user, files) => {
@@ -141,22 +133,8 @@ const changePassword = async (changePasswordId, password) => {
     });
   }
   const now = new Date();
-  /* console.log(user.changePasswordExpiration);
-  console.log(typeof user.changePasswordExpiration);
-  if (now.getTime() > user.changePasswordExpiration.getTime()) {
-    logger.error('Recovery password id expired: ' + changePasswordId + ', ' + user.changePasswordExpiration);
-    throw new Error({
-      error: 'Recovery password id expired'
-    });
-  } */
-  /* user.password = await bcrypt.hash(password, 8);
-  console.log('password', password, user.password);
-  user.changePasswordId = '';
-  user.changePasswordExpiration = new Date();
-  await user.save(); */
 
   const user1 = await User.findByPk(user._id, { raw: true });
-  //console.log('USEEEEEER', user1);
 
   const newPwd = await bcrypt.hash(password, 8);
   user1.password = newPwd;
