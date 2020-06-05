@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const User = db.user; // require('../models/user.model');
+const User = db.user; 
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const {
@@ -102,7 +102,6 @@ const uploadPhoto = async (user, files) => {
       const name = Date.now() + file.originalname;
       user.photo = getPublicUrl(name);
       user.save();
-      //console.log(user);
       const blob = bucket.file(name);
       blob.createWriteStream({
         metadata: { contentType: file.mimetype }
@@ -125,7 +124,7 @@ const changePassword = async (changePasswordId, password) => {
   const user = await User.findOne({
     changePasswordId
   });
-  //console.log(user);
+  
   if (!user) {
     logger.error('Invalid recovery password id: ' + changePasswordId);
     throw new Error({
@@ -140,8 +139,7 @@ const changePassword = async (changePasswordId, password) => {
   user1.password = newPwd;
   user1.changePasswordId = '';
   user1.changePasswordExpiration = null;
-  console.log('PASSWORD', password, user.password);
-  //user1.save();
+  
   await User.update(user1, {
     where: {
       _id: user._id
