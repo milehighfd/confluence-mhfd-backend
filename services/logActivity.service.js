@@ -1,45 +1,35 @@
-const LogActivity = require('../models/logActivity.model');
+const db = require('../config/db');
+const LogActivity = db.logActivity;
+const User = db.user;
 
 const getLogActivities = async (page, limit, sortByField, sortType) => {
-
-  const result = await LogActivity.aggregate([
-    {
-      $lookup: {
-        from: "users",
-        localField: "userId",
-        foreignField: "_id",
-        as: "user"
-      }
-    }, 
-    {
-      $sort: {
-        sortByField: parseInt(sortType)
-      }
-    },
-    {
-      $project: {
-        "_id": 1,
-        "activityType": 1,
-        "registerDate": 1,
-        "user": {"firstName":1,"lastName":1, "city":1}
-      }
-    },
-    {
-      $replaceRoot: {
-        newRoot: {
-          $mergeObjects: [ {
-            $arrayElemAt: [ "$user", 0]
-          }, "$$ROOT"]
+  let result = [];
+  await LogActivity.findAll({
+    include: [{
+      model: User,
+      require: true
+    }],
+    offset: limit * (page - 1),
+    limit: limit,
+    order: [
+      [sortByField, sortType] 
+    ]
+  }).then(logs => {
+    result = logs.map(log => {
+      return Object.assign(
+        {},
+        {
+          log_id: log.id,
+          user_id: log.user_id,
+          registerDate: log.registerDate,
+          activityType: log.activityType,
+          firstName: log.user.firstName,
+          lastName: log.user.lastName,
+          city: log.user.city
         }
-      }
-    },
-    {
-      $project: {
-        user: 0
-      }
-    }
-  ]).limit(limit * page)
-  .skip(limit * (page - 1));
+      );
+    });
+  });
   return result;
 }
 
@@ -49,7 +39,8 @@ const countLogActivities = async () => {
 
 const saveLogActivity = async (logActivity) => {
   logActivity.registerDate = new Date();
-  await logActivity.save();
+  await LogActivity.create(logActivity);
+  console.log('activity save');
   return logActivity;
 }
 

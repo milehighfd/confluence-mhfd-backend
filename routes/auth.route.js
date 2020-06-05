@@ -1,5 +1,6 @@
 const express = require('express');
-const User = require('../models/user.model');
+const db = require('../config/db');
+const User = db.user;
 const router = express.Router();
 const auth = require('../auth/auth');
 const crypto = require('crypto');
@@ -16,7 +17,7 @@ router.post('/login', async (req, res) => {
       password
     } = req.body;
     const user = await User.findByCredentials(email, password);
-
+    
     const userResult = {
       email: user.email,
       designation: user.designation
@@ -28,10 +29,10 @@ router.post('/login', async (req, res) => {
     }
     const token = await user.generateAuthToken();
     
-    let logActivity = new LogActivity();
-    logActivity.userId = user._id;
+    let logActivity = {}; 
+    logActivity.user_id = user._id;
     logActivity.activityType = ACTIVITY_TYPE.USER_LOGIN;
-    logActivity.city = '';
+    
     logActivityService.saveLogActivity(logActivity);
     
     res.send({

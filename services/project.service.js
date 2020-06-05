@@ -1,52 +1,35 @@
-const {Storage} = require('@google-cloud/storage');
+const { Storage } = require('@google-cloud/storage');
 const path = require('path');
-
-const Project = require('../models/project.model');
+const https = require('https');
+const { Op } = require("sequelize");
+const db = require('../config/db');
+const Project = db.project;
 const userService = require('../services/user.service');
 const { PROJECT_STATUS, PROJECT_TYPE, PRIORITY, FIELDS } = require('../lib/enumConstants');
-const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
+const { STORAGE_NAME, STORAGE_URL, CARTO_TOKEN, PROJECT_TABLE } = require('../config/config');
 
 const storage = new Storage({
   keyFilename: path.join(__dirname, '../config/develop-test-271312-20b199f0adbe.json'),
   projectId: 'develop-test-271312'
 });
 
-function getPublicUrl (filename) {
+function getPublicUrl(filename) {
   return `${STORAGE_URL}/${STORAGE_NAME}/${filename}`;
 }
 
-const filterProject = async (filters, fieldSort, sortType) => {
-  let data = {};
-  for (const key in filters) {
-    if (key === FIELDS.REQUEST_NAME && filters[key] != null) {
-      data[key] = new RegExp(filters[key], 'i');
-    } else if ((key === FIELDS.ESTIMATED_COST || key === FIELDS.MHFD_DOLLAR_ALLOCATED) && filters[key] != null) {
-      let initValue = filters[key];
-
-      initValue = initValue.split('[').join("");
-      initValue = initValue.split(']').join("");
-      const range = initValue.split(",");
-      data[key] = {
-        "$gte": +range[0],
-        "$lte": +range[1]
-      }
-    } else if (key === FIELDS.CAPITAL_STATUS) {
-      data['status'] = filters[key];
-    } else {
-      data[key] = filters[key];
-    }
-  }
-  return await Project.find(data).sort([[fieldSort, sortType]]);
+const filterProject = async (filters) => {
+  const projects  = await Project.findAll();
+  return projects;
 }
 
 const getCollaboratorsByProject = async (user) => {
   let result = [];
   const projects = await Project.find({
-    collaborators: {"$in": user._id}
+    collaborators: { "$in": user._id }
   });
-  for(const project of projects) {
+  for (const project of projects) {
     const listCollaborators = [];
-    for(const collaborator of project.collaborators) {
+    for (const collaborator of project.collaborators) {
       await userService.findById(collaborator).then(
         (user) => {
           listCollaborators.push(user[0]);
@@ -57,27 +40,117 @@ const getCollaboratorsByProject = async (user) => {
     data.collaborators = listCollaborators;
     result.push(data);
   }
-  
+
   return result;
 }
 
-const saveProject = async (project, files) => {
-  project.status = PROJECT_STATUS.DRAFT;
-  project.dateCreated = new Date();
-  project.priority = PRIORITY.HIGH;
-  project.estimatedCost = 0;
-  project.collaborators = project.creator;
+const buildJsonData = async (project) => {
+  let data = {};
+  if (project.projectType === PROJECT_TYPE.CAPITAL) {
+    data['projectType'] = project.projectType;
+    data['requestName'] = project.requestName;
+    data['description'] = project.description;
+    data['mhfdFundingRequest'] = project.mhfdFundingRequest;
+    data['localDollarsContributed'] = project.localDollarsContributed;
+    data['requestFundingYear'] = project.requestFundingYear;
+    data['goal'] = project.goal;
 
-  if (project.tasks.length > 0) {
-    if (project.tasks[0] !== "") {
-      project.tasks = project.tasks[0].split(',');
+  } else {
+    if (project.projectType === PROJECT_TYPE.MAINTENANCE) {
+      switch (project.projectSubtype) {
+        case PROJECT_SUBTYPE.DEBRIS_MANAGEMENT:
+          data['projectType'] = project.projectType;
+          data['projectSubtype'] = project.projectSubtype;
+          data['requestName'] = project.requestName;
+          data['description'] = project.description;
+          data['mhfdDollarRequest'] = project.mhfdDollarRequest;
+          data['maintenanceEligility'] = project.maintenanceEligility;
+          data['maintenanceEligility'] = project.maintenanceEligility;
+          break;
+        case PROJECT_SUBTYPE.VEGETATION_MANAGEMENT:
+          data['projectType'] = project.projectType;
+          data['projectSubtype'] = project.projectSubtype;
+          data['requestName'] = project.requestName;
+          data['description'] = project.description;
+          data['mhfdDollarRequest'] = project.mhfdDollarRequest;
+          data['recurrence'] = project.recurrence;
+          data['frecuency'] = project.frecuency;
+          data['maintenanceEligility'] = project.maintenanceEligility;
+          break;
+        case PROJECT_SUBTYPE.SEDIMENT_REMOVAL:
+          data['projectType'] = project.projectType;
+          data['projectSubtype'] = project.projectSubtype;
+          data['requestName'] = project.requestName;
+          data['mhfdDollarRequest'] = project.mhfdDollarRequest;
+          data['recurrence'] = project.recurrence;
+          data['frecuency'] = project.frecuency;
+          data['maintenanceEligility'] = project.maintenanceEligility;
+          break;
+        case PROJECT_SUBTYPE.MINOR_REPAIRS:
+          data['projectType'] = project.projectType;
+          data['projectSubtype'] = project.projectSubtype;
+          data['requestName'] = project.requestName;
+          data['description'] = project.description;
+          data['mhfdDollarRequest'] = project.mhfdDollarRequest;
+          data['maintenanceEligility'] = project.maintenanceEligility;
+          break;
+        case PROJECT_SUBTYPE.RESTORATION:
+          data['projectType'] = project.projectType;
+          data['projectSubtype'] = project.projectSubtype;
+          data['requestName'] = project.requestName;
+          data['description'] = project.description;
+          data['mhfdDollarRequest'] = project.mhfdDollarRequest;
+          data['maintenanceEligility'] = project.maintenanceEligility;
+          break;
+      }
+    } else {
+      if (project.projectType === PROJECT_TYPE.PROPERTY_ACQUISITION) {
+        data['projectType'] = project.projectType;
+        data['requestName'] = project.requestName;
+        data['description'] = project.description;
+        data['mhfdDollarRequest'] = project.mhfdDollarRequest;
+        data['localDollarsContributed'] = project.localDollarsContributed;
+      } else {
+        if (project.projectType == PROJECT_TYPE.STUDY) {
+          if (project.projectSubType == PROJECT_SUBTYPE.MASTER_PLAN) {
+            data['projectType'] = project.projectType;
+            data['projectSubtype'] = project.projectSubtype;
+            data['requestName'] = project.requestName;
+            data['sponsor'] = project.sponsor;
+            data['coSponsor'] = project.coSponsor;
+            data['requestedStartyear'] = project.requestedStartyear;
+            data['goal'] = project.goal;
+          } else {
+            data['projectType'] = project.projectType;
+            data['projectSubtype'] = project.projectSubtype;
+            data['requestName'] = project.requestName;
+            data['sponsor'] = project.sponsor;
+            data['coSponsor'] = project.coSponsor;
+            data['requestedStartyear'] = project.requestedStartyear;
+          }
+        } else {
+          data['projectType'] = project.projectType;
+          data['requestName'] = project.requestName;
+          data['description'] = project.description;
+        }
+      }
     }
   }
 
+  return data;
+}
+
+const saveProject = async (project, files) => {
+
+  let data = this.buildJsonData(project);
+  data.status = PROJECT_STATUS.DRAFT;
+  data.dateCreated = new Date();
+  data.priority = PRIORITY.HIGH;
+  data.estimatedCost = 0;
+  
   if (project.projectType === PROJECT_TYPE.CAPITAL || project.projectType === PROJECT_TYPE.MAINTENANCE) {
 
-    if(project.projectType === PROJECT_TYPE.CAPITAL) {
-      console.log(project.components);
+    if (project.projectType === PROJECT_TYPE.CAPITAL) {
       project.components = JSON.parse(project.components);
     }
     const bucket = storage.bucket(STORAGE_NAME);
@@ -88,7 +161,7 @@ const saveProject = async (project, files) => {
       const blob = bucket.file(name);
       const newPromise = new Promise((resolve, reject) => {
         blob.createWriteStream({
-          metadata: { contentType: file.mimetype}
+          metadata: { contentType: file.mimetype }
         }).on('finish', async response => {
           await blob.makePublic();
           resolve(getPublicUrl(name));
@@ -109,7 +182,7 @@ const saveProject = async (project, files) => {
       });
     });
   } else {
-    await project.save();
+    Project.create(project);
     return project;
   }
 }
@@ -117,17 +190,17 @@ const saveProject = async (project, files) => {
 const userCreators = async () => {
   const users = await Project.aggregate([
     {
-        $lookup: {
-            from: "users",
-            localField: "creator",
-            foreignField: "_id",
-            as: "users"
-        }
-    }, 
+      $lookup: {
+        from: "users",
+        localField: "creator",
+        foreignField: "_id",
+        as: "users"
+      }
+    },
     {
-        $group: { 
-            _id: "$users"
-        }
+      $group: {
+        _id: "$users"
+      }
     }
   ]);
   return users;
@@ -145,24 +218,19 @@ const filterByField = async (field) => {
 }
 
 const counterProjectByCreator = async (creator) => {
-  const data = await Project.aggregate([
-    {
-      $match : {"creator": creator._id}
-    },
-    {
-      $group : {
-        _id: '$projectType',
-        count: { $sum: 1}
-      }
-    }
-  ]);
+  const data = await Project.findAll();
   return data;
 }
 
 const filterByFieldDistinct = async (field) => {
-  console.log(field);
+  
   const data = await Project.collection.distinct(field);
   return data;
+}
+
+const findAll = () => {
+  const projects = Project.findAll();
+  return projects;
 }
 
 module.exports = {
@@ -172,5 +240,6 @@ module.exports = {
   filterByField,
   filterByFieldDistinct,
   counterProjectByCreator,
-  getCollaboratorsByProject
+  getCollaboratorsByProject,
+  findAll
 };

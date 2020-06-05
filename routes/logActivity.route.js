@@ -21,7 +21,7 @@ router.post('/save', auth, async (req, res) => {
 router.get('/get-all', [auth, isAdminAccount], async (req, res) => {
   try {
     const { page = 1, limit = 10, sortby = 'registerDate',
-          sorttype = '-1' } = req.query;
+          sorttype = 'desc' } = req.query;
     
     const activities = await logActivityService.getLogActivities(page, limit, sortby, sorttype);
     const count = await logActivityService.countLogActivities();
@@ -40,7 +40,8 @@ router.get('/get-all', [auth, isAdminAccount], async (req, res) => {
 
 router.get('/csv', [auth, isAdminAccount], async (req, res) => {
   try {
-    let activity = await logActivityService.getLogActivities(1, 1000000, 'registerDate', '-1');
+    let activity = await logActivityService.getLogActivities(1, 1000000, 'registerDate', 'desc');
+    
     res.set('Content-Type', 'application/octet-stream');
     const fields = ['registerDate', 'city', 'activityType', 'firstName', 'lastName'];
     const data = json2csv.parse(activity, {fields});

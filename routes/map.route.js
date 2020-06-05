@@ -5,7 +5,6 @@ const https = require('https');
 const {CARTO_TOKEN} = require('../config/config');
 
 router.post('/', async (req, res) => { 
-  console.log(CARTO_TOKEN);
   const table = req.body.table;
   const sql = `SELECT * FROM ${table}`;
   var mapConfig = {
@@ -18,9 +17,9 @@ router.post('/', async (req, res) => {
   ]};
   mapConfig =  encodeURIComponent(JSON.stringify(mapConfig));
   const URL = `https://denver-mile-high-admin.carto.com/api/v1/map?config=${mapConfig}&api_key=${CARTO_TOKEN}`;
-  console.log(URL);
+  
   https.get(URL, response => {
-    console.log('response.statusCode' + response.statusCode);
+    
     if (response.statusCode == 200) {
       let str = '';
       response.on('data', function (chunk) {
@@ -39,4 +38,5 @@ router.post('/', async (req, res) => {
     res.status(500).send({error: err});
   });
 });
+
 module.exports = (router);

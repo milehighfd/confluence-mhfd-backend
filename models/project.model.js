@@ -1,128 +1,166 @@
-const mongoose = require('mongoose');
-const { PROJECT_STATUS, PROJECT_TYPE, PROJECT_SUBTYPE, GOAL, MAINTENANCE_ELIGIBILITY, SERVICE_AREA, FRECUENCY, RECURRENCE, TASK, PRIORITY } = require('../lib/enumConstants');
-const user = require('../models/user.model');
+module.exports = (sequelize, DataType) => {
+  const Project = sequelize.define('project', {
+    _id: {
+      type: DataType.UUID,
+      defaultValue: DataType.UUIDV4,
+      primaryKey: true
+    },
+    requestName: {
+      type: DataType.STRING
+    },
+    imageName: {
+      type: DataType.STRING
+    },
+    projectType: {
+      type: DataType.ENUM,
+      values: ['capital', 'maintenance', 'study', 'propertyAdquistion', 'special']
+    },
+    projectSubtype: {
+      type: DataType.ENUM,
+      values: ['debrisManagement', 'vegetationManagement', 'minorRepairs', 'sedimentRemoval',
+        'restoration', 'masterPlan', 'fhad']
+    },
+    description: {
+      type: DataType.STRING
+    },
+    goal: {
+      type: DataType.ENUM,
+      values: ['reduceFloodRiskStructures', 'streamBankBedStabilization', 'createSharedUsePathsRecreation',
+        'vegetationEnhancements', 'includePermanentWaterQualityBMP', 'stabilization',
+        'eliminateRoadwayOvertopping', 'increasedConveyance', 'peakFlowReduction',
+        'waterQuality', 'guideDevelopment']
+    },
+    publicAccess: {
+      type: DataType.BOOLEAN
+    },
+    maintenanceEligility: {
+      type: DataType.ENUM,
+      values: ['capitalProject', 'MEP', 'grandfathered', 'notEligible', 'iDontKnow']
+    },
+    // TODO tasks
+    recurrence: {
+      type: DataType.ENUM,
+      values: ['oneTime', 'annually', 'multiple']
+    },
+    frecuency: {
+      type: DataType.ENUM,
+      values: ['cyclePerYear']
+    },
+    sponsor: {
+      type: DataType.STRING
+    },
+    coSponsor: {
+      type: DataType.STRING
+    },
+    additionalCost: {
+      type: DataType.FLOAT
+    },
+    additionalCostDescription: {
+      type: DataType.STRING
+    },
+    overheadCost: {
+      type: DataType.FLOAT
+    },
+    estimatedCost: {
+      type: DataType.FLOAT
+    },
+    mhfdFundingRequest: {
+      type: DataType.STRING
+    },
+    requestFundingYear: {
+      type: DataType.STRING
+    },
+    mhfdDollarRequest: {
+      type: DataType.FLOAT
+    },
+    localDollarsContributed: {
+      type: DataType.FLOAT
+    },
+    requestedStartyear: {
+      type: DataType.INTEGER
+    },
+    requestedRank: {
+      type: DataType.FLOAT
+    },
+    onbaseId: {
+      type: DataType.STRING
+    },
+    projectName: {
+      type: DataType.STRING
+    },
+    status: {
+      type: DataType.ENUM,
+      values: ['draft', 'requested', 'approved', 'idle', 'initiated', 'prelimDesign', 'construction', 'finalDesign']
+    },
+    workPlanYear: {
+      type: DataType.INTEGER
+    },
+    mhfdDollarAllocated: {
+      type: DataType.FLOAT
+    },
+    finalCost: {
+      type: DataType.FLOAT
+    },
+    startYear: {
+      type: DataType.INTEGER
+    },
+    completedYear: {
+      type: DataType.INTEGER
+    },
+    consultant: {
+      type: DataType.INTEGER,
+      allowNull: true
+    },
+    contractor: {
+      type: DataType.INTEGER,
+      allowNull: true
+    },
+    localGovernmentManager: {
+      type: DataType.STRING
+    },
+    mhfdManager: {
+      type: DataType.INTEGER,
+      allowNull: true
+    },
+    serviceArea: {
+      type: DataType.ENUM,
+      values: ['boulderCreek', 'cherryCreek', 'north', 'northeast', 'sandCreek', 'south',
+        'southwest', 'west']
+    },
+    county: {
+      type: DataType.STRING
+    },
+    jurisdiction: {
+      type: DataType.STRING
+    },
+    streamName: {
+      type: DataType.STRING
+    },
+    mhfdCode: {
+      type: DataType.STRING
+    },
+    legacyCode: {
+      type: DataType.STRING
+    },
+    creator: {
+      type: DataType.INTEGER,
+      allowNull: true
+    },
+    dateCreated: {
+      type: DataType.DATE
+    },
+    lastModifiedUser: {
+      type: DataType.INTEGER,
+      allowNull: true
+    },
+    priority: {
+      type: DataType.ENUM,
+      values: ['high', 'medium', 'low']
+    },
+    mainImage: {
+      type: DataType.STRING
+    },
+  });
 
-const Schema = mongoose.Schema;
-
-var ProjectSchema = new Schema({
-   objectId: Number,
-   requestName: String,
-   imageName: String,
-   projectType: {
-      type: String,
-      enum: Object.values(PROJECT_TYPE)
-   },
-   projectSubtype: {
-      type: String,
-      enum: Object.values(PROJECT_SUBTYPE)
-   },
-   description: String,
-   goal: {
-      type: String,
-      enum: Object.values(GOAL)
-   },
-   publicAccess: {
-      type: Boolean,
-      default: false
-   },
-   maintenanceEligility: {
-      type: String,
-      enum: Object.values(MAINTENANCE_ELIGIBILITY)
-   },
-   tasks: Array,
-   recurrence: {
-      type: String,
-      enum: Object.values(RECURRENCE)
-   },
-   frecuency: {
-      type: String,
-      enum: Object.values(FRECUENCY)
-   },
-   sponsor: String,
-   coSponsor: String,
-   additionalCost: Number,
-   additionalCostDescription: String,
-   overheadCost: Number,
-   estimatedCost: Number,
-   mhfdFundingRequest: String,
-   requestFundingYear: String,
-   mhfdDollarRequest: Number,
-   localDollarsContributed: Number,
-   requestedStartyear: Number,
-   requestedRank: Number,
-   onbaseId: String,
-   projectName: String,
-   status: {
-      type: String,
-      enum: Object.values(PROJECT_STATUS)
-   },
-   workPlanYear: Number,
-   mhfdDollarAllocated: Number,
-   finalCost: Number,
-   startYear: Number,
-   completedYear: Number,
-   consultant: [{
-      type: Schema.Types.ObjectId,
-      ref: 'User'
-   }],
-   contractor: [{
-      type: Schema.Types.ObjectId,
-      ref: 'User'
-   }],
-   localGovernmentManager: String,
-   mhfdManager: [{
-      type: Schema.Types.ObjectId,
-      ref: 'User'
-   }],
-   serviceArea: {
-      type: String,
-      enum: Object.values(SERVICE_AREA)
-   },
-   county: String,
-   jurisdiction: String,
-   streamName: String,
-   mhfdCode: String,
-   legacyCode: String,
-   creator: [{
-      type: Schema.Types.ObjectId,
-      ref: 'User'
-   }],
-   dateCreated: Date,
-   lastModifiedUser: [{
-      type: Schema.Types.ObjectId,
-      ref: 'User'
-   }],
-   lastModifiedDate: Date,
-   image: {
-      data: Buffer, contentType: String
-   },
-   priority: {
-      type: String,
-      enum: Object.values(PRIORITY)
-   },
-   imageProject: {
-      type: Schema.Types.ObjectId,
-      ref: 'Attachment'
-   },
-   listDocuments: {
-      type: Array,
-      ref: 'Attachment'
-   },
-   // main image of the project
-   mainImage: String,
-   // attachments list
-   attachList: Array,
-   components: Array,
-   coordinates: String,
-   collaborators: Array
-});
-
-ProjectSchema.virtual("nameCreator")
-   .get(function() {
-      const user = User.findOne({_id});
-      return "usuario de pruebas"
-   });
-
-const Project = mongoose.model('Project', ProjectSchema);
-
-module.exports = Project;
+  return Project;
+}
