@@ -142,7 +142,7 @@ const buildJsonData = async (project) => {
 
 const saveProject = async (project, files) => {
 
-  let data = this.buildJsonData(project);
+  let data = project; //this.buildJsonData(project);
   data.status = PROJECT_STATUS.DRAFT;
   data.dateCreated = new Date();
   data.priority = PRIORITY.HIGH;
