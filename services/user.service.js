@@ -15,8 +15,8 @@ const logger = require('../config/logger');
 const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
 
 const storage = new Storage({
-  keyFilename: path.join(__dirname, '../config/mhfd-dev-14f5db72ccee.json'),
-  projectId: 'mhfd-dev'
+  keyFilename: path.join(__dirname, '../config/mhfd-cloud-8212a0689e50.json'),
+  projectId: 'mhfd-cloud'
 });
 
 function getPublicUrl(filename) {

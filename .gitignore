@@ -62,6 +62,7 @@ typings/
 
 # token for google cloud storage
 config/mhfd-dev-14f5db72ccee.json
+config/mhfd-cloud-8212a0689e50.json
 
 # images download from google drive
 images/drive/
