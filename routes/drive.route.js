@@ -30,7 +30,7 @@ router.get('/get-images-drive', async (req, res) => {
         if (err) throw err;
   
         for (const file of files) {
-          await images.push(MHFD_BACKEND + path.join(IMAGES_URL, file));
+          await images.push(path.join(MHFD_BACKEND, file));
         }
         resolve(images);
       });
@@ -44,7 +44,7 @@ router.get('/get-images-drive', async (req, res) => {
   }
 });
 
-var j = schedule.scheduleJob('5 * * * * *', function(){
+var j = schedule.scheduleJob('5 5 * * * *', function(){
   
   try {
     if (!fs.existsSync(IMAGES_FROM_GOOGLE_DRIVE)) {
