@@ -44,7 +44,7 @@ const getCollaboratorsByProject = async (user) => {
   return result;
 }
 
-const buildJsonData = async (project) => {
+function buildJsonData(project) {
   let data = {};
   if (project.projectType === PROJECT_TYPE.CAPITAL) {
     data['projectType'] = project.projectType;
@@ -142,7 +142,7 @@ const buildJsonData = async (project) => {
 
 const saveProject = async (project, files) => {
 
-  let data = project; //this.buildJsonData(project);
+  let data = buildJsonData(project);
   data.status = PROJECT_STATUS.DRAFT;
   data.dateCreated = new Date();
   data.priority = PRIORITY.HIGH;

@@ -66,3 +66,4 @@ config/mhfd-dev-14f5db72ccee.json
 # images download from google drive
 images/drive/
 public/images/drive/
+public/images/

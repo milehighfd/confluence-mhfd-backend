@@ -16,8 +16,8 @@ var schedule = require('node-schedule');
 const { MHFD_BACKEND } = require('../config/config');
 
 const FOLDER_CONFLUENCE_IMAGES = '1KxAtCizoff5g__SEj3ESs5unPZHD4n3W';
-const IMAGES_FROM_GOOGLE_DRIVE = './public/images/drive/';
-const IMAGES_URL = '/images/drive/';
+const IMAGES_FROM_GOOGLE_DRIVE = './public/images/';
+const IMAGES_URL = '/images/';
 
 
 router.get('/get-images-drive', async (req, res) => {
@@ -44,13 +44,16 @@ router.get('/get-images-drive', async (req, res) => {
   }
 });
 
-var j = schedule.scheduleJob('5 5 0 * * *', function(){
+var j = schedule.scheduleJob('5 * * * * *', function(){
   
   try {
+    if (!fs.existsSync(IMAGES_FROM_GOOGLE_DRIVE)) {
+      fs.mkdirSync(IMAGES_FROM_GOOGLE_DRIVE);
+    }
     logger.info('Cleaning folfer '+ IMAGES_FROM_GOOGLE_DRIVE);
     fs.readdir(IMAGES_FROM_GOOGLE_DRIVE, (err, files) => {
       if (err) throw err;
-
+      //console.log(files);
       for (const file of files) {
         fs.unlink(path.join(IMAGES_FROM_GOOGLE_DRIVE, file), err => {
           if (err) throw err;
