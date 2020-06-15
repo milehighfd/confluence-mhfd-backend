@@ -30,7 +30,7 @@ router.get('/get-images-drive', async (req, res) => {
         if (err) throw err;
   
         for (const file of files) {
-          await images.push(path.join(MHFD_BACKEND, file));
+          await images.push(file);
         }
         resolve(images);
       });
