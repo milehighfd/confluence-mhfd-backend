@@ -19,6 +19,8 @@ var attachmentRouter = require('./routes/attachment.route');
 const db = require('./config/db');
 db.sequelize.sync();
 
+const cacheTime = 1000 * 60 * 60;
+
 //require('./config/db');
 require('./config/seed');
 
@@ -39,6 +41,9 @@ app.use(function(res, res, next) {
   next();
 });
 
+app.use(express.static('public', {
+  maxAge: cacheTime
+}));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);

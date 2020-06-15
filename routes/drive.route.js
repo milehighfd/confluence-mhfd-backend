@@ -3,16 +3,62 @@ const readline = require('readline');
 const { google } = require('googleapis');
 const express = require('express');
 const router = express.Router();
-
+const path = require('path');
 const auth = require('../auth/auth');
 const logger = require('../config/logger');
 
 const SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly'];
 const TOKEN_PATH = __dirname + '/token.json';
 const CREDENTIALS_PATH = __dirname + '/credentials.json';
+const https = require('https');
+const request = require('request');
+var schedule = require('node-schedule');
+const { MHFD_BACKEND } = require('../config/config');
+
+const FOLDER_CONFLUENCE_IMAGES = '1KxAtCizoff5g__SEj3ESs5unPZHD4n3W';
+const IMAGES_FROM_GOOGLE_DRIVE = './public/images/drive/';
+const IMAGES_URL = '/images/drive/';
+
 
 router.get('/get-images-drive', async (req, res) => {
   try {
+    let imagesFinal = [];
+
+    const newProm = new Promise((resolve, reject) => {
+      let images = [];
+      fs.readdir(IMAGES_FROM_GOOGLE_DRIVE, async (err, files) => {
+        if (err) throw err;
+  
+        for (const file of files) {
+          await images.push(MHFD_BACKEND + path.join(IMAGES_URL, file));
+        }
+        resolve(images);
+      });
+    });
+    
+    imagesFinal = await newProm;
+    res.status(200).send(imagesFinal);
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send(error);
+  }
+});
+
+var j = schedule.scheduleJob('5 5 0 * * *', function(){
+  
+  try {
+    logger.info('Cleaning folfer '+ IMAGES_FROM_GOOGLE_DRIVE);
+    fs.readdir(IMAGES_FROM_GOOGLE_DRIVE, (err, files) => {
+      if (err) throw err;
+
+      for (const file of files) {
+        fs.unlink(path.join(IMAGES_FROM_GOOGLE_DRIVE, file), err => {
+          if (err) throw err;
+        })
+      }
+    });
+
+    logger.info('Downloading images from Google Drive');
     let files = [''];
     
     fs.readFile(CREDENTIALS_PATH, async (err, content) => {
@@ -21,11 +67,10 @@ router.get('/get-images-drive', async (req, res) => {
       }
       files = await authorize(JSON.parse(content), listFiles);
 
-      res.status(200).send(files);
+      
     });
   } catch (error) {
     logger.error(error);
-    res.status(500).send(error);
   }
 });
 
@@ -87,9 +132,35 @@ function getAccessToken(oAuth2Client, callback) {
 async function listFiles(auth) {
   const drive = google.drive({ version: 'v3', auth });
   let files = [];
+  let files2 = [];
   try {
+    
     const newProm = new Promise((resolve, reject) => {
       drive.files.list({
+        q: "mimeType contains 'image'",
+        pageSize: 10,
+        fields: 'nextPageToken, files(id, name)',
+      }, (err, res) => {
+        if (err) {
+          return console.log('The API returned an error: ' + err);
+        }
+        const files1 = res.data.files;
+        if (files1.length) {
+          
+          files1.map((file) => {
+            files2.push(file.id);
+          });
+        } else {
+          console.log('No files found.');
+        }
+        resolve(res.data.files);
+      });
+    })
+    const respuesta = await newProm;
+
+    const newProm1 = new Promise((resolve, reject) => {
+      drive.files.list({
+        q: `'${FOLDER_CONFLUENCE_IMAGES}' in parents`,
         pageSize: 10,
         fields: 'nextPageToken, files(id, name)',
       }, (err, res) => {
@@ -98,15 +169,21 @@ async function listFiles(auth) {
         }
         resolve(res.data.files);
       });
-    })
-    const respuesta = await newProm;
-    
-    respuesta.map((resp) => {
-      if (isImage(resp.name) ) {
-        files.push({
-          image: 'https://drive.google.com/uc?id=' + resp.id,
-          name: resp.name
-        });
+    });
+
+    const respuesta2 = await newProm1;
+    respuesta2.map((resp) => {
+      if(files2.includes(resp.id)) {
+        if (isImage(resp.name) ) {
+          const localPath = IMAGES_FROM_GOOGLE_DRIVE + resp.name;
+          download('https://drive.google.com/uc?id=' + resp.id, localPath, () => {
+            console.log('done');
+          });
+          files.push({
+            image: 'https://drive.google.com/uc?id=' + resp.id,
+            name: resp.name
+          });
+        }
       }
     });
   } catch(error) {
@@ -114,6 +191,14 @@ async function listFiles(auth) {
   }
   
   return files;
+}
+
+const download = (url, path, callback) => {
+  request.head(url, (err, res, body) => {
+    request(url)
+      .pipe(fs.createWriteStream(path))
+      .on('close', callback)
+  })
 }
 
 function isImage(name) {

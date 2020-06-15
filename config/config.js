@@ -6,6 +6,7 @@ const JWT_KEY = process.env.JWT_KEY || 'jwtkey';
 const POSTGRESQL_URL = process.env.POSTGRESQL_URL || 'POSTGRESQL://' + POSTGRESQL_HOST + '/' + POSTGRESQL_DB;
 const JWT_EXPIRANCY = process.env.JWT_EXPIRANCY || 60 * 60;
 const MHFD_FRONTEND = process.env.MHFD_FRONTEND || 'http://localhost/';
+const MHFD_BACKEND = process.env.MHFD_BACKEND || 'http://localhost:3003';
 const MHFD_EMAIL = process.env.MHFD_EMAIL || 'email';
 const MHFD_PASSWORD = process.env.MHFD_PASSWORD || 'password';
 const CARTO_TOKEN = process.env.CARTO_TOKEN || 'b0f91f29fd34765bb173da66ad06d0630a8d3c74';
@@ -23,6 +24,7 @@ module.exports = {
   POSTGRESQL_PASSWORD,
   JWT_EXPIRANCY,
   MHFD_FRONTEND,
+  MHFD_BACKEND,
   MHFD_EMAIL,
   MHFD_PASSWORD,
   CARTO_TOKEN,
