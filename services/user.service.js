@@ -62,8 +62,13 @@ const sendRecoverPasswordEmail = async (user) => {
 
 const sendApprovedAccount = async (user) => {
   const email = user.email;
+  const redirectUrl = MHFD_FRONTEND
   const template = fs.readFileSync(__dirname + '/templates/email_approved.html', 'utf8');
-  const emailToSend = template.split('{{completeName}}').join(user.name);
+  const emailToSend = template.split('{{completeName}}').join(user.name).split('{{url}}').join(redirectUrl);
+  //emailToSend = template.split('{{url}}').join(redirectUrl);
+  /*const redirectUrl = MHFD_FRONTEND + '/confirm-password/' + changePasswordId;
+  const template = fs.readFileSync(__dirname + '/templates/email_reset-pass-MHFD.html', 'utf8');
+  const emailToSend = template.split('{{url}}').join(redirectUrl); */
 
   const transporter = getTransporter();
   const options = {
@@ -79,9 +84,14 @@ const sendApprovedAccount = async (user) => {
 const sendConfirmAccount = async (user) => {
   const email = user.email; 
 
+  const redirectUrl = MHFD_FRONTEND;
   const template = fs.readFileSync(__dirname + '/templates/email_registered-MHFD.html', 'utf8');
   const completeName = user.firstName + ' ' + user.lastName;
-  const emailToSend = template.split('{{completeName}}').join(completeName);
+  console.log(redirectUrl, completeName);
+  const emailToSend = template.split('{{completeName}}').join(user.name).split('{{url}}').join(redirectUrl);
+  //let emailToSend = template.split('{{completeName}}').join(completeName);
+  //emailToSend = template.split('{{url}}').join(redirectUrl);
+  /*emailToSend = template.split('{{url}}').join(redirectUrl); */
 
   const transporter = getTransporter();
   const options = {
