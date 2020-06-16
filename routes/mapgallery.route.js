@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
       });
     }
     else {
-      const PROJECT_FIELDS = `objectid, coverimage, sponsor, finalCost, estimatedCost, status, attachments `;
+      const PROJECT_FIELDS = `objectid, projecttype, coverimage, sponsor, finalCost, estimatedCost, status, attachments, projectname, requestedname `;
       const LINE_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_line_1`;
       const POLYGON_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_polygon_`;
       const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
