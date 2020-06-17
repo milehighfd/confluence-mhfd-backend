@@ -44,7 +44,7 @@ router.get('/get-images-drive', async (req, res) => {
   }
 });
 
-var j = schedule.scheduleJob('0 12 12 * * *', function(){
+var j = schedule.scheduleJob('0 18 12 * * *', function(){
   
   try {
     if (!fs.existsSync(IMAGES_FROM_GOOGLE_DRIVE)) {
