@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
       });
     }
     else {
-      const PROJECT_FIELDS = `objectid, coverimage, sponsor, finalCost, estimatedCost, status, attachments `;
+      const PROJECT_FIELDS = `objectid, coverimage, sponsor, finalCost, estimatedCost, status, attachments, projectname `;
       const LINE_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_line_1`;
       const POLYGON_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_polygon_`;
       const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
@@ -91,5 +91,30 @@ router.get('/', async (req, res) => {
   }
 
 });
+
+
+router.get('/group-by', async (req, res) => {
+  try {
+    const column = req.query.column;
+    const LINE_SQL = `SELECT ${column} FROM projects_line_1 group by ${column} order by ${column}`;
+    const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
+    https.get(LINE_URL, response => {
+      if (response.statusCode === 200) {
+        let str = '';
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+        response.on('end', async function() {
+          let result = JSON.parse(str).rows;
+          //const result = result.concat(JSON.parse(str).rows);
+          return res.status(200).send(result);
+        })
+      }
+    });
+  } catch(error) {
+    logger.error(error);
+    res.status(500).send({error: error}).send({error: 'Connection error'});
+  }
+})
 
 module.exports = (router);
