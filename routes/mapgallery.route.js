@@ -55,14 +55,17 @@ router.get('/', async (req, res) => {
                 });
                 response.on('end', async function () {
                   result = result.concat(JSON.parse(str2).rows);
-                  //console.log(result);
-                  result = await result.map( element => {
-                    return {
-                      ...element,
-                      attachments: attachmentService.findByName(element.attachments)
-                    }
-                  })
-                  return res.status(200).send(result);
+                  const finalResult = [];
+                  for(const element of result) {
+                    const valor = await attachmentService.findByName(element.attachments);// imaben.jpg
+                    finalResult.push(
+                      {
+                        ...element,
+                        attachments: valor
+                      }
+                    );
+                  }
+                  return res.status(200).send(finalResult);
                 });
               } else {
                 return res.status(response.statusCode);

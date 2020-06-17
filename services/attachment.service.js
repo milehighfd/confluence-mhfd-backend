@@ -67,6 +67,7 @@ const migrateFilesFromCloud = async () => {
 }
 
 const findByName = async (name) => {
+  let urlImage = null;
   try {
     const attach = await Attachment.findOne({
       where: {
@@ -74,18 +75,16 @@ const findByName = async (name) => {
       }
     });
     if (attach) {
-      console.log('DATOOOOOOO', attach.value);
-      return attach.value;
+      urlImage = await attach.value;
     } else {
-      return null;
+      urlImage = null;
     }
-    
-    
   } catch(err) {
     logger.error(err);
+    urlImage = null;
   }
-  
 
+  return await urlImage;
 }
 
 const countAttachments = async () => {
