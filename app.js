@@ -12,6 +12,7 @@ const projectRouter = require('./routes/project.route');
 const adminRouter = require('./routes/admin.route');
 const logActivityRouter = require('./routes/logActivity.route');
 const mapRouter = require('./routes/map.route');
+const mapGalleryRouter = require('./routes/mapgallery.route');
 const problemRouter = require('./routes/problem.route');
 const driveRouter = require('./routes/drive.route');
 const attachmentRouter = require('./routes/attachment.route');
