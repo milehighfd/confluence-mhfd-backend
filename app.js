@@ -5,22 +5,21 @@ var morgan = require('morgan');
 
 const logger = require('./config/logger');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users.route');
-var authRouter = require('./routes/auth.route');
-var projectRouter = require('./routes/project.route');
-var adminRouter = require('./routes/admin.route');
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users.route');
+const authRouter = require('./routes/auth.route');
+const projectRouter = require('./routes/project.route');
+const adminRouter = require('./routes/admin.route');
 const logActivityRouter = require('./routes/logActivity.route');
 const mapRouter = require('./routes/map.route');
 const mapGalleryRouter = require('./routes/mapgallery.route');
 const problemRouter = require('./routes/problem.route');
 const driveRouter = require('./routes/drive.route');
-var attachmentRouter = require('./routes/attachment.route');
+const attachmentRouter = require('./routes/attachment.route');
+const galleryRouter = require('./routes/mapgallery.route');
 
 const db = require('./config/db');
 db.sequelize.sync();
-
-const cacheTime = 1000 * 60 * 60;
 
 //require('./config/db');
 require('./config/seed');
@@ -42,9 +41,6 @@ app.use(function(res, res, next) {
   next();
 });
 
-app.use(express.static('public', {
-  maxAge: cacheTime
-}));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
@@ -55,7 +51,7 @@ app.use('/map', mapRouter);
 app.use('/problems', problemRouter);
 app.use('/drive', driveRouter);
 app.use('/attachments', attachmentRouter);
-app.use('/gallery', mapGalleryRouter);
+app.use('/gallery', galleryRouter);
 
 app.listen(3003, () => {
   console.log("Server is listening on port 3003");
