@@ -61,7 +61,7 @@ router.get('/', async (req, res) => {
                   result = result.map(element => {
                     return {
                       ...element,
-                      attachments: attachmentService.findByName(element.attachments)
+                      attachments: attachmentService.findByName(element.coverimage)
                     }
                   })
                   return res.status(200).send(result);
