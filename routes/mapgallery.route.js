@@ -3,12 +3,10 @@ const router = express.Router();
 const https = require('https');
 const fs = require('fs');
 const { google } = require('googleapis');
+const logger = require('../config/logger');
 
 const { CARTO_TOKEN } = require('../config/config');
 const attachmentService = require('../services/attachment.service');
-/* const TOKEN_PATH = __dirname + '/token.json';
-const CREDENTIALS_PATH = __dirname + '/credentials.json';
-const FOLDER_CONFLUENCE_IMAGES = '1KxAtCizoff5g__SEj3ESs5unPZHD4n3W' */; // TODO id de la carpeta
 
 router.get('/', async (req, res) => {
   try {
@@ -58,10 +56,10 @@ router.get('/', async (req, res) => {
                 response.on('end', async function () {
                   result = result.concat(JSON.parse(str2).rows);
                   //console.log(result);
-                  result = result.map(element => {
+                  result = await result.map( element => {
                     return {
                       ...element,
-                      attachments: attachmentService.findByName(element.coverimage)
+                      attachments: attachmentService.findByName(element.attachments)
                     }
                   })
                   return res.status(200).send(result);
@@ -78,7 +76,8 @@ router.get('/', async (req, res) => {
           return res.status(response.statusCode).send({ error: 'Error with C connection' });
         }
       }).on('error', err => {
-        logger.error(`failed call to ${url}  with error  ${err}`)
+        //logger.error(`failed call to ${url}  with error  ${err}`)
+        logger.error(`failed call to url  with error  ${err}`)
         return res.status(500).send({ error: err });
       });
       console.log(URL);
