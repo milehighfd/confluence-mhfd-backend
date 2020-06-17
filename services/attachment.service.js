@@ -7,6 +7,7 @@ const User = db.user;
 const path = require('path');
 const { Storage } = require('@google-cloud/storage');
 const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
+const { Op } = require("sequelize");
 
 const storage = new Storage({
   keyFilename: path.join(__dirname, '../config/mhfd-cloud-8212a0689e50.json'),
@@ -65,6 +66,28 @@ const migrateFilesFromCloud = async () => {
 
 }
 
+const findByName = async (name) => {
+  try {
+    const attach = await Attachment.findOne({
+      where: {
+        filename: { [Op.iLike]: '%'+name+'%' }
+      }
+    });
+    if (attach) {
+      console.log('DATOOOOOOO', attach.value);
+      return attach.value;
+    } else {
+      return null;
+    }
+    
+    
+  } catch(err) {
+    logger.error(err);
+  }
+  
+
+}
+
 const countAttachments = async () => {
   return await Attachment.count();
 }
@@ -117,5 +140,6 @@ module.exports = {
   uploadFiles,
   countAttachments,
   removeAttachment,
-  migrateFilesFromCloud
+  migrateFilesFromCloud,
+  findByName
 }
