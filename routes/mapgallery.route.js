@@ -12,8 +12,72 @@ router.get('/', async (req, res) => {
   try {
     console.log('enter here');
     if (req.query.isproblem) {
+      let filters = '';
+      if (req.query.name) {
+        filters = ` problemname ilike '%${req.query.name}%' `;
+      }
+
+      if (req.query.priority) {
+        //console.log('PRIORU',req.query.priority);
+        if (filters.length > 0) {
+          //console.log('HAY DATO');
+          filters = filters + ` and problempriority = '${req.query.priority}'`;
+        } else {
+          //console.log('no hay');
+          filters = ` problempriority = '${req.query.priority}'`;
+        }
+        console.log('FILTRO', filters);
+      }
+
+      if (req.query.status) {
+        let limite = 0;
+        if (req.query.status === '10') {
+          limite = 25;
+        } else {
+          limite = Number(req.query.status) + 25;
+        }
+        if (filters.length > 0) {
+          filters = filters + ` and (cast(solutionstatus as int) between ${req.query.status} and ${limite}) `;
+        } else {
+          filters = ` (cast(solutionstatus as int) between ${req.query.status} and ${limite}) `;
+        }
+      }
+
+      if (req.query.county) {
+        if (filters.length > 0) {
+          filters = filters + ` and county ilike '${req.query.county}'`;
+        } else {
+          filters = `county ilike '${req.query.county}'`;
+        }
+      }
+
+      if (req.query.cost) {
+        let initValue = 0;
+        let endValue = 0;
+        if (req.query.cost === '1' || req.query.cost === '5') {
+          initValue = Number(req.query.cost) * 1000000;
+          endValue = 10000000;
+        } else {
+          initValue = Number(req.query.cost) * 1000000;
+          endValue = initValue + 5000000;
+        }
+        if (filters.length > 0) {
+          filters = filters + ` and (cast(solutioncost as bigint) between ${initValue} and ${endValue})`;
+        } else {
+          filters = ` (cast(solutioncost as bigint) between ${initValue} and ${endValue})`;
+        }
+        //console.log('FILTROOS2 ', filters);
+      }
+
+      if (filters.length > 0) {
+        filters = ' where ' + filters;
+      }
+      
       const PROBLEM_SQL = `SELECT problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype FROM problems `;
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL}&api_key=${CARTO_TOKEN}`);
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
+      console.log('SQL', PROBLEM_SQL);
+      console.log('FILTER', filters);
+      console.log(URL);
       https.get(URL, response => {
         if (response.statusCode === 200) {
           let str = '';
@@ -33,11 +97,21 @@ router.get('/', async (req, res) => {
       });
     }
     else {
+      let filters = '';
+      //let name = '';
+      if (req.query.name) {
+        //name = req.query.name;
+        filters = ` projectname ilike '%${req.query.name}%' `;
+      }
+
+      if (filters.length > 0) {
+        filters = ' where ' + filters;
+      }
       const PROJECT_FIELDS = `objectid, coverimage, sponsor, finalCost, estimatedCost, status, attachments, projectname `;
       const LINE_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_line_1`;
       const POLYGON_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_polygon_`;
-      const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
-      const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${POLYGON_SQL}&api_key=${CARTO_TOKEN}`);
+      const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL} ${filters}&api_key=${CARTO_TOKEN}`);
+      const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${POLYGON_SQL} ${filters}&api_key=${CARTO_TOKEN}`);
       https.get(LINE_URL, response => {
         if (response.statusCode === 200) {
           let str = '';
