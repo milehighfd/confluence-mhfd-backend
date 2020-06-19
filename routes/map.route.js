@@ -35,6 +35,7 @@ router.post('/', async (req, res) => {
       }
     }
   ]};
+  console.log('TABLA', table);
   mapConfig =  encodeURIComponent(JSON.stringify(mapConfig));
   const URL = `https://denver-mile-high-admin.carto.com/api/v1/map?config=${mapConfig}&api_key=${CARTO_TOKEN}`;
   

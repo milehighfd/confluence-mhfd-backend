@@ -69,11 +69,43 @@ router.get('/', async (req, res) => {
         //console.log('FILTROOS2 ', filters);
       }
 
+      if (req.query.jurisdiction) {
+        if (filters.length > 0) {
+          filters = filters + ` and jurisdiction = '${req.query.jurisdiction}'`;
+        } else {
+          filters = ` jurisdiction = '${req.query.jurisdiction}'`;
+        }
+      }
+
+      if (req.query.mhfdmanager) {
+        if (filters.length > 0) {
+          filters = filters + ` and mhfdmanager = '${req.query.mhfdmanager}'`;
+        } else {
+          filters = `mhfdmanager = '${req.query.mhfdmanager}'`;
+        }
+      }
+
+      if (req.query.problemtype) {
+        if (filters.length > 0) {
+          filters = filters + ` and problemtype = '${req.query.problemtype}'`;
+        } else {
+          filters = ` problemtype = '${req.query.problemtype}'`;
+        }
+      }
+
+      if (req.query.problemtype) {
+        if (filters.length > 0) {
+          filters = filters + ` and source = '${req.query.problemtype}'`
+        } else {
+          filters = ` source = '${req.query.problemtype}'`;
+        }
+      }
+
       if (filters.length > 0) {
         filters = ' where ' + filters;
       }
-      
-      const PROBLEM_SQL = `SELECT problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype FROM problems `;
+
+      const PROBLEM_SQL = `SELECT problemid, problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype FROM problems `;
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
       console.log('SQL', PROBLEM_SQL);
       console.log('FILTER', filters);
@@ -98,20 +130,33 @@ router.get('/', async (req, res) => {
     }
     else {
       let filters = '';
+      console.log('PROJECTS')
       //let name = '';
       if (req.query.name) {
         //name = req.query.name;
         filters = ` projectname ilike '%${req.query.name}%' `;
       }
 
+      if (req.query.projecttype) {
+        console.log('TYPE', req.query.projecttype);
+        if (filters.length > 0) {
+          filters = filters + ` and projecttype = '${req.query.projecttype}'`;
+        } else {
+          filters = `projecttype = '${req.query.projecttype}'`;
+        }
+      }
+
       if (filters.length > 0) {
         filters = ' where ' + filters;
       }
-      const PROJECT_FIELDS = `objectid, coverimage, sponsor, finalCost, estimatedCost, status, attachments, projectname `;
+      console.log('FILTROS', filters);
+
+      const PROJECT_FIELDS = `objectid, projecttype, coverimage, sponsor, finalCost, estimatedCost, status, attachments, projectname `;
       const LINE_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_line_1`;
       const POLYGON_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_polygon_`;
       const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL} ${filters}&api_key=${CARTO_TOKEN}`);
       const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${POLYGON_SQL} ${filters}&api_key=${CARTO_TOKEN}`);
+      console.log(LINE_URL);
       https.get(LINE_URL, response => {
         if (response.statusCode === 200) {
           let str = '';
@@ -130,7 +175,7 @@ router.get('/', async (req, res) => {
                 response.on('end', async function () {
                   result = result.concat(JSON.parse(str2).rows);
                   const finalResult = [];
-                  for(const element of result) {
+                  for (const element of result) {
                     const valor = await attachmentService.findByName(element.attachments);// imaben.jpg
                     finalResult.push(
                       {
@@ -166,6 +211,69 @@ router.get('/', async (req, res) => {
 
 });
 
+router.get('/project-by-id/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    console.log('ID', id)
+    //const PROJECT_FIELDS = `objectid, projecttype, coverimage, sponsor, finalCost, estimatedCost, status, attachments, projectname `;
+    const LINE_SQL = `SELECT * FROM projects_line_1 where objectid=${id}`;
+    //const POLYGON_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_polygon_`;
+    const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL} &api_key=${CARTO_TOKEN}`);
+    //const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${POLYGON_SQL} ${filters}&api_key=${CARTO_TOKEN}`);
+    console.log(LINE_URL);
+    https.get(LINE_URL, response => {
+      if (response.statusCode === 200) {
+        let str = '';
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+        response.on('end', function () {
+          const result = JSON.parse(str).rows[0];
+          console.log('resultado', result);
+          return res.status(200).send(result);
+        });
+      }
+    });
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send({ error: 'No there data with ID' });
+  }
+})
+
+router.get('/problem-by-id/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    //console.log('ID',id);
+    const PROBLEM_SQL = `SELECT * FROM problems where problemid='${id}'`;
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} &api_key=${CARTO_TOKEN}`);
+    console.log('SQL', PROBLEM_SQL);
+    //console.log('FILTER', filters);
+    console.log(URL);
+    https.get(URL, response => {
+      console.log('status', response.statusCode);
+      if (response.statusCode === 200) {
+        let str = '';
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+        response.on('end', function () {
+          const result = JSON.parse(str).rows[0];
+          console.log('resultado', result);
+          return res.status(200).send(result);
+        });
+      } else {
+        return res.status(response.statusCode).send({ error: 'Error with C connection' });
+      }
+    }).on('error', err => {
+      logger.error(`failed call to ${url}  with error  ${err}`)
+      return res.status(500).send({ error: err });
+    });
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send({ error: 'No there data with ID' });
+  }
+})
+
 
 router.get('/group-by', async (req, res) => {
   try {
@@ -178,16 +286,16 @@ router.get('/group-by', async (req, res) => {
         response.on('data', function (chunk) {
           str += chunk;
         });
-        response.on('end', async function() {
+        response.on('end', async function () {
           let result = JSON.parse(str).rows;
           //const result = result.concat(JSON.parse(str).rows);
           return res.status(200).send(result);
         })
       }
     });
-  } catch(error) {
+  } catch (error) {
     logger.error(error);
-    res.status(500).send({error: error}).send({error: 'Connection error'});
+    res.status(500).send({ error: error }).send({ error: 'Connection error' });
   }
 })
 
