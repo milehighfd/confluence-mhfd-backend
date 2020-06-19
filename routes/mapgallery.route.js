@@ -146,12 +146,102 @@ router.get('/', async (req, res) => {
         }
       }
 
+      if (req.query.status) {
+        if (filters.length > 0) {
+          filters = filters + ` and status = '${req.query.status}'`;
+        } else {
+          filters = `status = '${req.query.status}'`;
+        }
+      }
+
+      if (req.query.startyear) {
+        if (filters.length > 0) {
+          filters = filters +  ` and startyear = ${req.query.startyear} `;
+        } else {
+          filters = `startyear = ${req.query.startyear} `;
+        }
+      }
+
+      if (req.query.completedyear) {
+        if (filters.length > 0) {
+          filters = filters + ` and completedyear = ${req.query.completedyear} `;
+        } else {
+          filters = ` completedyear = ${req.query.completedyear} `;
+        }
+      }
+
+      if (req.query.mhfddollarsallocated) {
+        let initValue = Number(req.query.mhfddollarsallocated) * 1000000;
+        let endValue = initValue + 5000000;
+        if (filters.length > 0) {
+          filters = filters + ` and (cast(mhfddollarsallocated as bigint) between ${initValue} and ${endValue})`;
+        } else {
+          filters = `(cast(mhfddollarsallocated as bigint) between ${initValue} and ${endValue})`;
+        }
+      }
+
+      if (req.query.workplanyear) {
+        if (filters.length > 0) {
+          filters = filters + ` and workplanyear = ${req.query.workplanyear}`;
+        } else {
+          filters = ` workplanyear = ${req.query.workplanyear}`;
+        }
+      }
+
+      if (req.query.mhfdmanager) {
+        if (filters.length > 0) {
+          filters = filters + ` and mhfdmanager ilike '%${req.query.mhfdmanager}%'`;
+        } else {
+          filters = ` mhfdmanager ilike '%${req.query.mhfdmanager}%'`;
+        }
+      }
+
+      if (req.query.jurisdiction) {
+        if (filters.length > 0) {
+          filters = filters + ` and jurisdiction = '${req.query.jurisdiction}' `;
+        } else {
+          filters = `jurisdiction = '${req.query.jurisdiction}' `;
+        }
+      }
+
+      if (req.query.lgmanager) {
+        if (filters.length > 0) {
+          filters = filters + ` and lgmanager ilike '%${req.query.lgmanager}%' `;
+        } else {
+          filters = ` lgmanager ilike '%${req.query.lgmanager}%' `;
+        }  
+      }
+
+      if (req.query.county) {
+        if (filters.length > 0) {
+          filters = filters + ` and county = '${req.query.county}'`;
+        } else {
+          filters = `county = '${req.query.county}'`;
+        }
+      }
+
+      if (req.query.streamname) {
+        if (filters.length > 0) {
+          filters = filters + ` and streamname ilike '%${req.query.streamname}%' `;
+        } else {
+          filters = ` streamname ilike '%${req.query.streamname}%' `;
+        }
+      }
+
+      if (req.query.creator) {
+        if (filters.length > 0) { 
+          filters = filters + ` and creator ilike '%${req.query.creator}%' `;
+        } else {
+          filters = ` creator ilike '%${req.query.creator}%' `;
+        }
+      }
+
       if (filters.length > 0) {
         filters = ' where ' + filters;
       }
       console.log('FILTROS', filters);
 
-      const PROJECT_FIELDS = `objectid, projecttype, coverimage, sponsor, finalCost, estimatedCost, status, attachments, projectname `;
+      const PROJECT_FIELDS = `objectid, projecttype, coverimage, sponsor, finalCost, estimatedCost, status, attachments, projectname, jurisdiction `;
       const LINE_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_line_1`;
       const POLYGON_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_polygon_`;
       const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL} ${filters}&api_key=${CARTO_TOKEN}`);
@@ -227,9 +317,12 @@ router.get('/project-by-id/:id', async (req, res) => {
         response.on('data', function (chunk) {
           str += chunk;
         });
-        response.on('end', function () {
+        response.on('end', async function () {
           const result = JSON.parse(str).rows[0];
-          console.log('resultado', result);
+          //console.log('resultado', result);
+          const valor = await attachmentService.findByName(result.attachments);
+          //console.log('IMAGEN', valor);
+          result.attachments = valor;
           return res.status(200).send(result);
         });
       }
@@ -258,7 +351,7 @@ router.get('/problem-by-id/:id', async (req, res) => {
         });
         response.on('end', function () {
           const result = JSON.parse(str).rows[0];
-          console.log('resultado', result);
+          //console.log('resultado', result);
           return res.status(200).send(result);
         });
       } else {
