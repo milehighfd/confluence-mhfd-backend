@@ -13,8 +13,20 @@ router.get('/', async (req, res) => {
     console.log('enter here');
     if (req.query.isproblem) {
       let filters = '';
+
+      if (req.query.bounds) {
+        const coords = req.query.bounds.split(',');
+        filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+        filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`; // only for readbility 
+      }
+
       if (req.query.name) {
-        filters = ` problemname ilike '%${req.query.name}%' `;
+        if (filters.length) {
+         filters = filters = ` and problemname ilike '%${req.query.name}%'`; 
+        }
+        else { 
+          filters = ` problemname ilike '%${req.query.name}%' `;
+        }
       }
 
       if (req.query.priority) {
