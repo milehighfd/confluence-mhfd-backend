@@ -264,7 +264,7 @@ router.get('/', async (req, res) => {
         sort_data = ` order by ${req.query.sortby} ${sorttype}`;
       }
 
-      const PROJECT_FIELDS = `objectid, projecttype, coverimage, sponsor, finalCost, 
+      const PROJECT_FIELDS = `objectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, 
         estimatedCost, status, attachments, projectname, jurisdiction, streamname `;
       const LINE_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_line_1`;
       const POLYGON_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_polygon_`;
