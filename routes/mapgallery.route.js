@@ -105,8 +105,20 @@ router.get('/', async (req, res) => {
         filters = ' where ' + filters;
       }
 
+      let sort_data = '';
+
+      if (req.query.sortby) {
+        let sorttype = '';
+        if (!req.query.sorttype) {
+          sorttype = 'desc';
+        } else {
+          sorttype = req.query.sorttype;
+        }
+        sort_data = ` order by ${req.query.sortby} ${sorttype}`;
+      }
+
       const PROBLEM_SQL = `SELECT problemid, problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype FROM problems `;
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} ${sort_data} &api_key=${CARTO_TOKEN}`);
       console.log('SQL', PROBLEM_SQL);
       console.log('FILTER', filters);
       console.log(URL);
@@ -239,13 +251,25 @@ router.get('/', async (req, res) => {
       if (filters.length > 0) {
         filters = ' where ' + filters;
       }
-      console.log('FILTROS', filters);
 
-      const PROJECT_FIELDS = `objectid, projecttype, coverimage, sponsor, finalCost, estimatedCost, status, attachments, projectname, jurisdiction `;
+      let sort_data = '';
+
+      if (req.query.sortby) {
+        let sorttype = '';
+        if (!req.query.sorttype) {
+          sorttype = 'desc';
+        } else {
+          sorttype = req.query.sorttype;
+        }
+        sort_data = ` order by ${req.query.sortby} ${sorttype}`;
+      }
+
+      const PROJECT_FIELDS = `objectid, projecttype, coverimage, sponsor, finalCost, 
+        estimatedCost, status, attachments, projectname, jurisdiction, streamname `;
       const LINE_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_line_1`;
       const POLYGON_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_polygon_`;
-      const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL} ${filters}&api_key=${CARTO_TOKEN}`);
-      const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${POLYGON_SQL} ${filters}&api_key=${CARTO_TOKEN}`);
+      const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL} ${filters} ${sort_data} &api_key=${CARTO_TOKEN}`);
+      const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${POLYGON_SQL} ${filters} ${sort_data}&api_key=${CARTO_TOKEN}`);
       console.log(LINE_URL);
       https.get(LINE_URL, response => {
         if (response.statusCode === 200) {
