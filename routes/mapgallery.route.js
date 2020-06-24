@@ -154,10 +154,14 @@ router.get('/', async (req, res) => {
     }
     else {
       let filters = '';
-      console.log('PROJECTS')
-      //let name = '';
+      
+      if (req.query.bounds) {
+        const coords = req.query.bounds.split(',');
+        filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+        filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`; // only for readbility 
+      }
+      
       if (req.query.name) {
-        //name = req.query.name;
         filters = ` projectname ilike '%${req.query.name}%' `;
       }
 
