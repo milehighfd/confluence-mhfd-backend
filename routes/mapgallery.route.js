@@ -14,123 +14,10 @@ router.get('/', async (req, res) => {
     if (req.query.isproblem) {
       let filters = '';
 
-      if (req.query.bounds) {
-        const coords = req.query.bounds.split(',');
-        filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-        filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`; // only for readbility 
-      }
-
-      if (req.query.name) {
-        if (filters.length) {
-         filters = filters = ` and problemname ilike '%${req.query.name}%'`; 
-        }
-        else { 
-          filters = ` problemname ilike '%${req.query.name}%' `;
-        }
-      }
-
-      if (req.query.priority) {
-        //console.log('PRIORU',req.query.priority);
-        if (filters.length > 0) {
-          //console.log('HAY DATO');
-          filters = filters + ` and problempriority = '${req.query.priority}'`;
-        } else {
-          //console.log('no hay');
-          filters = ` problempriority = '${req.query.priority}'`;
-        }
-        console.log('FILTRO', filters);
-      }
-
-      if (req.query.status) {
-        let limite = 0;
-        if (req.query.status === '10') {
-          limite = 25;
-        } else {
-          limite = Number(req.query.status) + 25;
-        }
-        if (filters.length > 0) {
-          filters = filters + ` and (cast(solutionstatus as int) between ${req.query.status} and ${limite}) `;
-        } else {
-          filters = ` (cast(solutionstatus as int) between ${req.query.status} and ${limite}) `;
-        }
-      }
-
-      if (req.query.county) {
-        if (filters.length > 0) {
-          filters = filters + ` and county ilike '${req.query.county}'`;
-        } else {
-          filters = `county ilike '${req.query.county}'`;
-        }
-      }
-
-      if (req.query.cost) {
-        let initValue = 0;
-        let endValue = 0;
-        if (req.query.cost === '1' || req.query.cost === '5') {
-          initValue = Number(req.query.cost) * 1000000;
-          endValue = 10000000;
-        } else {
-          initValue = Number(req.query.cost) * 1000000;
-          endValue = initValue + 5000000;
-        }
-        if (filters.length > 0) {
-          filters = filters + ` and (cast(solutioncost as bigint) between ${initValue} and ${endValue})`;
-        } else {
-          filters = ` (cast(solutioncost as bigint) between ${initValue} and ${endValue})`;
-        }
-        //console.log('FILTROOS2 ', filters);
-      }
-
-      if (req.query.jurisdiction) {
-        if (filters.length > 0) {
-          filters = filters + ` and jurisdiction = '${req.query.jurisdiction}'`;
-        } else {
-          filters = ` jurisdiction = '${req.query.jurisdiction}'`;
-        }
-      }
-
-      if (req.query.mhfdmanager) {
-        if (filters.length > 0) {
-          filters = filters + ` and mhfdmanager = '${req.query.mhfdmanager}'`;
-        } else {
-          filters = `mhfdmanager = '${req.query.mhfdmanager}'`;
-        }
-      }
-
-      if (req.query.problemtype) {
-        if (filters.length > 0) {
-          filters = filters + ` and problemtype = '${req.query.problemtype}'`;
-        } else {
-          filters = ` problemtype = '${req.query.problemtype}'`;
-        }
-      }
-
-      if (req.query.problemtype) {
-        if (filters.length > 0) {
-          filters = filters + ` and source = '${req.query.problemtype}'`
-        } else {
-          filters = ` source = '${req.query.problemtype}'`;
-        }
-      }
-
-      if (filters.length > 0) {
-        filters = ' where ' + filters;
-      }
-
-      let sort_data = '';
-
-      if (req.query.sortby) {
-        let sorttype = '';
-        if (!req.query.sorttype) {
-          sorttype = 'desc';
-        } else {
-          sorttype = req.query.sorttype;
-        }
-        sort_data = ` order by ${req.query.sortby} ${sorttype}`;
-      }
+      filters = getFilters(req.query);
 
       const PROBLEM_SQL = `SELECT problemid, problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype FROM problems `;
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} ${sort_data} &api_key=${CARTO_TOKEN}`);
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
       console.log('SQL', PROBLEM_SQL);
       console.log('FILTER', filters);
       console.log(URL);
@@ -154,138 +41,15 @@ router.get('/', async (req, res) => {
     }
     else {
       let filters = '';
-      
-      if (req.query.bounds) {
-        const coords = req.query.bounds.split(',');
-        filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-        filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`; // only for readbility 
-      }
-      
-      if (req.query.name) {
-        filters = ` projectname ilike '%${req.query.name}%' `;
-      }
 
-      if (req.query.projecttype) {
-        console.log('TYPE', req.query.projecttype);
-        if (filters.length > 0) {
-          filters = filters + ` and projecttype = '${req.query.projecttype}'`;
-        } else {
-          filters = `projecttype = '${req.query.projecttype}'`;
-        }
-      }
-
-      if (req.query.status) {
-        if (filters.length > 0) {
-          filters = filters + ` and status = '${req.query.status}'`;
-        } else {
-          filters = `status = '${req.query.status}'`;
-        }
-      }
-
-      if (req.query.startyear) {
-        if (filters.length > 0) {
-          filters = filters +  ` and startyear = ${req.query.startyear} `;
-        } else {
-          filters = `startyear = ${req.query.startyear} `;
-        }
-      }
-
-      if (req.query.completedyear) {
-        if (filters.length > 0) {
-          filters = filters + ` and completedyear = ${req.query.completedyear} `;
-        } else {
-          filters = ` completedyear = ${req.query.completedyear} `;
-        }
-      }
-
-      if (req.query.mhfddollarsallocated) {
-        let initValue = Number(req.query.mhfddollarsallocated) * 1000000;
-        let endValue = initValue + 5000000;
-        if (filters.length > 0) {
-          filters = filters + ` and (cast(mhfddollarsallocated as bigint) between ${initValue} and ${endValue})`;
-        } else {
-          filters = `(cast(mhfddollarsallocated as bigint) between ${initValue} and ${endValue})`;
-        }
-      }
-
-      if (req.query.workplanyear) {
-        if (filters.length > 0) {
-          filters = filters + ` and workplanyear = ${req.query.workplanyear}`;
-        } else {
-          filters = ` workplanyear = ${req.query.workplanyear}`;
-        }
-      }
-
-      if (req.query.mhfdmanager) {
-        if (filters.length > 0) {
-          filters = filters + ` and mhfdmanager ilike '%${req.query.mhfdmanager}%'`;
-        } else {
-          filters = ` mhfdmanager ilike '%${req.query.mhfdmanager}%'`;
-        }
-      }
-
-      if (req.query.jurisdiction) {
-        if (filters.length > 0) {
-          filters = filters + ` and jurisdiction = '${req.query.jurisdiction}' `;
-        } else {
-          filters = `jurisdiction = '${req.query.jurisdiction}' `;
-        }
-      }
-
-      if (req.query.lgmanager) {
-        if (filters.length > 0) {
-          filters = filters + ` and lgmanager ilike '%${req.query.lgmanager}%' `;
-        } else {
-          filters = ` lgmanager ilike '%${req.query.lgmanager}%' `;
-        }  
-      }
-
-      if (req.query.county) {
-        if (filters.length > 0) {
-          filters = filters + ` and county = '${req.query.county}'`;
-        } else {
-          filters = `county = '${req.query.county}'`;
-        }
-      }
-
-      if (req.query.streamname) {
-        if (filters.length > 0) {
-          filters = filters + ` and streamname ilike '%${req.query.streamname}%' `;
-        } else {
-          filters = ` streamname ilike '%${req.query.streamname}%' `;
-        }
-      }
-
-      if (req.query.creator) {
-        if (filters.length > 0) { 
-          filters = filters + ` and creator ilike '%${req.query.creator}%' `;
-        } else {
-          filters = ` creator ilike '%${req.query.creator}%' `;
-        }
-      }
-
-      if (filters.length > 0) {
-        filters = ' where ' + filters;
-      }
-
-      let sort_data = '';
-
-      if (req.query.sortby) {
-        let sorttype = '';
-        if (!req.query.sorttype) {
-          sorttype = 'desc';
-        } else {
-          sorttype = req.query.sorttype;
-        }
-        sort_data = ` order by ${req.query.sortby} ${sorttype}`;
-      }
+      filters = getFilters(req.query);
 
       const PROJECT_FIELDS = `objectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, 
         estimatedCost, status, attachments, projectname, jurisdiction, streamname `;
       const LINE_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_line_1`;
       const POLYGON_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_polygon_`;
-      const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL} ${filters} ${sort_data} &api_key=${CARTO_TOKEN}`);
-      const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${POLYGON_SQL} ${filters} ${sort_data}&api_key=${CARTO_TOKEN}`);
+      const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL} ${filters}  &api_key=${CARTO_TOKEN}`);
+      const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${POLYGON_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
       console.log(LINE_URL);
       https.get(LINE_URL, response => {
         if (response.statusCode === 200) {
@@ -340,6 +104,226 @@ router.get('/', async (req, res) => {
   }
 
 });
+
+function getFilters(params) {
+  let filters = '';
+  if (params.isproblem) {
+    console.log('PROBLEMS');
+    if (params.name) {
+      if (filters.length > 0) {
+        filters = filters = ` and problemname ilike '%${params.name}%'`;
+      }
+      else {
+        filters = ` problemname ilike '%${params.name}%' `;
+      }
+    }
+  } else {
+    console.log('PROJECTS');
+    if (params.name) { 
+      if (filters.length > 0) {
+        filters = ` and projectname ilike '%${params.name}%' `;
+      } else {
+        filters = ` projectname ilike '%${params.name}%' `;
+      }
+    }
+  }
+
+  // ALL FILTERS
+  // PROBLEMS 
+  if (params.priority) {
+    if (filters.length > 0) {
+      filters = filters + ` and problempriority = '${params.priority}'`;
+    } else {
+      filters = ` problempriority = '${params.priority}'`;
+    }
+    console.log('FILTRO', filters);
+  }
+
+  if (params.solutionstatus) { 
+    let limite = 0;
+    if (params.solutionstatus === '10') {
+      limite = 25;
+    } else {
+      limite = Number(params.solutionstatus) + 25;
+    }
+    if (filters.length > 0) {
+      filters = filters + ` and (cast(solutionstatus as int) between ${params.solutionstatus} and ${limite}) `;
+    } else {
+      filters = ` (cast(solutionstatus as int) between ${params.solutionstatus} and ${limite}) `;
+    }
+  }
+
+  if (params.cost) {
+    let initValue = 0;
+    let endValue = 0;
+    if (params.cost === '1' || params.cost === '5') {
+      initValue = Number(params.cost) * 1000000;
+      endValue = 10000000;
+    } else {
+      initValue = Number(params.cost) * 1000000;
+      endValue = initValue + 5000000;
+    }
+    if (filters.length > 0) {
+      filters = filters + ` and (cast(solutioncost as bigint) between ${initValue} and ${endValue})`;
+    } else {
+      filters = ` (cast(solutioncost as bigint) between ${initValue} and ${endValue})`;
+    }
+  }
+
+  if (params.mhfdmanager) {
+    if (filters.length > 0) {
+      filters = filters + ` and mhfdmanager = '${params.mhfdmanager}'`;
+    } else {
+      filters = `mhfdmanager = '${params.mhfdmanager}'`;
+    }
+  }
+
+  if (params.problemtype) {
+    if (filters.length > 0) {
+      filters = filters + ` and problemtype = '${params.problemtype}'`;
+    } else {
+      filters = ` problemtype = '${params.problemtype}'`;
+    }
+  }
+
+  if (params.problemtype) {
+    if (filters.length > 0) {
+      filters = filters + ` and source = '${params.problemtype}'`
+    } else {
+      filters = ` source = '${params.problemtype}'`;
+    }
+  }
+
+  // PROJECTS
+  if (params.projecttype) {
+    if (filters.length > 0) {
+      filters = filters + ` and projecttype = '${params.projecttype}'`;
+    } else {
+      filters = `projecttype = '${params.projecttype}'`;
+    }
+  }
+
+  if (params.status) { 
+    if (filters.length > 0) {
+      filters = filters + ` and status = '${params.status}'`;
+    } else {
+      filters = `status = '${params.status}'`;
+    }
+  }
+
+  if (params.startyear) {
+    if (filters.length > 0) {
+      filters = filters + ` and startyear = ${params.startyear} `;
+    } else {
+      filters = `startyear = ${params.startyear} `;
+    }
+  }
+
+  if (params.completedyear) {
+    if (filters.length > 0) {
+      filters = filters + ` and completedyear = ${params.completedyear} `;
+    } else {
+      filters = ` completedyear = ${params.completedyear} `;
+    }
+  }
+
+  if (params.mhfddollarsallocated) {
+    let initValue = Number(params.mhfddollarsallocated) * 1000000;
+    let endValue = initValue + 5000000;
+    if (filters.length > 0) {
+      filters = filters + ` and (cast(mhfddollarsallocated as bigint) between ${initValue} and ${endValue})`;
+    } else {
+      filters = `(cast(mhfddollarsallocated as bigint) between ${initValue} and ${endValue})`;
+    }
+  }
+
+  if (params.workplanyear) {
+    if (filters.length > 0) {
+      filters = filters + ` and workplanyear = ${params.workplanyear}`;
+    } else {
+      filters = ` workplanyear = ${params.workplanyear}`;
+    }
+  }
+
+  if (params.mhfdmanager) {
+    if (filters.length > 0) {
+      filters = filters + ` and mhfdmanager ilike '%${params.mhfdmanager}%'`;
+    } else {
+      filters = ` mhfdmanager ilike '%${params.mhfdmanager}%'`;
+    }
+  }
+
+  if (params.lgmanager) {
+    if (filters.length > 0) {
+      filters = filters + ` and lgmanager ilike '%${params.lgmanager}%' `;
+    } else {
+      filters = ` lgmanager ilike '%${params.lgmanager}%' `;
+    }
+  }
+
+  if (params.streamname) {
+    if (filters.length > 0) {
+      filters = filters + ` and streamname ilike '%${params.streamname}%' `;
+    } else {
+      filters = ` streamname ilike '%${params.streamname}%' `;
+    }
+  }
+
+  if (params.creator) {
+    if (filters.length > 0) {
+      filters = filters + ` and creator ilike '%${params.creator}%' `;
+    } else {
+      filters = ` creator ilike '%${params.creator}%' `;
+    }
+  }
+
+  // 
+  if (params.bounds) {
+    const coords = params.bounds.split(',');
+    if (filters.length > 0) {
+      console.log('FILTERS coord', filters);
+      filters += ` and (ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+      filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`; // only for readbility 
+    } else {
+      filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+      filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`; // only for readbility 
+    }
+  }
+
+  if (params.county) {
+    if (filters.length > 0) {
+      filters = filters + ` and county ilike '${params.county}'`;
+    } else {
+      filters = `county ilike '${params.county}'`;
+    }
+  }
+
+  if (params.jurisdiction) {
+    if (filters.length > 0) {
+      filters = filters + ` and jurisdiction = '${params.jurisdiction}'`;
+    } else {
+      filters = ` jurisdiction = '${params.jurisdiction}'`;
+    }
+  }
+
+  if (filters.length > 0) {
+    filters = ' where ' + filters;
+  }
+
+  if (params.sortby) {
+    let sorttype = '';
+    if (!params.sorttype) {
+      sorttype = 'desc';
+    } else {
+      sorttype = params.sorttype;
+    }
+    filters += ` order by ${params.sortby} ${sorttype}`;
+  }
+
+  console.log('FILTROS', filters);
+
+  return filters;
+}
 
 router.get('/project-by-id/:id', async (req, res) => {
   const id = req.params.id;
