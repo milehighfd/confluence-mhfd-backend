@@ -18,8 +18,9 @@ router.get('/', async (req, res) => {
 
       const PROBLEM_SQL = `SELECT problemid, problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype FROM problems `;
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
-      console.log('SQL', PROBLEM_SQL);
+      /* console.log('SQL', PROBLEM_SQL);
       console.log('FILTER', filters);
+       */
       console.log(URL);
       https.get(URL, response => {
         if (response.statusCode === 200) {
@@ -35,7 +36,7 @@ router.get('/', async (req, res) => {
           return res.status(response.statusCode).send({ error: 'Error with C connection' });
         }
       }).on('error', err => {
-        logger.error(`failed call to ${url}  with error  ${err}`)
+        logger.error(`failed call to ${URL}  with error  ${err}`)
         return res.status(500).send({ error: err });
       });
     }
@@ -70,7 +71,11 @@ router.get('/', async (req, res) => {
                   result = result.concat(JSON.parse(str2).rows);
                   const finalResult = [];
                   for (const element of result) {
-                    const valor = await attachmentService.findByName(element.attachments);// imaben.jpg
+                    let valor = '';
+                    if (element.attachments) {
+                      valor = await attachmentService.findByName(element.attachments);
+                    }
+                    
                     finalResult.push(
                       {
                         ...element,
@@ -84,7 +89,7 @@ router.get('/', async (req, res) => {
                 return res.status(response.statusCode);
               }
             }).on('error', err => {
-              logger.error(`failed call to ${url}  with error  ${err}`)
+              logger.error(`failed call to ${LINE_URL}  with error  ${err}`)
               return res.status(500).send({ error: err });
             });
           });
@@ -93,10 +98,9 @@ router.get('/', async (req, res) => {
         }
       }).on('error', err => {
         //logger.error(`failed call to ${url}  with error  ${err}`)
-        logger.error(`failed call to url  with error  ${err}`)
+        logger.error(`failed call to url ${LINE_URL} with error  ${err}`)
         return res.status(500).send({ error: err });
       });
-      console.log(URL);
     }
   } catch (error) {
     logger.error(error);
@@ -117,6 +121,14 @@ function getFilters(params) {
         filters = ` problemname ilike '%${params.name}%' `;
       }
     }
+
+    if (params.problemtype) {
+      if (filters.length > 0) {
+        filters = filters + ` and problemtype = '${params.problemtype}'`;
+      } else {
+        filters = ` problemtype = '${params.problemtype}'`;
+      }
+    }
   } else {
     console.log('PROJECTS');
     if (params.name) { 
@@ -125,6 +137,10 @@ function getFilters(params) {
       } else {
         filters = ` projectname ilike '%${params.name}%' `;
       }
+    }
+
+    if (params.problemtype) {
+      
     }
   }
 
@@ -175,14 +191,6 @@ function getFilters(params) {
       filters = filters + ` and mhfdmanager = '${params.mhfdmanager}'`;
     } else {
       filters = `mhfdmanager = '${params.mhfdmanager}'`;
-    }
-  }
-
-  if (params.problemtype) {
-    if (filters.length > 0) {
-      filters = filters + ` and problemtype = '${params.problemtype}'`;
-    } else {
-      filters = ` problemtype = '${params.problemtype}'`;
     }
   }
 
@@ -391,11 +399,22 @@ router.get('/problem-by-id/:id', async (req, res) => {
   }
 })
 
-
-router.get('/group-by', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const column = req.query.column;
-    const LINE_SQL = `SELECT ${column} FROM projects_line_1 group by ${column} order by ${column}`;
+    const SQL = ``;
+    const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
+  } catch(err) {
+    logger.error(err);
+    res.status(500).send({ error: 'No there data in Components' });
+  }
+})
+
+
+router.post('/group-by', async (req, res) => {
+  try {
+    const table = req.body.table;
+    const column = req.body.column;
+    const LINE_SQL = `SELECT ${column} FROM ${table} group by ${column} order by ${column}`;
     const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
     https.get(LINE_URL, response => {
       if (response.statusCode === 200) {
@@ -404,9 +423,12 @@ router.get('/group-by', async (req, res) => {
           str += chunk;
         });
         response.on('end', async function () {
+          let data = [];
           let result = JSON.parse(str).rows;
-          //const result = result.concat(JSON.parse(str).rows);
-          return res.status(200).send(result);
+          for (const res of result) {
+            data.push(res[column]);
+          }
+          return res.status(200).send({'data': data});
         })
       }
     });
