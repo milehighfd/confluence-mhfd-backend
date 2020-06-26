@@ -1,5 +1,4 @@
 const bcrypt = require('bcryptjs');
-//const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken')
 const config = require('../config/config');
 const crypto = require('crypto');
@@ -67,8 +66,6 @@ module.exports = (sequelize, DataType) => {
     }
   });
 
-  //User.hasMany()
-
   User.prototype.generateAuthToken = async function () {
     const user = this;
     
@@ -78,9 +75,6 @@ module.exports = (sequelize, DataType) => {
       expiresIn: config.JWT_EXPIRANCY
     });
     user.token = token;
-    /* user.tokens = user.tokens.concat({
-      token
-    }); */
     await user.save();
     return token;
   };
@@ -118,7 +112,6 @@ module.exports = (sequelize, DataType) => {
   };
 
   User.findByCredentials = async (email, password) => {
-    //console.log('login');
     const user = await User.findOne({
       where: {
         email: email

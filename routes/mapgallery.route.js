@@ -8,6 +8,7 @@ const auth = require('../auth/auth');
 
 const { CARTO_TOKEN } = require('../config/config');
 const attachmentService = require('../services/attachment.service');
+const { query } = require('../config/logger');
 
 router.get('/', async (req, res) => {
   try {
@@ -35,6 +36,7 @@ router.get('/', async (req, res) => {
           });
           response.on('end', async function () {
             const result = JSON.parse(str).rows;
+            console.log('cant probl', result.length);
             //let totalComponents = 0;
             /*const finalResult = [];
             for (const element of result) {
@@ -110,6 +112,7 @@ router.get('/', async (req, res) => {
           });
           response.on('end', function () {
             let result = JSON.parse(str).rows;
+            console.log('cantidad',result.length);
             https.get(POLYGON_URL, response => {
               console.log(response.statusCode);
               if (response.statusCode === 200) {
@@ -173,10 +176,12 @@ function getFilters(params) {
     }
 
     if (params.problemtype) {
+      const query = createQueryForIn(params.problemtype.split(','));
+      console.log('prob tye', query);
       if (filters.length > 0) {
-        filters = filters + ` and problemtype = '${params.problemtype}'`;
+        filters = filters + ` and problemtype in (${query}) `;
       } else {
-        filters = ` problemtype = '${params.problemtype}'`;
+        filters = ` problemtype in (${query}) `;
       }
     }
   } else {
@@ -197,25 +202,33 @@ function getFilters(params) {
   // ALL FILTERS
   // PROBLEMS 
   if (params.priority) {
+    const query = createQueryForIn(params.priority.split(','));
     if (filters.length > 0) {
-      filters = filters + ` and problempriority = '${params.priority}'`;
+      filters = filters + ` and problempriority in (${query})`;
     } else {
-      filters = ` problempriority = '${params.priority}'`;
+      filters = ` problempriority in (${query})`;
     }
-    console.log('FILTRO', filters);
   }
 
   if (params.solutionstatus) {
     let limite = 0;
-    if (params.solutionstatus === '10') {
-      limite = 25;
-    } else {
-      limite = Number(params.solutionstatus) + 25;
+    const values = params.solutionstatus.split(',');
+    let query = '';
+    let operator = '';
+    for (const val of values) {
+      if (val === '10') {
+        limite = 25;
+      } else {
+        limite = Number(val) + 25;
+      }
+      query += operator + ` (cast(solutionstatus as int) between ${val} and ${limite}) `;
+      operator = ' or ';
     }
+    
     if (filters.length > 0) {
-      filters = filters + ` and (cast(solutionstatus as int) between ${params.solutionstatus} and ${limite}) `;
+      filters = filters + ` and ${query} `;
     } else {
-      filters = ` (cast(solutionstatus as int) between ${params.solutionstatus} and ${limite}) `;
+      filters = ` ${query} `;
     }
   }
 
@@ -237,35 +250,39 @@ function getFilters(params) {
   }
 
   if (params.mhfdmanager) {
+    const query = createQueryForIn(params.mhfdmanager.split(','))
     if (filters.length > 0) {
-      filters = filters + ` and mhfdmanager = '${params.mhfdmanager}'`;
+      filters = filters + ` and mhfdmanager = '${query}'`;
     } else {
-      filters = `mhfdmanager = '${params.mhfdmanager}'`;
+      filters = `mhfdmanager = '${query}'`;
     }
   }
 
-  if (params.problemtype) {
+  if (params.source) {
+    const query = createQueryForIn(params.source.split(','));
     if (filters.length > 0) {
-      filters = filters + ` and source = '${params.problemtype}'`
+      filters = filters + ` and source in (${query}) `;
     } else {
-      filters = ` source = '${params.problemtype}'`;
+      filters = ` source in (${query}) `;
     }
   }
 
   // PROJECTS
   if (params.projecttype) {
+    const query = createQueryForIn(params.projecttype.split(','));
     if (filters.length > 0) {
-      filters = filters + ` and projecttype = '${params.projecttype}'`;
+      filters = filters + ` and projecttype in (${query})`;
     } else {
-      filters = `projecttype = '${params.projecttype}'`;
+      filters = `projecttype in (${query})`;
     }
   }
 
   if (params.status) {
+    const query = createQueryForIn(params.status.split(','))
     if (filters.length > 0) {
-      filters = filters + ` and status = '${params.status}'`;
+      filters = filters + ` and status in (${query})`;
     } else {
-      filters = `status = '${params.status}'`;
+      filters = `status in (${query})`;
     }
   }
 
@@ -303,35 +320,30 @@ function getFilters(params) {
     }
   }
 
-  if (params.mhfdmanager) {
-    if (filters.length > 0) {
-      filters = filters + ` and mhfdmanager ilike '%${params.mhfdmanager}%'`;
-    } else {
-      filters = ` mhfdmanager ilike '%${params.mhfdmanager}%'`;
-    }
-  }
-
   if (params.lgmanager) {
+    const query = createQueryForIn(params.lgmanager.split(','));
     if (filters.length > 0) {
-      filters = filters + ` and lgmanager ilike '%${params.lgmanager}%' `;
+      filters = filters + ` and lgmanager in (${query}) `;
     } else {
-      filters = ` lgmanager ilike '%${params.lgmanager}%' `;
+      filters = ` lgmanager in (${query}) `;
     }
   }
 
   if (params.streamname) {
+    const query = createQueryForIn(params.streamname.split(','));
     if (filters.length > 0) {
-      filters = filters + ` and streamname ilike '%${params.streamname}%' `;
+      filters = filters + ` and streamname in (${query}) `;
     } else {
-      filters = ` streamname ilike '%${params.streamname}%' `;
+      filters = ` streamname in (${query}) `;
     }
   }
 
   if (params.creator) {
+    const query = createQueryForIn(params.creator.split(','));
     if (filters.length > 0) {
-      filters = filters + ` and creator ilike '%${params.creator}%' `;
+      filters = filters + ` and creator in (${query}) `;
     } else {
-      filters = ` creator ilike '%${params.creator}%' `;
+      filters = ` creator in (${query}) `;
     }
   }
 
@@ -349,18 +361,22 @@ function getFilters(params) {
   }
 
   if (params.county) {
+    const query = createQueryForIn(params.county.split(','));
     if (filters.length > 0) {
-      filters = filters + ` and county ilike '${params.county}'`;
+      filters = filters + ` and county in (${query})`;
     } else {
-      filters = `county ilike '${params.county}'`;
+      filters = `county in (${query})`;
     }
   }
 
   if (params.jurisdiction) {
+    //const data = params.jurisdiction.split(',');
+    const query = createQueryForIn(params.jurisdiction.split(','));
+    console.log('jur', query);
     if (filters.length > 0) {
-      filters = filters + ` and jurisdiction = '${params.jurisdiction}'`;
+      filters = filters + ` and jurisdiction in (${query})`;
     } else {
-      filters = ` jurisdiction = '${params.jurisdiction}'`;
+      filters = ` jurisdiction in (${query})`;
     }
   }
 
@@ -377,10 +393,19 @@ function getFilters(params) {
     }
     filters += ` order by ${params.sortby} ${sorttype}`;
   }
-
   console.log('FILTROS', filters);
-
   return filters;
+}
+
+function createQueryForIn(data) {
+  //const data = params.jurisdiction.split(',');
+  let query = '';
+  let separator = '';
+  for (const elem of data) {
+    query += separator + '\'' + elem.trim() + '\'';
+    separator = ','
+  }
+  return query;
 }
 
 router.get('/project-by-id/:id', async (req, res) => {
@@ -481,16 +506,6 @@ router.get('/problem-by-id/:id', async (req, res) => {
     logger.error(error);
     res.status(500).send({ error: 'No there data with ID' });
   }
-})
-
-router.get('/', async (req, res) => {
-  try {
-    const SQL = ``;
-    const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
-  } catch (err) {
-    logger.error(err);
-    res.status(500).send({ error: 'No there data in Components' });
-  }
 });
 
 router.post('/group-by', async (req, res) => {
@@ -499,6 +514,7 @@ router.post('/group-by', async (req, res) => {
     const column = req.body.column;
     const LINE_SQL = `SELECT ${column} FROM ${table} group by ${column} order by ${column}`;
     const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
+    console.log(LINE_URL);
     https.get(LINE_URL, response => {
       if (response.statusCode === 200) {
         let str = '';
