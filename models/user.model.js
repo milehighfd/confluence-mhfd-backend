@@ -71,11 +71,13 @@ module.exports = (sequelize, DataType) => {
 
   User.prototype.generateAuthToken = async function () {
     const user = this;
+    
     const token = jwt.sign({
       _id: user._id
     }, config.JWT_KEY, {
-      expiresIn: config.JWT_EXPIRANCY
+      expiresIn: '24h'
     });
+    console.log(config.JWT_EXPIRANCY);
     user.token = token;
     /* user.tokens = user.tokens.concat({
       token

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const https = require('https');
+const logger = require('../config/logger');
 
 const {CARTO_TOKEN} = require('../config/config');
 
@@ -54,9 +55,9 @@ router.post('/', async (req, res) => {
       return res.status(response.statusCode).send({error: 'error'});
     }
   }).on('error', err => {
-    console.log('failed call to ', url, 'with error ', err);
-    logger.error(`failed call to ${url}  with error  ${err}`)
-    res.status(500).send({error: err});
+    //console.log('failed call to ', URL, 'with error ', err);
+    logger.error(`failed call to ${URL}  with error  ${err}`)
+    res.status(500).send(err);
   });
 });
 

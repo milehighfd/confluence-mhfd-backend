@@ -212,8 +212,8 @@ router.get('/me', auth, async (req, res) => {
           });
         }
       }).on('error', err => {
-        console.log('failed call to ', url, 'with error ', err);
-        logger.error(`failed call to ${url}  with error  ${err}`)
+        //console.log('failed call to ', url, 'with error ', err);
+        logger.error(`failed call to  with error  ${err}`)
         
       });
     });

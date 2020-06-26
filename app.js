@@ -42,9 +42,7 @@ app.use(function(res, res, next) {
   next();
 });
 
-app.use(express.static('public', {
-  maxAge: cacheTime
-}))
+app.use(express.static('public'))
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
