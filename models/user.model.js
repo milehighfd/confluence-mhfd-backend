@@ -75,9 +75,8 @@ module.exports = (sequelize, DataType) => {
     const token = jwt.sign({
       _id: user._id
     }, config.JWT_KEY, {
-      expiresIn: '24h'
+      expiresIn: config.JWT_EXPIRANCY
     });
-    console.log(config.JWT_EXPIRANCY);
     user.token = token;
     /* user.tokens = user.tokens.concat({
       token
