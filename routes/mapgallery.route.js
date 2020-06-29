@@ -495,7 +495,9 @@ router.post('/group-by', async (req, res) => {
   try {
     const table = req.body.table;
     const column = req.body.column;
+    console.log(table, column);
     const LINE_SQL = `SELECT ${column} FROM ${table} group by ${column} order by ${column}`;
+    console.log(LINE_SQL);
     const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
     console.log(LINE_URL);
     https.get(LINE_URL, response => {
@@ -520,11 +522,14 @@ router.post('/group-by', async (req, res) => {
   }
 });
 
-router.get('/data-jurisdiction', auth, async (req, res) => {
-  try {
-    console.log(req.user.organization, req.user._id);
-    const LINE_SQL = `SELECT ${column} FROM ${table} group by ${column} order by ${column}`;
-    const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
+async function getValuesByColumn(table, column) {
+  /* const table = req.body.table;
+  const column = req.body.column; */
+  let data = [];
+  const LINE_SQL = `SELECT ${column} FROM ${table} group by ${column} order by ${column}`;
+  const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
+  //console.log(LINE_URL);
+  const newProm1 = new Promise((resolve, reject) => {
     https.get(LINE_URL, response => {
       if (response.statusCode === 200) {
         let str = '';
@@ -537,11 +542,50 @@ router.get('/data-jurisdiction', auth, async (req, res) => {
           for (const res of result) {
             data.push(res[column]);
           }
-          return res.status(200).send({ 'data': data });
+          resolve(data);
+          
         })
       }
     });
-    res.status(200).send('ok');
+  });
+  data = await newProm1;
+  return data;
+}
+
+
+router.get('/params-filters', async (req, res) => {
+  try {
+    const creators = await getValuesByColumn('projects_line_1', 'creator');
+    const mhfdmanagers = await getValuesByColumn('projects_line_1', 'mhfdmanager');
+    const projecttypes = ['Maintenance', 'Study', 'Capital'];
+    const status = await getValuesByColumn('projects_line_1', 'status');
+    const startyear = await getValuesByColumn('projects_line_1', 'startyear');
+    const completedyear = await getValuesByColumn('projects_line_1', 'completedyear');
+    const mhfddollarsallocated = await getValuesByColumn('projects_line_1', 'mhfddollarsallocated');
+    //const workplanyear = await getValuesByColumn('projects_line_1', 'workplanyear');
+    const problemtype = await getValuesByColumn('problems', 'problemtype');
+    const jurisdictionProj = await getValuesByColumn('projects_line_1', 'jurisdiction');
+    const countyProj = await getValuesByColumn('projects_line_1', 'county'); 
+
+    const result = {
+      "projects": {
+        "creator": creators,
+        "mhfdmanager": mhfdmanagers,
+        "projecttype": projecttypes,
+        "status": status,
+        "startyear": startyear,
+        "completedyear": completedyear,
+        "mhfddollarsallocated": mhfddollarsallocated,
+        "workplanyear": [],
+        "problemtype": problemtype,
+        "jurisdiction": jurisdictionProj,
+        "county": countyProj
+      },
+      "problems": {
+        "problemtype": problemtype
+      }
+    }
+    res.status(200).send(result);
   } catch (error) {
     logger.error(error);
     res.status(500).send({ error: error }).send({ error: 'Connection error' });
