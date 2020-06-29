@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
 
       /* const PROBLEM_SQL = `SELECT problemid, problemname, solutioncost, jurisdiction,
             problempriority, solutionstatus, problemtype, county FROM problems `; */
-      const PROBLEM_SQL = `SELECT problemid, problemname, solutioncost, jurisdiction,
+      const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, jurisdiction,
             problempriority, solutionstatus, problemtype, county, 
             (select count(*) from grade_control_structure where problemid = cast(problems.problemid as integer) ) as count_gcs, 
             (select count(*) from pipe_appurtenances where problemid = cast(problems.problemid as integer) ) as count_pa,
@@ -37,7 +37,7 @@ router.get('/', async (req, res) => {
             (select count(*) from landscaping_area where problemid = cast(problems.problemid as integer) ) as count_la 
             FROM problems `;
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
-      console.log('SQL', PROBLEM_SQL);
+      //console.log('SQL', PROBLEM_SQL);
 
       //console.log(URL);
       https.get(URL, response => {
@@ -56,7 +56,14 @@ router.get('/', async (req, res) => {
                 element.count_sd + element.count_df + element.count_mt + element.count_la + element.count_la
               finalResult.push(
                 {
-                  ...element,
+                  problemid: element.problemid,
+                  problemname: element.problemname,
+                  solutioncost: element.solutioncost,
+                  jurisdiction: element.jurisdiction,
+                  problempriority: element.problempriority,
+                  solutionstatus: element.solutionstatus,
+                  problemtype: element.problemtype,
+                  county: element.county,
                   totalComponents: total
                 }
               );
@@ -78,7 +85,7 @@ router.get('/', async (req, res) => {
 
       filters = getFilters(req.query);
 
-      const PROJECT_FIELDS = `objectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, 
+      const PROJECT_FIELDS = `cartodb_id, objectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, 
         estimatedCost, status, attachments, projectname, jurisdiction, streamname `;
       const LINE_SQL = `SELECT 'line' as type, ${PROJECT_FIELDS} FROM projects_line_1`;
       const POLYGON_SQL = `SELECT 'polygon' as type, ${PROJECT_FIELDS} FROM projects_polygon_`;
@@ -226,7 +233,7 @@ function getFilters(params) {
   }
 
   if (params.mhfdmanager) {
-    const query = createQueryForIn(params.mhfdmanager.split(','))
+    const query = createQueryForIn(params.mhfdmanager.split(','));
     if (filters.length > 0) {
       filters = filters + ` and mhfdmanager in (${query})`;
     } else {
@@ -240,6 +247,14 @@ function getFilters(params) {
       filters = filters + ` and source in (${query}) `;
     } else {
       filters = ` source in (${query}) `;
+    }
+  }
+
+  if (params.component) {
+    const query = createQueryForIn(params.component.split(','));
+    if (filters.length > 0) {
+    } else {
+      filters = ``;
     }
   }
 
