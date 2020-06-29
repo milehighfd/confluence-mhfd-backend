@@ -539,7 +539,7 @@ async function getValuesByColumn(table, column) {
             data.push(res[column]);
           }
           resolve(data);
-          
+
         })
       }
     });
@@ -561,12 +561,16 @@ router.get('/params-filters', async (req, res) => {
     //const workplanyear = await getValuesByColumn('projects_line_1', 'workplanyear');
     const problemtype = await getValuesByColumn('problems', 'problemtype');
     const jurisdictionProj = await getValuesByColumn('projects_line_1', 'jurisdiction');
-    const countyProj = await getValuesByColumn('projects_line_1', 'county'); 
+    const countyProj = await getValuesByColumn('projects_line_1', 'county');
     const priority = ['High', 'Medium', 'Low'];
-    const countyProb = await getValuesByColumn('problems', 'county'); 
+    const countyProb = await getValuesByColumn('problems', 'county');
     const jurisdictionProb = await getValuesByColumn('problems', 'jurisdiction');
     const mhfdmanagerprob = await getValuesByColumn('problems', 'mhfdmanager');
     const sources = await getValuesByColumn('problems', 'source');
+    const components = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
+      'special_item_linear', 'special_item_area', 'channel_improvements_linear',
+      'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
+      'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
 
     const result = {
       "projects": {
@@ -588,7 +592,8 @@ router.get('/params-filters', async (req, res) => {
         "county": countyProb,
         "jurisdiction": jurisdictionProb,
         "mhfdmanager": mhfdmanagerprob,
-        "source": sources
+        "source": sources,
+        "components": components
       }
     }
     res.status(200).send(result);
