@@ -18,16 +18,28 @@ router.get('/', async (req, res) => {
 
       filters = getFilters(req.query);
 
-      const PROBLEM_SQL = `SELECT problemid, problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype FROM problems `;
+      /* const PROBLEM_SQL = `SELECT problemid, problemname, solutioncost, jurisdiction,
+            problempriority, solutionstatus, problemtype, county FROM problems `; */
+      const PROBLEM_SQL = `SELECT problemid, problemname, solutioncost, jurisdiction,
+            problempriority, solutionstatus, problemtype, county, 
+            (select count(*) from grade_control_structure where problemid = cast(problems.problemid as integer) ) as count_gcs, 
+            (select count(*) from pipe_appurtenances where problemid = cast(problems.problemid as integer) ) as count_pa,
+            (select count(*) from special_item_point where problemid = cast(problems.problemid as integer) ) as count_sip, 
+            (select count(*) from special_item_linear where problemid = cast(problems.problemid as integer) ) as count_sil, 
+            (select count(*) from channel_improvements_area where problemid = cast(problems.problemid as integer) ) as count_cia, 
+            (select count(*) from special_item_area where problemid = cast(problems.problemid as integer) ) as count_sia, 
+            (select count(*) from  removal_line where problemid = cast(problems.problemid as integer) ) as count_rl, 
+            (select count(*) from removal_area where problemid = cast(problems.problemid as integer) ) as count_ra, 
+            (select count(*) from storm_drain where problemid = cast(problems.problemid as integer) ) as count_sd, 
+            (select count(*) from detention_facilities where problemid = cast(problems.problemid as integer) ) as count_df, 
+            (select count(*) from maintenance_trails where problemid = cast(problems.problemid as integer) ) as count_mt, 
+            (select count(*) from land_acquisition where problemid = cast(problems.problemid as integer) ) as count_la, 
+            (select count(*) from landscaping_area where problemid = cast(problems.problemid as integer) ) as count_la 
+            FROM problems `;
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
-      /* console.log('SQL', PROBLEM_SQL);
-      console.log('FILTER', filters);
-       */
+      console.log('SQL', PROBLEM_SQL);
 
-
-      //console.log('FILTER', filters);
-
-      console.log(URL);
+      //console.log(URL);
       https.get(URL, response => {
         if (response.statusCode === 200) {
           let str = '';
@@ -38,51 +50,23 @@ router.get('/', async (req, res) => {
             const result = JSON.parse(str).rows;
             console.log('cant probl', result.length);
             //let totalComponents = 0;
-            /*const finalResult = [];
+            const finalResult = [];
             for (const element of result) {
               //console.log('prob', element);
-              const COMPONENTS_SQL = `SELECT id, type, estimated_cost, status FROM grade_control_structure where problemid=${element.problemid} union ` +
-                `SELECT id, type, estimated_cost, status FROM pipe_appurtenances where problemid=${element.problemid} union ` +
-                `SELECT id, type, estimated_cost, status FROM special_item_point where problemid=${element.problemid} union ` +
-                `SELECT id, type, estimated_cost, status FROM special_item_linear where problemid=${element.problemid} union ` +
-                `SELECT id, type, estimated_cost, status FROM special_item_area where problemid=${element.problemid} union ` +
-                `SELECT id, type, estimated_cost, status FROM channel_improvements_linear where problemid=${element.problemid} union ` +
-                `SELECT id, type, estimated_cost, status FROM channel_improvements_area where problemid=${element.problemid} union ` +
-                `SELECT id, type, estimated_cost, status FROM removal_line where problemid=${element.problemid} union ` +
-                `SELECT id, type, estimated_cost, status FROM removal_area where problemid=${element.problemid} union ` +
-                `SELECT id, type, estimated_cost, status FROM storm_drain where problemid=${element.problemid} union ` +
-                `SELECT id, type, estimated_cost, status FROM detention_facilities where problemid=${element.problemid} union ` +
-                `SELECT id, type, estimated_cost, status FROM maintenance_trails where problemid=${element.problemid} union ` +
-                `SELECT id, type, estimated_cost, status FROM land_acquisition where problemid=${element.problemid} union ` +
-                `SELECT id, type, estimated_cost, status FROM landscaping_area where problemid=${element.problemid}`;
-              const URL_COMPONENT = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL} &api_key=${CARTO_TOKEN}`);
-              const newProm1 = new Promise((resolve, reject) => {
-                https.get(URL_COMPONENT, response1 => {
-                  if (response.statusCode === 200) {
-                    let str2 = '';
-                    response1.on('data', function (chunk) {
-                      str2 += chunk;
-                    });
-                    response1.on('end', async function () {
-                      const res1 = JSON.parse(str2).rows;
-                      //console.log(res1.length);
-                      resolve(res1.length);
-                    });
-                  }
-                })
-              });
-
-              const total = await newProm1;
+              let total = 0;
+              total = element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
+                element.count_cia + element.count_sia + element.count_rl + element.count_ra +
+                element.count_sd + element.count_df + element.count_mt + element.count_la + element.count_la
               finalResult.push(
                 {
                   ...element,
                   totalComponents: total
                 }
               );
-              //console.log('total', total);
-            } 
-            return res.status(200).send(finalResult);*/
-            return res.status(200).send(result);
+              // console.log('total', total);
+            }
+            return res.status(200).send(finalResult);
+            //return res.status(200).send(result);
           });
         } else {
           return res.status(response.statusCode).send({ error: 'Error with C connection' });
@@ -112,7 +96,7 @@ router.get('/', async (req, res) => {
           });
           response.on('end', function () {
             let result = JSON.parse(str).rows;
-            console.log('cantidad',result.length);
+            console.log('cantidad', result.length);
             https.get(POLYGON_URL, response => {
               console.log(response.statusCode);
               if (response.statusCode === 200) {
@@ -177,7 +161,6 @@ function getFilters(params) {
 
     if (params.problemtype) {
       const query = createQueryForIn(params.problemtype.split(','));
-      console.log('prob tye', query);
       if (filters.length > 0) {
         filters = filters + ` and problemtype in (${query}) `;
       } else {
@@ -224,7 +207,7 @@ function getFilters(params) {
       query += operator + ` (cast(solutionstatus as int) between ${val} and ${limite}) `;
       operator = ' or ';
     }
-    
+
     if (filters.length > 0) {
       filters = filters + ` and ${query} `;
     } else {
