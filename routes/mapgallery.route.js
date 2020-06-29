@@ -48,11 +48,8 @@ router.get('/', async (req, res) => {
           });
           response.on('end', async function () {
             const result = JSON.parse(str).rows;
-            console.log('cant probl', result.length);
-            //let totalComponents = 0;
             const finalResult = [];
             for (const element of result) {
-              //console.log('prob', element);
               let total = 0;
               total = element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
                 element.count_cia + element.count_sia + element.count_rl + element.count_ra +
@@ -83,8 +80,8 @@ router.get('/', async (req, res) => {
 
       const PROJECT_FIELDS = `objectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, 
         estimatedCost, status, attachments, projectname, jurisdiction, streamname `;
-      const LINE_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_line_1`;
-      const POLYGON_SQL = `SELECT ${PROJECT_FIELDS} FROM projects_polygon_`;
+      const LINE_SQL = `SELECT 'line' as type, ${PROJECT_FIELDS} FROM projects_line_1`;
+      const POLYGON_SQL = `SELECT 'polygon' as type, ${PROJECT_FIELDS} FROM projects_polygon_`;
       const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL} ${filters}  &api_key=${CARTO_TOKEN}`);
       const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${POLYGON_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
       console.log(LINE_URL);
@@ -96,7 +93,7 @@ router.get('/', async (req, res) => {
           });
           response.on('end', function () {
             let result = JSON.parse(str).rows;
-            console.log('cantidad', result.length);
+            
             https.get(POLYGON_URL, response => {
               console.log(response.statusCode);
               if (response.statusCode === 200) {
@@ -231,9 +228,9 @@ function getFilters(params) {
   if (params.mhfdmanager) {
     const query = createQueryForIn(params.mhfdmanager.split(','))
     if (filters.length > 0) {
-      filters = filters + ` and mhfdmanager = '${query}'`;
+      filters = filters + ` and mhfdmanager in (${query})`;
     } else {
-      filters = `mhfdmanager = '${query}'`;
+      filters = `mhfdmanager in (${query})`;
     }
   }
 
