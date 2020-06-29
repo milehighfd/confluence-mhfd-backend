@@ -195,15 +195,11 @@ function getFilters(params) {
 
   if (params.solutionstatus) {
     let limite = 0;
-    const values = params.solutionstatus.split(',');
+    const values = createQueryForIn(params.solutionstatus.split(','));
     let query = '';
     let operator = '';
     for (const val of values) {
-      if (val === '10') {
-        limite = 25;
-      } else {
-        limite = Number(val) + 25;
-      }
+      limite = Number(val) + 25;
       query += operator + ` (cast(solutionstatus as int) between ${val} and ${limite}) `;
       operator = ' or ';
     }
@@ -566,6 +562,11 @@ router.get('/params-filters', async (req, res) => {
     const problemtype = await getValuesByColumn('problems', 'problemtype');
     const jurisdictionProj = await getValuesByColumn('projects_line_1', 'jurisdiction');
     const countyProj = await getValuesByColumn('projects_line_1', 'county'); 
+    const priority = ['High', 'Medium', 'Low'];
+    const countyProb = await getValuesByColumn('problems', 'county'); 
+    const jurisdictionProb = await getValuesByColumn('problems', 'jurisdiction');
+    const mhfdmanagerprob = await getValuesByColumn('problems', 'mhfdmanager');
+    const sources = await getValuesByColumn('problems', 'source');
 
     const result = {
       "projects": {
@@ -582,7 +583,12 @@ router.get('/params-filters', async (req, res) => {
         "county": countyProj
       },
       "problems": {
-        "problemtype": problemtype
+        "problemtype": problemtype,
+        "priority": priority,
+        "county": countyProb,
+        "jurisdiction": jurisdictionProb,
+        "mhfdmanager": mhfdmanagerprob,
+        "source": sources
       }
     }
     res.status(200).send(result);
