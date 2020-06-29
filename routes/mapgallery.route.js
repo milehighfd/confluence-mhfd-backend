@@ -15,7 +15,6 @@ router.get('/', async (req, res) => {
     console.log('enter here');
     if (req.query.isproblem) {
       let filters = '';
-
       filters = getFilters(req.query);
 
       /* const PROBLEM_SQL = `SELECT problemid, problemname, solutioncost, jurisdiction,
@@ -34,7 +33,7 @@ router.get('/', async (req, res) => {
             (select count(*) from detention_facilities where problemid = cast(problems.problemid as integer) ) as count_df, 
             (select count(*) from maintenance_trails where problemid = cast(problems.problemid as integer) ) as count_mt, 
             (select count(*) from land_acquisition where problemid = cast(problems.problemid as integer) ) as count_la, 
-            (select count(*) from landscaping_area where problemid = cast(problems.problemid as integer) ) as count_la 
+            (select count(*) from landscaping_area where problemid = cast(problems.problemid as integer) ) as count_la1 
             FROM problems `;
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
       //console.log('SQL', PROBLEM_SQL);
@@ -53,7 +52,8 @@ router.get('/', async (req, res) => {
               let total = 0;
               total = element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
                 element.count_cia + element.count_sia + element.count_rl + element.count_ra +
-                element.count_sd + element.count_df + element.count_mt + element.count_la + element.count_la
+                element.count_sd + element.count_df + element.count_mt + element.count_la + 
+                element.count_la + element.count_la1;
               finalResult.push(
                 {
                   problemid: element.problemid,
@@ -251,11 +251,20 @@ function getFilters(params) {
   }
 
   if (params.component) {
-    const query = createQueryForIn(params.component.split(','));
-    if (filters.length > 0) {
-    } else {
-      filters = ``;
+    const values = params.component.split(',');
+    let query = '';
+    let operator = '';
+    for (const val of values) {
+      query += operator + ` problemid in (select problemid from ${val})`;
+      operator = ' or ';
     }
+    
+    if (filters.length > 0) {
+      filters += ` and ${query} `;
+    } else {
+      filters = ` ${query} `;
+    }
+    //console.log('query', filters);
   }
 
   // PROJECTS
