@@ -52,7 +52,7 @@ router.get('/', async (req, res) => {
               let total = 0;
               total = element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
                 element.count_cia + element.count_sia + element.count_rl + element.count_ra +
-                element.count_sd + element.count_df + element.count_mt + element.count_la + 
+                element.count_sd + element.count_df + element.count_mt + element.count_la +
                 element.count_la + element.count_la1;
               finalResult.push(
                 {
@@ -100,7 +100,7 @@ router.get('/', async (req, res) => {
           });
           response.on('end', function () {
             let result = JSON.parse(str).rows;
-            
+
             https.get(POLYGON_URL, response => {
               console.log(response.statusCode);
               if (response.statusCode === 200) {
@@ -182,7 +182,26 @@ function getFilters(params) {
     }
 
     if (params.problemtype) {
-
+      const values = params.problemtype.split(',');
+      const components = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
+        'special_item_linear', 'special_item_area', 'channel_improvements_linear',
+        'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
+        'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
+      let operator = '';
+      let query = '';
+      for (const component of components) {
+        for (const val of values) {
+          query += operator + ` projectid in (select projectid 
+            from ${component} where projectid > 0 and 
+            problemid in (select problemid from problems where problemtype='${val}')) `;
+          operator = ' or ';
+        }
+      }
+      if (filters.length > 0) {
+        filters += ` and (${query}) `;
+      } else {
+        filters += ` (${query}) `;
+      }
     }
   }
 
@@ -258,7 +277,7 @@ function getFilters(params) {
       query += operator + ` problemid in (select problemid from ${val})`;
       operator = ' or ';
     }
-    
+
     if (filters.length > 0) {
       filters += ` and ${query} `;
     } else {
