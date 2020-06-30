@@ -88,9 +88,10 @@ router.get('/', async (req, res) => {
       filters = getFilters(req.query);
 
       const PROJECT_FIELDS = `cartodb_id, objectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, 
-        estimatedCost, status, attachments, projectname, jurisdiction, streamname `;
+        estimatedCost, status, attachments, projectname, jurisdiction, streamname, county `;
       const LINE_SQL = `SELECT 'projects_line_1' as type, ${PROJECT_FIELDS} FROM projects_line_1`;
       const POLYGON_SQL = `SELECT 'projects_polygon_' as type, ${PROJECT_FIELDS} FROM projects_polygon_`;
+      console.log(LINE_SQL, filters);
       const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL} ${filters}  &api_key=${CARTO_TOKEN}`);
       const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${POLYGON_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
       console.log(LINE_URL);
@@ -196,7 +197,7 @@ function getFilters(params) {
 
       let operator = '';
       let query = '';
-      for (const component of components) {
+      for (const component of VALUES_COMPONENTS) {
         for (const val of values) {
           query += operator + ` projectid in (select projectid 
             from ${component} where projectid > 0 and 
@@ -230,26 +231,99 @@ function getFilters(params) {
   }
 
   if (params.componentstatus) {
-    const values = params.componentstatus.split(',');
+    const values = createQueryForIn(params.componentstatus.split(','));
     let query = '';
     let operator = '';
-    for (const value of values) {
-      for (const component of components) {
-        query += operator +
-          ` ${tipoid} in (select ${tipoid} from ${component} where status=${value}) `;
-        operator = ' or ';
-      }
+    // for (const value of values) {
+    for (const component of VALUES_COMPONENTS) {
+      query += operator +
+        ` ${tipoid} in (select ${tipoid} from ${component} where status in (${values})) `;
+      operator = ' or ';
     }
-
-    if (params) {}
-    //mhfdmanager
+    //}
 
     if (filters.length > 0) {
       filters += ` AND ${query}`;
     } else {
       filters = ` ${query}`;
     }
-    
+
+  }
+
+  if (params.watershed) {
+    const values = createQueryForIn(params.watershed.split(','));
+    let query = '';
+    let operator = '';
+    //for (const value of values) {
+    for (const component of VALUES_COMPONENTS) {
+      query += operator +
+        ` ${tipoid} in (select ${tipoid} from ${component} where mhfdmanager in (${values})) `;
+      operator = ' or ';
+    }
+    //}
+
+    if (filters.length > 0) {
+      filters += ` AND ${query}`;
+    } else {
+      filters = ` ${query}`;
+    }
+  }
+
+  if (params.yearofstudy) {
+    const values = params.yearofstudy.split(',');
+    let query = '';
+    let operator = '';
+    for (const value of values) {
+      //const initValue = value;
+      for (const component of VALUES_COMPONENTS) {
+        query += operator +
+          ` ${tipoid} in (select ${tipoid} from ${component} where year_of_study between ${value} and ${value + 9}) `;
+        operator = ' or ';
+      }
+    }
+
+    if (filters.length > 0) {
+      filters += ` AND ${query}`;
+    } else {
+      filters = ` ${query}`;
+    }
+  }
+
+  if (params.jurisdictionComp) {
+
+    const values = createQueryForIn(params.jurisdictionComp.split(','));
+    let query = '';
+    let operator = '';
+    //const initValue = value;
+    for (const component of VALUES_COMPONENTS) {
+      query += operator +
+        ` ${tipoid} in (select ${tipoid} from ${component} where jurisdiction in (${values}) ) `;
+      operator = ' or ';
+    }
+
+    if (filters.length > 0) {
+      filters += ` AND ${query}`;
+    } else {
+      filters = ` ${query}`;
+    }
+  }
+
+  if (params.countyComp) {
+    const values = createQueryForIn(params.countyComp.split(','));
+    let query = '';
+    let operator = '';
+    //const initValue = value;
+    for (const component of VALUES_COMPONENTS) {
+      query += operator +
+        ` ${tipoid} in (select ${tipoid} from ${component} where county in (${values}) ) `;
+      operator = ' or ';
+    }
+
+    if (filters.length > 0) {
+      filters += ` AND ${query}`;
+    } else {
+      filters = ` ${query}`;
+    }
   }
 
   // ALL FILTERS
@@ -273,7 +347,6 @@ function getFilters(params) {
 
       limite = Number(val) + 25;
       query += operator + ` (cast(solutionstatus as int) between ${val} and ${limite}) `;
-      //console.log('QUERYYYY', query);
       operator = ' or ';
     }
 
@@ -342,7 +415,6 @@ function getFilters(params) {
     } else {
       filters = ` ${query} `;
     }
-    //console.log('query', filters);
   }
 
   // PROJECTS
@@ -732,7 +804,7 @@ router.get('/params-filters', async (req, res) => {
     const lgmanager = await getValuesByColumn('projects_line_1', 'county');
     const streamname = await getValuesByColumn('projects_line_1', 'streamname');
     const statusComponent = await getComponentsValuesByColumn('status');
-    const yearOfStudyComponent = [1970, 1980, 1990, 2000, 2010, 2020]; 
+    const yearOfStudyComponent = [1970, 1980, 1990, 2000, 2010, 2020];
     //const estimatedCostComp = await getComponentsValuesByColumn('estimated_cost');
     const jurisdictionComponent = await getComponentsValuesByColumn('jurisdiction');
     const countyComponent = await getComponentsValuesByColumn('county');
