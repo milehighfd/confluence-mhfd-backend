@@ -89,8 +89,8 @@ router.get('/', async (req, res) => {
 
       const PROJECT_FIELDS = `cartodb_id, objectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, 
         estimatedCost, status, attachments, projectname, jurisdiction, streamname `;
-      const LINE_SQL = `SELECT 'line' as type, ${PROJECT_FIELDS} FROM projects_line_1`;
-      const POLYGON_SQL = `SELECT 'polygon' as type, ${PROJECT_FIELDS} FROM projects_polygon_`;
+      const LINE_SQL = `SELECT 'projects_line_1' as type, ${PROJECT_FIELDS} FROM projects_line_1`;
+      const POLYGON_SQL = `SELECT 'projects_polygon_' as type, ${PROJECT_FIELDS} FROM projects_polygon_`;
       const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL} ${filters}  &api_key=${CARTO_TOKEN}`);
       const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${POLYGON_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
       console.log(LINE_URL);
