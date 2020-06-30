@@ -611,6 +611,8 @@ router.get('/params-filters', async (req, res) => {
       'special_item_linear', 'special_item_area', 'channel_improvements_linear',
       'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
       'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
+    const lgmanager = await getValuesByColumn('projects_line_1', 'county');
+    const streamname = await getValuesByColumn('projects_line_1', 'streamname');
 
     const result = {
       "projects": {
@@ -624,7 +626,10 @@ router.get('/params-filters', async (req, res) => {
         "workplanyear": [],
         "problemtype": problemtype,
         "jurisdiction": jurisdictionProj,
-        "county": countyProj
+        "county": countyProj,
+        "lgmanager": lgmanager,
+        "streamname": streamname
+
       },
       "problems": {
         "problemtype": problemtype,
