@@ -56,6 +56,8 @@ router.get('/', async (req, res) => {
                 element.count_la + element.count_la1;
               finalResult.push(
                 {
+                  cartodb_id: element.cartodb_id,
+                  type: 'problems',
                   problemid: element.problemid,
                   problemname: element.problemname,
                   solutioncost: element.solutioncost,
