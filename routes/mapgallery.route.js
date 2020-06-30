@@ -412,6 +412,9 @@ function getFilters(params) {
     }
     filters += ` order by ${params.sortby} ${sorttype}`;
   }
+  if (params.limit && params.page) {
+    filters = ` limit= ${limit} offset=${params.page * params.limit}`
+  }
   console.log('FILTROS', filters);
   return filters;
 }
