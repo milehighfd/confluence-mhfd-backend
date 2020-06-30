@@ -154,8 +154,15 @@ router.get('/', async (req, res) => {
 
 function getFilters(params) {
   let filters = '';
+  let tipoid = '';
+  const VALUES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
+    'special_item_linear', 'special_item_area', 'channel_improvements_linear',
+    'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
+    'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
+
   if (params.isproblem) {
     console.log('PROBLEMS');
+    tipoid = 'problemid';
     if (params.name) {
       if (filters.length > 0) {
         filters = filters = ` and problemname ilike '%${params.name}%'`;
@@ -173,18 +180,9 @@ function getFilters(params) {
         filters = ` problemtype in (${query}) `;
       }
     }
-
-    // components
-    if (params.componenttype) {
-      const values = params.componenttype.split(',');
-      let query = '';
-      let operator = '';
-      for (const value of values) {
-        query += operator + ` `;
-      }
-    }
   } else {
     console.log('PROJECTS');
+    tipoid = 'projectid';
     if (params.name) {
       if (filters.length > 0) {
         filters = ` and projectname ilike '%${params.name}%' `;
@@ -195,10 +193,7 @@ function getFilters(params) {
 
     if (params.problemtype) {
       const values = params.problemtype.split(',');
-      const components = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
-        'special_item_linear', 'special_item_area', 'channel_improvements_linear',
-        'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
-        'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
+
       let operator = '';
       let query = '';
       for (const component of components) {
@@ -215,6 +210,46 @@ function getFilters(params) {
         filters += ` (${query}) `;
       }
     }
+  }
+
+  // components
+  if (params.componenttype) {
+    const values = params.componenttype.split(',');
+    let query = '';
+    let operator = '';
+    for (const component of values) {
+      query += operator + ` ${tipoid} in (select ${tipoid} from ${component}) `;
+      operator = ' or ';
+    }
+
+    if (filters.length > 0) {
+      filters += ` AND ${query}`;
+    } else {
+      filters = ` ${query}`;
+    }
+  }
+
+  if (params.componentstatus) {
+    const values = params.componentstatus.split(',');
+    let query = '';
+    let operator = '';
+    for (const value of values) {
+      for (const component of components) {
+        query += operator +
+          ` ${tipoid} in (select ${tipoid} from ${component} where status=${value}) `;
+        operator = ' or ';
+      }
+    }
+
+    if (params) {}
+    //mhfdmanager
+
+    if (filters.length > 0) {
+      filters += ` AND ${query}`;
+    } else {
+      filters = ` ${query}`;
+    }
+    
   }
 
   // ALL FILTERS
@@ -269,7 +304,7 @@ function getFilters(params) {
     }
 
     if (filters.length > 0) {
-      filters +=  ` and ${query}`;
+      filters += ` and ${query}`;
     } else {
       filters = ` ${query}`;
     }
@@ -679,29 +714,29 @@ router.get('/params-filters', async (req, res) => {
     const mhfdmanagerprob = await getValuesByColumn('problems', 'mhfdmanager');
     const sources = await getValuesByColumn('problems', 'source');
     const components = [
-      { key: 'grade_control_structure', value: 'Grade Control Structure' }, 
+      { key: 'grade_control_structure', value: 'Grade Control Structure' },
       { key: 'pipe_appurtenances', value: 'Pipe Appurtenances' },
       { key: 'special_item_point', value: 'Special Item Point' },
-      { key: 'special_item_linear', value: 'Special Item Linear' }, 
-      { key: 'special_item_area', value: 'Special Item Area' }, 
+      { key: 'special_item_linear', value: 'Special Item Linear' },
+      { key: 'special_item_area', value: 'Special Item Area' },
       { key: 'channel_improvements_linear', value: 'Channel Improvements Linear' },
-      { key: 'channel_improvements_area', value: 'Channel Improvements Area' }, 
-      { key: 'removal_line', value: 'Removal Line' }, 
-      { key: 'removal_area', value: 'Removal Area' }, 
+      { key: 'channel_improvements_area', value: 'Channel Improvements Area' },
+      { key: 'removal_line', value: 'Removal Line' },
+      { key: 'removal_area', value: 'Removal Area' },
       { key: 'storm_drain', value: 'Storm Drain' },
-      { key: 'detention_facilities', value: 'Detention Facilities' }, 
-      { key: 'maintenance_trails', value: 'Maintenance Trails' }, 
-      { key: 'land_acquisition', value: 'Land Acquisition' }, 
+      { key: 'detention_facilities', value: 'Detention Facilities' },
+      { key: 'maintenance_trails', value: 'Maintenance Trails' },
+      { key: 'land_acquisition', value: 'Land Acquisition' },
       { key: 'landscaping_area', value: 'Landscaping Area' }
     ];
     const lgmanager = await getValuesByColumn('projects_line_1', 'county');
     const streamname = await getValuesByColumn('projects_line_1', 'streamname');
     const statusComponent = await getComponentsValuesByColumn('status');
-    const yearOfStudyComponent = await getComponentsValuesByColumn('year_of_study');
+    const yearOfStudyComponent = [1970, 1980, 1990, 2000, 2010, 2020]; 
     //const estimatedCostComp = await getComponentsValuesByColumn('estimated_cost');
     const jurisdictionComponent = await getComponentsValuesByColumn('jurisdiction');
     const countyComponent = await getComponentsValuesByColumn('county');
-    const mhfdManagerComponent = await getComponentsValuesByColumn('mhfdmanager'); 
+    const mhfdManagerComponent = await getComponentsValuesByColumn('mhfdmanager');
     //const streamnameComponent = await getComponentsValuesByColumn('streamname'); 
 
     const result = {
@@ -728,7 +763,7 @@ router.get('/params-filters', async (req, res) => {
         "mhfdmanager": mhfdmanagerprob,
         "source": sources,
         "components": components
-      }, 
+      },
       "components": {
         "component_type": components,
         "status": statusComponent,
