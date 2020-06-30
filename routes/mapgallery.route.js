@@ -220,12 +220,15 @@ function getFilters(params) {
 
   if (params.solutionstatus) {
     let limite = 0;
-    const values = createQueryForIn(params.solutionstatus.split(','));
+    console.log('SOLUTIONS', params.solutionstatus);
+    const values = params.solutionstatus.split(',');
     let query = '';
     let operator = '';
     for (const val of values) {
+
       limite = Number(val) + 25;
       query += operator + ` (cast(solutionstatus as int) between ${val} and ${limite}) `;
+      //console.log('QUERYYYY', query);
       operator = ' or ';
     }
 
@@ -237,19 +240,28 @@ function getFilters(params) {
   }
 
   if (params.cost) {
-    let initValue = 0;
-    let endValue = 0;
-    if (params.cost === '1' || params.cost === '5') {
-      initValue = Number(params.cost) * 1000000;
-      endValue = 10000000;
-    } else {
-      initValue = Number(params.cost) * 1000000;
-      endValue = initValue + 5000000;
+
+    const values = params.cost.split(',');
+    let query = '';
+    let operator = '';
+    for (const val of values) {
+      let initValue = 0;
+      let endValue = 0;
+      if (val === '1' || val === '5') {
+        initValue = Number(val) * 1000000;
+        endValue = 10000000;
+      } else {
+        initValue = Number(val) * 1000000;
+        endValue = initValue + 5000000;
+      }
+      query += operator + ` (cast(solutioncost as bigint) between ${initValue} and ${endValue})`;
+      operator = ' or ';
     }
+
     if (filters.length > 0) {
-      filters = filters + ` and (cast(solutioncost as bigint) between ${initValue} and ${endValue})`;
+      filters +=  ` and ${query}`;
     } else {
-      filters = ` (cast(solutioncost as bigint) between ${initValue} and ${endValue})`;
+      filters = ` ${query}`;
     }
   }
 
@@ -594,6 +606,50 @@ async function getValuesByColumn(table, column) {
 }
 
 
+async function getComponentsValuesByColumn(column) {
+  /* const table = req.body.table;
+  const column = req.body.column; */
+  let data = [];
+  const LINE_SQL = `SELECT ${column} FROM grade_control_structure group by ${column} union
+  SELECT ${column} FROM pipe_appurtenances group by ${column} union
+  SELECT ${column} FROM special_item_point group by ${column} union
+  SELECT ${column} FROM special_item_linear group by ${column} union
+  SELECT ${column} FROM special_item_area group by ${column} union
+  SELECT ${column} FROM channel_improvements_linear group by ${column} union
+  SELECT ${column} FROM channel_improvements_area group by ${column} union
+  SELECT ${column} FROM removal_line group by ${column} union
+  SELECT ${column} FROM removal_area group by ${column} union
+  SELECT ${column} FROM storm_drain group by ${column} union
+  SELECT ${column} FROM detention_facilities group by ${column} union
+  SELECT ${column} FROM maintenance_trails group by ${column} union
+  SELECT ${column} FROM land_acquisition group by ${column} union
+  SELECT ${column} FROM landscaping_area group by ${column} order by ${column}`;
+  const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
+  //console.log(LINE_URL);
+  const newProm1 = new Promise((resolve, reject) => {
+    https.get(LINE_URL, response => {
+      if (response.statusCode === 200) {
+        let str = '';
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+        response.on('end', async function () {
+          let data = [];
+          let result = JSON.parse(str).rows;
+          for (const res of result) {
+            data.push(res[column]);
+          }
+          resolve(data);
+
+        })
+      }
+    });
+  });
+  data = await newProm1;
+  return data;
+}
+
+
 router.get('/params-filters', async (req, res) => {
   try {
     const creators = await getValuesByColumn('projects_line_1', 'creator');
@@ -619,6 +675,7 @@ router.get('/params-filters', async (req, res) => {
     const lgmanager = await getValuesByColumn('projects_line_1', 'county');
     const streamname = await getValuesByColumn('projects_line_1', 'streamname');
 
+
     const result = {
       "projects": {
         "creator": creators,
@@ -634,7 +691,6 @@ router.get('/params-filters', async (req, res) => {
         "county": countyProj,
         "lgmanager": lgmanager,
         "streamname": streamname
-
       },
       "problems": {
         "problemtype": problemtype,
@@ -644,6 +700,8 @@ router.get('/params-filters', async (req, res) => {
         "mhfdmanager": mhfdmanagerprob,
         "source": sources,
         "components": components
+      }, "components": {
+        "component_type": components
       }
     }
     res.status(200).send(result);
