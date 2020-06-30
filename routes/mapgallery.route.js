@@ -611,19 +611,19 @@ async function getComponentsValuesByColumn(column) {
   const column = req.body.column; */
   let data = [];
   const LINE_SQL = `SELECT ${column} FROM grade_control_structure group by ${column} union
-  SELECT ${column} FROM pipe_appurtenances group by ${column} union
-  SELECT ${column} FROM special_item_point group by ${column} union
-  SELECT ${column} FROM special_item_linear group by ${column} union
-  SELECT ${column} FROM special_item_area group by ${column} union
-  SELECT ${column} FROM channel_improvements_linear group by ${column} union
-  SELECT ${column} FROM channel_improvements_area group by ${column} union
-  SELECT ${column} FROM removal_line group by ${column} union
-  SELECT ${column} FROM removal_area group by ${column} union
-  SELECT ${column} FROM storm_drain group by ${column} union
-  SELECT ${column} FROM detention_facilities group by ${column} union
-  SELECT ${column} FROM maintenance_trails group by ${column} union
-  SELECT ${column} FROM land_acquisition group by ${column} union
-  SELECT ${column} FROM landscaping_area group by ${column} order by ${column}`;
+      SELECT ${column} FROM pipe_appurtenances group by ${column} union
+      SELECT ${column} FROM special_item_point group by ${column} union
+      SELECT ${column} FROM special_item_linear group by ${column} union
+      SELECT ${column} FROM special_item_area group by ${column} union
+      SELECT ${column} FROM channel_improvements_linear group by ${column} union
+      SELECT ${column} FROM channel_improvements_area group by ${column} union
+      SELECT ${column} FROM removal_line group by ${column} union
+      SELECT ${column} FROM removal_area group by ${column} union
+      SELECT ${column} FROM storm_drain group by ${column} union
+      SELECT ${column} FROM detention_facilities group by ${column} union
+      SELECT ${column} FROM maintenance_trails group by ${column} union
+      SELECT ${column} FROM land_acquisition group by ${column} union
+      SELECT ${column} FROM landscaping_area group by ${column} order by ${column}`;
   const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
   //console.log(LINE_URL);
   const newProm1 = new Promise((resolve, reject) => {
@@ -674,7 +674,13 @@ router.get('/params-filters', async (req, res) => {
       'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
     const lgmanager = await getValuesByColumn('projects_line_1', 'county');
     const streamname = await getValuesByColumn('projects_line_1', 'streamname');
-
+    const statusComponent = await getComponentsValuesByColumn('status');
+    const yearOfStudyComponent = await getComponentsValuesByColumn('year_of_study');
+    //const estimatedCostComp = await getComponentsValuesByColumn('estimated_cost');
+    const jurisdictionComponent = await getComponentsValuesByColumn('jurisdiction');
+    const countyComponent = await getComponentsValuesByColumn('county');
+    const mhfdManagerComponent = await getComponentsValuesByColumn('mhfdmanager'); 
+    //const streamnameComponent = await getComponentsValuesByColumn('streamname'); 
 
     const result = {
       "projects": {
@@ -700,8 +706,16 @@ router.get('/params-filters', async (req, res) => {
         "mhfdmanager": mhfdmanagerprob,
         "source": sources,
         "components": components
-      }, "components": {
-        "component_type": components
+      }, 
+      "components": {
+        "component_type": components,
+        "status": statusComponent,
+        "yearofstudy": yearOfStudyComponent,
+        "estimatedcost": [],
+        "jurisdiction": jurisdictionComponent,
+        "county": countyComponent,
+        "watershed": mhfdManagerComponent,
+        //"streamname": streamnameComponent
       }
     }
     res.status(200).send(result);
