@@ -193,6 +193,7 @@ function getFilters(params) {
     }
 
     if (params.problemtype) {
+      console.log('TIPOS PROBLEMAS', params.problemtype);
       const values = params.problemtype.split(',');
 
       let operator = '';
@@ -284,6 +285,26 @@ function getFilters(params) {
 
     if (filters.length > 0) {
       filters += ` AND ${query}`;
+    } else {
+      filters = ` ${query}`;
+    }
+  }
+
+  if (params.estimatedcostComp) {
+    const values = params.estimatedcostComp.split(',');
+    let query = '';
+    let operator = '';
+    for (const value of values) {
+      const initValue = Number(value) * 1000000;
+      for (const component of VALUES_COMPONENTS) {
+        query += operator +
+          ` (${tipoid} in (select ${tipoid} from ${component} where estimated_cost > 0 and estimated_cost between ${initValue} and ${initValue + 2000000 } )) `;
+        operator = ' or ';
+      }
+    }
+
+    if (filters.length > 0) {
+      filters = `and ${query}`;
     } else {
       filters = ` ${query}`;
     }
@@ -384,7 +405,9 @@ function getFilters(params) {
   }
 
   if (params.mhfdmanager) {
+    console.log('MHFD MANAGER', params.mhfdmanager);
     const query = createQueryForIn(params.mhfdmanager.split(','));
+    console.log('QUERY', query);
     if (filters.length > 0) {
       filters = filters + ` and mhfdmanager in (${query})`;
     } else {
@@ -613,7 +636,7 @@ router.get('/problem-by-id/:id', async (req, res) => {
       `SELECT id, type, estimated_cost, status FROM maintenance_trails where problemid=${id} union ` +
       `SELECT id, type, estimated_cost, status FROM land_acquisition where problemid=${id} union ` +
       `SELECT id, type, estimated_cost, status FROM landscaping_area where problemid=${id}`;
-
+    console.log('components', COMPONENTS_SQL);
     //console.log('FILTER', filters);
     console.log('URL', URL);
     const URL_COMPONENT = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL} &api_key=${CARTO_TOKEN}`);
@@ -624,25 +647,24 @@ router.get('/problem-by-id/:id', async (req, res) => {
         response.on('data', function (chunk) {
           str += chunk;
         });
-        response.on('end', function () {
+        response.on('end', async function () {
           const result = JSON.parse(str).rows[0];
-          let resultComponents = [];
-          //console.log('PROBLEMAS', result);
-          //console.log('URL COMPO', URL_COMPONENT);
-          https.get(URL_COMPONENT, response1 => {
-            //console.log('status2', response1.statusCode);
-            if (response1.statusCode === 200) {
-              let str2 = '';
-              response1.on('data', function (chunk) {
-                str2 += chunk;
-              });
+          const newProm1 = new Promise((resolve, reject) => {
+            https.get(URL_COMPONENT, response1 => {
+              if (response1.statusCode === 200) {
+                let str2 = '';
+                response1.on('data', function (chunk) {
+                  str2 += chunk;
+                });
+  
+                response1.on('end', async function () {
+                  resolve(JSON.parse(str2).rows);
+                });
+              }
+            });
+          });
 
-              response1.on('end', async function () {
-                resultComponents = JSON.parse(str2).rows;
-                console.log('componentes', resultComponents);
-              });
-            }
-          })
+          const resultComponents = await newProm1;
           return res.status(200).send({
             ...result,
             components: resultComponents
