@@ -50,7 +50,7 @@ router.get('/', async (req, res) => {
   res.send([... new Set(send)]);
 });
 
-router.get('/projecttype', async (req, res) => {
+router.get('/project-filter', async (req, res) => {
   const problemtype = req.query.problemtype;
   let send = [];
   for (const element of components) {
