@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
           });
         } else {
           console.log('Error ', response.statusCode);
-          resolve(null);
+          resolve([]);
         }
       });
     });
