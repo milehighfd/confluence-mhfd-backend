@@ -648,14 +648,6 @@ router.get('/project-by-ids', async (req, res) => {
 router.get('/problem-by-id/:id', async (req, res) => {
   const id = req.params.id;
   try {
-    //console.log('ID',id);
-    /*
-    ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom, cartodb_id,
-    objectid, problemid, problemname, problemdescription, problemtype,
-    problempriority, source, sourcename, solutioncost, solutionstatus,
-    mhfdmanager, servicearea, county, jurisdiction, streamname,
-    problemsubtype, sourcedate, shape_length, shape_area
-     */
     const PROBLEM_SQL = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom, cartodb_id,
     objectid, problemid, problemname, problemdescription, problemtype,
     problempriority, source, sourcename, solutioncost, solutionstatus,
@@ -663,24 +655,7 @@ router.get('/problem-by-id/:id', async (req, res) => {
     problemsubtype, sourcedate, shape_length, shape_area 
     FROM problems where problemid='${id}'`;
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} &api_key=${CARTO_TOKEN}`);
-    const COMPONENTS_SQL = `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM grade_control_structure where problemid=${id} group by type, status union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM pipe_appurtenances where problemid=${id} group by type, status union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM special_item_point where problemid=${id} group by type, status union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM special_item_linear where problemid=${id} group by type, status union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM special_item_area where problemid=${id} group by type, status union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM channel_improvements_linear where problemid=${id} group by type, status union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM channel_improvements_area where problemid=${id} group by type, status union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM removal_line where problemid=${id} group by type, status union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM removal_area where problemid=${id} group by type, status union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM storm_drain where problemid=${id} group by type, status union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM detention_facilities where problemid=${id} group by type, status union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM maintenance_trails where problemid=${id} group by type, status union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM land_acquisition where problemid=${id} group by type, status union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM landscaping_area where problemid=${id} group by type, status`;
-    console.log('components', COMPONENTS_SQL);
-    //console.log('FILTER', filters);
-    console.log('URL', URL);
-    const URL_COMPONENT = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL} &api_key=${CARTO_TOKEN}`);
+    
     https.get(URL, response => {
       console.log('status', response.statusCode);
       if (response.statusCode === 200) {
@@ -690,27 +665,29 @@ router.get('/problem-by-id/:id', async (req, res) => {
         });
         response.on('end', async function () {
           const result = JSON.parse(str).rows[0];
-          /* const newProm1 = new Promise((resolve, reject) => {
-            https.get(URL_COMPONENT, response1 => {
-              if (response1.statusCode === 200) {
-                let str2 = '';
-                response1.on('data', function (chunk) {
-                  str2 += chunk;
-                });
-
-                response1.on('end', async function () {
-                  resolve(JSON.parse(str2).rows);
-                });
-              }
-            });
-          });
-
-          const resultComponents = await newProm1; */
           const resultComponents = await getCoordinatesOfComponents(id, 'problemid');
-          //console.log('THE GEOM', JSON.parse(result.the_geom).coordinates);
-          console.log(resultComponents);
+
           return res.status(200).send({
-            ...result,
+            cartodb_id: result.cartodb_id,
+            objectid: result.objectid,
+            problemid: result.problemid,
+            problemname: result.problemname,
+            problemdescription: result.problemdescription,
+            problemtype: result.problemtype,
+            problempriority: result.problempriority,
+            source: result.source,
+            solutioncost: result.solutioncost,
+            solutionstatus: result.solutionstatus,
+            sourcename: result.sourcename,
+            mhfdmanager: result.mhfdmanager,
+            servicearea: result.servicearea,
+            county: result.county,
+            streamname: result.streamname,
+            problemsubtype: result.problemsubtype,
+            sourcedate: result.sourcedate,
+            jurisdiction: result.jurisdiction,
+            shape_length: result.shape_length,
+            shape_area: result.shape_area,
             components: resultComponents,
             coordinates: JSON.parse(result.the_geom).coordinates
           });
@@ -854,7 +831,6 @@ async function getCoordinatesOfComponents(id, field) {
       where ${field}=${id}  `;
 
   console.log('components', COMPONENTS_SQL);
-  //console.log('FILTER', filters);
   const newProm1 = new Promise((resolve, reject) => {
     const COMPONENT_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL}&api_key=${CARTO_TOKEN}`);
     https.get(COMPONENT_URL, response => {
@@ -864,18 +840,7 @@ async function getCoordinatesOfComponents(id, field) {
           str += chunk;
         });
         response.on('end', async function () {
-          /* let result = [];
-          for (const comp of JSON.parse(str).rows) {
-            //console.log(comp);
-            const type_component = comp.type.split(' ').join('_').toLowerCase();
-            const percentage = await getTotals(type_component, id);
-            result.push({
-              ...comp,
-              percentage: percentage
-            })
-          } */
           const result = JSON.parse(str).rows;
-          console.log('COORDENADAS', result);
           let resultFinal = [];
           for (const res of result) {
             
@@ -886,7 +851,6 @@ async function getCoordinatesOfComponents(id, field) {
           }
 
           resolve(resultFinal);
-          //return res.status(200).send(result);
         })
       }
     });
@@ -898,10 +862,10 @@ async function getCoordinatesOfComponents(id, field) {
 router.post('/components-by-problemid', async (req, res) => {
   try {
     const id = req.body.id;
-    const sortby = req.body.sortby;
+    let sortby = req.body.sortby;
     let sorttype = req.body.sorttype;
 
-    const COMPONENTS_SQL = `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+    let COMPONENTS_SQL = `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM grade_control_structure 
       where problemid=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
@@ -975,7 +939,7 @@ router.post('/components-by-problemid', async (req, res) => {
       }
     });
 
-  } catch (err) {
+  } catch (error) {
     logger.error(error);
     res.status(500).send({ error: error }).send({ error: 'Connection error' });
   }
