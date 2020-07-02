@@ -6,7 +6,7 @@ const { google } = require('googleapis');
 const logger = require('../config/logger');
 const auth = require('../auth/auth');
 var request = require("request");
-const COMPONENTS = require('..')
+//const COMPONENTS = require('..')
 
 const { CARTO_TOKEN } = require('../config/config');
 const attachmentService = require('../services/attachment.service');
@@ -629,7 +629,7 @@ router.get('/project-by-ids', async (req, res) => {
             attachments = await attachmentService.findByName(result.attachments);
             //result.attachments = valor;
           }
-          
+
           return res.status(200).send({
             ...result,
             attachments: attachments,
@@ -690,7 +690,7 @@ router.get('/problem-by-id/:id', async (req, res) => {
         });
         response.on('end', async function () {
           const result = JSON.parse(str).rows[0];
-          const newProm1 = new Promise((resolve, reject) => {
+          /* const newProm1 = new Promise((resolve, reject) => {
             https.get(URL_COMPONENT, response1 => {
               if (response1.statusCode === 200) {
                 let str2 = '';
@@ -705,10 +705,14 @@ router.get('/problem-by-id/:id', async (req, res) => {
             });
           });
 
-          const resultComponents = await newProm1;
+          const resultComponents = await newProm1; */
+          const resultComponents = await getCoordinatesOfComponents(id, 'problemid');
+          //console.log('THE GEOM', JSON.parse(result.the_geom).coordinates);
+          console.log(resultComponents);
           return res.status(200).send({
             ...result,
-            components: resultComponents
+            components: resultComponents,
+            coordinates: JSON.parse(result.the_geom).coordinates
           });
         });
       } else {
@@ -798,7 +802,7 @@ async function getTotals(type_component, problemid) {
                 state_apro += proj.total_projects;
               }
             }
-            resolve(state_apro/result.length);
+            resolve(state_apro / result.length);
           } else {
             resolve(0);
           }
@@ -813,7 +817,7 @@ async function getTotals(type_component, problemid) {
 router.post('/components-by-projectid', async (req, res) => {
   try {
 
-  } catch(err) {
+  } catch (err) {
     logger.error(error);
     res.status(500).send({ error: error }).send({ error: 'Connection error' });
   }
@@ -822,35 +826,36 @@ router.post('/components-by-projectid', async (req, res) => {
 async function getCoordinatesOfComponents(id, field) {
   const COMPONENTS_SQL = `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM grade_control_structure 
       where ${field}=${id}  union ` +
-      `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM pipe_appurtenances 
+    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM pipe_appurtenances 
       where ${field}=${id}  union ` +
-      `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_point 
+    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_point 
       where ${field}=${id}  union ` +
-      `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_linear 
+    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_linear 
       where ${field}=${id}  union ` +
-      `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_area 
+    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_area 
       where ${field}=${id}  union ` +
-      `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM channel_improvements_linear 
+    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM channel_improvements_linear 
       where ${field}=${id}  union ` +
-      `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM channel_improvements_area 
+    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM channel_improvements_area 
       where ${field}=${id}  union ` +
-      `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM removal_line 
+    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM removal_line 
       where ${field}=${id}  union ` +
-      `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM removal_area 
+    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM removal_area 
       where ${field}=${id}  union ` +
-      `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM storm_drain 
+    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM storm_drain 
       where ${field}=${id}  union ` +
-      `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM detention_facilities 
+    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM detention_facilities 
       where ${field}=${id}  union ` +
-      `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM maintenance_trails 
+    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM maintenance_trails 
       where ${field}=${id}  union ` +
-      `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM land_acquisition 
+    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM land_acquisition 
       where ${field}=${id}  union ` +
-      `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM landscaping_area 
+    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM landscaping_area 
       where ${field}=${id}  `;
-    
-    console.log('components', COMPONENTS_SQL);
-    //console.log('FILTER', filters);
+
+  console.log('components', COMPONENTS_SQL);
+  //console.log('FILTER', filters);
+  const newProm1 = new Promise((resolve, reject) => {
     const COMPONENT_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL}&api_key=${CARTO_TOKEN}`);
     https.get(COMPONENT_URL, response => {
       if (response.statusCode === 200) {
@@ -871,11 +876,23 @@ async function getCoordinatesOfComponents(id, field) {
           } */
           const result = JSON.parse(str).rows;
           console.log('COORDENADAS', result);
+          let resultFinal = [];
+          for (const res of result) {
+            
+            resultFinal.push({
+              type: res.type,
+              coordinates: JSON.parse(res.st_asgeojson).coordinates
+            });
+          }
 
-          return res.status(200).send(result);
+          resolve(resultFinal);
+          //return res.status(200).send(result);
         })
       }
     });
+  });
+  const finalResult = await newProm1;
+  return finalResult;
 }
 
 router.post('/components-by-problemid', async (req, res) => {
@@ -957,7 +974,7 @@ router.post('/components-by-problemid', async (req, res) => {
         })
       }
     });
-    
+
   } catch (err) {
     logger.error(error);
     res.status(500).send({ error: error }).send({ error: 'Connection error' });
