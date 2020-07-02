@@ -17,7 +17,7 @@ const problemRouter = require('./routes/problem.route');
 const driveRouter = require('./routes/drive.route');
 const attachmentRouter = require('./routes/attachment.route');
 const galleryRouter = require('./routes/mapgallery.route');
-
+const filterRouter = require('./routes/filters.route');
 const db = require('./config/db');
 db.sequelize.sync();
 const cacheTime = 1000 * 60 * 60;
@@ -54,6 +54,7 @@ app.use('/problems', problemRouter);
 app.use('/drive', driveRouter);
 app.use('/attachments', attachmentRouter);
 app.use('/gallery', galleryRouter);
+app.use('/filters', filterRouter);
 
 app.listen(3003, () => {
   console.log("Server is listening on port 3003");
