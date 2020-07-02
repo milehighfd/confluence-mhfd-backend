@@ -5,6 +5,7 @@ const fs = require('fs');
 const { google } = require('googleapis');
 const logger = require('../config/logger');
 const auth = require('../auth/auth');
+var request = require("request");
 
 const { CARTO_TOKEN } = require('../config/config');
 const attachmentService = require('../services/attachment.service');
@@ -298,7 +299,7 @@ function getFilters(params) {
       const initValue = Number(value) * 1000000;
       for (const component of VALUES_COMPONENTS) {
         query += operator +
-          ` (${tipoid} in (select ${tipoid} from ${component} where estimated_cost > 0 and estimated_cost between ${initValue} and ${initValue + 2000000 } )) `;
+          ` (${tipoid} in (select ${tipoid} from ${component} where estimated_cost > 0 and estimated_cost between ${initValue} and ${initValue + 2000000} )) `;
         operator = ' or ';
       }
     }
@@ -622,20 +623,20 @@ router.get('/problem-by-id/:id', async (req, res) => {
     //console.log('ID',id);
     const PROBLEM_SQL = `SELECT * FROM problems where problemid='${id}'`;
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} &api_key=${CARTO_TOKEN}`);
-    const COMPONENTS_SQL = `SELECT id, type, estimated_cost, status FROM grade_control_structure where problemid=${id} union ` +
-      `SELECT id, type, estimated_cost, status FROM pipe_appurtenances where problemid=${id} union ` +
-      `SELECT id, type, estimated_cost, status FROM special_item_point where problemid=${id} union ` +
-      `SELECT id, type, estimated_cost, status FROM special_item_linear where problemid=${id} union ` +
-      `SELECT id, type, estimated_cost, status FROM special_item_area where problemid=${id} union ` +
-      `SELECT id, type, estimated_cost, status FROM channel_improvements_linear where problemid=${id} union ` +
-      `SELECT id, type, estimated_cost, status FROM channel_improvements_area where problemid=${id} union ` +
-      `SELECT id, type, estimated_cost, status FROM removal_line where problemid=${id} union ` +
-      `SELECT id, type, estimated_cost, status FROM removal_area where problemid=${id} union ` +
-      `SELECT id, type, estimated_cost, status FROM storm_drain where problemid=${id} union ` +
-      `SELECT id, type, estimated_cost, status FROM detention_facilities where problemid=${id} union ` +
-      `SELECT id, type, estimated_cost, status FROM maintenance_trails where problemid=${id} union ` +
-      `SELECT id, type, estimated_cost, status FROM land_acquisition where problemid=${id} union ` +
-      `SELECT id, type, estimated_cost, status FROM landscaping_area where problemid=${id}`;
+    const COMPONENTS_SQL = `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM grade_control_structure where problemid=${id} group by type, status union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM pipe_appurtenances where problemid=${id} group by type, status union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM special_item_point where problemid=${id} group by type, status union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM special_item_linear where problemid=${id} group by type, status union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM special_item_area where problemid=${id} group by type, status union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM channel_improvements_linear where problemid=${id} group by type, status union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM channel_improvements_area where problemid=${id} group by type, status union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM removal_line where problemid=${id} group by type, status union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM removal_area where problemid=${id} group by type, status union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM storm_drain where problemid=${id} group by type, status union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM detention_facilities where problemid=${id} group by type, status union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM maintenance_trails where problemid=${id} group by type, status union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM land_acquisition where problemid=${id} group by type, status union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, status, coalesce(sum(original_cost), 0) as original_cost FROM landscaping_area where problemid=${id} group by type, status`;
     console.log('components', COMPONENTS_SQL);
     //console.log('FILTER', filters);
     console.log('URL', URL);
@@ -656,7 +657,7 @@ router.get('/problem-by-id/:id', async (req, res) => {
                 response1.on('data', function (chunk) {
                   str2 += chunk;
                 });
-  
+
                 response1.on('end', async function () {
                   resolve(JSON.parse(str2).rows);
                 });
@@ -682,6 +683,128 @@ router.get('/problem-by-id/:id', async (req, res) => {
     res.status(500).send({ error: 'No there data with ID' });
   }
 });
+
+async function getTotals(type_component, problemid) {
+  let data = [];
+  const LINE_SQL = `select status, count(*) as total_projects from ${type_component} 
+  where problemid=${problemid} and projectid>0 group by projectid, status`;
+  const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
+  //console.log(LINE_URL);
+  const newProm1 = new Promise((resolve, reject) => {
+    https.get(LINE_URL, response => {
+      if (response.statusCode === 200) {
+        let str = '';
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+        response.on('end', async function () {
+          let data = [];
+          let result = JSON.parse(str).rows;
+          let state_apro = 0;
+          if (result.length > 0) {
+            for (const proj of result) {
+              //data.push(res[column]);
+              if (proj.status === 'Completed') {
+                state_apro += proj.total_projects;
+              }
+            }
+            resolve(state_apro/result.length);
+          } else {
+            resolve(0);
+          }
+        })
+      }
+    });
+  });
+  data = await newProm1;
+  return data;
+}
+
+router.post('/components-by-problemid', async (req, res) => {
+  try {
+    const id = req.body.id;
+    const sortby = req.body.sortby;
+    let sorttype = req.body.sorttype;
+
+    const COMPONENTS_SQL = `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM grade_control_structure 
+      where problemid=${id} group by type union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM pipe_appurtenances 
+      where problemid=${id} group by type union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM special_item_point 
+      where problemid=${id} group by type union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM special_item_linear 
+      where problemid=${id} group by type union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM special_item_area 
+      where problemid=${id} group by type union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM channel_improvements_linear 
+      where problemid=${id} group by type union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM channel_improvements_area 
+      where problemid=${id} group by type union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM removal_line 
+      where problemid=${id} group by type union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM removal_area 
+      where problemid=${id} group by type union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM storm_drain 
+      where problemid=${id} group by type union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM detention_facilities 
+      where problemid=${id} group by type union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM maintenance_trails 
+      where problemid=${id} group by type union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM land_acquisition 
+      where problemid=${id} group by type union ` +
+      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+      coalesce(sum(original_cost), 0) as original_cost FROM landscaping_area 
+      where problemid=${id} group by type `;
+
+    if (sortby) {
+      if (sorttype) {
+        sorttype = 'desc';
+      }
+      COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
+    }
+    console.log('components', COMPONENTS_SQL);
+    //console.log('FILTER', filters);
+    const COMPONENT_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL}&api_key=${CARTO_TOKEN}`);
+    https.get(COMPONENT_URL, response => {
+      if (response.statusCode === 200) {
+        let str = '';
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+        response.on('end', async function () {
+          let result = [];
+          for (const comp of JSON.parse(str).rows) {
+            //console.log(comp);
+            const type_component = comp.type.split(' ').join('_').toLowerCase();
+            const percentage = await getTotals(type_component, id);
+            result.push({
+              ...comp,
+              percentage: percentage
+            })
+          }
+          return res.status(200).send(result);
+        })
+      }
+    });
+    
+  } catch (err) {
+    logger.error(error);
+    res.status(500).send({ error: error }).send({ error: 'Connection error' });
+  }
+})
 
 router.post('/group-by', async (req, res) => {
   try {
@@ -743,6 +866,7 @@ async function getValuesByColumn(table, column) {
   data = await newProm1;
   return data;
 }
+
 
 
 async function getComponentsValuesByColumn(column) {
