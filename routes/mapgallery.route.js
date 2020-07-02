@@ -593,8 +593,6 @@ router.get('/project-by-ids', async (req, res) => {
   const type = req.query.type;
 
   try {
-    //console.log('ID', id)
-    //const PROJECT_FIELDS = `objectid, projecttype, coverimage, sponsor, finalCost, estimatedCost, status, attachments, projectname `;
     let SQL = '';
     let URL = '';
     if (type === 'projects_polygon_') {
@@ -622,12 +620,10 @@ router.get('/project-by-ids', async (req, res) => {
           if (result.projectid && result.projectid !== null) {
             problems = await getProblemByProjectId(result.projectid);
             components = await getCoordinatesOfComponents(result.projectid, 'projectid');
-            //result.problems = problems;
           }
 
           if (result.attachments) {
             attachments = await attachmentService.findByName(result.attachments);
-            //result.attachments = valor;
           }
 
           return res.status(200).send({
@@ -755,10 +751,10 @@ async function getProblemByProjectId(projectid) {
   return data;
 }
 
-async function getTotals(type_component, problemid) {
+async function getTotals(type_component, pid, typeid) {
   let data = [];
   const LINE_SQL = `select status, count(*) as total_projects from ${type_component} 
-  where problemid=${problemid} and projectid>0 group by projectid, status`;
+  where ${typeid}=${pid} and projectid>0 group by projectid, status`;
   const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
   //console.log(LINE_URL);
   const newProm1 = new Promise((resolve, reject) => {
@@ -790,15 +786,6 @@ async function getTotals(type_component, problemid) {
   data = await newProm1;
   return data;
 }
-
-router.post('/components-by-projectid', async (req, res) => {
-  try {
-
-  } catch (err) {
-    logger.error(error);
-    res.status(500).send({ error: error }).send({ error: 'Connection error' });
-  }
-});
 
 async function getCoordinatesOfComponents(id, field) {
   const COMPONENTS_SQL = `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM grade_control_structure 
@@ -859,54 +846,55 @@ async function getCoordinatesOfComponents(id, field) {
   return finalResult;
 }
 
-router.post('/components-by-problemid', async (req, res) => {
+router.post('/components-by-entityid', async (req, res) => {
   try {
     const id = req.body.id;
+    const typeid = req.body.typeid;
     let sortby = req.body.sortby;
     let sorttype = req.body.sorttype;
 
     let COMPONENTS_SQL = `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM grade_control_structure 
-      where problemid=${id} group by type union ` +
+      where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM pipe_appurtenances 
-      where problemid=${id} group by type union ` +
+      where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM special_item_point 
-      where problemid=${id} group by type union ` +
+      where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM special_item_linear 
-      where problemid=${id} group by type union ` +
+      where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM special_item_area 
-      where problemid=${id} group by type union ` +
+      where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM channel_improvements_linear 
-      where problemid=${id} group by type union ` +
+      where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM channel_improvements_area 
-      where problemid=${id} group by type union ` +
+      where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM removal_line 
-      where problemid=${id} group by type union ` +
+      where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM removal_area 
-      where problemid=${id} group by type union ` +
+      where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM storm_drain 
-      where problemid=${id} group by type union ` +
+      where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM detention_facilities 
-      where problemid=${id} group by type union ` +
+      where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM maintenance_trails 
-      where problemid=${id} group by type union ` +
+      where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM land_acquisition 
-      where problemid=${id} group by type union ` +
+      where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost FROM landscaping_area 
-      where problemid=${id} group by type `;
+      where ${typeid}=${id} group by type `;
 
     if (sortby) {
       if (sorttype) {
@@ -928,7 +916,7 @@ router.post('/components-by-problemid', async (req, res) => {
           for (const comp of JSON.parse(str).rows) {
             //console.log(comp);
             const type_component = comp.type.split(' ').join('_').toLowerCase();
-            const percentage = await getTotals(type_component, id);
+            const percentage = await getTotals(type_component, id, typeid);
             result.push({
               ...comp,
               percentage: percentage
