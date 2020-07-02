@@ -51,12 +51,12 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/projecttype', async (req, res) => {
-  const projecttype = req.query.projecttype;
+  const problemtype = req.query.problemtype;
   let send = [];
   for (const element of components) {
     const component = element.key;
     for (const table of PROJECT_TABLES) {
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=SELECT DISTINCT ${table}.projectid FROM ${table}, problems, ${component}   WHERE ${table}.projectid = ${component}.projectid and problems.problemid = ${component}.problemid and problems.problemtype = '${projecttype}'  &api_key=${CARTO_TOKEN}`);
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=SELECT DISTINCT ${table}.projectid FROM ${table}, problems, ${component}   WHERE ${table}.projectid = ${component}.projectid and problems.problemid = ${component}.problemid and problems.problemtype = '${problemtype}'  &api_key=${CARTO_TOKEN}`);
       const answer = await new Promise(resolve => {
         https.get(URL, response => {
           var str = '';
