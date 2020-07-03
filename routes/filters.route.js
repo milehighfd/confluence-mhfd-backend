@@ -24,7 +24,7 @@ const components = [
 ];
 const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
 router.get('/', async (req, res) => {
-  const tables = req.query.tables.split(',');
+  const tables = req.query.tables ? req.query.tables.split(',') : [];
   let send = [];
   for (const table of tables) {
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=SELECT DISTINCT problemid FROM ${table}  WHERE problemid is not null  &api_key=${CARTO_TOKEN}`);
@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/project-filter', async (req, res) => {
-  const problemtype = req.query.problemtype;
+  const problemtype = req.query.problemtype ? req.query.problemtype : '';
   let send = [];
   for (const element of components) {
     const component = element.key;
@@ -81,7 +81,7 @@ router.get('/project-filter', async (req, res) => {
 });
 router.get('/search/:type', async (req, res) => {
   const type = req.params.type;
-  const field = req.query.field;
+  const field = req.query.field ? req.query.field : '';
   let data = {};
   if (type === 'problems') {
     const query = `SELECT cartodb_id FROM problems WHERE problemname ILIKE '%${field}%'`;
