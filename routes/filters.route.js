@@ -79,4 +79,57 @@ router.get('/project-filter', async (req, res) => {
   }
   res.send(send);
 });
+router.get('/search/:type', async (req, res) => {
+  const type = req.params.type;
+  const field = req.query.field;
+  let data = {};
+  if (type === 'problems') {
+    const query = `SELECT cartodb_id FROM problems WHERE problemname ILIKE '%${field}%'`;
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query}  &api_key=${CARTO_TOKEN}`);
+      
+    const answer = await new Promise(resolve => {
+      https.get(URL, response => {
+        var str = '';
+        if (response.statusCode == 200) {
+          response.on('data', function (chunk) {
+            str += chunk;
+          });
+          response.on('end', function () {
+            var data = JSON.parse(str);
+            resolve ( data.rows.map(element => element.cartodb_id));
+          });
+        } else {
+          console.log('Error ', response.statusCode);
+          resolve([]);
+        }
+      });
+    });
+    data['problems'] = answer;
+  } else {
+    for (const project of PROJECT_TABLES) {
+      const query = `SELECT cartodb_id FROM ${project} WHERE streamname ILIKE '%${field}%'`;
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query}  &api_key=${CARTO_TOKEN}`);
+      const answer = await new Promise(resolve => {
+        https.get(URL, response => {
+          var str = '';
+          if (response.statusCode == 200) {
+            response.on('data', function (chunk) {
+              str += chunk;
+            });
+            response.on('end', function () {
+              var data = JSON.parse(str);
+              resolve ( data.rows.map(element => element.cartodb_id));
+            });
+          } else {
+            console.log('Error ', response.statusCode);
+            resolve([]);
+          }
+        });
+      });
+      console.log(project);
+      data[project] = answer;
+    }
+  }
+  return res.send(data);
+});
 module.exports = router;
