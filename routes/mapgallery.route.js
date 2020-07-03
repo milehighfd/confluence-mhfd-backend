@@ -614,7 +614,7 @@ router.get('/project-by-ids', async (req, res) => {
           const result = JSON.parse(str).rows[0];
           console.log('resultado', result);
           let problems = [];
-          let attachments = [];
+          let attachmentFinal = [];
           let components = [];
 
           if (result.projectid && result.projectid !== null) {
@@ -622,13 +622,67 @@ router.get('/project-by-ids', async (req, res) => {
             components = await getCoordinatesOfComponents(result.projectid, 'projectid');
           }
 
+          console.log('listado', result.attachments);
           if (result.attachments) {
             attachments = await attachmentService.findByName(result.attachments);
           }
-
+          // the_geom
+          // the_geom_webmercator
           return res.status(200).send({
-            ...result,
-            attachments: attachments,
+            objectid: result.objectid,
+            projectid: result.projectid,
+            onbaseid: result.onbaseid,
+            projectname: result.projectname,
+            status: result.status,
+            requestedname: result.requestedname,
+            projecttype: result.projecttype,
+            projectsubtype: result.projectsubtype,
+            description: result.description,
+            sponsor: result.sponsor,
+            cosponsor: result.cosponsor,
+            recurrence: result.recurrence,
+            frequency: result.frequency,
+            mhfddollarsrequested: result.mhfddollarsrequested,
+            estimatedcost: result.estimatedcost,
+            mhfddollarsallocated: result.mhfddollarsallocated,
+            finalcost: result.finalcost,
+            startyear: result.startyear,
+            completedyear: result.completedyear,
+            consultant: result.consultant,
+            contractor: result.contractor,
+            lgmanager: result.lgmanager,
+            mhfdmanager: result.mhfdmanager,
+            servicearea: result.servicearea,
+            county: result.county,
+            jurisdiction: result.jurisdiction,
+            streamname: result.streamname,
+            tasksedimentremoval: result.tasksedimentremoval,
+            tasktreethinning: result.tasktreethinning,
+            taskbankstabilization: result.taskbankstabilization,
+            taskdrainagestructure: result.taskdrainagestructure,
+            taskregionaldetention: result.taskregionaldetention,
+            goalfloodrisk: result.goalfloodrisk,
+            goalwaterquality: result.goalwaterquality,
+            goalstabilization: result.goalstabilization,
+            goalcaprecreation: result.goalcaprecreation,
+            goalcapvegetation: result.goalcapvegetation,
+            goalstudyovertopping: result.goalstudyovertopping,
+            goalstudyconveyance: result.goalstudyconveyance,
+            goalstudypeakflow: result.goalstudypeakflow,
+            goalstudydevelopment: result.goalstudydevelopment,
+            creator: result.creator,
+            datecreated: result.datecreated,
+            lastmodifieduser: result.lastmodifieduser,
+            lastmodifieddate: result.lastmodifieddate,
+            workplanyr1: result.workplanyr1,
+            workplanyr2: result.workplanyr2,
+            workplanyr3: result.workplanyr3,
+            workplanyr4: result.workplanyr4,
+            workplanyr5: result.workplanyr5,
+            coverimage: result.coverimage,
+            globalid: result.globalid,
+            shape_length: result.shape_length,
+            attachments: attachmentFinal,
             problems: problems,
             components: components
           });
