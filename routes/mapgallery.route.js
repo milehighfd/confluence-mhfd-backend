@@ -487,11 +487,42 @@ function getFilters(params) {
     }
   }
 
+  console.log(params);
   if (params.workplanyear) {
+    const values = params.workplanyear.split(',');
+    let query = '';
+    let operator = '';
+    for (const year of values) {
+      console.log(year);
+      switch(year) {
+        case "2019": {
+          query += operator + ` workplanyr1 = ${year}`; 
+          break;
+        }
+        case "2020": {
+          query += operator + ` workplanyr2 = ${year}`; 
+          break;
+        }
+        case "2021": {
+          query += operator + ` workplanyr3 = ${year}`; 
+          break;
+        }
+        case "2022": {
+          query += operator + ` workplanyr4 = ${year}`; 
+          break;
+        }
+        case "2023": {
+          query += operator + ` workplanyr5 = ${year}`; 
+          break;
+        }
+      }
+      operator = ' or ';
+    }
+    console.log(query);
     if (filters.length > 0) {
-      filters = filters + ` and workplanyear = ${params.workplanyear}`;
+      filters += ` and (${query}) `;
     } else {
-      filters = ` workplanyear = ${params.workplanyear}`;
+      filters = ` (${query}) `;
     }
   }
 
