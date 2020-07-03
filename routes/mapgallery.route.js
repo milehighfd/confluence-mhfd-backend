@@ -12,12 +12,12 @@ const { CARTO_TOKEN } = require('../config/config');
 const attachmentService = require('../services/attachment.service');
 const { query } = require('../config/logger');
 
-router.get('/', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     console.log('enter here');
-    if (req.query.isproblem) {
+    if (req.body.isproblem) {
       let filters = '';
-      filters = getFilters(req.query);
+      filters = getFilters(req.body);
 
       /* const PROBLEM_SQL = `SELECT problemid, problemname, solutioncost, jurisdiction,
             problempriority, solutionstatus, problemtype, county FROM problems `; */
@@ -87,7 +87,7 @@ router.get('/', async (req, res) => {
     else {
       let filters = '';
 
-      filters = getFilters(req.query);
+      filters = getFilters(req.body);
 
       const PROJECT_FIELDS = `cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, 
         estimatedCost, status, attachments, projectname, jurisdiction, streamname, county `;
