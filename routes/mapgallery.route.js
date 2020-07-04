@@ -156,6 +156,7 @@ router.post('/', async (req, res) => {
 });
 
 function getFilters(params) {
+  console.log('PARAMS',params);
   let filters = '';
   let tipoid = '';
   const VALUES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
@@ -478,22 +479,51 @@ function getFilters(params) {
   }
 
   if (params.mhfddollarsallocated) {
-    let initValue = Number(params.mhfddollarsallocated) * 1000000;
-    let endValue = initValue + 5000000;
+    const values = params.mhfddollarsallocated.split(',');
+    let query = '';
+    let operator = '';
+
+    for (const mhfddolar of values) {
+      let initValue = Number(mhfddolar) * 1000000;
+      let endValue = initValue + 5000000;
+      query += operator + ` (cast(mhfddollarsallocated as bigint) between ${initValue} and ${endValue})`;
+      operator = ' or ';
+    }
+    
     if (filters.length > 0) {
-      filters = filters + ` and (cast(mhfddollarsallocated as bigint) between ${initValue} and ${endValue})`;
+      filters = filters + ` and (${query})`;
     } else {
-      filters = `(cast(mhfddollarsallocated as bigint) between ${initValue} and ${endValue})`;
+      filters = ` (${query}) `;
     }
   }
 
-  console.log(params);
+  if (params.totalcost) {
+    // console.log('TOTAL COST', params.totalcost);
+    const values = params.totalcost.split(',');
+    let query = '';
+    let operator = '';
+
+    for (const cost of values) {
+      let initValue = Number(cost);
+      let endValue = initValue + 5000000;
+      query += operator + ` (coalesce(cast(finalcost as int), cast(estimatedcost as int)) between ${initValue} and ${endValue}) `;
+      operator = ' or ';
+    }
+
+    if (filters.length > 0) {
+      filters += ` and (${query}) `;
+    } else {
+      filters = ` (${query}) `;
+    }
+  }
+
+  //console.log(params);
   if (params.workplanyear) {
     const values = params.workplanyear.split(',');
     let query = '';
     let operator = '';
     for (const year of values) {
-      console.log(year);
+      //console.log(year);
       switch(year) {
         case "2019": {
           query += operator + ` workplanyr1 = ${year}`; 
@@ -518,7 +548,7 @@ function getFilters(params) {
       }
       operator = ' or ';
     }
-    console.log(query);
+    //console.log(query);
     if (filters.length > 0) {
       filters += ` and (${query}) `;
     } else {
