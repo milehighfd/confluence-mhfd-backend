@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
               total = element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
                 element.count_cia + element.count_sia + element.count_rl + element.count_ra +
                 element.count_sd + element.count_df + element.count_mt + element.count_la +
-                element.count_la + element.count_la1;
+                element.count_la + element.count_la1 + element.count_cila;
               finalResult.push(
                 {
                   cartodb_id: element.cartodb_id,
@@ -110,7 +110,7 @@ router.post('/', async (req, res) => {
                     total = element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
                       element.count_cia + element.count_sia + element.count_rl + element.count_ra +
                       element.count_sd + element.count_df + element.count_mt + element.count_la +
-                      element.count_la + element.count_la1;
+                      element.count_la + element.count_la1 + element.count_cila;
                     if (element.attachments) {
                       valor = await attachmentService.findByName(element.attachments);
                     }
