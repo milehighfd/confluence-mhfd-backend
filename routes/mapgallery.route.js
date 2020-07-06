@@ -683,10 +683,10 @@ router.get('/project-by-ids', async (req, res) => {
     let SQL = '';
     let URL = '';
     if (type === 'projects_polygon_') {
-      SQL = `SELECT * FROM projects_polygon_ where objectid=${objectid} and cartodb_id=${cartoid} `;
+      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_polygon_ where objectid=${objectid} and cartodb_id=${cartoid} `;
       URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
     } else {
-      SQL = `SELECT * FROM projects_line_1 where objectid=${objectid} and cartodb_id=${cartoid} `;
+      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_line_1 where objectid=${objectid} and cartodb_id=${cartoid} `;
       URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
     }
     console.log(SQL);
@@ -699,10 +699,12 @@ router.get('/project-by-ids', async (req, res) => {
         });
         response.on('end', async function () {
           const result = JSON.parse(str).rows[0];
-          console.log('resultado', result);
+          /* console.log('resultado', result);
+          console.log('JSON', JSON.parse(result.the_geom).coordinates); */
           let problems = [];
           let attachmentFinal = [];
           let components = [];
+          let coordinates = [];
 
           if (result.projectid && result.projectid !== null) {
             problems = await getProblemByProjectId(result.projectid);
@@ -712,6 +714,10 @@ router.get('/project-by-ids', async (req, res) => {
           console.log('listado', result.attachments);
           if (result.attachments) {
             attachments = await attachmentService.findByName(result.attachments);
+          }
+          //coordinates: JSON.parse(result.the_geom).coordinates
+          if (JSON.parse(result.the_geom).coordinates) {
+            coordinates = JSON.parse(result.the_geom).coordinates;
           }
           // the_geom
           // the_geom_webmercator
@@ -771,7 +777,8 @@ router.get('/project-by-ids', async (req, res) => {
             shape_length: result.shape_length,
             attachments: attachmentFinal,
             problems: problems,
-            components: components
+            components: components,
+            coordinates: coordinates
           });
         });
       }
@@ -1267,4 +1274,4 @@ router.get('/params-filters', async (req, res) => {
   }
 });
 
-module.exports = (router);
+module.exports = (router); 
