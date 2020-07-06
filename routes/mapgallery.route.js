@@ -22,20 +22,7 @@ router.post('/', async (req, res) => {
       /* const PROBLEM_SQL = `SELECT problemid, problemname, solutioncost, jurisdiction,
             problempriority, solutionstatus, problemtype, county FROM problems `; */
       const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, jurisdiction,
-            problempriority, solutionstatus, problemtype, county, 
-            (select count(*) from grade_control_structure where problemid = cast(problems.problemid as integer) ) as count_gcs, 
-            (select count(*) from pipe_appurtenances where problemid = cast(problems.problemid as integer) ) as count_pa,
-            (select count(*) from special_item_point where problemid = cast(problems.problemid as integer) ) as count_sip, 
-            (select count(*) from special_item_linear where problemid = cast(problems.problemid as integer) ) as count_sil, 
-            (select count(*) from channel_improvements_area where problemid = cast(problems.problemid as integer) ) as count_cia, 
-            (select count(*) from special_item_area where problemid = cast(problems.problemid as integer) ) as count_sia, 
-            (select count(*) from  removal_line where problemid = cast(problems.problemid as integer) ) as count_rl, 
-            (select count(*) from removal_area where problemid = cast(problems.problemid as integer) ) as count_ra, 
-            (select count(*) from storm_drain where problemid = cast(problems.problemid as integer) ) as count_sd, 
-            (select count(*) from detention_facilities where problemid = cast(problems.problemid as integer) ) as count_df, 
-            (select count(*) from maintenance_trails where problemid = cast(problems.problemid as integer) ) as count_mt, 
-            (select count(*) from land_acquisition where problemid = cast(problems.problemid as integer) ) as count_la, 
-            (select count(*) from landscaping_area where problemid = cast(problems.problemid as integer) ) as count_la1 
+            problempriority, solutionstatus, problemtype, county, ${getCounters('problems', 'problemid')}
             FROM problems `;
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
       //console.log('SQL', PROBLEM_SQL);
@@ -91,9 +78,10 @@ router.post('/', async (req, res) => {
 
       const PROJECT_FIELDS = `cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, 
         estimatedCost, status, attachments, projectname, jurisdiction, streamname, county `;
-      const LINE_SQL = `SELECT 'projects_line_1' as type, ${PROJECT_FIELDS} FROM projects_line_1`;
-      const POLYGON_SQL = `SELECT 'projects_polygon_' as type, ${PROJECT_FIELDS} FROM projects_polygon_`;
-      console.log(LINE_SQL, filters);
+      const LINE_SQL = `SELECT 'projects_line_1' as type, ${PROJECT_FIELDS}, ${getCounters('projects_line_1', 'projectid')} FROM projects_line_1`;
+      const POLYGON_SQL = `SELECT 'projects_polygon_' as type, ${PROJECT_FIELDS}, ${getCounters('projects_polygon_', 'projectid')} FROM projects_polygon_`;
+      //console.log('LINE', LINE_SQL);
+      //console.log('POLYGON', POLYGON_SQL);
       const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL} ${filters}  &api_key=${CARTO_TOKEN}`);
       const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${POLYGON_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
       console.log(LINE_URL);
@@ -118,14 +106,35 @@ router.post('/', async (req, res) => {
                   const finalResult = [];
                   for (const element of result) {
                     let valor = '';
+                    let total = 0;
+                    total = element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
+                      element.count_cia + element.count_sia + element.count_rl + element.count_ra +
+                      element.count_sd + element.count_df + element.count_mt + element.count_la +
+                      element.count_la + element.count_la1;
                     if (element.attachments) {
                       valor = await attachmentService.findByName(element.attachments);
                     }
 
                     finalResult.push(
                       {
-                        ...element,
-                        attachments: valor
+                        type: element.type,
+                        cartodb_id: element.cartodb_id,
+                        objectid: element.objectid,
+                        projectid: element.projectid,
+                        projecttype: element.projecttype,
+                        projectsubtype: element.projectsubtype,
+                        coverimage: element.coverimage,
+                        sponsor: element.sponsor,
+                        finalcost: element.finalcost,
+                        estimatedcost: element.estimatedcost,
+                        status: element.status,
+                        attachments: element.attachments,
+                        projectname: element.projectname,
+                        jurisdiction: element.jurisdiction,
+                        streamname: element.streamname,
+                        county: element.county,
+                        attachments: valor,
+                        totalComponents: total
                       }
                     );
                   }
@@ -155,8 +164,25 @@ router.post('/', async (req, res) => {
 
 });
 
+function getCounters(table, column) {
+  return ` (select count(*) from grade_control_structure where ${column} = cast(${table}.${column} as integer) ) as count_gcs, 
+      (select count(*) from pipe_appurtenances where ${column} = cast(${table}.${column} as integer) ) as count_pa,
+      (select count(*) from special_item_point where ${column} = cast(${table}.${column} as integer) ) as count_sip, 
+      (select count(*) from special_item_linear where ${column} = cast(${table}.${column} as integer) ) as count_sil, 
+      (select count(*) from special_item_area where ${column} = cast(${table}.${column} as integer) ) as count_sia, 
+      (select count(*) from channel_improvements_linear where ${column} = cast(${table}.${column} as integer) ) as count_cila, 
+      (select count(*) from channel_improvements_area where ${column} = cast(${table}.${column} as integer) ) as count_cia, 
+      (select count(*) from  removal_line where ${column} = cast(${table}.${column} as integer) ) as count_rl, 
+      (select count(*) from removal_area where ${column} = cast(${table}.${column} as integer) ) as count_ra, 
+      (select count(*) from storm_drain where ${column} = cast(${table}.${column} as integer) ) as count_sd, 
+      (select count(*) from detention_facilities where ${column} = cast(${table}.${column} as integer) ) as count_df, 
+      (select count(*) from maintenance_trails where ${column} = cast(${table}.${column} as integer) ) as count_mt, 
+      (select count(*) from land_acquisition where ${column} = cast(${table}.${column} as integer) ) as count_la, 
+      (select count(*) from landscaping_area where ${column} = cast(${table}.${column} as integer) ) as count_la1 `;
+}
+
 function getFilters(params) {
-  console.log('PARAMS',params);
+  //console.log('PARAMS',params);
   let filters = '';
   let tipoid = '';
   const VALUES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
@@ -489,7 +515,7 @@ function getFilters(params) {
       query += operator + ` (cast(mhfddollarsallocated as bigint) between ${initValue} and ${endValue})`;
       operator = ' or ';
     }
-    
+
     if (filters.length > 0) {
       filters = filters + ` and (${query})`;
     } else {
@@ -524,25 +550,25 @@ function getFilters(params) {
     let operator = '';
     for (const year of values) {
       //console.log(year);
-      switch(year) {
+      switch (year) {
         case "2019": {
-          query += operator + ` workplanyr1 = ${year}`; 
+          query += operator + ` workplanyr1 = ${year}`;
           break;
         }
         case "2020": {
-          query += operator + ` workplanyr2 = ${year}`; 
+          query += operator + ` workplanyr2 = ${year}`;
           break;
         }
         case "2021": {
-          query += operator + ` workplanyr3 = ${year}`; 
+          query += operator + ` workplanyr3 = ${year}`;
           break;
         }
         case "2022": {
-          query += operator + ` workplanyr4 = ${year}`; 
+          query += operator + ` workplanyr4 = ${year}`;
           break;
         }
         case "2023": {
-          query += operator + ` workplanyr5 = ${year}`; 
+          query += operator + ` workplanyr5 = ${year}`;
           break;
         }
       }
@@ -766,7 +792,7 @@ router.get('/problem-by-id/:id', async (req, res) => {
     problemsubtype, sourcedate, shape_length, shape_area 
     FROM problems where problemid='${id}'`;
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} &api_key=${CARTO_TOKEN}`);
-    
+
     https.get(URL, response => {
       console.log('status', response.statusCode);
       if (response.statusCode === 200) {
@@ -903,36 +929,36 @@ async function getTotals(type_component, pid, typeid) {
 }
 
 async function getCoordinatesOfComponents(id, field) {
-  const COMPONENTS_SQL = `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM grade_control_structure 
+  const COMPONENTS_SQL = `SELECT type, 'grade_control_structure' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM grade_control_structure 
       where ${field}=${id}  union ` +
-    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM pipe_appurtenances 
+    `SELECT type, 'pipe_appurtenances' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM pipe_appurtenances 
       where ${field}=${id}  union ` +
-    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_point 
+    `SELECT type, 'special_item_point' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_point 
       where ${field}=${id}  union ` +
-    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_linear 
+    `SELECT type, 'special_item_linear' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_linear 
       where ${field}=${id}  union ` +
-    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_area 
+    `SELECT type, 'special_item_area' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_area 
       where ${field}=${id}  union ` +
-    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM channel_improvements_linear 
+    `SELECT type, 'channel_improvements_linear' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM channel_improvements_linear 
       where ${field}=${id}  union ` +
-    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM channel_improvements_area 
+    `SELECT type, 'channel_improvements_area' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM channel_improvements_area 
       where ${field}=${id}  union ` +
-    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM removal_line 
+    `SELECT type, 'removal_line' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM removal_line 
       where ${field}=${id}  union ` +
-    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM removal_area 
+    `SELECT type, 'removal_area' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM removal_area 
       where ${field}=${id}  union ` +
-    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM storm_drain 
+    `SELECT type, 'storm_drain' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM storm_drain 
       where ${field}=${id}  union ` +
-    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM detention_facilities 
+    `SELECT type, 'detention_facilities' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM detention_facilities 
       where ${field}=${id}  union ` +
-    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM maintenance_trails 
+    `SELECT type, 'maintenance_trails' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM maintenance_trails 
       where ${field}=${id}  union ` +
-    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM land_acquisition 
+    `SELECT type, 'land_acquisition' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM land_acquisition 
       where ${field}=${id}  union ` +
-    `SELECT type, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM landscaping_area 
+    `SELECT type, 'landscaping_area' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM landscaping_area 
       where ${field}=${id}  `;
 
-  console.log('components', COMPONENTS_SQL);
+  //console.log('components', COMPONENTS_SQL);
   const newProm1 = new Promise((resolve, reject) => {
     const COMPONENT_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL}&api_key=${CARTO_TOKEN}`);
     https.get(COMPONENT_URL, response => {
@@ -945,9 +971,10 @@ async function getCoordinatesOfComponents(id, field) {
           const result = JSON.parse(str).rows;
           let resultFinal = [];
           for (const res of result) {
-            
+
             resultFinal.push({
               type: res.type,
+              table: res.table,
               coordinates: JSON.parse(res.st_asgeojson).coordinates
             });
           }
