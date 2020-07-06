@@ -504,9 +504,9 @@ function getFilters(params) {
     let operator = '';
 
     for (const cost of values) {
-      let initValue = Number(cost);
+      let initValue = Number(cost) * 1000000;
       let endValue = initValue + 5000000;
-      query += operator + ` (coalesce(cast(finalcost as int), cast(estimatedcost as int)) between ${initValue} and ${endValue}) `;
+      query += operator + ` (coalesce(cast(finalcost as real), cast(estimatedcost as real)) between ${initValue} and ${endValue}) `;
       operator = ' or ';
     }
 
