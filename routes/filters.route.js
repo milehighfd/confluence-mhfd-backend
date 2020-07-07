@@ -110,7 +110,7 @@ router.get('/search/:type', async (req, res) => {
     data['problems'] = answer;
   } else {
     for (const project of PROJECT_TABLES) {
-      const query = `SELECT cartodb_id FROM ${project} WHERE streamname ILIKE '%${field}%'`;
+      const query = `SELECT cartodb_id FROM ${project} WHERE projectname ILIKE '%${field}%'`;
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query}  &api_key=${CARTO_TOKEN}`);
       const answer = await new Promise(resolve => {
         https.get(URL, response => {
