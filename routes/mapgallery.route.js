@@ -936,36 +936,35 @@ async function getTotals(type_component, pid, typeid) {
 }
 
 async function getCoordinatesOfComponents(id, field) {
-  const COMPONENTS_SQL = `SELECT type, 'grade_control_structure' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM grade_control_structure 
+  const COMPONENTS_SQL = `SELECT type, 'grade_control_structure' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM grade_control_structure 
       where ${field}=${id}  union ` +
-    `SELECT type, 'pipe_appurtenances' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM pipe_appurtenances 
+    `SELECT type, 'pipe_appurtenances' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM pipe_appurtenances 
       where ${field}=${id}  union ` +
-    `SELECT type, 'special_item_point' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_point 
+    `SELECT type, 'special_item_point' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_point 
       where ${field}=${id}  union ` +
-    `SELECT type, 'special_item_linear' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_linear 
+    `SELECT type, 'special_item_linear' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_linear 
       where ${field}=${id}  union ` +
-    `SELECT type, 'special_item_area' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_area 
+    `SELECT type, 'special_item_area' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM special_item_area 
       where ${field}=${id}  union ` +
-    `SELECT type, 'channel_improvements_linear' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM channel_improvements_linear 
+    `SELECT type, 'channel_improvements_linear' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM channel_improvements_linear 
       where ${field}=${id}  union ` +
-    `SELECT type, 'channel_improvements_area' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM channel_improvements_area 
+    `SELECT type, 'channel_improvements_area' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM channel_improvements_area 
       where ${field}=${id}  union ` +
-    `SELECT type, 'removal_line' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM removal_line 
+    `SELECT type, 'removal_line' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM removal_line 
       where ${field}=${id}  union ` +
-    `SELECT type, 'removal_area' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM removal_area 
+    `SELECT type, 'removal_area' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM removal_area 
       where ${field}=${id}  union ` +
-    `SELECT type, 'storm_drain' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM storm_drain 
+    `SELECT type, 'storm_drain' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM storm_drain 
       where ${field}=${id}  union ` +
-    `SELECT type, 'detention_facilities' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM detention_facilities 
+    `SELECT type, 'detention_facilities' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM detention_facilities 
       where ${field}=${id}  union ` +
-    `SELECT type, 'maintenance_trails' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM maintenance_trails 
+    `SELECT type, 'maintenance_trails' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM maintenance_trails 
       where ${field}=${id}  union ` +
-    `SELECT type, 'land_acquisition' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM land_acquisition 
+    `SELECT type, 'land_acquisition' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM land_acquisition 
       where ${field}=${id}  union ` +
-    `SELECT type, 'landscaping_area' as table, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM landscaping_area 
+    `SELECT type, 'landscaping_area' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM landscaping_area 
       where ${field}=${id}  `;
-
-  //console.log('components', COMPONENTS_SQL);
+  
   const newProm1 = new Promise((resolve, reject) => {
     const COMPONENT_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL}&api_key=${CARTO_TOKEN}`);
     https.get(COMPONENT_URL, response => {
@@ -982,6 +981,8 @@ async function getCoordinatesOfComponents(id, field) {
             resultFinal.push({
               type: res.type,
               table: res.table,
+              problemid: res.problemid,
+              projectid: res.projectid,
               coordinates: JSON.parse(res.st_asgeojson).coordinates
             });
           }
@@ -1052,7 +1053,7 @@ router.post('/components-by-entityid', async (req, res) => {
       COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
     }
     console.log('components', COMPONENTS_SQL);
-    //console.log('FILTER', filters);
+    
     const COMPONENT_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL}&api_key=${CARTO_TOKEN}`);
     https.get(COMPONENT_URL, response => {
       if (response.statusCode === 200) {
@@ -1063,7 +1064,7 @@ router.post('/components-by-entityid', async (req, res) => {
         response.on('end', async function () {
           let result = [];
           for (const comp of JSON.parse(str).rows) {
-            //console.log(comp);
+            
             const type_component = comp.type.split(' ').join('_').toLowerCase();
             const percentage = await getTotals(type_component, id, typeid);
             result.push({
@@ -1114,12 +1115,10 @@ router.post('/group-by', async (req, res) => {
 });
 
 async function getValuesByColumn(table, column) {
-  /* const table = req.body.table;
-  const column = req.body.column; */
   let data = [];
   const LINE_SQL = `SELECT ${column} FROM ${table} group by ${column} order by ${column}`;
   const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
-  //console.log(LINE_URL);
+  
   const newProm1 = new Promise((resolve, reject) => {
     https.get(LINE_URL, response => {
       if (response.statusCode === 200) {
@@ -1144,8 +1143,7 @@ async function getValuesByColumn(table, column) {
 }
 
 async function getComponentsValuesByColumn(column) {
-  /* const table = req.body.table;
-  const column = req.body.column; */
+  
   let data = [];
   const LINE_SQL = `SELECT ${column} FROM grade_control_structure group by ${column} union
       SELECT ${column} FROM pipe_appurtenances group by ${column} union
@@ -1162,7 +1160,7 @@ async function getComponentsValuesByColumn(column) {
       SELECT ${column} FROM land_acquisition group by ${column} union
       SELECT ${column} FROM landscaping_area group by ${column} order by ${column}`;
   const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
-  //console.log(LINE_URL);
+  
   const newProm1 = new Promise((resolve, reject) => {
     https.get(LINE_URL, response => {
       if (response.statusCode === 200) {
