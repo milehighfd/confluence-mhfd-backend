@@ -5,6 +5,8 @@ const https = require('https');
 const {CARTO_TOKEN} = require('../config/config');
 const { response } = require('../app');
 const { component } = require('../config/db');
+const { add } = require('../config/logger');
+const { table } = require('console');
 
 const components = [
   { key: 'grade_control_structure', value: 'Grade Control Structure' },
@@ -23,6 +25,7 @@ const components = [
   { key: 'landscaping_area', value: 'Landscaping Area' }
 ];
 const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
+const PROBLEM_TABLE = 'problems';
 router.get('/', async (req, res) => {
   const tables = req.query.tables ? req.query.tables.split(',') : [];
   let send = [];
@@ -131,5 +134,210 @@ router.get('/search/:type', async (req, res) => {
     }
   }
   return res.send(data);
+});
+
+const addCondition = (conditions, newCondition, connector) => {
+  if (conditions) {
+    if (newCondition) {
+      return conditions + ' ' + connector + ' ' + newCondition;
+    }
+    return conditions;
+  }
+  return newCondition;
+};
+
+router.post('/by-components', async (req, res) => {
+  const body = req.body;
+  let componentArray = [];
+  const response = {};
+  let tables = '';
+  if (body.component_type) {
+    tables = body.component_type;
+    componentArray = tables.split(',');
+  }
+  for (const type of [PROBLEM_TABLE, ...PROJECT_TABLES]) {
+    console.log('my body is b' ,body);
+    let conditions = '';
+    for (const component of componentArray) {
+      console.log('my components ', component);
+      if (body.status) {
+        let statusConditions = '';
+        for (const status of body.status.split(',')) {
+          const condition = `${component}.status='${status}'`;
+          statusConditions = addCondition(statusConditions, condition, 'OR');
+        }
+        conditions = addCondition(conditions, '(' + statusConditions + ')', 'AND');
+      }
+      if (body.year_of_study) {
+        let yearConditions = '';
+        for (const year of body.year_of_study.split(',')) {
+          const condition = `${component}.year_of_study>=${year} AND ${component}.year_of_study<=${+year + 9}`;
+          yearConditions = addCondition(yearConditions, condition, 'OR');
+        }
+        conditions = addCondition(conditions, '(' + yearConditions + ')', 'AND');
+      }
+      if (body.estimated_cost) {
+        let estimated_costConditions = '';
+        for (const costRange of body.estimated_cost) {
+          const [lower, upper] = costRange.split(',');
+          const condition = `${component}.estimated_cost>=${+lower} AND ${component}.estimated_cost<=${+upper}`;
+          estimated_costConditions = addCondition(estimated_costConditions, condition, 'OR');
+        }
+        conditions = addCondition(conditions, '(' + estimated_costConditions + ')', 'AND');
+      }
+      if (body.jurisdiction) {
+        let jurisdictionCondition = `${component}.jurisdiction='${body.jurisdiction}'`;
+        conditions = addCondition(conditions, jurisdictionCondition, 'AND');
+      }
+      if (body.county) {
+        let countyCondition = `${component}.county='${body.county}'`;
+        conditions = addCondition(conditions, countyCondition, 'AND');
+      }
+      if (body.mhfdmanager) {
+        let mhfdmanagerCondition = `${component}.mhfdmanager='${body.mhfdmanager}'`;
+        conditions = addCondition(conditions, mhfdmanagerCondition, 'AND');
+      }
+      console.log('add the end conditions', conditions);
+    }
+    let extraConditions = '';
+    for (const component of componentArray) {
+      if (type === 'problems') {
+        const condition = `problems.problemid=${component}.problemid`;
+        extraConditions = addCondition(extraConditions, condition, 'OR');
+      } else {
+        const condition = `${type}.projectid=${component}.projectid`;
+        extraConditions = addCondition(extraConditions, condition, 'OR');
+      }
+    }
+    conditions = addCondition(conditions, extraConditions, 'AND');
+    if (tables && tables[0] !== ',') {
+      tables = ',' + tables;
+    }
+    if (conditions) {
+      conditions = 'WHERE ' + conditions;
+    }
+    const query = `SELECT ${type}.cartodb_id FROM ${type}${tables} ${conditions}`;
+    console.log('my query is query ', query);
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query}  &api_key=${CARTO_TOKEN}`);
+    const answer = await new Promise(resolve => {
+      https.get(URL, response => {
+        var str = '';
+        if (response.statusCode == 200) {
+          response.on('data', function (chunk) {
+            str += chunk;
+          });
+          response.on('end', function () {
+            var data = JSON.parse(str);
+            resolve ( data.rows.map(element => element.cartodb_id));
+          });
+        } else {
+          console.log('Error ', response.statusCode);
+          resolve([]);
+        }
+      });
+    });
+    response[type] = [...new Set(answer)];
+  }
+  return res.send(response);
+});
+
+
+router.post('/v2/by-components', async (req, res) => {
+  const body = req.body;
+  let componentArray = [];
+  const response = {};
+  let tables = '';
+  if (body.component_type) {
+    tables = body.component_type;
+    componentArray = tables.split(',');
+  }
+  const promises = [];
+  for (const type of [PROBLEM_TABLE, ...PROJECT_TABLES]) {
+    console.log('my body is b' ,body);
+    let conditions = '';
+    for (const component of componentArray) {
+      console.log('my components ', component);
+      if (body.status) {
+        let statusConditions = '';
+        for (const status of body.status.split(',')) {
+          const condition = `${component}.status='${status}'`;
+          statusConditions = addCondition(statusConditions, condition, 'OR');
+        }
+        conditions = addCondition(conditions, '(' + statusConditions + ')', 'AND');
+      }
+      if (body.year_of_study) {
+        let yearConditions = '';
+        for (const year of body.year_of_study.split(',')) {
+          const condition = `${component}.year_of_study>=${year} AND ${component}.year_of_study<=${+year + 9}`;
+          yearConditions = addCondition(yearConditions, condition, 'OR');
+        }
+        conditions = addCondition(conditions, '(' + yearConditions + ')', 'AND');
+      }
+      if (body.estimated_cost) {
+        let estimated_costConditions = '';
+        for (const costRange of body.estimated_cost) {
+          const [lower, upper] = costRange.split(',');
+          const condition = `${component}.estimated_cost>=${+lower} AND ${component}.estimated_cost<=${+upper}`;
+          estimated_costConditions = addCondition(estimated_costConditions, condition, 'OR');
+        }
+        conditions = addCondition(conditions, '(' + estimated_costConditions + ')', 'AND');
+      }
+      if (body.jurisdiction) {
+        let jurisdictionCondition = `${component}.jurisdiction='${body.jurisdiction}'`;
+        conditions = addCondition(conditions, jurisdictionCondition, 'AND');
+      }
+      if (body.county) {
+        let countyCondition = `${component}.county='${body.county}'`;
+        conditions = addCondition(conditions, countyCondition, 'AND');
+      }
+      if (body.mhfdmanager) {
+        let mhfdmanagerCondition = `${component}.mhfdmanager='${body.mhfdmanager}'`;
+        conditions = addCondition(conditions, mhfdmanagerCondition, 'AND');
+      } 
+      let extraConditions = '';
+      if (type === 'problems') {
+        const condition = `problems.problemid=${component}.problemid`;
+        extraConditions = addCondition(extraConditions, condition, 'OR');
+      } else {
+        const condition = `${type}.projectid=${component}.projectid`;
+        extraConditions = addCondition(extraConditions, condition, 'OR');
+      }
+      conditions = addCondition(conditions, extraConditions, 'AND');
+      if (conditions) {
+        conditions = 'WHERE ' + conditions;
+      }
+      const query = `SELECT ${type}.cartodb_id FROM ${type},${component} ${conditions}`;
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query}  &api_key=${CARTO_TOKEN}`);
+      console.log('my query is ', query);
+      promises.push(new Promise(resolve => {
+        https.get(URL, response => {
+          var str = '';
+          if (response.statusCode == 200) {
+            response.on('data', function (chunk) {
+              str += chunk;
+            });
+            response.on('end', function () {
+              var data = JSON.parse(str);
+              console.log(data.rows.map(element => element.cartodb_id)); 
+              resolve ( data.rows.map(element => element.cartodb_id));
+            });
+          } else {
+            console.log('Error ', response.statusCode);
+            resolve([]);
+          }
+        });
+      }));
+      console.log('add the end conditions', conditions);
+      conditions = '';
+    }
+    let answer = await Promise.all(promises);
+    const array = [];
+    for (const ans of answer) {
+      array.push(...ans);
+    }
+    response[type] = [...new Set(array)];
+    
+  }
+  return res.send(response);
 });
 module.exports = router;
