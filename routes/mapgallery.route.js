@@ -722,6 +722,7 @@ router.get('/project-by-ids', async (req, res) => {
           // the_geom
           // the_geom_webmercator
           return res.status(200).send({
+            cartodb_id: result.cartodb_id,
             objectid: result.objectid,
             projectid: result.projectid,
             onbaseid: result.onbaseid,
