@@ -1048,12 +1048,12 @@ router.post('/components-by-entityid', async (req, res) => {
       where ${typeid}=${id} group by type `;
 
     if (sortby) {
-      if (sorttype) {
+      if (!sorttype) {
         sorttype = 'desc';
       }
       COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
     }
-    console.log('components', COMPONENTS_SQL);
+    //console.log('components', COMPONENTS_SQL);
     
     const COMPONENT_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL}&api_key=${CARTO_TOKEN}`);
     https.get(COMPONENT_URL, response => {
