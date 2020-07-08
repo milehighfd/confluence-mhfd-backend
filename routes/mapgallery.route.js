@@ -1005,46 +1005,74 @@ router.post('/components-by-entityid', async (req, res) => {
     let sorttype = req.body.sorttype;
 
     let COMPONENTS_SQL = `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM grade_control_structure 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from grade_control_structure where ${typeid}=${id} and status='Completed')/count(*)) percen
+       FROM grade_control_structure 
       where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM pipe_appurtenances 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from pipe_appurtenances where ${typeid}=${id} and status='Completed')/count(*)) percen
+      FROM pipe_appurtenances 
       where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM special_item_point 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from special_item_point where ${typeid}=${id} and status='Completed')/count(*)) percen
+      FROM special_item_point 
       where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM special_item_linear 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from special_item_linear where ${typeid}=${id} and status='Completed')/count(*)) percen
+      FROM special_item_linear
       where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM special_item_area 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from special_item_area where ${typeid}=${id} and status='Completed')/count(*)) percen
+      FROM special_item_area
       where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM channel_improvements_linear 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from channel_improvements_linear where ${typeid}=${id} and status='Completed')/count(*)) percen
+      FROM channel_improvements_linear
       where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM channel_improvements_area 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from channel_improvements_area where ${typeid}=${id} and status='Completed')/count(*)) percen
+      FROM channel_improvements_area
       where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM removal_line 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from removal_line where ${typeid}=${id} and status='Completed')/count(*)) percen
+      FROM removal_line
       where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM removal_area 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from removal_area where ${typeid}=${id} and status='Completed')/count(*)) percen
+      FROM removal_area
       where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM storm_drain 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from storm_drain where ${typeid}=${id} and status='Completed')/count(*)) percen
+      FROM storm_drain
       where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM detention_facilities 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from detention_facilities where ${typeid}=${id} and status='Completed')/count(*)) percen
+      FROM detention_facilities
       where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM maintenance_trails 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from maintenance_trails where ${typeid}=${id} and status='Completed')/count(*)) percen
+      FROM maintenance_trails
       where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM land_acquisition 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from land_acquisition where ${typeid}=${id} and status='Completed')/count(*)) percen
+      FROM land_acquisition
       where ${typeid}=${id} group by type union ` +
       `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost FROM landscaping_area 
+      coalesce(sum(original_cost), 0) as original_cost,
+      ((select count(*) from landscaping_area where ${typeid}=${id} and status='Completed')/count(*)) percen
+      FROM landscaping_area
       where ${typeid}=${id} group by type `;
 
     if (sortby) {
@@ -1063,17 +1091,17 @@ router.post('/components-by-entityid', async (req, res) => {
           str += chunk;
         });
         response.on('end', async function () {
-          let result = [];
+          /* let result = [];
           for (const comp of JSON.parse(str).rows) {
             
             const type_component = comp.type.split(' ').join('_').toLowerCase();
             const percentage = await getTotals(type_component, id, typeid);
             result.push({
-              ...comp,
-              percentage: percentage
+              ...comp
+              //,percentage: percentage
             })
-          }
-          return res.status(200).send(result);
+          } */
+          return res.status(200).send(JSON.parse(str).rows);
         })
       }
     });
