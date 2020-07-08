@@ -222,7 +222,7 @@ function getFilters(params) {
     }
 
     if (params.problemtype) {
-      console.log('TIPOS PROBLEMAS', params.problemtype);
+      //console.log('TIPOS PROBLEMAS', params.problemtype);
       const values = params.problemtype.split(',');
 
       let operator = '';
@@ -453,8 +453,9 @@ function getFilters(params) {
     }
   }
 
-  if (params.component) {
-    const values = params.component.split(',');
+  if (params.components) {
+    //console.log('COMPONENTES', params.components);
+    const values = params.components.split(',');
     let query = '';
     let operator = '';
     for (const val of values) {
