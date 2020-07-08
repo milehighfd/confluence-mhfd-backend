@@ -55,11 +55,16 @@ router.get('/', async (req, res) => {
 
 router.get('/project-filter', async (req, res) => {
   const problemtype = req.query.problemtype ? req.query.problemtype : '';
+  const problemtypeFilter = problemtype.length ? 'AND problems.problemtype IN(' + problemtype.split(',').map(element => `'${element}'`).join(',') + ')' : '';
+  if (!problemtype.length) {
+    return res.send(null);
+  }
   let send = [];
   for (const element of components) {
     const component = element.key;
     for (const table of PROJECT_TABLES) {
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=SELECT DISTINCT ${table}.projectid FROM ${table}, problems, ${component}   WHERE ${table}.projectid = ${component}.projectid and problems.problemid = ${component}.problemid and problems.problemtype = '${problemtype}'  &api_key=${CARTO_TOKEN}`);
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=SELECT DISTINCT ${table}.projectid FROM ${table}, problems, ${component}   WHERE ${table}.projectid = ${component}.projectid and problems.problemid = ${component}.problemid ${problemtypeFilter} &api_key=${CARTO_TOKEN}`);
+      console.log(URL);
       const answer = await new Promise(resolve => {
         https.get(URL, response => {
           var str = '';
@@ -250,6 +255,8 @@ router.post('/v2/by-components', async (req, res) => {
   if (body.component_type) {
     tables = body.component_type;
     componentArray = tables.split(',');
+  } else {
+    return res.send(null);
   }
   const promises = [];
   for (const type of [PROBLEM_TABLE, ...PROJECT_TABLES]) {
@@ -257,7 +264,7 @@ router.post('/v2/by-components', async (req, res) => {
     let conditions = '';
     for (const component of componentArray) {
       console.log('my components ', component);
-      if (body.status) {
+      if (body.status && body.status.length) {
         let statusConditions = '';
         for (const status of body.status.split(',')) {
           const condition = `${component}.status='${status}'`;
@@ -265,7 +272,7 @@ router.post('/v2/by-components', async (req, res) => {
         }
         conditions = addCondition(conditions, '(' + statusConditions + ')', 'AND');
       }
-      if (body.year_of_study) {
+      if (body.year_of_study && body.year_of_study.length) {
         let yearConditions = '';
         for (const year of body.year_of_study.split(',')) {
           const condition = `${component}.year_of_study>=${year} AND ${component}.year_of_study<=${+year + 9}`;
@@ -273,7 +280,7 @@ router.post('/v2/by-components', async (req, res) => {
         }
         conditions = addCondition(conditions, '(' + yearConditions + ')', 'AND');
       }
-      if (body.estimated_cost) {
+      if (body.estimated_cost && body.estimated_cost.length) {
         let estimated_costConditions = '';
         for (const costRange of body.estimated_cost) {
           const [lower, upper] = costRange.split(',');
@@ -282,15 +289,15 @@ router.post('/v2/by-components', async (req, res) => {
         }
         conditions = addCondition(conditions, '(' + estimated_costConditions + ')', 'AND');
       }
-      if (body.jurisdiction) {
+      if (body.jurisdiction && body.jurisdiction.length) {
         let jurisdictionCondition = `${component}.jurisdiction='${body.jurisdiction}'`;
         conditions = addCondition(conditions, jurisdictionCondition, 'AND');
       }
-      if (body.county) {
+      if (body.county && body.county.length) {
         let countyCondition = `${component}.county='${body.county}'`;
         conditions = addCondition(conditions, countyCondition, 'AND');
       }
-      if (body.mhfdmanager) {
+      if (body.mhfdmanager && body.mhfdmanager.length) {
         let mhfdmanagerCondition = `${component}.mhfdmanager='${body.mhfdmanager}'`;
         conditions = addCondition(conditions, mhfdmanagerCondition, 'AND');
       } 
@@ -330,7 +337,7 @@ router.post('/v2/by-components', async (req, res) => {
       console.log('add the end conditions', conditions);
       conditions = '';
     }
-    let answer = await Promise.all(promises);
+    let answer = await Promise.all(promises); 
     const array = [];
     for (const ans of answer) {
       array.push(...ans);
