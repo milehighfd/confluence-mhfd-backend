@@ -1148,10 +1148,14 @@ router.post('/problems-by-projectid', async (req, res) => {
 
 router.post('/components-by-entityid', async (req, res) => {
   try {
-    const id = req.body.id;
+    let id = req.body.id;
     const typeid = req.body.typeid;
     let sortby = req.body.sortby;
     let sorttype = req.body.sorttype;
+
+    if (id === '') {
+      id = null;
+    }
 
     let COMPONENTS_SQL = `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
       coalesce(sum(original_cost), 0) as original_cost,
