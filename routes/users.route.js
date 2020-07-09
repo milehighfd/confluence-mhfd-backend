@@ -15,7 +15,8 @@ const userService = require('../services/user.service');
 const UPDATEABLE_FIELDS = userService.requiredFields('edit');
 const logger = require('../config/logger');
 const ORGANIZATION_DEFAULT = 'Mile High Flood Control District Boundary';
-
+const {CARTO_TOKEN } = require('../config/config');
+const { count } = require('console');
 const multer = Multer({
   storage: Multer.MemoryStorage,
   limits: {
@@ -227,7 +228,7 @@ router.get('/me', auth, async (req, res) => {
         
       });
     });
-
+   
     const respuesta = await newProm;
 
   } catch (error) {
@@ -235,6 +236,40 @@ router.get('/me', auth, async (req, res) => {
   }
   result1['coordinates'] = coordinates;
   result1['polygon'] = polygon;
+  const counters = {};
+  for (const table of ['projects_line_1, projects_polygon_']) {
+    const sql = `SELECT COUNT( projecttype), projecttype  FROM "denver-mile-high-admin".${table}  WHERE jurisdiction='${user.organization}' group by projecttype`;
+    const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
+    const promise = await new Promise(resolve => {
+      https.get(URL, response => {
+        console.log('status ' + response.statusCode);
+        if (response.statusCode === 200) {
+          let str = '';
+          response.on('data', function (chunk) {
+            str += chunk;
+          });
+          response.on('end', function () {
+            result = JSON.parse(str).rows;
+            const counter = {};
+            for (const element of result) {
+              counter[element.projecttype] = element.count;
+            }
+            resolve(counter);
+
+          });
+        }
+      }).on('error', err => {
+        //console.log('failed call to ', url, 'with error ', err);
+        logger.error(`failed call to  with error  ${err}`)
+       resolve({}); 
+      });
+      
+    });
+    for (const key in promise) {
+      counters[key] = counters[key] ? counters[key] + promise[key] : promise[key];
+    }
+  }
+  result1['counters'] = counters;
   res.status(200).send(result1);
 });
 
