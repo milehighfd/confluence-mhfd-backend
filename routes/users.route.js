@@ -140,6 +140,7 @@ router.get('/me', auth, async (req, res) => {
     longitude: -104.9063129121965,
     latitude: 39.768682416183
   };
+  //console.log('USER ME', user);
   result1['_id'] = user._id;
   result1['firstName'] = user.firstName;
   result1['lastName'] = user.lastName;
@@ -156,7 +157,7 @@ router.get('/me', auth, async (req, res) => {
   result1['designation'] = user.designation;
   result1['photo'] = user.photo;
   result1['zoomarea'] = user.zoomarea ? user.zoomarea : '';
-
+  //console.log('RESUME DATA', result1);
   /* if (req.user.designation === ROLES.GOVERNMENT_STAFF ||
     req.user.designation === ROLES.GOVERNMENT_ADMIN) {
     organization_query = req.user.organization;
@@ -174,7 +175,7 @@ router.get('/me', auth, async (req, res) => {
       const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM organizations WHERE name = '${organization_query}' `;
       const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=a53AsTjS8iBMU83uEaj3dw`;
       let result = [];
-      console.log('URL', URL);
+      //console.log('URL', URL);
       https.get(URL, response => {
         console.log('status ' + response.statusCode);
         if (response.statusCode === 200) {
@@ -237,7 +238,7 @@ router.get('/me', auth, async (req, res) => {
   result1['coordinates'] = coordinates;
   result1['polygon'] = polygon;
   const counters = {};
-  for (const table of ['projects_line_1, projects_polygon_']) {
+  /* for (const table of ['projects_line_1, projects_polygon_']) {
     const sql = `SELECT COUNT( projecttype), projecttype  FROM "denver-mile-high-admin".${table}  WHERE jurisdiction='${user.organization}' group by projecttype`;
     const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
     const promise = await new Promise(resolve => {
@@ -267,9 +268,9 @@ router.get('/me', auth, async (req, res) => {
     });
     for (const key in promise) {
       counters[key] = counters[key] ? counters[key] + promise[key] : promise[key];
-    }
-  }
-  result1['counters'] = counters;
+    } */
+  //}
+  //result1['counters'] = counters;
   res.status(200).send(result1);
 });
 
