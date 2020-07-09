@@ -156,9 +156,15 @@ router.get('/me', auth, async (req, res) => {
   result1['photo'] = user.photo;
   result1['zoomarea'] = user.zoomarea ? user.zoomarea : '';
 
-  if (req.user.designation === ROLES.GOVERNMENT_STAFF ||
+  /* if (req.user.designation === ROLES.GOVERNMENT_STAFF ||
     req.user.designation === ROLES.GOVERNMENT_ADMIN) {
     organization_query = req.user.organization;
+  } else {
+    organization_query = ORGANIZATION_DEFAULT;
+  } */
+  
+  if (req.user.zoomarea) {
+    organization_query = req.user.zoomarea;
   } else {
     organization_query = ORGANIZATION_DEFAULT;
   }
