@@ -63,6 +63,9 @@ module.exports = (sequelize, DataType) => {
     },
     title: {
       type: DataType.STRING
+    },
+    zoomarea: {
+      type: DataType.STRING
     }
   });
 

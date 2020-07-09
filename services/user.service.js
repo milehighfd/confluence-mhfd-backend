@@ -176,13 +176,14 @@ const requiredFields = (type) => {
     COUNTY,
     SERVICE_AREA,
     PHONE,
-    TITLE
+    TITLE,
+    ZOOM_AREA
   } = FIELDS;
   if (type === 'signup') {
     return [FIRST_NAME, LAST_NAME, DESIGNATION, EMAIL, ORGANIZATION, PASSWORD];
   }
   if (type === 'edit') {
-    return [FIRST_NAME, LAST_NAME, EMAIL, CITY, COUNTY, SERVICE_AREA, PHONE, TITLE, ORGANIZATION, DESIGNATION];
+    return [FIRST_NAME, LAST_NAME, EMAIL, CITY, COUNTY, SERVICE_AREA, PHONE, TITLE, ORGANIZATION, DESIGNATION, ZOOM_AREA];
   }
 }
 

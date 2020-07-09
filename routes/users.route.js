@@ -111,6 +111,9 @@ router.put('/update', auth, async (req, res) => {
         case 'serviceArea':
           user[key] = req.body[key];
           break;
+        case 'zoomarea':
+          user[key] = req.body[key];
+          break;
       }
     }
     user.name = user.firstName + ' ' + user.lastName;
@@ -151,6 +154,7 @@ router.get('/me', auth, async (req, res) => {
   result1['activated'] = user.activated;
   result1['designation'] = user.designation;
   result1['photo'] = user.photo;
+  result1['zoomarea'] = user.zoomarea ? user.zoomarea : '';
 
   if (req.user.designation === ROLES.GOVERNMENT_STAFF ||
     req.user.designation === ROLES.GOVERNMENT_ADMIN) {
