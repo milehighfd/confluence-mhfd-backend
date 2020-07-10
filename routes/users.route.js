@@ -17,6 +17,7 @@ const logger = require('../config/logger');
 const ORGANIZATION_DEFAULT = 'Mile High Flood Control District Boundary';
 const {CARTO_TOKEN } = require('../config/config');
 const { count } = require('console');
+const { PROJECT_TYPES_AND_NAME } = require('../lib/enumConstants');
 const multer = Multer({
   storage: Multer.MemoryStorage,
   limits: {
@@ -235,11 +236,22 @@ router.get('/me', auth, async (req, res) => {
   } catch (error) {
     logger.error(error);
   }
+  const mapProjects = {};
+  const counters = {};
+  console.log(PROJECT_TYPES_AND_NAME);
+  for (const element of PROJECT_TYPES_AND_NAME) {
+    mapProjects[element.name] = element.id;
+    counters[element.id] = 0;
+  }
   result1['coordinates'] = coordinates;
   result1['polygon'] = polygon;
-  const counters = {};
-  /* for (const table of ['projects_line_1, projects_polygon_']) {
-    const sql = `SELECT COUNT( projecttype), projecttype  FROM "denver-mile-high-admin".${table}  WHERE jurisdiction='${user.organization}' group by projecttype`;
+  for (const table of ['projects_line_1', 'projects_polygon_']) {
+    let condition = '';
+    if (user.zoomarea) {
+      condition = `WHERE jurisdiction='${user.zoomarea}';`
+    }
+    const sql = `SELECT COUNT( projecttype), projecttype  FROM "denver-mile-high-admin".${table}  ${condition} group by projecttype`;
+    console.log('my zoom area sql is ', sql);
     const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
     const promise = await new Promise(resolve => {
       https.get(URL, response => {
@@ -253,7 +265,7 @@ router.get('/me', auth, async (req, res) => {
             result = JSON.parse(str).rows;
             const counter = {};
             for (const element of result) {
-              counter[element.projecttype] = element.count;
+              counter[mapProjects[element.projecttype]] = +element.count;
             }
             resolve(counter);
 
@@ -267,10 +279,10 @@ router.get('/me', auth, async (req, res) => {
       
     });
     for (const key in promise) {
-      counters[key] = counters[key] ? counters[key] + promise[key] : promise[key];
-    } */
-  //}
-  //result1['counters'] = counters;
+      counters[key] += promise[key];
+    } 
+  }
+  result1['counters'] = counters;
   res.status(200).send(result1);
 });
 
