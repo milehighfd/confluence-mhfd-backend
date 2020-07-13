@@ -8,6 +8,7 @@ const { response } = require('../app');
 const { component } = require('../config/db');
 const { add } = require('../config/logger');
 const { table } = require('console');
+const { resolve } = require('path');
 
 const components = [
   { key: 'grade_control_structure', value: 'Grade Control Structure' },
@@ -31,24 +32,19 @@ router.get('/', async (req, res) => {
   const tables = req.query.tables ? req.query.tables.split(',') : [];
   let send = [];
   for (const table of tables) {
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=SELECT DISTINCT problemid FROM ${table}  WHERE problemid is not null  &api_key=${CARTO_TOKEN}`);
-    const answer = await new Promise(resolve => {
-      https.get(URL, response => {
-        var str = '';
-        if (response.statusCode == 200) {
-          response.on('data', function (chunk) {
-            str += chunk;
-          });
-          response.on('end', function () {
-            var data = JSON.parse(str);
-            resolve ( data.rows.map(element => element.problemid));
-          });
-        } else {
-          console.log('Error ', response.statusCode);
-          resolve([]);
-        }
-      });
-    });
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    const query = {q: `SELECT DISTINCT problemid FROM ${table}  WHERE problemid is not null`};
+    let answer = [];
+    try {
+      const data = await needle('post', URL, query, {json: true});
+      if (data.statusCode === 200) {
+        answer = data.body.rows.map(element => element.problemid);
+      } else {
+        console.log('bad status ', response.statusCode, response.body);
+      }
+    } catch (error) {
+      console.log(error);
+    };
     send = send.concat(answer);
   }
   res.send([... new Set(send)]);
@@ -64,25 +60,20 @@ router.get('/project-filter', async (req, res) => {
   for (const element of components) {
     const component = element.key;
     for (const table of PROJECT_TABLES) {
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=SELECT DISTINCT ${table}.projectid FROM ${table}, problems, ${component}   WHERE ${table}.projectid = ${component}.projectid and problems.problemid = ${component}.problemid ${problemtypeFilter} &api_key=${CARTO_TOKEN}`);
+      let answer = [];
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+      const query = {q: `SELECT DISTINCT ${table}.projectid FROM ${table}, problems, ${component}   WHERE ${table}.projectid = ${component}.projectid and problems.problemid = ${component}.problemid ${problemtypeFilter}`};
       console.log(URL);
-      const answer = await new Promise(resolve => {
-        https.get(URL, response => {
-          var str = '';
-          if (response.statusCode == 200) {
-            response.on('data', function (chunk) {
-              str += chunk;
-            });
-            response.on('end', function () {
-              var data = JSON.parse(str);
-              resolve ( data.rows.map(element => element.projectid));
-            });
-          } else {
-            console.log('Error ', response.statusCode);
-            resolve([]);
-          }
-        });
-      });
+      try {
+        const data = await needle('post', URL, query, {json: true});
+        if (data.statusCode === 200) {
+          answer = data.body.rows.map(element => element.projectid);
+        } else {
+          console.log('bad status ', response.statusCode, response.body);
+        }
+      } catch (error) {
+        console.log(error);
+      };
       send = send.concat(answer);
     }
   }
@@ -93,48 +84,35 @@ router.get('/search/:type', async (req, res) => {
   const field = req.query.field ? req.query.field : '';
   let data = {};
   if (type === 'problems') {
-    const query = `SELECT cartodb_id FROM problems WHERE problemname ILIKE '%${field}%'`;
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query}  &api_key=${CARTO_TOKEN}`);
-      
-    const answer = await new Promise(resolve => {
-      https.get(URL, response => {
-        var str = '';
-        if (response.statusCode == 200) {
-          response.on('data', function (chunk) {
-            str += chunk;
-          });
-          response.on('end', function () {
-            var data = JSON.parse(str);
-            resolve ( data.rows.map(element => element.cartodb_id));
-          });
-        } else {
-          console.log('Error ', response.statusCode);
-          resolve([]);
-        }
-      });
-    });
+    const query = {q: `SELECT cartodb_id FROM problems WHERE problemname ILIKE '%${field}%'`};
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    let answer = [];
+    try {
+      const data = await needle('post', URL, query, {json: true});
+      if (data.statusCode === 200) {
+        answer = data.body.rows.map(element => element.cartodb_id);
+      } else {
+        console.log('bad status ', response.statusCode, response.body);
+      }
+    } catch (error) {
+      console.log(error);
+    };
     data['problems'] = answer;
   } else {
     for (const project of PROJECT_TABLES) {
-      const query = `SELECT cartodb_id FROM ${project} WHERE projectname ILIKE '%${field}%'`;
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query}  &api_key=${CARTO_TOKEN}`);
-      const answer = await new Promise(resolve => {
-        https.get(URL, response => {
-          var str = '';
-          if (response.statusCode == 200) {
-            response.on('data', function (chunk) {
-              str += chunk;
-            });
-            response.on('end', function () {
-              var data = JSON.parse(str);
-              resolve ( data.rows.map(element => element.cartodb_id));
-            });
-          } else {
-            console.log('Error ', response.statusCode);
-            resolve([]);
-          }
-        });
-      });
+      const query = {q: `SELECT cartodb_id FROM ${project} WHERE projectname ILIKE '%${field}%'`};
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+      let answer = [];
+      try {
+        const data = await needle('post', URL, query, {json: true});
+        if (data.statusCode === 200) {
+          answer = data.body.rows.map(element => element.cartodb_id);
+        } else {
+          console.log('bad status ', response.statusCode, response.body);
+        }
+      } catch (error) {
+        console.log(error);
+      };
       console.log(project);
       data[project] = answer;
     }
@@ -329,24 +307,6 @@ router.post('/v2/by-components', async (req, res) => {
           console.log(error);
           resolve([]);
         });
-        /*
-        https.request(options, (response) => {
-          console.log('my response ' , response);
-          var str = '';
-          if (response.statusCode == 200) {
-            response.on('data', function (chunk) {
-              str += chunk;
-            });
-            response.on('end', function () {
-              var data = JSON.parse(str);
-              console.log(data.rows.map(element => element.cartodb_id)); 
-              resolve ( data.rows.map(element => element.cartodb_id));
-            });
-          } else {
-            console.log('Error ', response.statusCode, response, query);
-            resolve([]);
-          }
-        });*/
       }));
       console.log('add the end conditions', conditions);
       conditions = '';
