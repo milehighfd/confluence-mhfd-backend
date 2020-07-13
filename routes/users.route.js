@@ -248,7 +248,7 @@ router.get('/me', auth, async (req, res) => {
   for (const table of ['projects_line_1', 'projects_polygon_']) {
     let condition = '';
     if (user.zoomarea) {
-      condition = `WHERE jurisdiction='${user.zoomarea}`;
+      condition = `WHERE jurisdiction='${user.zoomarea}'`;
     }
     const sql = `SELECT COUNT( projecttype), projecttype  FROM "denver-mile-high-admin".${table}  ${condition} group by projecttype`;
     console.log('my zoom area sql is ', sql);
