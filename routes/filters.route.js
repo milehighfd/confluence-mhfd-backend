@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const https = require('https');
+const needle = require('needle');
 
 const {CARTO_TOKEN} = require('../config/config');
 const { response } = require('../app');
@@ -313,11 +314,24 @@ router.post('/v2/by-components', async (req, res) => {
       if (conditions) {
         conditions = 'WHERE ' + conditions;
       }
-      const query = `SELECT ${type}.cartodb_id FROM ${type},${component} ${conditions}`;
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query}  &api_key=${CARTO_TOKEN}`);
+      const query = {q: `SELECT ${type}.cartodb_id FROM ${type},${component} ${conditions}` };
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       console.log('my query is ', query);
       promises.push(new Promise(resolve => {
-        https.get(URL, response => {
+        needle('post', URL, query, {json: true}).then(response => {
+          if (response.statusCode === 200) {
+            resolve(response.body.rows.map(element => element.cartodb_id));
+          } else {
+            console.log('bad status ', response.statusCode, response.body);
+            resolve([]);
+          }
+        }).catch(error => {
+          console.log(error);
+          resolve([]);
+        });
+        /*
+        https.request(options, (response) => {
+          console.log('my response ' , response);
           var str = '';
           if (response.statusCode == 200) {
             response.on('data', function (chunk) {
@@ -329,10 +343,10 @@ router.post('/v2/by-components', async (req, res) => {
               resolve ( data.rows.map(element => element.cartodb_id));
             });
           } else {
-            console.log('Error ', response.statusCode);
+            console.log('Error ', response.statusCode, response, query);
             resolve([]);
           }
-        });
+        });*/
       }));
       console.log('add the end conditions', conditions);
       conditions = '';
