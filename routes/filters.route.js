@@ -60,24 +60,30 @@ router.get('/project-filter', async (req, res) => {
   for (const element of components) {
     const component = element.key;
     for (const table of PROJECT_TABLES) {
-      let answer = [];
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       const query = {q: `SELECT DISTINCT ${table}.projectid FROM ${table}, problems, ${component}   WHERE ${table}.projectid = ${component}.projectid and problems.problemid = ${component}.problemid ${problemtypeFilter}`};
-      console.log(URL);
+      console.log(query.q);
       try {
-        const data = await needle('post', URL, query, {json: true});
-        if (data.statusCode === 200) {
-          answer = data.body.rows.map(element => element.projectid);
-        } else {
-          console.log('bad status ', response.statusCode, response.body);
-        }
+        send.push(new Promise(resolve => {
+          needle('post', URL, query, {json: true}).then(response => {
+            if (response.statusCode === 200) {
+              resolve(response.body.rows.map(element => element.projectid));
+            } else {
+              console.log('bad status ', response.statusCode, response.body);
+              resolve([]);
+            }
+          }).catch(error => {
+            console.log('some error ', error);
+            resolve([]);
+          });
+        }));
       } catch (error) {
         console.log(error);
       };
-      send = send.concat(answer);
     }
   }
-  res.send(send);
+  const answer =  Promise.all(send);
+  res.send(answer);
 });
 router.get('/search/:type', async (req, res) => {
   const type = req.params.type;
