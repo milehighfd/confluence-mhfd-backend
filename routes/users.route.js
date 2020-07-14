@@ -369,8 +369,8 @@ router.get('/get-position', auth, async (req, res) => {
         });
       }
     }).on('error', err => {
-      console.log('failed call to ', url, 'with error ', err);
-      logger.error(`failed call to ${url}  with error  ${err}`)
+      console.log('failed call to ', URL, 'with error ', err);
+      logger.error(`failed call to ${URL}  with error  ${err}`)
       res.status(500).send({ error: err });
     });
   } catch (error) {

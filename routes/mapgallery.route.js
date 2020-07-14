@@ -6,11 +6,13 @@ const { google } = require('googleapis');
 const logger = require('../config/logger');
 const auth = require('../auth/auth');
 var request = require("request");
-//const COMPONENTS = require('..')
+const needle = require('needle');
 
 const { CARTO_TOKEN } = require('../config/config');
 const attachmentService = require('../services/attachment.service');
-const { query } = require('../config/logger');
+const { response } = require('express');
+//const { query } = require('../config/logger');
+const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
 
 router.post('/', async (req, res) => {
   try {
@@ -18,156 +20,113 @@ router.post('/', async (req, res) => {
     if (req.body.isproblem) {
       let filters = '';
       filters = getFilters(req.body);
-
-      /* const PROBLEM_SQL = `SELECT problemid, problemname, solutioncost, jurisdiction,
-            problempriority, solutionstatus, problemtype, county FROM problems `; */
-      const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, jurisdiction,
-            problempriority, solutionstatus, problemtype, county, ${getCounters('problems', 'problemid')}
-            FROM problems `;
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
-      //console.log('SQL', PROBLEM_SQL);
-
-      //console.log(URL);
-      https.get(URL, response => {
-        if (response.statusCode === 200) {
-          let str = '';
-          response.on('data', function (chunk) {
-            str += chunk;
-          });
-          response.on('end', async function () {
-            const result = JSON.parse(str).rows;
-            const finalResult = [];
-            for (const element of result) {
-              let total = 0;
-              total = element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
+      // 
+      const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype, county, ${getCounters('problems', 'problemid')} FROM problems `;
+      //const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+      const query = { q: `${PROBLEM_SQL} ${filters}` };
+      console.log('QUERY', query);
+      let answer = [];
+      try {
+        const data = await needle('post', URL, query, { json: true });
+        console.log('status', data.statusCode);
+        if (data.statusCode === 200) {
+          answer = data.body.rows.map(element => {
+            return {
+              cartodb_id: element.cartodb_id,
+              type: 'problems',
+              problemid: element.problemid,
+              problemname: element.problemname,
+              solutioncost: element.solutioncost,
+              jurisdiction: element.jurisdiction,
+              problempriority: element.problempriority,
+              solutionstatus: element.solutionstatus,
+              problemtype: element.problemtype,
+              county: element.county,
+              totalComponents: element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
                 element.count_cia + element.count_sia + element.count_rl + element.count_ra +
                 element.count_sd + element.count_df + element.count_mt + element.count_la +
-                element.count_la + element.count_la1 + element.count_cila;
-              finalResult.push(
-                {
-                  cartodb_id: element.cartodb_id,
-                  type: 'problems',
-                  problemid: element.problemid,
-                  problemname: element.problemname,
-                  solutioncost: element.solutioncost,
-                  jurisdiction: element.jurisdiction,
-                  problempriority: element.problempriority,
-                  solutionstatus: element.solutionstatus,
-                  problemtype: element.problemtype,
-                  county: element.county,
-                  totalComponents: total
-                }
-              );
-              // console.log('total', total);
+                element.count_la + element.count_la1 + element.count_cila
             }
-            return res.status(200).send(finalResult);
-            //return res.status(200).send(result);
-          });
+          })
         } else {
-          return res.status(response.statusCode).send({ error: 'Error with C connection' });
+          console.log('bad status', response.statusCode, response.body);
+          logger.error('bad status', response.statusCode, response.body);
         }
-      }).on('error', err => {
-        logger.error(`failed call to ${URL}  with error  ${err}`)
-        return res.status(500).send({ error: err });
-      });
-    }
-    else {
+      } catch (error) {
+        console.log('Error', error);
+      }
+      res.send(answer);
+    } else {
       let filters = '';
+      let send = [];
 
       filters = getFilters(req.body);
+      const PROJECT_FIELDS = 'cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, ' +
+        'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county ';
 
-      const PROJECT_FIELDS = `cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, 
-        estimatedCost, status, attachments, projectname, jurisdiction, streamname, county `;
-      // 
-      const LINE_SQL = `SELECT 'projects_line_1' as type, ${PROJECT_FIELDS}, ${getCounters('projects_line_1', 'projectid')} FROM projects_line_1`;
-      // 
-      const POLYGON_SQL = `SELECT 'projects_polygon_' as type, ${PROJECT_FIELDS}, ${getCounters('projects_polygon_', 'projectid')} FROM projects_polygon_`;
-      console.log('LINE', LINE_SQL);
-      console.log('FILTERS', filters);
-      //console.log('POLYGON', POLYGON_SQL);
       if (req.body.problemtype) {
-        console.log('SI TIENE PROBLEM TYPE');
-        const result = await queriesByProblemTypeInProject(LINE_SQL, POLYGON_SQL, filters, req.body.problemtype, res);
+        //console.log('SI TIENE PROBLEM TYPE');
+        const result = await queriesByProblemTypeInProject(PROJECT_FIELDS, filters, req.body.problemtype);
         return res.status(200).send(result);
       } else {
-        console.log('NO TIENE PROBLEM TYPE');
-        const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL} ${filters}  &api_key=${CARTO_TOKEN}`);
-        const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${POLYGON_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
-        console.log(LINE_URL);
-        https.get(LINE_URL, response => {
-          if (response.statusCode === 200) {
-            let str = '';
-            response.on('data', function (chunk) {
-              str += chunk;
-            });
-            response.on('end', function () {
-              let result = JSON.parse(str).rows;
-
-              https.get(POLYGON_URL, response => {
-                console.log(response.statusCode);
-                if (response.statusCode === 200) {
-                  let str2 = '';
-                  response.on('data', function (chunk) {
-                    str2 += chunk;
-                  });
-                  response.on('end', async function () {
-                    result = result.concat(JSON.parse(str2).rows);
-                    const finalResult = [];
-                    for (const element of result) {
-                      let valor = '';
-                      let total = 0;
-                      total = element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
-                        element.count_cia + element.count_sia + element.count_rl + element.count_ra +
-                        element.count_sd + element.count_df + element.count_mt + element.count_la +
-                        element.count_la + element.count_la1 + element.count_cila;
-                      if (element.attachments) {
-                        valor = await attachmentService.findByName(element.attachments);
-                      }
-
-                      finalResult.push(
-                        {
-                          type: element.type,
-                          cartodb_id: element.cartodb_id,
-                          objectid: element.objectid,
-                          projectid: element.projectid,
-                          projecttype: element.projecttype,
-                          projectsubtype: element.projectsubtype,
-                          coverimage: element.coverimage,
-                          sponsor: element.sponsor,
-                          finalcost: element.finalcost,
-                          estimatedcost: element.estimatedcost,
-                          status: element.status,
-                          attachments: element.attachments,
-                          projectname: element.projectname,
-                          jurisdiction: element.jurisdiction,
-                          streamname: element.streamname,
-                          county: element.county,
-                          attachments: valor,
-                          totalComponents: total
-                        }
-                      );
-                    }
-                    return res.status(200).send(finalResult);
-                  });
-                } else {
-                  return res.status(response.statusCode);
-                }
-              }).on('error', err => {
-                logger.error(`failed call to ${LINE_URL}  with error  ${err}`)
-                return res.status(500).send({ error: err });
-              });
-            });
+        for (const table of PROJECT_TABLES) {
+          // 
+          console.log('TABLE', table);
+          let query = ''
+          if (table === 'projects_line_1') {
+            query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_line_1', 'projectid')} FROM ${table} ${filters} ` };
           } else {
-            return res.status(response.statusCode).send({ error: 'Error with C connection' });
+            query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_polygon_', 'projectid')} FROM ${table} ${filters} ` };
           }
-        }).on('error', err => {
-          //logger.error(`failed call to ${url}  with error  ${err}`)
-          logger.error(`failed call to url ${LINE_URL} with error  ${err}`)
-          return res.status(500).send({ error: err });
-        });
+
+          console.log('MY QUERY ', query);
+          const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+          let answer = [];
+          try {
+            const data = await needle('post', URL, query, { json: true });
+            console.log('STATUS', data.statusCode);
+            if (data.statusCode === 200) {
+              const result = data.body.rows;
+              for (const element of result) {
+                let valor = '';
+                if (element.attachments) {
+                  valor = await attachmentService.findByName(element.attachments);
+                }
+                answer.push({
+                  type: element.type,
+                  cartodb_id: element.cartodb_id,
+                  objectid: element.objectid,
+                  projectid: element.projectid,
+                  projecttype: element.projecttype,
+                  projectsubtype: element.projectsubtype,
+                  coverimage: element.coverimage,
+                  sponsor: element.sponsor,
+                  finalcost: element.finalcost,
+                  estimatedcost: element.estimatedcost,
+                  status: element.status,
+                  attachments: element.attachments,
+                  projectname: element.projectname,
+                  jurisdiction: element.jurisdiction,
+                  streamname: element.streamname,
+                  county: element.county,
+                  attachments: valor,
+                  totalComponents: element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
+                    element.count_cia + element.count_sia + element.count_rl + element.count_ra +
+                    element.count_sd + element.count_df + element.count_mt + element.count_la +
+                    element.count_la + element.count_la1 + element.count_cila
+                });
+              }
+              send = send.concat(answer);
+            } else {
+              console.log('bad status ', response.statusCode, response.body);
+            }
+          } catch (error) {
+            console.log(error);
+          };
+        }
       }
-
-
+      return res.send(send);
     }
   } catch (error) {
     logger.error(error);
@@ -709,102 +668,68 @@ function createQueryByProblemType(problemType) {
   return query;
 }
 
-async function queriesByProblemTypeInProject(query_project_line, query_project_polygon, filters, problemTypes) { // , res
-  //problemtype
+async function queriesByProblemTypeInProject(project_fields, filters, problemTypes) { // , res
 
-  //console.log('TYPEEEEEEEES', problemTypes);
   let send = [];
   const values = problemTypes.split(',');
   for (const type of values) {
-    //console.log('PROBLEM TYPE BY PROJECT', type);
-    const answer = await new Promise(resolve => {
-      const newfilter = createQueryByProblemType(type);
-      //console.log('NEW PROBLEM TYPE', newfilter);
-      //console.log('SUBSTRING', filters.substr(6, filters.length));
+    const newfilter = createQueryByProblemType(type);
+    for (const table of PROJECT_TABLES) {
+      console.log('TABLE', table);
+      let query = '';
       filters = ` where (${newfilter}) and ` + filters.substr(6, filters.length);
       //console.log('QUERY LINE', query_project_line);
-      //console.log('FILTERS BY COMPONENT', filters);
+      console.log('FILTERS BY COMPONENT', filters);
+      if (table === 'projects_line_1') {
+        query = { q: `SELECT '${table}' as type, ${project_fields}, ${getCounters('projects_line_1', 'projectid')} FROM ${table} ${filters} ` };
+      } else {
+        query = { q: `SELECT '${table}' as type, ${project_fields}, ${getCounters('projects_polygon_', 'projectid')} FROM ${table} ${filters} ` };
+      }
 
-      const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query_project_line} ${filters}  &api_key=${CARTO_TOKEN}`);
-      const POLYGON_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query_project_polygon} ${filters} &api_key=${CARTO_TOKEN}`);
-      //console.log(LINE_URL);
-      https.get(LINE_URL, response => {
-        if (response.statusCode === 200) {
-          let str = '';
-          response.on('data', function (chunk) {
-            str += chunk;
+      console.log('MY QUERY ', query);
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+
+      const data = await needle('post', URL, query, { json: true });
+      let answer = [];
+      console.log('STATUS', data.statusCode);
+      if (data.statusCode === 200) {
+        const result = data.body.rows;
+        for (const element of result) {
+          let valor = '';
+          if (element.attachments) {
+            valor = await attachmentService.findByName(element.attachments);
+          }
+          answer.push({
+            type: element.type,
+            cartodb_id: element.cartodb_id,
+            objectid: element.objectid,
+            projectid: element.projectid,
+            projecttype: element.projecttype,
+            projectsubtype: element.projectsubtype,
+            coverimage: element.coverimage,
+            sponsor: element.sponsor,
+            finalcost: element.finalcost,
+            estimatedcost: element.estimatedcost,
+            status: element.status,
+            attachments: element.attachments,
+            projectname: element.projectname,
+            jurisdiction: element.jurisdiction,
+            streamname: element.streamname,
+            county: element.county,
+            attachments: valor,
+            totalComponents: element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
+              element.count_cia + element.count_sia + element.count_rl + element.count_ra +
+              element.count_sd + element.count_df + element.count_mt + element.count_la +
+              element.count_la + element.count_la1 + element.count_cila
           });
-          response.on('end', function () {
-            let result = JSON.parse(str).rows;
-
-            https.get(POLYGON_URL, response => {
-              console.log(response.statusCode);
-              if (response.statusCode === 200) {
-                let str2 = '';
-                response.on('data', function (chunk) {
-                  str2 += chunk;
-                });
-                response.on('end', async function () {
-                  result = result.concat(JSON.parse(str2).rows);
-                  const finalResult = [];
-                  for (const element of result) {
-                    let valor = '';
-                    let total = 0;
-                    total = element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
-                      element.count_cia + element.count_sia + element.count_rl + element.count_ra +
-                      element.count_sd + element.count_df + element.count_mt + element.count_la +
-                      element.count_la + element.count_la1 + element.count_cila;
-                    if (element.attachments) {
-                      valor = await attachmentService.findByName(element.attachments);
-                    }
-
-                    finalResult.push(
-                      {
-                        type: element.type,
-                        cartodb_id: element.cartodb_id,
-                        objectid: element.objectid,
-                        projectid: element.projectid,
-                        projecttype: element.projecttype,
-                        projectsubtype: element.projectsubtype,
-                        coverimage: element.coverimage,
-                        sponsor: element.sponsor,
-                        finalcost: element.finalcost,
-                        estimatedcost: element.estimatedcost,
-                        status: element.status,
-                        attachments: element.attachments,
-                        projectname: element.projectname,
-                        jurisdiction: element.jurisdiction,
-                        streamname: element.streamname,
-                        county: element.county,
-                        attachments: valor,
-                        totalComponents: total
-                      }
-                    );
-                  }
-                  //return res.status(200).send(finalResult);
-                  resolve(finalResult);
-                });
-              } /* else {
-                return res.status(response.statusCode);
-              } */
-            })
-            /* .on('error', err => {
-              logger.error(`failed call to ${LINE_URL}  with error  ${err}`)
-              return res.status(500).send({ error: err });
-            }); */
-          });
-        } else {
-          logger.error(`Failed call endpoint status code ${response.statusCode}`);
-          //return res.status(response.statusCode).send({ error: 'Error with C connection' });
         }
-      }).on('error', err => {
-        //logger.error(`failed call to ${url}  with error  ${err}`)
-        logger.error(`failed call to url ${LINE_URL} with error  ${err}`)
-        //return res.status(500).send({ error: err });
-      });
-    });
 
-    send = send.concat(answer);
+        send = send.concat(answer);
+      } else {
+        console.log('bad status ', response.statusCode, response.body);
+      }
+
+    }
   }
   return send;
 }
@@ -854,8 +779,6 @@ router.get('/project-by-ids', async (req, res) => {
           if (JSON.parse(result.the_geom).coordinates) {
             coordinates = JSON.parse(result.the_geom).coordinates;
           }
-          // the_geom
-          // the_geom_webmercator
           return res.status(200).send({
             cartodb_id: result.cartodb_id,
             objectid: result.objectid,
@@ -1296,6 +1219,83 @@ router.post('/group-by', async (req, res) => {
   }
 });
 
+async function getQuintilComponentValues(table, column) {
+  const VALUES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
+    'special_item_linear', 'special_item_area', 'channel_improvements_linear',
+    'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
+    'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
+  let connector = '';
+  let query = '';
+  for (const component of VALUES_COMPONENTS) {
+    query += `SELECT max(${column}) as max, min(${column}) as min FROM ${component}`;
+  }
+  const LINE_SQL = '';
+  const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
+
+  const newProm1 = new Promise((resolve, reject) => {
+    https.get(LINE_URL, response => {
+      if (response.statusCode === 200) {
+        let str = '';
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+        response.on('end', async function () {
+          const result = JSON.parse(str).rows;
+          const dif2 = Math.round((result[0].max - result[0].min) / 5);
+          const divisor = 1000000;
+
+          let result2 = [];
+          let min = result[0].min;
+          for (let i = 0; i < 5; i += 1) {
+            result2.push({ min: Math.round(min / divisor), max: Math.round((dif2 * (i + 1)) / divisor) });
+            min = (dif2 * (i + 1));
+          }
+          console.log('FINAL', result2);
+          resolve(result2);
+
+        })
+      }
+    });
+  });
+  return await newProm1;
+}
+
+async function getQuintilValues(table, column) {
+  const LINE_SQL = `SELECT max(${column}) as max, min(${column}) as min FROM ${table}`;
+  const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
+
+  const newProm1 = new Promise((resolve, reject) => {
+    https.get(LINE_URL, response => {
+      if (response.statusCode === 200) {
+        let str = '';
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+        response.on('end', async function () {
+          const result = JSON.parse(str).rows;
+          console.log('RESULT', result);
+          const dif2 = Math.round((result[0].max - result[0].min) / 5);
+          let divisor = 1000000;
+          if (result[0].max < 1000000) {
+            divisor = 100000;
+          }
+
+          let result2 = [];
+          let min = result[0].min;
+          for (let i = 0; i < 5; i += 1) {
+            result2.push({ min: Math.round(min / divisor), max: Math.round((dif2 * (i + 1)) / divisor) });
+            min = (dif2 * (i + 1));
+          }
+          console.log('FINAL', result2);
+          resolve(result2);
+
+        })
+      }
+    });
+  });
+  return await newProm1;
+}
+
 async function getValuesByColumn(table, column) {
   let data = [];
   const LINE_SQL = `SELECT ${column} FROM ${table} group by ${column} order by ${column}`;
@@ -1366,7 +1366,6 @@ async function getComponentsValuesByColumn(column) {
   return data;
 }
 
-
 router.get('/params-filters', async (req, res) => {
   try {
     const creators = await getValuesByColumn('projects_line_1', 'creator');
@@ -1375,8 +1374,9 @@ router.get('/params-filters', async (req, res) => {
     const status = await getValuesByColumn('projects_line_1', 'status');
     const startyear = await getValuesByColumn('projects_line_1', 'startyear');
     const completedyear = await getValuesByColumn('projects_line_1', 'completedyear');
-    const mhfddollarsallocated = await getValuesByColumn('projects_line_1', 'mhfddollarsallocated');
+    const mhfddollarsallocated = await getQuintilValues('projects_line_1', 'mhfddollarsallocated');
     //const workplanyear = await getValuesByColumn('projects_line_1', 'workplanyear');
+    const solutioncost = await getQuintilValues('problems', 'solutioncost');
     const problemtype = await getValuesByColumn('problems', 'problemtype');
     const jurisdictionProj = await getValuesByColumn('projects_line_1', 'jurisdiction');
     const countyProj = await getValuesByColumn('projects_line_1', 'county');
@@ -1385,6 +1385,7 @@ router.get('/params-filters', async (req, res) => {
     const jurisdictionProb = await getValuesByColumn('problems', 'jurisdiction');
     const mhfdmanagerprob = await getValuesByColumn('problems', 'mhfdmanager');
     const sources = await getValuesByColumn('problems', 'source');
+    const estimatedCostProj = await getQuintilValues('projects_line_1', 'estimatedcost');
     const components = [
       { key: 'grade_control_structure', value: 'Grade Control Structure' },
       { key: 'pipe_appurtenances', value: 'Pipe Appurtenances' },
@@ -1425,7 +1426,8 @@ router.get('/params-filters', async (req, res) => {
         "jurisdiction": jurisdictionProj,
         "county": countyProj,
         "lgmanager": lgmanager,
-        "streamname": streamname
+        "streamname": streamname,
+        "estimatedCost": estimatedCostProj
       },
       "problems": {
         "problemtype": problemtype,
@@ -1434,7 +1436,8 @@ router.get('/params-filters', async (req, res) => {
         "jurisdiction": jurisdictionProb,
         "mhfdmanager": mhfdmanagerprob,
         "source": sources,
-        "components": components
+        "components": components,
+        "solutioncost": solutioncost
       },
       "components": {
         "component_type": components,
