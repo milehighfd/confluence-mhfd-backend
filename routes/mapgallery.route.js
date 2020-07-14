@@ -68,6 +68,7 @@ router.post('/', async (req, res) => {
       if (req.body.problemtype) {
         //console.log('SI TIENE PROBLEM TYPE');
         const result = await queriesByProblemTypeInProject(PROJECT_FIELDS, filters, req.body.problemtype);
+        //console.log('FINALIZANDO METODO');
         return res.status(200).send(result);
       } else {
         for (const table of PROJECT_TABLES) {
@@ -649,7 +650,7 @@ function createQueryForIn(data) {
   return query;
 }
 
-function createQueryByProblemType(problemType) {
+function createQueryByProblemType(problemType, project) {
   const VALUES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
     'special_item_linear', 'special_item_area', 'channel_improvements_linear',
     'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
@@ -658,13 +659,18 @@ function createQueryByProblemType(problemType) {
   let operator = '';
   let query = '';
   for (const component of VALUES_COMPONENTS) {
-
-    query += operator + ` projectid in (select projectid 
+    query += operator + ` select projectid from ${component}, problems where projectid = ${project}.projectid 
+    and ${component}.problemid = problems.problemid and problemtype='${problemType}' `;
+    operator = ' union '
+    /* query += operator + ` projectid in (select projectid 
           from ${component} where projectid > 0 and 
           problemid in (select problemid from problems where problemtype='${problemType}')) `;
-    operator = ' or ';
+    operator = ' or '; */
 
   }
+  query = ` projectid in (${query})`;
+  //console.log('PASO QUERY', query);
+  //console.log('PROBLEM TYPE QUERY ', query);
   return query;
 }
 
@@ -672,21 +678,30 @@ async function queriesByProblemTypeInProject(project_fields, filters, problemTyp
 
   let send = [];
   const values = problemTypes.split(',');
+  //console.log('VALORES', values);
   for (const type of values) {
-    const newfilter = createQueryByProblemType(type);
+    
     for (const table of PROJECT_TABLES) {
-      console.log('TABLE', table);
+      //console.log('TABLE', table);
+      let newfilter = createQueryByProblemType(type, table);
       let query = '';
-      filters = ` where (${newfilter}) and ` + filters.substr(6, filters.length);
-      //console.log('QUERY LINE', query_project_line);
-      console.log('FILTERS BY COMPONENT', filters);
-      if (table === 'projects_line_1') {
-        query = { q: `SELECT '${table}' as type, ${project_fields}, ${getCounters('projects_line_1', 'projectid')} FROM ${table} ${filters} ` };
+      //console.log('filtros ANTES', filters);
+      if (filters.length > 0) {
+        newfilter = ` where ${newfilter} and ` + filters.substr(6, filters.length);
       } else {
-        query = { q: `SELECT '${table}' as type, ${project_fields}, ${getCounters('projects_polygon_', 'projectid')} FROM ${table} ${filters} ` };
+        newfilter = ` where ${newfilter}`;
       }
+      
+      //console.log('QUERY LINE', query_project_line);
+      //console.log('FILTERS BY COMPONENT', newfilter);
+      if (table === 'projects_line_1') {
+        query = { q: `SELECT '${table}' as type, ${project_fields}, ${getCounters('projects_line_1', 'projectid')} FROM ${table} ${newfilter} ` };
+      } else {
+        query = { q: `SELECT '${table}' as type, ${project_fields}, ${getCounters('projects_polygon_', 'projectid')} FROM ${table} ${newfilter} ` };
+      }
+      //console.log('FILTROSSS', query);
 
-      console.log('MY QUERY ', query);
+      //console.log('MY QUERY ', query);
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
       const data = await needle('post', URL, query, { json: true });
@@ -694,6 +709,7 @@ async function queriesByProblemTypeInProject(project_fields, filters, problemTyp
       console.log('STATUS', data.statusCode);
       if (data.statusCode === 200) {
         const result = data.body.rows;
+        //console.log('RESULTADO', result);
         for (const element of result) {
           let valor = '';
           if (element.attachments) {
@@ -723,6 +739,7 @@ async function queriesByProblemTypeInProject(project_fields, filters, problemTyp
               element.count_la + element.count_la1 + element.count_cila
           });
         }
+        //console.log('DATOS', type, answer);
 
         send = send.concat(answer);
       } else {
@@ -731,6 +748,7 @@ async function queriesByProblemTypeInProject(project_fields, filters, problemTyp
 
     }
   }
+  //console.log('ENVIANDO RESPUESTA ', send);
   return send;
 }
 
