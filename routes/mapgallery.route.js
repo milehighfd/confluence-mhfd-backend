@@ -25,11 +25,11 @@ router.post('/', async (req, res) => {
       //const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       const query = { q: `${PROBLEM_SQL} ${filters}` };
-      console.log('QUERY', query);
+      //console.log('QUERY', PROBLEM_SQL, filters);
       let answer = [];
       try {
         const data = await needle('post', URL, query, { json: true });
-        console.log('status', data.statusCode);
+        //console.log('status', data.statusCode);
         if (data.statusCode === 200) {
           answer = data.body.rows.map(element => {
             return {
@@ -66,27 +66,24 @@ router.post('/', async (req, res) => {
         'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county ';
 
       if (req.body.problemtype) {
-        //console.log('SI TIENE PROBLEM TYPE');
         const result = await queriesByProblemTypeInProject(PROJECT_FIELDS, filters, req.body.problemtype);
-        //console.log('FINALIZANDO METODO');
         return res.status(200).send(result);
       } else {
         for (const table of PROJECT_TABLES) {
-          // 
-          console.log('TABLE', table);
           let query = ''
           if (table === 'projects_line_1') {
             query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_line_1', 'projectid')} FROM ${table} ${filters} ` };
           } else {
             query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_polygon_', 'projectid')} FROM ${table} ${filters} ` };
           }
+          //console.log('tablas', table, filters);
 
-          console.log('MY QUERY ', query);
+          // console.log('MY QUERY ', query);
           const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
           let answer = [];
           try {
             const data = await needle('post', URL, query, { json: true });
-            console.log('STATUS', data.statusCode);
+            //console.log('STATUS', data.statusCode);
             if (data.statusCode === 200) {
               const result = data.body.rows;
               for (const element of result) {
@@ -157,6 +154,7 @@ function getFilters(params) {
   //console.log('PARAMS',params);
   let filters = '';
   let tipoid = '';
+  let hasProjectType = false;
   const VALUES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
     'special_item_linear', 'special_item_area', 'channel_improvements_linear',
     'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
@@ -194,25 +192,7 @@ function getFilters(params) {
     }
 
     if (params.problemtype) {
-      //console.log('TIPOS PROBLEMAS', params.problemtype);
-      // change query 
-      /* const values = params.problemtype.split(',');
-
-      let operator = '';
-      let query = '';
-      for (const component of VALUES_COMPONENTS) {
-        for (const val of values) {
-          query += operator + ` projectid in (select projectid 
-            from ${component} where projectid > 0 and 
-            problemid in (select problemid from problems where problemtype='${val}')) `;
-          operator = ' or ';
-        }
-      }
-      if (filters.length > 0) {
-        filters += ` and (${query}) `;
-      } else {
-        filters += ` (${query}) `;
-      } */
+      
     }
   }
 
@@ -295,15 +275,15 @@ function getFilters(params) {
   }
 
   if (params.estimatedcostComp) {
-    //console.log('COST ESTIMATED COMPONENT');
-    const values = params.estimatedcostComp.split(',');
+    
     let query = '';
     let operator = '';
-    for (const value of values) {
-      const initValue = Number(value) * 1000000;
+    for (const value of params.estimatedcostComp) {
+      const values = value.split(',');
+      
       for (const component of VALUES_COMPONENTS) {
         query += operator +
-          ` (${tipoid} in (select ${tipoid} from ${component} where ${component}.${tipoid}=${tipoid} and estimated_cost > 0 and estimated_cost between ${initValue} and ${initValue + 2000000} )) `;
+          ` (${tipoid} in (select ${tipoid} from ${component} where ${component}.${tipoid}=${tipoid} and estimated_cost > 0 and estimated_cost between ${values[0]} and ${values[1]} )) `;
         operator = ' or ';
       }
     }
@@ -384,23 +364,15 @@ function getFilters(params) {
   }
 
   if (params.cost) {
-
-    const values = params.cost.split(',');
     let query = '';
     let operator = '';
-    for (const val of values) {
-      let initValue = 0;
-      let endValue = 0;
-      if (val === '1' || val === '5') {
-        initValue = Number(val) * 1000000;
-        endValue = 10000000;
-      } else {
-        initValue = Number(val) * 1000000;
-        endValue = initValue + 5000000;
-      }
-      query += operator + ` (cast(solutioncost as bigint) between ${initValue} and ${endValue})`;
+    for (const val of params.cost) {
+      const values = val.split(',');
+      
+      query += operator + ` (cast(solutioncost as bigint) between ${values[0]} and ${values[1]})`;
       operator = ' or ';
     }
+    //console.log('query', query);
 
     if (filters.length > 0) {
       filters += ` and ${query}`;
@@ -454,6 +426,7 @@ function getFilters(params) {
     } else {
       filters = `projecttype in (${query})`;
     }
+    hasProjectType = true;
   }
 
   if (params.status) {
@@ -482,14 +455,12 @@ function getFilters(params) {
   }
 
   if (params.mhfddollarsallocated) {
-    const values = params.mhfddollarsallocated.split(',');
     let query = '';
     let operator = '';
 
-    for (const mhfddolar of values) {
-      let initValue = Number(mhfddolar) * 1000000;
-      let endValue = initValue + 5000000;
-      query += operator + ` (cast(mhfddollarsallocated as bigint) between ${initValue} and ${endValue})`;
+    for (const mhfddolar of params.mhfddollarsallocated) {
+      const values = mhfddolar.split(',');
+      query += operator + ` (cast(mhfddollarsallocated as bigint) between ${values[0]} and ${values[1]})`;
       operator = ' or ';
     }
 
@@ -501,15 +472,12 @@ function getFilters(params) {
   }
 
   if (params.totalcost) {
-    // console.log('TOTAL COST', params.totalcost);
-    const values = params.totalcost.split(',');
     let query = '';
     let operator = '';
 
-    for (const cost of values) {
-      let initValue = Number(cost) * 1000000;
-      let endValue = initValue + 5000000;
-      query += operator + ` (coalesce(cast(finalcost as real), cast(estimatedcost as real)) between ${initValue} and ${endValue}) `;
+    for (const cost of params.totalcost) {
+      const values = cost.split(',');
+      query += operator + ` (coalesce(cast(finalcost as real), cast(estimatedcost as real)) between ${values[0]} and ${values[1]}) `;
       operator = ' or ';
     }
 
@@ -611,11 +579,18 @@ function getFilters(params) {
   if (params.jurisdiction) {
     //const data = params.jurisdiction.split(',');
     const query = createQueryForIn(params.jurisdiction.split(','));
-    console.log('jur', query);
     if (filters.length > 0) {
       filters = filters + ` and jurisdiction in (${query})`;
     } else {
       filters = ` jurisdiction in (${query})`;
+    }
+  }
+
+  if (!hasProjectType && !params.isproblem) {
+    if (filters.length > 0) {
+      filters += ` and projecttype in ('Capital', 'Study', 'Maintenance')`;
+    } else {
+      filters = `projecttype in ('Capital', 'Study', 'Maintenance')`;
     }
   }
 
@@ -1237,7 +1212,7 @@ router.post('/group-by', async (req, res) => {
   }
 });
 
-async function getQuintilComponentValues(table, column) {
+async function getQuintilComponentValues(column) {
   const VALUES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
     'special_item_linear', 'special_item_area', 'channel_improvements_linear',
     'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
@@ -1245,10 +1220,10 @@ async function getQuintilComponentValues(table, column) {
   let connector = '';
   let query = '';
   for (const component of VALUES_COMPONENTS) {
-    query += `SELECT max(${column}) as max, min(${column}) as min FROM ${component}`;
+    query += connector + `SELECT max(${column}) as max, min(${column}) as min FROM ${component}`;
+    connector = ' union ';
   }
-  const LINE_SQL = '';
-  const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
+  const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query}&api_key=${CARTO_TOKEN}`);
 
   const newProm1 = new Promise((resolve, reject) => {
     https.get(LINE_URL, response => {
@@ -1259,17 +1234,24 @@ async function getQuintilComponentValues(table, column) {
         });
         response.on('end', async function () {
           const result = JSON.parse(str).rows;
-          const dif2 = Math.round((result[0].max - result[0].min) / 5);
-          const divisor = 1000000;
-
-          let result2 = [];
-          let min = result[0].min;
-          for (let i = 0; i < 5; i += 1) {
-            result2.push({ min: Math.round(min / divisor), max: Math.round((dif2 * (i + 1)) / divisor) });
-            min = (dif2 * (i + 1));
+          //console.log('DATIS', result);
+          const max = Math.max.apply(Math, result.map(function(element) { return element.max }));
+          let min = Math.min.apply(Math, result.map(function(element) { return element.min }));
+          const difference = Math.round((max - min) / 5);
+          let label = '';
+          if (max < 1000000) {
+            label = 'K';
+          } else {
+            label = 'M';
           }
-          console.log('FINAL', result2);
-          resolve(result2);
+          const divisor = 1000000;
+          let finalResult = [];
+          
+          for (let i = 0; i < 5; i += 1) {
+            finalResult.push({ min: Math.round(min / divisor), max: Math.round((difference * (i + 1)) / divisor), label: label });
+            min = (difference * (i + 1));
+          }
+          resolve(finalResult);
 
         })
       }
@@ -1291,20 +1273,24 @@ async function getQuintilValues(table, column) {
         });
         response.on('end', async function () {
           const result = JSON.parse(str).rows;
-          console.log('RESULT', result);
+          //console.log('RESULT', result);
           const dif2 = Math.round((result[0].max - result[0].min) / 5);
+          let label = '';
           let divisor = 1000000;
           if (result[0].max < 1000000) {
-            divisor = 100000;
+            divisor = 1000;
+            label = 'K';
+          } else {
+            label = 'M';
           }
 
           let result2 = [];
           let min = result[0].min;
           for (let i = 0; i < 5; i += 1) {
-            result2.push({ min: Math.round(min / divisor), max: Math.round((dif2 * (i + 1)) / divisor) });
+            result2.push({ min: Math.round(min / divisor), max: Math.round((dif2 * (i + 1)) / divisor), label: label });
             min = (dif2 * (i + 1));
           }
-          console.log('FINAL', result2);
+          //console.log('FINAL', result2);
           resolve(result2);
 
         })
@@ -1404,6 +1390,7 @@ router.get('/params-filters', async (req, res) => {
     const mhfdmanagerprob = await getValuesByColumn('problems', 'mhfdmanager');
     const sources = await getValuesByColumn('problems', 'source');
     const estimatedCostProj = await getQuintilValues('projects_line_1', 'estimatedcost');
+    const estimatedCostComp = await getQuintilComponentValues('estimated_cost');
     const components = [
       { key: 'grade_control_structure', value: 'Grade Control Structure' },
       { key: 'pipe_appurtenances', value: 'Pipe Appurtenances' },
@@ -1424,7 +1411,7 @@ router.get('/params-filters', async (req, res) => {
     const streamname = await getValuesByColumn('projects_line_1', 'streamname');
     const statusComponent = await getComponentsValuesByColumn('status');
     const yearOfStudyComponent = [1970, 1980, 1990, 2000, 2010, 2020];
-    //const estimatedCostComp = await getComponentsValuesByColumn('estimated_cost');
+    // = await getComponentsValuesByColumn('estimated_cost');
     const jurisdictionComponent = await getComponentsValuesByColumn('jurisdiction');
     const countyComponent = await getComponentsValuesByColumn('county');
     const mhfdManagerComponent = await getComponentsValuesByColumn('mhfdmanager');
@@ -1455,16 +1442,16 @@ router.get('/params-filters', async (req, res) => {
         "mhfdmanager": mhfdmanagerprob,
         "source": sources,
         "components": components,
-        "solutioncost": solutioncost
+        "cost": solutioncost
       },
       "components": {
         "component_type": components,
         "status": statusComponent,
         "yearofstudy": yearOfStudyComponent,
-        "estimatedcost": [],
         "jurisdiction": jurisdictionComponent,
         "county": countyComponent,
         "watershed": mhfdManagerComponent,
+        "estimatedcost": estimatedCostComp
         //"streamname": streamnameComponent
       }
     }
