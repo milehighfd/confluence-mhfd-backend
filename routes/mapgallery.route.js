@@ -11,8 +11,13 @@ const needle = require('needle');
 const { CARTO_TOKEN } = require('../config/config');
 const attachmentService = require('../services/attachment.service');
 const { response } = require('express');
+const { query } = require('../config/logger');
 //const { query } = require('../config/logger');
 const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
+const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
+  'special_item_linear', 'special_item_area', 'channel_improvements_linear',
+  'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
+  'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
 
 router.post('/', async (req, res) => {
   try {
@@ -76,7 +81,7 @@ router.post('/', async (req, res) => {
           } else {
             query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_polygon_', 'projectid')} FROM ${table} ${filters} ` };
           }
-          
+
           const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
           let answer = [];
           try {
@@ -190,7 +195,7 @@ function getFilters(params) {
     }
 
     if (params.problemtype) {
-      
+
     }
   }
 
@@ -273,12 +278,12 @@ function getFilters(params) {
   }
 
   if (params.estimatedcostComp) {
-    
+
     let query = '';
     let operator = '';
     for (const value of params.estimatedcostComp) {
       const values = value.split(',');
-      
+
       for (const component of VALUES_COMPONENTS) {
         query += operator +
           ` (${tipoid} in (select ${tipoid} from ${component} where ${component}.${tipoid}=${tipoid} and estimated_cost > 0 and estimated_cost between ${values[0]} and ${values[1]} )) `;
@@ -366,7 +371,7 @@ function getFilters(params) {
     let operator = '';
     for (const val of params.cost) {
       const values = val.split(',');
-      
+
       query += operator + ` (cast(solutioncost as bigint) between ${values[0]} and ${values[1]})`;
       operator = ' or ';
     }
@@ -647,7 +652,7 @@ async function queriesByProblemTypeInProject(project_fields, filters, problemTyp
   const values = problemTypes.split(',');
   //console.log('VALORES', values);
   for (const type of values) {
-    
+
     for (const table of PROJECT_TABLES) {
       //console.log('TABLE', table);
       let newfilter = createQueryByProblemType(type, table);
@@ -658,7 +663,7 @@ async function queriesByProblemTypeInProject(project_fields, filters, problemTyp
       } else {
         newfilter = ` where ${newfilter}`;
       }
-      
+
       //console.log('QUERY LINE', query_project_line);
       //console.log('FILTERS BY COMPONENT', newfilter);
       if (table === 'projects_line_1') {
@@ -1064,108 +1069,43 @@ router.post('/components-by-entityid', async (req, res) => {
     if (id === '') {
       id = null;
     }
-
-    let COMPONENTS_SQL = `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from grade_control_structure where ${typeid}=${id} and status='Completed')/count(*)) percen
-       FROM grade_control_structure 
-      where ${typeid}=${id} group by type union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from pipe_appurtenances where ${typeid}=${id} and status='Completed')/count(*)) percen
-      FROM pipe_appurtenances 
-      where ${typeid}=${id} group by type union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from special_item_point where ${typeid}=${id} and status='Completed')/count(*)) percen
-      FROM special_item_point 
-      where ${typeid}=${id} group by type union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from special_item_linear where ${typeid}=${id} and status='Completed')/count(*)) percen
-      FROM special_item_linear
-      where ${typeid}=${id} group by type union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from special_item_area where ${typeid}=${id} and status='Completed')/count(*)) percen
-      FROM special_item_area
-      where ${typeid}=${id} group by type union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from channel_improvements_linear where ${typeid}=${id} and status='Completed')/count(*)) percen
-      FROM channel_improvements_linear
-      where ${typeid}=${id} group by type union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from channel_improvements_area where ${typeid}=${id} and status='Completed')/count(*)) percen
-      FROM channel_improvements_area
-      where ${typeid}=${id} group by type union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from removal_line where ${typeid}=${id} and status='Completed')/count(*)) percen
-      FROM removal_line
-      where ${typeid}=${id} group by type union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from removal_area where ${typeid}=${id} and status='Completed')/count(*)) percen
-      FROM removal_area
-      where ${typeid}=${id} group by type union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from storm_drain where ${typeid}=${id} and status='Completed')/count(*)) percen
-      FROM storm_drain
-      where ${typeid}=${id} group by type union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from detention_facilities where ${typeid}=${id} and status='Completed')/count(*)) percen
-      FROM detention_facilities
-      where ${typeid}=${id} group by type union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from maintenance_trails where ${typeid}=${id} and status='Completed')/count(*)) percen
-      FROM maintenance_trails
-      where ${typeid}=${id} group by type union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from land_acquisition where ${typeid}=${id} and status='Completed')/count(*)) percen
-      FROM land_acquisition
-      where ${typeid}=${id} group by type union ` +
-      `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
-      coalesce(sum(original_cost), 0) as original_cost,
-      ((select count(*) from landscaping_area where ${typeid}=${id} and status='Completed')/count(*)) percen
-      FROM landscaping_area
-      where ${typeid}=${id} group by type `;
-
+    let table = '';
+    let finalcost = '';
+    if (typeid === 'projectid') {
+      table = 'projects_line_1';
+      finalcost = 'finalcost';
+    } else {
+      table = 'problems';
+      finalcost = 'solutioncost';
+    }
+    let COMPONENTS_SQL = '';
+    let union = '';
+    for (const component of TABLES_COMPONENTS) {
+      COMPONENTS_SQL += union + `SELECT type, coalesce(sum(estimated_cost), 0) as estimated_cost, 
+        case when cast(${finalcost} as integer) > 0 then coalesce(sum(original_cost),0)/cast(${finalcost} as integer) else 0 END as original_cost,
+        ((select count(*) from ${component} where ${typeid}=${id} and status='Completed')/count(*)) percen
+        FROM ${component}, ${table}
+        where ${component}.${typeid}=${id} and ${table}.${typeid}=${id} group by type, ${finalcost}`;
+      union = ' union ';
+    }
+    
     if (sortby) {
       if (!sorttype) {
         sorttype = 'desc';
       }
       COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
     }
-    //console.log('components', COMPONENTS_SQL);
-
-    const COMPONENT_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL}&api_key=${CARTO_TOKEN}`);
-    https.get(COMPONENT_URL, response => {
-      if (response.statusCode === 200) {
-        let str = '';
-        response.on('data', function (chunk) {
-          str += chunk;
-        });
-        response.on('end', async function () {
-          /* let result = [];
-          for (const comp of JSON.parse(str).rows) {
-            
-            const type_component = comp.type.split(' ').join('_').toLowerCase();
-            const percentage = await getTotals(type_component, id, typeid);
-            result.push({
-              ...comp
-              //,percentage: percentage
-            })
-          } */
-          return res.status(200).send(JSON.parse(str).rows);
-        })
-      }
-    });
+    const query = { q: `${COMPONENTS_SQL}` };
+    
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    const data = await needle('post', URL, query, { json: true });
+    if (data.statusCode === 200) {
+      const result = data.body.rows;
+      return res.status(200).send(result);
+    } else {
+      console.log('bad status ', response.statusCode, response.body);
+      res.status(500).send({ error: 'bad status' }).send({ error: 'Connection error' });
+    }
 
   } catch (error) {
     logger.error(error);
@@ -1227,8 +1167,8 @@ async function getQuintilComponentValues(column) {
         response.on('end', async function () {
           const result = JSON.parse(str).rows;
           //console.log('DATIS', result);
-          const max = Math.max.apply(Math, result.map(function(element) { return element.max }));
-          let min = Math.min.apply(Math, result.map(function(element) { return element.min }));
+          const max = Math.max.apply(Math, result.map(function (element) { return element.max }));
+          let min = Math.min.apply(Math, result.map(function (element) { return element.min }));
           const difference = Math.round((max - min) / 5);
           let label = '';
           if (max < 1000000) {
@@ -1238,7 +1178,7 @@ async function getQuintilComponentValues(column) {
           }
           const divisor = 1000000;
           let finalResult = [];
-          
+
           for (let i = 0; i < 5; i += 1) {
             finalResult.push({ min: Math.round(min), max: Math.round(difference * (i + 1)), label: label });
             min = (difference * (i + 1));
