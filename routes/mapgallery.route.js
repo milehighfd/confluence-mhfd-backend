@@ -76,9 +76,7 @@ router.post('/', async (req, res) => {
           } else {
             query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_polygon_', 'projectid')} FROM ${table} ${filters} ` };
           }
-          //console.log('tablas', table, filters);
-
-          // console.log('MY QUERY ', query);
+          
           const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
           let answer = [];
           try {
@@ -636,16 +634,10 @@ function createQueryByProblemType(problemType, project) {
   for (const component of VALUES_COMPONENTS) {
     query += operator + ` select projectid from ${component}, problems where projectid = ${project}.projectid 
     and ${component}.problemid = problems.problemid and problemtype='${problemType}' `;
-    operator = ' union '
-    /* query += operator + ` projectid in (select projectid 
-          from ${component} where projectid > 0 and 
-          problemid in (select problemid from problems where problemtype='${problemType}')) `;
-    operator = ' or '; */
+    operator = ' union ';
 
   }
   query = ` projectid in (${query})`;
-  //console.log('PASO QUERY', query);
-  //console.log('PROBLEM TYPE QUERY ', query);
   return query;
 }
 
@@ -1248,7 +1240,7 @@ async function getQuintilComponentValues(column) {
           let finalResult = [];
           
           for (let i = 0; i < 5; i += 1) {
-            finalResult.push({ min: Math.round(min / divisor), max: Math.round((difference * (i + 1)) / divisor), label: label });
+            finalResult.push({ min: Math.round(min), max: Math.round(difference * (i + 1)), label: label });
             min = (difference * (i + 1));
           }
           resolve(finalResult);
@@ -1287,7 +1279,7 @@ async function getQuintilValues(table, column) {
           let result2 = [];
           let min = result[0].min;
           for (let i = 0; i < 5; i += 1) {
-            result2.push({ min: Math.round(min / divisor), max: Math.round((dif2 * (i + 1)) / divisor), label: label });
+            result2.push({ min: Math.round(min), max: Math.round(dif2 * (i + 1)), label: label });
             min = (dif2 * (i + 1));
           }
           //console.log('FINAL', result2);
