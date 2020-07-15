@@ -30,7 +30,6 @@ router.post('/', async (req, res) => {
       //const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       const query = { q: `${PROBLEM_SQL} ${filters}` };
-      //console.log('QUERY', PROBLEM_SQL, filters);
       let answer = [];
       try {
         const data = await needle('post', URL, query, { json: true });
@@ -277,7 +276,7 @@ function getFilters(params) {
     }
   }
 
-  if (params.estimatedcostComp) {
+  if (params.estimatedcostComp.length > 0) {
 
     let query = '';
     let operator = '';
@@ -299,7 +298,7 @@ function getFilters(params) {
   }
 
   if (params.jurisdictionComp) {
-
+    
     const values = createQueryForIn(params.jurisdictionComp.split(','));
     let query = '';
     let operator = '';
@@ -364,9 +363,9 @@ function getFilters(params) {
     } else {
       filters = ` ${query} `;
     }
-  }
+  }  
 
-  if (params.cost) {
+  if (params.cost && params.cost.length > 0) {
     let query = '';
     let operator = '';
     for (const val of params.cost) {
@@ -375,7 +374,6 @@ function getFilters(params) {
       query += operator + ` (cast(solutioncost as bigint) between ${values[0]} and ${values[1]})`;
       operator = ' or ';
     }
-    //console.log('query', query);
 
     if (filters.length > 0) {
       filters += ` and ${query}`;
@@ -394,7 +392,7 @@ function getFilters(params) {
       filters = `mhfdmanager in (${query})`;
     }
   }
-
+  
   if (params.source) {
     const query = createQueryForIn(params.source.split(','));
     if (filters.length > 0) {
@@ -439,7 +437,7 @@ function getFilters(params) {
     } else {
       filters = `status in (${query})`;
     }
-  }
+  }  
 
   if (params.startyear) {
     if (filters.length > 0) {
@@ -457,7 +455,7 @@ function getFilters(params) {
     }
   }
 
-  if (params.mhfddollarsallocated) {
+  if (params.mhfddollarsallocated && params.mhfddollarsallocated.length > 0) {
     let query = '';
     let operator = '';
 
@@ -473,8 +471,8 @@ function getFilters(params) {
       filters = ` (${query}) `;
     }
   }
-
-  if (params.totalcost) {
+  
+  if (params.totalcost && params.totalcost.length > 0) {
     let query = '';
     let operator = '';
 
@@ -560,8 +558,9 @@ function getFilters(params) {
   // 
   if (params.bounds) {
     const coords = params.bounds.split(',');
+    filters = filters.trim();
     if (filters.length > 0) {
-      console.log('FILTERS coord', filters);
+      
       filters += ` and (ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
       filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`; // only for readbility 
     } else {
@@ -1180,7 +1179,11 @@ async function getQuintilComponentValues(column) {
           let finalResult = [];
 
           for (let i = 0; i < 5; i += 1) {
-            finalResult.push({ min: Math.round(min), max: Math.round(difference * (i + 1)), label: label });
+            if (i === 4) {
+              finalResult.push({ min: Math.round(min), max: max, label: label });
+            } else {
+              finalResult.push({ min: Math.round(min), max: Math.round(difference * (i + 1)), label: label });
+            }
             min = (difference * (i + 1));
           }
           resolve(finalResult);
@@ -1219,7 +1222,11 @@ async function getQuintilValues(table, column) {
           let result2 = [];
           let min = result[0].min;
           for (let i = 0; i < 5; i += 1) {
-            result2.push({ min: Math.round(min), max: Math.round(dif2 * (i + 1)), label: label });
+            if (i === 4) {
+              result2.push({ min: Math.round(min), max: result[0].max, label: label });
+            } else {
+              result2.push({ min: Math.round(min), max: Math.round(dif2 * (i + 1)), label: label });
+            }
             min = (dif2 * (i + 1));
           }
           //console.log('FINAL', result2);
