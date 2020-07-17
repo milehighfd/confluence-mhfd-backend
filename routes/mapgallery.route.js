@@ -823,7 +823,7 @@ router.get('/project-by-ids', async (req, res) => {
             coverimage: result.coverimage,
             globalid: result.globalid,
             shape_length: result.shape_length,
-            attachments: attachmentFinal,
+            attachments: attachments,
             problems: problems,
             components: components,
             coordinates: coordinates
