@@ -276,7 +276,7 @@ function getFilters(params) {
     }
   }
 
-  if (params.estimatedcostComp.length > 0) {
+  if (params.estimatedcostComp && params.estimatedcostComp.length > 0) {
 
     let query = '';
     let operator = '';
@@ -1165,7 +1165,6 @@ async function getQuintilComponentValues(column) {
         });
         response.on('end', async function () {
           const result = JSON.parse(str).rows;
-          //console.log('DATIS', result);
           const max = Math.max.apply(Math, result.map(function (element) { return element.max }));
           let min = Math.min.apply(Math, result.map(function (element) { return element.min }));
           const difference = Math.round((max - min) / 5);
@@ -1314,7 +1313,9 @@ router.get('/params-filters', async (req, res) => {
     const creators = await getValuesByColumn('projects_line_1', 'creator');
     const mhfdmanagers = await getValuesByColumn('projects_line_1', 'mhfdmanager');
     const projecttypes = ['Maintenance', 'Study', 'Capital'];
-    const status = await getValuesByColumn('projects_line_1', 'status');
+    const status = ['Draft', 'Requested', 'Approved', 'Idle', 'Initiated',
+    'Ongoing', 'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
+    'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete'];//await getValuesByColumn('projects_line_1', 'status');
     const startyear = await getValuesByColumn('projects_line_1', 'startyear');
     const completedyear = await getValuesByColumn('projects_line_1', 'completedyear');
     const mhfddollarsallocated = await getQuintilValues('projects_line_1', 'mhfddollarsallocated');
@@ -1350,11 +1351,9 @@ router.get('/params-filters', async (req, res) => {
     const streamname = await getValuesByColumn('projects_line_1', 'streamname');
     const statusComponent = await getComponentsValuesByColumn('status');
     const yearOfStudyComponent = [1970, 1980, 1990, 2000, 2010, 2020];
-    // = await getComponentsValuesByColumn('estimated_cost');
     const jurisdictionComponent = await getComponentsValuesByColumn('jurisdiction');
     const countyComponent = await getComponentsValuesByColumn('county');
     const mhfdManagerComponent = await getComponentsValuesByColumn('mhfdmanager');
-    //const streamnameComponent = await getComponentsValuesByColumn('streamname'); 
 
     const result = {
       "projects": {
