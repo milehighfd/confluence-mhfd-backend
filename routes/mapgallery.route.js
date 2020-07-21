@@ -298,7 +298,7 @@ function getFilters(params) {
   }
 
   if (params.jurisdictionComp) {
-    
+
     const values = createQueryForIn(params.jurisdictionComp.split(','));
     let query = '';
     let operator = '';
@@ -363,7 +363,7 @@ function getFilters(params) {
     } else {
       filters = ` ${query} `;
     }
-  }  
+  }
 
   if (params.cost && params.cost.length > 0) {
     let query = '';
@@ -392,7 +392,7 @@ function getFilters(params) {
       filters = `mhfdmanager in (${query})`;
     }
   }
-  
+
   if (params.source) {
     const query = createQueryForIn(params.source.split(','));
     if (filters.length > 0) {
@@ -437,7 +437,7 @@ function getFilters(params) {
     } else {
       filters = `status in (${query})`;
     }
-  }  
+  }
 
   if (params.startyear) {
     if (filters.length > 0) {
@@ -471,7 +471,7 @@ function getFilters(params) {
       filters = ` (${query}) `;
     }
   }
-  
+
   if (params.totalcost && params.totalcost.length > 0) {
     let query = '';
     let operator = '';
@@ -560,7 +560,7 @@ function getFilters(params) {
     const coords = params.bounds.split(',');
     filters = filters.trim();
     if (filters.length > 0) {
-      
+
       filters += ` and (ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
       filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`; // only for readbility 
     } else {
@@ -612,12 +612,10 @@ function getFilters(params) {
   if (params.limit && params.page) {
     filters = ` limit= ${limit} offset=${params.page * params.limit}`
   }
-  //console.log('FILTROS', filters);
   return filters;
 }
 
 function createQueryForIn(data) {
-  //const data = params.jurisdiction.split(',');
   let query = '';
   let separator = '';
   for (const elem of data) {
@@ -738,8 +736,7 @@ router.get('/project-by-ids', async (req, res) => {
       SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_line_1 where objectid=${objectid} and cartodb_id=${cartoid} `;
       URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
     }
-    console.log(SQL);
-    console.log(URL);
+
     https.get(URL, response => {
       if (response.statusCode === 200) {
         let str = '';
@@ -1087,7 +1084,7 @@ router.post('/components-by-entityid', async (req, res) => {
         where ${component}.${typeid}=${id} and ${table}.${typeid}=${id} group by type, ${finalcost}`;
       union = ' union ';
     }
-    
+
     if (sortby) {
       if (!sorttype) {
         sorttype = 'desc';
@@ -1095,7 +1092,7 @@ router.post('/components-by-entityid', async (req, res) => {
       COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
     }
     const query = { q: `${COMPONENTS_SQL}` };
-    
+
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
     const data = await needle('post', URL, query, { json: true });
     if (data.statusCode === 200) {
@@ -1176,15 +1173,61 @@ async function getQuintilComponentValues(column) {
           }
           const divisor = 1000000;
           let finalResult = [];
+          const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
           for (let i = 0; i < 5; i += 1) {
+            let min1 = Math.round(min);
+            let max1 = 0;
+            let limitCount = 0;
+            let counter = 0;
+
             if (i === 4) {
-              finalResult.push({ min: Math.round(min), max: max, label: label });
+              max1 = max;
+              limitCount = max;
+              //finalResult.push({ min: Math.round(min), max: max, label: label });
             } else {
-              finalResult.push({ min: Math.round(min), max: Math.round(difference * (i + 1)), label: label });
+              max1 = Math.round(difference * (i + 1));
+              limitCount = max1;
+              //finalResult.push({ min: Math.round(min), max: Math.round(difference * (i + 1)), label: label });
             }
+
+            let query1 = '';
+            let union = '';
+            for (const table1 of TABLES_COMPONENTS) {
+              query1 += union + `select count(*) from ${table1} where (${column} between ${min1} and ${limitCount})`;
+              union = ' union ';
+            }
+
+            const query = { q: `${query1} ` };
+            const data = await needle('post', URL, query, { json: true });
+            let answer = [];
+            console.log('STATUS', data.statusCode, query);
+            if (data.statusCode === 200) {
+              const result = data.body.rows;
+              for (const row of result) {
+                counter += row.count;
+              }
+              //console.log('CONTADOR PROBLEMAS ', table, result);
+              //counter = result[0].count;
+            } else {
+              console.log('error');
+            }
+
+            //console.log('QUINTILES COUNTER');
+            /* const query = { q: `select count(*) from ${table} where ${table}.${column}= ${table}.${column} ` };
+            const data = await needle('post', URL, query, { json: true });
+            let answer = [];
+
+            console.log('STATUS', data.statusCode, query);
+            if (data.statusCode === 200) {
+              const result = data.body.rows;
+              console.log('CONTADOR PROBLEMAS ', table, result);
+              counter = result[0].count;
+            } */
+            finalResult.push({ min: min1, max: max1, label: label, counter: counter });
             min = (difference * (i + 1));
           }
+          //console.log('FINAL RESULT', finalResult);
           resolve(finalResult);
 
         })
@@ -1207,7 +1250,6 @@ async function getQuintilValues(table, column) {
         });
         response.on('end', async function () {
           const result = JSON.parse(str).rows;
-          //console.log('RESULT', result);
           const dif2 = Math.round((result[0].max - result[0].min) / 5);
           let label = '';
           let divisor = 1000000;
@@ -1221,14 +1263,50 @@ async function getQuintilValues(table, column) {
           let result2 = [];
           let min = result[0].min;
           for (let i = 0; i < 5; i += 1) {
+            min = Math.round(min);
+            let max = 0;
+            let limitCount = 0;
             if (i === 4) {
-              result2.push({ min: Math.round(min), max: result[0].max, label: label });
+              //result2.push({ min: Math.round(min), max: result[0].max, label: label });
+              max = result[0].max;
+              limitCount = max;
             } else {
-              result2.push({ min: Math.round(min), max: Math.round(dif2 * (i + 1)), label: label });
+              max = Math.round(dif2 * (i + 1));
+              limitCount = max;
+              //result2.push({ min: Math.round(min), max: Math.round(dif2 * (i + 1)), label: label });
             }
+            let counter = 0;
+            const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+            if (table === 'problems') {
+              //console.log('QUINTILES COUNTER');
+              const query = { q: `select count(*) from ${table} where ${column} between ${min} and ${limitCount} ` };
+              const data = await needle('post', URL, query, { json: true });
+              let answer = [];
+              console.log('STATUS', data.statusCode);
+              if (data.statusCode === 200) {
+                const result = data.body.rows;
+                //console.log('CONTADOR PROBLEMAS ', table, result);
+                counter = result[0].count;
+              }
+            } else {
+              let answer = [];
+              for (const table1 of PROJECT_TABLES) {
+                const query = { q: `select count(*) from ${table1} where cast(${column} as real) between ${min} and ${limitCount} ` };
+                //console.log('QUINTIL PROJECT', table1, query);
+                const data = await needle('post', URL, query, { json: true });
+                let answer = [];
+                console.log('STATUS COST', data.statusCode, query);
+                if (data.statusCode === 200) {
+                  const result = data.body.rows;
+                  console.log('CONTADOR TABLA', table1, result);
+                  counter += result[0].count;
+                }
+              }
+            }
+
+            result2.push({ min: min, max: max, label: label, counter: counter });
             min = (dif2 * (i + 1));
           }
-          //console.log('FINAL', result2);
           resolve(result2);
 
         })
@@ -1239,99 +1317,268 @@ async function getQuintilValues(table, column) {
 }
 
 async function getValuesByColumn(table, column) {
-  let data = [];
-  const LINE_SQL = `SELECT ${column} FROM ${table} group by ${column} order by ${column}`;
-  const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
+  let result = [];
+  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  if (table === 'problems') {
+    const query = { q: `select ${column} as column, count(*) as count from ${table} group by ${column} order by ${column} ` };
+    const data = await needle('post', URL, query, { json: true });
 
-  const newProm1 = new Promise((resolve, reject) => {
-    https.get(LINE_URL, response => {
-      if (response.statusCode === 200) {
-        let str = '';
-        response.on('data', function (chunk) {
-          str += chunk;
+    console.log('STATUS', data.statusCode, query);
+    if (data.statusCode === 200) {
+      const result1 = data.body.rows;
+      for (const row of result1) {
+        result.push({
+          value: row.column,
+          counter: row.count
         });
-        response.on('end', async function () {
-          let data = [];
-          let result = JSON.parse(str).rows;
-          for (const res of result) {
-            data.push(res[column]);
-          }
-          resolve(data);
-
-        })
       }
-    });
-  });
-  data = await newProm1;
-  return data;
+    }
+  } else {
+    let answer = [];
+    for (const table1 of PROJECT_TABLES) {
+      const query = { q: `select ${column} as column, count(*) as count from ${table1} group by ${column} order by ${column} ` };
+      const data = await needle('post', URL, query, { json: true });
+
+      if (data.statusCode === 200) {
+        const result1 = data.body.rows;
+        answer = answer.concat(result1);
+      }
+    }
+    for (const row of answer) {
+      const search = result.filter(item => item.value === row.column);
+      if (search.length === 0) {
+        const sum = answer.filter(item => item.column === row.column).map(item => item.count).reduce((prev, next) => prev + next);
+        result.push({
+          value: row.column,
+          counter: sum
+        });
+      }
+    }
+  }
+
+  return result;
+}
+
+async function getCountByYearStudy(values) {
+  let result = [];
+  let queryComponents = '';
+  let union = '';
+
+  for (const value of values) {
+    const initValue = Number(value);
+    let endValue = 0; 
+    if (value === '2020') {
+      endValue = initValue + 10;
+    } else {
+      endValue = initValue + 9;
+    }
+    
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    const SQL = `SELECT count(*) as count FROM grade_control_structure where year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM pipe_appurtenances where year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM special_item_point where year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM special_item_linear where year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM special_item_area where year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM channel_improvements_linear where year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM channel_improvements_area where year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM removal_line where year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM removal_area where year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM storm_drain where year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM detention_facilities where year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM maintenance_trails where year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM land_acquisition where year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM landscaping_area where year_of_study between ${initValue} and ${endValue} `;
+    console.log(' YEAR OF STUDY', SQL);
+    const query = { q: ` ${SQL} ` };
+    const data = await needle('post', URL, query, { json: true });
+    let counter = 0;
+
+    console.log('STATUS', data.statusCode, query);
+    if (data.statusCode === 200) {
+      const result1 = data.body.rows;
+      for (const val of result1) {
+        counter += val.count;
+      }
+      result.push({
+        value: value,
+        count: counter
+      });
+    }
+  }
+  return result;
 }
 
 async function getComponentsValuesByColumn(column) {
 
-  let data = [];
-  const LINE_SQL = `SELECT ${column} FROM grade_control_structure group by ${column} union
-      SELECT ${column} FROM pipe_appurtenances group by ${column} union
-      SELECT ${column} FROM special_item_point group by ${column} union
-      SELECT ${column} FROM special_item_linear group by ${column} union
-      SELECT ${column} FROM special_item_area group by ${column} union
-      SELECT ${column} FROM channel_improvements_linear group by ${column} union
-      SELECT ${column} FROM channel_improvements_area group by ${column} union
-      SELECT ${column} FROM removal_line group by ${column} union
-      SELECT ${column} FROM removal_area group by ${column} union
-      SELECT ${column} FROM storm_drain group by ${column} union
-      SELECT ${column} FROM detention_facilities group by ${column} union
-      SELECT ${column} FROM maintenance_trails group by ${column} union
-      SELECT ${column} FROM land_acquisition group by ${column} union
-      SELECT ${column} FROM landscaping_area group by ${column} order by ${column}`;
-  const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
+  let result = [];
+  const LINE_SQL = `SELECT ${column} as column, count(*) as count FROM grade_control_structure group by ${column} union
+      SELECT ${column} as column, count(*) as count FROM pipe_appurtenances group by ${column} union
+      SELECT ${column} as column, count(*) as count FROM special_item_point group by ${column} union
+      SELECT ${column} as column, count(*) as count FROM special_item_linear group by ${column} union
+      SELECT ${column} as column, count(*) as count FROM special_item_area group by ${column} union
+      SELECT ${column} as column, count(*) as count FROM channel_improvements_linear group by ${column} union
+      SELECT ${column} as column, count(*) as count FROM channel_improvements_area group by ${column} union
+      SELECT ${column} as column, count(*) as count FROM removal_line group by ${column} union
+      SELECT ${column} as column, count(*) as count FROM removal_area group by ${column} union
+      SELECT ${column} as column, count(*) as count FROM storm_drain group by ${column} union
+      SELECT ${column} as column, count(*) as count FROM detention_facilities group by ${column} union
+      SELECT ${column} as column, count(*) as count FROM maintenance_trails group by ${column} union
+      SELECT ${column} as column, count(*) as count FROM land_acquisition group by ${column} union
+      SELECT ${column} as column, count(*) as count FROM landscaping_area group by ${column} `;
+  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  const query = { q: ` ${LINE_SQL} ` };
+  const data = await needle('post', URL, query, { json: true });
+  let answer = [];
 
-  const newProm1 = new Promise((resolve, reject) => {
-    https.get(LINE_URL, response => {
-      if (response.statusCode === 200) {
-        let str = '';
-        response.on('data', function (chunk) {
-          str += chunk;
-        });
-        response.on('end', async function () {
-          let data = [];
-          let result = JSON.parse(str).rows;
-          for (const res of result) {
-            data.push(res[column]);
-          }
-          resolve(data);
+  console.log('STATUS', data.statusCode, query);
+  if (data.statusCode === 200) {
+    answer = data.body.rows;
+  }
+  for (const row of answer) {
+    const search = result.filter(item => item.value === row.column);
+    if (search.length === 0) {
+      const sum = answer.filter(item => item.column === row.column).map(item => item.count).reduce((prev, next) => prev + next);
+      result.push({
+        value: row.column,
+        counter: sum
+      });
+    }
+  }
+  return result;
+}
 
-        })
+async function getCountWorkYear(data) {
+  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  for (const value of data) {
+    let counter = 0;
+    for (const table of PROJECT_TABLES) {
+      const query = { q: `select ${column} as column, count(*) as count from ${table} where ${column}='${value}' group by ${column} order by ${column} ` };
+      const data = await needle('post', URL, query, { json: true });
+      console.log('STATUS', data.statusCode, query);
+      if (data.statusCode === 200) {
+        if (data.body.rows.length > 0) {
+          counter += data.body.rows[0].count;
+        }
       }
+    }
+  }
+}
+
+async function getCountByArrayColumns(table, column, columns) {
+  let result = [];
+  if (table === 'problems') {
+    for (const value of columns) {
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+      const query = { q: `select ${column} as column, count(*) as count from ${table} where ${column}='${value}' group by ${column} order by ${column} ` };
+      const data = await needle('post', URL, query, { json: true });
+
+      console.log('STATUS', data.statusCode, query);
+      if (data.statusCode === 200) {
+        const result1 = data.body.rows;
+        result.push({
+          value: result1[0].column,
+          count: result1[0].count
+        });
+      }
+    }
+  } else {
+    
+    for (const value of columns) {
+      let answer = [];
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+      let counter = 0;
+      for (const table of PROJECT_TABLES) {
+        const query = { q: `select ${column} as column, count(*) as count from ${table} where ${column}='${value}' group by ${column} order by ${column} ` };
+        const data = await needle('post', URL, query, { json: true });
+
+        console.log('STATUS', data.statusCode, query);
+        if (data.statusCode === 200) {
+          if (data.body.rows.length > 0) {
+            answer = answer.concat(data.body.rows);
+          }
+        }
+      }
+      for (const row of answer) {
+        const search = result.filter(item => item.value === row.column);
+        if (search.length === 0) {
+          counter = answer.filter(item => item.column === row.column).map(item => item.count).reduce((prev, next) => prev + next);
+          /* result.push({
+            value: row.column,
+            counter: sum
+          }); */
+        }
+      }
+
+      result.push({
+        value: value,
+        counter: counter
+      });
+
+    }
+    
+  }
+
+  return result;
+}
+
+async function getSubtotalsByComponent(column) {
+  let result = [];
+  const COMPONENTS = ['Grade Control Structure', 'Pipe Appurtenances', 'Special Item Point',
+    'Special Item Linear', 'Special Item Area', 'Channel Improvements Linear',
+    'Channel Improvements Area', 'Removal Line', 'Removal Area', 'Storm Drain',
+    'Detention Facilities', 'Maintenance Trails', 'Land Acquisition', 'Landscaping Area'];
+
+  for (const tablename of COMPONENTS) {
+    const table = tablename.toLowerCase().split(' ').join('_');
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    const query = { q: `select count(*) from ${table}, problems where problems.${column}= ${table}.${column} ` };
+    const data = await needle('post', URL, query, { json: true });
+    let answer = [];
+    console.log('STATUS', data.statusCode, query);
+    if (data.statusCode === 200) {
+      const result = data.body.rows;
+      console.log(table, result);
+    }
+    result.push({
+      key: table,
+      value: tablename,
+      count: 0
     });
-  });
-  data = await newProm1;
-  return data;
+  }
+  return result;
 }
 
 router.get('/params-filters', async (req, res) => {
   try {
     const creators = await getValuesByColumn('projects_line_1', 'creator');
     const mhfdmanagers = await getValuesByColumn('projects_line_1', 'mhfdmanager');
-    const projecttypes = ['Maintenance', 'Study', 'Capital'];
-    const status = ['Draft', 'Requested', 'Approved', 'Idle', 'Initiated',
-    'Ongoing', 'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
-    'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete'];//await getValuesByColumn('projects_line_1', 'status');
+    const projecttypes = await getCountByArrayColumns('projects_line_1', 'projecttype', ['Maintenance', 'Study', 'Capital']);
+    //['Maintenance', 'Study', 'Capital'];
+    const status = await getCountByArrayColumns('projects_line_1', 'status', ['Draft', 'Requested',
+      'Approved', 'Idle', 'Initiated', 'Ongoing',
+      'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
+      'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete']);
+    /* const status = ['Draft', 'Requested', 'Approved', 'Idle', 'Initiated',
+      'Ongoing', 'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
+      'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete'] */;
+    //const status = await getCountByArrayColumns('projects_line_1', '', []);
     const startyear = await getValuesByColumn('projects_line_1', 'startyear');
     const completedyear = await getValuesByColumn('projects_line_1', 'completedyear');
     const mhfddollarsallocated = await getQuintilValues('projects_line_1', 'mhfddollarsallocated');
-    //const workplanyear = await getValuesByColumn('projects_line_1', 'workplanyear');
     const solutioncost = await getQuintilValues('problems', 'solutioncost');
     const problemtype = await getValuesByColumn('problems', 'problemtype');
     const jurisdictionProj = await getValuesByColumn('projects_line_1', 'jurisdiction');
     const countyProj = await getValuesByColumn('projects_line_1', 'county');
-    const priority = ['High', 'Medium', 'Low'];
+    //const priority = ['High', 'Medium', 'Low'];
+    const priority = await getCountByArrayColumns('problems', 'problempriority', ['High', 'Medium', 'Low']);
     const countyProb = await getValuesByColumn('problems', 'county');
     const jurisdictionProb = await getValuesByColumn('problems', 'jurisdiction');
     const mhfdmanagerprob = await getValuesByColumn('problems', 'mhfdmanager');
     const sources = await getValuesByColumn('problems', 'source');
     const estimatedCostProj = await getQuintilValues('projects_line_1', 'estimatedcost');
     const estimatedCostComp = await getQuintilComponentValues('estimated_cost');
-    const components = [
+    const components = await getSubtotalsByComponent('problemid');
+    /* [
       { key: 'grade_control_structure', value: 'Grade Control Structure' },
       { key: 'pipe_appurtenances', value: 'Pipe Appurtenances' },
       { key: 'special_item_point', value: 'Special Item Point' },
@@ -1346,11 +1593,11 @@ router.get('/params-filters', async (req, res) => {
       { key: 'maintenance_trails', value: 'Maintenance Trails' },
       { key: 'land_acquisition', value: 'Land Acquisition' },
       { key: 'landscaping_area', value: 'Landscaping Area' }
-    ];
+    ]; */
     const lgmanager = await getValuesByColumn('projects_line_1', 'county');
     const streamname = await getValuesByColumn('projects_line_1', 'streamname');
     const statusComponent = await getComponentsValuesByColumn('status');
-    const yearOfStudyComponent = [1970, 1980, 1990, 2000, 2010, 2020];
+    const yearOfStudyComponent = await getCountByYearStudy([1970, 1980, 1990, 2000, 2010, 2020]);
     const jurisdictionComponent = await getComponentsValuesByColumn('jurisdiction');
     const countyComponent = await getComponentsValuesByColumn('county');
     const mhfdManagerComponent = await getComponentsValuesByColumn('mhfdmanager');
@@ -1390,7 +1637,6 @@ router.get('/params-filters', async (req, res) => {
         "county": countyComponent,
         "watershed": mhfdManagerComponent,
         "estimatedcost": estimatedCostComp
-        //"streamname": streamnameComponent
       }
     }
     res.status(200).send(result);
