@@ -498,23 +498,23 @@ function getFilters(params) {
       //console.log(year);
       switch (year) {
         case "2019": {
-          query += operator + ` workplanyr1 = ${year}`;
+          query += operator + ` workplanyr1 > 0`;
           break;
         }
         case "2020": {
-          query += operator + ` workplanyr2 = ${year}`;
+          query += operator + ` workplanyr2 > 0`;
           break;
         }
         case "2021": {
-          query += operator + ` workplanyr3 = ${year}`;
+          query += operator + ` workplanyr3 > 0`;
           break;
         }
         case "2022": {
-          query += operator + ` workplanyr4 = ${year}`;
+          query += operator + ` workplanyr4 > 0`;
           break;
         }
         case "2023": {
-          query += operator + ` workplanyr5 = ${year}`;
+          query += operator + ` workplanyr5 > 0`;
           break;
         }
       }
@@ -1360,10 +1360,13 @@ async function getValuesByColumn(table, column, bounds) {
   return result;
 }
 
-async function getCountByYearStudy(values) {
+async function getCountByYearStudy(values, bounds) {
   let result = [];
   let queryComponents = '';
   let union = '';
+  const coords = bounds.split(',');
+  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
 
   for (const value of values) {
     const initValue = Number(value);
@@ -1375,20 +1378,20 @@ async function getCountByYearStudy(values) {
     }
 
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-    const SQL = `SELECT count(*) as count FROM grade_control_structure where year_of_study between ${initValue} and ${endValue} union
-      SELECT count(*) as count FROM pipe_appurtenances where year_of_study between ${initValue} and ${endValue} union
-      SELECT count(*) as count FROM special_item_point where year_of_study between ${initValue} and ${endValue} union
-      SELECT count(*) as count FROM special_item_linear where year_of_study between ${initValue} and ${endValue} union
-      SELECT count(*) as count FROM special_item_area where year_of_study between ${initValue} and ${endValue} union
-      SELECT count(*) as count FROM channel_improvements_linear where year_of_study between ${initValue} and ${endValue} union
-      SELECT count(*) as count FROM channel_improvements_area where year_of_study between ${initValue} and ${endValue} union
-      SELECT count(*) as count FROM removal_line where year_of_study between ${initValue} and ${endValue} union
-      SELECT count(*) as count FROM removal_area where year_of_study between ${initValue} and ${endValue} union
-      SELECT count(*) as count FROM storm_drain where year_of_study between ${initValue} and ${endValue} union
-      SELECT count(*) as count FROM detention_facilities where year_of_study between ${initValue} and ${endValue} union
-      SELECT count(*) as count FROM maintenance_trails where year_of_study between ${initValue} and ${endValue} union
-      SELECT count(*) as count FROM land_acquisition where year_of_study between ${initValue} and ${endValue} union
-      SELECT count(*) as count FROM landscaping_area where year_of_study between ${initValue} and ${endValue} `;
+    const SQL = `SELECT count(*) as count FROM grade_control_structure where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM pipe_appurtenances where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM special_item_point where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM special_item_linear where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM special_item_area where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM channel_improvements_linear where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM channel_improvements_area where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM removal_line where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM removal_area where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM storm_drain where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM detention_facilities where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM maintenance_trails where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM land_acquisition where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      SELECT count(*) as count FROM landscaping_area where ${filters} and year_of_study between ${initValue} and ${endValue} `;
     //console.log(' YEAR OF STUDY', SQL);
     const query = { q: ` ${SQL} ` };
     const data = await needle('post', URL, query, { json: true });
@@ -1569,7 +1572,7 @@ async function getSubtotalsByComponent(table, column, bounds) {
         const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
         const query = { q: `select count(*) from ${table}, ${project} where ${project}.${column}= ${table}.${column} where ${filters} ` };
         const data = await needle('post', URL, query, { json: true });
-        
+
         if (data.statusCode === 200) {
           if (data.body.rows.length > 0) {
             counter = data.body.rows[0].count;
@@ -1593,65 +1596,77 @@ router.get('/params-filters', async (req, res) => {
     bounds = req.query.bounds;
     console.log(bounds);
     let requests = [];
-    //const creators = 
-    //await getValuesByColumn2('problems', 'problemtype', bounds);
+
     requests.push(getValuesByColumn('projects_line_1', 'creator', bounds));
-    //const mhfdmanagers = 
     requests.push(getValuesByColumn('projects_line_1', 'mhfdmanager', bounds));
-    //const projecttypes = 
     requests.push(getCountByArrayColumns('projects_line_1', 'projecttype', ['Maintenance', 'Study', 'Capital'], bounds));
-    //['Maintenance', 'Study', 'Capital'];
-    //const status = 
     requests.push(getCountByArrayColumns('projects_line_1', 'status', ['Draft', 'Requested',
       'Approved', 'Idle', 'Initiated', 'Ongoing',
       'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
       'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete'], bounds));
-    //const startyear = 
     requests.push(getValuesByColumn('projects_line_1', 'startyear', bounds));
-    //const completedyear = 
     requests.push(getValuesByColumn('projects_line_1', 'completedyear', bounds));
-    //const mhfddollarsallocated = 
     requests.push(getQuintilValues('projects_line_1', 'mhfddollarsallocated', bounds));
-    //const solutioncost = 
-    requests.push(getQuintilValues('problems', 'solutioncost', bounds));
-    //const problemtype = 
-    requests.push(getValuesByColumn('problems', 'problemtype', bounds));
-    //const jurisdictionProj = 
+    const workplanyear = [{ value: 2019, counter: 0 }, { value: 2020, counter: 0 },
+    { value: 2021, counter: 0 }, { value: 2022, counter: 0 }, { value: 2023, counter: 0 }];
+    const problemtype = [{
+      value: "Human Connection",
+      counter: 0
+    },
+    {
+      value: "Geomorphology",
+      counter: 0
+    },
+    {
+      value: "Vegetation",
+      counter: 0
+    },
+    {
+      value: "Hydrology",
+      counter: 0
+    },
+    {
+      value: "Hydraulics",
+      counter: 0
+    }];
     requests.push(getValuesByColumn('projects_line_1', 'jurisdiction', bounds));
-    //const countyProj = 
     requests.push(getValuesByColumn('projects_line_1', 'county', bounds));
-    //const priority = ['High', 'Medium', 'Low'];
-    //const priority = 
-    requests.push(getCountByArrayColumns('problems', 'problempriority', ['High', 'Medium', 'Low'], bounds));
-    //const countyProb = 
-    requests.push(getValuesByColumn('problems', 'county', bounds));
-    //const jurisdictionProb = 
-    requests.push(getValuesByColumn('problems', 'jurisdiction', bounds));
-    //const mhfdmanagerprob = 
-    requests.push(getValuesByColumn('problems', 'mhfdmanager', bounds));
-    //const sources = 
-    requests.push(getValuesByColumn('problems', 'source', bounds));
-    //const estimatedCostProj = 
-    requests.push(getQuintilValues('projects_line_1', 'estimatedcost', bounds));
-    //const estimatedCostComp = 
-    requests.push(getQuintilComponentValues('estimated_cost', bounds));
-    //const components = 
-    requests.push(getSubtotalsByComponent('problems', 'problemid', bounds));
-    //const lgmanager = 
-    requests.push(getValuesByColumn('projects_line_1', 'county', bounds));
-    //const streamname = 
+    requests.push(getValuesByColumn('projects_line_1', 'lgmanager', bounds));
     requests.push(getValuesByColumn('projects_line_1', 'streamname', bounds));
-    //const statusComponent = 
+    requests.push(getQuintilValues('projects_line_1', 'estimatedcost', bounds));
+
+    requests.push(getValuesByColumn('problems', 'problemtype', bounds));
+    requests.push(getCountByArrayColumns('problems', 'problempriority', ['High', 'Medium', 'Low'], bounds));
+    requests.push(getValuesByColumn('problems', 'county', bounds));
+    requests.push(getValuesByColumn('problems', 'jurisdiction', bounds));
+    requests.push(getValuesByColumn('problems', 'mhfdmanager', bounds));
+    requests.push(getValuesByColumn('problems', 'source', bounds));
+    requests.push(getSubtotalsByComponent('problems', 'problemid', bounds));
+    requests.push(getQuintilValues('problems', 'solutioncost', bounds));
+
+    const components = [
+      { key: 'grade_control_structure', value: 'Grade Control Structure', counter: 0 },
+      { key: 'pipe_appurtenances', value: 'Pipe Appurtenances', counter: 0 },
+      { key: 'special_item_point', value: 'Special Item Point', counter: 0 },
+      { key: 'special_item_linear', value: 'Special Item Linear', counter: 0 },
+      { key: 'special_item_area', value: 'Special Item Area', counter: 0 },
+      { key: 'channel_improvements_linear', value: 'Channel Improvements Linear', counter: 0 },
+      { key: 'channel_improvements_area', value: 'Channel Improvements Area', counter: 0 },
+      { key: 'removal_line', value: 'Removal Line', counter: 0 },
+      { key: 'removal_area', value: 'Removal Area', counter: 0 },
+      { key: 'storm_drain', value: 'Storm Drain', counter: 0 },
+      { key: 'detention_facilities', value: 'Detention Facilities', counter: 0 },
+      { key: 'maintenance_trails', value: 'Maintenance Trails', counter: 0 },
+      { key: 'land_acquisition', value: 'Land Acquisition', counter: 0 },
+      { key: 'landscaping_area', value: 'Landscaping Area', counter: 0 }
+    ];
     requests.push(getComponentsValuesByColumn('status', bounds));
-    //const yearOfStudyComponent = 
-    requests.push(getCountByYearStudy([1970, 1980, 1990, 2000, 2010, 2020]));
-    //const jurisdictionComponent = 
+    requests.push(getCountByYearStudy([1970, 1980, 1990, 2000, 2010, 2020], bounds));
     requests.push(getComponentsValuesByColumn('jurisdiction', bounds));
-    //const countyComponent = 
     requests.push(getComponentsValuesByColumn('county', bounds));
-    //const mhfdManagerComponent = 
     requests.push(getComponentsValuesByColumn('mhfdmanager', bounds));
-    //requests.push()
+    requests.push(getQuintilComponentValues('estimated_cost', bounds));
+
 
     const promises = await Promise.all(requests);
 
@@ -1664,32 +1679,32 @@ router.get('/params-filters', async (req, res) => {
         "startyear": promises[4],
         "completedyear": promises[5],
         "mhfddollarsallocated": promises[6],
-        "workplanyear": [],
-        "problemtype": promises[7],
-        "jurisdiction": promises[8],
-        "county": promises[9],
-        "lgmanager": promises[10],
-        "streamname": promises[11],
-        "estimatedCost": promises[12]
+        "workplanyear": workplanyear,
+        "problemtype": problemtype,
+        "jurisdiction": promises[7],
+        "county": promises[8],
+        "lgmanager": promises[9],
+        "streamname": promises[10],
+        "estimatedCost": promises[11]
       },
       "problems": {
-        "problemtype": promises[13],
-        "priority": promises[14],
-        "county": promises[15],
-        "jurisdiction": promises[16],
-        "mhfdmanager": promises[17],
-        "source": promises[18],
-        "components": promises[19],
-        "cost": promises[20]
+        "problemtype": promises[12],
+        "priority": promises[13],
+        "county": promises[14],
+        "jurisdiction": promises[15],
+        "mhfdmanager": promises[16],
+        "source": promises[17],
+        "components": promises[18],
+        "cost": promises[19]
       },
       "components": {
-        "component_type": promises[21],
-        "status": promises[22],
-        "yearofstudy": promises[23],
-        "jurisdiction": promises[24],
-        "county": promises[25],
-        "watershed": promises[26],
-        "estimatedcost": promises[27]
+        "component_type": components,
+        "status": promises[20],
+        "yearofstudy": promises[21],
+        "jurisdiction": promises[22],
+        "county": promises[23],
+        "watershed": promises[24],
+        "estimatedcost": promises[25]
       }
     }
     res.status(200).send(result);
