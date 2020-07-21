@@ -1412,6 +1412,14 @@ async function getCountByYearStudy(values, bounds) {
   return result;
 }
 
+async function getCounterComponents(bounds) {
+  let result = [];
+  const coords = bounds.split(',');
+  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+  return result;
+}
+
 async function getComponentsValuesByColumn(column, bounds) {
 
   let result = [];
@@ -1470,6 +1478,37 @@ async function getCountWorkYear(data) {
       }
     }
   }
+}
+
+async function getCountSolutionStatus(range, bounds) {
+  let result = [];
+  const coords = bounds.split(',');
+  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  for (const value of range) {
+    let endValue = 0; 
+    if (value === 75) {
+      endValue = value + 25;
+    } else {
+      endValue = value + 24;
+    }
+    
+    const query = { q: `select count(*) as count from problems where ${filters} and solutionstatus between ${value} and ${endValue} ` };
+    const data = await needle('post', URL, query, { json: true });
+    let counter = 0;
+    if (data.statusCode === 200) {
+      if (data.body.rows.length > 0) {
+        counter = data.body.rows[0].count;
+      }
+    }
+    result.push({
+      value: value,
+      count: counter
+    });
+  }
+
+  return result;
 }
 
 async function getCountByArrayColumns(table, column, columns, bounds) {
@@ -1550,7 +1589,7 @@ async function getSubtotalsByComponent(table, column, bounds) {
     for (const tablename of COMPONENTS) {
       const table = tablename.toLowerCase().split(' ').join('_');
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-      const query = { q: `select count(*) from ${table}, problems where problems.${column}= ${table}.${column} where ${filters} ` };
+      const query = { q: `select count(*) from ${table}, problems where problems.${column}= ${table}.${column} and ${filters} ` };
       const data = await needle('post', URL, query, { json: true });
       let counter = 0;
       if (data.statusCode === 200) {
@@ -1570,7 +1609,7 @@ async function getSubtotalsByComponent(table, column, bounds) {
       for (const project of PROJECT_TABLES) {
         const table = tablename.toLowerCase().split(' ').join('_');
         const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-        const query = { q: `select count(*) from ${table}, ${project} where ${project}.${column}= ${table}.${column} where ${filters} ` };
+        const query = { q: `select count(*) from ${table}, ${project} where ${project}.${column}= ${table}.${column} and ${filters} ` };
         const data = await needle('post', URL, query, { json: true });
 
         if (data.statusCode === 200) {
@@ -1637,6 +1676,8 @@ router.get('/params-filters', async (req, res) => {
 
     requests.push(getValuesByColumn('problems', 'problemtype', bounds));
     requests.push(getCountByArrayColumns('problems', 'problempriority', ['High', 'Medium', 'Low'], bounds));
+    requests.push(getCountSolutionStatus([0, 25, 50, 75], bounds));
+    requests.push(getValuesByColumn('problems', 'county', bounds));
     requests.push(getValuesByColumn('problems', 'county', bounds));
     requests.push(getValuesByColumn('problems', 'jurisdiction', bounds));
     requests.push(getValuesByColumn('problems', 'mhfdmanager', bounds));
@@ -1690,21 +1731,22 @@ router.get('/params-filters', async (req, res) => {
       "problems": {
         "problemtype": promises[12],
         "priority": promises[13],
-        "county": promises[14],
-        "jurisdiction": promises[15],
-        "mhfdmanager": promises[16],
-        "source": promises[17],
-        "components": promises[18],
-        "cost": promises[19]
+        "solutionstatus": promises[14],
+        "county": promises[15],
+        "jurisdiction": promises[16],
+        "mhfdmanager": promises[17],
+        "source": promises[18],
+        "components": promises[19],
+        "cost": promises[20]
       },
       "components": {
         "component_type": components,
-        "status": promises[20],
-        "yearofstudy": promises[21],
-        "jurisdiction": promises[22],
-        "county": promises[23],
-        "watershed": promises[24],
-        "estimatedcost": promises[25]
+        "status": promises[21],
+        "yearofstudy": promises[22],
+        "jurisdiction": promises[23],
+        "county": promises[24],
+        "watershed": promises[25],
+        "estimatedcost": promises[26]
       }
     }
     res.status(200).send(result);
