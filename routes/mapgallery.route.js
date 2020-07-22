@@ -1152,7 +1152,7 @@ async function getQuintilComponentValues(column, bounds) {
     let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
     for (const component of VALUES_COMPONENTS) {
-      query += connector + `SELECT max(${column}) as max, min(${column}) as min FROM ${component} where ${filters} `;
+      query += connector + `SELECT max(${column}) as max, min(${column}) as min FROM ${component} `;
       connector = ' union ';
     }
     const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query}&api_key=${CARTO_TOKEN}`);
@@ -1240,7 +1240,7 @@ async function getQuintilValues(table, column, bounds) {
     const coords = bounds.split(',');
     let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-    const LINE_SQL = `SELECT max(${column}) as max, min(${column}) as min FROM ${table} where ${filters} `;
+    const LINE_SQL = `SELECT max(${column}) as max, min(${column}) as min FROM ${table}  `;
     const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
 
     const newProm1 = new Promise((resolve, reject) => {
@@ -1326,6 +1326,60 @@ async function getQuintilValues(table, column, bounds) {
   return result;
 }
 
+async function getValuesByColumnWithOutCount(table, column, bounds) {
+  let result = [];
+  try {
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    if (table === 'problems') {
+      const coords = bounds.split(',');
+      let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+      filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+      const query = { q: `select ${column} as column from ${table} where ${filters} group by ${column} order by ${column} ` };
+      const data = await needle('post', URL, query, { json: true });
+
+      console.log('STATUS', data.statusCode, query);
+      if (data.statusCode === 200) {
+        const result1 = data.body.rows;
+        //unounounoconsole.log('RESULTADO', result1)
+        for (const row of result1) {
+          result.push(row.column);
+        }
+      }
+    } else {
+      let answer = [];
+      const coords = bounds.split(',');
+      //console.log('COLUMN', column);
+      let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+      filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+      for (const table1 of PROJECT_TABLES) {
+        const query = { q: `select ${column} as column from ${table1} where ${filters} group by ${column} order by ${column} ` };
+        const data = await needle('post', URL, query, { json: true });
+
+        if (data.statusCode === 200) {
+          //const result1 = data.body.rows;
+          answer = answer.concat(data.body.rows);
+        }
+      }
+      for (const row of answer) {
+        result.push(row.column);
+        /* const search = result.filter(item => item.value === row.column);
+        if (search.length === 0) {
+          const sum = answer.filter(item => item.column === row.column).map(item => item.count).reduce((prev, next) => prev + next);
+          result.push({
+            value: row.column,
+            counter: sum
+          });
+        } */
+      }
+    }
+  } catch (error) {
+    logger.error(error);
+    logger.error(`Get Value by Column, Table: ${table} Column: ${column} Connection error`);
+  }
+
+  return result;
+}
+
 async function getValuesByColumn(table, column, bounds) {
   let result = [];
   try {
@@ -1337,7 +1391,7 @@ async function getValuesByColumn(table, column, bounds) {
       const query = { q: `select ${column} as column, count(*) as count from ${table} where ${filters} group by ${column} order by ${column} ` };
       const data = await needle('post', URL, query, { json: true });
 
-      console.log('STATUS', data.statusCode, query);
+      //console.log('STATUS', data.statusCode, query);
       if (data.statusCode === 200) {
         const result1 = data.body.rows;
         //unounounoconsole.log('RESULTADO', result1)
@@ -1351,7 +1405,7 @@ async function getValuesByColumn(table, column, bounds) {
     } else {
       let answer = [];
       const coords = bounds.split(',');
-      console.log('COLUMN', column);
+      //console.log('COLUMN', column);
       let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
       filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
       for (const table1 of PROJECT_TABLES) {
@@ -1484,6 +1538,55 @@ async function getCounterComponents(bounds) {
   } catch (error) {
     logger.error(error);
     logger.error(`getCounterComponents Connection error`);
+  }
+
+  return result;
+}
+
+async function getComponentsValuesByColumnWithCount(column, bounds) {
+  let result = [];
+  try {
+    const coords = bounds.split(',');
+    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+
+    const LINE_SQL = `SELECT ${column} as column FROM grade_control_structure where ${filters} group by ${column} union
+      SELECT ${column} as column FROM pipe_appurtenances where ${filters} group by ${column} union
+      SELECT ${column} as column FROM special_item_point where ${filters} group by ${column} union
+      SELECT ${column} as column FROM special_item_linear where ${filters} group by ${column} union
+      SELECT ${column} as column FROM special_item_area where ${filters} group by ${column} union
+      SELECT ${column} as column FROM channel_improvements_linear where ${filters} group by ${column} union
+      SELECT ${column} as column FROM channel_improvements_area where ${filters} group by ${column} union
+      SELECT ${column} as column FROM removal_line where ${filters} group by ${column} union
+      SELECT ${column} as column FROM removal_area where ${filters} group by ${column} union
+      SELECT ${column} as column FROM storm_drain where ${filters} group by ${column} union
+      SELECT ${column} as column FROM detention_facilities where ${filters} group by ${column} union
+      SELECT ${column} as column FROM maintenance_trails where ${filters} group by ${column} union
+      SELECT ${column} as column FROM land_acquisition where ${filters} group by ${column} union
+      SELECT ${column} as column FROM landscaping_area where ${filters} group by ${column} `;
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    const query = { q: ` ${LINE_SQL} ` };
+    const data = await needle('post', URL, query, { json: true });
+    let answer = [];
+
+    console.log('STATUS', data.statusCode);
+    if (data.statusCode === 200) {
+      answer = data.body.rows;
+    }
+    for (const row of answer) {
+      result.push(row.column);
+      /* const search = result.filter(item => item.value === row.column);
+      if (search.length === 0) {
+        const sum = answer.filter(item => item.column === row.column).map(item => item.count).reduce((prev, next) => prev + next);
+        result.push({
+          value: row.column,
+          counter: sum
+        });
+      } */
+    }
+  } catch (error) {
+    logger.error(error);
+    logger.error(`getComponentsValuesByColumn, Column ${column} Connection error`);
   }
 
   return result;
@@ -1747,8 +1850,9 @@ router.get('/params-filters', async (req, res) => {
     //console.log(bounds);
     let requests = [];
 
-    requests.push(getValuesByColumn('projects_line_1', 'creator', bounds));
-    requests.push(getValuesByColumn('projects_line_1', 'mhfdmanager', bounds));
+    // PROJECTS
+    requests.push(getValuesByColumnWithOutCount('projects_line_1', 'creator', bounds));
+    requests.push(getValuesByColumnWithOutCount('projects_line_1', 'mhfdmanager', bounds));
     requests.push(getCountByArrayColumns('projects_line_1', 'projecttype', ['Maintenance', 'Study', 'Capital'], bounds));
     requests.push(getCountByArrayColumns('projects_line_1', 'status', ['Draft', 'Requested',
       'Approved', 'Idle', 'Initiated', 'Ongoing',
@@ -1781,20 +1885,22 @@ router.get('/params-filters', async (req, res) => {
       value: "Hydraulics",
       counter: 0
     }];
-    requests.push(getValuesByColumn('projects_line_1', 'jurisdiction', bounds));
-    requests.push(getValuesByColumn('projects_line_1', 'county', bounds));
-    requests.push(getValuesByColumn('projects_line_1', 'lgmanager', bounds));
-    requests.push(getValuesByColumn('projects_line_1', 'streamname', bounds));
+    requests.push(getValuesByColumnWithOutCount('projects_line_1', 'jurisdiction', bounds));
+    requests.push(getValuesByColumnWithOutCount('projects_line_1', 'county', bounds));
+    requests.push(getValuesByColumnWithOutCount('projects_line_1', 'lgmanager', bounds));
+    requests.push(getValuesByColumnWithOutCount('projects_line_1', 'streamname', bounds));
     requests.push(getQuintilValues('projects_line_1', 'estimatedcost', bounds));
 
-    requests.push(getCountByArrayColumns('problems', 'problemtype', 
-      ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'], bounds));
+    // PROBLEMS
+    const problemTypes = ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics']['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'];
+    /* requests.push(getCountByArrayColumns('problems', 'problemtype', 
+      ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'], bounds)); */
     requests.push(getCountByArrayColumns('problems', 'problempriority', ['High', 'Medium', 'Low'], bounds));
     requests.push(getCountSolutionStatus([0, 25, 50, 75], bounds));
     requests.push(getValuesByColumn('problems', 'county', bounds));
-    requests.push(getValuesByColumn('problems', 'jurisdiction', bounds));
-    requests.push(getValuesByColumn('problems', 'mhfdmanager', bounds));
-    requests.push(getValuesByColumn('problems', 'source', bounds));
+    requests.push(getValuesByColumnWithOutCount('problems', 'jurisdiction', bounds));
+    requests.push(getValuesByColumnWithOutCount('problems', 'mhfdmanager', bounds));
+    requests.push(getValuesByColumnWithOutCount('problems', 'source', bounds));
     requests.push(getSubtotalsByComponent('problems', 'problemid', bounds));
     requests.push(getQuintilValues('problems', 'solutioncost', bounds));
 
@@ -1817,9 +1923,9 @@ router.get('/params-filters', async (req, res) => {
     requests.push(getCounterComponents(bounds));
     requests.push(getComponentsValuesByColumn('status', bounds));
     requests.push(getCountByYearStudy([1970, 1980, 1990, 2000, 2010, 2020], bounds));
-    requests.push(getComponentsValuesByColumn('jurisdiction', bounds));
-    requests.push(getComponentsValuesByColumn('county', bounds));
-    requests.push(getComponentsValuesByColumn('mhfdmanager', bounds));
+    requests.push(getComponentsValuesByColumnWithCount('jurisdiction', bounds));
+    requests.push(getComponentsValuesByColumnWithCount('county', bounds));
+    requests.push(getComponentsValuesByColumnWithCount('mhfdmanager', bounds));
     requests.push(getQuintilComponentValues('estimated_cost', bounds));
 
 
@@ -1843,24 +1949,24 @@ router.get('/params-filters', async (req, res) => {
         "estimatedCost": promises[12]
       },
       "problems": {
-        "problemtype": promises[13],
-        "priority": promises[14],
-        "solutionstatus": promises[15],
-        "county": promises[16],
-        "jurisdiction": promises[17],
-        "mhfdmanager": promises[18],
-        "source": promises[19],
-        "components": promises[20],
-        "cost": promises[21]
+        "problemtype": problemTypes,
+        "priority": promises[13],
+        "solutionstatus": promises[14],
+        "county": promises[15],
+        "jurisdiction": promises[16],
+        "mhfdmanager": promises[17],
+        "source": promises[18],
+        "components": promises[19],
+        "cost": promises[20]
       },
       "components": {
-        "component_type": promises[22],
-        "status": promises[23],
-        "yearofstudy": promises[24],
-        "jurisdiction": promises[25],
-        "county": promises[26],
-        "watershed": promises[27],
-        "estimatedcost": promises[28]
+        "component_type": promises[21],
+        "status": promises[22],
+        "yearofstudy": promises[23],
+        "jurisdiction": promises[24],
+        "county": promises[25],
+        "watershed": promises[26],
+        "estimatedcost": promises[27]
       }
     }
     res.status(200).send(result);
