@@ -43,7 +43,8 @@ router.post('/signup', validator(userService.requiredFields('signup')), async (r
     } else {
 
       if (EMAIL_VALIDATOR.test(user.email)) {
-        user['activated'] = false;
+        user['activated'] = true;
+        user['status'] = 'pending';
         user.password = await bcrypt.hash(user.password, 8);
         user.name = user.firstName + ' ' + user.lastName;
         const user1 = await User.create(user);
@@ -158,13 +159,6 @@ router.get('/me', auth, async (req, res) => {
   result1['designation'] = user.designation;
   result1['photo'] = user.photo;
   result1['zoomarea'] = user.zoomarea ? user.zoomarea : '';
-  //console.log('RESUME DATA', result1);
-  /* if (req.user.designation === ROLES.GOVERNMENT_STAFF ||
-    req.user.designation === ROLES.GOVERNMENT_ADMIN) {
-    organization_query = req.user.organization;
-  } else {
-    organization_query = ORGANIZATION_DEFAULT;
-  } */
   
   if (req.user.zoomarea) {
     organization_query = req.user.zoomarea;
@@ -225,7 +219,6 @@ router.get('/me', auth, async (req, res) => {
           });
         }
       }).on('error', err => {
-        //console.log('failed call to ', url, 'with error ', err);
         logger.error(`failed call to  with error  ${err}`)
         
       });

@@ -65,10 +65,6 @@ const sendApprovedAccount = async (user) => {
   const redirectUrl = MHFD_FRONTEND
   const template = fs.readFileSync(__dirname + '/templates/email_approved.html', 'utf8');
   const emailToSend = template.split('{{completeName}}').join(user.name).split('{{url}}').join(redirectUrl);
-  //emailToSend = template.split('{{url}}').join(redirectUrl);
-  /*const redirectUrl = MHFD_FRONTEND + '/confirm-password/' + changePasswordId;
-  const template = fs.readFileSync(__dirname + '/templates/email_reset-pass-MHFD.html', 'utf8');
-  const emailToSend = template.split('{{url}}').join(redirectUrl); */
 
   const transporter = getTransporter();
   const options = {

@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken')
 const config = require('../config/config');
 const crypto = require('crypto');
 const logger = require('../config/logger');
+const { Op } = require("sequelize");
+
 module.exports = (sequelize, DataType) => {
   const User = sequelize.define('user', {
     _id: {
@@ -66,6 +68,10 @@ module.exports = (sequelize, DataType) => {
     },
     zoomarea: {
       type: DataType.STRING
+    },
+    status: {
+      type: DataType.ENUM,
+      values: ['approved', 'pending', 'deleted']
     }
   });
 
@@ -117,10 +123,12 @@ module.exports = (sequelize, DataType) => {
   User.findByCredentials = async (email, password) => {
     const user = await User.findOne({
       where: {
-        email: email
+        email: email,
+        status: {
+          [Op.not]: 'deleted'
+        }
       }
     });
-    console.log(!user, !!user)
     if (!user) {
       logger.error('Invalid login email: ' + email);
       throw new Error({

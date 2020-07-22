@@ -15,14 +15,17 @@ const { NUMBER_PER_PAGE, INITIAL_PAGE } = require('../config/config');
 const UPDATEABLE_FIELDS = userService.requiredFields('edit');
 const { isAdminAccount } = require('../utils/utils');
 
-router.put('/change-user-state/:id', [auth, isAdminAccount], async (req, res, next) => {
+router.put('/change-user-state/:id/:status', [auth, isAdminAccount], async (req, res, next) => {
   const id = req.params.id;
+  const status = req.params.status;
   try {
     const user = await User.findByPk(id, { raw: true });
     if (!user) {
       return res.status(404).send({ error: 'User not found' });
     }
-    user.activated = !user.activated;
+    //user.activated = !user.activated;
+    user.status = status;
+
     await User.update(user, {
       where: {
         _id: id
@@ -73,19 +76,23 @@ router.put('/edit-user/:id', [auth, isAdminAccount], async (req, res, next) => {
 });
 
 router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
-  const isPending = req.query.pending || false;
+  //const isPending = req.query.pending || false;
   const organization = req.query.organization;
   const serviceArea = req.query.serviceArea;
   const designation = req.query.designation;
-  const search_obj = { activated: !isPending };
+  const search_obj = { }; // activated: !isPending
+  const status = req.query.status;
+  console.log('status', status);
+  
   const limit = +req.query.limit || NUMBER_PER_PAGE;
   const page = +req.query.page || INITIAL_PAGE;
   const name = req.query.name;
   const sort = req.query.sort ? req.query.sort : 'name';
   const sortObject = {};
   
+  search_obj['status'] = status;
+
   if (organization) {
-    console.log(organization)
     search_obj['organization'] = String(organization);
   }
   if (serviceArea) {
@@ -114,7 +121,7 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
         [sort, "asc"]
       ]
     });
-    console.log('user list', userList.length);
+    //console.log('user list', userList.length);
     const numberOfPages = Math.ceil(userCount / limit);
     return res.status(200).send({ users: userList, totalPages: numberOfPages, currentPage: page });
   } catch (error) {
