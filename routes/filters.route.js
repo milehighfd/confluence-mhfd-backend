@@ -82,8 +82,15 @@ router.get('/project-filter', async (req, res) => {
       };
     }
   }
-  const answer =  Promise.all(send);
-  res.send(answer);
+  const promises =  await Promise.all(send);
+  const answer = [];
+  for (const element of promises) {
+    answer.push(...element);
+  }
+  if (!answer.length) {
+    answer.push(-1);
+  }
+  res.send([... new Set(answer)]);
 });
 router.get('/search/:type', async (req, res) => {
   const type = req.params.type;
