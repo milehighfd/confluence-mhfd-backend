@@ -1534,6 +1534,7 @@ async function getCounterComponents(bounds) {
         value: COMPONENTS_TABLE[i],
         counter: component.count
       });
+      i++;
     }
   } catch (error) {
     logger.error(error);
@@ -1892,7 +1893,7 @@ router.get('/params-filters', async (req, res) => {
     requests.push(getQuintilValues('projects_line_1', 'estimatedcost', bounds));
 
     // PROBLEMS
-    const problemTypes = ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics']['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'];
+    let problemTypesConst = ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'];
     /* requests.push(getCountByArrayColumns('problems', 'problemtype', 
       ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'], bounds)); */
     requests.push(getCountByArrayColumns('problems', 'problempriority', ['High', 'Medium', 'Low'], bounds));
@@ -1949,7 +1950,7 @@ router.get('/params-filters', async (req, res) => {
         "estimatedCost": promises[12]
       },
       "problems": {
-        "problemtype": problemTypes,
+        "problemtype": problemTypesConst,
         "priority": promises[13],
         "solutionstatus": promises[14],
         "county": promises[15],
