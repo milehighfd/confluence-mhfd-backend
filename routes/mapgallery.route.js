@@ -12,7 +12,6 @@ const { CARTO_TOKEN } = require('../config/config');
 const attachmentService = require('../services/attachment.service');
 const { response } = require('express');
 const { query } = require('../config/logger');
-//const { query } = require('../config/logger');
 const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
   'special_item_linear', 'special_item_area', 'channel_improvements_linear',
@@ -1141,220 +1140,243 @@ router.post('/group-by', async (req, res) => {
 });
 
 async function getQuintilComponentValues(column, bounds) {
-  const VALUES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
-    'special_item_linear', 'special_item_area', 'channel_improvements_linear',
-    'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
-    'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
-  let connector = '';
-  let query = '';
-  const coords = bounds.split(',');
-  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-  for (const component of VALUES_COMPONENTS) {
-    query += connector + `SELECT max(${column}) as max, min(${column}) as min FROM ${component} where ${filters} `;
-    connector = ' union ';
-  }
-  const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query}&api_key=${CARTO_TOKEN}`);
+  let result = [];
+  try {
+    const VALUES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
+      'special_item_linear', 'special_item_area', 'channel_improvements_linear',
+      'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
+      'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
+    let connector = '';
+    let query = '';
+    const coords = bounds.split(',');
+    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+    for (const component of VALUES_COMPONENTS) {
+      query += connector + `SELECT max(${column}) as max, min(${column}) as min FROM ${component} where ${filters} `;
+      connector = ' union ';
+    }
+    const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${query}&api_key=${CARTO_TOKEN}`);
 
-  const newProm1 = new Promise((resolve, reject) => {
-    https.get(LINE_URL, response => {
-      if (response.statusCode === 200) {
-        let str = '';
-        response.on('data', function (chunk) {
-          str += chunk;
-        });
-        response.on('end', async function () {
-          const result = JSON.parse(str).rows;
-          const max = Math.max.apply(Math, result.map(function (element) { return element.max }));
-          let min = Math.min.apply(Math, result.map(function (element) { return element.min }));
-          const difference = Math.round((max - min) / 5);
-          let label = '';
-          if (max < 1000000) {
-            label = 'K';
-          } else {
-            label = 'M';
-          }
-          const divisor = 1000000;
-          let finalResult = [];
-          const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-
-          for (let i = 0; i < 5; i += 1) {
-            let min1 = Math.round(min);
-            let max1 = 0;
-            let limitCount = 0;
-            let counter = 0;
-
-            if (i === 4) {
-              max1 = max;
-              limitCount = max;
-              //finalResult.push({ min: Math.round(min), max: max, label: label });
+    const newProm1 = new Promise((resolve, reject) => {
+      https.get(LINE_URL, response => {
+        if (response.statusCode === 200) {
+          let str = '';
+          response.on('data', function (chunk) {
+            str += chunk;
+          });
+          response.on('end', async function () {
+            const result = JSON.parse(str).rows;
+            const max = Math.max.apply(Math, result.map(function (element) { return element.max }));
+            let min = Math.min.apply(Math, result.map(function (element) { return element.min }));
+            const difference = Math.round((max - min) / 5);
+            let label = '';
+            if (max < 1000000) {
+              label = 'K';
             } else {
-              max1 = Math.round(difference * (i + 1));
-              limitCount = max1;
-              //finalResult.push({ min: Math.round(min), max: Math.round(difference * (i + 1)), label: label });
+              label = 'M';
             }
-
-            let query1 = '';
-            let union = '';
-            for (const table1 of TABLES_COMPONENTS) {
-              query1 += union + `select count(*) from ${table1} where (${column} between ${min1} and ${limitCount}) 
-              and ${filters} `;
-              union = ' union ';
-            }
-
-            const query = { q: `${query1} ` };
-            const data = await needle('post', URL, query, { json: true });
-            let answer = [];
-            console.log('STATUS', data.statusCode);
-            if (data.statusCode === 200) {
-              const result = data.body.rows;
-              for (const row of result) {
-                counter += row.count;
-              }
-            } else {
-              console.log('error');
-            }
-
-            finalResult.push({ min: min1, max: max1, label: label, counter: counter });
-            min = (difference * (i + 1));
-          }
-          resolve(finalResult);
-        })
-      }
-    });
-  });
-  return await newProm1;
-}
-
-async function getQuintilValues(table, column, bounds) {
-  const coords = bounds.split(',');
-  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-  const LINE_SQL = `SELECT max(${column}) as max, min(${column}) as min FROM ${table} where ${filters} `;
-  const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
-
-  const newProm1 = new Promise((resolve, reject) => {
-    https.get(LINE_URL, response => {
-      if (response.statusCode === 200) {
-        let str = '';
-        response.on('data', function (chunk) {
-          str += chunk;
-        });
-        response.on('end', async function () {
-          const result = JSON.parse(str).rows;
-          const dif2 = Math.round((result[0].max - result[0].min) / 5);
-          let label = '';
-          let divisor = 1000000;
-          if (result[0].max < 1000000) {
-            divisor = 1000;
-            label = 'K';
-          } else {
-            label = 'M';
-          }
-
-          let result2 = [];
-          let min = result[0].min;
-          for (let i = 0; i < 5; i += 1) {
-            min = Math.round(min);
-            let max = 0;
-            let limitCount = 0;
-            if (i === 4) {
-              //result2.push({ min: Math.round(min), max: result[0].max, label: label });
-              max = result[0].max;
-              limitCount = max;
-            } else {
-              max = Math.round(dif2 * (i + 1));
-              limitCount = max;
-              //result2.push({ min: Math.round(min), max: Math.round(dif2 * (i + 1)), label: label });
-            }
-            let counter = 0;
+            const divisor = 1000000;
+            let finalResult = [];
             const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-            if (table === 'problems') {
-              //console.log('QUINTILES COUNTER');
-              const query = { q: `select count(*) from ${table} where (${column} between ${min} and ${limitCount}) and ${filters} ` };
+
+            for (let i = 0; i < 5; i += 1) {
+              let min1 = Math.round(min);
+              let max1 = 0;
+              let limitCount = 0;
+              let counter = 0;
+
+              if (i === 4) {
+                max1 = max;
+                limitCount = max;
+                //finalResult.push({ min: Math.round(min), max: max, label: label });
+              } else {
+                max1 = Math.round(difference * (i + 1));
+                limitCount = max1;
+                //finalResult.push({ min: Math.round(min), max: Math.round(difference * (i + 1)), label: label });
+              }
+
+              let query1 = '';
+              let union = '';
+              for (const table1 of TABLES_COMPONENTS) {
+                query1 += union + `select count(*) from ${table1} where (${column} between ${min1} and ${limitCount}) 
+              and ${filters} `;
+                union = ' union ';
+              }
+
+              const query = { q: `${query1} ` };
               const data = await needle('post', URL, query, { json: true });
               let answer = [];
               console.log('STATUS', data.statusCode);
               if (data.statusCode === 200) {
                 const result = data.body.rows;
-                //console.log('CONTADOR PROBLEMAS ', table, result);
-                counter = result[0].count;
-              }
-            } else {
-              let answer = [];
-              for (const table1 of PROJECT_TABLES) {
-                const query = {
-                  q: `select count(*) from ${table1} where (cast(${column} as real) between ${min} and ${limitCount})
-                and ${filters} `
-                };
-                //console.log('QUINTIL PROJECT', table1, query);
-                const data = await needle('post', URL, query, { json: true });
-                let answer = [];
-                console.log('STATUS COST', data.statusCode);
-                if (data.statusCode === 200) {
-                  const result = data.body.rows;
-                  //console.log('CONTADOR TABLA', table1, result);
-                  counter += result[0].count;
+                for (const row of result) {
+                  counter += row.count;
                 }
+              } else {
+                console.log('error');
               }
+
+              finalResult.push({ min: min1, max: max1, label: label, counter: counter });
+              min = (difference * (i + 1));
+            }
+            resolve(finalResult);
+          })
+        }
+      });
+    });
+    result = await newProm1;
+
+  } catch (error) {
+    logger.error(error);
+    logger.error(`Quintil By Components, Column ${column} Connection error`);
+
+  }
+  return result;
+}
+
+async function getQuintilValues(table, column, bounds) {
+  let result = [];
+  try {
+    const coords = bounds.split(',');
+    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+    const LINE_SQL = `SELECT max(${column}) as max, min(${column}) as min FROM ${table} where ${filters} `;
+    const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
+
+    const newProm1 = new Promise((resolve, reject) => {
+      https.get(LINE_URL, response => {
+        if (response.statusCode === 200) {
+          let str = '';
+          response.on('data', function (chunk) {
+            str += chunk;
+          });
+          response.on('end', async function () {
+            const result = JSON.parse(str).rows;
+            const dif2 = Math.round((result[0].max - result[0].min) / 5);
+            let label = '';
+            let divisor = 1000000;
+            if (result[0].max < 1000000) {
+              divisor = 1000;
+              label = 'K';
+            } else {
+              label = 'M';
             }
 
-            result2.push({ min: min, max: max, label: label, counter: counter });
-            min = (dif2 * (i + 1));
-          }
-          resolve(result2);
+            let result2 = [];
+            let min = result[0].min;
+            for (let i = 0; i < 5; i += 1) {
+              min = Math.round(min);
+              let max = 0;
+              let limitCount = 0;
+              if (i === 4) {
+                //result2.push({ min: Math.round(min), max: result[0].max, label: label });
+                max = result[0].max;
+                limitCount = max;
+              } else {
+                max = Math.round(dif2 * (i + 1));
+                limitCount = max;
+                //result2.push({ min: Math.round(min), max: Math.round(dif2 * (i + 1)), label: label });
+              }
+              let counter = 0;
+              const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+              if (table === 'problems') {
+                //console.log('QUINTILES COUNTER');
+                const query = { q: `select count(*) from ${table} where (${column} between ${min} and ${limitCount}) and ${filters} ` };
+                const data = await needle('post', URL, query, { json: true });
+                let answer = [];
+                console.log('STATUS', data.statusCode);
+                if (data.statusCode === 200) {
+                  const result = data.body.rows;
+                  //console.log('CONTADOR PROBLEMAS ', table, result);
+                  counter = result[0].count;
+                }
+              } else {
+                let answer = [];
+                for (const table1 of PROJECT_TABLES) {
+                  const query = {
+                    q: `select count(*) from ${table1} where (cast(${column} as real) between ${min} and ${limitCount})
+                and ${filters} `
+                  };
+                  //console.log('QUINTIL PROJECT', table1, query);
+                  const data = await needle('post', URL, query, { json: true });
+                  let answer = [];
+                  console.log('STATUS COST', data.statusCode);
+                  if (data.statusCode === 200) {
+                    const result = data.body.rows;
+                    //console.log('CONTADOR TABLA', table1, result);
+                    counter += result[0].count;
+                  }
+                }
+              }
 
-        })
-      }
+              result2.push({ min: min, max: max, label: label, counter: counter });
+              min = (dif2 * (i + 1));
+            }
+            resolve(result2);
+
+          })
+        }
+      });
     });
-  });
-  return await newProm1;
+    result = await newProm1;
+  } catch (error) {
+    logger.error(error);
+    logger.error(`Quintil By Value, Column ${column} Connection error`);
+  }
+  return result;
 }
 
 async function getValuesByColumn(table, column, bounds) {
   let result = [];
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-  if (table === 'problems') {
-    const coords = bounds.split(',');
-    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-    const query = { q: `select ${column} as column, count(*) as count from ${table} where ${filters} group by ${column} order by ${column} ` };
-    const data = await needle('post', URL, query, { json: true });
-
-    console.log('STATUS', data.statusCode, query);
-    if (data.statusCode === 200) {
-      const result1 = data.body.rows;
-      for (const row of result1) {
-        result.push({
-          value: row.column,
-          counter: row.count
-        });
-      }
-    }
-  } else {
-    let answer = [];
-    const coords = bounds.split(',');
-    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-    for (const table1 of PROJECT_TABLES) {
-      const query = { q: `select ${column} as column, count(*) as count from ${table1} where ${filters} group by ${column} order by ${column} ` };
+  try {
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    if (table === 'problems') {
+      const coords = bounds.split(',');
+      let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+      filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+      const query = { q: `select ${column} as column, count(*) as count from ${table} where ${filters} group by ${column} order by ${column} ` };
       const data = await needle('post', URL, query, { json: true });
 
+      console.log('STATUS', data.statusCode, query);
       if (data.statusCode === 200) {
         const result1 = data.body.rows;
-        answer = answer.concat(result1);
+        //unounounoconsole.log('RESULTADO', result1)
+        for (const row of result1) {
+          result.push({
+            value: row.column,
+            counter: row.count
+          });
+        }
+      }
+    } else {
+      let answer = [];
+      const coords = bounds.split(',');
+      console.log('COLUMN', column);
+      let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+      filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+      for (const table1 of PROJECT_TABLES) {
+        const query = { q: `select ${column} as column, count(*) as count from ${table1} where ${filters} group by ${column} order by ${column} ` };
+        const data = await needle('post', URL, query, { json: true });
+
+        if (data.statusCode === 200) {
+          const result1 = data.body.rows;
+          answer = answer.concat(result1);
+        }
+      }
+      for (const row of answer) {
+        const search = result.filter(item => item.value === row.column);
+        if (search.length === 0) {
+          const sum = answer.filter(item => item.column === row.column).map(item => item.count).reduce((prev, next) => prev + next);
+          result.push({
+            value: row.column,
+            counter: sum
+          });
+        }
       }
     }
-    for (const row of answer) {
-      const search = result.filter(item => item.value === row.column);
-      if (search.length === 0) {
-        const sum = answer.filter(item => item.column === row.column).map(item => item.count).reduce((prev, next) => prev + next);
-        result.push({
-          value: row.column,
-          counter: sum
-        });
-      }
-    }
+  } catch (error) {
+    logger.error(error);
+    logger.error(`Get Value by Column, Table: ${table} Column: ${column} Connection error`);
   }
 
   return result;
@@ -1362,23 +1384,24 @@ async function getValuesByColumn(table, column, bounds) {
 
 async function getCountByYearStudy(values, bounds) {
   let result = [];
-  let queryComponents = '';
-  let union = '';
-  const coords = bounds.split(',');
-  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+  try {
+    let queryComponents = '';
+    let union = '';
+    const coords = bounds.split(',');
+    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
 
-  for (const value of values) {
-    const initValue = Number(value);
-    let endValue = 0;
-    if (value === '2020') {
-      endValue = initValue + 10;
-    } else {
-      endValue = initValue + 9;
-    }
+    for (const value of values) {
+      const initValue = Number(value);
+      let endValue = 0;
+      if (value === '2020') {
+        endValue = initValue + 10;
+      } else {
+        endValue = initValue + 9;
+      }
 
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-    const SQL = `SELECT count(*) as count FROM grade_control_structure where ${filters} and year_of_study between ${initValue} and ${endValue} union
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+      const SQL = `SELECT count(*) as count FROM grade_control_structure where ${filters} and year_of_study between ${initValue} and ${endValue} union
       SELECT count(*) as count FROM pipe_appurtenances where ${filters} and year_of_study between ${initValue} and ${endValue} union
       SELECT count(*) as count FROM special_item_point where ${filters} and year_of_study between ${initValue} and ${endValue} union
       SELECT count(*) as count FROM special_item_linear where ${filters} and year_of_study between ${initValue} and ${endValue} union
@@ -1392,42 +1415,89 @@ async function getCountByYearStudy(values, bounds) {
       SELECT count(*) as count FROM maintenance_trails where ${filters} and year_of_study between ${initValue} and ${endValue} union
       SELECT count(*) as count FROM land_acquisition where ${filters} and year_of_study between ${initValue} and ${endValue} union
       SELECT count(*) as count FROM landscaping_area where ${filters} and year_of_study between ${initValue} and ${endValue} `;
-    //console.log(' YEAR OF STUDY', SQL);
-    const query = { q: ` ${SQL} ` };
-    const data = await needle('post', URL, query, { json: true });
-    let counter = 0;
+      //console.log(' YEAR OF STUDY', SQL);
+      const query = { q: ` ${SQL} ` };
+      const data = await needle('post', URL, query, { json: true });
+      let counter = 0;
 
-    console.log('STATUS', data.statusCode);
-    if (data.statusCode === 200) {
-      const result1 = data.body.rows;
-      for (const val of result1) {
-        counter += val.count;
+      console.log('STATUS', data.statusCode);
+      if (data.statusCode === 200) {
+        const result1 = data.body.rows;
+        for (const val of result1) {
+          counter += val.count;
+        }
+        result.push({
+          value: value,
+          count: counter
+        });
       }
-      result.push({
-        value: value,
-        count: counter
-      });
     }
+  } catch (error) {
+    logger.error(error);
+    logger.error(`CountByYearStudy, Values: ${values} Connection error`);
   }
+
   return result;
 }
 
 async function getCounterComponents(bounds) {
   let result = [];
-  const coords = bounds.split(',');
-  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+  try {
+    const coords = bounds.split(',');
+    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+    const COMPONENTS_TABLE = ['Grade Control Structure', 'Pipe Appurtenances', 'Special Item Point',
+      'Special Item Linear', 'Special Item Area', 'Channel Improvements Linear',
+      'Channel Improvements Area', 'Removal Line', 'Removal Area', 'Storm Drain',
+      'Detention Facilities', 'Maintenance Trails', 'Land Acquisition', 'Landscaping Area'];
+
+    const LINE_SQL = `SELECT count(*) as count FROM grade_control_structure where ${filters} union
+      SELECT count(*) as count FROM pipe_appurtenances where ${filters} union
+      SELECT count(*) as count FROM special_item_point where ${filters} union
+      SELECT count(*) as count FROM special_item_linear where ${filters} union
+      SELECT count(*) as count FROM special_item_area where ${filters} union
+      SELECT count(*) as count FROM channel_improvements_linear where ${filters} union
+      SELECT count(*) as count FROM channel_improvements_area where ${filters} union
+      SELECT count(*) as count FROM removal_line where ${filters} union
+      SELECT count(*) as count FROM removal_area where ${filters} union
+      SELECT count(*) as count FROM storm_drain where ${filters} union
+      SELECT count(*) as count FROM detention_facilities where ${filters} union
+      SELECT count(*) as count FROM maintenance_trails where ${filters} union
+      SELECT count(*) as count FROM land_acquisition where ${filters} union
+      SELECT count(*) as count FROM landscaping_area where ${filters} `;
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    const query = { q: ` ${LINE_SQL} ` };
+    const data = await needle('post', URL, query, { json: true });
+    let answer = [];
+
+    if (data.statusCode === 200) {
+      answer = data.body.rows;
+    }
+    let i = 0;
+    for (const component of answer) {
+      result.push({
+        key: COMPONENTS_TABLE[i].toLowerCase().split(' ').join('_'),
+        value: COMPONENTS_TABLE[i],
+        counter: component.count
+      });
+    }
+  } catch (error) {
+    logger.error(error);
+    logger.error(`getCounterComponents Connection error`);
+  }
+
   return result;
 }
 
 async function getComponentsValuesByColumn(column, bounds) {
 
   let result = [];
-  const coords = bounds.split(',');
-  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+  try {
+    const coords = bounds.split(',');
+    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
 
-  const LINE_SQL = `SELECT ${column} as column, count(*) as count FROM grade_control_structure where ${filters} group by ${column} union
+    const LINE_SQL = `SELECT ${column} as column, count(*) as count FROM grade_control_structure where ${filters} group by ${column} union
       SELECT ${column} as column, count(*) as count FROM pipe_appurtenances where ${filters} group by ${column} union
       SELECT ${column} as column, count(*) as count FROM special_item_point where ${filters} group by ${column} union
       SELECT ${column} as column, count(*) as count FROM special_item_linear where ${filters} group by ${column} union
@@ -1441,155 +1511,82 @@ async function getComponentsValuesByColumn(column, bounds) {
       SELECT ${column} as column, count(*) as count FROM maintenance_trails where ${filters} group by ${column} union
       SELECT ${column} as column, count(*) as count FROM land_acquisition where ${filters} group by ${column} union
       SELECT ${column} as column, count(*) as count FROM landscaping_area where ${filters} group by ${column} `;
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-  const query = { q: ` ${LINE_SQL} ` };
-  const data = await needle('post', URL, query, { json: true });
-  let answer = [];
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    const query = { q: ` ${LINE_SQL} ` };
+    const data = await needle('post', URL, query, { json: true });
+    let answer = [];
 
-  console.log('STATUS', data.statusCode);
-  if (data.statusCode === 200) {
-    answer = data.body.rows;
-  }
-  for (const row of answer) {
-    const search = result.filter(item => item.value === row.column);
-    if (search.length === 0) {
-      const sum = answer.filter(item => item.column === row.column).map(item => item.count).reduce((prev, next) => prev + next);
-      result.push({
-        value: row.column,
-        counter: sum
-      });
+    console.log('STATUS', data.statusCode);
+    if (data.statusCode === 200) {
+      answer = data.body.rows;
     }
+    for (const row of answer) {
+      const search = result.filter(item => item.value === row.column);
+      if (search.length === 0) {
+        const sum = answer.filter(item => item.column === row.column).map(item => item.count).reduce((prev, next) => prev + next);
+        result.push({
+          value: row.column,
+          counter: sum
+        });
+      }
+    }
+  } catch (error) {
+    logger.error(error);
+    logger.error(`getComponentsValuesByColumn, Column ${column} Connection error`);
   }
+
   return result;
 }
 
-async function getCountWorkYear(data) {
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-  for (const value of data) {
-    let counter = 0;
-    for (const table of PROJECT_TABLES) {
-      const query = { q: `select ${column} as column, count(*) as count from ${table} where ${column}='${value}' group by ${column} order by ${column} ` };
-      const data = await needle('post', URL, query, { json: true });
-      console.log('STATUS', data.statusCode, query);
-      if (data.statusCode === 200) {
-        if (data.body.rows.length > 0) {
-          counter += data.body.rows[0].count;
+async function getCountWorkYear(data, bounds) {
+  let result = [];
+  try {
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    const coords = bounds.split(',');
+    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+
+    for (const value of data) {
+      let counter = 0;
+      for (const table of PROJECT_TABLES) {
+        const query = { q: `select count(*) as count from ${table} where ${filters} and ${value.column} > 0 ` };
+        const data = await needle('post', URL, query, { json: true });
+        console.log('STATUS', data.statusCode, query);
+        if (data.statusCode === 200) {
+          if (data.body.rows.length > 0) {
+            counter += data.body.rows[0].count;
+          }
         }
       }
+      result.push({
+        value: value.year,
+        counter: counter
+      });
     }
+  } catch (error) {
+    logger.error(error);
+    logger.error(`getCountWorkYear Connection error`);
   }
+
+  return result;
 }
 
 async function getCountSolutionStatus(range, bounds) {
   let result = [];
-  const coords = bounds.split(',');
-  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-  for (const value of range) {
-    let endValue = 0; 
-    if (value === 75) {
-      endValue = value + 25;
-    } else {
-      endValue = value + 24;
-    }
-    
-    const query = { q: `select count(*) as count from problems where ${filters} and solutionstatus between ${value} and ${endValue} ` };
-    const data = await needle('post', URL, query, { json: true });
-    let counter = 0;
-    if (data.statusCode === 200) {
-      if (data.body.rows.length > 0) {
-        counter = data.body.rows[0].count;
-      }
-    }
-    result.push({
-      value: value,
-      count: counter
-    });
-  }
-
-  return result;
-}
-
-async function getCountByArrayColumns(table, column, columns, bounds) {
-  let result = [];
-  const coords = bounds.split(',');
-  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-
-  if (table === 'problems') {
-    for (const value of columns) {
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-      const query = {
-        q: `select ${column} as column, count(*) as count from ${table} 
-      where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
-      };
-      const data = await needle('post', URL, query, { json: true });
-
-      console.log('STATUS', data.statusCode);
-      if (data.statusCode === 200) {
-        const result1 = data.body.rows;
-        result.push({
-          value: result1[0].column,
-          count: result1[0].count
-        });
-      }
-    }
-  } else {
-
-    for (const value of columns) {
-      let answer = [];
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-      let counter = 0;
-      for (const table of PROJECT_TABLES) {
-        const query = {
-          q: `select ${column} as column, count(*) as count from ${table} 
-        where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
-        };
-        const data = await needle('post', URL, query, { json: true });
-
-        console.log('STATUS', data.statusCode);
-        if (data.statusCode === 200) {
-          if (data.body.rows.length > 0) {
-            answer = answer.concat(data.body.rows);
-          }
-        }
-      }
-      for (const row of answer) {
-        const search = result.filter(item => item.value === row.column);
-        if (search.length === 0) {
-          counter = answer.filter(item => item.column === row.column).map(item => item.count).reduce((prev, next) => prev + next);
-        }
+  try {
+    const coords = bounds.split(',');
+    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    for (const value of range) {
+      let endValue = 0;
+      if (value === 75) {
+        endValue = value + 25;
+      } else {
+        endValue = value + 24;
       }
 
-      result.push({
-        value: value,
-        counter: counter
-      });
-
-    }
-
-  }
-
-  return result;
-}
-
-async function getSubtotalsByComponent(table, column, bounds) {
-  let result = [];
-  const coords = bounds.split(',');
-  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-
-  const COMPONENTS = ['Grade Control Structure', 'Pipe Appurtenances', 'Special Item Point',
-    'Special Item Linear', 'Special Item Area', 'Channel Improvements Linear',
-    'Channel Improvements Area', 'Removal Line', 'Removal Area', 'Storm Drain',
-    'Detention Facilities', 'Maintenance Trails', 'Land Acquisition', 'Landscaping Area'];
-
-  if (table === 'problems') {
-    for (const tablename of COMPONENTS) {
-      const table = tablename.toLowerCase().split(' ').join('_');
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-      const query = { q: `select count(*) from ${table}, problems where problems.${column}= ${table}.${column} and ${filters} ` };
+      const query = { q: `select count(*) as count from problems where ${filters} and solutionstatus between ${value} and ${endValue} ` };
       const data = await needle('post', URL, query, { json: true });
       let counter = 0;
       if (data.statusCode === 200) {
@@ -1598,33 +1595,147 @@ async function getSubtotalsByComponent(table, column, bounds) {
         }
       }
       result.push({
-        key: table,
-        value: tablename,
+        value: value,
         count: counter
       });
     }
-  } else {
-    for (const tablename of COMPONENTS) {
-      let counter = 0;
-      for (const project of PROJECT_TABLES) {
-        const table = tablename.toLowerCase().split(' ').join('_');
+  } catch (error) {
+    logger.error(error);
+    logger.error(`getCountSolutionStatus Connection error`);
+  }
+
+  return result;
+}
+
+async function getCountByArrayColumns(table, column, columns, bounds) {
+  let result = [];
+  try {
+    const coords = bounds.split(',');
+    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+
+    if (table === 'problems') {
+      for (const value of columns) {
         const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-        const query = { q: `select count(*) from ${table}, ${project} where ${project}.${column}= ${table}.${column} and ${filters} ` };
+        const query = {
+          q: `select ${column} as column, count(*) as count from ${table} 
+              where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
+        };
+        let counter = 0;
         const data = await needle('post', URL, query, { json: true });
 
+        console.log('STATUS', data.statusCode);
+        if (data.statusCode === 200) {
+          //const result1 = data.body.rows;
+          if (data.body.rows.length > 0) {
+            counter = data.body.rows[0].count
+          }
+          
+        }
+        result.push({
+          value: value,
+          count: counter
+        });
+      }
+    } else {
+
+      for (const value of columns) {
+        let answer = [];
+        const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+        let counter = 0;
+        for (const table of PROJECT_TABLES) {
+          const query = {
+            q: `select ${column} as column, count(*) as count from ${table} 
+        where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
+          };
+          const data = await needle('post', URL, query, { json: true });
+
+          console.log('STATUS', data.statusCode);
+          if (data.statusCode === 200) {
+            if (data.body.rows.length > 0) {
+              answer = answer.concat(data.body.rows);
+            }
+          }
+        }
+        for (const row of answer) {
+          const search = result.filter(item => item.value === row.column);
+          if (search.length === 0) {
+            counter = answer.filter(item => item.column === row.column).map(item => item.count).reduce((prev, next) => prev + next);
+          }
+        }
+
+        result.push({
+          value: value,
+          counter: counter
+        });
+
+      }
+
+    }
+  } catch (error) {
+    logger.error(error);
+    logger.error(`getCountByArrayColumns Table: ${table}, Column: ${column} Connection error`);
+  }
+
+  return result;
+}
+
+async function getSubtotalsByComponent(table, column, bounds) {
+  let result = [];
+  try {
+    const coords = bounds.split(',');
+    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+
+    const COMPONENTS = ['Grade Control Structure', 'Pipe Appurtenances', 'Special Item Point',
+      'Special Item Linear', 'Special Item Area', 'Channel Improvements Linear',
+      'Channel Improvements Area', 'Removal Line', 'Removal Area', 'Storm Drain',
+      'Detention Facilities', 'Maintenance Trails', 'Land Acquisition', 'Landscaping Area'];
+
+    if (table === 'problems') {
+      for (const tablename of COMPONENTS) {
+        const table = tablename.toLowerCase().split(' ').join('_');
+        const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+        const query = { q: `select count(*) from ${table}, problems where problems.${column}= ${table}.${column} and ${filters} ` };
+        const data = await needle('post', URL, query, { json: true });
+        let counter = 0;
         if (data.statusCode === 200) {
           if (data.body.rows.length > 0) {
             counter = data.body.rows[0].count;
           }
         }
+        result.push({
+          key: table,
+          value: tablename,
+          count: counter
+        });
       }
+    } else {
+      for (const tablename of COMPONENTS) {
+        let counter = 0;
+        for (const project of PROJECT_TABLES) {
+          const table = tablename.toLowerCase().split(' ').join('_');
+          const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+          const query = { q: `select count(*) from ${table}, ${project} where ${project}.${column}= ${table}.${column} and ${filters} ` };
+          const data = await needle('post', URL, query, { json: true });
 
-      result.push({
-        key: table,
-        value: tablename,
-        count: counter
-      });
+          if (data.statusCode === 200) {
+            if (data.body.rows.length > 0) {
+              counter = data.body.rows[0].count;
+            }
+          }
+        }
+
+        result.push({
+          key: table,
+          value: tablename,
+          count: counter
+        });
+      }
     }
+  } catch (error) {
+    logger.error(error);
+    logger.error(`getSubtotalsByComponent Connection error`);
   }
 
   return result;
@@ -1633,7 +1744,7 @@ async function getSubtotalsByComponent(table, column, bounds) {
 router.get('/params-filters', async (req, res) => {
   try {
     bounds = req.query.bounds;
-    console.log(bounds);
+    //console.log(bounds);
     let requests = [];
 
     requests.push(getValuesByColumn('projects_line_1', 'creator', bounds));
@@ -1646,8 +1757,10 @@ router.get('/params-filters', async (req, res) => {
     requests.push(getValuesByColumn('projects_line_1', 'startyear', bounds));
     requests.push(getValuesByColumn('projects_line_1', 'completedyear', bounds));
     requests.push(getQuintilValues('projects_line_1', 'mhfddollarsallocated', bounds));
-    const workplanyear = [{ value: 2019, counter: 0 }, { value: 2020, counter: 0 },
-    { value: 2021, counter: 0 }, { value: 2022, counter: 0 }, { value: 2023, counter: 0 }];
+    requests.push(getCountWorkYear([{ year: 2019, column: 'workplanyr1' }, { year: 2020, column: 'workplanyr2' },
+    { year: 2021, column: 'workplanyr3' }, { year: 2022, column: 'workplanyr4' }, { year: 2023, column: 'workplanyr5' }], bounds));
+    /* const workplanyear = [{ value: 2019, counter: 0 }, { value: 2020, counter: 0 },
+    { value: 2021, counter: 0 }, { value: 2022, counter: 0 }, { value: 2023, counter: 0 }]; */
     const problemtype = [{
       value: "Human Connection",
       counter: 0
@@ -1674,10 +1787,10 @@ router.get('/params-filters', async (req, res) => {
     requests.push(getValuesByColumn('projects_line_1', 'streamname', bounds));
     requests.push(getQuintilValues('projects_line_1', 'estimatedcost', bounds));
 
-    requests.push(getValuesByColumn('problems', 'problemtype', bounds));
+    requests.push(getCountByArrayColumns('problems', 'problemtype', 
+      ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'], bounds));
     requests.push(getCountByArrayColumns('problems', 'problempriority', ['High', 'Medium', 'Low'], bounds));
     requests.push(getCountSolutionStatus([0, 25, 50, 75], bounds));
-    requests.push(getValuesByColumn('problems', 'county', bounds));
     requests.push(getValuesByColumn('problems', 'county', bounds));
     requests.push(getValuesByColumn('problems', 'jurisdiction', bounds));
     requests.push(getValuesByColumn('problems', 'mhfdmanager', bounds));
@@ -1685,7 +1798,7 @@ router.get('/params-filters', async (req, res) => {
     requests.push(getSubtotalsByComponent('problems', 'problemid', bounds));
     requests.push(getQuintilValues('problems', 'solutioncost', bounds));
 
-    const components = [
+    /* const components = [
       { key: 'grade_control_structure', value: 'Grade Control Structure', counter: 0 },
       { key: 'pipe_appurtenances', value: 'Pipe Appurtenances', counter: 0 },
       { key: 'special_item_point', value: 'Special Item Point', counter: 0 },
@@ -1700,7 +1813,8 @@ router.get('/params-filters', async (req, res) => {
       { key: 'maintenance_trails', value: 'Maintenance Trails', counter: 0 },
       { key: 'land_acquisition', value: 'Land Acquisition', counter: 0 },
       { key: 'landscaping_area', value: 'Landscaping Area', counter: 0 }
-    ];
+    ]; */
+    requests.push(getCounterComponents(bounds));
     requests.push(getComponentsValuesByColumn('status', bounds));
     requests.push(getCountByYearStudy([1970, 1980, 1990, 2000, 2010, 2020], bounds));
     requests.push(getComponentsValuesByColumn('jurisdiction', bounds));
@@ -1720,33 +1834,33 @@ router.get('/params-filters', async (req, res) => {
         "startyear": promises[4],
         "completedyear": promises[5],
         "mhfddollarsallocated": promises[6],
-        "workplanyear": workplanyear,
+        "workplanyear": promises[7], //workplanyear,
         "problemtype": problemtype,
-        "jurisdiction": promises[7],
-        "county": promises[8],
-        "lgmanager": promises[9],
-        "streamname": promises[10],
-        "estimatedCost": promises[11]
+        "jurisdiction": promises[8],
+        "county": promises[9],
+        "lgmanager": promises[10],
+        "streamname": promises[11],
+        "estimatedCost": promises[12]
       },
       "problems": {
-        "problemtype": promises[12],
-        "priority": promises[13],
-        "solutionstatus": promises[14],
-        "county": promises[15],
-        "jurisdiction": promises[16],
-        "mhfdmanager": promises[17],
-        "source": promises[18],
-        "components": promises[19],
-        "cost": promises[20]
+        "problemtype": promises[13],
+        "priority": promises[14],
+        "solutionstatus": promises[15],
+        "county": promises[16],
+        "jurisdiction": promises[17],
+        "mhfdmanager": promises[18],
+        "source": promises[19],
+        "components": promises[20],
+        "cost": promises[21]
       },
       "components": {
-        "component_type": components,
-        "status": promises[21],
-        "yearofstudy": promises[22],
-        "jurisdiction": promises[23],
-        "county": promises[24],
-        "watershed": promises[25],
-        "estimatedcost": promises[26]
+        "component_type": promises[22],
+        "status": promises[23],
+        "yearofstudy": promises[24],
+        "jurisdiction": promises[25],
+        "county": promises[26],
+        "watershed": promises[27],
+        "estimatedcost": promises[28]
       }
     }
     res.status(200).send(result);
