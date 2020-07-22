@@ -159,6 +159,7 @@ router.get('/me', auth, async (req, res) => {
   result1['designation'] = user.designation;
   result1['photo'] = user.photo;
   result1['zoomarea'] = user.zoomarea ? user.zoomarea : '';
+  result1['status'] = user.status;
   
   if (req.user.zoomarea) {
     organization_query = req.user.zoomarea;
