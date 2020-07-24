@@ -1361,16 +1361,13 @@ async function getValuesByColumnWithOutCount(table, column, bounds) {
         }
       }
       for (const row of answer) {
-        result.push(row.column);
-        /* const search = result.filter(item => item.value === row.column);
+        //result.push(row.column);
+        const search = result.filter(item => item == row.column);
         if (search.length === 0) {
-          const sum = answer.filter(item => item.column === row.column).map(item => item.count).reduce((prev, next) => prev + next);
-          result.push({
-            value: row.column,
-            counter: sum
-          });
-        } */
+          result.push(row.column);
+        }
       }
+      result = result.sort((a, b) => (a > b ? 1 : -1));
     }
   } catch (error) {
     logger.error(error);
@@ -1533,41 +1530,44 @@ async function getCounterComponents(bounds) {
     const coords = bounds.split(',');
     let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-    const COMPONENTS_TABLE = ['Grade Control Structure', 'Pipe Appurtenances', 'Special Item Point',
+    /* const COMPONENTS_TABLE = ['Grade Control Structure', 'Pipe Appurtenances', 'Special Item Point',
       'Special Item Linear', 'Special Item Area', 'Channel Improvements Linear',
       'Channel Improvements Area', 'Removal Line', 'Removal Area', 'Storm Drain',
-      'Detention Facilities', 'Maintenance Trails', 'Land Acquisition', 'Landscaping Area'];
+      'Detention Facilities', 'Maintenance Trails', 'Land Acquisition', 'Landscaping Area']; */
 
-    const LINE_SQL = `SELECT count(*) as count FROM grade_control_structure where ${filters} union
-      SELECT count(*) as count FROM pipe_appurtenances where ${filters} union
-      SELECT count(*) as count FROM special_item_point where ${filters} union
-      SELECT count(*) as count FROM special_item_linear where ${filters} union
-      SELECT count(*) as count FROM special_item_area where ${filters} union
-      SELECT count(*) as count FROM channel_improvements_linear where ${filters} union
-      SELECT count(*) as count FROM channel_improvements_area where ${filters} union
-      SELECT count(*) as count FROM removal_line where ${filters} union
-      SELECT count(*) as count FROM removal_area where ${filters} union
-      SELECT count(*) as count FROM storm_drain where ${filters} union
-      SELECT count(*) as count FROM detention_facilities where ${filters} union
-      SELECT count(*) as count FROM maintenance_trails where ${filters} union
-      SELECT count(*) as count FROM land_acquisition where ${filters} union
-      SELECT count(*) as count FROM landscaping_area where ${filters} `;
+    const LINE_SQL = `SELECT type, count(*) as count FROM grade_control_structure where ${filters} group by type union
+      SELECT type, count(*) as count FROM pipe_appurtenances where ${filters} group by type union
+      SELECT type, count(*) as count FROM special_item_point where ${filters} group by type union
+      SELECT type, count(*) as count FROM special_item_linear where ${filters} group by type union
+      SELECT type, count(*) as count FROM special_item_area where ${filters} group by type union
+      SELECT type, count(*) as count FROM channel_improvements_linear where ${filters} group by type union
+      SELECT type, count(*) as count FROM channel_improvements_area where ${filters} group by type union
+      SELECT type, count(*) as count FROM removal_line where ${filters} group by type union
+      SELECT type, count(*) as count FROM removal_area where ${filters} group by type union
+      SELECT type, count(*) as count FROM storm_drain where ${filters} group by type union
+      SELECT type, count(*) as count FROM detention_facilities where ${filters} group by type union
+      SELECT type, count(*) as count FROM maintenance_trails where ${filters} group by type union
+      SELECT type, count(*) as count FROM land_acquisition where ${filters} group by type union
+      SELECT type, count(*) as count FROM landscaping_area where ${filters} group by type`;
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
     const query = { q: ` ${LINE_SQL} ` };
     const data = await needle('post', URL, query, { json: true });
     let answer = [];
 
+    //console.log('QUERY COMPONENTES TODOS', LINE_SQL);
+
     if (data.statusCode === 200) {
       answer = data.body.rows;
+      console.log('CONTADOR POR COMPONENTES', answer);
     }
-    let i = 0;
+    //let i = 0;
     for (const component of answer) {
       result.push({
-        key: COMPONENTS_TABLE[i].toLowerCase().split(' ').join('_'),
-        value: COMPONENTS_TABLE[i],
+        key: component.type.toLowerCase().split(' ').join('_'),
+        value: component.type,
         counter: component.count
       });
-      i++;
+      //i++;
     }
   } catch (error) {
     logger.error(error);
@@ -1608,16 +1608,12 @@ async function getComponentsValuesByColumnWithCount(column, bounds) {
       answer = data.body.rows;
     }
     for (const row of answer) {
-      result.push(row.column);
-      /* const search = result.filter(item => item.value === row.column);
-      if (search.length === 0) {
-        const sum = answer.filter(item => item.column === row.column).map(item => item.count).reduce((prev, next) => prev + next);
-        result.push({
-          value: row.column,
-          counter: sum
-        });
-      } */
+      const search = result.filter(item => item == row.column.trim());
+      if(search.length === 0) {
+        result.push(row.column.trim());
+      }
     }
+    result = result.sort((a, b) => (a > b ? 1 : -1));
   } catch (error) {
     logger.error(error);
     logger.error(`getComponentsValuesByColumn, Column ${column} Connection error`);
@@ -1649,6 +1645,7 @@ async function getComponentsValuesByColumn(column, bounds) {
       SELECT ${column} as column, count(*) as count FROM land_acquisition where ${filters} group by ${column} union
       SELECT ${column} as column, count(*) as count FROM landscaping_area where ${filters} group by ${column} `;
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    console.log('count(*) as countcount(*) as countcount(*) as countcount(*) as countcount(*) as count', LINE_SQL);
     const query = { q: ` ${LINE_SQL} ` };
     const data = await needle('post', URL, query, { json: true });
     let answer = [];
@@ -1656,6 +1653,7 @@ async function getComponentsValuesByColumn(column, bounds) {
     console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       answer = data.body.rows;
+      console.log('COMPONENTS BY COLUMN', column, answer);
     }
     for (const row of answer) {
       const search = result.filter(item => item.value === row.column);
