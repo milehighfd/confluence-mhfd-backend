@@ -601,12 +601,17 @@ function getFilters(params) {
 
   if (params.sortby) {
     let sorttype = '';
+    let sortby = params.sortby;
+    if (params.sortby === 'estimatedcost') {
+      sortby = ` (coalesce(${params.sortby}::real, 0)) `;
+    }
+    
     if (!params.sorttype) {
       sorttype = 'desc';
     } else {
       sorttype = params.sorttype;
     }
-    filters += ` order by ${params.sortby} ${sorttype}`;
+    filters += ` order by ${sortby} ${sorttype}`;
   }
   if (params.limit && params.page) {
     filters = ` limit= ${limit} offset=${params.page * params.limit}`
