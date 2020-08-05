@@ -65,7 +65,8 @@ router.post('/', async (req, res) => {
 router.get('/search/:query', async (req, res) => {
   const query = req.params.query;
   const to_url = encodeURIComponent(query);
-  const map = `https://api.mapbox.com/geocoding/v5/mapbox.places/${to_url}.json?bbox=-109.4424900706,36.6070426751,-101.6263840793,41.2535776532&access_token=pk.eyJ1IjoibWlsZWhpZ2hmZCIsImEiOiJjazRqZjg1YWQwZTN2M2RudmhuNXZtdWFyIn0.oU_jVFAr808WPbcVOFnzbg`;
+  const map = `https://api.mapbox.com/geocoding/v5/mapbox.places/${to_url}.json?bbox=-105.39820822776036,39.38595107828999,-104.46244596259402,40.16671105031628&access_token=pk.eyJ1IjoibWlsZWhpZ2hmZCIsImEiOiJjazRqZjg1YWQwZTN2M2RudmhuNXZtdWFyIn0.oU_jVFAr808WPbcVOFnzbg`;
+                                                              
   const promises = [];
   promises.push(new Promise((resolve, reject) => {
     console.log(map);
@@ -93,7 +94,7 @@ router.get('/search/:query', async (req, res) => {
       resolve([]);
     })})
   );  
-  let sql = `SELECT ST_x(ST_line_interpolate_point(st_makeline(st_linemerge(the_geom)), 0.5)) as x, ST_y(ST_line_interpolate_point(st_makeline(st_linemerge(the_geom)), 0.5)) as y, str_name FROM streams WHERE  str_name ILIKE '%${query}%' AND ST_IsEmpty(the_geom) = false group by str_name`;
+  let sql = `SELECT ST_x(ST_line_interpolate_point(st_makeline(st_linemerge(the_geom)), 0.5)) as x, ST_y(ST_line_interpolate_point(st_makeline(st_linemerge(the_geom)), 0.5)) as y, str_name FROM streams WHERE  str_name ILIKE '${query}%' AND ST_IsEmpty(the_geom) = false group by str_name`;
   console.log('el query ' , sql);
   sql =  encodeURIComponent(sql);
   const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
