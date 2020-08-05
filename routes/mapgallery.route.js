@@ -1211,7 +1211,7 @@ async function getQuintilComponentValues(column, bounds) {
               const query = { q: `${query1} ` };
               const data = await needle('post', URL, query, { json: true });
               let answer = [];
-              console.log('STATUS', data.statusCode);
+              //console.log('STATUS', data.statusCode);
               if (data.statusCode === 200) {
                 const result = data.body.rows;
                 for (const row of result) {
@@ -1305,7 +1305,7 @@ async function getQuintilValues(table, column, bounds) {
                   //console.log('QUINTIL PROJECT', table1, query);
                   const data = await needle('post', URL, query, { json: true });
                   let answer = [];
-                  console.log('STATUS COST', data.statusCode);
+                  //console.log('STATUS COST', data.statusCode);
                   if (data.statusCode === 200) {
                     const result = data.body.rows;
                     //console.log('CONTADOR TABLA', table1, result);
@@ -1342,7 +1342,7 @@ async function getValuesByColumnWithOutCount(table, column, bounds) {
       const query = { q: `select ${column} as column from ${table} where ${filters} group by ${column} order by ${column} ` };
       const data = await needle('post', URL, query, { json: true });
 
-      console.log('STATUS', data.statusCode, query);
+      //console.log('STATUS', data.statusCode, query);
       if (data.statusCode === 200) {
         const result1 = data.body.rows;
         //unounounoconsole.log('RESULTADO', result1)
@@ -1563,7 +1563,7 @@ async function getCounterComponents(bounds) {
 
     if (data.statusCode === 200) {
       answer = data.body.rows;
-      console.log('CONTADOR POR COMPONENTES', answer);
+      //console.log('CONTADOR POR COMPONENTES', answer);
     }
     //let i = 0;
     for (const component of answer) {
@@ -1604,18 +1604,20 @@ async function getComponentsValuesByColumnWithCount(column, bounds) {
       SELECT ${column} as column FROM land_acquisition where ${filters} group by ${column} union
       SELECT ${column} as column FROM landscaping_area where ${filters} group by ${column} `;
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    //console.log('COLUMN COMPONENT', column, LINE_SQL);
     const query = { q: ` ${LINE_SQL} ` };
     const data = await needle('post', URL, query, { json: true });
     let answer = [];
 
-    console.log('STATUS', data.statusCode);
+    //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       answer = data.body.rows;
     }
+    //console.log('RESPUESTA COLUMN COMPONENT', column, answer);
     for (const row of answer) {
-      const search = result.filter(item => item == row.column.trim());
+      const search = result.filter(item => item == row.column);
       if(search.length === 0) {
-        result.push(row.column.trim());
+        result.push(row.column);
       }
     }
     result = result.sort((a, b) => (a > b ? 1 : -1));
