@@ -111,7 +111,7 @@ router.get('/search/:query', async (req, res) => {
           const filteredPlaces = places.map(ele => {
             return {
               text: ele.str_name,
-              place_name: 'stream',
+              place_name: 'Stream',
               center: [ele.x, ele.y],
               type: 'stream'
           }});
