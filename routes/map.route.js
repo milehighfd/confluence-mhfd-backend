@@ -131,6 +131,13 @@ router.get('/search/:query', async (req, res) => {
   for(const data of all) {
     answer.push(...data);
   }
+  const weight = {'stream': 0, 'geocoder': 1};
+  answer.sort((a,b) => {
+    if (a.type !== b.type) {
+      return weight[a.type] - weight[b.type];
+    }
+    return a.text.toLowerCase().localeCompare(b.text.toLowerCase());
+  });
   res.send(answer);
 });
 
