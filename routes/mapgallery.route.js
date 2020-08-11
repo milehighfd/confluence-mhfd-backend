@@ -1115,7 +1115,7 @@ router.post('/components-by-entityid', async (req, res) => {
 
 router.get('/group-organization', async (req, res) => {
   try {
-    const sql = `SELECT type, name from organizations group by type, name order by type`;
+    const sql = `SELECT type, name, ST_AsGeoJSON(ST_Envelope(the_geom)) from organizations group by type, name, the_geom order by type`;
     const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`);
     //console.log(LINE_URL);
     https.get(LINE_URL, response => {
@@ -1127,12 +1127,16 @@ router.get('/group-organization', async (req, res) => {
         response.on('end', async function () {
           let data = [];
           let result = JSON.parse(str).rows;
+          let coordinates = [];
           if (result.length > 0) {
             let type = result[0].type;
             let subtypes = [];
             for (const res of result) {
               if (res.type === type) {
-                subtypes.push(res.name);
+                subtypes.push({
+                  name: res.name,
+                  coordinates: JSON.parse(res.st_asgeojson).coordinates
+                });
               } else {
                 data.push({
                   type: type,
@@ -1140,7 +1144,10 @@ router.get('/group-organization', async (req, res) => {
                 });
                 subtypes = [];
                 type = res.type;
-                subtypes.push(res.name);
+                subtypes.push({
+                  name: res.name,
+                  coordinates: JSON.parse(res.st_asgeojson).coordinates
+                });
               }
             }
             data.push({
