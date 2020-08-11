@@ -1113,13 +1113,57 @@ router.post('/components-by-entityid', async (req, res) => {
   }
 })
 
+router.get('/group-organization', async (req, res) => {
+  try {
+    const sql = `SELECT type, name from organizations group by type, name order by type`;
+    const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`);
+    //console.log(LINE_URL);
+    https.get(LINE_URL, response => {
+      if (response.statusCode === 200) {
+        let str = '';
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+        response.on('end', async function () {
+          let data = [];
+          let result = JSON.parse(str).rows;
+          if (result.length > 0) {
+            let type = result[0].type;
+            let subtypes = [];
+            for (const res of result) {
+              if (res.type === type) {
+                subtypes.push(res.name);
+              } else {
+                data.push({
+                  type: type,
+                  values: subtypes
+                });
+                subtypes = [];
+                type = res.type;
+                subtypes.push(res.name);
+              }
+            }
+            data.push({
+              type: type,
+              values: subtypes
+            });
+          }
+          return res.status(200).send(data);
+        })
+      }
+    });
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send({ error: error }).send({ error: 'Connection error' });
+  }
+});
 router.post('/group-by', async (req, res) => {
   try {
     const table = req.body.table;
     const column = req.body.column;
     console.log(table, column);
     const LINE_SQL = `SELECT ${column} FROM ${table} group by ${column} order by ${column}`;
-    console.log(LINE_SQL);
+    //console.log(LINE_SQL);
     const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
     console.log(LINE_URL);
     https.get(LINE_URL, response => {
