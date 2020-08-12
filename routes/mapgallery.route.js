@@ -605,7 +605,11 @@ function getFilters(params) {
     if (params.sortby === 'estimatedcost') {
       sortby = ` (coalesce(${params.sortby}::real, 0)) `;
     }
-    
+
+    if (params.sortby === 'projectname') {
+      sortby = ` coalesce(projectname, '')`;
+    }
+
     if (!params.sorttype) {
       sorttype = 'desc';
     } else {
@@ -1105,6 +1109,61 @@ router.post('/components-by-entityid', async (req, res) => {
     } else {
       console.log('bad status ', response.statusCode, response.body);
       res.status(500).send({ error: 'bad status' }).send({ error: 'Connection error' });
+    }
+
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send({ error: error }).send({ error: 'Connection error' });
+  }
+})
+
+router.post('/component-counter', async (req, res) => {
+  try {
+    const column = req.body.column;
+    const value = req.body.value;
+    let answer = [];
+    if (column === 'problemid') {
+      console.log(column, value);
+      const query = {
+        q: `select problemid, problemname, ${getCounters('problems', column)} from problems 
+        where problemid = ${value} `
+      };
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+      const data = await needle('post', URL, query, { json: true });
+      let answer = [];
+      if (data.statusCode === 200) {
+        const result = data.body.rows;
+        const counter = result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil + result[0].count_sia + result[0].count_cila + result[0].count_cia
+          + result[0].count_rl + result[0].count_ra + result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la + result[0].count_la1;
+        return res.status(200).send({
+          'componentes': counter
+        });
+      } else {
+        return res.status(data.statusCode).send({ 'error': 'error' });
+      }
+
+    } else {
+      let counter = 0;
+      for (const table1 of PROJECT_TABLES) {
+        const query = {
+          q: `select projectid, projectname, ${getCounters(table1, column)} from ${table1} where ${column} = ${value} `
+        };
+        console.log(' PROJECT', table1, query);
+        const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+        
+        try {
+          const data = await needle('post', URL, query, { json: true });
+          if (data.statusCode === 200) {
+            const result = data.body.rows;
+            counter +=  result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil + result[0].count_sia + result[0].count_cila + result[0].count_cia
+              + result[0].count_rl + result[0].count_ra + result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la + result[0].count_la1;
+          }
+        } catch(error) {}
+        
+      }
+      return res.status(200).send({
+        'componentes': counter
+      });
     }
 
   } catch (error) {
@@ -1667,7 +1726,7 @@ async function getComponentsValuesByColumnWithCount(column, bounds) {
     //console.log('RESPUESTA COLUMN COMPONENT', column, answer);
     for (const row of answer) {
       const search = result.filter(item => item == row.column);
-      if(search.length === 0) {
+      if (search.length === 0) {
         result.push(row.column);
       }
     }
@@ -1890,7 +1949,7 @@ async function getSubtotalsByComponent(table, column, bounds) {
         const table = tablename.toLowerCase().split(' ').join('_');
         let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), ${table}.the_geom) or `;
         filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), ${table}.the_geom))`;
-        
+
         const query = { q: `select count(*) from ${table}, problems where problems.${column}= ${table}.${column} and ${filters} ` };
         //requests.push(needle('post', URL, query, { json: true }));
         const data = await needle('post', URL, query, { json: true });
