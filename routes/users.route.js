@@ -185,6 +185,7 @@ router.get('/me', auth, async (req, res) => {
               const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
               let latitude_array = [];
               let longitude_array = [];
+              console.log('COORDENADAS', all_coordinates);
               for (const key in all_coordinates[0]) {
                 const row = JSON.stringify(all_coordinates[0][key]).replace("[", "").replace("]", "").split(',')
                 let coordinate_num = [];
@@ -208,7 +209,29 @@ router.get('/me', auth, async (req, res) => {
                 longitude: -104.9063129121965,
                 latitude: 39.768682416183
               };
-              polygon = [];
+              console.log('NO HAY DATOS');
+              polygon = [
+                [
+                    -105.32366831,
+                    39.40578787
+                ],
+                [
+                    -105.32366831,
+                    40.13157697
+                ],
+                [
+                    -104.48895751,
+                    40.13157697
+                ],
+                [
+                    -104.48895751,
+                    39.40578787
+                ],
+                [
+                    -105.32366831,
+                    39.40578787
+                ]
+            ];
 
             }
 
