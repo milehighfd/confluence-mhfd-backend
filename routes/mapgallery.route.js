@@ -1116,6 +1116,38 @@ router.post('/components-by-entityid', async (req, res) => {
   }
 })
 
+router.post('/get-coordinates', async (req, res) => {
+  try {
+    const table = req.body.table;
+    const value = req.body.value;
+    let query = {
+      q: `select ST_AsGeoJSON(ST_Envelope(the_geom)) from ${table} 
+      where cartodb_id = ${value} `
+    };
+    
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+
+    const data = await needle('post', URL, query, { json: true });
+    let answer = [];
+    if (data.statusCode === 200) {
+      const result = data.body.rows;
+      let all_coordinates = [];
+      if (result.length > 0) {
+        all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
+      }
+      
+      return res.status(200).send({
+        'polygon': all_coordinates
+      });
+    } else {
+      return res.status(data.statusCode).send({ 'error': 'error' });
+    }
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send({ error: error }).send({ error: 'Connection error' });
+  }
+})
+
 router.post('/component-counter', async (req, res) => {
   try {
     const column = req.body.column;
