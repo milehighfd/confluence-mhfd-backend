@@ -731,20 +731,19 @@ async function queriesByProblemTypeInProject(project_fields, filters, problemTyp
 
 router.get('/project-by-ids', async (req, res) => {
   const cartoid = req.query.cartoid;
-  const objectid = req.query.objectid;
+  //const objectid = req.query.objectid;
   const type = req.query.type;
 
   try {
     let SQL = '';
     let URL = '';
-    if (type === 'projects_polygon_') {
-      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_polygon_ where objectid=${objectid} and cartodb_id=${cartoid} `;
+    if (type === 'projects_polygon_') { // objectid=${objectid} and 
+      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_polygon_ where cartodb_id=${cartoid} `;
       URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
-    } else {
-      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_line_1 where objectid=${objectid} and cartodb_id=${cartoid} `;
+    } else { // objectid=${objectid} and
+      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_line_1 where  cartodb_id=${cartoid} `;
       URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
     }
-
     https.get(URL, response => {
       if (response.statusCode === 200) {
         let str = '';
@@ -760,12 +759,12 @@ router.get('/project-by-ids', async (req, res) => {
           let components = [];
           let coordinates = [];
 
-          if (result.projectid && result.projectid !== null) {
+          if (result.projectid !== null && result.projectid !== undefined && result.projectid) {
             problems = await getProblemByProjectId(result.projectid, 'problemname', 'asc');
             components = await getCoordinatesOfComponents(result.projectid, 'projectid');
           }
 
-          console.log('listado', result.attachments);
+          //console.log('listado', result.attachments);
           if (result.attachments) {
             attachments = await attachmentService.findByName(result.attachments);
           }
@@ -1123,43 +1122,51 @@ router.post('/component-counter', async (req, res) => {
     const value = req.body.value;
     let answer = [];
     if (column === 'problemid') {
-      console.log(column, value);
-      const query = {
-        q: `select problemid, problemname, ${getCounters('problems', column)} from problems 
-        where problemid = ${value} `
-      };
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-      const data = await needle('post', URL, query, { json: true });
-      let answer = [];
-      if (data.statusCode === 200) {
-        const result = data.body.rows;
-        const counter = result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil + result[0].count_sia + result[0].count_cila + result[0].count_cia
-          + result[0].count_rl + result[0].count_ra + result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la + result[0].count_la1;
+      //console.log(column, value);
+      if (value === null || value === 0) {
         return res.status(200).send({
           'componentes': counter
         });
       } else {
-        return res.status(data.statusCode).send({ 'error': 'error' });
+        const query = {
+          q: `select problemid, problemname, ${getCounters('problems', column)} from problems 
+          where problemid = ${value} `
+        };
+        const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+        const data = await needle('post', URL, query, { json: true });
+        let answer = [];
+        if (data.statusCode === 200) {
+          const result = data.body.rows;
+          const counter = result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil + result[0].count_sia + result[0].count_cila + result[0].count_cia
+            + result[0].count_rl + result[0].count_ra + result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la + result[0].count_la1;
+          return res.status(200).send({
+            'componentes': counter
+          });
+        } else {
+          return res.status(data.statusCode).send({ 'error': 'error' });
+        }
       }
 
     } else {
       let counter = 0;
-      for (const table1 of PROJECT_TABLES) {
-        const query = {
-          q: `select projectid, projectname, ${getCounters(table1, column)} from ${table1} where ${column} = ${value} `
-        };
-        console.log(' PROJECT', table1, query);
-        const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-        
-        try {
-          const data = await needle('post', URL, query, { json: true });
-          if (data.statusCode === 200) {
-            const result = data.body.rows;
-            counter +=  result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil + result[0].count_sia + result[0].count_cila + result[0].count_cia
-              + result[0].count_rl + result[0].count_ra + result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la + result[0].count_la1;
-          }
-        } catch(error) {}
-        
+      if (value !== null && value !== 0) {
+        for (const table1 of PROJECT_TABLES) {
+          const query = {
+            q: `select projectid, projectname, ${getCounters(table1, column)} from ${table1} where ${column} = ${value} `
+          };
+          console.log(' PROJECT', table1, query);
+          const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+          
+          try {
+            const data = await needle('post', URL, query, { json: true });
+            if (data.statusCode === 200) {
+              const result = data.body.rows;
+              counter +=  result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil + result[0].count_sia + result[0].count_cila + result[0].count_cia
+                + result[0].count_rl + result[0].count_ra + result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la + result[0].count_la1;
+            }
+          } catch(error) {}
+          
+        }
       }
       return res.status(200).send({
         'componentes': counter

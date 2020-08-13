@@ -209,7 +209,7 @@ router.get('/me', auth, async (req, res) => {
                 longitude: -104.9063129121965,
                 latitude: 39.768682416183
               };
-              console.log('NO HAY DATOS');
+              //console.log('NO HAY DATOS');
               polygon = [
                 [
                     -105.32366831,
