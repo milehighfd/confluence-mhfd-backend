@@ -25,7 +25,7 @@ router.post('/', async (req, res) => {
       let filters = '';
       filters = getFilters(req.body);
       // 
-      const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype, county, ${getCounters('problems', 'problemid')} FROM problems `;
+      const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype, county, ${getCounters('problems', 'problemid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM problems `;
       //const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       const query = { q: `${PROBLEM_SQL} ${filters}` };
@@ -34,6 +34,10 @@ router.post('/', async (req, res) => {
         const data = await needle('post', URL, query, { json: true });
         //console.log('status', data.statusCode);
         if (data.statusCode === 200) {
+          /* let coordinates = [];
+          if (JSON.parse(element.the_geom).coordinates) {
+            coordinates = JSON.parse(element.the_geom).coordinates;
+          } */
           answer = data.body.rows.map(element => {
             return {
               cartodb_id: element.cartodb_id,
@@ -49,7 +53,8 @@ router.post('/', async (req, res) => {
               totalComponents: element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
                 element.count_cia + element.count_sia + element.count_rl + element.count_ra +
                 element.count_sd + element.count_df + element.count_mt + element.count_la +
-                element.count_la + element.count_la1 + element.count_cila
+                element.count_la + element.count_la1 + element.count_cila,
+              coordinates: JSON.parse(element.the_geom).coordinates ? JSON.parse(element.the_geom).coordinates : []
             }
           })
         } else {
@@ -75,9 +80,9 @@ router.post('/', async (req, res) => {
         for (const table of PROJECT_TABLES) {
           let query = ''
           if (table === 'projects_line_1') {
-            query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_line_1', 'projectid')} FROM ${table} ${filters} ` };
+            query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_line_1', 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
           } else {
-            query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_polygon_', 'projectid')} FROM ${table} ${filters} ` };
+            query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_polygon_', 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
           }
 
           const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
@@ -91,6 +96,10 @@ router.post('/', async (req, res) => {
                 let valor = '';
                 if (element.attachments) {
                   valor = await attachmentService.findByName(element.attachments);
+                }
+                let coordinates = [];
+                if (JSON.parse(element.the_geom).coordinates) {
+                  coordinates = JSON.parse(element.the_geom).coordinates;
                 }
                 answer.push({
                   type: element.type,
@@ -113,7 +122,8 @@ router.post('/', async (req, res) => {
                   totalComponents: element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
                     element.count_cia + element.count_sia + element.count_rl + element.count_ra +
                     element.count_sd + element.count_df + element.count_mt + element.count_la +
-                    element.count_la + element.count_la1 + element.count_cila
+                    element.count_la + element.count_la1 + element.count_cila,
+                  coordinates: coordinates
                 });
               }
               send = send.concat(answer);
@@ -1124,7 +1134,7 @@ router.post('/get-coordinates', async (req, res) => {
       q: `select ST_AsGeoJSON(ST_Envelope(the_geom)) from ${table} 
       where cartodb_id = ${value} `
     };
-    
+
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
     const data = await needle('post', URL, query, { json: true });
@@ -1135,7 +1145,7 @@ router.post('/get-coordinates', async (req, res) => {
       if (result.length > 0) {
         all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
       }
-      
+
       return res.status(200).send({
         'polygon': all_coordinates
       });
@@ -1169,8 +1179,10 @@ router.post('/component-counter', async (req, res) => {
         let answer = [];
         if (data.statusCode === 200) {
           const result = data.body.rows;
-          const counter = result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil + result[0].count_sia + result[0].count_cila + result[0].count_cia
-            + result[0].count_rl + result[0].count_ra + result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la + result[0].count_la1;
+          const counter = result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil +
+          result[0].count_cia + result[0].count_sia + result[0].count_rl + result[0].count_ra +
+          result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la +
+          result[0].count_la + result[0].count_la1 + result[0].count_cila;
           return res.status(200).send({
             'componentes': counter
           });
@@ -1188,16 +1200,18 @@ router.post('/component-counter', async (req, res) => {
           };
           console.log(' PROJECT', table1, query);
           const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-          
+
           try {
             const data = await needle('post', URL, query, { json: true });
             if (data.statusCode === 200) {
               const result = data.body.rows;
-              counter +=  result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil + result[0].count_sia + result[0].count_cila + result[0].count_cia
-                + result[0].count_rl + result[0].count_ra + result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la + result[0].count_la1;
+              counter += result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil +
+              result[0].count_cia + result[0].count_sia + result[0].count_rl + result[0].count_ra +
+              result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la +
+              result[0].count_la + result[0].count_la1 + result[0].count_cila;
             }
-          } catch(error) {}
-          
+          } catch (error) { }
+
         }
       }
       return res.status(200).send({
