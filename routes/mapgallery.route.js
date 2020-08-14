@@ -1163,6 +1163,7 @@ router.post('/component-counter', async (req, res) => {
     const column = req.body.column;
     const value = req.body.value;
     let answer = [];
+    console.log('CONTADOR',column, value);
     if (column === 'problemid') {
       //console.log(column, value);
       if (value === null || value === 0) {
@@ -1198,7 +1199,7 @@ router.post('/component-counter', async (req, res) => {
           const query = {
             q: `select projectid, projectname, ${getCounters(table1, column)} from ${table1} where ${column} = ${value} `
           };
-          console.log(' PROJECT', table1, query);
+          //console.log(' PROJECT', table1, query);
           const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
           try {
@@ -1209,9 +1210,9 @@ router.post('/component-counter', async (req, res) => {
               result[0].count_cia + result[0].count_sia + result[0].count_rl + result[0].count_ra +
               result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la +
               result[0].count_la + result[0].count_la1 + result[0].count_cila;
+              //console.log('suma', table1, counter);
             }
           } catch (error) { }
-
         }
       }
       return res.status(200).send({
