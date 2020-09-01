@@ -51,10 +51,13 @@ router.put('/edit-user/:id', [auth, isAdminAccount], async (req, res, next) => {
       return res.status(404).send({ error: 'User not found' });
     }
     if (user.email !== req.body.email) {
-      if (User.count({ email: user.email })) {
+      const count = await User.count({
+        where: { email: req.body.email }
+      });
+      if (count !== 0) {
         return res.status(422).send({ error: 'the email has already been registered' });
       }
-      if (EMAIL_VALIDATOR.test(user.email)) {
+      if (!EMAIL_VALIDATOR.test(req.body.email)) {
         return res.status(400).send({ error: 'the email must be valid' });
       }
     }
@@ -63,6 +66,7 @@ router.put('/edit-user/:id', [auth, isAdminAccount], async (req, res, next) => {
       user[field] = req.body[field];
     }
     user.name = user.firstName + ' ' + user.lastName;
+
     await User.update(user, {
       where: {
         _id: id
@@ -82,7 +86,7 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
   const designation = req.query.designation;
   const search_obj = { }; // activated: !isPending
   const status = req.query.status;
-  console.log('status', status);
+  //console.log('status', status);
   
   const limit = +req.query.limit || NUMBER_PER_PAGE;
   const page = +req.query.page || INITIAL_PAGE;
