@@ -66,7 +66,7 @@ const migrateFilesFromCloud = async () => {
 
 }
 
-const findByName = async (name) => {
+const findCoverImage = async (name) => {
   let urlImage = null;
   try {
     const attach = await Attachment.findOne({
@@ -79,6 +79,32 @@ const findByName = async (name) => {
     } else {
       urlImage = null;
     }
+  } catch(err) {
+    logger.error(err);
+    urlImage = null;
+  }
+
+  return await urlImage;
+}
+
+const findByName = async (name) => {
+  let urlImage = [];
+  try {
+    const attach = await Attachment.findAll({
+      where: {
+        filename: { [Op.iLike]: '%'+name+'%' }
+      }
+    });
+    //console.log(attach);
+    if (attach.length > 0) {
+      for (const url of attach) {
+        //console.log('URL', url)
+        urlImage.push(url.value);
+      }
+      //urlImage = await attach.value;
+    } /* else {
+      urlImage = null;
+    } */
   } catch(err) {
     logger.error(err);
     urlImage = null;
@@ -140,5 +166,6 @@ module.exports = {
   countAttachments,
   removeAttachment,
   migrateFilesFromCloud,
-  findByName
+  findByName,
+  findCoverImage
 }

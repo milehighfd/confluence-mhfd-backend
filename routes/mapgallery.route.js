@@ -95,7 +95,7 @@ router.post('/', async (req, res) => {
               for (const element of result) {
                 let valor = '';
                 if (element.attachments) {
-                  valor = await attachmentService.findByName(element.attachments);
+                  valor = await attachmentService.findCoverImage(element.attachments);
                 }
                 let coordinates = [];
                 if (JSON.parse(element.the_geom).coordinates) {
@@ -743,7 +743,7 @@ router.get('/project-by-ids', async (req, res) => {
   const cartoid = req.query.cartoid;
   //const objectid = req.query.objectid;
   const type = req.query.type;
-
+  console.log('Carto ID', cartoid, type);
   try {
     let SQL = '';
     let URL = '';
@@ -775,8 +775,9 @@ router.get('/project-by-ids', async (req, res) => {
           }
 
           //console.log('listado', result.attachments);
-          if (result.attachments) {
-            attachments = await attachmentService.findByName(result.attachments);
+          if (result.attachments) { // result.attachments - '{B83521F5-96D6-4360-B80A-81A0A31327A9}'
+            attachmentFinal = await attachmentService.findByName(result.attachments);
+            //console.log('ATTACH', attachmentFinal);
           }
           //coordinates: JSON.parse(result.the_geom).coordinates
           if (JSON.parse(result.the_geom).coordinates) {
@@ -837,7 +838,7 @@ router.get('/project-by-ids', async (req, res) => {
             coverimage: result.coverimage,
             globalid: result.globalid,
             shape_length: result.shape_length,
-            attachments: attachments,
+            attachments: attachmentFinal,
             problems: problems,
             components: components,
             coordinates: coordinates
