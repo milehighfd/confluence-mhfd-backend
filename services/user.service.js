@@ -13,6 +13,7 @@ const { Storage } = require('@google-cloud/storage');
 const { FIELDS } = require('../lib/enumConstants');
 const logger = require('../config/logger');
 const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
+const LogActivity = db.logActivity;
 
 const storage = new Storage({
   keyFilename: path.join(__dirname, '../config/mhfd-cloud-8212a0689e50.json'),
@@ -85,9 +86,6 @@ const sendConfirmAccount = async (user) => {
   const completeName = user.firstName + ' ' + user.lastName;
   console.log(redirectUrl, completeName);
   const emailToSend = template.split('{{completeName}}').join(user.name).split('{{url}}').join(redirectUrl);
-  //let emailToSend = template.split('{{completeName}}').join(completeName);
-  //emailToSend = template.split('{{url}}').join(redirectUrl);
-  /*emailToSend = template.split('{{url}}').join(redirectUrl); */
 
   const transporter = getTransporter();
   const options = {
@@ -125,6 +123,21 @@ const uploadPhoto = async (user, files) => {
 
 const findById = async (userId) => {
   return await User.find({ _id: userId });
+}
+
+const deleteUser = async (userId) => {
+  LogActivity.destroy({
+    where: {
+      user_id: userId
+    }
+  });
+
+  User.destroy({
+    where: {
+      _id: userId
+    }
+  });
+
 }
 
 const changePassword = async (changePasswordId, password) => {
@@ -191,5 +204,6 @@ module.exports = {
   findById,
   sendConfirmAccount,
   findAllUsers,
-  sendApprovedAccount
+  sendApprovedAccount,
+  deleteUser
 };

@@ -23,7 +23,6 @@ router.put('/change-user-state/:id/:status', [auth, isAdminAccount], async (req,
     if (!user) {
       return res.status(404).send({ error: 'User not found' });
     }
-    //user.activated = !user.activated;
     user.status = status;
 
     await User.update(user, {
@@ -78,6 +77,16 @@ router.put('/edit-user/:id', [auth, isAdminAccount], async (req, res, next) => {
     return res.status(500).send({ error: error });
   }
 });
+
+router.delete('/delete-user/:id', [auth, isAdminAccount], async (req, res, next) => {
+  try {
+    await userService.deleteUser(req.params.id);
+    return res.status(200).send({message: 'User deleted successfully'});
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).send({ error: error });
+  }
+})
 
 router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
   //const isPending = req.query.pending || false;
