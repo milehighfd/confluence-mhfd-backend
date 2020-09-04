@@ -1164,7 +1164,6 @@ router.post('/component-counter', async (req, res) => {
       const column = req.body.column;
       const value = req.body.value;
       let answer = [];
-      console.log('CONTADOR', column, value);
       if (column === 'problemid') {
          //console.log(column, value);
          if (value === null || value === 0) {
