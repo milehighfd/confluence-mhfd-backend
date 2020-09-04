@@ -329,6 +329,9 @@ router.post('/v2/by-components', async (req, res) => {
     for (const ans of answer) {
       array.push(...ans);
     }
+    if (!array.length) {
+      array.push(-1);
+    }
     response[type] = [...new Set(array)];
     
   }
