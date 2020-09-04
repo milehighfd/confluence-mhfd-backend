@@ -1754,45 +1754,25 @@ async function getCounterComponents(bounds) {
       const coords = bounds.split(',');
       let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
       filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-      /* const COMPONENTS_TABLE = ['Grade Control Structure', 'Pipe Appurtenances', 'Special Item Point',
-        'Special Item Linear', 'Special Item Area', 'Channel Improvements Linear',
-        'Channel Improvements Area', 'Removal Line', 'Removal Area', 'Storm Drain',
-        'Detention Facilities', 'Maintenance Trails', 'Land Acquisition', 'Landscaping Area']; */
-
-      const LINE_SQL = `SELECT type, count(*) as count FROM grade_control_structure where ${filters} group by type union
-      SELECT type, count(*) as count FROM pipe_appurtenances where ${filters} group by type union
-      SELECT type, count(*) as count FROM special_item_point where ${filters} group by type union
-      SELECT type, count(*) as count FROM special_item_linear where ${filters} group by type union
-      SELECT type, count(*) as count FROM special_item_area where ${filters} group by type union
-      SELECT type, count(*) as count FROM channel_improvements_linear where ${filters} group by type union
-      SELECT type, count(*) as count FROM channel_improvements_area where ${filters} group by type union
-      SELECT type, count(*) as count FROM removal_line where ${filters} group by type union
-      SELECT type, count(*) as count FROM removal_area where ${filters} group by type union
-      SELECT type, count(*) as count FROM storm_drain where ${filters} group by type union
-      SELECT type, count(*) as count FROM detention_facilities where ${filters} group by type union
-      SELECT type, count(*) as count FROM maintenance_trails where ${filters} group by type union
-      SELECT type, count(*) as count FROM land_acquisition where ${filters} group by type union
-      SELECT type, count(*) as count FROM landscaping_area where ${filters} group by type`;
+      
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-      const query = { q: ` ${LINE_SQL} ` };
-      const data = await needle('post', URL, query, { json: true });
-      let answer = [];
-
-      //console.log('QUERY COMPONENTES TODOS', LINE_SQL);
-
-      if (data.statusCode === 200) {
-         answer = data.body.rows;
-         //console.log('CONTADOR POR COMPONENTES', answer);
-      }
-      //let i = 0;
-      for (const component of answer) {
+      for (const component of TABLES_COMPONENTS) {
+         let answer = [];
+         const SQL = `SELECT type, count(*) as count FROM ${component} where ${filters} and 
+         (problemid > 0 or projectid > 0) group by type `;
+         
+         const query = { q: ` ${SQL} ` };
+         const data = await needle('post', URL, query, { json: true });
+         if (data.statusCode === 200) {
+            answer = data.body.rows;
+         }
          result.push({
-            key: component.type.toLowerCase().split(' ').join('_'),
-            value: component.type,
-            counter: component.count
-         });
-         //i++;
+            key: component, 
+            value: answer[0].type,
+            counter: answer[0].count
+         })
       }
+      
    } catch (error) {
       logger.error(error);
       logger.error(`getCounterComponents Connection error`);
