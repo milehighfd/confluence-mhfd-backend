@@ -1748,6 +1748,15 @@ async function getCountByYearStudy(values, bounds) {
    return result;
 }
 
+function CapitalLetter(chain) {
+   const array = chain.split('_');
+   let result = '';
+   for (const word of array) {
+      result = result + " " + word.charAt(0).toUpperCase() + word.substring(1);
+   }
+   return result;
+}
+
 async function getCounterComponents(bounds) {
    let result = [];
    try {
@@ -1758,19 +1767,22 @@ async function getCounterComponents(bounds) {
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       for (const component of TABLES_COMPONENTS) {
          let answer = [];
-         const SQL = `SELECT type, count(*) as count FROM ${component} where ${filters} and 
-         (problemid > 0 or projectid > 0) group by type `;
+         let counter = 0;
+         const SQL = `SELECT type, count(*) as count FROM ${component} where ${filters} group by type `;
          
          const query = { q: ` ${SQL} ` };
          const data = await needle('post', URL, query, { json: true });
          if (data.statusCode === 200) {
             answer = data.body.rows;
+            if (data.body.rows.length > 0) {
+               counter = answer[0].count;
+            }
          }
          result.push({
             key: component, 
-            value: answer[0].type,
-            counter: answer[0].count
-         })
+            value: CapitalLetter(component),
+            counter: counter
+         });
       }
       
    } catch (error) {
