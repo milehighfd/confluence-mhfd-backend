@@ -123,7 +123,9 @@ module.exports = (sequelize, DataType) => {
   User.findByCredentials = async (email, password) => {
     const user = await User.findOne({
       where: {
-        email: email,
+        email: {
+          [Op.iLike]: '%' + email + '%'
+        },
         status: {
           [Op.not]: 'deleted'
         }
