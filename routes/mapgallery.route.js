@@ -1109,19 +1109,11 @@ router.post('/components-by-entityid', async (req, res) => {
          }
          COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
       }
-      //console.log('COMPONENTES SSSSS', COMPONENTS_SQL);
       const query = { q: `${COMPONENTS_SQL}` };
 
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       const data = await needle('post', URL, query, { json: true });
       if (data.statusCode === 200) {
-         //const result = data.body.rows;
-         //console.log(result);
-         /*
-         answer = data.body.rows.map(element => {
-                  return {
-                     cartodb_id: element.cartodb_id,
-          */
          const result = data.body.rows.map(element => {
             return {
                type: element.type + '(' + element.count + ')',

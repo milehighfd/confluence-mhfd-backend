@@ -51,7 +51,7 @@ var j = schedule.scheduleJob('10 44 12 * * *', function(){
       fs.mkdirSync(IMAGES_FROM_GOOGLE_DRIVE);
     }
     logger.info('Cleaning folfer '+ IMAGES_FROM_GOOGLE_DRIVE);
-    fs.readdir(IMAGES_FROM_GOOGLE_DRIVE, (err, files) => {
+    /* fs.readdir(IMAGES_FROM_GOOGLE_DRIVE, (err, files) => {
       if (err) throw err;
       //console.log(files);
       for (const file of files) {
@@ -59,7 +59,7 @@ var j = schedule.scheduleJob('10 44 12 * * *', function(){
           if (err) throw err;
         })
       }
-    });
+    }); */
 
     logger.info('Downloading images from Google Drive');
     let files = [''];
