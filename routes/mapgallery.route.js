@@ -1095,7 +1095,7 @@ router.post('/components-by-entityid', async (req, res) => {
       let COMPONENTS_SQL = '';
       let union = '';
       for (const component of TABLES_COMPONENTS) {
-         COMPONENTS_SQL += union + `SELECT type, coalesce(sum(original_cost), 0) as estimated_cost, 
+         COMPONENTS_SQL += union + `SELECT type, count(original_cost), coalesce(sum(original_cost), 0) as estimated_cost, 
         case when cast(${finalcost} as integer) > 0 then coalesce(sum(original_cost),0)/cast(${finalcost} as integer) else 0 END as original_cost,
         ((select count(*) from ${component} where ${typeid}=${id} and status='Completed')/count(*)) percen
         FROM ${component}, ${table}
@@ -1109,12 +1109,28 @@ router.post('/components-by-entityid', async (req, res) => {
          }
          COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
       }
+      //console.log('COMPONENTES SSSSS', COMPONENTS_SQL);
       const query = { q: `${COMPONENTS_SQL}` };
 
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       const data = await needle('post', URL, query, { json: true });
       if (data.statusCode === 200) {
-         const result = data.body.rows;
+         //const result = data.body.rows;
+         //console.log(result);
+         /*
+         answer = data.body.rows.map(element => {
+                  return {
+                     cartodb_id: element.cartodb_id,
+          */
+         const result = data.body.rows.map(element => {
+            return {
+               type: element.type + '(' + element.count + ')',
+               estimated_cost: element.estimated_cost,
+               original_cost: element.original_cost,
+               percen: element.percen
+            }
+         })
+
          return res.status(200).send(result);
       } else {
          console.log('bad status ', response.statusCode, response.body);
@@ -1285,7 +1301,7 @@ router.post('/group-by', async (req, res) => {
       const LINE_SQL = `SELECT ${column} FROM ${table} group by ${column} order by ${column}`;
       //console.log(LINE_SQL);
       const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
-      console.log(LINE_URL);
+      //console.log(LINE_URL);
       https.get(LINE_URL, response => {
          if (response.statusCode === 200) {
             let str = '';
