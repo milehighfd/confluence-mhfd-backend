@@ -439,6 +439,24 @@ function getFilters(params) {
       hasProjectType = true;
    }
 
+   if (params.consultant) {
+      const query = createQueryForIn(params.consultant.split(','));
+      if (filters.length > 0) {
+         filters += ` and consultant in (${query}) `;
+      } else {
+         filters = ` consultant in (${query})`;
+      }
+   }
+
+   if (params.contractor) {
+      const query = createQueryForIn(params.contractor.split(','));
+      if (filters.length > 0) {
+         filters += ` and contractor in (${query}) `;
+      } else {
+         filters = ` contractor in (${query})`;
+      }
+   }
+
    if (params.status) {
       const query = createQueryForIn(params.status.split(','))
       if (filters.length > 0) {
@@ -498,7 +516,6 @@ function getFilters(params) {
       }
    }
 
-   //console.log(params);
    if (params.workplanyear) {
       const values = params.workplanyear.split(',');
       let query = '';
@@ -864,7 +881,7 @@ router.get('/problem-by-id/:id', async (req, res) => {
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} &api_key=${CARTO_TOKEN}`);
 
       https.get(URL, response => {
-         console.log('status', response.statusCode);
+         //console.log('status', response.statusCode);
          if (response.statusCode === 200) {
             let str = '';
             response.on('data', function (chunk) {
@@ -1879,7 +1896,6 @@ async function getComponentsValuesByColumn(column, bounds) {
       console.log('STATUS', data.statusCode);
       if (data.statusCode === 200) {
          answer = data.body.rows;
-         console.log('COMPONENTS BY COLUMN', column, answer);
       }
       for (const row of answer) {
          const search = result.filter(item => item.value === row.column);
@@ -1912,7 +1928,7 @@ async function getCountWorkYear(data, bounds) {
          for (const table of PROJECT_TABLES) {
             const query = { q: `select count(*) as count from ${table} where ${filters} and ${value.column} > 0 ` };
             const data = await needle('post', URL, query, { json: true });
-            console.log('STATUS', data.statusCode, query);
+            //console.log('STATUS', data.statusCode, query);
             if (data.statusCode === 200) {
                if (data.body.rows.length > 0) {
                   counter += data.body.rows[0].count;
@@ -1985,7 +2001,7 @@ async function getCountByArrayColumns(table, column, columns, bounds) {
             let counter = 0;
             const data = await needle('post', URL, query, { json: true });
 
-            console.log('STATUS', data.statusCode);
+            //console.log('STATUS', data.statusCode);
             if (data.statusCode === 200) {
                //const result1 = data.body.rows;
                if (data.body.rows.length > 0) {
@@ -2011,7 +2027,7 @@ async function getCountByArrayColumns(table, column, columns, bounds) {
                };
                const data = await needle('post', URL, query, { json: true });
 
-               console.log('STATUS', data.statusCode);
+               //console.log('STATUS', data.statusCode);
                if (data.statusCode === 200) {
                   if (data.body.rows.length > 0) {
                      answer = answer.concat(data.body.rows);
@@ -2215,6 +2231,8 @@ router.get('/params-filters', async (req, res) => {
          }
       ];
       requests.push(getValuesByRange('projects_line_1', 'estimatedcost', rangeTotalCost, bounds));
+      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'consultant', bounds));
+      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'contractor', bounds));
 
       // PROBLEMS
       let problemTypesConst = ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'];
@@ -2246,6 +2264,7 @@ router.get('/params-filters', async (req, res) => {
       ]
       requests.push(getValuesByRange('problems', 'solutioncost', rangeSolution, bounds));
 
+      // Components
       requests.push(getCounterComponents(bounds));
       requests.push(getComponentsValuesByColumn('status', bounds));
       requests.push(getCountByYearStudy([1970, 1980, 1990, 2000, 2010, 2020], bounds));
@@ -2272,27 +2291,29 @@ router.get('/params-filters', async (req, res) => {
             "county": promises[10],
             "lgmanager": promises[11],
             "streamname": promises[12],
-            "estimatedCost": promises[13]
+            "estimatedCost": promises[13],
+            "consultant": promises[14],
+            "contractor": promises[15]
          },
          "problems": {
             "problemtype": problemTypesConst,
-            "priority": promises[14],
-            "solutionstatus": promises[15],
-            "county": promises[16],
-            "jurisdiction": promises[17],
-            "mhfdmanager": promises[18],
-            "source": promises[19],
-            "components": promises[20],
-            "cost": promises[21]
+            "priority": promises[16],
+            "solutionstatus": promises[17],
+            "county": promises[18],
+            "jurisdiction": promises[19],
+            "mhfdmanager": promises[20],
+            "source": promises[21],
+            "components": promises[22],
+            "cost": promises[23]
          },
          "components": {
-            "component_type": promises[22],
-            "status": promises[23],
-            "yearofstudy": promises[24],
-            "jurisdiction": promises[25],
-            "county": promises[26],
-            "watershed": promises[27],
-            "estimatedcost": promises[28]
+            "component_type": promises[24],
+            "status": promises[25],
+            "yearofstudy": promises[26],
+            "jurisdiction": promises[27],
+            "county": promises[28],
+            "watershed": promises[29],
+            "estimatedcost": promises[30]
          }
       }
       res.status(200).send(result);
