@@ -1133,7 +1133,7 @@ router.post('/components-by-entityid', async (req, res) => {
       if (data.statusCode === 200) {
          const result = data.body.rows.map(element => {
             return {
-               type: element.type + '(' + element.count + ')',
+               type: element.type + ' (' + element.count + ')',
                estimated_cost: element.estimated_cost,
                original_cost: element.original_cost,
                percen: element.percen
