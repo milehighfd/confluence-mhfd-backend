@@ -10,6 +10,19 @@ const logActivityService = require('../services/logActivity.service');
 const LogActivity = require('../models/logActivity.model');
 const { ACTIVITY_TYPE } = require('../lib/enumConstants');
 
+router.get('/guest', async (req, res) => {
+  const user = await User.findOne({
+    where: {
+      email: config.GUEST_USER
+    }
+  });
+  const token = await user.generateAuthToken();
+  res.send({
+    user,
+    token
+  });
+})
+
 router.post('/login', async (req, res) => {
   try {
     const {
