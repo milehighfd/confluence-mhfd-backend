@@ -162,7 +162,7 @@ function getCounters(table, column) {
 }
 
 function getFilters(params) {
-   console.log('PARAMS',params);
+   //console.log('PARAMS', params);
    let filters = '';
    let tipoid = '';
    let hasProjectType = false;
@@ -1479,7 +1479,7 @@ async function getValuesByRange(table, column, range, bounds) {
             } else {
                result2.push({ min: values.min, max: values.max, counter: counter, last: false });
             }
-            
+
             index++;
          }
          resolve(result2);
@@ -1797,13 +1797,13 @@ async function getCounterComponents(bounds) {
       const coords = bounds.split(',');
       let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
       filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-      
+
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       for (const component of TABLES_COMPONENTS) {
          let answer = [];
          let counter = 0;
          const SQL = `SELECT type, count(*) as count FROM ${component} where ${filters} group by type `;
-         
+
          const query = { q: ` ${SQL} ` };
          const data = await needle('post', URL, query, { json: true });
          if (data.statusCode === 200) {
@@ -1813,12 +1813,12 @@ async function getCounterComponents(bounds) {
             }
          }
          result.push({
-            key: component, 
+            key: component,
             value: CapitalLetter(component),
             counter: counter
          });
       }
-      
+
    } catch (error) {
       logger.error(error);
       logger.error(`getCounterComponents Connection error`);
@@ -2162,6 +2162,196 @@ router.get('/range', async (req, res) => {
          }
       ];
       const result = await getValuesByRange('projects_line_1', 'mhfddollarsallocated', rangeMhfdDollarsAllocated, bounds);
+      res.status(200).send(result);
+   } catch (error) {
+      logger.error(error);
+      logger.error(`getSubtotalsByComponent Connection error`);
+   }
+})
+
+router.get('/params-filter-projects', async (req, res) => {
+   try {
+      const bounds = req.query.bounds;
+
+      let requests = [];
+
+      // PROJECTS
+      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'creator', bounds));
+      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'mhfdmanager', bounds));
+      requests.push(getCountByArrayColumns('projects_line_1', 'projecttype', ['Maintenance', 'Study', 'Capital'], bounds));
+      requests.push(getCountByArrayColumns('projects_line_1', 'status', ['Draft', 'Requested',
+         'Approved', 'Idle', 'Initiated', 'Ongoing',
+         'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
+         'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete'], bounds));
+      requests.push(getValuesByColumn('projects_line_1', 'startyear', bounds));
+      requests.push(getValuesByColumn('projects_line_1', 'completedyear', bounds));
+      const rangeMhfdDollarsAllocated = [
+         {
+            min: 0,
+            max: 250000
+         },
+         {
+            min: 250001,
+            max: 500000
+         },
+         {
+            min: 500001,
+            max: 750000
+         },
+         {
+            min: 750001,
+            max: 1000000
+         },
+         {
+            min: 1000001,
+            max: 50000000
+         }
+      ];
+      requests.push(getValuesByRange('projects_line_1', 'mhfddollarsallocated', rangeMhfdDollarsAllocated, bounds));
+      //requests.push(getQuintilValues('projects_line_1', 'mhfddollarsallocated', bounds));
+      requests.push(getCountWorkYear([{ year: 2019, column: 'workplanyr1' }, { year: 2020, column: 'workplanyr2' },
+      { year: 2021, column: 'workplanyr3' }, { year: 2022, column: 'workplanyr4' }, { year: 2023, column: 'workplanyr5' }], bounds));
+      requests.push(getProjectByProblemType(bounds));
+      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'jurisdiction', bounds));
+      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'county', bounds));
+      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'lgmanager', bounds));
+      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'streamname', bounds));
+      //requests.push(getQuintilValues('projects_line_1', 'estimatedcost', bounds));
+      const rangeTotalCost = [
+         {
+            min: 0,
+            max: 250000
+         },
+         {
+            min: 250001,
+            max: 500000
+         },
+         {
+            min: 500001,
+            max: 750000
+         },
+         {
+            min: 750001,
+            max: 1000000
+         },
+         {
+            min: 1000001,
+            max: 50000000
+         }
+      ];
+      requests.push(getValuesByRange('projects_line_1', 'estimatedcost', rangeTotalCost, bounds));
+      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'consultant', bounds));
+      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'contractor', bounds));
+      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'servicearea', bounds));
+
+      const promises = await Promise.all(requests);
+      const result = {
+         "creator": promises[0],
+         "mhfdmanager": promises[1],
+         "projecttype": promises[2],
+         "status": promises[3],
+         "startyear": promises[4],
+         "completedyear": promises[5],
+         "mhfddollarsallocated": promises[6],
+         "workplanyear": promises[7],
+         "problemtype": promises[8],
+         "jurisdiction": promises[9],
+         "county": promises[10],
+         "lgmanager": promises[11],
+         "streamname": promises[12],
+         "estimatedCost": promises[13],
+         "consultant": promises[14],
+         "contractor": promises[15],
+         "servicearea": promises[16]
+      }
+      res.status(200).send(result);
+   } catch (error) {
+      logger.error(error);
+      logger.error(`getSubtotalsByComponent Connection error`);
+   }
+})
+
+router.get('/params-filter-problems', async (req, res) => {
+   try {
+      const bounds = req.query.bounds;
+      //console.log(bounds);
+      let requests = [];
+      let problemTypesConst = ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'];
+      requests.push(getCountByArrayColumns('problems', 'problempriority', ['High', 'Medium', 'Low'], bounds));
+      requests.push(getCountSolutionStatus([0, 25, 50, 75], bounds));
+      requests.push(getValuesByColumn('problems', 'county', bounds));
+      requests.push(getValuesByColumnWithOutCount('problems', 'jurisdiction', bounds));
+      requests.push(getValuesByColumnWithOutCount('problems', 'mhfdmanager', bounds));
+      requests.push(getValuesByColumnWithOutCount('problems', 'source', bounds));
+      requests.push(getSubtotalsByComponent('problems', 'problemid', bounds));
+      //requests.push(getQuintilValues('problems', 'solutioncost', bounds));
+      const rangeSolution = [
+         {
+            min: 0,
+            max: 1000000
+         },
+         {
+            min: 1000001,
+            max: 3000000
+         },
+         {
+            min: 3000001,
+            max: 5000000
+         },
+         {
+            min: 5000001,
+            max: 50000000
+         }
+      ]
+      requests.push(getValuesByRange('problems', 'solutioncost', rangeSolution, bounds));
+      requests.push(getValuesByColumnWithOutCount('problems', 'servicearea', bounds));
+
+      const promises = await Promise.all(requests);
+
+      const result = {
+         "problemtype": problemTypesConst,
+         "priority": promises[0],
+         "solutionstatus": promises[1],
+         "county": promises[2],
+         "jurisdiction": promises[3],
+         "mhfdmanager": promises[4],
+         "source": promises[5],
+         "components": promises[6],
+         "cost": promises[7],
+         "servicearea": promises[8]
+      };
+      res.status(200).send(result);
+   } catch (error) {
+      logger.error(error);
+      logger.error(`getSubtotalsByComponent Connection error`);
+   }
+})
+
+router.get('/params-filter-components', async (req, res) => {
+   try {
+      const bounds = req.query.bounds;
+      let requests = [];
+
+      requests.push(getCounterComponents(bounds));
+      requests.push(getComponentsValuesByColumn('status', bounds));
+      requests.push(getCountByYearStudy([1970, 1980, 1990, 2000, 2010, 2020], bounds));
+      requests.push(getComponentsValuesByColumnWithCount('jurisdiction', bounds));
+      requests.push(getComponentsValuesByColumnWithCount('county', bounds));
+      requests.push(getComponentsValuesByColumnWithCount('mhfdmanager', bounds));
+      requests.push(getQuintilComponentValues('estimated_cost', bounds));
+      requests.push(getComponentsValuesByColumnWithCount('servicearea', bounds));
+
+      const promises = await Promise.all(requests);
+      const result = {
+         "component_type": promises[0],
+         "status": promises[1],
+         "yearofstudy": promises[2],
+         "jurisdiction": promises[3],
+         "county": promises[4],
+         "watershed": promises[5],
+         "estimatedcost": promises[6],
+         "servicearea": promises[7]
+      };
       res.status(200).send(result);
    } catch (error) {
       logger.error(error);
