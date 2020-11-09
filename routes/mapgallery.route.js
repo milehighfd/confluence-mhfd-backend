@@ -162,7 +162,7 @@ function getCounters(table, column) {
 }
 
 function getFilters(params) {
-   //console.log('PARAMS',params);
+   console.log('PARAMS',params);
    let filters = '';
    let tipoid = '';
    let hasProjectType = false;
@@ -209,7 +209,7 @@ function getFilters(params) {
 
    // components
    if (params.componenttype) {
-      console.log('COMPONENTS FILTER', params.componenttype);
+      //console.log('COMPONENTS FILTER', params.componenttype);
       const values = params.componenttype.split(',');
       let query = '';
       let operator = '';
@@ -391,10 +391,19 @@ function getFilters(params) {
       }
    }
 
+   if (params.servicearea) {
+      const query = createQueryForIn(params.servicearea.split(','));
+      if (filters.length > 0) {
+         filters += ` and servicearea in (${query})`;
+      } else {
+         filters = ` servicearea in (${query})`;
+      }
+   }
+
    if (params.mhfdmanager) {
-      console.log('MHFD MANAGER', params.mhfdmanager);
+      //console.log('MHFD MANAGER', params.mhfdmanager);
       const query = createQueryForIn(params.mhfdmanager.split(','));
-      console.log('QUERY', query);
+      //console.log('QUERY', query);
       if (filters.length > 0) {
          filters = filters + ` and mhfdmanager in (${query})`;
       } else {
@@ -2233,6 +2242,7 @@ router.get('/params-filters', async (req, res) => {
       requests.push(getValuesByRange('projects_line_1', 'estimatedcost', rangeTotalCost, bounds));
       requests.push(getValuesByColumnWithOutCount('projects_line_1', 'consultant', bounds));
       requests.push(getValuesByColumnWithOutCount('projects_line_1', 'contractor', bounds));
+      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'servicearea', bounds));
 
       // PROBLEMS
       let problemTypesConst = ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'];
@@ -2263,6 +2273,7 @@ router.get('/params-filters', async (req, res) => {
          }
       ]
       requests.push(getValuesByRange('problems', 'solutioncost', rangeSolution, bounds));
+      requests.push(getValuesByColumnWithOutCount('problems', 'servicearea', bounds));
 
       // Components
       requests.push(getCounterComponents(bounds));
@@ -2272,6 +2283,7 @@ router.get('/params-filters', async (req, res) => {
       requests.push(getComponentsValuesByColumnWithCount('county', bounds));
       requests.push(getComponentsValuesByColumnWithCount('mhfdmanager', bounds));
       requests.push(getQuintilComponentValues('estimated_cost', bounds));
+      requests.push(getComponentsValuesByColumnWithCount('servicearea', bounds));
 
 
       const promises = await Promise.all(requests);
@@ -2293,27 +2305,30 @@ router.get('/params-filters', async (req, res) => {
             "streamname": promises[12],
             "estimatedCost": promises[13],
             "consultant": promises[14],
-            "contractor": promises[15]
+            "contractor": promises[15],
+            "servicearea": promises[16]
          },
          "problems": {
             "problemtype": problemTypesConst,
-            "priority": promises[16],
-            "solutionstatus": promises[17],
-            "county": promises[18],
-            "jurisdiction": promises[19],
-            "mhfdmanager": promises[20],
-            "source": promises[21],
-            "components": promises[22],
-            "cost": promises[23]
+            "priority": promises[17],
+            "solutionstatus": promises[18],
+            "county": promises[19],
+            "jurisdiction": promises[20],
+            "mhfdmanager": promises[21],
+            "source": promises[22],
+            "components": promises[23],
+            "cost": promises[24],
+            "servicearea": promises[25]
          },
          "components": {
-            "component_type": promises[24],
-            "status": promises[25],
-            "yearofstudy": promises[26],
-            "jurisdiction": promises[27],
-            "county": promises[28],
-            "watershed": promises[29],
-            "estimatedcost": promises[30]
+            "component_type": promises[26],
+            "status": promises[27],
+            "yearofstudy": promises[28],
+            "jurisdiction": promises[29],
+            "county": promises[30],
+            "watershed": promises[31],
+            "estimatedcost": promises[32],
+            "servicearea": promises[33]
          }
       }
       res.status(200).send(result);
