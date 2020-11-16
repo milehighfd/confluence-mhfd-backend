@@ -5,14 +5,12 @@ const { CARTO_TOKEN } = require('../config/config');
 //const { response } = require('express');
 
 router.get('/', async (req, res) => {
-  console.log('into');
   try {
     const newProm = new Promise((resolve, reject) => {
       const sql = `select aoi, filter, ST_AsGeoJSON(ST_Envelope(the_geom)) from mhfd_zoom_to_areas`;
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`);
       let result = [];
       https.get(URL, response => {
-        console.log('STATUS', response.statusCode);
         if (response.statusCode === 200) {
           let str = '';
           response.on('data', function (chunk) {
