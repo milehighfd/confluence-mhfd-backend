@@ -56,7 +56,7 @@ const migrateFilesFromCloud = async () => {
       let attach = {};
       attach.value = getPublicUrl(file.name);
       attach.user_id = user._id;
-      attach.filename = file.name; 
+      attach.filename = file.name;
       attach.mimetype = file.metadata.contentType;
       attach.register_date = new Date();
       attach.filesize = file.metadata.size;
@@ -71,7 +71,7 @@ const findCoverImage = async (name) => {
   try {
     const attach = await Attachment.findOne({
       where: {
-        filename: { [Op.iLike]: '%'+name+'%' }
+        filename: { [Op.iLike]: '%' + name + '%' }
       }
     });
     if (attach) {
@@ -79,7 +79,7 @@ const findCoverImage = async (name) => {
     } else {
       urlImage = null;
     }
-  } catch(err) {
+  } catch (err) {
     logger.error(err);
     urlImage = null;
   }
@@ -87,25 +87,49 @@ const findCoverImage = async (name) => {
   return await urlImage;
 }
 
+const exists = async (name) => {
+  console.log('NAME', name);
+  const file = await storage.bucket(STORAGE_NAME).file(name).exists();
+  console.log('ATTACHMENTSSSSS', file);
+}
+
 const findByName = async (name) => {
   let urlImage = [];
   try {
     const attach = await Attachment.findAll({
       where: {
-        filename: { [Op.iLike]: '%'+name+'%' }
+        filename: { [Op.iLike]: '%' + name + '%' }
       }
-    });
-    //console.log(attach);
+    });    
+    
     if (attach.length > 0) {
       for (const url of attach) {
-        //console.log('URL', url)
         urlImage.push(url.value);
       }
-      //urlImage = await attach.value;
-    } /* else {
-      urlImage = null;
-    } */
-  } catch(err) {
+    }
+  } catch (err) {
+    logger.error(err);
+    urlImage = null;
+  }
+
+  return await urlImage;
+}
+
+const findByFilename = async (name) => {
+  let urlImage = [];
+  try {
+    const attach = await Attachment.findAll({
+      where: {
+        filename: { [Op.iLike]: '%' + name + '%' }
+      }
+    });    
+    
+    if (attach.length > 0) {
+      for (const url of attach) {
+        urlImage.push(url.filename);
+      }
+    }
+  } catch (err) {
     logger.error(err);
     urlImage = null;
   }
@@ -118,22 +142,22 @@ const countAttachments = async () => {
 }
 
 const removeAttachment = async (id) => {
-    const attach = await Attachment.findByPk(id, { raw: true }); 
-    await storage.bucket(STORAGE_NAME).file(attach.filename).delete();
-    console.log(attach.filename);
-    await Attachment.destroy({
-      where: {
-        _id: attach._id
-      }
-    });
-  
+  const attach = await Attachment.findByPk(id, { raw: true });
+  await storage.bucket(STORAGE_NAME).file(attach.filename).delete();
+  console.log(attach.filename);
+  await Attachment.destroy({
+    where: {
+      _id: attach._id
+    }
+  });
+
 }
 
 const uploadFiles = async (user, files) => {
   const bucket = storage.bucket(STORAGE_NAME);
   console.log('iniciando attach');
-  
-  for(const file of files ) {
+
+  for (const file of files) {
     const name = file.originalname;
     const blob = bucket.file(name);
     let attach = {};
@@ -142,7 +166,7 @@ const uploadFiles = async (user, files) => {
     attach.filename = file.originalname;
     attach.mimetype = file.mimetype;
     attach.register_date = new Date();
-    attach.filesize = file.size; 
+    attach.filesize = file.size;
     Attachment.create(attach);
     const newPromise = new Promise((resolve, reject) => {
       blob.createWriteStream({
@@ -150,14 +174,14 @@ const uploadFiles = async (user, files) => {
       }).on('finish', async response => {
         await blob.makePublic();
         resolve(attach);
-        
+
       }).on('error', err => {
         reject('upload error: ', err);
       }).end(file.buffer);
     });
     await newPromise;
   }
-  
+
 }
 
 module.exports = {
@@ -167,5 +191,7 @@ module.exports = {
   removeAttachment,
   migrateFilesFromCloud,
   findByName,
-  findCoverImage
+  findCoverImage,
+  exists,
+  findByFilename
 }

@@ -96,6 +96,11 @@ router.post('/', async (req, res) => {
                         let valor = '';
                         if (element.attachments) {
                            valor = await attachmentService.findCoverImage(element.attachments);
+                           const var2 = await attachmentService.findByFilename(element.attachments);
+                           if (var2.length) {
+                              const k = await attachmentService.exists(var2[0]);
+                              const k2 = await attachmentService.exists(var2[0] + '_compress');
+                           }
                         }
                         let coordinates = [];
                         if (JSON.parse(element.the_geom).coordinates) {
