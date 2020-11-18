@@ -8,6 +8,7 @@ const path = require('path');
 const { Storage } = require('@google-cloud/storage');
 const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
 const { Op } = require("sequelize");
+const { resolve } = require('path');
 
 const storage = new Storage({
   keyFilename: path.join(__dirname, '../config/mhfd-cloud-8212a0689e50.json'),
@@ -156,7 +157,6 @@ const removeAttachment = async (id) => {
 const uploadFiles = async (user, files) => {
   const bucket = storage.bucket(STORAGE_NAME);
   console.log('iniciando attach');
-
   for (const file of files) {
     const name = file.originalname;
     const blob = bucket.file(name);
@@ -168,6 +168,32 @@ const uploadFiles = async (user, files) => {
     attach.register_date = new Date();
     attach.filesize = file.size;
     Attachment.create(attach);
+    const complete = path.join(__dirname, './tmp/' + file.originalname) ;
+    const prom = new Promise((resolve, reject => {
+      fs.writeFile(complete, file.buffer, (error) => {
+        if (error) {
+          console.log('error');
+          reject('the error ', error);
+        }
+        console.log('bla bla bla');
+        resolve('OK');
+      });
+    }));
+    console.log('entro');
+    const t1 = await prom;
+    console.log('paso');
+    const read = new Promise((res, rej) => {
+      fs.readFile(complete, (error, data) => {
+        console.log(error, data);
+        if (error) {
+          return rej('error');
+        }
+        console.log('my data is ', data);
+        return res('ok');
+      });
+    });
+    const t2 = await read;
+    console.log('step');
     const newPromise = new Promise((resolve, reject) => {
       blob.createWriteStream({
         metadata: { contentType: file.mimetype }
@@ -180,6 +206,7 @@ const uploadFiles = async (user, files) => {
       }).end(file.buffer);
     });
     await newPromise;
+    
   }
 
 }
