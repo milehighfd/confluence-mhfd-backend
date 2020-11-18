@@ -97,11 +97,13 @@ router.post('/', async (req, res) => {
                         let valor = '';
                         if (element.attachments) {
                            valor = await attachmentService.findCoverImage(element.attachments);
-                           const var2 = await attachmentService.findByFilename(element.attachments);
-                           if (var2.length) {
-                              const k = await attachmentService.exists(var2[0]);
-                              const k2 = await attachmentService.exists(var2[0] + '_compress');
+                           console.log('mi valor ', valor);
+                           if (valor) {
+                              valor = valor.split('https://storage.googleapis.com/mhfd-cloud.appspot.com/');
+                              valor = 'https://storage.cloud.google.com/mhfd-cloud.appspot.com/compressed/' + valor[1];
                            }
+                           console.log('mi valor ', valor);
+                           
                         }
                         let coordinates = [];
                         if (JSON.parse(element.the_geom).coordinates) {
