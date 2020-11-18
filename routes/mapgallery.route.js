@@ -10,6 +10,7 @@ const needle = require('needle');
 
 const { CARTO_TOKEN } = require('../config/config');
 const attachmentService = require('../services/attachment.service');
+const zoomareaService = require('../services/zoomarea.service');
 const { response } = require('express');
 const { query } = require('../config/logger');
 const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
@@ -2213,15 +2214,15 @@ router.get('/params-filter-projects', async (req, res) => {
          }
       ];
       requests.push(getValuesByRange('projects_line_1', 'mhfddollarsallocated', rangeMhfdDollarsAllocated, bounds));
-      //requests.push(getQuintilValues('projects_line_1', 'mhfddollarsallocated', bounds));
       requests.push(getCountWorkYear([{ year: 2019, column: 'workplanyr1' }, { year: 2020, column: 'workplanyr2' },
       { year: 2021, column: 'workplanyr3' }, { year: 2022, column: 'workplanyr4' }, { year: 2023, column: 'workplanyr5' }], bounds));
       requests.push(getProjectByProblemType(bounds));
-      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'jurisdiction', bounds));
-      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'county', bounds));
+      // *** replace by other method
+      //requests.push(getValuesByColumnWithOutCount('projects_line_1', 'jurisdiction', bounds)); 
+      // *** replace by other method
+      //requests.push(getValuesByColumnWithOutCount('projects_line_1', 'county', bounds)); 
       requests.push(getValuesByColumnWithOutCount('projects_line_1', 'lgmanager', bounds));
       requests.push(getValuesByColumnWithOutCount('projects_line_1', 'streamname', bounds));
-      //requests.push(getQuintilValues('projects_line_1', 'estimatedcost', bounds));
       const rangeTotalCost = [
          {
             min: 0,
@@ -2247,9 +2248,12 @@ router.get('/params-filter-projects', async (req, res) => {
       requests.push(getValuesByRange('projects_line_1', 'estimatedcost', rangeTotalCost, bounds));
       requests.push(getValuesByColumnWithOutCount('projects_line_1', 'consultant', bounds));
       requests.push(getValuesByColumnWithOutCount('projects_line_1', 'contractor', bounds));
-      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'servicearea', bounds));
+      // *** replace by other method
+      //requests.push(getValuesByColumnWithOutCount('projects_line_1', 'servicearea', bounds)); 
 
       const promises = await Promise.all(requests);
+      const zoomareaFilters = await zoomareaService.getZoomareaFilters();
+
       const result = {
          "creator": promises[0],
          "mhfdmanager": promises[1],
@@ -2260,14 +2264,14 @@ router.get('/params-filter-projects', async (req, res) => {
          "mhfddollarsallocated": promises[6],
          "workplanyear": promises[7],
          "problemtype": promises[8],
-         "jurisdiction": promises[9],
-         "county": promises[10],
-         "lgmanager": promises[11],
-         "streamname": promises[12],
-         "estimatedCost": promises[13],
-         "consultant": promises[14],
-         "contractor": promises[15],
-         "servicearea": promises[16]
+         "jurisdiction": zoomareaFilters.Jurisdiction,
+         "county": zoomareaFilters.County,
+         "lgmanager": promises[9],
+         "streamname": promises[10],
+         "estimatedCost": promises[11],
+         "consultant": promises[12],
+         "contractor": promises[13],
+         "servicearea": zoomareaFilters.ServiceArea
       }
       res.status(200).send(result);
    } catch (error) {
@@ -2284,8 +2288,9 @@ router.get('/params-filter-problems', async (req, res) => {
       let problemTypesConst = ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'];
       requests.push(getCountByArrayColumns('problems', 'problempriority', ['High', 'Medium', 'Low'], bounds));
       requests.push(getCountSolutionStatus([0, 25, 50, 75], bounds));
-      requests.push(getValuesByColumn('problems', 'county', bounds));
-      requests.push(getValuesByColumnWithOutCount('problems', 'jurisdiction', bounds));
+      // *** replace by other method
+      //requests.push(getValuesByColumn('problems', 'county', bounds));
+      //requests.push(getValuesByColumnWithOutCount('problems', 'jurisdiction', bounds));
       requests.push(getValuesByColumnWithOutCount('problems', 'mhfdmanager', bounds));
       requests.push(getValuesByColumnWithOutCount('problems', 'source', bounds));
       requests.push(getSubtotalsByComponent('problems', 'problemid', bounds));
@@ -2309,21 +2314,22 @@ router.get('/params-filter-problems', async (req, res) => {
          }
       ]
       requests.push(getValuesByRange('problems', 'solutioncost', rangeSolution, bounds));
-      requests.push(getValuesByColumnWithOutCount('problems', 'servicearea', bounds));
-
+      // *** replace by other method
+      //requests.push(getValuesByColumnWithOutCount('problems', 'servicearea', bounds));
       const promises = await Promise.all(requests);
-
+      const zoomareaFilters = await zoomareaService.getZoomareaFilters();
+      const counters = await zoomareaService.countZoomareaFilter('County');
       const result = {
          "problemtype": problemTypesConst,
          "priority": promises[0],
          "solutionstatus": promises[1],
-         "county": promises[2],
-         "jurisdiction": promises[3],
-         "mhfdmanager": promises[4],
-         "source": promises[5],
-         "components": promises[6],
-         "cost": promises[7],
-         "servicearea": promises[8]
+         "county": counters,
+         "jurisdiction": zoomareaFilters.Jurisdiction,
+         "mhfdmanager": promises[2],
+         "source": promises[3],
+         "components": promises[4],
+         "cost": promises[5],
+         "servicearea": zoomareaFilters.ServiceArea
       };
       res.status(200).send(result);
    } catch (error) {
@@ -2340,22 +2346,25 @@ router.get('/params-filter-components', async (req, res) => {
       requests.push(getCounterComponents(bounds));
       requests.push(getComponentsValuesByColumn('status', bounds));
       requests.push(getCountByYearStudy([1970, 1980, 1990, 2000, 2010, 2020], bounds));
-      requests.push(getComponentsValuesByColumnWithCount('jurisdiction', bounds));
-      requests.push(getComponentsValuesByColumnWithCount('county', bounds));
+      // *** replace by other method
+      //requests.push(getComponentsValuesByColumnWithCount('jurisdiction', bounds));
+      //requests.push(getComponentsValuesByColumnWithCount('county', bounds));
       requests.push(getComponentsValuesByColumnWithCount('mhfdmanager', bounds));
       requests.push(getQuintilComponentValues('estimated_cost', bounds));
-      requests.push(getComponentsValuesByColumnWithCount('servicearea', bounds));
+      // *** replace by other method
+      //requests.push(getComponentsValuesByColumnWithCount('servicearea', bounds));
 
       const promises = await Promise.all(requests);
+      const zoomareaFilters = await zoomareaService.getZoomareaFilters();
       const result = {
          "component_type": promises[0],
          "status": promises[1],
          "yearofstudy": promises[2],
-         "jurisdiction": promises[3],
-         "county": promises[4],
-         "watershed": promises[5],
-         "estimatedcost": promises[6],
-         "servicearea": promises[7]
+         "jurisdiction": zoomareaFilters.Jurisdiction,
+         "county": zoomareaFilters.County,
+         "watershed": promises[3],
+         "estimatedcost": promises[4],
+         "servicearea": zoomareaFilters.ServiceArea
       };
       res.status(200).send(result);
    } catch (error) {
