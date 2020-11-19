@@ -100,7 +100,7 @@ router.post('/', async (req, res) => {
                            console.log('mi valor ', valor);
                            if (valor) {
                               valor = valor.split('https://storage.googleapis.com/mhfd-cloud.appspot.com/');
-                              valor = 'https://storage.cloud.google.com/mhfd-cloud.appspot.com/compressed/' + valor[1];
+                              valor = 'https://storage.googleapis.com/mhfd-cloud.appspot.com/compressed/' + valor[1];
                            }
                            console.log('mi valor ', valor);
 
