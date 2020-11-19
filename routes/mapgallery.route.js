@@ -103,7 +103,7 @@ router.post('/', async (req, res) => {
                               valor = 'https://storage.cloud.google.com/mhfd-cloud.appspot.com/compressed/' + valor[1];
                            }
                            console.log('mi valor ', valor);
-                           
+
                         }
                         let coordinates = [];
                         if (JSON.parse(element.the_geom).coordinates) {
@@ -2177,6 +2177,72 @@ router.get('/range', async (req, res) => {
    }
 })
 
+async function getZoomareaFilters() {
+   let data = {};
+   try {
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+      const query = { q: `select filter, aoi from mhfd_zoom_to_areas group by filter, aoi order by filter, aoi ` };
+      const data = await needle('post', URL, query, { json: true });
+      let elementGroup = [];
+      let group = '';
+
+      if (data.statusCode === 200) {
+         for (let row of data.body.rows) {
+            if (group === '') {
+               group = row.filter;
+               elementGroup.push(row.aoi);
+            } else {
+               if (row.filter === group) {
+                  elementGroup.push(row.aoi);
+               } else {
+                  if (group !== null) {
+                     group = group.split(' ').join('')
+                     data[group] = elementGroup;
+                  }
+                  group = row.filter;
+                  elementGroup = [];
+               }
+            }
+         }
+
+         if (group !== null) {
+            group = group.split(' ').join('')
+            data[group] = elementGroup;
+         }
+      }
+      return data;
+   } catch (error) {
+      logger.error(error);
+      logger.error(`getZoomareaFilters Connection error`);
+   }
+   return data;
+}
+
+async function countZoomareaFilter(filter) {
+   let result = [];
+   try {
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+      const query = { q: `select mhfd_zoom_to_areas.aoi, count(problems.county) as counter
+      from mhfd_zoom_to_areas left outer join problems on  
+      mhfd_zoom_to_areas.aoi = problems.county 
+      where mhfd_zoom_to_areas.filter='${filter}' group by mhfd_zoom_to_areas.aoi ` };
+      const data = await needle('post', URL, query, { json: true });
+
+      if (data.statusCode === 200) {
+         result = data.body.rows.map(element => {
+            return {
+               value: element.aoi,
+               counter: element.counter
+            }
+         })
+      }
+   } catch(error) {
+      logger.error(error);
+      logger.error(`getZoomareaFilters Connection error`);
+   }
+   return result;
+}
+
 router.get('/params-filter-projects', async (req, res) => {
    try {
       const bounds = req.query.bounds;
@@ -2252,9 +2318,9 @@ router.get('/params-filter-projects', async (req, res) => {
       requests.push(getValuesByColumnWithOutCount('projects_line_1', 'contractor', bounds));
       // *** replace by other method
       //requests.push(getValuesByColumnWithOutCount('projects_line_1', 'servicearea', bounds)); 
+      requests.push(getZoomareaFilters());
 
       const promises = await Promise.all(requests);
-      const zoomareaFilters = await zoomareaService.getZoomareaFilters();
 
       const result = {
          "creator": promises[0],
@@ -2266,14 +2332,14 @@ router.get('/params-filter-projects', async (req, res) => {
          "mhfddollarsallocated": promises[6],
          "workplanyear": promises[7],
          "problemtype": promises[8],
-         "jurisdiction": zoomareaFilters.Jurisdiction,
-         "county": zoomareaFilters.County,
+         "jurisdiction": promises[14].Jurisdiction,
+         "county": promises[14].County,
          "lgmanager": promises[9],
          "streamname": promises[10],
          "estimatedCost": promises[11],
          "consultant": promises[12],
          "contractor": promises[13],
-         "servicearea": zoomareaFilters.ServiceArea
+         "servicearea": promises[14].ServiceArea
       }
       res.status(200).send(result);
    } catch (error) {
@@ -2318,20 +2384,21 @@ router.get('/params-filter-problems', async (req, res) => {
       requests.push(getValuesByRange('problems', 'solutioncost', rangeSolution, bounds));
       // *** replace by other method
       //requests.push(getValuesByColumnWithOutCount('problems', 'servicearea', bounds));
+      requests.push(getZoomareaFilters());
+      requests.push(countZoomareaFilter('County'));
+
       const promises = await Promise.all(requests);
-      const zoomareaFilters = await zoomareaService.getZoomareaFilters();
-      const counters = await zoomareaService.countZoomareaFilter('County');
       const result = {
          "problemtype": problemTypesConst,
          "priority": promises[0],
          "solutionstatus": promises[1],
-         "county": counters,
-         "jurisdiction": zoomareaFilters.Jurisdiction,
+         "county": promises[7],
+         "jurisdiction": promises[6].Jurisdiction,
          "mhfdmanager": promises[2],
          "source": promises[3],
          "components": promises[4],
          "cost": promises[5],
-         "servicearea": zoomareaFilters.ServiceArea
+         "servicearea": promises[6].ServiceArea
       };
       res.status(200).send(result);
    } catch (error) {
@@ -2355,18 +2422,19 @@ router.get('/params-filter-components', async (req, res) => {
       requests.push(getQuintilComponentValues('estimated_cost', bounds));
       // *** replace by other method
       //requests.push(getComponentsValuesByColumnWithCount('servicearea', bounds));
+      requests.push(getZoomareaFilters());
 
       const promises = await Promise.all(requests);
-      const zoomareaFilters = await zoomareaService.getZoomareaFilters();
+      
       const result = {
          "component_type": promises[0],
          "status": promises[1],
          "yearofstudy": promises[2],
-         "jurisdiction": zoomareaFilters.Jurisdiction,
-         "county": zoomareaFilters.County,
+         "jurisdiction": promises[5].Jurisdiction,
+         "county": promises[5].County,
          "watershed": promises[3],
          "estimatedcost": promises[4],
-         "servicearea": zoomareaFilters.ServiceArea
+         "servicearea": promises[5].ServiceArea
       };
       res.status(200).send(result);
    } catch (error) {
