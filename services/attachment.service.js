@@ -169,7 +169,7 @@ const uploadFiles = async (user, files) => {
     attach.filesize = file.size;
     Attachment.create(attach);
     const complete = path.join(__dirname, './tmp/' + file.originalname) ;
-    const prom = new Promise((resolve, reject => {
+    const prom = new Promise((resolve, reject) => {
       fs.writeFile(complete, file.buffer, (error) => {
         if (error) {
           console.log('error');
@@ -178,7 +178,7 @@ const uploadFiles = async (user, files) => {
         console.log('bla bla bla');
         resolve('OK');
       });
-    }));
+    });
     console.log('entro');
     const t1 = await prom;
     console.log('paso');
@@ -206,9 +206,7 @@ const uploadFiles = async (user, files) => {
       }).end(file.buffer);
     });
     await newPromise;
-    
   }
-
 }
 
 module.exports = {
