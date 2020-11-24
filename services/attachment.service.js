@@ -8,7 +8,6 @@ const path = require('path');
 const { Storage } = require('@google-cloud/storage');
 const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
 const { Op } = require("sequelize");
-const { resolve } = require('path');
 
 const storage = new Storage({
   keyFilename: path.join(__dirname, '../config/mhfd-cloud-8212a0689e50.json'),
@@ -154,8 +153,38 @@ const removeAttachment = async (id) => {
 
 }
 
+
+const compress_images = require("compress-images"); 
+const INPUT_path_to_your_images = __dirname + '/tmp/*.{jpg,JPG,jpeg,JPEG,png,svg,gif}';
+const OUTPUT_path = __dirname + "/compressed/";
+ 
+const compress = () => {
+  return new Promise((resolve, rejected) => {
+    compress_images(INPUT_path_to_your_images, OUTPUT_path, { compress_force: false, statistic: true, autoupdate: true }, false,
+      { jpg: { engine: "mozjpeg", command: ["-quality", "25"] } },
+      { png: { engine: "pngquant", command: ["--quality=20-50", "-o"] } },
+      { svg: { engine: "svgo", command: "--multipass" } },
+      { gif: { engine: "gifsicle", command: ["--colors", "64", "--use-col=web"] } },
+    function (error, completed, statistic) {
+      console.log("-------------");
+      console.log(error);
+      console.log(completed);
+      console.log(statistic);
+      console.log("-------------");
+      if (error) {
+        rejected(false);
+      } else {
+        resolve(true);
+      }
+    }
+  );
+
+  });
+}
+
 const uploadFiles = async (user, files) => {
   const bucket = storage.bucket(STORAGE_NAME);
+  const compressBucket = storage.bucket(STORAGE_NAME + '/compressed');
   console.log('iniciando attach');
   for (const file of files) {
     const name = file.originalname;
@@ -175,7 +204,6 @@ const uploadFiles = async (user, files) => {
           console.log('error');
           reject('the error ', error);
         }
-        console.log('bla bla bla');
         resolve('OK');
       });
     });
@@ -186,13 +214,35 @@ const uploadFiles = async (user, files) => {
       fs.readFile(complete, (error, data) => {
         console.log(error, data);
         if (error) {
-          return rej('error');
+          return rej({data: null});
         }
         console.log('my data is ', data);
-        return res('ok');
+        return res({data: data});
       });
     });
-    const t2 = await read;
+    const file2 = await read;
+    if (file2) {
+      console.log('file 2 exists');
+      const didCompression = await compress();
+      if (didCompression) {
+        const route =  __dirname + '/compressed/' + file.originalname;
+        console.log('¿¿¿¿¿ he comprimido ');
+        console.log(route);
+        const uploadCompressed = new Promise((resolve, rejected) => {
+          compressBucket.upload(route, (err, file) => {
+            console.log(' mi error ', err, file);
+            if (err) {
+              rejected(false);
+            } else {
+              resolve(true);
+            }
+          });
+        });
+        console.log('llego aca ');
+        const uploaded = await uploadCompressed;
+        console.log('I can ', uploaded);
+      }
+    }
     console.log('step');
     const newPromise = new Promise((resolve, reject) => {
       blob.createWriteStream({
