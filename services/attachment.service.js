@@ -100,8 +100,8 @@ const findByName = async (name) => {
       where: {
         filename: { [Op.iLike]: '%' + name + '%' }
       }
-    });    
-    
+    });
+
     if (attach.length > 0) {
       for (const url of attach) {
         urlImage.push(url.value);
@@ -122,8 +122,8 @@ const findByFilename = async (name) => {
       where: {
         filename: { [Op.iLike]: '%' + name + '%' }
       }
-    });    
-    
+    });
+
     if (attach.length > 0) {
       for (const url of attach) {
         urlImage.push(url.filename);
@@ -144,6 +144,11 @@ const countAttachments = async () => {
 const removeAttachment = async (id) => {
   const attach = await Attachment.findByPk(id, { raw: true });
   await storage.bucket(STORAGE_NAME).file(attach.filename).delete();
+  try {
+    await storage.bucket(STORAGE_NAME).file('compressed/' + attach.filename).delete();
+  } catch (err) {
+    console.log('Doesnt exist compress file');
+  }
   console.log(attach.filename);
   await Attachment.destroy({
     where: {
@@ -154,10 +159,10 @@ const removeAttachment = async (id) => {
 }
 
 
-const compress_images = require("compress-images"); 
+const compress_images = require("compress-images");
 const INPUT_path_to_your_images = __dirname + '/tmp/*.{jpg,JPG,jpeg,JPEG,png,svg,gif}';
 const OUTPUT_path = __dirname + "/compressed/";
- 
+
 const compress = () => {
   return new Promise((resolve, rejected) => {
     compress_images(INPUT_path_to_your_images, OUTPUT_path, { compress_force: false, statistic: true, autoupdate: true }, false,
@@ -165,27 +170,35 @@ const compress = () => {
       { png: { engine: "pngquant", command: ["--quality=20-50", "-o"] } },
       { svg: { engine: "svgo", command: "--multipass" } },
       { gif: { engine: "gifsicle", command: ["--colors", "64", "--use-col=web"] } },
-    function (error, completed, statistic) {
-      console.log("-------------");
-      console.log(error);
-      console.log(completed);
-      console.log(statistic);
-      console.log("-------------");
-      if (error) {
-        rejected(false);
-      } else {
-        resolve(true);
+      function (error, completed, statistic) {
+        /* console.log("-------------");
+        console.log(error);
+        console.log(completed);
+        console.log(statistic);
+        console.log("-------------"); */
+        if (error) {
+          rejected(false);
+        } else {
+          resolve(true);
+        }
       }
-    }
-  );
+    );
 
   });
 }
 
+const isImage = (type) => {
+  if (type === 'image/png' || type === 'image/jpg' || type === 'image/jpeg') {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 const uploadFiles = async (user, files) => {
   const bucket = storage.bucket(STORAGE_NAME);
-  const compressBucket = storage.bucket(STORAGE_NAME + '/compressed');
-  console.log('iniciando attach');
+  const compressBucket = storage.bucket(STORAGE_NAME);
+
   for (const file of files) {
     const name = file.originalname;
     const blob = bucket.file(name);
@@ -197,54 +210,53 @@ const uploadFiles = async (user, files) => {
     attach.register_date = new Date();
     attach.filesize = file.size;
     Attachment.create(attach);
-    const complete = path.join(__dirname, './tmp/' + file.originalname) ;
-    const prom = new Promise((resolve, reject) => {
-      fs.writeFile(complete, file.buffer, (error) => {
-        if (error) {
-          console.log('error');
-          reject('the error ', error);
-        }
-        resolve('OK');
-      });
-    });
-    console.log('entro');
-    const t1 = await prom;
-    console.log('paso');
-    const read = new Promise((res, rej) => {
-      fs.readFile(complete, (error, data) => {
-        console.log(error, data);
-        if (error) {
-          return rej({data: null});
-        }
-        console.log('my data is ', data);
-        return res({data: data});
-      });
-    });
-    const file2 = await read;
-    if (file2) {
-      console.log('file 2 exists');
-      const didCompression = await compress();
-      if (didCompression) {
-        const route =  __dirname + '/compressed/' + file.originalname;
-        console.log('¿¿¿¿¿ he comprimido ');
-        console.log(route);
-        const uploadCompressed = new Promise((resolve, rejected) => {
-          compressBucket.upload(route, (err, file) => {
-            console.log(' mi error ', err, file);
-            if (err) {
-              rejected(false);
-            } else {
-              resolve(true);
-            }
-          });
+    
+    if (isImage(file.mimetype)) {
+      const complete = path.join(__dirname, './tmp/' + file.originalname);
+      const prom = new Promise((resolve, reject) => {
+        fs.writeFile(complete, file.buffer, (error) => {
+          if (error) {
+            console.log('error');
+            reject('the error ', error);
+          }
+          resolve('OK');
         });
-        console.log('llego aca ');
-        const uploaded = await uploadCompressed;
-        console.log('I can ', uploaded);
+      });
+      const t1 = await prom;
+      const read = new Promise((res, rej) => {
+        fs.readFile(complete, (error, data) => {
+          console.log(error, data);
+          if (error) {
+            return rej({ data: null });
+          }
+          return res({ data: data });
+        });
+      });
+
+      const file2 = await read;
+      if (file2) {
+        const didCompression = await compress();
+        if (didCompression) {
+          const route = __dirname + '/compressed/' + file.originalname;
+
+          try {
+            bucket.makePublic(function (err) { });
+            await bucket.upload(route, {
+              destination: `compressed/${file.originalname}`,
+              metadata: {
+                cacheControl: 'public'
+              }
+            });
+
+          } catch (err) {
+            console.log('ERROR', err);
+          }
+        }
       }
     }
-    console.log('step');
+
     const newPromise = new Promise((resolve, reject) => {
+      const blob = bucket.file(name);
       blob.createWriteStream({
         metadata: { contentType: file.mimetype }
       }).on('finish', async response => {

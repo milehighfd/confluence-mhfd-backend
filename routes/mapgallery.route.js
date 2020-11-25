@@ -97,13 +97,11 @@ router.post('/', async (req, res) => {
                         let valor = '';
                         if (element.attachments) {
                            valor = await attachmentService.findCoverImage(element.attachments);
-                           console.log('mi valor ', valor);
+                           //console.log('mi valor ', valor);
                            if (valor) {
                               valor = valor.split('https://storage.googleapis.com/mhfd-cloud.appspot.com/');
                               valor = 'https://storage.googleapis.com/mhfd-cloud.appspot.com/compressed/' + valor[1];
                            }
-                           console.log('mi valor ', valor);
-
                         }
                         let coordinates = [];
                         if (JSON.parse(element.the_geom).coordinates) {
@@ -231,7 +229,6 @@ function getFilters(params) {
       } else {
          filters = ` (${query})`;
       }
-      //console.log('QUERY COMPONENTS', query);
    }
 
    if (params.componentstatus) {
@@ -409,9 +406,7 @@ function getFilters(params) {
    }
 
    if (params.mhfdmanager) {
-      //console.log('MHFD MANAGER', params.mhfdmanager);
       const query = createQueryForIn(params.mhfdmanager.split(','));
-      //console.log('QUERY', query);
       if (filters.length > 0) {
          filters = filters + ` and mhfdmanager in (${query})`;
       } else {

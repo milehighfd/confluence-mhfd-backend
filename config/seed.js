@@ -14,7 +14,8 @@ const seed = async () => {
       activated: "true",
       firstName: "admin",
       lastName: "admin",
-      name: "admin"
+      name: "admin",
+      status: "approved"
     };
     userAdmin.password = await bcrypt.hash('admin', 8);
     User.create(userAdmin);
