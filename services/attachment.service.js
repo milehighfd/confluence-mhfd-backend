@@ -169,7 +169,7 @@ const compress = () => {
       { jpg: { engine: "mozjpeg", command: ["-quality", "25"] } },
       { png: { engine: "pngquant", command: ["--quality=20-50", "-o"] } },
       { svg: { engine: "svgo", command: "--multipass" } },
-      { gif: { engine: "gifsicle", command: ["--colors", "64", "--use-col=web"] } },
+      { gif: { engine: "giflossy", command: ["--colors", "64", "--use-col=web"] } },
       function (error, completed, statistic) {
         /* console.log("-------------");
         console.log(error);
@@ -188,7 +188,7 @@ const compress = () => {
 }
 
 const isImage = (type) => {
-  if (type === 'image/png' || type === 'image/jpg' || type === 'image/jpeg') {
+  if (type === 'image/png' || type === 'image/jpg' || type === 'image/jpeg' || type === 'image/gif') {
     return true;
   } else {
     return false;
@@ -210,6 +210,7 @@ const uploadFiles = async (user, files) => {
     attach.register_date = new Date();
     attach.filesize = file.size;
     Attachment.create(attach);
+    console.log(file.mimetype);
     
     if (isImage(file.mimetype)) {
       const complete = path.join(__dirname, './tmp/' + file.originalname);
