@@ -211,10 +211,11 @@ const uploadFiles = async (user, files) => {
     attach.filesize = file.size;
     Attachment.create(attach);
     console.log(file.mimetype);
+    const complete = path.join(__dirname, './tmp/' + file.originalname);
+    const compressedrRoute = __dirname + '/compressed/' + file.originalname;
     
     if (isImage(file.mimetype)) {
-      const complete = path.join(__dirname, './tmp/' + file.originalname);
-      const compressedrRoute = __dirname + '/compressed/' + file.originalname;
+      
       const prom = new Promise((resolve, reject) => {
         fs.writeFile(complete, file.buffer, (error) => {
           if (error) {
