@@ -214,6 +214,7 @@ const uploadFiles = async (user, files) => {
     
     if (isImage(file.mimetype)) {
       const complete = path.join(__dirname, './tmp/' + file.originalname);
+      const compressedrRoute = __dirname + '/compressed/' + file.originalname;
       const prom = new Promise((resolve, reject) => {
         fs.writeFile(complete, file.buffer, (error) => {
           if (error) {
@@ -238,11 +239,11 @@ const uploadFiles = async (user, files) => {
       if (file2) {
         const didCompression = await compress();
         if (didCompression) {
-          const route = __dirname + '/compressed/' + file.originalname;
+          
 
           try {
             bucket.makePublic(function (err) { });
-            await bucket.upload(route, {
+            await bucket.upload(compressedrRoute, {
               destination: `compressed/${file.originalname}`,
               metadata: {
                 cacheControl: 'public'
@@ -269,6 +270,26 @@ const uploadFiles = async (user, files) => {
       }).end(file.buffer);
     });
     await newPromise;
+    const delelteFile = new Promise((resolve, rejected) => {
+      fs.unlink(complete, function (err) {
+        if (err) {
+         
+          console.log('problem deleting ', complete, ' with error ', err);
+          return rejected(false);
+        }
+        // if no error, file has been deleted successfully
+        console.log('File deleted! ', complete);
+        resolve(true);
+      });
+    });
+    await delelteFile;
+    fs.unlink(compressedrRoute, function (err) {
+      if (err) {
+        console.log('problem deleting ', compressedrRoute, ' with error ', err);
+      }
+      // if no error, file has been deleted successfully
+      console.log('File deleted! ', compressedrRoute);
+    }); 
   }
 }
 
