@@ -6,7 +6,7 @@ const { CARTO_TOKEN } = require('../config/config');
 router.get('/', async (req, res) => {
   try {
     const newProm = new Promise((resolve, reject) => {
-      const sql = `select aoi, filter, ST_AsGeoJSON(ST_Envelope(the_geom)) from mhfd_zoom_to_areas order by aoi`;
+      const sql = `select cartodb_id, aoi, filter, ST_AsGeoJSON(ST_Envelope(the_geom)) from mhfd_zoom_to_areas order by aoi`;
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`);
       let result = [];
       https.get(URL, response => {
@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
             let firstElement = {};
             let arrayAux = [];
             for (let row of JSON.parse(str).rows) {
-              if (row.aoi === 'MHFD Boundary') {
+              if (row.cartodb_id === 1) {
                 firstElement = {
                   aoi: row.aoi,
                   filter: row.filter,
