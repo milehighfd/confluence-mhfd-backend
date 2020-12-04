@@ -124,7 +124,7 @@ router.get('/get-project-collaborators', auth, async (req, res) => {
   }
 })
 
-router.post('/filters', auth, async (req, res) => {
+router.post('/filters', async (req, res) => {
   try {
     const data = req.body;
     const { fieldsort = 'dateCreated', sorttype = 'desc' } = req.query;
@@ -136,7 +136,7 @@ router.post('/filters', auth, async (req, res) => {
   }
 });
 
-router.post('/filters-by-creator', auth, async (req, res) => {
+router.post('/filters-by-creator', async (req, res) => {
   try {
     const data = req.body;
     data.creator = req.user;

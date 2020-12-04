@@ -7,7 +7,7 @@ const https = require('https');
 
 const CARTO_TOKEN = 'a53AsTjS8iBMU83uEaj3dw';
 
-router.post('/filters', auth, async (req, res) => {
+router.post('/filters', async (req, res) => {
   try {
     var filters = req.body;
     let where = '';
