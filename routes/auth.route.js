@@ -16,7 +16,7 @@ router.get('/guest', async (req, res) => {
       email: config.GUEST_USER
     }
   });
-  const token = await user.generateAuthToken();
+  const token = await user.generateGuestAuthToken();
   let result = {};
   result['_id'] = user._id;
   result['firstName'] = user.firstName;

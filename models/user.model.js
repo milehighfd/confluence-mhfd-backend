@@ -87,7 +87,14 @@ module.exports = (sequelize, DataType) => {
     await user.save();
     return token;
   };
-
+  User.prototype.generateGuestAuthToken = async function () {
+    const user = this;
+    
+    user.token = 'GUEST';
+    await user.save();
+    return token;
+  };
+  
   User.findByEmail = async (email) => {
     const user = await User.findOne({
       email
