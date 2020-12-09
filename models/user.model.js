@@ -92,7 +92,7 @@ module.exports = (sequelize, DataType) => {
     
     user.token = 'GUEST';
     await user.save();
-    return token;
+    return user.token;
   };
   
   User.findByEmail = async (email) => {

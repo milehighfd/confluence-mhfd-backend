@@ -6,8 +6,10 @@ const config = require('../config/config');
 
 const auth = async (req, res, next) => {
   try {
+
     const token = req.header('Authorization').replace('Bearer ', '');
-    const data = jwt.verify(token, config.JWT_KEY);
+    //const data = jwt.verify(token, config.JWT_KEY);
+    
     const user = await User.findOne({
       where: {
         token: token
