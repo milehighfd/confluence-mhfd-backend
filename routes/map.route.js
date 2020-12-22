@@ -168,6 +168,7 @@ router.get('/bbox-components', async (req, res) => {
     const component = element.key;
     let sql = `SELECT ST_extent(${component}.the_geom) as bbox FROM "denver-mile-high-admin".${component} 
     where ${component}.${field} = ${id}`;
+    console.log('my sql ', sql);
     sql = encodeURIComponent(sql);
     const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
     promises.push(new Promise((resolve, reject) => {
@@ -179,6 +180,7 @@ router.get('/bbox-components', async (req, res) => {
           });
           response.on('end', function () {
             const rows = JSON.parse(str).rows;
+            console.log(rows);
             if (rows[0].bbox != null) {
               rows[0].bbox = rows[0].bbox.replace('BOX(', '').replace(')', '').replace(/ /g, ',').split(',');
             }
@@ -201,23 +203,25 @@ router.get('/bbox-components', async (req, res) => {
       answer.push(data);
     }
   }
+  console.log(answer);
   let [minLat, minLng, maxLat, maxLng] = [Infinity, Infinity, -Infinity, -Infinity];
   for (const bbox of answer) {
     const coords = bbox.bbox;
-    if (coords[0] < minLat) {
-      minLat = coords[0];
+    if (+coords[0] < minLat) {
+      minLat = +coords[0];
     }
-    if (coords[1] < minLng) {
-      minLng = coords[1];
+    if (+coords[1] < minLng) {
+      minLng = +coords[1];
     }
-    if (coords[2] > maxLat) {
-      maxLat = coords[2];
+    if (+coords[2] > maxLat) {
+      maxLat = +coords[2];
     }
-    if (coords[3] > maxLng) {
-      maxLng = coords[3];
+    if (+coords[3] > maxLng) {
+      maxLng = +coords[3];
     }
   }
   const polygon = [[[minLat, minLng], [minLat, maxLng], [maxLat, maxLng], [maxLat, minLng], [minLat, minLng]]];
+  console.log(polygon);
   res.send(polygon);
 });
 
