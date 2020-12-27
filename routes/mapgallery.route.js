@@ -13,6 +13,14 @@ const attachmentService = require('../services/attachment.service');
 const zoomareaService = require('../services/zoomarea.service');
 const { response } = require('express');
 const { query } = require('../config/logger');
+const {
+   getCounterComponentsWithFilter,
+   getComponentsValuesByColumnWithFilter,
+   getCountByYearStudyWithFilter,
+   getComponentsValuesByColumnWithCountWithFilter,
+   getQuintilComponentValuesWithFilter,
+   getZoomareaFiltersWithFilters
+} = require('./mapgallery.component.route');
 const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
    'special_item_linear', 'special_item_area', 'channel_improvements_linear',
@@ -2606,5 +2614,39 @@ router.get('/params-filters', async (req, res) => {
       res.status(500).send({ error: error }).send({ error: 'Connection error' });
    }
 });
+
+router.post('/params-filter-components', async (req, res) => {
+   try {
+      const bounds = req.query.bounds;
+      const body = req.body;
+      let requests = [];
+
+      requests.push(getCounterComponentsWithFilter(bounds, body));
+      requests.push(getComponentsValuesByColumnWithFilter('status', bounds, body));
+      requests.push(getCountByYearStudyWithFilter([1970, 1980, 1990, 2000, 2010, 2020], bounds, body));
+      requests.push(getComponentsValuesByColumnWithCountWithFilter('mhfdmanager', bounds, body));
+      requests.push(getQuintilComponentValuesWithFilter('estimated_cost', bounds, body));
+      requests.push(getComponentsValuesByColumnWithCountWithFilter('jurisdiction', bounds, body));
+      requests.push(getComponentsValuesByColumnWithCountWithFilter('county', bounds, body));
+      requests.push(getComponentsValuesByColumnWithCountWithFilter('servicearea', bounds, body));
+
+      const promises = await Promise.all(requests);
+
+      const result = {
+         "component_type": promises[0],
+         "status": promises[1],
+         "yearofstudy": promises[2],
+         "watershed": promises[3],
+         "estimatedcost": promises[4],
+         "jurisdiction": promises[5],
+         "county": promises[6],
+         "servicearea": promises[7]
+      };
+      res.status(200).send(result);
+   } catch (error) {
+      logger.error(error);
+      logger.error(`getSubtotalsByComponent Connection error`);
+   }
+})
 
 module.exports = (router); 
