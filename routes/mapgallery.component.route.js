@@ -261,7 +261,8 @@ async function getQuintilComponentValuesWithFilter(column, bounds, body) {
     const lineResult = lineData.body.rows;
     const max = Math.max.apply(Math, lineResult.map(function (element) { return element.max }));
     let min = Math.min.apply(Math, lineResult.map(function (element) { return element.min }));
-    const difference = Math.round((max - min) / 5);
+    let numberOfPartitions = 20;
+    const difference = Math.round((max - min) / numberOfPartitions);
     let label = '';
     if (max < 1000000) {
       label = 'K';
@@ -270,13 +271,13 @@ async function getQuintilComponentValuesWithFilter(column, bounds, body) {
     }
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
-    for (let i = 0; i < 5; i += 1) {
+    for (let i = 0; i < numberOfPartitions; i ++) {
       let min1 = Math.round(min);
       let max1 = 0;
       let limitCount = 0;
       let counter = 0;
 
-      if (i === 4) {
+      if (i === numberOfPartitions - 1) {
         max1 = max;
         limitCount = max;
       } else {
