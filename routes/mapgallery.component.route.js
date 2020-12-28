@@ -24,6 +24,38 @@ const getNewFilter = (filters, body) => {
     let componentTypesIn = componentTypes.map(s => `'${CapitalLetter(s)}'`)
     filters += ` and type in (${componentTypesIn.join(',')})`
   }
+  if (body.estimatedcost && body.estimatedcost.length !== 0) {
+    let column = 'estimated_cost';
+    let minPair = body.estimatedcost[0];
+    let maxPair = body.estimatedcost[body.estimatedcost.length - 1];
+    let minimumValue = minPair.split(',')[0];
+    let maximumValue = maxPair.split(',')[1];
+    filters += ` and ${column} between ${minimumValue} and ${maximumValue}`
+  }
+  if (body.yearofstudy) {
+    let splitted = body.yearofstudy.split(',');
+    let column = 'year_of_study';
+    let minimumValue = splitted[0];
+    let maximumValue = splitted[splitted.length - 1];
+    maximumValue = maximumValue === '2020' ? Number(maximumValue) + 10 : Number(maximumValue) + 9
+    filters += `and ${column} between ${minimumValue} and ${maximumValue}`;
+  }
+  if (body.jurisdiction) {
+    filters += ` and jurisdiction = '${body.jurisdiction}'`;
+  }
+  if (body.mhfdmanager) {
+    filters += ` and mhfdmanager = '${body.mhfdmanager}'`;
+  }
+  if (body.county) {
+    let counties = body.county.split(',');
+    let countiesIn = counties.map(s => `'${s}'`)
+    filters += ` and county in (${countiesIn.join(',')})`
+  }
+  if (body.servicearea) {
+    let serviceareas = body.servicearea.split(',');
+    let serviceareasIn = serviceareas.map(s => `'${s}'`)
+    filters += ` and servicearea in (${serviceareasIn.join(',')})`
+  }
   return filters;
 }
 
@@ -224,7 +256,7 @@ async function getQuintilComponentValuesWithFilter(column, bounds, body) {
     let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
 
-    // filters = getNewFilter(filters, body);
+    filters = getNewFilter(filters, body);
 
     const lineResult = lineData.body.rows;
     const max = Math.max.apply(Math, lineResult.map(function (element) { return element.max }));
