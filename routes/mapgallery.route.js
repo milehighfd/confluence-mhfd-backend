@@ -2623,7 +2623,7 @@ router.post('/params-filter-components', async (req, res) => {
 
       requests.push(getCounterComponentsWithFilter(bounds, body));
       requests.push(getComponentsValuesByColumnWithFilter('status', bounds, body));
-      requests.push(getCountByYearStudyWithFilter([1970, 1980, 1990, 2000, 2010, 2020], bounds, body));
+      requests.push(getCountByYearStudyWithFilter(bounds, body));
       requests.push(getComponentsValuesByColumnWithCountWithFilter('mhfdmanager', bounds, body));
       requests.push(getQuintilComponentValuesWithFilter('estimated_cost', bounds, body));
       requests.push(getComponentsValuesByColumnWithCountWithFilter('jurisdiction', bounds, body));

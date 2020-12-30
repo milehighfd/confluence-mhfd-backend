@@ -2,6 +2,8 @@ const { CARTO_TOKEN } = require('../config/config');
 const logger = require('../config/logger');
 const needle = require('needle');
 
+const distanceInYears = 5;
+
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
   'special_item_linear', 'special_item_area', 'channel_improvements_linear',
   'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
@@ -37,7 +39,7 @@ const getNewFilter = (filters, body) => {
     let column = 'year_of_study';
     let minimumValue = splitted[0];
     let maximumValue = splitted[splitted.length - 1];
-    maximumValue = maximumValue === '2020' ? Number(maximumValue) + 10 : Number(maximumValue) + 9
+    maximumValue = maximumValue === 2020 ? Number(maximumValue) + 10 : Number(maximumValue) + (distanceInYears - 1)
     filters += `and ${column} between ${minimumValue} and ${maximumValue}`;
   }
   if (body.jurisdiction) {
@@ -154,7 +156,7 @@ async function getComponentsValuesByColumnWithFilter(column, bounds, body) {
   return result;
 }
 
-async function getCountByYearStudyWithFilter(values, bounds, body) {
+async function getCountByYearStudyWithFilter(bounds, body) {
   let result = [];
   try {
     const coords = bounds.split(',');
@@ -163,13 +165,18 @@ async function getCountByYearStudyWithFilter(values, bounds, body) {
 
     filters = getNewFilter(filters, body);
 
+    let values = [];
+    for(var y = 1970 ; y <= 2020 ; y += distanceInYears) {
+       values.push(y);
+    }
+
     for (const value of values) {
       const initValue = Number(value);
       let endValue = 0;
-      if (value === '2020') {
+      if (value === 2020) {
         endValue = initValue + 10;
       } else {
-        endValue = initValue + 9;
+        endValue = initValue + (distanceInYears - 1);
       }
 
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
