@@ -28,6 +28,13 @@ const {
    getCountWorkYearProject,
    getProjectByProblemTypeProject,
 } = require('./mapgallery.project.route');
+const {
+   getCountByArrayColumnsProblem,
+   getCountByColumnProblem,
+   getCountSolutionStatusProblem,
+   getSubtotalsByComponentProblem,
+   getValuesByRangeProblem,
+} = require('./mapgallery.problem.route');
 const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
    'special_item_linear', 'special_item_area', 'channel_improvements_linear',
@@ -2752,6 +2759,61 @@ router.post('/params-filter-projects', async (req, res) => {
          "contractor": promises[13],
          "servicearea": promises[16]
       }
+      res.status(200).send(result);
+   } catch (error) {
+      logger.error(error);
+      logger.error(`getSubtotalsByComponent Connection error`);
+   }
+})
+
+router.post('/params-filter-problems', async (req, res) => {
+   try {
+      const bounds = req.query.bounds;
+      const body = req.body;
+      let requests = [];
+      let problemTypesConst = ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'];
+      requests.push(getCountByArrayColumnsProblem('problems', 'problempriority', ['High', 'Medium', 'Low'], bounds, body));
+      requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body));
+      requests.push(getCountByColumnProblem('problems', 'mhfdmanager', bounds, body));
+      requests.push(getCountByColumnProblem('problems', 'source', bounds, body));
+      requests.push(getSubtotalsByComponentProblem('problems', 'problemid', bounds, body));
+      const rangeSolution = [
+         {
+            min: 0,
+            max: 1000000
+         },
+         {
+            min: 1000001,
+            max: 3000000
+         },
+         {
+            min: 3000001,
+            max: 5000000
+         },
+         {
+            min: 5000001,
+            max: 50000000
+         }
+      ]
+      requests.push(getValuesByRangeProblem('problems', 'solutioncost', rangeSolution, bounds, body));
+      requests.push(getCountByColumnProblem('problems', 'jurisdiction', bounds, body));
+      requests.push(getCountByColumnProblem('problems', 'servicearea', bounds, body));
+      requests.push(getCountByColumnProblem('problems', 'county', bounds, body));
+      requests.push(getCountByArrayColumnsProblem('problems', 'problemtype', problemTypesConst, bounds, body));
+
+      const promises = await Promise.all(requests);
+      const result = {
+         "problemtype": promises[9],
+         "priority": promises[0],
+         "solutionstatus": promises[1],
+         "county": promises[8],
+         "jurisdiction": promises[6],
+         "mhfdmanager": promises[2],
+         "source": promises[3],
+         "components": promises[4],
+         "cost": promises[5],
+         "servicearea": promises[7]
+      };
       res.status(200).send(result);
    } catch (error) {
       logger.error(error);
