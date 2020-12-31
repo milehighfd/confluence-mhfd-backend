@@ -29,7 +29,7 @@ const getNewFilter = (filters, body) => {
      let maxPair = body.mhfddollarsallocated[body.mhfddollarsallocated.length - 1];
      let minimumValue = minPair.split(',')[0];
      let maximumValue = maxPair.split(',')[1];
-     filters += ` and ${column} between ${minimumValue} and ${maximumValue}`
+     filters += ` and cast(${column} as real) between ${minimumValue} and ${maximumValue}`
    }
    if (body.totalcost && body.totalcost.length !== 0) {
       let column = 'estimatedcost';
@@ -37,15 +37,7 @@ const getNewFilter = (filters, body) => {
       let maxPair = body.totalcost[body.totalcost.length - 1];
       let minimumValue = minPair.split(',')[0];
       let maximumValue = maxPair.split(',')[1];
-      filters += ` and ${column} between ${minimumValue} and ${maximumValue}`
-   }
-   if (body.mhfddollarsallocated && body.mhfddollarsallocated.length !== 0) {
-      let column = 'mhfddollarsallocated';
-      let minPair = body.mhfddollarsallocated[0];
-      let maxPair = body.mhfddollarsallocated[body.mhfddollarsallocated.length - 1];
-      let minimumValue = minPair.split(',')[0];
-      let maximumValue = maxPair.split(',')[1];
-      filters += ` and ${column} between ${minimumValue} and ${maximumValue}`
+      filters += ` and cast(${column} as real) between ${minimumValue} and ${maximumValue}`
    }
    if (body.lgmanager) {
       filters += ` and lgmanager = '${body.lgmanager}'`;
@@ -108,6 +100,9 @@ async function getValuesByColumnWithOutCountProject(table, column, bounds, body)
          const data = await needle('post', URL, query, { json: true });
          if (data.statusCode === 200) {
             answer = answer.concat(data.body.rows);
+         } else {
+            console.log('data.statusCode', data.statusCode, table, column, data.body)
+            console.log('query.q', query.q)
          }
       }
       if (column === 'startyear' || column === 'completedyear') {
@@ -172,6 +167,9 @@ async function getCountByArrayColumnsProject(table, column, columns, bounds, bod
                if (data.body.rows.length > 0) {
                   answer = answer.concat(data.body.rows);
                }
+            } else {
+               console.log('data.statusCode', data.statusCode, table, column, data.body)
+               console.log('query.q', query.q)
             }
          }
          for (const row of answer) {
@@ -230,6 +228,9 @@ async function getValuesByRangeProject(table, column, range, bounds, body) {
                   if (data.statusCode === 200) {
                      const rows = data.body.rows;
                      counter += rows[0].count;
+                  } else {
+                     console.log('data.statusCode', data.statusCode, table, column, data.body)
+                     console.log('query.q', query.q)
                   }
                }
             }
@@ -271,6 +272,9 @@ async function getCountWorkYearProject(data, bounds, body) {
                   if (d.body.rows.length > 0) {
                      counter += d.body.rows[0].count;
                   }
+               } else {
+                  console.log('data.statusCode', data.statusCode, table, value.column, data.body)
+                  console.log('query.q', query.q)
                }
             }
          }
@@ -324,6 +328,9 @@ async function getProjectByProblemTypeProject(bounds, body) {
 
             if (data.statusCode === 200) {
                counter += data.body.rows[0].count;
+            } else {
+               console.log('data.statusCode', data.statusCode, table, data.body)
+               console.log('query.q', query.q)
             }
          }
          result.push({
