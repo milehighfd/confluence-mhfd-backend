@@ -21,6 +21,13 @@ const {
    getQuintilComponentValuesWithFilter,
    getZoomareaFiltersWithFilters
 } = require('./mapgallery.component.route');
+const {
+   getValuesByColumnWithOutCountProject,
+   getCountByArrayColumnsProject,
+   getValuesByRangeProject,
+   getCountWorkYearProject,
+   getProjectByProblemTypeProject,
+} = require('./mapgallery.project.route');
 const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
    'special_item_linear', 'special_item_area', 'channel_improvements_linear',
@@ -2642,6 +2649,109 @@ router.post('/params-filter-components', async (req, res) => {
          "county": promises[6],
          "servicearea": promises[7]
       };
+      res.status(200).send(result);
+   } catch (error) {
+      logger.error(error);
+      logger.error(`getSubtotalsByComponent Connection error`);
+   }
+})
+
+router.post('/params-filter-projects', async (req, res) => {
+   try {
+      const bounds = req.query.bounds;
+      const body = req.body;
+
+      let requests = [];
+
+      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'creator', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'mhfdmanager', bounds, body));
+
+      requests.push(getCountByArrayColumnsProject('projects_line_1', 'projecttype', ['Maintenance', 'Study', 'Capital'], bounds, body));
+      requests.push(getCountByArrayColumnsProject('projects_line_1', 'status', ['Draft', 'Requested',
+         'Approved', 'Idle', 'Initiated', 'Ongoing',
+         'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
+         'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete'], bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'startyear', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'completedyear', bounds, body));
+      const rangeMhfdDollarsAllocated = [
+         {
+            min: 0,
+            max: 250000
+         },
+         {
+            min: 250001,
+            max: 500000
+         },
+         {
+            min: 500001,
+            max: 750000
+         },
+         {
+            min: 750001,
+            max: 1000000
+         },
+         {
+            min: 1000001,
+            max: 50000000
+         }
+      ];
+      requests.push(getValuesByRangeProject('projects_line_1', 'mhfddollarsallocated', rangeMhfdDollarsAllocated, bounds, body));
+      requests.push(getCountWorkYearProject([{ year: 2019, column: 'workplanyr1' }, { year: 2020, column: 'workplanyr2' },
+      { year: 2021, column: 'workplanyr3' }, { year: 2022, column: 'workplanyr4' }, { year: 2023, column: 'workplanyr5' }], bounds, body));
+      requests.push(getProjectByProblemTypeProject(bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'lgmanager', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'streamname', bounds, body));
+      const rangeTotalCost = [
+         {
+            min: 0,
+            max: 250000
+         },
+         {
+            min: 250001,
+            max: 500000
+         },
+         {
+            min: 500001,
+            max: 750000
+         },
+         {
+            min: 750001,
+            max: 1000000
+         },
+         {
+            min: 1000001,
+            max: 50000000
+         }
+      ];
+      requests.push(getValuesByRangeProject('projects_line_1', 'estimatedcost', rangeTotalCost, bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'consultant', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'contractor', bounds, body));
+
+      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'jurisdiction', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'county', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'servicearea', bounds, body));
+
+      const promises = await Promise.all(requests);
+
+      const result = {
+         "creator": promises[0],
+         "mhfdmanager": promises[1],
+         "projecttype": promises[2],
+         "status": promises[3],
+         "startyear": promises[4],
+         "completedyear": promises[5],
+         "mhfddollarsallocated": promises[6],
+         "workplanyear": promises[7],
+         "problemtype": promises[8],
+         "jurisdiction": promises[14],
+         "county": promises[15],
+         "lgmanager": promises[9],
+         "streamname": promises[10],
+         "estimatedCost": promises[11],
+         "consultant": promises[12],
+         "contractor": promises[13],
+         "servicearea": promises[16]
+      }
       res.status(200).send(result);
    } catch (error) {
       logger.error(error);
