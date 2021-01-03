@@ -4,14 +4,6 @@ const needle = require('needle');
 
 const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
 
-const WorkPlanMap = [
-   { year: 2019, column: 'workplanyr1' },
-   { year: 2020, column: 'workplanyr2' },
-   { year: 2021, column: 'workplanyr3' },
-   { year: 2022, column: 'workplanyr4' },
-   { year: 2023, column: 'workplanyr5' }
-];
-
 const getNewFilter = (filters, body) => {
    if (body.status) {
      let statuses = body.status.split(',');
@@ -194,53 +186,67 @@ async function getCountByArrayColumnsProject(table, column, columns, bounds, bod
    return result;
 }
 
-async function getValuesByRangeProject(table, column, range, bounds, body) {
+async function getValuesByRangeProject(table, column, range, bounds, body) {  
    let result = [];
    try {
       const coords = bounds.split(',');
       let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
       filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+      filters = getNewFilter(filters, body);
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+
       const newProm1 = new Promise(async (resolve, reject) => {
-         let result2 = [];
-         let counter = 0;
-         const lenRange = range.length;
-         let index = 0;
-         for (const values of range) {
-            const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-            if (table === 'problems') {
-               const query = { q: `select count(*) from ${table} where (${column} between ${values.min} and ${values.max}) and ${filters} ` };
-               const data = await needle('post', URL, query, { json: true });
-               let answer = [];
-               if (data.statusCode === 200) {
-                  const rows = data.body.rows;
-                  counter = rows[0].count;
-               }
-            } else {
-               let answer = [];
-               counter = 0;
-               const newFilters = getNewFilter(filters, body);
-               for (const table1 of PROJECT_TABLES) {
-                  const query = {
-                     q: `select count(*) from ${table1} where (cast(${column} as real) between ${values.min} and ${values.max})
-               and ${newFilters} `
-                  };
-                  const data = await needle('post', URL, query, { json: true });
-                  if (data.statusCode === 200) {
-                     const rows = data.body.rows;
-                     counter += rows[0].count;
-                  } else {
-                     console.log('data.statusCode', data.statusCode, table, column, data.body)
-                     console.log('query.q', query.q)
-                  }
-               }
+         let minRange, maxRange;
+
+         let bodyColumn = column === 'estimatedcost' ? body['totalcost'] : body[column];
+         if (bodyColumn && bodyColumn.length !== 0) {
+            let minPair = bodyColumn[0];
+            let maxPair = bodyColumn[bodyColumn.length - 1];
+            let minimumValue = minPair.split(',')[0];
+            let maximumValue = maxPair.split(',')[1];
+            minRange = +minimumValue;
+            maxRange = +maximumValue;
+         } else {
+            const minMaxQuery = {
+               q: PROJECT_TABLES.map(t => {
+                  return `SELECT max(${column}) as max, min(${column}) as min FROM ${t} where ${filters}`;
+               }).join(' union ')
             }
-            if (index === (lenRange - 1)) {
-               result2.push({ min: values.min, max: values.max, counter: counter, last: true });
-            } else {
-               result2.push({ min: values.min, max: values.max, counter: counter, last: false });
+            const minMaxData = await needle('post', URL, minMaxQuery, { json: true });
+            const minMaxResult = minMaxData.body.rows;
+            minRange = Math.min.apply(Math, minMaxResult.map(function (element) { return element.min }));
+            maxRange = Math.max.apply(Math, minMaxResult.map(function (element) { return element.max }));
+         }
+
+         let width = maxRange - minRange;
+         const lenRange = 20;
+         let intervalWidth = width / lenRange;
+         let result2 = [];
+         let epsilon = 0.001;
+
+         for (let i = 0 ; i < lenRange ; i++) {
+            const isLast = i === (lenRange - 1);
+            let values = {
+               min: minRange + i * intervalWidth,
+               max: minRange + (i + 1) * intervalWidth - (isLast ? 0 : epsilon)
             }
 
-            index++;
+            let counter = 0;
+            for (const table1 of PROJECT_TABLES) {
+               const query = {
+                  q: `select count(*) from ${table1} where (cast(${column} as real) between ${values.min} and ${values.max}) and ${filters}`
+               };
+               const data = await needle('post', URL, query, { json: true });
+               if (data.statusCode === 200) {
+                  const rows = data.body.rows;
+                  counter += rows[0].count;
+               } else {
+                  console.log('data.statusCode', data.statusCode, table, column, data.body)
+                  console.log('query.q', query.q)
+               }
+            }
+
+            result2.push({ min: values.min, max: values.max, counter: counter, last: isLast });
          }
          resolve(result2);
       });
