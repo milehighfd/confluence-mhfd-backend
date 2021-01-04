@@ -205,16 +205,42 @@ async function getValuesByRangeProblem(table, column, range, bounds, body) {
     const coords = bounds.split(',');
     let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-
     filters = getNewFilter(filters, body);
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
     const newProm1 = new Promise(async (resolve, reject) => {
+      let minRange, maxRange;
+      let bodyColumn = column === 'solutioncost' ? body['cost'] : body[column];
+      if (bodyColumn && bodyColumn.length !== 0) {
+        let minPair = bodyColumn[0];
+        let maxPair = bodyColumn[bodyColumn.length - 1];
+        let minimumValue = minPair.split(',')[0];
+        let maximumValue = maxPair.split(',')[1];
+        minRange = +minimumValue;
+        maxRange = +maximumValue;
+      } else {
+        const minMaxQuery = {
+            q: `SELECT max(${column}) as max, min(${column}) as min FROM ${table} where ${filters}`
+        }
+        const minMaxData = await needle('post', URL, minMaxQuery, { json: true });
+        const minMaxResult = minMaxData.body.rows;
+        minRange = Math.min.apply(Math, minMaxResult.map(function (element) { return element.min }));
+        maxRange = Math.max.apply(Math, minMaxResult.map(function (element) { return element.max }));
+      }
+
+      let width = maxRange - minRange;
+      const lenRange = 20;
+      let intervalWidth = width / lenRange;
       let result2 = [];
-      let counter = 0;
-      const lenRange = range.length;
-      let index = 0;
-      for (const values of range) {
-        const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+      let epsilon = 0.001;
+
+      for (let i = 0 ; i < lenRange ; i++) {
+        const isLast = i === (lenRange - 1);
+        let values = {
+           min: minRange + i * intervalWidth,
+           max: minRange + (i + 1) * intervalWidth - (isLast ? 0 : epsilon)
+        }
+        let counter = 0;
         const query = { q: `select count(*) from ${table} where (${column} between ${values.min} and ${values.max}) and ${filters} ` };
         const data = await needle('post', URL, query, { json: true });
         console.log('STATUS', data.statusCode);
@@ -222,13 +248,9 @@ async function getValuesByRangeProblem(table, column, range, bounds, body) {
           const rows = data.body.rows;
           counter = rows[0].count;
         }
-        if (index === (lenRange - 1)) {
-          result2.push({ min: values.min, max: values.max, counter: counter, last: true });
-        } else {
-          result2.push({ min: values.min, max: values.max, counter: counter, last: false });
-        }
 
-        index++;
+        result2.push({ min: values.min, max: values.max, counter: counter, last: isLast });
+
       }
       resolve(result2);
     });
