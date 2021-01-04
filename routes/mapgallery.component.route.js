@@ -166,8 +166,8 @@ async function getCountByYearStudyWithFilter(bounds, body) {
     filters = getNewFilter(filters, body);
 
     let values = [];
-    for(var y = 1970 ; y <= 2020 ; y += distanceInYears) {
-       values.push(y);
+    for (var y = 1970; y <= 2020; y += distanceInYears) {
+      values.push(y);
     }
 
     for (const value of values) {
@@ -249,21 +249,21 @@ async function getComponentsValuesByColumnWithCountWithFilter(column, bounds, bo
 async function getQuintilComponentValuesWithFilter(column, bounds, body) {
   let finalResult = [];
   try {
-    let MINMAXSQL = '';
-
-    MINMAXSQL = TABLES_COMPONENTS.map(t => {
-      return `SELECT max(${column}) as max, min(${column}) as min FROM ${t}`
-    }).join(' union ');
-    const lineQuery = { q: ` ${MINMAXSQL} ` };
-    const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-    const lineData = await needle('post', LINE_URL, lineQuery, { json: true });
-
-
     const coords = bounds.split(',');
     let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
 
     filters = getNewFilter(filters, body);
+
+    let MINMAXSQL = '';
+
+    MINMAXSQL = TABLES_COMPONENTS.map(t => {
+      return `SELECT max(${column}) as max, min(${column}) as min FROM ${t} where ${filters}`
+    }).join(' union ');
+    const lineQuery = { q: ` ${MINMAXSQL} ` };
+    const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+
+    const lineData = await needle('post', LINE_URL, lineQuery, { json: true });
 
     const lineResult = lineData.body.rows;
     const max = Math.max.apply(Math, lineResult.map(function (element) { return element.max }));
@@ -278,7 +278,7 @@ async function getQuintilComponentValuesWithFilter(column, bounds, body) {
     }
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
-    for (let i = 0; i < numberOfPartitions; i ++) {
+    for (let i = 0; i < numberOfPartitions; i++) {
       let min1 = Math.round(min);
       let max1 = 0;
       let limitCount = 0;
@@ -292,23 +292,21 @@ async function getQuintilComponentValuesWithFilter(column, bounds, body) {
         limitCount = max1;
       }
 
-      let val = `${min1},${max1}`;
-      if (!body.estimatedcost || body.estimatedcost.length === 0 || body.estimatedcost.includes(val)) { 
-        let query1 = TABLES_COMPONENTS.map(t => {
-          return `SELECT count(*) FROM ${t} where (${column} between ${min1} and ${limitCount}) and ${filters}`
-        }).join(' union ');
+      let query1 = TABLES_COMPONENTS.map(t => {
+        return `SELECT count(*) FROM ${t} where (${column} between ${min1} and ${limitCount}) and ${filters}`
+      }).join(' union ');
 
-        const query = { q: `${query1} ` };
-        const data = await needle('post', URL, query, { json: true });
-        if (data.statusCode === 200) {
-          const result = data.body.rows;
-          for (const row of result) {
-            counter += row.count;
-          }
-        } else {
-          console.log('error');
+      const query = { q: `${query1} ` };
+      const data = await needle('post', URL, query, { json: true });
+      if (data.statusCode === 200) {
+        const result = data.body.rows;
+        for (const row of result) {
+          counter += row.count;
         }
+      } else {
+        console.log('error');
       }
+
       finalResult.push({ min: min1, max: max1, label: label, counter: counter });
       min = (difference * (i + 1));
     }
