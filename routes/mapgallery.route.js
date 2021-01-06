@@ -1146,7 +1146,7 @@ router.post('/components-by-entityid', async (req, res) => {
       let COMPONENTS_SQL = '';
       let union = '';
       for (const component of TABLES_COMPONENTS) {
-         COMPONENTS_SQL += union + `SELECT type, count(original_cost), coalesce(sum(original_cost), 0) as estimated_cost, 
+         COMPONENTS_SQL += union + `SELECT type, count(*), coalesce(sum(original_cost), 0) as estimated_cost, 
         case when cast(${finalcost} as integer) > 0 then coalesce(sum(original_cost),0)/cast(${finalcost} as integer) else 0 END as original_cost,
         ((select count(*) from ${component} where ${typeid}=${id} and status='Completed')/count(*)) percen
         FROM ${component}, ${table}
