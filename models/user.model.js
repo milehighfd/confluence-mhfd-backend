@@ -96,8 +96,11 @@ module.exports = (sequelize, DataType) => {
   };
   
   User.findByEmail = async (email) => {
-    const user = await User.findOne({
-      email
+    const user = await User.findOne({where: {
+      email: {
+        [Op.iLike]: '%' + email + '%'
+      }
+      }
     });
 
     if (!user) {

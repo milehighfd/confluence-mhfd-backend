@@ -25,7 +25,9 @@ db.attachment = require('../models/attachment.model.js')(sequelize, Sequelize);
 db.task = require('../models/task.model.js')(sequelize, Sequelize);
 db.coordinate = require('../models/coordinate.model.js')(sequelize, Sequelize);
 db.logActivity = require('../models/logActivity.model.js')(sequelize, Sequelize);
+db.favorites = require('../models/favorites.model.js')(sequelize, Sequelize);
 
+db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
 db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
 db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
