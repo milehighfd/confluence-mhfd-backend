@@ -61,7 +61,23 @@ router.get('/create', async (req, res) => {
     res.status(500).send('error found ', error);
   }
 });
+router.delete('/', async (req, res) => {
+  const {email, table, cartodb_id} = req.body;
+  const user = await User.findByEmail(email);
+  try {
+    const favorite = {
+      user_id: user._id,
+      table: table,
+      cartodb_id: cartodb_id
+    };
+    const selectedFavorite = await favoritesService.getOne(favorite);
+    selectedFavorite.destroy();
+    res.send('deleted');
 
+  } catch(error) {
+    res.status(500).send('error found ' + error);
+  }
+});
 router.post('/favorite-list', async (req, res) => {
   try {
      console.log('enter here');
