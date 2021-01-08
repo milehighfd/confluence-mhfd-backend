@@ -184,7 +184,10 @@ router.get('/bbox-components', async (req, res) => {
             if (rows[0].bbox != null) {
               rows[0].bbox = rows[0].bbox.replace('BOX(', '').replace(')', '').replace(/ /g, ',').split(',');
             }
-            resolve({bbox: rows[0].bbox});
+            resolve({
+              bbox: rows[0].bbox,
+              component
+            });
           });
         } else {
           console.log('status ', response.statusCode, URL);
@@ -197,15 +200,25 @@ router.get('/bbox-components', async (req, res) => {
     );  
   }
   const all = await Promise.all(promises);
-  const answer = [];
+  const bboxes = [];
+  let centroids = all.filter(x => x.bbox).map((x) => {
+    console.log('x', x);
+    const coords = x.bbox;
+    let midLat = ((+coords[0]) + (+coords[2])) / 2;
+    let midLng = ((+coords[1]) + (+coords[3])) / 2;
+    return {
+      component: x.component,
+      centroid: [midLat, midLng]
+    }
+  })
   for(const data of all) {
     if (data.bbox != null) { 
-      answer.push(data);
+      bboxes.push(data);
     }
   }
-  console.log(answer);
+  console.log(centroids);
   let [minLat, minLng, maxLat, maxLng] = [Infinity, Infinity, -Infinity, -Infinity];
-  for (const bbox of answer) {
+  for (const bbox of bboxes) {
     const coords = bbox.bbox;
     if (+coords[0] < minLat) {
       minLat = +coords[0];
@@ -220,9 +233,15 @@ router.get('/bbox-components', async (req, res) => {
       maxLng = +coords[3];
     }
   }
+  centroids = [{
+    component: 'self',
+    centroid: [(minLat + maxLat) / 2, (minLng + maxLng) / 2]
+  }, ...centroids]
   const polygon = [[[minLat, minLng], [minLat, maxLng], [maxLat, maxLng], [maxLat, minLng], [minLat, minLng]]];
-  console.log(polygon);
-  res.send(polygon);
+  res.send({
+    bbox: polygon,
+    centroids
+  });
 });
 
 module.exports = (router);
