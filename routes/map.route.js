@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const https = require('https');
 const logger = require('../config/logger');
+const needle = require('needle');
 
 const {CARTO_TOKEN} = require('../config/config');
 
@@ -200,23 +201,45 @@ router.get('/bbox-components', async (req, res) => {
     );  
   }
   const all = await Promise.all(promises);
-  const bboxes = [];
-  let centroids = all.filter(x => x.bbox).map((x) => {
-    console.log('x', x);
-    const coords = x.bbox;
-    let midLat = ((+coords[0]) + (+coords[2])) / 2;
-    let midLng = ((+coords[1]) + (+coords[3])) / 2;
-    return {
-      component: x.component,
-      centroid: [midLat, midLng]
+  const URL2 = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  const query = {
+    q: components.map(t => 
+      `SELECT ST_AsGeoJSON(the_geom) as geojson, '${t.key}' as component from ${t.key} where ${field} = ${id}` 
+    ).join(' union ')
+  }
+  const datap = await needle('post', URL2, query, { json: true });
+  let centroids = datap.body.rows.map((r) => {
+    let geojson = JSON.parse(r.geojson);
+    let center = [0, 0];
+    if (geojson.type === 'MultiLineString') {
+      if (geojson.coordinates[0].length > 0) {
+        let len = geojson.coordinates[0].length;
+        let mid = Math.floor(len / 2);
+        center = geojson.coordinates[0][mid];
+      }
     }
+    if (geojson.type === 'MultiPolygon') {
+      if (geojson.coordinates[0][0].length > 0) {
+        let len = geojson.coordinates[0][0].length;
+        let mid = Math.floor(len / 2);
+        center = geojson.coordinates[0][0][mid];
+      }
+    }
+    if (geojson.type === 'Point') {
+      center = geojson.coordinates;
+    }
+    return {
+      component: r.component,
+      centroid: center
+    };
   })
+
+  const bboxes = [];
   for(const data of all) {
     if (data.bbox != null) { 
       bboxes.push(data);
     }
   }
-  console.log(centroids);
   let [minLat, minLng, maxLat, maxLng] = [Infinity, Infinity, -Infinity, -Infinity];
   for (const bbox of bboxes) {
     const coords = bbox.bbox;
