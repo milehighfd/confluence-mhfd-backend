@@ -122,7 +122,28 @@ router.post('/favorite-list', async (req, res) => {
         } catch (error) {
            console.log('Error', error);
         }
-        res.send(answer);
+        const email = req.body.email;
+        console.log('my email ', email);
+        const user = await User.findByEmail(email);
+        try {  
+          const favorite = await favoritesService.getFavorites(user._id);
+          console.log('my favorite ', favorite);
+          const ids = favorite.map(fav => {
+            return {cartodb_id: fav.cartodb_id, table: fav.table};
+          });
+          console.log('my ids ', ids);
+          res = res.filter(element => {
+            for (const id of ids) {
+              if (element.type === id.table && element.cartodb_id === id.cartodb_id) {
+                return true;
+              }
+            }
+            return false;
+          });
+          return res.send(answer);
+         } catch(error) {
+            return res.send([]);
+          }
      } else {
         let filters = '';
         let send = [];
@@ -199,15 +220,16 @@ router.post('/favorite-list', async (req, res) => {
               };
            }
         }
-        const email = req.query.email;
+        const email = req.body.email;
         console.log('my email ', email);
         const user = await User.findByEmail(email);
         try {  
-          console.log(user);
           const favorite = await favoritesService.getFavorites(user._id);
+          console.log('my favorite ', favorite);
           const ids = favorite.map(fav => {
             return {cartodb_id: fav.cartodb_id, table: fav.table};
           });
+          console.log('my ids ', ids);
           send = send.filter(element => {
             for (const id of ids) {
               if (element.type === id.table && element.cartodb_id === id.cartodb_id) {
