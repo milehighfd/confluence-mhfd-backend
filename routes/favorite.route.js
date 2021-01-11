@@ -122,17 +122,18 @@ router.post('/favorite-list', async (req, res) => {
         } catch (error) {
            console.log('Error', error);
         }
+
         const email = req.body.email;
         console.log('my email ', email);
         const user = await User.findByEmail(email);
         try {  
-          const favorite = await favoritesService.getFavorites(user._id);
-          console.log('my favorite ', favorite);
+          
+         const favorite = await favoritesService.getFavorites(user._id);
           const ids = favorite.map(fav => {
             return {cartodb_id: fav.cartodb_id, table: fav.table};
           });
           console.log('my ids ', ids);
-          res = res.filter(element => {
+          answer = answer.filter(element => {
             for (const id of ids) {
               if (element.type === id.table && element.cartodb_id === id.cartodb_id) {
                 return true;
