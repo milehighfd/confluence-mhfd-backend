@@ -6,7 +6,9 @@ const { Op } = require("sequelize");
 const getFavorites = async (user_id) => {
   let result = [];
   await Favorites.findAll({
-    user_id: user_id
+    where: {
+      user_id: user_id
+    }
   }).then(data => {
     result = data;
   });
