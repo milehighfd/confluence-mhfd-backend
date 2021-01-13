@@ -89,7 +89,9 @@ function getFilters(params) {
    }
 
 
-
+   if (filters.length > 0) {
+      filters = ' where ' + filters;
+   }
 
    if (params.sortby) {
       let sorttype = '';
@@ -149,6 +151,7 @@ router.get('/', async (req, res) => {
 
 router.get('/create', async (req, res) => {
   const {email, table, cartodb_id} = req.query;
+  console.log('entro aca');
   const user = await User.findByEmail(email);
   try {
     const favorite = {
@@ -271,7 +274,7 @@ router.post('/favorite-list', async (req, res) => {
               } else {
                  query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_polygon_', 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
               }
-
+              console.log(query);
               const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
               let answer = [];
               try {
