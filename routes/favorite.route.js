@@ -13,6 +13,110 @@ const { CARTO_TOKEN } = require('../config/config');
 const needle = require('needle');
 
 
+function getFilters(params) {
+   //console.log('PARAMS', params);
+   let filters = '';
+   let tipoid = '';
+   let hasProjectType = false;
+   const VALUES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
+      'special_item_linear', 'special_item_area', 'channel_improvements_linear',
+      'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
+      'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
+
+   if (params.isproblem) {
+      console.log('PROBLEMS');
+      tipoid = 'problemid';
+      if (params.name) {
+         if (filters.length > 0) {
+            filters = filters = ` and problemname ilike '%${params.name}%'`;
+         }
+         else {
+            filters = ` problemname ilike '%${params.name}%' `;
+         }
+      }
+
+      if (params.problemtype) {
+         const query = createQueryForIn(params.problemtype.split(','));
+         if (filters.length > 0) {
+            filters = filters + ` and problemtype in (${query}) `;
+         } else {
+            filters = ` problemtype in (${query}) `;
+         }
+      }
+   } else {
+      console.log('PROJECTS');
+      tipoid = 'projectid';
+      if (params.name) {
+         if (filters.length > 0) {
+            filters = ` and projectname ilike '%${params.name}%' `;
+         } else {
+            filters = ` projectname ilike '%${params.name}%' `;
+         }
+      }
+
+      if (params.problemtype) {
+
+      }
+   }
+
+   // components
+
+
+
+
+   // ALL FILTERS
+   // PROBLEMS 
+   if (params.priority) {
+      const query = createQueryForIn(params.priority.split(','));
+      if (filters.length > 0) {
+         filters = filters + ` and problempriority in (${query})`;
+      } else {
+         filters = ` problempriority in (${query})`;
+      }
+   }
+
+ 
+
+   // PROJECTS
+   if (params.projecttype) {
+      const query = createQueryForIn(params.projecttype.split(','));
+      if (filters.length > 0) {
+         filters = filters + ` and projecttype in (${query})`;
+      } else {
+         filters = `projecttype in (${query})`;
+      }
+      hasProjectType = true;
+   }
+
+
+
+
+   if (params.sortby) {
+      let sorttype = '';
+      let sortby = params.sortby;
+      if (params.sortby === 'estimatedcost') {
+         sortby = ` (coalesce(${params.sortby}::real, 0)) `;
+      }
+
+      if (params.sortby === 'projectname') {
+         sortby = ` coalesce(projectname, '')`;
+      }
+
+      if (!params.sorttype) {
+         sorttype = 'desc';
+      } else {
+         sorttype = params.sorttype;
+      }
+      filters += ` order by ${sortby} ${sorttype}`;
+   }
+   if (params.limit && params.page) {
+      filters = ` limit= ${limit} offset=${params.page * params.limit}`
+   }
+   return filters;
+}
+
+
+
 function getCounters(table, column) {
   return ` (select count(*) from grade_control_structure where ${column} = cast(${table}.${column} as integer) ) as count_gcs, 
      (select count(*) from pipe_appurtenances where ${column} = cast(${table}.${column} as integer) ) as count_pa,
@@ -82,11 +186,13 @@ router.post('/favorite-list', async (req, res) => {
   try {
      console.log('enter here');
      if (req.body.isproblem) {
+      let filters = '';
+      filters = getFilters(req.body);
         // 
         const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype, county, ${getCounters('problems', 'problemid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM problems `;
         //const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
         const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-        const query = { q: `${PROBLEM_SQL} ` };
+        const query = { q: `${PROBLEM_SQL}  ${filters} ` };
         let answer = [];
         try {
            const data = await needle('post', URL, query, { json: true });
@@ -148,7 +254,8 @@ router.post('/favorite-list', async (req, res) => {
      } else {
         let filters = '';
         let send = [];
-
+        
+        filters = getFilters(req.body);
         const PROJECT_FIELDS = 'cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, ' +
            'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county ';
 
