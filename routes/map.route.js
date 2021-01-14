@@ -267,10 +267,35 @@ router.get('/bbox-components', async (req, res) => {
       maxLng = +coords[3];
     }
   }
-  centroids = [{
+
+  let selfCentroid = {
     component: 'self',
     centroid: [(minLat + maxLat) / 2, (minLng + maxLng) / 2]
-  }, ...centroids]
+  };
+  if (table === 'projects_line_1') {
+    const queryProjectLine = {
+      q: ['projects_line_1'/*, 'projects_polygon_'*/].map(t => 
+        `SELECT ST_AsGeoJSON(the_geom) as geojson from ${t} where projectid = ${id}`
+      ).join(' union ')
+    }
+    const dataProjectLine = await needle('post', URL2, queryProjectLine, { json: true });
+    let r = dataProjectLine.body.rows[0];
+    let geojson = JSON.parse(r.geojson);
+    let projectCenter = [0, 0];
+    if (geojson.type === 'MultiLineString') {
+      if (geojson.coordinates[0].length > 0) {
+        let len = geojson.coordinates[0].length;
+        let mid = Math.floor(len / 2);
+        projectCenter = geojson.coordinates[0][mid];
+      }
+    }
+    selfCentroid = {
+      component: 'self',
+      centroid: projectCenter
+    }
+  }
+
+  centroids = [selfCentroid, ...centroids]
   const polygon = [[[minLat, minLng], [minLat, maxLng], [maxLat, maxLng], [maxLat, minLng], [minLat, minLng]]];
   res.send({
     bbox: polygon,
