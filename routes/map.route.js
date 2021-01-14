@@ -204,7 +204,7 @@ router.get('/bbox-components', async (req, res) => {
   const URL2 = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
   const query = {
     q: components.map(t => 
-      `SELECT ST_AsGeoJSON(the_geom) as geojson, '${t.key}' as component from ${t.key} where ${field} = ${id}` 
+      `SELECT ST_AsGeoJSON(the_geom) as geojson, '${t.key}' as component, original_cost as cost from ${t.key} where ${field} = ${id}` 
     ).join(' union ')
   }
   const datap = await needle('post', URL2, query, { json: true });
@@ -228,9 +228,20 @@ router.get('/bbox-components', async (req, res) => {
     if (geojson.type === 'Point') {
       center = geojson.coordinates;
     }
+    let arcWidth;
+    if (r.cost <= 500 * 1000) {
+      arcWidth = 2;
+    } else if (r.cost <= 1 * 1000 * 1000) {
+      arcWidth = 4;
+    } else if (r.cost <= 5 * 1000 * 1000) {
+      arcWidth = 6;
+    } else {
+      arcWidth = 8;
+    }
     return {
       component: r.component,
-      centroid: center
+      centroid: center,
+      arcWidth
     };
   })
 
