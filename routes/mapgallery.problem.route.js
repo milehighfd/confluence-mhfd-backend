@@ -30,12 +30,22 @@ const getNewFilter = (filters, body, withPrefix) => {
   }
   if (body.county) {
     let counties = body.county.split(',');
-    let countiesIn = counties.map(s => `'${s}'`)
+    let countiesIn = counties.map(s => {
+      if (s.includes(' County')) {
+        s = s.substring(0, s.length - ' County'.length);
+      }
+      return `'${s}'`;
+    })
     filters += ` and ${prefix}county in (${countiesIn.join(',')})`
   }
   if (body.servicearea) {
     let serviceareas = body.servicearea.split(',');
-    let serviceareasIn = serviceareas.map(s => `'${s}'`)
+    let serviceareasIn = serviceareas.map(s => {
+      if (s.includes(' Service Area')) {
+        s = s.substring(0, s.length - ' Service Area'.length);
+      }
+      return `'${s}'`
+    })
     filters += ` and ${prefix}servicearea in (${serviceareasIn.join(',')})`
   }
   if (body.jurisdiction) {
@@ -62,7 +72,6 @@ async function getCountByArrayColumnsProblem(table, column, columns, bounds, bod
         q: `select ${column} as column, count(*) as count from ${table} 
              where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
       };
-      console.log('query.q', query.q);
       let counter = 0;
       const data = await needle('post', URL, query, { json: true });
 
@@ -243,7 +252,6 @@ async function getValuesByRangeProblem(table, column, range, bounds, body) {
         let counter = 0;
         const query = { q: `select count(*) from ${table} where (${column} between ${values.min} and ${values.max}) and ${filters} ` };
         const data = await needle('post', URL, query, { json: true });
-        console.log('STATUS', data.statusCode);
         if (data.statusCode === 200) {
           const rows = data.body.rows;
           counter = rows[0].count;

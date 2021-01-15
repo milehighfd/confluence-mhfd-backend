@@ -50,7 +50,13 @@ const getNewFilter = (filters, body) => {
   }
   if (body.county) {
     let counties = body.county.split(',');
-    let countiesIn = counties.map(s => `'${s}'`)
+    let countiesIn = counties.map(s => {
+      if (s.includes(' County')) {
+        s = s.substring(0, s.length - ' County'.length);
+      }
+      return `'${s}'`;
+    })
+    console.log('countiesIn', countiesIn.join(','));
     filters += ` and county in (${countiesIn.join(',')})`
   }
   if (body.servicearea) {
