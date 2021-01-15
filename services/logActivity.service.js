@@ -33,6 +33,12 @@ const getLogActivities = async (page, limit, sortByField, sortType) => {
   return result;
 }
 
+const timesLogin = async (user_id) => {
+  return await LogActivity.count({where: {
+    user_id: user_id
+  }});  
+}
+
 const countLogActivities = async () => {
   return await LogActivity.count();
 }
@@ -47,5 +53,6 @@ const saveLogActivity = async (logActivity) => {
 module.exports = {
   saveLogActivity,
   getLogActivities,
-  countLogActivities
+  countLogActivities,
+  timesLogin
 }

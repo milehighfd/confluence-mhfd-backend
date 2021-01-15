@@ -54,4 +54,18 @@ router.get('/csv', [auth, isAdminAccount], async (req, res) => {
   }
 
 });
+
+router.get('/count-login', auth, async (req, res) => {
+  try {
+    const user = req.user;
+    console.log(user);
+    const counter = await logActivityService.timesLogin(user._id);
+    console.log(counter);
+    res.send({times: counter});
+  } catch (error) {
+    logger.error(error);
+    res.sendStatus(500).send({error: error});
+  }
+});
+
 module.exports = router;
