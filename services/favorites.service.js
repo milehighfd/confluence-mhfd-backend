@@ -27,8 +27,21 @@ const getOne = async (data) => {
 }
 
 const saveFavorite = async (favorite) => {
-  await Favorites.create(favorite);
-  console.log('favorite save');
+  const fav = await Favorites.findOne({
+    where: {
+      table: {
+        [Op.iLike]: '%' + data.table + '%'
+      },
+      cartodb_id: data.cartodb_id,
+      user_id: data.user_id
+    }
+  });
+  if (!fav) {
+    await Favorites.create(favorite);
+    console.log('favorite save');
+  } else {
+    console.log('no update');
+  }
   return favorite;
 }
 
