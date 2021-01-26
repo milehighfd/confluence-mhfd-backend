@@ -15,6 +15,10 @@ var options = {
 };
 
 module.exports = {
+  printProblem: (data) => {
+    var html = fs.readFileSync('./pdf-templates/Problems.html', 'utf8');
+    return pdf.create(html, options);
+  },
   printProject: (data) => {
     var html = fs.readFileSync('./pdf-templates/Projects.html', 'utf8');
     const {

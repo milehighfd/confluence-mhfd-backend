@@ -35,7 +35,7 @@ const {
    getSubtotalsByComponentProblem,
    getValuesByRangeProblem,
 } = require('./mapgallery.problem.route');
-const { printProject } = require('./mapgallery.print');
+const { printProject, printProblem } = require('./mapgallery.print');
 const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
    'special_item_linear', 'special_item_area', 'channel_improvements_linear',
@@ -908,60 +908,67 @@ router.get('/project-by-ids', async (req, res) => {
    }
 });
 
-router.get('/problem-by-id/:id', async (req, res) => {
-   const id = req.params.id;
-   try {
-      const PROBLEM_SQL = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom, cartodb_id,
+let getDataByProblemId = async (id) => {
+   const PROBLEM_SQL = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom, cartodb_id,
     objectid, problemid, problemname, problemdescription, problemtype,
     problempriority, source, sourcename, solutioncost, solutionstatus,
     mhfdmanager, servicearea, county, jurisdiction, streamname,
     problemsubtype, sourcedate, shape_length, shape_area 
     FROM problems where problemid='${id}'`;
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} &api_key=${CARTO_TOKEN}`);
+   const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} &api_key=${CARTO_TOKEN}`);
+   const data = await needle('get', URL, { json: true });
+   if (data.statusCode === 200) {
+      const result = data.body.rows[0];
+      const resultComponents = await getCoordinatesOfComponents(id, 'problemid');
+      return {
+         cartodb_id: result.cartodb_id,
+         objectid: result.objectid,
+         problemid: result.problemid,
+         problemname: result.problemname,
+         problemdescription: result.problemdescription,
+         problemtype: result.problemtype,
+         problempriority: result.problempriority,
+         source: result.source,
+         solutioncost: result.solutioncost,
+         solutionstatus: result.solutionstatus,
+         sourcename: result.sourcename,
+         mhfdmanager: result.mhfdmanager,
+         servicearea: result.servicearea,
+         county: result.county,
+         streamname: result.streamname,
+         problemsubtype: result.problemsubtype,
+         sourcedate: result.sourcedate,
+         jurisdiction: result.jurisdiction,
+         shape_length: result.shape_length,
+         shape_area: result.shape_area,
+         components: resultComponents,
+         coordinates: JSON.parse(result.the_geom).coordinates
+      };
+   } else {
+      throw new Error('');
+   }
+}
 
-      https.get(URL, response => {
-         //console.log('status', response.statusCode);
-         if (response.statusCode === 200) {
-            let str = '';
-            response.on('data', function (chunk) {
-               str += chunk;
-            });
-            response.on('end', async function () {
-               const result = JSON.parse(str).rows[0];
-               const resultComponents = await getCoordinatesOfComponents(id, 'problemid');
+router.get('/problem-by-id/:id/pdf', async (req, res) => {
+   const id = req.params.id;
+   try {
+      let data = await getDataByProblemId(id);
+      printProblem(data).toBuffer(function (err, buffer) {
+         if (err) return res.send(err);
+         res.type('pdf');
+         res.end(buffer, 'binary');
+      })
+   } catch (error) {
+      logger.error(error);
+      res.status(500).send({ error: 'No there data with ID' });
+   }
+})
 
-               return res.status(200).send({
-                  cartodb_id: result.cartodb_id,
-                  objectid: result.objectid,
-                  problemid: result.problemid,
-                  problemname: result.problemname,
-                  problemdescription: result.problemdescription,
-                  problemtype: result.problemtype,
-                  problempriority: result.problempriority,
-                  source: result.source,
-                  solutioncost: result.solutioncost,
-                  solutionstatus: result.solutionstatus,
-                  sourcename: result.sourcename,
-                  mhfdmanager: result.mhfdmanager,
-                  servicearea: result.servicearea,
-                  county: result.county,
-                  streamname: result.streamname,
-                  problemsubtype: result.problemsubtype,
-                  sourcedate: result.sourcedate,
-                  jurisdiction: result.jurisdiction,
-                  shape_length: result.shape_length,
-                  shape_area: result.shape_area,
-                  components: resultComponents,
-                  coordinates: JSON.parse(result.the_geom).coordinates
-               });
-            });
-         } else {
-            return res.status(response.statusCode).send({ error: 'Error with C connection' });
-         }
-      }).on('error', err => {
-         logger.error(`failed call to ${URL}  with error  ${err}`);
-         return res.status(500).send({ error: err });
-      });
+router.get('/problem-by-id/:id', async (req, res) => {
+   const id = req.params.id;
+   try {
+      let data = await getDataByProblemId(id);
+      res.status(200).send(data);
    } catch (error) {
       logger.error(error);
       res.status(500).send({ error: 'No there data with ID' });
