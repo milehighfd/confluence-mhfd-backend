@@ -17,6 +17,25 @@ var options = {
 module.exports = {
   printProblem: (data) => {
     var html = fs.readFileSync('./pdf-templates/Problems.html', 'utf8');
+    const {
+      problemname,
+      problemtype,
+      jurisdiction,
+      servicearea,
+      county,
+      solutionstatus,
+    } = data;
+    html = html.replace('${problemname}', problemname);
+
+    html = html.replace('${problemtype}', problemtype + ' Problem');
+    html = html.replace('${jurisdiction}', jurisdiction + ', CO' );
+    html = html.replace('${county}', county);
+    html = html.replace('${servicearea}', servicearea);
+    html = html.replace('${solutionstatus}', solutionstatus);
+    let solutionstatusVal = solutionstatus ? solutionstatus : 0;
+    solutionstatusVal = Math.floor((solutionstatusVal / 100) * 150)
+    html = html.replace('${solutionstatusVal}', solutionstatusVal);
+
     return pdf.create(html, options);
   },
   printProject: (data) => {

@@ -12,15 +12,20 @@
       <thead style="min-height: 80px; background: rgba(37,24,99,.03); border: hidden; border-spacing: 0px;">
         <tr>
           <th style="padding: 10px 20px; text-align:left;">
-            <h3 style="font-size: 21px; color: #11093c; line-height: 22px; margin: 0px 0px 7px 0px;">Big Dry Creek (ADCO) @ Upstream of Sheridan Blvd 2016</h3>
-            <p style="font-size: 14px; color: rgba(17,9,60,.5); margin: 0; font-weight: 500">Capital Project  •  Westminster  •   Jefferson County   •   West Service Area</p>
+            <h3 style="font-size: 21px; color: #11093c; line-height: 22px; margin: 0px 0px 7px 0px;">${problemname}</h3>
+            <p style="font-size: 14px; color: rgba(17,9,60,.5); margin: 0; font-weight: 500">
+              <span>${problemtype}</span>  •  
+              <span>${jurisdiction}</span>  •  
+              <span>${county}</span>  •  
+              <span>${service}</span>  •  
+            </p>
           </th>
           <th style="padding: 10px 10px;">
             <p style="font-size: 12px; color: rgba(17,9,60,.5);margin:0px 0ps 5px 0px; width: 100%; font-weight:500; text-align:left;">
               Solution Status
-              <b style="float: right; color: #251863;">15%</b>
+              <b style="float: right; color: #251863;">${solutionstatus}%</b>
             </p>
-            <div style="background-color: rgba(61,46,138,.07); height:6px; border-radius: 10px; border-left: 50px solid #fd0; display: block;"></div>
+            <div style="background-color: rgba(61,46,138,.07); height:6px; border-radius: 10px; border-left: ${solutionstatusVal}px solid #fd0; display: block;"></div>
           </th>
           <th style="padding: 10px 20px;">
             <div style="font-size: 14px; color: #251863; border-left: 1.5px solid rgba(61,46,138,.07); border-right: 1.5px solid rgba(61,46,138,.07); padding: 8px 0; margin: 8px 12px;">
@@ -182,35 +187,6 @@
               </tr>
             </table>
 
-            <table style="padding:20px 25px 0px 25px; border-spacing: 0px; ">
-              <tr>
-                <td style="width: 300px; background-color: rgba(37,24,99,.08); height: 50px; border-radius: 4px 4px 0 0; font-size: 18px; color: #11093c; padding: 0px 15px;">
-                    COMMENTS
-                    <img src="../Icons/icon-19.svg" alt="" height="15px">
-                </td>
-              </tr>
-              <tr>
-                <td style="border-bottom: 1.3px solid rgba(61,46,138,.07); width: 300px; background-color: rgba(37,24,99,.03); padding: 105px 50px; text-align: center;">
-                    <img src="../Icons/icon-61.svg" alt="">
-                    <h6 style="font-size: 16px; color: #11093c; margin: 0px 0px 10px 0px;">Share your thoughts</h6>
-                    <p style="font-size: 12px; color: rgba(17,9,60,.5); margin: 0px;">Let everyone in your group know what you think about this listing</p>
-                </td>
-              </tr>
-            </table>
-
-            <table style="width: 345px; padding:0px 25px 20px 25px; border-spacing: 0px; ">
-              <tr style="background-color: rgba(37,24,99,.03); border-radius: 0px 0px 4px 4px;">
-                <td style="width: 35px; padding:5px;">
-                  <img src="../Icons/icon-28.svg" alt="" height="35px">
-                </td>
-                <td style="width: 146.5px; font-size:14px;">
-                  Add a comment...
-                </td>
-                <td style="width: 78.5px; text-align: right; font-size: 12px; color: rgba(17,9,60,.5); text-align: center">
-                  <b>SEND</b>
-                </td>
-              </tr>
-            </table>
           </td>
           <!-- END COLLABORATORS AND COMMENTS -->
         </tr>
