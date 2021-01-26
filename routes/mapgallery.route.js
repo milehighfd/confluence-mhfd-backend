@@ -35,6 +35,7 @@ const {
    getSubtotalsByComponentProblem,
    getValuesByRangeProblem,
 } = require('./mapgallery.problem.route');
+const { printProject } = require('./mapgallery.print');
 const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
    'special_item_linear', 'special_item_area', 'channel_improvements_linear',
@@ -888,7 +889,11 @@ router.get('/project-by-ids/pdf', async (req, res) => {
    const cartoid = req.query.cartoid;
    const type = req.query.type;
    let data = await getDataByProjectIds(cartoid, type);
-   res.status(200).send(data);
+   printProject(data).toBuffer(function (err, buffer) {
+      if (err) return res.send(err);
+      res.type('pdf');
+      res.end(buffer, 'binary');
+  })
 })
 
 router.get('/project-by-ids', async (req, res) => {
