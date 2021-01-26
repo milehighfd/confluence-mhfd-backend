@@ -513,6 +513,24 @@ router.get('/get-position', auth, async (req, res) => {
   }
 });
 
+router.post('/change-password', validator(['email', 'password', 'newpassword']), async (req, res) =>{
+  try {
+    const {email, password, newpassword} = req.body;
+    const user = await User.findByCredentials(email, password);
+    if (!user) {
+      return res.status(401).send({
+        error: 'Login failed! Check authentication credentials'
+      });
+    }
+    const newPwd = await bcrypt.hash(newpassword, 8);
+    user.password = newPwd;
+    user.save();
+    res.send(use);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 router.post('/reset-password', validator(['id', 'password']), async (req, res) => {
   try {
     const chgId = req.body.id;
