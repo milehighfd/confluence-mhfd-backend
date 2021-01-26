@@ -15,6 +15,7 @@ const NUMBER_PER_PAGE = process.env.NUMBER_PER_PAGE || 20;
 const INITIAL_PAGE = process.env.INITIAL_PAGE || 1;
 const PROJECT_TABLE = process.env.PROJECT_TABLE || 'projects';
 const GUEST_USER = process.env.GUEST_USER || 'guest@mhfd.com';
+const DEFAULT_PASSWORD = process.env.DEFAULT_PASSWORD || 'example-password';
 module.exports = {
   JWT_KEY,
   POSTGRESQL_URL,
@@ -32,5 +33,6 @@ module.exports = {
   NUMBER_PER_PAGE,
   INITIAL_PAGE,
   PROJECT_TABLE,
-  GUEST_USER
+  GUEST_USER,
+  DEFAULT_PASSWORD
 };
