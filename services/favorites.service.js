@@ -30,10 +30,10 @@ const saveFavorite = async (favorite) => {
   const fav = await Favorites.findOne({
     where: {
       table: {
-        [Op.iLike]: '%' + data.table + '%'
+        [Op.iLike]: '%' + favorite.table + '%'
       },
-      cartodb_id: data.cartodb_id,
-      user_id: data.user_id
+      cartodb_id: favorite.cartodb_id,
+      user_id: favorite.user_id
     }
   });
   if (!fav) {
