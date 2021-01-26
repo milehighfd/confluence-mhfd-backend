@@ -12,17 +12,22 @@
       <thead style="min-height: 80px; background: rgba(37,24,99,.03); border: hidden; border-spacing: 0px;">
         <tr>
           <th style="padding: 10px 20px; text-align:left;">
-            <h3 style="font-size: 21px; color: #11093c; line-height: 22px; margin: 0px 0px 7px 0px;">Big Dry Creek (ADCO) @ Upstream of Sheridan Blvd 2016</h3>
-            <p style="font-size: 14px; color: rgba(17,9,60,.5); margin: 0; font-weight: 500">Capital Project  •  Westminster  •   Jefferson County   •   West Service Area</p>
+            <h3 style="font-size: 21px; color: #11093c; line-height: 22px; margin: 0px 0px 7px 0px;">${projectname}</h3>
+            <p style="font-size: 14px; color: rgba(17,9,60,.5); margin: 0; font-weight: 500">
+              <span>${projecttype}</span>  •  
+              <span>${sponsor}</span>  •   
+              <span>${county}</span>   •   
+              <span>${servicearea}</span>
+            </p>
           </th>
           <th style="padding: 10px 20px;">
             <div style="color: #11093c; font-size: 13px; border-radius: 2px; text-align: center; padding: 12px 0; width: 120px; background-color: rgba(37,24,99,.03); float: right;">
-              Initiated
+              ${status}
             </div>
           </th>
           <th style="padding: 10px 20px;">
             <div style="font-size: 14px; color: #251863; border-left: 1.5px solid rgba(61,46,138,.07); border-right: 1.5px solid rgba(61,46,138,.07); padding: 8px 0; margin: 8px 12px;">
-              $9,254,660
+              ${cost}
             </div>
           </th>
           <th style="padding: 10px 20px;">
@@ -41,34 +46,33 @@
           <td style="width: 848px; min-width:848px; max-width:850px; border-right: 1.5px solid rgba(61, 46, 138, 0.07);">
             <table style="border-spacing: 0px; text-align:center; margin: auto;">
               <tr>
-                <td style="text-align:center;"><img src="https://i.imgur.com/kLyZbrB.jpg" alt="" height="400px"></td>
+                <td style="text-align:center;"><img src="${attachmentUrl}" alt="" height="400px"></td>
               </tr>
             </table>
 
             <table style="border-spacing: 10px; padding: 10px 40px 0px 40px; font-size: 14px; text-align: left; width:100%;">
               <tr>
                 <td style="width:20%; color:rgba(17,9,60,.5);"><i>Stream</i></td>
-                <td style="width:30%; color:#11093c;">Big Dry Creek (ADCO)</td>
+                <td style="width:30%; color:#11093c;">${streamname}</td>
                 <td style="width:20%; color:rgba(17,9,60,.5);"><i>Start Year</i></td>
-                <td style="width:30%; color:#11093c;">2019</td>
+                <td style="width:30%; color:#11093c;">${startyear}</td>
               </tr>
               <tr>
                 <td style="width:20%; color:rgba(17,9,60,.5);"><i>Completed Year</i></td>
-                <td style="width:30%; color:#11093c;">N/A</td>
+                <td style="width:30%; color:#11093c;">${completedyear}</td>
                 <td style="width:20%; color:rgba(17,9,60,.5);"><i>LG Manager</i></td>
-                <td style="width:30%; color:#11093c;">Andrew Hawthorn</td>
+                <td style="width:30%; color:#11093c;">${lgmanager}</td>
               </tr>
               <tr>
                 <td style="width:20%; color:rgba(17,9,60,.5);"><i>MHFD Manager</i></td>
-                <td style="width:30%; color:#11093c;">Brooke Seymour</td>
+                <td style="width:30%; color:#11093c;">${mhfdmanager}</td>
                 <td style="width:20%;"></td>
                 <td style="width:30%;"></td>
               </tr>
               <tr>
                 <td style="width:19.5%; color:rgba(17,9,60,.5); vertical-align: top;"><i>Description</i></td>
                 <td colspan="3" style="width:80%; color:#11093c;">
-                  Restore stream functions that have been negatively impacted by urbanization to
-                  lower project life cycle costs by implementing natural stream design processes.
+                  ${description}
                 </td>
               </tr>
             </table>
@@ -89,10 +93,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-                  <td width="50%" style="padding: 17px 20px;">BDC d/s BNSF</td>
-                  <td width="50%" style="padding: 17px 20px;">Medium</td>
-                </tr>
+                ${problemRows}
               </tbody>
             </table>
             <!-- END PROBLEM -->
@@ -108,9 +109,9 @@
             <table style="border-spacing: 10px; padding: 10px 50px 0px 50px; font-size: 14px; text-align: left; width:100%;">
               <tr>
                 <td style="width:20%; color:rgba(17,9,60,.5);"><i>Contractor</i></td>
-                <td style="width:30%; color:#11093c;">N/A</td>
+                <td style="width:30%; color:#11093c;">${contractor}</td>
                 <td style="width:20%; color:rgba(17,9,60,.5);"><i>Consultant</i></td>
-                <td style="width:30%; color:#11093c;">Olsson Associates</td>
+                <td style="width:30%; color:#11093c;">${consultant}</td>
               </tr>
             </table>
             <!-- END VENDORS -->
@@ -133,25 +134,14 @@
                 </tr>
               </thead>
               <tbody>
-                <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-                  <td width="40%" style="padding: 17px 20px;">Channel Improvements Linear (3)</td>
-                  <td width="20%" style="padding: 17px 20px;">$139,160</td>
-                  <td width="20%" style="padding: 17px 20px;">0%</td>
-                  <td width="20%" style="padding: 17px 20px;">0%</td>
-                </tr>
-                <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-                  <td width="40%" style="padding: 17px 20px;">Landscaping Area (4)</td>
-                  <td width="20%" style="padding: 17px 20px;">$139,160</td>
-                  <td width="20%" style="padding: 17px 20px;">0%</td>
-                  <td width="20%" style="padding: 17px 20px;">0%</td>
-                </tr>
+                ${componentRows}
               </tbody>
-              <tfoot>
+              <!-- <tfoot>
                 <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
                   <th width="40%" style="padding: 17px 20px; text-align:left;"><b>Total Estimated Cost</b></th>
                   <th width="60%" colspan="3" style="padding: 17px 20px; text-align:left;"><b>$9,254,660</b></th>
                 </tr>
-              </tfoot>
+              </tfoot> -->
             </table>
             <!-- END SOLUTION COMPONENTS -->
 
@@ -229,35 +219,6 @@
               </tr>
             </table>
 
-            <table style="padding:20px 25px 0px 25px; border-spacing: 0px; ">
-              <tr>
-                <td style="width: 300px; background-color: rgba(37,24,99,.08); height: 50px; border-radius: 4px 4px 0 0; font-size: 18px; color: #11093c; padding: 0px 15px;">
-                    COMMENTS
-                    <img src="../Icons/icon-19.svg" alt="" height="15px">
-                </td>
-              </tr>
-              <tr>
-                <td style="border-bottom: 1.3px solid rgba(61,46,138,.07); width: 300px; background-color: rgba(37,24,99,.03); padding: 105px 50px; text-align: center;">
-                    <img src="../Icons/icon-61.svg" alt="">
-                    <h6 style="font-size: 16px; color: #11093c; margin: 0px 0px 10px 0px;">Share your thoughts</h6>
-                    <p style="font-size: 12px; color: rgba(17,9,60,.5); margin: 0px;">Let everyone in your group know what you think about this listing</p>
-                </td>
-              </tr>
-            </table>
-
-            <table style="width: 345px; padding:0px 25px 20px 25px; border-spacing: 0px; ">
-              <tr style="background-color: rgba(37,24,99,.03); border-radius: 0px 0px 4px 4px;">
-                <td style="width: 35px; padding:5px;">
-                  <img src="../Icons/icon-28.svg" alt="" height="35px">
-                </td>
-                <td style="width: 146.5px; font-size:14px;">
-                  Add a comment...
-                </td>
-                <td style="width: 78.5px; text-align: right; font-size: 12px; color: rgba(17,9,60,.5); text-align: center">
-                  <b>SEND</b>
-                </td>
-              </tr>
-            </table>
           </td>
         </tr>
       </tbody>
