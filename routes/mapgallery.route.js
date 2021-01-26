@@ -790,118 +790,118 @@ async function queriesByProblemTypeInProject(project_fields, filters, problemTyp
    return send;
 }
 
+let getDataByProjectIds = async (cartoid, type) => {
+   let SQL = '';
+   let URL = '';
+   if (type === 'projects_polygon_') { // objectid=${objectid} and 
+      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_polygon_ where cartodb_id=${cartoid} `;
+      URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
+   } else { // objectid=${objectid} and
+      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_line_1 where  cartodb_id=${cartoid} `;
+      URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
+   }
+   const data = await needle('get', URL, { json: true });
+   if (data.statusCode === 200) {
+      const result = data.body.rows[0];
+      let problems = [];
+      let attachmentFinal = [];
+      let components = [];
+      let coordinates = [];
+
+      if (result.projectid !== null && result.projectid !== undefined && result.projectid) {
+         problems = await getProblemByProjectId(result.projectid, 'problemname', 'asc');
+         components = await getCoordinatesOfComponents(result.projectid, 'projectid');
+      }
+
+      if (result.attachments) {
+         attachmentFinal = await attachmentService.findByName(result.attachments);
+      }
+      if (JSON.parse(result.the_geom).coordinates) {
+         coordinates = JSON.parse(result.the_geom).coordinates;
+      }
+      return {
+         cartodb_id: result.cartodb_id,
+         objectid: result.objectid,
+         projectid: result.projectid,
+         onbaseid: result.onbaseid,
+         projectname: result.projectname,
+         status: result.status,
+         requestedname: result.requestedname,
+         projecttype: result.projecttype,
+         projectsubtype: result.projectsubtype,
+         description: result.description,
+         sponsor: result.sponsor,
+         cosponsor: result.cosponsor,
+         recurrence: result.recurrence,
+         frequency: result.frequency,
+         mhfddollarsrequested: result.mhfddollarsrequested,
+         estimatedcost: result.estimatedcost,
+         mhfddollarsallocated: result.mhfddollarsallocated,
+         finalcost: result.finalcost,
+         startyear: result.startyear,
+         completedyear: result.completedyear,
+         consultant: result.consultant,
+         contractor: result.contractor,
+         lgmanager: result.lgmanager,
+         mhfdmanager: result.mhfdmanager,
+         servicearea: result.servicearea,
+         county: result.county,
+         jurisdiction: result.jurisdiction,
+         streamname: result.streamname,
+         tasksedimentremoval: result.tasksedimentremoval,
+         tasktreethinning: result.tasktreethinning,
+         taskbankstabilization: result.taskbankstabilization,
+         taskdrainagestructure: result.taskdrainagestructure,
+         taskregionaldetention: result.taskregionaldetention,
+         goalfloodrisk: result.goalfloodrisk,
+         goalwaterquality: result.goalwaterquality,
+         goalstabilization: result.goalstabilization,
+         goalcaprecreation: result.goalcaprecreation,
+         goalcapvegetation: result.goalcapvegetation,
+         goalstudyovertopping: result.goalstudyovertopping,
+         goalstudyconveyance: result.goalstudyconveyance,
+         goalstudypeakflow: result.goalstudypeakflow,
+         goalstudydevelopment: result.goalstudydevelopment,
+         creator: result.creator,
+         datecreated: result.datecreated,
+         lastmodifieduser: result.lastmodifieduser,
+         lastmodifieddate: result.lastmodifieddate,
+         workplanyr1: result.workplanyr1,
+         workplanyr2: result.workplanyr2,
+         workplanyr3: result.workplanyr3,
+         workplanyr4: result.workplanyr4,
+         workplanyr5: result.workplanyr5,
+         coverimage: result.coverimage,
+         globalid: result.globalid,
+         shape_length: result.shape_length,
+         attachments: attachmentFinal,
+         problems: problems,
+         components: components,
+         coordinates: coordinates
+      };
+   } else {
+      throw new Error('');
+   }
+}
+
+router.get('/project-by-ids/pdf', async (req, res) => {
+   const cartoid = req.query.cartoid;
+   const type = req.query.type;
+   let data = await getDataByProjectIds(cartoid, type);
+   res.status(200).send(data);
+})
+
 router.get('/project-by-ids', async (req, res) => {
    const cartoid = req.query.cartoid;
-   //const objectid = req.query.objectid;
    const type = req.query.type;
-   console.log('Carto ID', cartoid, type);
    try {
-      let SQL = '';
-      let URL = '';
-      if (type === 'projects_polygon_') { // objectid=${objectid} and 
-         SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_polygon_ where cartodb_id=${cartoid} `;
-         URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
-      } else { // objectid=${objectid} and
-         SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_line_1 where  cartodb_id=${cartoid} `;
-         URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
-      }
-      https.get(URL, response => {
-         if (response.statusCode === 200) {
-            let str = '';
-            response.on('data', function (chunk) {
-               str += chunk;
-            });
-            response.on('end', async function () {
-               const result = JSON.parse(str).rows[0];
-               /* console.log('resultado', result);
-               console.log('JSON', JSON.parse(result.the_geom).coordinates); */
-               let problems = [];
-               let attachmentFinal = [];
-               let components = [];
-               let coordinates = [];
-
-               if (result.projectid !== null && result.projectid !== undefined && result.projectid) {
-                  problems = await getProblemByProjectId(result.projectid, 'problemname', 'asc');
-                  components = await getCoordinatesOfComponents(result.projectid, 'projectid');
-               }
-
-               //console.log('listado', result.attachments);
-               if (result.attachments) { // result.attachments - '{B83521F5-96D6-4360-B80A-81A0A31327A9}'
-                  attachmentFinal = await attachmentService.findByName(result.attachments);
-                  //console.log('ATTACH', attachmentFinal);
-               }
-               //coordinates: JSON.parse(result.the_geom).coordinates
-               if (JSON.parse(result.the_geom).coordinates) {
-                  coordinates = JSON.parse(result.the_geom).coordinates;
-               }
-               return res.status(200).send({
-                  cartodb_id: result.cartodb_id,
-                  objectid: result.objectid,
-                  projectid: result.projectid,
-                  onbaseid: result.onbaseid,
-                  projectname: result.projectname,
-                  status: result.status,
-                  requestedname: result.requestedname,
-                  projecttype: result.projecttype,
-                  projectsubtype: result.projectsubtype,
-                  description: result.description,
-                  sponsor: result.sponsor,
-                  cosponsor: result.cosponsor,
-                  recurrence: result.recurrence,
-                  frequency: result.frequency,
-                  mhfddollarsrequested: result.mhfddollarsrequested,
-                  estimatedcost: result.estimatedcost,
-                  mhfddollarsallocated: result.mhfddollarsallocated,
-                  finalcost: result.finalcost,
-                  startyear: result.startyear,
-                  completedyear: result.completedyear,
-                  consultant: result.consultant,
-                  contractor: result.contractor,
-                  lgmanager: result.lgmanager,
-                  mhfdmanager: result.mhfdmanager,
-                  servicearea: result.servicearea,
-                  county: result.county,
-                  jurisdiction: result.jurisdiction,
-                  streamname: result.streamname,
-                  tasksedimentremoval: result.tasksedimentremoval,
-                  tasktreethinning: result.tasktreethinning,
-                  taskbankstabilization: result.taskbankstabilization,
-                  taskdrainagestructure: result.taskdrainagestructure,
-                  taskregionaldetention: result.taskregionaldetention,
-                  goalfloodrisk: result.goalfloodrisk,
-                  goalwaterquality: result.goalwaterquality,
-                  goalstabilization: result.goalstabilization,
-                  goalcaprecreation: result.goalcaprecreation,
-                  goalcapvegetation: result.goalcapvegetation,
-                  goalstudyovertopping: result.goalstudyovertopping,
-                  goalstudyconveyance: result.goalstudyconveyance,
-                  goalstudypeakflow: result.goalstudypeakflow,
-                  goalstudydevelopment: result.goalstudydevelopment,
-                  creator: result.creator,
-                  datecreated: result.datecreated,
-                  lastmodifieduser: result.lastmodifieduser,
-                  lastmodifieddate: result.lastmodifieddate,
-                  workplanyr1: result.workplanyr1,
-                  workplanyr2: result.workplanyr2,
-                  workplanyr3: result.workplanyr3,
-                  workplanyr4: result.workplanyr4,
-                  workplanyr5: result.workplanyr5,
-                  coverimage: result.coverimage,
-                  globalid: result.globalid,
-                  shape_length: result.shape_length,
-                  attachments: attachmentFinal,
-                  problems: problems,
-                  components: components,
-                  coordinates: coordinates
-               });
-            });
-         }
-      });
+      let data = await getDataByProjectIds(cartoid, type);
+      res.status(200).send(data);
    } catch (error) {
       logger.error(error);
       res.status(500).send({ error: 'No there data with ID' });
    }
-})
+});
 
 router.get('/problem-by-id/:id', async (req, res) => {
    const id = req.params.id;
