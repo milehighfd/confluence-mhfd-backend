@@ -30,6 +30,7 @@ db.favorites = require('../models/favorites.model.js')(sequelize, Sequelize);
 db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
 db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
+db.favorites.belongsTo(db.user, {foreignKey: 'user_id'});
 db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
 db.attachment.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.components.belongsTo(db.projects);

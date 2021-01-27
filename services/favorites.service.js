@@ -4,18 +4,17 @@ const User = db.user;
 const { Op } = require("sequelize");
 
 const getAll = async () => {
-  const result = await Favorites.findAll({
-    include: [{
-      model: User,
-      require: true
-    }],
-    offset: limit * (page - 1),
-    limit: limit,
-    order: [
-      [sortByField, sortType] 
-    ]
-  });
-  return result;
+  try {
+    const result = await Favorites.findAll({
+      include: [{
+        model: User,
+        require: true
+      }]
+    });
+    return result;
+  } catch(error) {
+    console.log('my error is ', error);
+  }
 }
 const getFavorites = async (user_id) => {
   let result = [];
