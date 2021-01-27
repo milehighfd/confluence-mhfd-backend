@@ -3,6 +3,20 @@ const Favorites = db.favorites;
 const User = db.user;
 const { Op } = require("sequelize");
 
+const getAll = async () => {
+  const result = await Favorites.findAll({
+    include: [{
+      model: User,
+      require: true
+    }],
+    offset: limit * (page - 1),
+    limit: limit,
+    order: [
+      [sortByField, sortType] 
+    ]
+  });
+  return result;
+}
 const getFavorites = async (user_id) => {
   let result = [];
   result = await Favorites.findAll({
@@ -48,5 +62,6 @@ const saveFavorite = async (favorite) => {
 module.exports = {
   saveFavorite,
   getFavorites,
-  getOne
+  getOne,
+  getAll
 }
