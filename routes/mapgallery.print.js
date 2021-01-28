@@ -55,7 +55,7 @@ module.exports = {
 
     return pdf.create(html, options);
   },
-  printProject: (_data) => {
+  printProject: (_data, components) => {
     let data = {};
     Object.keys(_data).forEach(k => {
       if (k.includes('cost')) {
@@ -87,7 +87,6 @@ module.exports = {
       contractor,
       consultant,
       problems,
-      components,
     } = data;
     html = html.split('${projectname}').join(projectname);
     html = html.split('${projecttype}').join(projecttype + ' Project');
@@ -119,15 +118,20 @@ module.exports = {
     }).join('')
     html = html.split('${problemRows}').join(problemRows);
 
-    let _components = components.length > 0 ? components : [{type: ''}]
+    let _components = components.length > 0 ? components : [{
+      type: '',
+      estimated_cost: 0,
+      original_cost: 0,
+      percen: 0
+    }]
 
     let componentRows = _components.map((c) => {
       return `
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
           <td width="40%" style="padding: 17px 20px;">${c.type}</td>
-          <td width="20%" style="padding: 17px 20px;"></td>
-          <td width="20%" style="padding: 17px 20px;"></td>
-          <td width="20%" style="padding: 17px 20px;"></td>
+          <td width="20%" style="padding: 17px 20px;">${priceFormatter(c.estimated_cost)}</td>
+          <td width="20%" style="padding: 17px 20px;">${priceFormatter(c.original_cost)}</td>
+          <td width="20%" style="padding: 17px 20px;">${c.percen}%</td>
         </tr>
       `
     }).join('')

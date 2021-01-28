@@ -889,7 +889,11 @@ router.get('/project-by-ids/pdf', async (req, res) => {
    const cartoid = req.query.cartoid;
    const type = req.query.type;
    let data = await getDataByProjectIds(cartoid, type);
-   printProject(data).toBuffer(function (err, buffer) {
+   let components = [];
+   if (data.projectid) {
+     components = await componentsByEntityId(data.projectid, 'projectid', 'type', 'asc');
+   }
+   printProject(data, components).toBuffer(function (err, buffer) {
       if (err) return res.send(err);
       res.type('pdf');
       res.end(buffer, 'binary');
@@ -953,6 +957,7 @@ router.get('/problem-by-id/:id/pdf', async (req, res) => {
    const id = req.params.id;
    try {
       let data = await getDataByProblemId(id);
+      let components = 
       printProblem(data).toBuffer(function (err, buffer) {
          if (err) return res.send(err);
          res.type('pdf');
