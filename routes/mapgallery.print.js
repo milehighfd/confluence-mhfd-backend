@@ -14,6 +14,10 @@ var options = {
   }
 };
 
+const priceFormatter = (value) => {
+  return `$${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
 module.exports = {
   printProblem: (data) => {
     var html = fs.readFileSync('./pdf-templates/Problems.html', 'utf8');
@@ -25,20 +29,30 @@ module.exports = {
       county,
       solutionstatus,
     } = data;
-    html = html.replace('${problemname}', problemname);
+    html = html.split('${problemname}').join(problemname);
 
-    html = html.replace('${problemtype}', problemtype + ' Problem');
-    html = html.replace('${jurisdiction}', jurisdiction + ', CO' );
-    html = html.replace('${county}', county);
-    html = html.replace('${servicearea}', servicearea);
-    html = html.replace('${solutionstatus}', solutionstatus);
+    html = html.split('${problemtype}').join(problemtype + ' Problem');
+    html = html.split('${jurisdiction}').join(jurisdiction + ', CO' );
+    html = html.split('${county}').join(county);
+    html = html.split('${servicearea}').join(servicearea);
+    html = html.split('${solutionstatus}').join(solutionstatus);
     let solutionstatusVal = solutionstatus ? solutionstatus : 0;
     solutionstatusVal = Math.floor((solutionstatusVal / 100) * 150)
-    html = html.replace('${solutionstatusVal}', solutionstatusVal);
+    html = html.split('${solutionstatusVal').join(solutionstatusVal);
 
     return pdf.create(html, options);
   },
-  printProject: (data) => {
+  printProject: (_data) => {
+    let data = {};
+    Object.keys(_data).forEach(k => {
+      if (k.includes('cost')) {
+        data[k] = _data[k];
+      } else if (k === 'description') {
+        data[k] = _data[k] ? _data[k] : 'No Data';
+      } else {
+        data[k] = _data[k] ? _data[k] : 'N/A';
+      }
+    })
     var html = fs.readFileSync('./pdf-templates/Projects.html', 'utf8');
     const {
       projectname,
@@ -49,11 +63,12 @@ module.exports = {
       finalcost,
       estimatedcost,
       streamname,
+      projectsubtype,
       attachments,
       status,
       startyear,
       completedyear,
-      lgmanager,
+      frequency,
       mhfdmanager,
       description,
       contractor,
@@ -61,24 +76,27 @@ module.exports = {
       problems,
       components,
     } = data;
-    html = html.replace('${projectname}', projectname);
-    html = html.replace('${projecttype}', projecttype + ' Project');
-    html = html.replace('${sponsor}', sponsor);
-    html = html.replace('${county}', county);
-    html = html.replace('${servicearea}', servicearea);
-    html = html.replace('${cost}', finalcost ? finalcost : estimatedcost);
-    html = html.replace('${status}', status);
-    html = html.replace('${streamname}', streamname);
-    html = html.replace('${attachmentUrl}', attachments.length > 0 ? attachments[0] : 'https://i.imgur.com/kLyZbrB.jpg');
-    html = html.replace('${startyear}', startyear);
-    html = html.replace('${completedyear}', completedyear);
-    html = html.replace('${lgmanager}', lgmanager);
-    html = html.replace('${mhfdmanager}', mhfdmanager);
-    html = html.replace('${description}', description);
-    html = html.replace('${contractor}', contractor);
-    html = html.replace('${consultant}', consultant);
+    html = html.split('${projectname}').join(projectname);
+    html = html.split('${projecttype}').join(projecttype + ' Project');
+    html = html.split('${sponsor}').join(sponsor);
+    html = html.split('${county}').join(county);
+    html = html.split('${servicearea}').join(servicearea);
+    html = html.split('${cost}').join(priceFormatter(finalcost ? finalcost : estimatedcost));
+    html = html.split('${status}').join(status);
+    html = html.split('${streamname}').join(streamname);
+    html = html.split('${projectsubtype}').join(projectsubtype);
+    html = html.split('${attachmentUrl').join(attachments.length > 0 ? attachments[0] : 'https://i.imgur.com/kLyZbrB.jpg');
+    html = html.split('${startyear}').join(startyear);
+    html = html.split('${completedyear}').join(completedyear);
+    html = html.split('${frequency}').join(frequency);
+    html = html.split('${mhfdmanager}').join(mhfdmanager);
+    html = html.split('${description}').join(description);
+    html = html.split('${contractor}').join(contractor);
+    html = html.split('${consultant}').join(consultant);
 
-    let problemRows = problems.map((p) => {
+    let _problems = problems.length > 0 ? problems : [{ problemname: '', problempriority: '' }]
+
+    let problemRows = _problems.map((p) => {
       return `
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
           <td width="50%" style="padding: 17px 20px;">${p.problemname}</td>
@@ -86,20 +104,22 @@ module.exports = {
         </tr>
       `
     }).join('')
-    html = html.replace('${problemRows}', problemRows);
+    html = html.split('${problemRows}').join(problemRows);
 
-    let componentRows = components.map((c) => {
+    let _components = components.length > 0 ? components : [{type: ''}]
+
+    let componentRows = _components.map((c) => {
       return `
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
           <td width="40%" style="padding: 17px 20px;">${c.type}</td>
           <td width="20%" style="padding: 17px 20px;"></td>
-          <td width="20%" style="padding: 17px 20px;">0%</td>
-          <td width="20%" style="padding: 17px 20px;">0%</td>
+          <td width="20%" style="padding: 17px 20px;"></td>
+          <td width="20%" style="padding: 17px 20px;"></td>
         </tr>
       `
     }).join('')
 
-    html = html.replace('${componentRows}', componentRows);
+    html = html.split('${componentRows}').join(componentRows);
 
     return pdf.create(html, options);
   }
