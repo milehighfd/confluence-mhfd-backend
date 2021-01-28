@@ -19,7 +19,7 @@ const priceFormatter = (value) => {
 }
 
 module.exports = {
-  printProblem: (data) => {
+  printProblem: (data, components) => {
     var html = fs.readFileSync('./pdf-templates/Problems.html', 'utf8');
     const {
       problemname,
@@ -52,6 +52,28 @@ module.exports = {
     let solutionstatusVal = solutionstatus ? solutionstatus : 0;
     solutionstatusVal = Math.floor((solutionstatusVal / 100) * 150)
     html = html.split('${solutionstatusVal}').join(solutionstatusVal);
+
+    let _components = components.length > 0 ? components : [{
+      type: '',
+      estimated_cost: 0,
+      original_cost: 0,
+      percen: 0
+    }]
+    let sum = 0;
+    let componentRows = _components.map((c) => {
+      sum += c.estimated_cost;
+      return `
+        <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
+          <td width="40%" style="padding: 17px 20px;">${c.type}</td>
+          <td width="20%" style="padding: 17px 20px;">${priceFormatter(c.estimated_cost)}</td>
+          <td width="20%" style="padding: 17px 20px;">${priceFormatter(c.original_cost)}</td>
+          <td width="20%" style="padding: 17px 20px;">${c.percen}%</td>
+        </tr>
+      `
+    }).join('')
+
+    html = html.split('${componentRows}').join(componentRows);
+    html = html.split('${totalEstimatedCost}').join(priceFormatter(sum));
 
     return pdf.create(html, options);
   },
@@ -124,8 +146,9 @@ module.exports = {
       original_cost: 0,
       percen: 0
     }]
-
+    let sum = 0;
     let componentRows = _components.map((c) => {
+      sum += c.estimated_cost;
       return `
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
           <td width="40%" style="padding: 17px 20px;">${c.type}</td>
@@ -137,6 +160,7 @@ module.exports = {
     }).join('')
 
     html = html.split('${componentRows}').join(componentRows);
+    html = html.split('${totalEstimatedCost}').join(priceFormatter(sum));
 
     return pdf.create(html, options);
   }
