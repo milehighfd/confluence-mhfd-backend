@@ -28,6 +28,12 @@ module.exports = {
       servicearea,
       county,
       solutionstatus,
+      solutioncost,
+      streamname,
+      problempriority,
+      sourcename,
+      source,
+      problemdescription,
     } = data;
     html = html.split('${problemname}').join(problemname);
 
@@ -36,9 +42,16 @@ module.exports = {
     html = html.split('${county}').join(county);
     html = html.split('${servicearea}').join(servicearea);
     html = html.split('${solutionstatus}').join(solutionstatus);
+    html = html.split('${solutioncost}').join(priceFormatter(solutioncost));
+    html = html.split('${streamname}').join(streamname);
+    html = html.split('${problempriority}').join(problempriority);
+    html = html.split('${sourcename}').join(sourcename);
+    html = html.split('${source}').join(source);
+    html = html.split('${problemdescription}').join(problemdescription);
+
     let solutionstatusVal = solutionstatus ? solutionstatus : 0;
     solutionstatusVal = Math.floor((solutionstatusVal / 100) * 150)
-    html = html.split('${solutionstatusVal').join(solutionstatusVal);
+    html = html.split('${solutionstatusVal}').join(solutionstatusVal);
 
     return pdf.create(html, options);
   },
