@@ -1136,6 +1136,56 @@ router.post('/problems-by-projectid', async (req, res) => {
    }
 });
 
+let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
+   if (id === '') {
+      id = null;
+   }
+   let table = '';
+   let finalcost = '';
+   if (typeid === 'projectid') {
+      table = 'projects_line_1';
+      finalcost = 'finalcost';
+   } else {
+      table = 'problems';
+      finalcost = 'solutioncost';
+   }
+   let COMPONENTS_SQL = '';
+   let union = '';
+   for (const component of TABLES_COMPONENTS) {
+      COMPONENTS_SQL += union + `SELECT type, count(*), coalesce(sum(original_cost), 0) as estimated_cost, 
+     case when cast(${finalcost} as integer) > 0 then coalesce(sum(original_cost),0)/cast(${finalcost} as integer) else 0 END as original_cost,
+     ((select count(*) from ${component} where ${typeid}=${id} and status='Completed')/count(*)) percen
+     FROM ${component}, ${table}
+     where ${component}.${typeid}=${id} and ${table}.${typeid}=${id} group by type, ${finalcost}`;
+      union = ' union ';
+   }
+
+   if (sortby) {
+      if (!sorttype) {
+         sorttype = 'desc';
+      }
+      COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
+   }
+   const componentQuery = { q: `${COMPONENTS_SQL}` };
+
+   const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+   const data = await needle('post', URL, componentQuery, { json: true });
+   if (data.statusCode === 200) {
+      const result = data.body.rows.map(element => {
+         return {
+            type: element.type + ' (' + element.count + ')',
+            estimated_cost: element.estimated_cost,
+            original_cost: element.original_cost,
+            percen: element.percen
+         }
+      })
+      return result;
+   } else {
+      console.log('bad status ', response.statusCode, response.body);
+      throw new Error('');
+   }
+}
+
 router.post('/components-by-entityid', async (req, res) => {
    try {
       let id = req.body.id;
@@ -1143,55 +1193,9 @@ router.post('/components-by-entityid', async (req, res) => {
       let sortby = req.body.sortby;
       let sorttype = req.body.sorttype;
 
-      if (id === '') {
-         id = null;
-      }
-      let table = '';
-      let finalcost = '';
-      if (typeid === 'projectid') {
-         table = 'projects_line_1';
-         finalcost = 'finalcost';
-      } else {
-         table = 'problems';
-         finalcost = 'solutioncost';
-      }
-      let COMPONENTS_SQL = '';
-      let union = '';
-      for (const component of TABLES_COMPONENTS) {
-         COMPONENTS_SQL += union + `SELECT type, count(*), coalesce(sum(original_cost), 0) as estimated_cost, 
-        case when cast(${finalcost} as integer) > 0 then coalesce(sum(original_cost),0)/cast(${finalcost} as integer) else 0 END as original_cost,
-        ((select count(*) from ${component} where ${typeid}=${id} and status='Completed')/count(*)) percen
-        FROM ${component}, ${table}
-        where ${component}.${typeid}=${id} and ${table}.${typeid}=${id} group by type, ${finalcost}`;
-         union = ' union ';
-      }
+      let result = await componentsByEntityId(id, typeid, sortby, sorttype);
 
-      if (sortby) {
-         if (!sorttype) {
-            sorttype = 'desc';
-         }
-         COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
-      }
-      const query = { q: `${COMPONENTS_SQL}` };
-
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-      const data = await needle('post', URL, query, { json: true });
-      if (data.statusCode === 200) {
-         const result = data.body.rows.map(element => {
-            return {
-               type: element.type + ' (' + element.count + ')',
-               estimated_cost: element.estimated_cost,
-               original_cost: element.original_cost,
-               percen: element.percen
-            }
-         })
-
-         return res.status(200).send(result);
-      } else {
-         console.log('bad status ', response.statusCode, response.body);
-         res.status(500).send({ error: 'bad status' }).send({ error: 'Connection error' });
-      }
-
+      return res.status(200).send(result);
    } catch (error) {
       logger.error(error);
       res.status(500).send({ error: error }).send({ error: 'Connection error' });
