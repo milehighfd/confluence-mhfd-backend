@@ -168,7 +168,7 @@ router.get('/me', auth, async (req, res) => {
   }
   try {
     const newProm = new Promise((resolve, reject) => {
-      const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM organizations WHERE name = '${organization_query}' `;
+      const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM mhfd_zoom_to_areas WHERE aoi = '${organization_query}' `;
       const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
       let result = [];
       //console.log('URL', URL);
@@ -527,6 +527,7 @@ router.post('/change-password', validator(['email', 'password', 'newpassword']),
     user.save();
     res.send(use);
   } catch (error) {
+    console.log(error);
     res.status(500).send(error);
   }
 });
