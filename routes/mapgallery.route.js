@@ -885,15 +885,16 @@ let getDataByProjectIds = async (cartoid, type) => {
    }
 }
 
-router.get('/project-by-ids/pdf', async (req, res) => {
+router.post('/project-by-ids/pdf', async (req, res) => {
    const cartoid = req.query.cartoid;
    const type = req.query.type;
+   const map = req.body.map;
    let data = await getDataByProjectIds(cartoid, type);
    let components = [];
    if (data.projectid) {
      components = await componentsByEntityId(data.projectid, 'projectid', 'type', 'asc');
    }
-   printProject(data, components).toBuffer(function (err, buffer) {
+   printProject(data, components, map).toBuffer(function (err, buffer) {
       if (err) return res.send(err);
       res.type('pdf');
       res.end(buffer, 'binary');
@@ -953,12 +954,13 @@ let getDataByProblemId = async (id) => {
    }
 }
 
-router.get('/problem-by-id/:id/pdf', async (req, res) => {
+router.post('/problem-by-id/:id/pdf', async (req, res) => {
    const id = req.params.id;
+   const map = req.body.map;
    try {
       let data = await getDataByProblemId(id);
       let components = await componentsByEntityId(id, 'problemid', 'type', 'asc')
-      printProblem(data, components).toBuffer(function (err, buffer) {
+      printProblem(data, components, map).toBuffer(function (err, buffer) {
          if (err) return res.send(err);
          res.type('pdf');
          res.end(buffer, 'binary');

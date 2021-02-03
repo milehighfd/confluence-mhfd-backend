@@ -19,7 +19,7 @@ const priceFormatter = (value) => {
 }
 
 module.exports = {
-  printProblem: (data, components) => {
+  printProblem: (data, components, map) => {
     var html = fs.readFileSync('./pdf-templates/Problems.html', 'utf8');
     const {
       problemname,
@@ -35,6 +35,9 @@ module.exports = {
       source,
       problemdescription,
     } = data;
+
+    let mainImage = problemtype ? `http://confluence.mhfd.org/gallery/${problemtype}.jpg` : 'https://i.imgur.com/kLyZbrB.jpg'
+
     html = html.split('${problemname}').join(problemname);
 
     html = html.split('${problemtype}').join(problemtype + ' Problem');
@@ -48,6 +51,8 @@ module.exports = {
     html = html.split('${sourcename}').join(sourcename);
     html = html.split('${source}').join(source);
     html = html.split('${problemdescription}').join(problemdescription);
+    html = html.split('${map}').join(map);
+    html = html.split('${mainImage}').join(mainImage);
 
     let solutionstatusVal = solutionstatus ? solutionstatus : 0;
     solutionstatusVal = Math.floor((solutionstatusVal / 100) * 150)
@@ -77,7 +82,7 @@ module.exports = {
 
     return pdf.create(html, options);
   },
-  printProject: (_data, components) => {
+  printProject: (_data, components, map) => {
     let data = {};
     Object.keys(_data).forEach(k => {
       if (k.includes('cost')) {
@@ -119,7 +124,7 @@ module.exports = {
     html = html.split('${status}').join(status);
     html = html.split('${streamname}').join(streamname);
     html = html.split('${projectsubtype}').join(projectsubtype);
-    html = html.split('${attachmentUrl').join(attachments.length > 0 ? attachments[0] : 'https://i.imgur.com/kLyZbrB.jpg');
+    html = html.split('${attachmentUrl}').join(attachments.length > 0 ? attachments[0] : 'https://i.imgur.com/kLyZbrB.jpg');
     html = html.split('${startyear}').join(startyear);
     html = html.split('${completedyear}').join(completedyear);
     html = html.split('${frequency}').join(frequency);
@@ -161,6 +166,7 @@ module.exports = {
 
     html = html.split('${componentRows}').join(componentRows);
     html = html.split('${totalEstimatedCost}').join(priceFormatter(sum));
+    html = html.split('${map}').join(map);
 
     return pdf.create(html, options);
   }
