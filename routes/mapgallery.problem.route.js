@@ -270,7 +270,24 @@ async function getValuesByRangeProblem(table, column, range, bounds, body) {
   return result;
 }
 
+async function countTotalProblems(bounds, body) {
+  const coords = bounds.split(',');
+  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+    filters = getNewFilter(filters, body);
+
+    let COUNTSQL = `SELECT count(*) FROM problems where ${filters}`;
+
+    const query = { q: ` ${COUNTSQL} ` };
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    const lineData = await needle('post', URL, query, { json: true });
+
+    let total = lineData.body.rows[0].count;
+    return total;
+}
+
 module.exports = {
+  countTotalProblems,
   getCountByArrayColumnsProblem,
   getCountByColumnProblem,
   getCountSolutionStatusProblem,

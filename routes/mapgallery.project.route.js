@@ -352,7 +352,25 @@ async function getProjectByProblemTypeProject(bounds, body) {
    return result;
 }
 
+async function countTotalProjects(bounds, body) {
+   const coords = bounds.split(',');
+   let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+     filters = getNewFilter(filters, body);
+ 
+     let COUNTSQL = PROJECT_TABLES.map(t => {
+       return `SELECT count(*) FROM ${t} where ${filters}`
+     }).join(' union ');
+     const query = { q: ` ${COUNTSQL} ` };
+     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+     const lineData = await needle('post', URL, query, { json: true });
+     
+     let total = lineData.body.rows.reduce((p, c) => p + c.count, 0)
+     return total;
+ }
+
 module.exports = {
+   countTotalProjects,
    getValuesByColumnWithOutCountProject,
    getCountByArrayColumnsProject,
    getValuesByRangeProject,

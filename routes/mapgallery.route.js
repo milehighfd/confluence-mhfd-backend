@@ -14,6 +14,7 @@ const zoomareaService = require('../services/zoomarea.service');
 const { response } = require('express');
 const { query } = require('../config/logger');
 const {
+   countTotalComponent,
    getCounterComponentsWithFilter,
    getComponentsValuesByColumnWithFilter,
    getCountByYearStudyWithFilter,
@@ -22,6 +23,7 @@ const {
    getZoomareaFiltersWithFilters
 } = require('./mapgallery.component.route');
 const {
+   countTotalProjects,
    getValuesByColumnWithOutCountProject,
    getCountByArrayColumnsProject,
    getValuesByRangeProject,
@@ -34,6 +36,7 @@ const {
    getCountSolutionStatusProblem,
    getSubtotalsByComponentProblem,
    getValuesByRangeProblem,
+   countTotalProblems,
 } = require('./mapgallery.problem.route');
 const { printProject, printProblem } = require('./mapgallery.print');
 const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
@@ -2657,7 +2660,6 @@ router.post('/params-filter-components', async (req, res) => {
       const bounds = req.query.bounds;
       const body = req.body;
       let requests = [];
-
       requests.push(getCounterComponentsWithFilter(bounds, body));
       requests.push(getComponentsValuesByColumnWithFilter('status', bounds, body));
       requests.push(getCountByYearStudyWithFilter(bounds, body));
@@ -2844,4 +2846,46 @@ router.post('/params-filter-problems', async (req, res) => {
    }
 })
 
-module.exports = (router); 
+router.post('/problems-counter', async (req, res) => {
+   try {
+      const bounds = req.query.bounds;
+      const body = req.body;
+      let total = await countTotalProblems(bounds, body);
+      res.status(200).send({
+         total
+      });
+   } catch (error) {
+      logger.error(error);
+      logger.error(`countTotalProblems Connection error`);
+   }
+})
+
+router.post('/projects-counter', async (req, res) => {
+   try {
+      const bounds = req.query.bounds;
+      const body = req.body;
+      let total = await countTotalProjects(bounds, body);
+      res.status(200).send({
+         total
+      });
+   } catch (error) {
+      logger.error(error);
+      logger.error(`countTotalProjects Connection error`);
+   }
+})
+
+router.post('/components-counter', async (req, res) => {
+   try {
+      const bounds = req.query.bounds;
+      const body = req.body;
+      let total = await countTotalComponent(bounds, body);
+      res.status(200).send({
+         total
+      });
+   } catch (error) {
+      logger.error(error);
+      logger.error(`countTotalComponent Connection error`);
+   }
+})
+
+module.exports = (router);
