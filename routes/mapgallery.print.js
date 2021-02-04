@@ -163,9 +163,25 @@ module.exports = {
         </tr>
       `
     }).join('')
-
-    html = html.split('${componentRows}').join(componentRows);
-    html = html.split('${totalEstimatedCost}').join(priceFormatter(sum));
+    if (sum) {
+      html = html.split('${componentRows}').join(componentRows);
+      html = html.split('${totalEstimatedCost}').join(priceFormatter(`<tfoot>
+      <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
+        <th width="40%" style="padding: 17px 20px; text-align:left;"><b>Total Estimated Cost</b></th>
+        <th width="60%" colspan="3" style="padding: 17px 20px; text-align:left;"><b>${sum}</b></th>
+      </tr>
+    </tfoot>`));
+    } else {
+      html = html.split('${componentRows}').join( `
+      <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
+        <td width="40%" style="padding: 17px 20px;"></td>
+        <td width="20%" style="padding: 17px 20px;"></td>
+        <td width="20%" style="padding: 17px 20px;"></td>
+        <td width="20%" style="padding: 17px 20px;"></td>
+      </tr>
+    `);
+      html = html.split('${totalEstimatedCost}').join(priceFormatter(''));
+    }
     html = html.split('${map}').join(map);
 
     return pdf.create(html, options);
