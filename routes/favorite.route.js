@@ -188,9 +188,11 @@ router.delete('/', async (req, res) => {
     };
     const selectedFavorite = await favoritesService.getOne(favorite);
     selectedFavorite.destroy();
+    logger.info('DELETED  ', email, table, cartodb_id);
     res.send('deleted');
 
   } catch(error) {
+     logger.error('error found on delete ', error);
     res.status(500).send('error found ' + error);
   }
 });
