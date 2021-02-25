@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const { Op } = require("sequelize");
+const { Op, literal } = require("sequelize");
 const auth = require('../auth/auth');
 
 const { ROLES, EMAIL_VALIDATOR } = require('../lib/enumConstants');
@@ -129,7 +129,7 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
       [sort, "asc"]
     ];
     if (sort === 'designation') {
-      sortField = sequelize.literal(`
+      sortField = literal(`
         CASE
           WHEN designation='consultant' THEN 1
           WHEN designation='government_staff' THEN 2
