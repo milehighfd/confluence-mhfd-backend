@@ -125,14 +125,27 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
     const userCount = await User.count({
       where: search_obj
     });
-
+    let sortField = [
+      [sort, "asc"]
+    ];
+    if (sort === 'designation') {
+      sortField = sequelize.literal(`
+        CASE
+          WHEN designation='consultant' THEN 1
+          WHEN designation='government_staff' THEN 2
+          WHEN designation='other' THEN 3
+          WHEN designation='government_admin' THEN 4
+          WHEN designation='staff' THEN 5
+          WHEN designation='admin' THEN 6
+          ELSE 7
+        END
+      `);
+    }
     const userList = await User.findAll({
       where: search_obj,
       offset: limit * (page - 1),
       limit: limit,
-      order: [
-        [sort, "asc"]
-      ]
+      order: sortField
     });
     //console.log('user list', userList.length);
     const numberOfPages = Math.ceil(userCount / limit);
