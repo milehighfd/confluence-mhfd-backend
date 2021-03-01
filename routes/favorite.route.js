@@ -11,7 +11,7 @@ const router = express.Router();
 const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
 const { CARTO_TOKEN } = require('../config/config');
 const needle = require('needle');
-
+const auth = require('../auth/auth');
 
 function getFilters(params) {
    //console.log('PARAMS', params);
