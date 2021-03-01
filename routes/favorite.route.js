@@ -139,13 +139,14 @@ function getCounters(table, column) {
 router.get('/list', async (req, res) => {
   try {
      const list = await favoritesService.getAll();
+     console.log('my list ', list);
      return res.send(list);
   } catch (error) {
      res.status(500).send({error: error});
   }
 });
 
-router.get('/', [auth], async (req, res) => {
+router.get('/', auth, async (req, res) => {
   const user = req.user;
   try {  
     console.log(user);
@@ -156,7 +157,7 @@ router.get('/', [auth], async (req, res) => {
   }
 });
 
-router.get('/create', [auth], async (req, res) => {
+router.get('/create', auth, async (req, res) => {
   const {table, id} = req.query;
   const user = req.user;
   try {
@@ -173,7 +174,7 @@ router.get('/create', [auth], async (req, res) => {
     res.status(500).send('error found ', error);
   }
 });
-router.delete('/', [auth], async (req, res) => {
+router.delete('/', auth, async (req, res) => {
   const {table, id} = req.body;
   const user = req.user;
   try {
@@ -192,7 +193,7 @@ router.delete('/', [auth], async (req, res) => {
     res.status(500).send('error found ' + error);
   }
 });
-router.post('/favorite-list', [auth], async (req, res) => {
+router.post('/favorite-list', auth, async (req, res) => {
   try {
      if (req.body.isproblem) {
       let filters = '';
