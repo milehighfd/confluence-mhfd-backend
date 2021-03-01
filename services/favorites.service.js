@@ -2,6 +2,7 @@ const db = require('../config/db');
 const Favorites = db.favorites;
 const User = db.user;
 const { Op } = require("sequelize");
+const logger = require('../config/logger');
 
 const getAll = async () => {
   try {
@@ -32,7 +33,7 @@ const getOne = async (data) => {
       table: {
         [Op.iLike]: '%' + data.table + '%'
       },
-      cartodb_id: data.cartodb_id,
+      id: data.id,
       user_id: data.user_id
     }
   });
@@ -45,15 +46,15 @@ const saveFavorite = async (favorite) => {
       table: {
         [Op.iLike]: '%' + favorite.table + '%'
       },
-      cartodb_id: favorite.cartodb_id,
+      id: favorite.id,
       user_id: favorite.user_id
     }
   });
   if (!fav) {
     await Favorites.create(favorite);
-    console.log('favorite save');
+    logger.info('favorite save');
   } else {
-    console.log('no update');
+    logger.info('no update');
   }
   return favorite;
 }
