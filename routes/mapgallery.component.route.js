@@ -121,21 +121,6 @@ async function getComponentsValuesByColumnWithFilter(column, bounds, body) {
       return `SELECT ${column} as column, count(*) as count FROM ${t} where ${filters} group by ${column}`
     }).join(' union ')
 
-    // const LINE_SQL = `SELECT ${column} as column, count(*) as count FROM grade_control_structure where ${filters} group by ${column} union
-    // SELECT ${column} as column, count(*) as count FROM pipe_appurtenances where ${filters} group by ${column} union
-    // SELECT ${column} as column, count(*) as count FROM special_item_point where ${filters} group by ${column} union
-    // SELECT ${column} as column, count(*) as count FROM special_item_linear where ${filters} group by ${column} union
-    // SELECT ${column} as column, count(*) as count FROM special_item_area where ${filters} group by ${column} union
-    // SELECT ${column} as column, count(*) as count FROM channel_improvements_linear where ${filters} group by ${column} union
-    // SELECT ${column} as column, count(*) as count FROM channel_improvements_area where ${filters} group by ${column} union
-    // SELECT ${column} as column, count(*) as count FROM removal_line where ${filters} group by ${column} union
-    // SELECT ${column} as column, count(*) as count FROM removal_area where ${filters} group by ${column} union
-    // SELECT ${column} as column, count(*) as count FROM storm_drain where ${filters} group by ${column} union
-    // SELECT ${column} as column, count(*) as count FROM detention_facilities where ${filters} group by ${column} union
-    // SELECT ${column} as column, count(*) as count FROM maintenance_trails where ${filters} group by ${column} union
-    // SELECT ${column} as column, count(*) as count FROM land_acquisition where ${filters} group by ${column} union
-    // SELECT ${column} as column, count(*) as count FROM landscaping_area where ${filters} group by ${column} `;
-
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
     const query = { q: ` ${LINE_SQL} ` };
     const data = await needle('post', URL, query, { json: true });
@@ -342,7 +327,56 @@ async function countTotalComponent(bounds, body) {
     return total;
 }
 
+async function componentCounterRoute(req, res) {
+  try {
+     const bounds = req.query.bounds;
+     const body = req.body;
+     let total = await countTotalComponent(bounds, body);
+     res.status(200).send({
+        total
+     });
+  } catch (error) {
+     logger.error(error);
+     logger.error(`countTotalComponent Connection error`);
+  }
+}
+
+async function componentParamFilterRoute(req, res) {
+  try {
+     const bounds = req.query.bounds;
+     const body = req.body;
+     let requests = [];
+     requests.push(getCounterComponentsWithFilter(bounds, body));
+     requests.push(getComponentsValuesByColumnWithFilter('status', bounds, body));
+     requests.push(getCountByYearStudyWithFilter(bounds, body));
+     requests.push(getComponentsValuesByColumnWithCountWithFilter('mhfdmanager', bounds, body));
+     requests.push(getQuintilComponentValuesWithFilter('estimated_cost', bounds, body));
+     requests.push(getComponentsValuesByColumnWithCountWithFilter('jurisdiction', bounds, body));
+     requests.push(getComponentsValuesByColumnWithCountWithFilter('county', bounds, body));
+     requests.push(getComponentsValuesByColumnWithCountWithFilter('servicearea', bounds, body));
+
+     const promises = await Promise.all(requests);
+
+     const result = {
+        "component_type": promises[0],
+        "status": promises[1],
+        "yearofstudy": promises[2],
+        "watershed": promises[3],
+        "estimatedcost": promises[4],
+        "jurisdiction": promises[5],
+        "county": promises[6],
+        "servicearea": promises[7]
+     };
+     res.status(200).send(result);
+  } catch (error) {
+     logger.error(error);
+     logger.error(`getSubtotalsByComponent Connection error`);
+  }
+}
+
 module.exports = {
+  componentParamFilterRoute,
+  componentCounterRoute,
   getCounterComponentsWithFilter,
   getComponentsValuesByColumnWithFilter,
   getCountByYearStudyWithFilter,

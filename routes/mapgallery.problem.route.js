@@ -286,7 +286,78 @@ async function countTotalProblems(bounds, body) {
     return total;
 }
 
+async function problemCounterRoute(req, res) {
+  try {
+     const bounds = req.query.bounds;
+     const body = req.body;
+     let total = await countTotalProblems(bounds, body);
+     res.status(200).send({
+        total
+     });
+  } catch (error) {
+     logger.error(error);
+     logger.error(`countTotalProblems Connection error`);
+  }
+}
+
+async function problemParamFilterRoute(req, res) {
+  try {
+     const bounds = req.query.bounds;
+     const body = req.body;
+     let requests = [];
+     let problemTypesConst = ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'];
+     requests.push(getCountByArrayColumnsProblem('problems', 'problempriority', ['High', 'Medium', 'Low'], bounds, body));
+     requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body));
+     requests.push(getCountByColumnProblem('problems', 'mhfdmanager', bounds, body));
+     requests.push(getCountByColumnProblem('problems', 'source', bounds, body));
+     requests.push(getSubtotalsByComponentProblem('problems', 'problemid', bounds, body));
+     const rangeSolution = [
+        {
+           min: 0,
+           max: 1000000
+        },
+        {
+           min: 1000001,
+           max: 3000000
+        },
+        {
+           min: 3000001,
+           max: 5000000
+        },
+        {
+           min: 5000001,
+           max: 50000000
+        }
+     ]
+     requests.push(getValuesByRangeProblem('problems', 'solutioncost', rangeSolution, bounds, body));
+     requests.push(getCountByColumnProblem('problems', 'jurisdiction', bounds, body));
+     requests.push(getCountByColumnProblem('problems', 'servicearea', bounds, body));
+     requests.push(getCountByColumnProblem('problems', 'county', bounds, body));
+     requests.push(getCountByArrayColumnsProblem('problems', 'problemtype', problemTypesConst, bounds, body));
+
+     const promises = await Promise.all(requests);
+     const result = {
+        "problemtype": promises[9],
+        "priority": promises[0],
+        "solutionstatus": promises[1],
+        "county": promises[8],
+        "jurisdiction": promises[6],
+        "mhfdmanager": promises[2],
+        "source": promises[3],
+        "components": promises[4],
+        "cost": promises[5],
+        "servicearea": promises[7]
+     };
+     res.status(200).send(result);
+  } catch (error) {
+     logger.error(error);
+     logger.error(`getSubtotalsByComponent Connection error`);
+  }
+}
+
 module.exports = {
+  problemParamFilterRoute,
+  problemCounterRoute,
   countTotalProblems,
   getCountByArrayColumnsProblem,
   getCountByColumnProblem,
