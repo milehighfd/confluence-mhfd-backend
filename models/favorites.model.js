@@ -6,7 +6,7 @@ module.exports = (sequelize, DataType) => {
       defaultValue: DataType.UUIDV4,
       primaryKey: true
     },
-    cartodb_id: {
+    id: {
       type: DataType.INTEGER
     },
     table: {

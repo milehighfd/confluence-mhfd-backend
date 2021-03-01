@@ -145,10 +145,8 @@ router.get('/list', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
-  const email = req.query.email;
-  console.log('my email ', email);
-  const user = await User.findByEmail(email);
+router.get('/', [auth], async (req, res) => {
+  const user = req.user;
   try {  
     console.log(user);
     const favorite = await favoritesService.getFavorites(user._id);
@@ -158,18 +156,16 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/create', async (req, res) => {
-  const {email, table, cartodb_id} = req.query;
-  console.log('entro aca');
-  const user = await User.findByEmail(email);
+router.get('/create', [auth], async (req, res) => {
+  const {table, id} = req.query;
+  const user = req.user;
   try {
     const favorite = {
       user_id: user._id,
       table: table,
-      cartodb_id: cartodb_id
+      id: id
     };
-    console.log('the user ', user);
-    console.log('the favorite ', favorite);
+    logger.info('create favorite ', favorite);
     const savedFavorite = await favoritesService.saveFavorite(favorite);
     res.send(savedFavorite);
 
@@ -177,18 +173,18 @@ router.get('/create', async (req, res) => {
     res.status(500).send('error found ', error);
   }
 });
-router.delete('/', async (req, res) => {
-  const {email, table, cartodb_id} = req.body;
-  const user = await User.findByEmail(email);
+router.delete('/', [auth], async (req, res) => {
+  const {table, id} = req.body;
+  const user = req.user;
   try {
     const favorite = {
       user_id: user._id,
       table: table,
-      cartodb_id: cartodb_id
+      id: id
     };
     const selectedFavorite = await favoritesService.getOne(favorite);
     selectedFavorite.destroy();
-    logger.info('DELETED  ', email, table, cartodb_id);
+    logger.info('DELETED  ', user.email, table, id);
     res.send('deleted');
 
   } catch(error) {
@@ -196,9 +192,8 @@ router.delete('/', async (req, res) => {
     res.status(500).send('error found ' + error);
   }
 });
-router.post('/favorite-list', async (req, res) => {
+router.post('/favorite-list', [auth], async (req, res) => {
   try {
-     console.log('enter here');
      if (req.body.isproblem) {
       let filters = '';
       filters = getFilters(req.body);
@@ -243,19 +238,18 @@ router.post('/favorite-list', async (req, res) => {
            console.log('Error', error);
         }
 
-        const email = req.body.email;
-        console.log('my email ', email);
-        const user = await User.findByEmail(email);
+        const email = req.user.email;
+        const user = req.user;
         try {  
           
          const favorite = await favoritesService.getFavorites(user._id);
           const ids = favorite.map(fav => {
-            return {cartodb_id: fav.cartodb_id, table: fav.table};
+            return {id: fav.id, table: fav.table};
           });
-          console.log('my ids ', ids);
+          logger.log('filtered favorite ids ', ids);
           answer = answer.filter(element => {
             for (const id of ids) {
-              if (element.type === id.table && element.cartodb_id === id.cartodb_id) {
+              if (element.type === id.table && element.problemid === id.id) {
                 return true;
               }
             }
@@ -335,26 +329,23 @@ router.post('/favorite-list', async (req, res) => {
                     }
                     send = send.concat(answer);
                  } else {
-                    console.log('bad status ', response.statusCode, response.body);
+                    logger.error('bad status ', response.statusCode, response.body);
                  }
               } catch (error) {
-                 console.log(error);
+                 logger.error(error);
               };
            }
         }
-        const email = req.body.email;
-        console.log('my email ', email);
-        const user = await User.findByEmail(email);
+        const user = req.user;
         try {  
           const favorite = await favoritesService.getFavorites(user._id);
-          console.log('my favorite ', favorite);
           const ids = favorite.map(fav => {
-            return {cartodb_id: fav.cartodb_id, table: fav.table};
+            return {id: fav.id, table: fav.table};
           });
-          console.log('my ids ', ids);
+          logger.info('my favorite ids ', ids);
           send = send.filter(element => {
             for (const id of ids) {
-              if (element.type === id.table && element.cartodb_id === id.cartodb_id) {
+              if (element.type === id.table && element.projectid === id.id) {
                 return true;
               }
             }
