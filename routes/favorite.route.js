@@ -8,7 +8,7 @@ const favoritesService = require('../services/favorites.service');
 const attachmentService = require('../services/attachment.service');
 
 const router = express.Router();
-const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
+const PROJECT_TABLES = ['mhfd_projects'];
 const { CARTO_TOKEN } = require('../config/config');
 const needle = require('needle');
 const auth = require('../auth/auth');
@@ -266,7 +266,7 @@ router.post('/favorite-list', auth, async (req, res) => {
         
         filters = getFilters(req.body);
         const PROJECT_FIELDS = 'cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, ' +
-           'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county ';
+           'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county1 ';
 
         if (req.body.problemtype) {
            const result = await queriesByProblemTypeInProject(PROJECT_FIELDS, filters, req.body.problemtype);
@@ -275,10 +275,8 @@ router.post('/favorite-list', auth, async (req, res) => {
           console.log('miau miau miau');
            for (const table of PROJECT_TABLES) {
               let query = ''
-              if (table === 'projects_line_1') {
-                 query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_line_1', 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
-              } else {
-                 query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_polygon_', 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
+              if (table === 'mhfd_projects') {
+                 query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('mhfd_projects', 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
               }
               console.log(query);
               const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);

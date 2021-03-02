@@ -262,7 +262,7 @@ router.get('/me', auth, async (req, res) => {
   }
   result1['coordinates'] = coordinates;
   result1['polygon'] = polygon;
-  for (const table of ['projects_line_1', 'projects_polygon_']) {
+  for (const table of ['mhfd_projects']) {
     let condition = '';
     if (user.zoomarea) {
       condition = `WHERE jurisdiction='${user.zoomarea}'`;

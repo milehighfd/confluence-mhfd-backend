@@ -26,7 +26,7 @@ const components = [
   { key: 'land_acquisition', value: 'Land Acquisition' },
   { key: 'landscaping_area', value: 'Landscaping Area' }
 ];
-const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
+const PROJECT_TABLES = ['mhfd_projects'];
 const PROBLEM_TABLE = 'problems';
 router.get('/', async (req, res) => {
   const tables = req.query.tables ? req.query.tables.split(',') : [];

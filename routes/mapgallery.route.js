@@ -20,7 +20,7 @@ const {
    problemParamFilterRoute,
 } = require('./mapgallery.problem.route');
 const { printProject, printProblem } = require('./mapgallery.print');
-const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
+const PROJECT_TABLES = ['mhfd_projects'];
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
    'special_item_linear', 'special_item_area', 'channel_improvements_linear',
    'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
@@ -87,10 +87,8 @@ router.post('/', async (req, res) => {
          } else {
             for (const table of PROJECT_TABLES) {
                let query = ''
-               if (table === 'projects_line_1') {
-                  query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_line_1', 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
-               } else {
-                  query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('projects_polygon_', 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
+               if (table === 'mhfd_projects') {
+                  query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('mhfd_projects', 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
                }
 
                const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
@@ -717,11 +715,9 @@ async function queriesByProblemTypeInProject(project_fields, filters, problemTyp
 
          //console.log('QUERY LINE', query_project_line);
          //console.log('FILTERS BY COMPONENT', newfilter);
-         if (table === 'projects_line_1') {
-            query = { q: `SELECT '${table}' as type, ${project_fields}, ${getCounters('projects_line_1', 'projectid')} FROM ${table} ${newfilter} ` };
-         } else {
-            query = { q: `SELECT '${table}' as type, ${project_fields}, ${getCounters('projects_polygon_', 'projectid')} FROM ${table} ${newfilter} ` };
-         }
+         if (table === 'mhfd_projects') {
+            query = { q: `SELECT '${table}' as type, ${project_fields}, ${getCounters('mhfd_projects', 'projectid')} FROM ${table} ${newfilter} ` };
+         } 
          //console.log('FILTROSSS', query);
 
          //console.log('MY QUERY ', query);
@@ -778,13 +774,9 @@ async function queriesByProblemTypeInProject(project_fields, filters, problemTyp
 let getDataByProjectIds = async (projectid, type) => {
    let SQL = '';
    let URL = '';
-   if (type === 'projects_polygon_') { // objectid=${objectid} and 
-      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_polygon_ where projectid=${projectid} `;
-      URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
-   } else { // objectid=${objectid} and
-      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_line_1 where  projectid=${projectid} `;
-      URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
-   }
+    // objectid=${objectid} and
+   SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM mhfd_projects where  projectid=${projectid} `;
+   URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
    const data = await needle('get', URL, { json: true });
    if (data.statusCode === 200) {
       const result = data.body.rows[0];
@@ -1098,7 +1090,7 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
    let table = '';
    let finalcost = '';
    if (typeid === 'projectid') {
-      table = 'projects_line_1';
+      table = 'mhfd_projects';
       finalcost = 'finalcost';
    } else {
       table = 'problems';
@@ -2065,7 +2057,7 @@ router.get('/range', async (req, res) => {
             max: 50000000
          }
       ];
-      const result = await getValuesByRange('projects_line_1', 'mhfddollarsallocated', rangeMhfdDollarsAllocated, bounds);
+      const result = await getValuesByRange('mhfd_projects', 'mhfddollarsallocated', rangeMhfdDollarsAllocated, bounds);
       res.status(200).send(result);
    } catch (error) {
       logger.error(error);
@@ -2080,15 +2072,15 @@ router.get('/params-filters', async (req, res) => {
       let requests = [];
 
       // PROJECTS
-      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'creator', bounds));
-      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'mhfdmanager', bounds));
-      requests.push(getCountByArrayColumns('projects_line_1', 'projecttype', ['Maintenance', 'Study', 'Capital'], bounds));
-      requests.push(getCountByArrayColumns('projects_line_1', 'status', ['Draft', 'Requested',
+      requests.push(getValuesByColumnWithOutCount('mhfd_projects', 'creator', bounds));
+      requests.push(getValuesByColumnWithOutCount('mhfd_projects', 'mhfdmanager', bounds));
+      requests.push(getCountByArrayColumns('mhfd_projects', 'projecttype', ['Maintenance', 'Study', 'Capital'], bounds));
+      requests.push(getCountByArrayColumns('mhfd_projects', 'status', ['Draft', 'Requested',
          'Approved', 'Idle', 'Initiated', 'Ongoing',
          'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
          'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete'], bounds));
-      requests.push(getValuesByColumn('projects_line_1', 'startyear', bounds));
-      requests.push(getValuesByColumn('projects_line_1', 'completedyear', bounds));
+      requests.push(getValuesByColumn('mhfd_projects', 'startyear', bounds));
+      requests.push(getValuesByColumn('mhfd_projects', 'completedyear', bounds));
       const rangeMhfdDollarsAllocated = [
          {
             min: 0,
@@ -2111,16 +2103,16 @@ router.get('/params-filters', async (req, res) => {
             max: 50000000
          }
       ];
-      requests.push(getValuesByRange('projects_line_1', 'mhfddollarsallocated', rangeMhfdDollarsAllocated, bounds));
-      //requests.push(getQuintilValues('projects_line_1', 'mhfddollarsallocated', bounds));
+      requests.push(getValuesByRange('mhfd_projects', 'mhfddollarsallocated', rangeMhfdDollarsAllocated, bounds));
+      //requests.push(getQuintilValues('mhfd_projects', 'mhfddollarsallocated', bounds));
       requests.push(getCountWorkYear([{ year: 2019, column: 'workplanyr1' }, { year: 2020, column: 'workplanyr2' },
       { year: 2021, column: 'workplanyr3' }, { year: 2022, column: 'workplanyr4' }, { year: 2023, column: 'workplanyr5' }], bounds));
       requests.push(getProjectByProblemType(bounds));
-      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'jurisdiction', bounds));
-      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'county', bounds));
-      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'lgmanager', bounds));
-      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'streamname', bounds));
-      //requests.push(getQuintilValues('projects_line_1', 'estimatedcost', bounds));
+      requests.push(getValuesByColumnWithOutCount('mhfd_projects', 'jurisdiction', bounds));
+      requests.push(getValuesByColumnWithOutCount('mhfd_projects', 'county', bounds));
+      requests.push(getValuesByColumnWithOutCount('mhfd_projects', 'lgmanager', bounds));
+      requests.push(getValuesByColumnWithOutCount('mhfd_projects', 'streamname', bounds));
+      //requests.push(getQuintilValues('mhfd_projects', 'estimatedcost', bounds));
       const rangeTotalCost = [
          {
             min: 0,
@@ -2143,10 +2135,10 @@ router.get('/params-filters', async (req, res) => {
             max: 50000000
          }
       ];
-      requests.push(getValuesByRange('projects_line_1', 'estimatedcost', rangeTotalCost, bounds));
-      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'consultant', bounds));
-      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'contractor', bounds));
-      requests.push(getValuesByColumnWithOutCount('projects_line_1', 'servicearea', bounds));
+      requests.push(getValuesByRange('mhfd_projects', 'estimatedcost', rangeTotalCost, bounds));
+      requests.push(getValuesByColumnWithOutCount('mhfd_projects', 'consultant', bounds));
+      requests.push(getValuesByColumnWithOutCount('mhfd_projects', 'contractor', bounds));
+      requests.push(getValuesByColumnWithOutCount('mhfd_projects', 'servicearea', bounds));
 
       // PROBLEMS
       let problemTypesConst = ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'];

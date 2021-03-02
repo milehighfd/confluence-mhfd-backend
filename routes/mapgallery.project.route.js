@@ -2,7 +2,7 @@ const { CARTO_TOKEN } = require('../config/config');
 const logger = require('../config/logger');
 const needle = require('needle');
 
-const PROJECT_TABLES = ['projects_line_1', 'projects_polygon_'];
+const PROJECT_TABLES = ['mhfd_projects'];
 
 const getNewFilter = (filters, body) => {
    if (body.status) {
@@ -66,7 +66,7 @@ const getNewFilter = (filters, body) => {
    if (body.county) {
      let counties = body.county.split(',');
      let countiesIn = counties.map(s => `'${s}'`)
-     filters += ` and county in (${countiesIn.join(',')})`
+     filters += ` and county1 in (${countiesIn.join(',')})`
    }
    if (body.servicearea) {
      let serviceareas = body.servicearea.split(',');
@@ -390,16 +390,16 @@ async function projectParamFilterRoute(req, res) {
 
       let requests = [];
 
-      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'creator', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'mhfdmanager', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'creator', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'mhfdmanager', bounds, body));
 
-      requests.push(getCountByArrayColumnsProject('projects_line_1', 'projecttype', ['Maintenance', 'Study', 'Capital'], bounds, body));
-      requests.push(getCountByArrayColumnsProject('projects_line_1', 'status', ['Draft', 'Requested',
+      requests.push(getCountByArrayColumnsProject('mhfd_projects', 'projecttype', ['Maintenance', 'Study', 'Capital'], bounds, body));
+      requests.push(getCountByArrayColumnsProject('mhfd_projects', 'status', ['Draft', 'Requested',
          'Approved', 'Idle', 'Initiated', 'Ongoing',
          'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
          'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete'], bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'startyear', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'completedyear', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'startyear', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'completedyear', bounds, body));
       const rangeMhfdDollarsAllocated = [
          {
             min: 0,
@@ -422,12 +422,12 @@ async function projectParamFilterRoute(req, res) {
             max: 50000000
          }
       ];
-      requests.push(getValuesByRangeProject('projects_line_1', 'mhfddollarsallocated', rangeMhfdDollarsAllocated, bounds, body));
+      requests.push(getValuesByRangeProject('mhfd_projects', 'mhfddollarsallocated', rangeMhfdDollarsAllocated, bounds, body));
       requests.push(getCountWorkYearProject([{ year: 2019, column: 'workplanyr1' }, { year: 2020, column: 'workplanyr2' },
       { year: 2021, column: 'workplanyr3' }, { year: 2022, column: 'workplanyr4' }, { year: 2023, column: 'workplanyr5' }], bounds, body));
       requests.push(getProjectByProblemTypeProject(bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'lgmanager', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'streamname', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'lgmanager', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'streamname', bounds, body));
       const rangeTotalCost = [
          {
             min: 0,
@@ -450,13 +450,13 @@ async function projectParamFilterRoute(req, res) {
             max: 50000000
          }
       ];
-      requests.push(getValuesByRangeProject('projects_line_1', 'estimatedcost', rangeTotalCost, bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'consultant', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'contractor', bounds, body));
+      requests.push(getValuesByRangeProject('mhfd_projects', 'estimatedcost', rangeTotalCost, bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'consultant', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'contractor', bounds, body));
 
-      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'jurisdiction', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'county', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('projects_line_1', 'servicearea', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'jurisdiction', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'county', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'servicearea', bounds, body));
 
       const promises = await Promise.all(requests);
 

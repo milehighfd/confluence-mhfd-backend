@@ -272,9 +272,9 @@ router.get('/bbox-components', async (req, res) => {
     component: 'self',
     centroid: [(minLat + maxLat) / 2, (minLng + maxLng) / 2]
   };
-  if (table === 'projects_line_1') {
+  if (table === 'mhfd_projects') {
     const queryProjectLine = {
-      q: ['projects_line_1'/*, 'projects_polygon_'*/].map(t => 
+      q: ['mhfd_projects'/*, 'projects_polygon_'*/].map(t => 
         `SELECT ST_AsGeoJSON(the_geom) as geojson from ${t} where projectid = ${id}`
       ).join(' union ')
     }
