@@ -775,14 +775,14 @@ async function queriesByProblemTypeInProject(project_fields, filters, problemTyp
    return send;
 }
 
-let getDataByProjectIds = async (cartoid, type) => {
+let getDataByProjectIds = async (projectid, type) => {
    let SQL = '';
    let URL = '';
    if (type === 'projects_polygon_') { // objectid=${objectid} and 
-      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_polygon_ where cartodb_id=${cartoid} `;
+      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_polygon_ where projectid=${projectid} `;
       URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
    } else { // objectid=${objectid} and
-      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_line_1 where  cartodb_id=${cartoid} `;
+      SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM projects_line_1 where  projectid=${projectid} `;
       URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
    }
    const data = await needle('get', URL, { json: true });
@@ -886,10 +886,10 @@ router.post('/project-by-ids/pdf', async (req, res) => {
 })
 
 router.get('/project-by-ids', async (req, res) => {
-   const cartoid = req.query.cartoid;
+   const projectid = req.query.projectid;
    const type = req.query.type;
    try {
-      let data = await getDataByProjectIds(cartoid, type);
+      let data = await getDataByProjectIds(projectid, type);
       res.status(200).send(data);
    } catch (error) {
       logger.error(error);
