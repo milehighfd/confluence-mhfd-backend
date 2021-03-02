@@ -89,9 +89,11 @@ router.post('/', async (req, res) => {
                let query = ''
                if (table === 'mhfd_projects') {
                   query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('mhfd_projects', 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
+                  console.log(query);
                }
 
                const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+               console.log(URL);
                let answer = [];
                try {
                   const data = await needle('post', URL, query, { json: true });
