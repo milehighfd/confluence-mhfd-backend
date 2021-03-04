@@ -115,12 +115,20 @@ module.exports = {
       consultant,
       problems,
     } = data;
+
+    let cost = 0;
+    if (finalcost) {
+      cost = finalcost;
+    } else if (estimatedcost) {
+      cost = estimatedcost;
+    }
+
     html = html.split('${projectname}').join(projectname);
     html = html.split('${projecttype}').join(projecttype + ' Project');
     html = html.split('${sponsor}').join(sponsor);
     html = html.split('${county}').join(county);
     html = html.split('${servicearea}').join(servicearea);
-    html = html.split('${cost}').join(priceFormatter(finalcost ? finalcost : estimatedcost));
+    html = html.split('${cost}').join(priceFormatter(cost));
     html = html.split('${status}').join(status);
     html = html.split('${streamname}').join(streamname);
     html = html.split('${projectsubtype}').join(projectsubtype);
@@ -144,7 +152,6 @@ module.exports = {
       `
     }).join('')
     html = html.split('${problemRows}').join(problemRows);
-
     let _components = components.length > 0 ? components : [{
       type: '',
       estimated_cost: 0,
@@ -165,12 +172,12 @@ module.exports = {
     }).join('')
     if (sum) {
       html = html.split('${componentRows}').join(componentRows);
-      html = html.split('${totalEstimatedCost}').join(priceFormatter(`<tfoot>
+      html = html.split('${totalEstimatedCost}').join(`<tfoot>
       <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
         <th width="40%" style="padding: 17px 20px; text-align:left;"><b>Total Estimated Cost</b></th>
         <th width="60%" colspan="3" style="padding: 17px 20px; text-align:left;"><b>${sum}</b></th>
       </tr>
-    </tfoot>`));
+    </tfoot>`);
     } else {
       html = html.split('${componentRows}').join( `
       <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
@@ -180,7 +187,7 @@ module.exports = {
         <td width="20%" style="padding: 17px 20px;"></td>
       </tr>
     `);
-      html = html.split('${totalEstimatedCost}').join(priceFormatter(''));
+      html = html.split('${totalEstimatedCost}').join('');
     }
     html = html.split('${map}').join(map);
 

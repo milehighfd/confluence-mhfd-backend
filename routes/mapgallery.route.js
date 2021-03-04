@@ -778,7 +778,7 @@ let getDataByProjectIds = async (projectid, type) => {
    let URL = '';
     // objectid=${objectid} and
    SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM mhfd_projects where  projectid=${projectid} `;
-   URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL} &api_key=${CARTO_TOKEN}`);
+   URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
    const data = await needle('get', URL, { json: true });
    if (data.statusCode === 200) {
       const result = data.body.rows[0];
@@ -859,15 +859,16 @@ let getDataByProjectIds = async (projectid, type) => {
          coordinates: coordinates
       };
    } else {
+      console.log('getDataByProjectIds error', data.statusCode, data.body);
       throw new Error('');
    }
 }
 
 router.post('/project-by-ids/pdf', async (req, res) => {
-   const cartoid = req.query.cartoid;
+   const projectid = req.query.projectid;
    const type = req.query.type;
    const map = req.body.map;
-   let data = await getDataByProjectIds(cartoid, type);
+   let data = await getDataByProjectIds(projectid, type);
    let components = [];
    if (data.projectid) {
      components = await componentsByEntityId(data.projectid, 'projectid', 'type', 'asc');
