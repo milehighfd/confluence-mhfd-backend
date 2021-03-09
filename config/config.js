@@ -16,6 +16,7 @@ const INITIAL_PAGE = process.env.INITIAL_PAGE || 1;
 const PROJECT_TABLE = process.env.PROJECT_TABLE || 'projects';
 const GUEST_USER = process.env.GUEST_USER || 'guest@mhfd.com';
 const DEFAULT_PASSWORD = process.env.DEFAULT_PASSWORD || 'example-password';
+const CREATE_PROJECT_TABLE = process.env.CREATE_PROJECT_TABLE || 'mhfd_projects_copy';
 module.exports = {
   JWT_KEY,
   POSTGRESQL_URL,
@@ -34,5 +35,6 @@ module.exports = {
   INITIAL_PAGE,
   PROJECT_TABLE,
   GUEST_USER,
-  DEFAULT_PASSWORD
+  DEFAULT_PASSWORD,
+  CREATE_PROJECT_TABLE
 };
