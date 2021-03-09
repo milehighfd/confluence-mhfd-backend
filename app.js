@@ -20,6 +20,7 @@ const galleryRouter = require('./routes/mapgallery.route');
 const filterRouter = require('./routes/filters.route');
 const zoomareaRouter = require('./routes/zoomarea.route');
 const favoriteRouter = require('./routes/favorite.route');
+const newProjectRouter = require('./routes/new-project.route');
 const db = require('./config/db');
 db.sequelize.sync();
 const cacheTime = 1000 * 60 * 60;
@@ -59,7 +60,7 @@ app.use('/gallery', galleryRouter);
 app.use('/filters', filterRouter);
 app.use('/zoomarea', zoomareaRouter);
 app.use('/favorites', favoriteRouter);
-
+app.use('/create', newProjectRouter);
 app.listen(3003, () => {
   console.log("Server is listening on port 3003");
 });
