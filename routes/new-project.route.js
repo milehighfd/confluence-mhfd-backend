@@ -4,7 +4,7 @@ const Multer = require('multer');
 const bcrypt = require('bcryptjs');
 const https = require('https');
 const needle = require('needle');
-const { CARTO_TOKEN } = require('../config/config');
+const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('../config/config');
 
 //const User = require('../models/user.model');
 const db = require('../config/db');
@@ -28,7 +28,8 @@ const multer = Multer({
 
 
 router.post('/showcomponents', auth, async (req, res) => {
-
+   const geom = req.body.geom;
+   
 });
 router.post('/capital', auth, async (req, res) => {
   const user = req.user;
@@ -37,7 +38,7 @@ router.post('/capital', auth, async (req, res) => {
   const sponsor = user.sponsor;
   const status = 'Draft';
   const projecttype = 'Capital';
-  const insertQuery = `INSERT INTO projects_line_1_copy (the_geom, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost, overheadcostdescription, additionalcost, additionalcostdescription)
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost, overheadcostdescription, additionalcost, additionalcostdescription)
    VALUES(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}',
    '${overheadcostdescription}', '${additionalcost}', '${additionalcostdescription}')`;
   const query = {
@@ -67,7 +68,7 @@ router.post('/maintenance', auth, async (req, res) => {
   const sponsor = user.sponsor;
   const status = 'Draft';
   const projecttype = 'Maintenance';
-  const insertQuery = `INSERT INTO projects_line_1_copy (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, frequency, sponsor, maintenanceeligibility, ownership)
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, frequency, sponsor, maintenanceeligibility, ownership)
    VALUES(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${frequency}', '${sponsor}', '${maintenanceeligibility}', '${ownership})`;
   const query = {
     q: insertQuery
@@ -96,7 +97,7 @@ router.post('/study', auth, async (req, res) => {
   const status = 'Draft';
   const projecttype = 'Study';
   const projectsubtype = 'Master Plan';
-  const insertQuery = `INSERT INTO projects_line_1_copy (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, cosponsor, sponsor)
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, cosponsor, sponsor)
    VALUES(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', ${cosponsor}, '${sponsor}')`;
   const query = {
     q: insertQuery
@@ -124,7 +125,7 @@ router.post('/acquisition', auth, async (req, res) => {
   const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate} = req.body;
   const status = 'Draft';
   const projecttype = 'Acquisition';
-  const insertQuery = `INSERT INTO projects_line_1_copy (the_geom, projectname, description, servicearea, county, status, projecttype, acquisitionprogress, acquisitionanticipateddate, sponsor)
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, acquisitionprogress, acquisitionanticipateddate, sponsor)
    VALUES(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${acquisitionprogress}', ${acquisitionanticipateddate}, '${sponsor}')`;
   const query = {
     q: insertQuery
@@ -151,7 +152,7 @@ router.post('/special', auth, async (req, res) => {
   const {projectname, description, servicearea, county, geom} = req.body;
   const status = 'Draft';
   const projecttype = 'Special';
-  const insertQuery = `INSERT INTO projects_line_1_copy (the_geom, projectname, description, servicearea, county, status,projecttype)
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status,projecttype)
    VALUES(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}')`;
   const query = {
     q: insertQuery
