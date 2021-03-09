@@ -27,7 +27,9 @@ const multer = Multer({
 });
 
 
+router.post('/showcomponents', auth, async (req, res) => {
 
+});
 router.post('/capital', auth, async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
@@ -65,7 +67,6 @@ router.post('/maintenance', auth, async (req, res) => {
   const sponsor = user.sponsor;
   const status = 'Draft';
   const projecttype = 'Maintenance';
-  const projectsubtype = 'Master Plan';
   const insertQuery = `INSERT INTO projects_line_1_copy (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, frequency, sponsor, maintenanceeligibility, ownership)
    VALUES(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${frequency}', '${sponsor}', '${maintenanceeligibility}', '${ownership})`;
   const query = {
