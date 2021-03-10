@@ -17,7 +17,7 @@ const userService = require('../services/user.service');
 const UPDATEABLE_FIELDS = userService.requiredFields('edit');
 const logger = require('../config/logger');
 const ORGANIZATION_DEFAULT = 'Mile High Flood District'; // 'Mile High Flood Control District';
-const { count } = require('console');
+const { count, group } = require('console');
 const { PROJECT_TYPES_AND_NAME } = require('../lib/enumConstants');
 const multer = Multer({
   storage: Multer.MemoryStorage,
@@ -26,9 +26,95 @@ const multer = Multer({
   }
 });
 
+const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
+'special_item_linear', 'special_item_area', 'channel_improvements_linear',
+'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
+'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
 
 router.post('/showcomponents', auth, async (req, res) => {
    const geom = req.body.geom;
+   let result = [];
+   for (const component of COMPONENTS_TABLES) {
+     const sql = `SELECT cartodb_id, type, jurisdiction, status, original_cost, problemid  FROM ${component} WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) AND projectid is null `;
+     const query = {
+      q: sql
+      };
+      console.log(sql);
+      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+      let body = {};
+      try {
+        const data = await needle('post', URL, query, { json: true });
+        //console.log('STATUS', data.statusCode);
+        if (data.statusCode === 200) {
+          body = data.body;
+          logger.info(JSON.stringify(body.rows));
+          result = result.concat(body.rows);
+          logger.info('length ' + result.length);
+          //logger.info(JSON.stringify(body, null, 2));
+        } else {
+          logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+        }
+      } catch (error) {
+        logger.error(error);
+      };
+    }
+    let inn = '';
+    for (const element of result) {
+      if (element.problemid) {
+        if (inn) {
+          inn += ',';
+        }
+        inn += element.problemid;
+      }
+    }
+    const groups = {'-1': {
+      problemname: 'No name',
+      components: [],
+      jurisdiction: '-'
+    }};
+    const problems = ['No problem'];
+    if (inn) {
+      const sql_problems = `SELECT problemname, problemid, jurisdiction FROM problems WHERE problemid IN (${inn})`;
+      const query_problems = {
+        q: sql_problems
+      }
+      let body = {};
+      try {
+        const data = await needle('post', URL, query, { json: true });
+        //console.log('STATUS', data.statusCode);
+        if (data.statusCode === 200) {
+          body = data.body;
+          logger.info(JSON.stringify(body.rows));
+          const bodyProblems = body.rows(row => row.problemname);
+          for (const problem of body) {
+            groups[problem.problemid] = {
+              problemname: problem.problemname,
+              jurisdiction: problem.jurisdiction,
+              components: []
+            };
+          }
+          problems = problems.concat(bodyProblems);
+          logger.info('length of problems' + problems.length);
+          //logger.info(JSON.stringify(body, null, 2));
+        } else {
+          logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+        }
+      } catch (error) {
+        logger.error(error);
+      };
+    }
+    for (const project of result) {
+      if (project.problemid == null) {
+        groups['-1'].components.push(project);
+      } else {
+        groups[project.problemid].components.push(project);
+      }
+    }
+    res.send({
+      result: result,
+      problems: problems,
+      groups: groups
+    });
    
 });
 router.post('/capital', auth, async (req, res) => {
@@ -54,7 +140,7 @@ router.post('/capital', auth, async (req, res) => {
       result = data.body;
       logger.info(result);
     } else {
-       logger.error('bad status ', data.statusCode, data.body);
+       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
     }
   } catch (error) {
     logger.error(error);
@@ -83,7 +169,7 @@ router.post('/maintenance', auth, async (req, res) => {
       result = data.body;
       logger.info(result);
     } else {
-       logger.error('bad status ', data.statusCode, data.body);
+       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
     }
   } catch (error) {
     logger.error(error);
@@ -112,7 +198,7 @@ router.post('/study', auth, async (req, res) => {
       result = data.body;
       logger.info(result);
     } else {
-       logger.error('bad status ', data.statusCode, data.body);
+       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
     }
   } catch (error) {
     logger.error(error);
@@ -140,7 +226,7 @@ router.post('/acquisition', auth, async (req, res) => {
       result = data.body;
       logger.info(result);
     } else {
-      logger.error('bad status ', data.statusCode, data.body);
+      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
     }
   } catch (error) {
     logger.error(error);
@@ -167,7 +253,7 @@ router.post('/special', auth, async (req, res) => {
       result = data.body;
       logger.info(result);
     } else {
-      logger.error('bad status ', data.statusCode, data.body);
+      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
     }
  } catch (error) {
     logger.error(error);
