@@ -2,7 +2,7 @@ var fs = require('fs');
 var pdf = require('html-pdf');
 
 let width = 1200;
-let height = 1828;
+let height = 2828;
 
 var options = {
   width: `${width}px`,
