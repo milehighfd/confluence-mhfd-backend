@@ -66,7 +66,7 @@ const getNewFilter = (filters, body) => {
    if (body.county) {
      let counties = body.county.split(',');
      let countiesIn = counties.map(s => `'${s}'`)
-     filters += ` and county1 in (${countiesIn.join(',')})`
+     filters += ` and county in (${countiesIn.join(',')})`
    }
    if (body.servicearea) {
      let serviceareas = body.servicearea.split(',');
