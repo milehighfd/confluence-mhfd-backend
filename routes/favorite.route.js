@@ -266,7 +266,7 @@ router.post('/favorite-list', auth, async (req, res) => {
         
         filters = getFilters(req.body);
         const PROJECT_FIELDS = 'cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, ' +
-           'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county1 ';
+           'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county ';
 
         if (req.body.problemtype) {
            const result = await queriesByProblemTypeInProject(PROJECT_FIELDS, filters, req.body.problemtype);
