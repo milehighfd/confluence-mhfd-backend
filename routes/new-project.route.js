@@ -88,6 +88,17 @@ router.post('/get-stream', auth, async (req, res) => {
           const body = intersectionData.body;
           logger.info(JSON.stringify(body.rows));
           result = body.rows[0];
+          const dropSQL = `DROP table if exists  aux_${current} `;
+          const dropQuery = {
+            q: dropSQL
+          }
+          console.log(dropSQL);
+          const deleted = await needle('post', URL, dropQuery, { json: true });
+          if (deleted.statusCode === 200) {
+            logger.info('DELETE TABLE aux_' + current);
+          } else {
+            logger.error('IMPOSSIBLE DELETE TABLE aux_' + current + ' ' + deleted.statusCode + ' ' + JSON.stringify(deleted.body));
+          }
           res.send(result);
           logger.info('length ' + result.length);
           //logger.info(JSON.stringify(body, null, 2));
@@ -214,6 +225,7 @@ router.post('/capital', auth, async (req, res) => {
       logger.info(result);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+       res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
     logger.error(error);
@@ -243,6 +255,7 @@ router.post('/maintenance', auth, async (req, res) => {
       logger.info(result);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+       res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
     logger.error(error);
@@ -272,7 +285,8 @@ router.post('/study', auth, async (req, res) => {
       logger.info(result);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
-    }
+       res.status(data.statusCode).send(data.body);
+      }
   } catch (error) {
     logger.error(error);
   };
@@ -300,6 +314,7 @@ router.post('/acquisition', auth, async (req, res) => {
       logger.info(result);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
     logger.error(error);
@@ -327,6 +342,7 @@ router.post('/special', auth, async (req, res) => {
       logger.info(result);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      res.status(data.statusCode).send(data.body);
     }
  } catch (error) {
     logger.error(error);
