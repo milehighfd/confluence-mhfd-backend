@@ -31,6 +31,79 @@ const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'spe
 'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
 'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
 
+
+router.post('/get-stream', auth, async (req, res) => {
+  const geom = req.body.geom;
+  let result = {};
+  const current = new Date().getTime();
+  const createSQL = `CREATE TABLE aux_${current} AS (SELECT the_geom, the_geom_webmercator FROM ${COMPONENTS_TABLES[0]} 
+  WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) AND projectid is null)`;
+  logger.info(createSQL);
+  const createQuery = {
+    q: createSQL
+  };
+  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  try {
+    const data = await needle('post', URL, createQuery, { json: true });
+    if (data.statusCode === 200) {
+      logger.info('CREATE');
+      const promises = [];
+      for (let i = 1; i < COMPONENTS_TABLES.length; i++) {
+        const updateSQL = `INSERT INTO aux_${current} (the_geom, the_geom_webmercator)
+        (SELECT the_geom, the_geom_webmercator FROM ${COMPONENTS_TABLES[i]}
+        WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) AND projectid is null)`;
+        logger.info(updateSQL);
+        const updateQuery = {
+          q: updateSQL
+        };
+        const promise = new Promise((resolve, reject) => {
+          needle('post', URL, updateQuery, { json: true })
+          .then(response => {
+            if (response.statusCode === 200) {
+              logger.info('INSERT ', COMPONENTS_TABLES[i]);
+              resolve(true);
+            } else {
+              logger.info('FAIL TO INSERT ',  COMPONENTS_TABLES[i]);
+              resolve(false);
+            }
+          })
+          .catch(error => {
+            reject(false);
+          });
+        });
+        promises.push(promise);
+      }
+      Promise.all(promises).then(async (values) => {
+        const hullSQL = `
+        SELECT ST_AsGeoJSON(
+          ST_Simplify(ST_Intersection(ST_ConvexHull(ST_COLLECT(ARRAY(SELECT the_geom FROM aux_${current}))),
+                          ST_COLLECT(ARRAY(SELECT the_geom FROM streams))), 0.5)
+        ) as geom`;
+        const hullQuery = {
+          q: hullSQL
+        };
+        logger.info(hullSQL);
+        const intersectionData = await needle('post', URL, hullQuery, { json: true });
+        if (intersectionData.statusCode === 200) {
+          const body = intersectionData.body;
+          logger.info(JSON.stringify(body.rows));
+          result = body.rows[0];
+          res.send(result);
+          logger.info('length ' + result.length);
+          //logger.info(JSON.stringify(body, null, 2));
+        } else {
+          logger.error('bad status ' + intersectionData.statusCode + ' ' +  JSON.stringify(intersectionData.body, null, 2));
+        }
+      });
+    } else {
+      logger.info('NOT CREATED ' +  data.statusCode + ' [ ' + JSON.stringify(data.body));
+    }
+  } catch(error) {
+    console.log(error);
+    res.status(500).send({error: JSON.stringify(error)});
+  }
+});
+
 router.post('/showcomponents', auth, async (req, res) => {
    const geom = req.body.geom;
    let result = [];
