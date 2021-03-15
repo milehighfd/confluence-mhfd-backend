@@ -31,7 +31,32 @@ const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'spe
 'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
 'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
 
-
+router.post('/get-all-streams', auth, async (req, res) => {
+  const geom = req.body.geom;
+  const sql = `SELECT cartodb_id FROM streams WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom)`;
+  const query = {
+    q: sql
+  };
+  let body = {};
+  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    //console.log('STATUS', data.statusCode);
+    if (data.statusCode === 200) {
+      body = data.body;
+      logger.info(JSON.stringify(body.rows));
+      body.rows = body.rows.map(data => data.cartodb_id);
+      res.send(body.rows);
+      //logger.info(JSON.stringify(body, null, 2));
+    } else {
+      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      res.status(data.statusCode).send(data);
+    }
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send(error);
+  };
+});
 router.post('/get-stream', auth, async (req, res) => {
   const geom = req.body.geom;
   let result = {};
@@ -50,8 +75,8 @@ router.post('/get-stream', auth, async (req, res) => {
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       body = data.body;
-      logger.info(JSON.stringify(body.rows));
-      res.send(body.rows);
+      logger.info(JSON.stringify(body.rows[0]));
+      res.send(body.rows[0]);
       //logger.info(JSON.stringify(body, null, 2));
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
