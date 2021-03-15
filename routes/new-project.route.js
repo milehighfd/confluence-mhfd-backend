@@ -31,6 +31,7 @@ const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'spe
 'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
 'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
 
+
 router.post('/get-stream', auth, async (req, res) => {
   const geom = req.body.geom;
   let result = {};
@@ -149,9 +150,9 @@ router.post('/showcomponents', auth, async (req, res) => {
    const geom = req.body.geom;
    let result = [];
    for (const component of COMPONENTS_TABLES) {
-     const sql = `SELECT cartodb_id, type, jurisdiction, status, original_cost, problemid  FROM ${component} WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) AND projectid is null `;
-     const query = {
-      q: sql
+      const sql = `SELECT cartodb_id, type, jurisdiction, status, original_cost, problemid  FROM ${component} WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) AND projectid is null `;
+      const query = {
+        q: sql
       };
       console.log(sql);
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
@@ -161,6 +162,11 @@ router.post('/showcomponents', auth, async (req, res) => {
         //console.log('STATUS', data.statusCode);
         if (data.statusCode === 200) {
           body = data.body;
+          body.rows = body.rows.map(element => {
+            return {
+              table: component, ...element
+            };
+          })
           logger.info(JSON.stringify(body.rows));
           result = result.concat(body.rows);
           logger.info('length ' + result.length);
