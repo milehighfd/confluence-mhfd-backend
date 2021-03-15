@@ -86,10 +86,47 @@ module.exports = {
     `);
       html = html.split('${totalEstimatedCost}').join('');
     }
+    let q = 0;
+    let spaceBetween = '';
+    switch(components.length) {
+      case 0:
+      case 1:
+      case 2:
+        q = 40;
+        break
+      case 3:
+        q = 35;
+        break;
+      case 4:
+        q = 30;
+        break;
+      case 5:
+        q = 28;
+        break;
+      case 6:
+        q = 25;
+        break;
+      case 7:
+        q = 23;
+        break;
+      case 8:
+        q = 20;
+        break;
+      case 9:
+        q = 15;
+        break;
+      case 10:
+        q = 10;
+        break;
+    }
+    for (var i = 0 ; i < q ; i++) {
+      spaceBetween += '<br/>'
+    }
+    html = html.split('${spaceBetween}').join(spaceBetween);
 
     let width = 1200;
-    let height = 1430 + (_components.length * 90);
-    
+    let height = 1550;
+
     var options = {
       width: `${width}px`,
       height: `${height}px`,
@@ -175,9 +212,9 @@ module.exports = {
       percen: 0
     }]
     let sum = 0;
-    let componentRows = _components.map((c) => {
+    let componentRows = _components.map((c, i) => {
       sum += c.estimated_cost;
-      return `
+      let str = `
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
           <td width="40%" style="padding: 17px 20px;">${c.type}</td>
           <td width="20%" style="padding: 17px 20px;">${priceFormatter(c.estimated_cost)}</td>
@@ -185,6 +222,10 @@ module.exports = {
           <td width="20%" style="padding: 17px 20px;">${c.percen}%</td>
         </tr>
       `
+      if (components.length === 9 && i === 6) {
+        str += '<tr><tr/><tr><tr/><tr><tr/><tr><tr/><tr><tr/><tr><tr/><tr><tr/>'
+      }
+      return str;
     }).join('')
     if (sum) {
       html = html.split('${componentRows}').join(componentRows);
@@ -195,7 +236,7 @@ module.exports = {
       </tr>
     </tfoot>`);
     } else {
-      html = html.split('${componentRows}').join( `
+      html = html.split('${componentRows}').join(`
       <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
         <td width="40%" style="padding: 17px 20px;"></td>
         <td width="20%" style="padding: 17px 20px;"></td>
@@ -206,10 +247,41 @@ module.exports = {
       html = html.split('${totalEstimatedCost}').join('');
     }
     html = html.split('${map}').join(map);
-
+    let q = 0;
+    let spaceBetween = '';
+    switch(components.length) {
+      case 0:
+        q = 30;
+        break;
+      case 1:
+        q = 25;
+        break;
+      case 2:
+        q = 20;
+        break;
+      case 3:
+        q = 17;
+        break;
+      case 4:
+        q = 13;
+        break;
+      case 5:
+        q = 8;
+        break;
+      case 6:
+        q = 5;
+        break;
+      case 7:
+        q = 3;
+        break;
+    }
+    for (var i = 0 ; i < q ; i++) {
+      spaceBetween += '<br/>'
+    }
+    html = html.split('${spaceBetween}').join(spaceBetween);
     let width = 1200;
-    let height = 1700 + (_components.length * 90);
-    
+    let height = 1550;
+
     var options = {
       width: `${width}px`,
       height: `${height}px`,
