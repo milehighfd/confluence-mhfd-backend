@@ -31,8 +31,38 @@ const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'spe
 'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
 'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
 
-
 router.post('/get-stream', auth, async (req, res) => {
+  const geom = req.body.geom;
+  let result = {};
+  const sql = `SELECT ST_AsGeoJSON(
+    ST_Simplify(ST_Intersection(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'),
+                    ST_COLLECT(ARRAY(SELECT the_geom FROM streams))), 0.5)
+  ) as geom`;
+  const query = {
+    q: sql
+  };
+  console.log(sql);
+  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  let body = {};
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    //console.log('STATUS', data.statusCode);
+    if (data.statusCode === 200) {
+      body = data.body;
+      logger.info(JSON.stringify(body.rows));
+      res.send(body.rows);
+      //logger.info(JSON.stringify(body, null, 2));
+    } else {
+      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      res.status(data.statusCode).send(data);
+    }
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send(error);
+  };
+});
+
+router.post('/get-stream-convexhull', auth, async (req, res) => {
   const geom = req.body.geom;
   let result = {};
   const current = new Date().getTime();
@@ -343,7 +373,7 @@ router.post('/special', auth, async (req, res) => {
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data.body);
-    }
+espera    }
  } catch (error) {
     logger.error(error);
  };
