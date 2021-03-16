@@ -4,22 +4,19 @@
  * Module dependencies.
  */
 
-var app = require('../app');
+var server = require('../app');
 var debug = require('debug')('mhfd-backend-express:server');
-var http = require('http');
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
+var port = normalizePort(process.env.PORT || '3003');
 
 /**
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -87,4 +84,5 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
+  console.log("Server is listening on " + bind);
 }

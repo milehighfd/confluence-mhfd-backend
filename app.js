@@ -2,7 +2,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var morgan = require('morgan');
-
+var http = require('http');
 const logger = require('./config/logger');
 
 const indexRouter = require('./routes/index');
@@ -22,13 +22,17 @@ const zoomareaRouter = require('./routes/zoomarea.route');
 const favoriteRouter = require('./routes/favorite.route');
 const newProjectRouter = require('./routes/new-project.route');
 const db = require('./config/db');
+const configWs = require('./ws');
 db.sequelize.sync();
 const cacheTime = 1000 * 60 * 60;
 
-//require('./config/db');
 require('./config/seed');
 
 var app = express();
+
+var server = http.createServer(app);
+
+configWs(server);
 
 app.use(morgan('dev', {stream: logger.stream}));
 app.use(express.json({limit: '20mb'}));
@@ -61,9 +65,5 @@ app.use('/filters', filterRouter);
 app.use('/zoomarea', zoomareaRouter);
 app.use('/favorites', favoriteRouter);
 app.use('/create', newProjectRouter);
-app.listen(3003, () => {
-  console.log("Server is listening on port 3003");
-});
 
-
-module.exports = app;
+module.exports = server;
