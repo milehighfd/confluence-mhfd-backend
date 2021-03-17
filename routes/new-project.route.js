@@ -30,7 +30,103 @@ const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'spe
 'special_item_linear', 'special_item_area', 'channel_improvements_linear',
 'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
 'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
-
+router.post('/convexhull-by-components', auth, async(req, res) => {
+  const components = req.body.components;
+  logger.info('COMPONENTS ' + JSON.stringify(components));
+  let createTable = false;
+  const current = new Date().getTime();
+  const promises = [];
+  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  for (const component in components) {
+    logger.info('component ' + component);
+    const inList = components[component]['in'];
+    let inQuery = '';
+    if (!inList.length) {
+      continue;
+    }
+    inQuery = 'IN(' + inList.join(',') + ')';
+    if (!createTable) {
+      const createSQL = `CREATE TABLE aux_${current} AS (SELECT the_geom, the_geom_webmercator FROM ${component} 
+        WHERE cartodb_id ${inQuery} AND projectid is null)`;
+      logger.info(createSQL);
+      const createQuery = {
+        q: createSQL
+      };
+      try {
+        const data = await needle('post', URL, createQuery, { json: true });
+        //console.log('STATUS', data.statusCode);
+        if (data.statusCode === 200) {
+          logger.info('TABLE CREATED ');
+          //logger.info(JSON.stringify(body, null, 2));
+        } else {
+          logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+          res.status(data.statusCode).send(data);
+        }
+      } catch (error) {
+        logger.error(error);
+        res.status(500).send(error);
+      };
+    } else {
+      const updateSQL = `INSERT INTO aux_${current} (the_geom, the_geom_webmercator)
+        (SELECT the_geom, the_geom_webmercator FROM ${component}
+        WHERE cartodb_id ${inQuery} AND projectid is null)`;
+      logger.info(updateSQL);
+      const updateQuery = {
+        q: updateSQL
+      };
+      const promise = new Promise((resolve, reject) => {
+        needle('post', URL, updateQuery, { json: true })
+        .then(response => {
+          if (response.statusCode === 200) {
+            logger.info('INSERT ', component);
+            resolve(true);
+          } else {
+            logger.info('FAIL TO INSERT ',  component);
+            resolve(false);
+          }
+        })
+        .catch(error => {
+          reject(false);
+        });
+      });
+      promises.push(promise);
+    }
+    createTable = true;
+  }
+  Promise.all(promises).then(async (values) => {
+    const hullSQL = `
+    SELECT ST_AsGeoJSON(
+      ST_Simplify(ST_Intersection(ST_ConvexHull(ST_COLLECT(ARRAY(SELECT the_geom FROM aux_${current}))),
+                      ST_COLLECT(ARRAY(SELECT the_geom FROM streams))), 0.5)
+    ) as geom`;
+    const hullQuery = {
+      q: hullSQL
+    };
+    logger.info(hullSQL);
+    const intersectionData = await needle('post', URL, hullQuery, { json: true });
+    if (intersectionData.statusCode === 200) {
+      const body = intersectionData.body;
+      logger.info(JSON.stringify(body.rows));
+      result = body.rows[0];
+      const dropSQL = `DROP table if exists  aux_${current} `;
+      const dropQuery = {
+        q: dropSQL
+      }
+      console.log(dropSQL);
+      const deleted = await needle('post', URL, dropQuery, { json: true });
+      if (deleted.statusCode === 200) {
+        logger.info('DELETE TABLE aux_' + current);
+      } else {
+        logger.error('IMPOSSIBLE DELETE TABLE aux_' + current + ' ' + deleted.statusCode + ' ' + JSON.stringify(deleted.body));
+      }
+      res.send(result);
+      logger.info('length ' + result.length);
+      //logger.info(JSON.stringify(body, null, 2));
+    } else {
+      logger.error('bad status ' + intersectionData.statusCode + ' ' +  JSON.stringify(intersectionData.body, null, 2));
+    }
+  });
+});
 router.post('/get-all-streams', auth, async (req, res) => {
   const geom = req.body.geom;
   const sql = `SELECT cartodb_id FROM streams WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom)`;
