@@ -199,9 +199,11 @@ const uploadFiles = async (user, files) => {
   const bucket = storage.bucket(STORAGE_NAME);
   const compressBucket = storage.bucket(STORAGE_NAME);
   if (!fs.existsSync('./tmp/')) {
+    console.log('creating /tmp/')
     fs.mkdirSync('./tmp/');
   }
   if (!fs.existsSync('./compressed/')) {
+    console.log('creating /compressed/')
     fs.mkdirSync('./compressed/');
   }
 
