@@ -479,6 +479,7 @@ router.post('/acquisition', auth, async (req, res) => {
   res.send(result);
 });
 router.post('/special', auth, async (req, res) => {
+
   const user = req.user;
   const {projectname, description, servicearea, county, geom} = req.body;
   const status = 'Draft';
@@ -500,7 +501,7 @@ router.post('/special', auth, async (req, res) => {
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data.body);
-espera    }
+    }
  } catch (error) {
     logger.error(error);
  };
