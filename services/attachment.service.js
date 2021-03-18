@@ -198,13 +198,13 @@ const isImage = (type) => {
 const uploadFiles = async (user, files) => {
   const bucket = storage.bucket(STORAGE_NAME);
   const compressBucket = storage.bucket(STORAGE_NAME);
-  if (!fs.existsSync('./tmp/')) {
-    console.log('creating /tmp/')
-    fs.mkdirSync('./tmp/');
+  if (!fs.existsSync(__dirname + '/tmp/')) {
+    console.log('creating /tmp/', __dirname + '/tmp/')
+    fs.mkdirSync(__dirname + '/tmp/');
   }
-  if (!fs.existsSync('./compressed/')) {
-    console.log('creating /compressed/')
-    fs.mkdirSync('./compressed/');
+  if (!fs.existsSync(__dirname + '/compressed/')) {
+    console.log('creating /compressed/', __dirname + '/compressed/')
+    fs.mkdirSync(__dirname + '/compressed/');
   }
 
   for (const file of files) {
