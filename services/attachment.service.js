@@ -213,35 +213,42 @@ const uploadFiles = async (user, files) => {
     console.log(file.mimetype);
     const complete = path.join(__dirname, './tmp/' + file.originalname);
     const compressedrRoute = __dirname + '/compressed/' + file.originalname;
-    
+    logger.info(complete);
+    logger.info(compressedrRoute);
     if (isImage(file.mimetype)) {
       
       const prom = new Promise((resolve, reject) => {
         fs.writeFile(complete, file.buffer, (error) => {
           if (error) {
-            console.log('error', error);
-            reject('the error ', error);
+            logger.error('error ' + JSON.stringify(error));
+            reject({error: error});
           }
           resolve('OK');
         });
       });
-      const t1 = await prom;
+      try {
+        await prom;
+      } catch (error) {
+        throw error;
+      }
       const read = new Promise((res, rej) => {
         fs.readFile(complete, (error, data) => {
           console.log(error, data);
           if (error) {
-            return rej({ data: null });
+            return rej({ error: 'Cannot read data' });
           }
           return res({ data: data });
         });
       });
-
-      const file2 = await read;
+      let file2;
+      try {
+        file2 = await read;
+      } catch(err) {
+        throw err;
+      }
       if (file2) {
         const didCompression = await compress();
         if (didCompression) {
-          
-
           try {
             bucket.makePublic(function (err) { });
             await bucket.upload(compressedrRoute, {
@@ -252,7 +259,7 @@ const uploadFiles = async (user, files) => {
             });
 
           } catch (err) {
-            console.log('ERROR', err);
+            throw err;
           }
         }
       }
@@ -267,14 +274,17 @@ const uploadFiles = async (user, files) => {
         resolve(attach);
 
       }).on('error', err => {
-        reject('upload error: ', err);
+        reject('upload error: '+ JSON.stringify(err));
       }).end(file.buffer);
     });
-    await newPromise;
+    try {
+      await newPromise;
+    } catch (error) {
+      throw error;
+    }
     const delelteFile = new Promise((resolve, rejected) => {
       fs.unlink(complete, function (err) {
         if (err) {
-         
           console.log('problem deleting ', complete, ' with error ', err);
           return rejected(false);
         }
@@ -283,7 +293,11 @@ const uploadFiles = async (user, files) => {
         resolve(true);
       });
     });
-    await delelteFile;
+    try {
+      await delelteFile;
+    } catch (error) {
+      throw error;
+    }
     fs.unlink(compressedrRoute, function (err) {
       if (err) {
         console.log('problem deleting ', compressedrRoute, ' with error ', err);
