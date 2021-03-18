@@ -213,7 +213,8 @@ const uploadFiles = async (user, files) => {
     console.log(file.mimetype);
     const complete = path.join(__dirname, './tmp/' + file.originalname);
     const compressedrRoute = __dirname + '/compressed/' + file.originalname;
-    
+    logger.info(complete);
+    logger.info(compressedrRoute);
     if (isImage(file.mimetype)) {
       
       const prom = new Promise((resolve, reject) => {
@@ -228,7 +229,7 @@ const uploadFiles = async (user, files) => {
       try {
         await prom;
       } catch (error) {
-        res.status(500).send(error);
+        throw error;
       }
       const read = new Promise((res, rej) => {
         fs.readFile(complete, (error, data) => {
@@ -243,7 +244,7 @@ const uploadFiles = async (user, files) => {
       try {
         file2 = await read;
       } catch(err) {
-        res.status(500).send(err);
+        throw err;
       }
       if (file2) {
         const didCompression = await compress();
@@ -258,7 +259,7 @@ const uploadFiles = async (user, files) => {
             });
 
           } catch (err) {
-            console.log('ERROR', err);
+            throw err;
           }
         }
       }
@@ -279,7 +280,7 @@ const uploadFiles = async (user, files) => {
     try {
       await newPromise;
     } catch (error) {
-      res.status(500).send(error);
+      throw error;
     }
     const delelteFile = new Promise((resolve, rejected) => {
       fs.unlink(complete, function (err) {
@@ -295,7 +296,7 @@ const uploadFiles = async (user, files) => {
     try {
       await delelteFile;
     } catch (error) {
-      res.status(500).send(error);
+      throw error;
     }
     fs.unlink(compressedrRoute, function (err) {
       if (err) {
