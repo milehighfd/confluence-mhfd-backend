@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^4.6.0",
-    "apollo-server-express": "^2.11.0",
+    "apollo-server-express": "^2.14.2",
     "bcryptjs": "^2.4.3",
     "compress-images": "^1.9.5",
     "cookie-parser": "~1.4.4",
