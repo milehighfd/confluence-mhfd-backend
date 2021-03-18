@@ -4,6 +4,7 @@ const Multer = require('multer');
 const bcrypt = require('bcryptjs');
 const https = require('https');
 const needle = require('needle');
+const attachmentService = require('../services/attachment.service');
 const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('../config/config');
 
 //const User = require('../models/user.model');
@@ -478,14 +479,14 @@ router.post('/acquisition', auth, async (req, res) => {
   };
   res.send(result);
 });
-router.post('/special', auth, async (req, res) => {
+router.post('/special', [auth, multer.array('files')], async (req, res) => {
 
   const user = req.user;
   const {projectname, description, servicearea, county, geom} = req.body;
   const status = 'Draft';
   const projecttype = 'Special';
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status,projecttype)
-   VALUES(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}')`;
+   VALUES(ST_GeomFromGeoJSON('${geom}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}')`;
   const query = {
     q: insertQuery
   };
@@ -498,6 +499,7 @@ router.post('/special', auth, async (req, res) => {
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(result);
+      await attachmentService.uploadFiles(user, req.files);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data.body);

@@ -219,7 +219,7 @@ const uploadFiles = async (user, files) => {
       const prom = new Promise((resolve, reject) => {
         fs.writeFile(complete, file.buffer, (error) => {
           if (error) {
-            console.log('error');
+            console.log('error', error);
             reject('the error ', error);
           }
           resolve('OK');
