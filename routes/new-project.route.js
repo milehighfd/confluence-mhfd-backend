@@ -31,6 +31,40 @@ const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'spe
 'special_item_linear', 'special_item_area', 'channel_improvements_linear',
 'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
 'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
+
+router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
+  const geom = req.body.geom;
+});
+
+router.post('/get-countyservicearea-for-point', auth, async (req, res) => {
+  const geom = req.body.geom;
+  const sql = `SELECT aoi, filter FROM mhfd_zoom_to_areas where filter SIMILAR TO '%(Service Area|County)%' 
+  AND ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0)`;
+  const query = {
+    q: sql
+  };
+  logger.info(sql);
+  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    if (data.statusCode === 200) {
+      const body = data.body;
+      const answer = {};
+      body.rows.forEach(row => {
+        if (row.filter) {
+          answer[row.filter] = row.aoi;
+        }
+      });
+      res.send(answer);
+    } else {
+      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      res.status(data.statusCode).send(data);
+    }
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send(error);
+  };
+});
 router.post('/convexhull-by-components', auth, async(req, res) => {
   const components = req.body.components;
   logger.info('COMPONENTS ' + JSON.stringify(components));
