@@ -34,6 +34,34 @@ const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'spe
 
 router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
   const geom = req.body.geom;
+  const sql = `SELECT aoi, filter FROM mhfd_zoom_to_areas where filter SIMILAR TO '%(Service Area|County)%'
+  AND ST_DWithin((SELECT ST_Centroid(ST_Collect(ST_Intersection(
+          streams.the_geom, ST_GeomFromGeoJSON('${JSON.stringify(geom)}')))) FROM streams), mhfd_zoom_to_areas.the_geom, 0)
+  `;
+  const query = {
+    q: sql
+  }
+  logger.info(sql);
+  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    if (data.statusCode === 200) {
+      const body = data.body;
+      const answer = {};
+      body.rows.forEach(row => {
+        if (row.filter) {
+          answer[row.filter] = row.aoi;
+        }
+      });
+      res.send(answer);
+    } else {
+      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      res.status(data.statusCode).send(data);
+    }
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send(error);
+  };
 });
 
 router.post('/get-countyservicearea-for-point', auth, async (req, res) => {
