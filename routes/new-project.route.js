@@ -363,7 +363,7 @@ router.post('/capital', auth, async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription} = req.body;
-  const sponsor = user.sponsor;
+  const sponsor = user.organization;
   const status = 'Draft';
   const projecttype = 'Capital';
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost, overheadcostdescription, additionalcost, additionalcostdescription)
@@ -393,8 +393,9 @@ router.post('/capital', auth, async (req, res) => {
 
 router.post('/maintenance', auth, async (req, res) => {
   const user = req.user;
+  console.log('the user ', user);
   const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership} = req.body;
-  const sponsor = user.sponsor;
+  const sponsor = user.organization;
   const status = 'Draft';
   const projecttype = 'Maintenance';
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, frequency, sponsor, maintenanceeligibility, ownership)
@@ -423,7 +424,7 @@ router.post('/maintenance', auth, async (req, res) => {
 router.post('/study', auth, async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom, cosponsor} = req.body;
-  const sponsor = req.body.sponsor || user.sponsor;
+  const sponsor = req.body.sponsor || user.organization;
   const status = 'Draft';
   const projecttype = 'Study';
   const projectsubtype = 'Master Plan';
@@ -452,7 +453,7 @@ router.post('/study', auth, async (req, res) => {
 });
 router.post('/acquisition', auth, async (req, res) => {
   const user = req.user;
-  const sponsor = user.sponsor;
+  const sponsor = user.organization;
   const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate} = req.body;
   const status = 'Draft';
   const projecttype = 'Acquisition';
