@@ -524,13 +524,13 @@ router.post('/maintenance', auth, async (req, res) => {
 });
 router.post('/study', auth, async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, geom, cosponsor} = req.body;
+  const {projectname, description, servicearea, county, ids, cosponsor} = req.body;
   const sponsor = req.body.sponsor || user.organization;
   const status = 'Draft';
   const projecttype = 'Study';
   const projectsubtype = 'Master Plan';
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, cosponsor, sponsor)
-   VALUES(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', ${cosponsor}, '${sponsor}')`;
+   VALUES(SELECT the_geom FROM streams WHERE ids IN (${ids.join(',')}), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', ${cosponsor}, '${sponsor}')`;
   const query = {
     q: insertQuery
   };
