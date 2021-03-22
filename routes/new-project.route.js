@@ -530,7 +530,7 @@ router.post('/study', auth, async (req, res) => {
   const projecttype = 'Study';
   const projectsubtype = 'Master Plan';
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, cosponsor, sponsor)
-   VALUES(SELECT the_geom FROM streams WHERE ids IN (${ids.join(',')}), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', ${cosponsor}, '${sponsor}')`;
+   VALUES(SELECT the_geom FROM streams WHERE cartodb_id IN (${ids.join(',')}), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', ${cosponsor}, '${sponsor}')`;
   const query = {
     q: insertQuery
   };
