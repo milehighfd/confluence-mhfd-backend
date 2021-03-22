@@ -32,6 +32,45 @@ const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'spe
 'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
 'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
 
+
+router.post('/streams-data', auth, async (req, res) => {
+  const geom = req.body.geom;
+  const sql = `SELECT  j.jurisdiction, s.str_name, ST_length(ST_intersection(s.the_geom, j.the_geom)::geography) as length  FROM streams s, jurisidictions j 
+  where ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), s.the_geom, 0) 
+  and ST_DWithin(s.the_geom, j.the_geom, 0) `;
+  const query = {
+    q: sql
+  }
+  logger.info(sql);
+  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    if (data.statusCode === 200) {
+      const body = data.body;
+      const answer = {};
+      body.rows.forEach(row => {
+        if (row.str_name) {
+          if (!answer[row.str_name]) {
+            answer[row.str_name] = [];
+          }
+          answer[row.str_name].push({
+            jurisdiction: row.jurisdiction,
+            length: row.length,
+            drainage: 0
+          });
+        }
+      });
+      res.send(answer);
+    } else {
+      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      res.status(data.statusCode).send(data);
+    }
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send(error);
+  };
+});
+
 router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
   const geom = req.body.geom;
   const sql = `SELECT aoi, filter FROM mhfd_zoom_to_areas where filter SIMILAR TO '%(Service Area|County)%'
