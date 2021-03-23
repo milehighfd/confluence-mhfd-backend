@@ -32,6 +32,76 @@ const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'spe
 'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
 'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
 
+router.get('/components-by-problemid', auth, async (req, res) => {
+  const problemid = req.query.problemid;
+  const sql = `SELECT problemname, problemid, jurisdiction FROM problems WHERE problemid = ${problemid}`;
+  const query = {
+    q: sql
+  };
+  const groups = {};
+  const result = [];
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    if (data.statusCode === 200) {
+      const body = data.body;
+      body.rows.forEach(problem => {
+        groups[problem.problemid] = {
+          problemname: problem.problemname,
+          jurisdiction: problem.jurisdiction,
+          components: []
+        };
+      });
+      for (const component of COMPONENTS_TABLES) {
+        const componentSQL = `SELECT SELECT cartodb_id, type, jurisdiction, status, original_cost, problemid 
+         FROM ${component} WHERE problemid = ${problemid} AND projectid is null`;
+        logger.info(componentSQL);
+        const componentQuery = {
+          q: componentSQL
+        };
+        const promise = new Promise((resolve, reject) => {
+          needle('post', URL, componentQuery, { json: true })
+          .then(response => {
+            if (response.statusCode === 200) {
+              const body = response.body;
+              body.rows.forEach(row => {
+                groups[problemid].components.push({
+                  table: component,
+                  ...row
+                });
+                result.push({
+                  table: component,
+                  ...row
+                });
+              });
+              logger.info('DO SELECT FOR ' + component);
+              resolve(true);
+            } else {
+              logger.info('FAIL TO SELECT ' + component);
+              resolve(false);
+            }
+          })
+          .catch(error => {
+            reject(false);
+          });
+        });
+        promises.push(promise);
+      }
+      Promise.all(promises).then((values) => {
+        res.send({
+          result: result,
+          problems: groups[problemid].problemname,
+          groups: groups
+        });
+      });
+    } else {
+      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      res.status(data.statusCode).send(data);
+    }
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send(error);
+  };
+});
 
 router.post('/streams-data', auth, async (req, res) => {
   const geom = req.body.geom;
@@ -423,7 +493,7 @@ router.post('/showcomponents', auth, async (req, res) => {
       }
       let body = {};
       try {
-        const data = await needle('post', URL, query, { json: true });
+        const data = await needle('post', URL, query_problems, { json: true });
         //console.log('STATUS', data.statusCode);
         if (data.statusCode === 200) {
           body = data.body;
