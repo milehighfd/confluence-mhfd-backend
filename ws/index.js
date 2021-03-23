@@ -1,7 +1,12 @@
 let io;
 
 const configWs = (server) => {
-  io = require('socket.io')(server)
+  io = require('socket.io')(server, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    }
+  });
   registerEvent();
 }
 
