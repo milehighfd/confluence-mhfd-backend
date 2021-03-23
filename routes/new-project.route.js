@@ -32,6 +32,70 @@ const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'spe
 'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
 'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
 
+router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
+  const geom = req.body.geom;
+  const components = req.body.components;
+  const usableComponents = {};
+  let where = '';
+  if (geom) {
+    where = `ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), s.the_geom, 0)`;
+  }
+  if (components) {
+    for (const component of components) {
+      if (!usableComponents[component.table]) {
+        usableComponents[component.table] = [];
+      }
+      usableComponents[component.table].push(cartodb_id);
+    }
+  }
+  let result = [];
+  for (const component of COMPONENTS_TABLES) {
+    if (!geom && !usableComponents[component.table]) {
+      continue;
+    }
+    let queryWhere = '';
+    if (usableComponents[component.table]) {
+      queryWhere = ` IN(${usableComponents[component.table].join(',')})`;
+    }
+    if (where) {
+      if (queryWhere) {
+        queryWhere = queryWhere + ' OR ' + where;
+      } else {
+        queryWhere = where;
+      }
+    }
+    const sql = `SELECT cartodb_id, type, jurisdiction, status, original_cost, problemid  FROM ${component} 
+    WHERE  ${queryWhere} AND projectid is null `;
+    const query = {
+      q: sql
+    };
+    console.log(sql);
+    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+    let body = {};
+    const result = {};
+    try {
+      const data = await needle('post', URL, query, { json: true });
+      //console.log('STATUS', data.statusCode);
+      if (data.statusCode === 200) {
+        body = data.body;
+        body.rows = body.rows.map(element => {
+          return {
+            table: component, ...element
+          };
+        })
+        logger.info(JSON.stringify(body.rows));
+        result = result.concat(body.rows);
+        logger.info('length ' + result.length);
+        //logger.info(JSON.stringify(body, null, 2));
+      } else {
+        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      }
+    } catch (error) {
+      logger.error(error);
+    };
+  }
+});
+
 router.get('/components-by-problemid', auth, async (req, res) => {
   const problemid = req.query.problemid;
   const sql = `SELECT problemname, problemid, jurisdiction FROM problems WHERE problemid = ${problemid}`;
