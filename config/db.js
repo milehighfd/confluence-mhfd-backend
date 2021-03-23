@@ -26,6 +26,8 @@ db.task = require('../models/task.model.js')(sequelize, Sequelize);
 db.coordinate = require('../models/coordinate.model.js')(sequelize, Sequelize);
 db.logActivity = require('../models/logActivity.model.js')(sequelize, Sequelize);
 db.favorites = require('../models/favorites.model.js')(sequelize, Sequelize);
+db.board = require('../models/board.model.js')(sequelize, Sequelize);
+db.locality = require('../models/locality.model.js')(sequelize, Sequelize);
 
 db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
