@@ -33,7 +33,7 @@ var app = express();
 
 var server = http.createServer(app);
 
-configWs(server);
+configWs();
 
 app.use(morgan('dev', {stream: logger.stream}));
 app.use(express.json({limit: '20mb'}));

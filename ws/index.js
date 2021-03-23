@@ -1,13 +1,16 @@
 let io;
 
 const configWs = (server) => {
-  io = require('socket.io')(server, {
+  var wsapp = require('express')();
+  var server1 = require('http').Server(wsapp);
+  io = require('socket.io')(server1, {
     cors: {
       origin: "*",
       methods: ["GET", "POST"]
     }
   });
   registerEvent();
+  server1.listen(65080);
 }
 
 const registerEvent = () => {
