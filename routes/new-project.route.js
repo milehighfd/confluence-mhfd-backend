@@ -239,7 +239,7 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
     const hullSQL = `
     SELECT ST_AsGeoJSON(
       ST_Simplify(ST_Intersection(ST_ConvexHull(ST_COLLECT(ARRAY(SELECT the_geom FROM aux_${current}))),
-                      ST_COLLECT(ARRAY(SELECT the_geom FROM streams))), 0.2)
+                      ST_COLLECT(ARRAY(SELECT the_geom FROM streams))), 0.05)
     ) as geom`;
     const hullQuery = {
       q: hullSQL
@@ -507,7 +507,7 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
     const hullSQL = `
     SELECT ST_AsGeoJSON(
       ST_Simplify(ST_Intersection(ST_ConvexHull(ST_COLLECT(ARRAY(SELECT the_geom FROM aux_${current}))),
-                      ST_COLLECT(ARRAY(SELECT the_geom FROM streams))), 0.2)
+                      ST_COLLECT(ARRAY(SELECT the_geom FROM streams))), 0.05)
     ) as geom`;
     const hullQuery = {
       q: hullSQL
