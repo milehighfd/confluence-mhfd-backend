@@ -171,14 +171,17 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
       usableComponents[component.table].push(component.cartodb_id);
     }
   }
+  logger.info(JSON.stringify(usableComponents, null, 2));
   const promises = [];
   let create = false;
+  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
   for (const component of COMPONENTS_TABLES) {
     if (!geom && !usableComponents[component]) {
       continue;
     }
     let queryWhere = '';
     if (usableComponents[component]) {
+      logger.info('this line ' + usableComponents[component].join(','));
       queryWhere = `cartodb_id IN(${usableComponents[component].join(',')})`;
     }
     if (where) {
@@ -189,12 +192,12 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
       }
     }
     if (!create) {
-      const createSQL = `CREATE TABLE aux_${current} AS (SELECT the_geom, the_geom_webmercator FROM component 
-        WHERE ${where} AND projectid is null)`;
+      const createSQL = `CREATE TABLE aux_${current} AS (SELECT the_geom, the_geom_webmercator FROM ${component} 
+        WHERE ${queryWhere} AND projectid is null)`;
       const createQuery = {
         q: createSQL
       };
-      logger.info(createQuery);
+      logger.info(createSQL);
       try {
         const data = await needle('post', URL, createQuery, { json: true });
         //console.log('STATUS', data.statusCode);
@@ -212,7 +215,7 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
     } else {
       const updateSQL = `INSERT INTO aux_${current} (the_geom, the_geom_webmercator)
         (SELECT the_geom, the_geom_webmercator FROM ${component}
-        WHERE cartodb_id ${inQuery} AND projectid is null)`;
+        WHERE cartodb_id ${queryWhere} AND projectid is null)`;
       logger.info(updateSQL);
       const updateQuery = {
         q: updateSQL
