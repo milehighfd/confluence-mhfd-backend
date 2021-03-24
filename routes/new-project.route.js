@@ -242,8 +242,8 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
   Promise.all(promises).then(async (values) => {
     const hullSQL = `
     SELECT ST_AsGeoJSON(
-      ST_Simplify(ST_Intersection(ST_ConvexHull(ST_COLLECT(ARRAY(SELECT the_geom FROM aux_${current}))),
-                      ST_COLLECT(ARRAY(SELECT the_geom FROM streams))), 0.05)
+      ST_Intersection(ST_ConvexHull(ST_COLLECT(ARRAY(SELECT the_geom FROM aux_${current}))),
+                      ST_COLLECT(ARRAY(SELECT the_geom FROM streams)))
     ) as geom`;
     const hullQuery = {
       q: hullSQL
@@ -510,8 +510,8 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
   Promise.all(promises).then(async (values) => {
     const hullSQL = `
     SELECT ST_AsGeoJSON(
-      ST_Simplify(ST_Intersection(ST_ConvexHull(ST_COLLECT(ARRAY(SELECT the_geom FROM aux_${current}))),
-                      ST_COLLECT(ARRAY(SELECT the_geom FROM streams))), 0.05)
+      ST_Intersection(ST_ConvexHull(ST_COLLECT(ARRAY(SELECT the_geom FROM aux_${current}))),
+                      ST_COLLECT(ARRAY(SELECT the_geom FROM streams)))
     ) as geom`;
     const hullQuery = {
       q: hullSQL
@@ -571,8 +571,8 @@ router.post('/get-stream', auth, async (req, res) => {
   const geom = req.body.geom;
   let result = {};
   const sql = `SELECT ST_AsGeoJSON(
-    ST_Simplify(ST_Intersection(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'),
-                    ST_COLLECT(ARRAY(SELECT the_geom FROM streams))), 0.5)
+    ST_Intersection(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'),
+                    ST_COLLECT(ARRAY(SELECT the_geom FROM streams)))
   ) as geom`;
   const query = {
     q: sql
@@ -642,8 +642,8 @@ router.post('/get-stream-convexhull', auth, async (req, res) => {
       Promise.all(promises).then(async (values) => {
         const hullSQL = `
         SELECT ST_AsGeoJSON(
-          ST_Simplify(ST_Intersection(ST_ConvexHull(ST_COLLECT(ARRAY(SELECT the_geom FROM aux_${current}))),
-                          ST_COLLECT(ARRAY(SELECT the_geom FROM streams))), 0.5)
+          ST_Intersection(ST_ConvexHull(ST_COLLECT(ARRAY(SELECT the_geom FROM aux_${current}))),
+                          ST_COLLECT(ARRAY(SELECT the_geom FROM streams)))
         ) as geom`;
         const hullQuery = {
           q: hullSQL
