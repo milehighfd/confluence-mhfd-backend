@@ -215,7 +215,7 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
     } else {
       const updateSQL = `INSERT INTO aux_${current} (the_geom, the_geom_webmercator)
         (SELECT the_geom, the_geom_webmercator FROM ${component}
-        WHERE cartodb_id ${queryWhere} AND projectid is null)`;
+        WHERE ${queryWhere} AND projectid is null)`;
       logger.info(updateSQL);
       const updateQuery = {
         q: updateSQL
@@ -224,10 +224,11 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
         needle('post', URL, updateQuery, { json: true })
         .then(response => {
           if (response.statusCode === 200) {
-            logger.info('INSERT ', component);
+            logger.info('INSERT '+ component);
             resolve(true);
           } else {
-            logger.info('FAIL TO INSERT ',  component);
+            logger.error(response.statusCode + ' ' + JSON.stringify(response.body));
+            logger.info('FAIL TO INSERT '+  component);
             resolve(false);
           }
         })
