@@ -45,17 +45,18 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
       if (!usableComponents[component.table]) {
         usableComponents[component.table] = [];
       }
-      usableComponents[component.table].push(cartodb_id);
+      usableComponents[component.table].push(component.cartodb_id);
     }
   }
+  logger.info('my usable components ' + JSON.stringify(usableComponents, null, 2));
   let result = [];
   for (const component of COMPONENTS_TABLES) {
-    if (!geom && !usableComponents[component.table]) {
+    if (!geom && !usableComponents[component]) {
       continue;
     }
     let queryWhere = '';
-    if (usableComponents[component.table]) {
-      queryWhere = ` IN(${usableComponents[component.table].join(',')})`;
+    if (usableComponents[component]) {
+      queryWhere = `cartodb_id IN(${usableComponents[component].join(',')})`;
     }
     if (where) {
       if (queryWhere) {
@@ -167,18 +168,18 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
       if (!usableComponents[component.table]) {
         usableComponents[component.table] = [];
       }
-      usableComponents[component.table].push(cartodb_id);
+      usableComponents[component.table].push(component.cartodb_id);
     }
   }
   const promises = [];
   let create = false;
   for (const component of COMPONENTS_TABLES) {
-    if (!geom && !usableComponents[component.table]) {
+    if (!geom && !usableComponents[component]) {
       continue;
     }
     let queryWhere = '';
-    if (usableComponents[component.table]) {
-      queryWhere = ` IN(${usableComponents[component.table].join(',')})`;
+    if (usableComponents[component]) {
+      queryWhere = `cartodb_id IN(${usableComponents[component].join(',')})`;
     }
     if (where) {
       if (queryWhere) {
