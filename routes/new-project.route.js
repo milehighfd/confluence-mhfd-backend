@@ -27,6 +27,8 @@ const multer = Multer({
   }
 });
 
+const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+
 const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
 'special_item_linear', 'special_item_area', 'channel_improvements_linear',
 'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
@@ -71,7 +73,6 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
       q: sql
     };
     console.log(sql);
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
     let body = {};
     try {
       const data = await needle('post', URL, query, { json: true });
@@ -173,8 +174,7 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
   }
   logger.info(JSON.stringify(usableComponents, null, 2));
   const promises = [];
-  let create = false;
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  let create = false
   for (const component of COMPONENTS_TABLES) {
     if (!geom && !usableComponents[component]) {
       continue;
@@ -354,8 +354,7 @@ router.post('/streams-data', auth, async (req, res) => {
   const query = {
     q: sql
   }
-  logger.info(sql);
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  logger.info(sql)
   try {
     const data = await needle('post', URL, query, { json: true });
     if (data.statusCode === 200) {
@@ -393,8 +392,7 @@ router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
   const query = {
     q: sql
   }
-  logger.info(sql);
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  logger.info(sql)
   try {
     const data = await needle('post', URL, query, { json: true });
     if (data.statusCode === 200) {
@@ -423,8 +421,7 @@ router.post('/get-countyservicearea-for-point', auth, async (req, res) => {
   const query = {
     q: sql
   };
-  logger.info(sql);
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  logger.info(sql)
   try {
     const data = await needle('post', URL, query, { json: true });
     if (data.statusCode === 200) {
@@ -450,8 +447,7 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
   logger.info('COMPONENTS ' + JSON.stringify(components));
   let createTable = false;
   const current = new Date().getTime();
-  const promises = [];
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  const promises = []
   for (const component in components) {
     logger.info('component ' + component);
     const inList = components[component]['in'];
@@ -548,8 +544,7 @@ router.post('/get-all-streams', auth, async (req, res) => {
   const query = {
     q: sql
   };
-  let body = {};
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  let body = {}
   try {
     const data = await needle('post', URL, query, { json: true });
     //console.log('STATUS', data.statusCode);
@@ -578,8 +573,7 @@ router.post('/get-stream', auth, async (req, res) => {
   const query = {
     q: sql
   };
-  console.log(sql);
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  console.log(sql)
   let body = {};
   try {
     const data = await needle('post', URL, query, { json: true });
@@ -608,8 +602,7 @@ router.post('/get-stream-convexhull', auth, async (req, res) => {
   logger.info(createSQL);
   const createQuery = {
     q: createSQL
-  };
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  }
   try {
     const data = await needle('post', URL, createQuery, { json: true });
     if (data.statusCode === 200) {
@@ -691,7 +684,7 @@ router.post('/showcomponents', auth, async (req, res) => {
         q: sql
       };
       console.log(sql);
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+
       let body = {};
       try {
         const data = await needle('post', URL, query, { json: true });
@@ -786,8 +779,7 @@ router.post('/capital', auth, async (req, res) => {
   const query = {
     q: insertQuery
   };
-  console.log('my query ' , query);
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  console.log('my query ' , query)
   let result = {};
   try {
     const data = await needle('post', URL, query, { json: true });
@@ -817,8 +809,7 @@ router.post('/maintenance', auth, async (req, res) => {
   const query = {
     q: insertQuery
   };
-  console.log('my query ' , query);
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  console.log('my query ' , query)
   let result = {};
   try {
     const data = await needle('post', URL, query, { json: true });
@@ -849,8 +840,7 @@ router.post('/study', auth, async (req, res) => {
   const query = {
     q: insertQuery
   };
-  console.log('my query ' , query);
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  console.log('my query ' , query)
   let result = {};
   try {
     const data = await needle('post', URL, query, { json: true });
@@ -878,8 +868,7 @@ router.post('/acquisition', auth, async (req, res) => {
   const query = {
     q: insertQuery
   };
-  console.log('my query ' , query);
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  console.log('my query ' , query)
   let result = {};
   try {
     const data = await needle('post', URL, query, { json: true });
@@ -907,8 +896,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
   const query = {
     q: insertQuery
   };
-  console.log('my query ' , query);
-  const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+  console.log('my query ' , query)
   let result = {};
   try {
     const data = await needle('post', URL, query, { json: true });
