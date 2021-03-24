@@ -38,7 +38,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
   const usableComponents = {};
   let where = '';
   if (geom) {
-    where = `ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), s.the_geom, 0)`;
+    where = `ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0)`;
   }
   if (components) {
     for (const component of components) {
@@ -160,7 +160,7 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
   const current = new Date().getTime();
   let where = '';
   if (geom) {
-    where = `ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), s.the_geom, 0)`;
+    where = `ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0)`;
   }
   if (components) {
     for (const component of components) {
