@@ -23,7 +23,6 @@ const favoriteRouter = require('./routes/favorite.route');
 const newProjectRouter = require('./routes/new-project.route');
 const boardRouter = require('./routes/board.route');
 const db = require('./config/db');
-const configWs = require('./ws');
 db.sequelize.sync();
 const cacheTime = 1000 * 60 * 60;
 
@@ -32,8 +31,6 @@ require('./config/seed');
 var app = express();
 
 var server = http.createServer(app);
-
-configWs();
 
 app.use(morgan('dev', {stream: logger.stream}));
 app.use(express.json({limit: '20mb'}));
