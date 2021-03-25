@@ -372,6 +372,15 @@ router.post('/streams-data', auth, async (req, res) => {
           });
         }
       });
+      /*
+      const drainageQuery = `SELECT s.str_name, j.jurisdiction, ST_AREA(ST_Intersection(c.the_geom, j.the_geom)::geography) 
+      as area FROM streams s,  mhfd_catchments_simple_v1 c, jurisidictions j WHERE 
+      ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), s.the_geom, 0) AND s.reach_code is not distinct from c.reach_code 
+      and s.trib_code1 is not distinct from c.trib_code1 and s.trib_code2 is not distinct from c.trib_code2 and s.trib_code3 is not distinct from c.trib_code3
+      and s.trib_code4 is not distinct from c.trib_code4 and s.trib_code5 is not distinct from c.trib_code5
+      and s.trib_code6 is not distinct from c.trib_code6 and s.trib_code7 is not distinct from c.trib_code7 AND ST_DWithin(c.the_geom, j.the_geom, 0) 
+      AND s.reach_code is not distinct from (SELECT max(reach_code) FROM streams WHERE ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0)) `;
+      */
       res.send(answer);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
@@ -442,6 +451,7 @@ router.post('/get-countyservicearea-for-point', auth, async (req, res) => {
     res.status(500).send(error);
   };
 });
+
 router.post('/convexhull-by-components', auth, async(req, res) => {
   const components = req.body.components;
   logger.info('COMPONENTS ' + JSON.stringify(components));
@@ -538,6 +548,7 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
     }
   });
 });
+
 router.post('/get-all-streams', auth, async (req, res) => {
   const geom = req.body.geom;
   const sql = `SELECT cartodb_id FROM streams WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom)`;
@@ -563,6 +574,7 @@ router.post('/get-all-streams', auth, async (req, res) => {
     res.status(500).send(error);
   };
 });
+
 router.post('/get-stream', auth, async (req, res) => {
   const geom = req.body.geom;
   let result = {};
@@ -763,10 +775,34 @@ router.post('/showcomponents', auth, async (req, res) => {
       result: result,
       problems: problems,
       groups: groups
-    });
-   
+    });   
 });
-router.post('/capital', auth, async (req, res) => {
+
+const setProjectID = async (res) => {
+  const update = `UPDATE ${CREATE_PROJECT_TABLE}
+  SET projectid = (SELECT GREATEST(max(projectid + 1), 800000) FROM ${CREATE_PROJECT_TABLE})
+  WHERE projectid = -1`;
+  const updateQuery = {
+    q: update
+  };
+  logger.info('update projectid query ' + JSON.stringify(updateQuery));
+  try {
+    const data = await needle('post', URL, updateQuery, { json: true });
+    console.log('STATUS', data.statusCode);
+    if (data.statusCode === 200) {
+      return true;
+    } else {
+       logger.error('bad status on UPDATE projectid ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+       res.status(data.statusCode).send(data.body);
+       return false;
+    }
+  } catch (error) {
+    logger.error(error);
+  };
+  return true;
+}
+
+router.post('/capital', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription} = req.body;
@@ -787,9 +823,14 @@ router.post('/capital', auth, async (req, res) => {
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(result);
+      const updateId = await setProjectID(res);
+      if (!updateId) {
+        return;
+      }
+      await attachmentService.uploadFiles(user, req.files);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
-       res.status(data.statusCode).send(data.body);
+       return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
     logger.error(error);
@@ -797,7 +838,7 @@ router.post('/capital', auth, async (req, res) => {
   res.send(result);
 });
 
-router.post('/maintenance', auth, async (req, res) => {
+router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   console.log('the user ', user);
   const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership} = req.body;
@@ -817,16 +858,22 @@ router.post('/maintenance', auth, async (req, res) => {
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(result);
+      const updateId = await setProjectID(res);
+      if (!updateId) {
+        return;
+      }
+      await attachmentService.uploadFiles(user, req.files);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
-       res.status(data.statusCode).send(data.body);
+       return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
     logger.error(error);
   };
   res.send(result);
 });
-router.post('/study', auth, async (req, res) => {
+
+router.post('/study', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, ids, cosponsor} = req.body;
   const sponsor = req.body.sponsor || user.organization;
@@ -848,16 +895,22 @@ router.post('/study', auth, async (req, res) => {
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(result);
+      const updateId = await setProjectID(res);
+      if (!updateId) {
+        return;
+      }
+      await attachmentService.uploadFiles(user, req.files);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
-       res.status(data.statusCode).send(data.body);
+       return res.status(data.statusCode).send(data.body);
       }
   } catch (error) {
     logger.error(error);
   };
   res.send(result);
 });
-router.post('/acquisition', auth, async (req, res) => {
+
+router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const sponsor = user.organization;
   const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate} = req.body;
@@ -876,38 +929,47 @@ router.post('/acquisition', auth, async (req, res) => {
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(result);
+      const updateId = await setProjectID(res);
+      if (!updateId) {
+        return;
+      }
+      await attachmentService.uploadFiles(user, req.files);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
-      res.status(data.statusCode).send(data.body);
+      return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
     logger.error(error);
   };
   res.send(result);
 });
-router.post('/special', [auth, multer.array('files')], async (req, res) => {
 
+router.post('/special', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom} = req.body;
   const status = 'Draft';
   const projecttype = 'Special';
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status,projecttype)
-   VALUES(ST_GeomFromGeoJSON('${geom}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}')`;
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, projectid) 
+  VALUES(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', -1)`;
   const query = {
     q: insertQuery
   };
-  console.log('my query ' , query)
+  console.log('my query ' , JSON.stringify(query));
   let result = {};
   try {
     const data = await needle('post', URL, query, { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
-      logger.info(result);
+      logger.info(JSON.stringify(result));
+      const updateId = await setProjectID(res);
+      if (!updateId) {
+        return;
+      }
       await attachmentService.uploadFiles(user, req.files);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
-      res.status(data.statusCode).send(data.body);
+      return res.status(data.statusCode).send(data.body);
     }
  } catch (error) {
     logger.error(error);
