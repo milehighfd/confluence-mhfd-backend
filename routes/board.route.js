@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 
 const db = require('../config/db');
+const { getDataByProjectIds } = require('./mapgallery.service');
 const Board = db.board; 
+const BoardProject = db.boardProject;
 
 router.get('/', async (req, res) => {
     let boards = await Board.findAll();
@@ -19,7 +21,25 @@ router.post('/', async (req, res) => {
         }
     });
     if (board) {
-        res.send(board);
+        let boardProjects = await BoardProject.findAll({
+            where: {
+                board_id: board._id
+            }
+        });
+        let projectsPromises = boardProjects.map(async (bp) => {
+            let project = await getDataByProjectIds(bp.project_id);
+            return {
+                project_id: bp.project_id,
+                column: bp.column,
+                position: bp.position,
+                project
+            }
+        })
+        let projects = await Promise.all(projectsPromises);
+        res.send({
+            board,
+            projects
+        });
     } else {
         let newBoard = new Board({
             type, year, locality
