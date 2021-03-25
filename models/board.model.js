@@ -5,7 +5,7 @@ module.exports = (sequelize, DataType) => {
       defaultValue: DataType.UUIDV4,
       primaryKey: true
     },
-    locality_id: {
+    locality: {
       type: DataType.STRING,
     },
     year: {
