@@ -111,7 +111,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
     components: [],
     jurisdiction: '-'
   }};
-  const problems = ['No problem'];
+  let problems = ['No problem'];
   if (inn) {
     const sqlProblems = `SELECT problemname, problemid, jurisdiction FROM problems WHERE problemid IN (${inn})`;
     const queryProblems = {
@@ -737,7 +737,7 @@ router.post('/showcomponents', auth, async (req, res) => {
       components: [],
       jurisdiction: '-'
     }};
-    const problems = ['No problem'];
+    let problems = ['No problem'];
     if (inn) {
       const sqlProblems = `SELECT problemname, problemid, jurisdiction FROM problems WHERE problemid IN (${inn})`;
       const queryProblems = {
