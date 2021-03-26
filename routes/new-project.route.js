@@ -296,7 +296,7 @@ router.get('/components-by-problemid', auth, async (req, res) => {
         };
       });
       for (const component of COMPONENTS_TABLES) {
-        const componentSQL = `SELECT SELECT cartodb_id, type, jurisdiction, status, original_cost, problemid 
+        const componentSQL = `SELECT cartodb_id, type, jurisdiction, status, original_cost, problemid 
          FROM ${component} WHERE problemid = ${problemid} AND projectid is null`;
         logger.info(componentSQL);
         const componentQuery = {
@@ -320,7 +320,8 @@ router.get('/components-by-problemid', auth, async (req, res) => {
               logger.info('DO SELECT FOR ' + component);
               resolve(true);
             } else {
-              logger.info('FAIL TO SELECT ' + component);
+              logger.info('FAIL TO SELECT ' + component + ' ' + response.statusCode + ' ' +  JSON.stringify(response.body));
+              logger.error(response.statusCode + ' ' + response.body);
               resolve(false);
             }
           })
