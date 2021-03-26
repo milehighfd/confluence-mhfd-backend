@@ -3,11 +3,15 @@ const https = require('https');
 
 const { CARTO_TOKEN } = require('../config/config');
 
-const getDataByProjectIds = async (projectid, type) => {
+const getDataByProjectIds = async (projectid, type, isDev) => {
   let SQL = '';
   let URL = '';
   // objectid=${objectid} and
-  SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM mhfd_projects where  projectid=${projectid} `;
+  let table = 'mhfd_projects'
+  if (isDev) {
+    table = 'mhfd_projects_copy'
+  }
+  SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} where  projectid=${projectid} `;
   URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
   const data = await needle('get', URL, { json: true });
   if (data.statusCode === 200) {

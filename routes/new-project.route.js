@@ -7,8 +7,10 @@ const needle = require('needle');
 const attachmentService = require('../services/attachment.service');
 const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('../config/config');
 
-//const User = require('../models/user.model');
 const db = require('../config/db');
+const Board = db.board;
+const BoardProject = db.boardProject;
+//const User = require('../models/user.model');
 const User = db.user;
 const UserService = require('../services/user.service');
 const auth = require('../auth/auth');
@@ -780,9 +782,17 @@ router.post('/showcomponents', auth, async (req, res) => {
     });   
 });
 
-const setProjectID = async (res) => {
+const getNewProjectId = async () => {
+  const query = {
+    q: `SELECT GREATEST(max(projectid + 1), 800000) FROM ${CREATE_PROJECT_TABLE}`
+  }
+  const data = await needle('post', URL, query, { json: true });
+  return data.body.rows[0].greatest;
+}
+
+const setProjectID = async (res, projectId) => {
   const update = `UPDATE ${CREATE_PROJECT_TABLE}
-  SET projectid = (SELECT GREATEST(max(projectid + 1), 800000) FROM ${CREATE_PROJECT_TABLE})
+  SET projectid = ${projectId}
   WHERE projectid = -1`;
   const updateQuery = {
     q: update
@@ -825,10 +835,12 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(result);
-      const updateId = await setProjectID(res);
+      let projectId = await getNewProjectId();
+      const updateId = await setProjectID(res, projectId);
       if (!updateId) {
         return;
       }
+      await addProjectToBoard(jurisdiction, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
@@ -860,10 +872,12 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(result);
-      const updateId = await setProjectID(res);
+      let projectId = await getNewProjectId();
+      const updateId = await setProjectID(res, projectId);
       if (!updateId) {
         return;
       }
+      await addProjectToBoard(jurisdiction, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
@@ -897,10 +911,12 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(result);
-      const updateId = await setProjectID(res);
+      let projectId = await getNewProjectId();
+      const updateId = await setProjectID(res, projectId);
       if (!updateId) {
         return;
       }
+      await addProjectToBoard(jurisdiction, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
@@ -931,10 +947,12 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(result);
-      const updateId = await setProjectID(res);
+      let projectId = await getNewProjectId();
+      const updateId = await setProjectID(res, projectId);
       if (!updateId) {
         return;
       }
+      await addProjectToBoard(jurisdiction, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
@@ -953,7 +971,41 @@ const getJurisdictionByGeom = async (geom) => {
   return data.body.rows[0].jurisdiction;
 }
 
-router.post('/special', [auth, multer.array('files')], async (req, res) => {
+const addProjectToBoard = async (locality, projecttype, project_id) => {
+  let type = 'WORK_REQUEST';
+  let year = '2021';
+  let board = await Board.findOne({
+    where: {
+        type, year, locality, projecttype
+      }
+  });
+  if (!board) {
+    let newBoard = new Board({
+      type, year, locality, projecttype
+    });
+    await newBoard.save();
+    board = newBoard;
+  }
+  console.log('new BoardProject', {
+    board_id: board._id,
+    project_id: `${project_id}`,
+    column: 0,
+    position: 0
+  })
+  let boardProject = new BoardProject({
+    board_id: board._id,
+    project_id: project_id,
+    column: 0,
+    position: 0
+  })
+  boardProject.save().then(function (boardProjectSaved) {
+    console.log('saved', boardProjectSaved)
+  }).catch(function (err) {
+    console.log('error', err)
+  });
+}
+
+router.post('/special', [ multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom} = req.body;
   let jurisdiction = await getJurisdictionByGeom(geom);
@@ -972,10 +1024,13 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(JSON.stringify(result));
-      const updateId = await setProjectID(res);
+      let projectId = await getNewProjectId();
+
+      const updateId = await setProjectID(res, projectId);
       if (!updateId) {
         return;
       }
+      await addProjectToBoard(jurisdiction, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
