@@ -11,6 +11,10 @@ module.exports = (sequelize, DataType) => {
     year: {
       type: DataType.STRING,
     },
+    projecttype: {
+      type: DataType.ENUM,
+      values: ['Capital', 'Study', 'Maintenance', 'Acquisition', 'Special']
+    },
     type: {
       type: DataType.ENUM,
       values: ['WORK_REQUEST', 'WORK_PLAN']

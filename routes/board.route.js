@@ -14,10 +14,10 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     let body = req.body;
-    let { type, year, locality } = body;
+    let { type, year, locality, projecttype } = body;
     let board = await Board.findOne({
         where: {
-            type, year, locality
+            type, year, locality, projecttype
         }
     });
     if (board) {
@@ -35,17 +35,21 @@ router.post('/', async (req, res) => {
                 project
             }
         })
-        let projects = await Promise.all(projectsPromises);
+        let resolvedProjects = await Promise.all(projectsPromises);
+        let projects = resolvedProjects;
         res.send({
             board,
             projects
         });
     } else {
         let newBoard = new Board({
-            type, year, locality
+            type, year, locality, projecttype
         });
         newBoard.save();
-        res.send(newBoard);
+        res.send({
+            board: newBoard,
+            projects: []
+        });
     }
 });
 
