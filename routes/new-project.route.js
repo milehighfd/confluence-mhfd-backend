@@ -825,6 +825,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription} = req.body;
   const sponsor = user.organization;
   const status = 'Draft';
+  let jurisdiction = await getJurisdictionByGeom(geom);
   const projecttype = 'Capital';
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost, overheadcostdescription, additionalcost, additionalcostdescription)
    VALUES(ST_GeomFromGeoJSON('${geom}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}',
@@ -863,6 +864,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
   const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership} = req.body;
   const sponsor = user.organization;
   const status = 'Draft';
+  let jurisdiction = await getJurisdictionByGeom(geom);
   const projecttype = 'Maintenance';
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, frequency, sponsor, maintenanceeligibility, ownership)
    VALUES(ST_GeomFromGeoJSON('${geom}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${frequency}', '${sponsor}', '${maintenanceeligibility}', '${ownership}')`;
@@ -900,6 +902,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
   const sponsor = req.body.sponsor || user.organization;
   const status = 'Draft';
   const projecttype = 'Study';
+  let jurisdiction = await getJurisdictionByGeom(geom);
   const projectsubtype = 'Master Plan';
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, cosponsor, sponsor)
   (SELECT ST_Collect(the_geom) as the_geom,  '${projectname}' as projectname , '${description}' as description, '${servicearea}' as servicearea,
@@ -939,6 +942,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
   const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate} = req.body;
   const status = 'Draft';
   const projecttype = 'Acquisition';
+  let jurisdiction = await getJurisdictionByGeom(geom);
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, acquisitionprogress, acquisitionanticipateddate, sponsor)
    VALUES(ST_GeomFromGeoJSON('${geom}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${acquisitionprogress}', ${acquisitionanticipateddate}, '${sponsor}')`;
   const query = {
