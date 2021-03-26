@@ -14,7 +14,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
   SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} where  projectid=${projectid} `;
   URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
   const data = await needle('get', URL, { json: true });
-  if (data.statusCode === 200) {
+  if (data.statusCode === 200 && data.body.rows.length > 0) {
     const result = data.body.rows[0];
     let problems = [];
     let attachmentFinal = [];
@@ -94,7 +94,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
     };
   } else {
     console.log('getDataByProjectIds error', data.statusCode, data.body);
-    throw new Error('');
+    throw new Error('Project not found');
   }
 }
 

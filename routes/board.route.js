@@ -27,7 +27,12 @@ router.post('/', async (req, res) => {
             }
         });
         let projectsPromises = boardProjects.map(async (bp) => {
-            let project = await getDataByProjectIds(bp.project_id, null, true);
+            let project = null;
+            try {
+                project = await getDataByProjectIds(bp.project_id, null, true);
+            } catch(e) {
+                console.log('e', e);
+            }
             return {
                 project_id: bp.project_id,
                 column: bp.column,
