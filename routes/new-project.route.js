@@ -283,6 +283,7 @@ router.get('/components-by-problemid', auth, async (req, res) => {
   };
   const groups = {};
   const result = [];
+  const promises = [];
   try {
     const data = await needle('post', URL, query, { json: true });
     if (data.statusCode === 200) {
