@@ -122,8 +122,8 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
       if (data.statusCode === 200) {
         body = data.body;
         logger.info(JSON.stringify(body.rows));
-        const bodyProblems = body.rows(row => row.problemname);
-        for (const problem of body) {
+        const bodyProblems = body.rows.map(row => row.problemname);
+        for (const problem of body.rows) {
           groups[problem.problemid] = {
             problemname: problem.problemname,
             jurisdiction: problem.jurisdiction,
