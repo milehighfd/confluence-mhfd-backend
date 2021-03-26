@@ -109,11 +109,12 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
   const groups = {'-1': {
     problemname: 'No name',
     components: [],
-    jurisdiction: '-'
+    jurisdiction: '-',
+    solutionstatus: 0
   }};
   let problems = ['No problem'];
   if (inn) {
-    const sqlProblems = `SELECT problemname, problemid, jurisdiction FROM problems WHERE problemid IN (${inn})`;
+    const sqlProblems = `SELECT problemname, problemid, jurisdiction, solutionstatus FROM problems WHERE problemid IN (${inn})`;
     const queryProblems = {
       q: sqlProblems
     }
@@ -129,6 +130,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
           groups[problem.problemid] = {
             problemname: problem.problemname,
             jurisdiction: problem.jurisdiction,
+            solutionstatus: problem.solutionstatus,
             components: []
           };
         }
@@ -279,7 +281,7 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
 
 router.get('/components-by-problemid', auth, async (req, res) => {
   const problemid = req.query.problemid;
-  const sql = `SELECT problemname, problemid, jurisdiction FROM problems WHERE problemid = ${problemid}`;
+  const sql = `SELECT problemname, problemid, jurisdiction, solutionstatus FROM problems WHERE problemid = ${problemid}`;
   const query = {
     q: sql
   };
@@ -294,6 +296,7 @@ router.get('/components-by-problemid', auth, async (req, res) => {
         groups[problem.problemid] = {
           problemname: problem.problemname,
           jurisdiction: problem.jurisdiction,
+          solutionstatus: problem.solutionstatus,
           components: []
         };
       });
@@ -735,11 +738,12 @@ router.post('/showcomponents', auth, async (req, res) => {
     const groups = {'-1': {
       problemname: 'No name',
       components: [],
-      jurisdiction: '-'
+      jurisdiction: '-',
+      solutionstatus: '-'
     }};
     let problems = ['No problem'];
     if (inn) {
-      const sqlProblems = `SELECT problemname, problemid, jurisdiction FROM problems WHERE problemid IN (${inn})`;
+      const sqlProblems = `SELECT problemname, problemid, jurisdiction, solutionstatus FROM problems WHERE problemid IN (${inn})`;
       const queryProblems = {
         q: sqlProblems
       }
@@ -755,6 +759,7 @@ router.post('/showcomponents', auth, async (req, res) => {
             groups[problem.problemid] = {
               problemname: problem.problemname,
               jurisdiction: problem.jurisdiction,
+              solutionstatus: problem.solutionstatus,
               components: []
             };
           }
