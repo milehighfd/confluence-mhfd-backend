@@ -946,13 +946,21 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
   res.send(result);
 });
 
+const getJurisdictionByGeom = async (geom) => {
+  let sql = `SELECT jurisdiction FROM "denver-mile-high-admin".jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
+  const query = { q: sql };
+  const data = await needle('post', URL, query, { json: true });
+  return data.body.rows[0].jurisdiction;
+}
+
 router.post('/special', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom} = req.body;
+  let jurisdiction = await getJurisdictionByGeom(geom);
   const status = 'Draft';
   const projecttype = 'Special';
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, projectid) 
-  VALUES(ST_GeomFromGeoJSON('${geom}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', -1)`;
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectid) 
+  VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', -1)`;
   const query = {
     q: insertQuery
   };
