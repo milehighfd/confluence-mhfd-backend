@@ -943,8 +943,8 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
   const status = 'Draft';
   const projecttype = 'Acquisition';
   let jurisdiction = await getJurisdictionByGeom(geom);
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, acquisitionprogress, acquisitionanticipateddate, sponsor)
-   VALUES(ST_GeomFromGeoJSON('${geom}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${acquisitionprogress}', ${acquisitionanticipateddate}, '${sponsor}')`;
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, acquisitionprogress, acquisitionanticipateddate, sponsor, projectid)
+   VALUES(ST_GeomFromGeoJSON('${geom}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${acquisitionprogress}', ${acquisitionanticipateddate}, '${sponsor}', ${-1})`;
   const query = {
     q: insertQuery
   };
