@@ -898,16 +898,16 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
 
 router.post('/study', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, ids, cosponsor} = req.body;
+  const {projectname, description, servicearea, county, ids, cosponsor, geom} = req.body;
   const sponsor = req.body.sponsor || user.organization;
   const status = 'Draft';
   const projecttype = 'Study';
   let jurisdiction = await getJurisdictionByGeom(geom);
   const projectsubtype = 'Master Plan';
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, cosponsor, sponsor)
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, cosponsor, sponsor, projectid)
   (SELECT ST_Collect(the_geom) as the_geom,  '${projectname}' as projectname , '${description}' as description, '${servicearea}' as servicearea,
   '${county}' as county, '${status}' as status, '${projecttype}' as projecttype, '${projectsubtype}' as projectsubtype, '${cosponsor}' as cosponsor,
-   '${sponsor}' as sponsor FROM streams WHERE cartodb_id IN(${ids.join(',')}))`;
+   '${sponsor}' as sponsor, ${-1} as projectid FROM streams WHERE cartodb_id IN(${ids}))`;
   const query = {
     q: insertQuery
   };
@@ -918,7 +918,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
-      logger.info(result);
+      logger.info(JSON.stringify(result));
       let projectId = await getNewProjectId();
       const updateId = await setProjectID(res, projectId);
       if (!updateId) {
