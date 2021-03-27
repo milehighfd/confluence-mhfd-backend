@@ -866,8 +866,8 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
   const status = 'Draft';
   let jurisdiction = await getJurisdictionByGeom(geom);
   const projecttype = 'Maintenance';
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, frequency, sponsor, maintenanceeligibility, ownership)
-   VALUES(ST_GeomFromGeoJSON('${geom}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${frequency}', '${sponsor}', '${maintenanceeligibility}', '${ownership}')`;
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectname, description, servicearea, county, status, projecttype, projectsubtype, frequency, sponsor, maintenanceeligibility, ownership, projectid)
+   VALUES(ST_GeomFromGeoJSON('${geom}'), '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${frequency}', '${sponsor}', '${maintenanceeligibility}', '${ownership}', ${-1})`;
   const query = {
     q: insertQuery
   };
@@ -878,7 +878,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
-      logger.info(result);
+      logger.info(JSON.stringify(result));
       let projectId = await getNewProjectId();
       const updateId = await setProjectID(res, projectId);
       if (!updateId) {
