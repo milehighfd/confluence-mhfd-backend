@@ -1,6 +1,8 @@
 const needle = require('needle');
 const https = require('https');
 
+const attachmentService = require('../services/attachment.service');
+
 const { CARTO_TOKEN } = require('../config/config');
 
 const getDataByProjectIds = async (projectid, type, isDev) => {
