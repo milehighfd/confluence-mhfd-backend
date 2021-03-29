@@ -355,7 +355,7 @@ router.get('/components-by-problemid', auth, async (req, res) => {
 
 router.post('/streams-data', auth, async (req, res) => {
   const geom = req.body.geom;
-  const sql = `SELECT  j.jurisdiction, s.str_name, ST_length(ST_intersection(s.the_geom, j.the_geom)::geography) as length  FROM streams s, jurisidictions j 
+  const sql = `SELECT  j.jurisdiction, s.str_name, s.cartodb_id, ST_length(ST_intersection(s.the_geom, j.the_geom)::geography) as length  FROM streams s, jurisidictions j 
   where ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), s.the_geom, 0) 
   and ST_DWithin(s.the_geom, j.the_geom, 0) `;
   const query = {
@@ -375,6 +375,7 @@ router.post('/streams-data', auth, async (req, res) => {
           answer[row.str_name].push({
             jurisdiction: row.jurisdiction,
             length: row.length,
+            cartodb_id: row.cartodb_id,
             drainage: 0
           });
         }
