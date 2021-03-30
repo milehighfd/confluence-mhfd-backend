@@ -1,10 +1,5 @@
 module.exports = (sequelize, DataType) => {
-  const WorkRequest = sequelize.define('workRequest', {
-    _id: {
-      type: DataType.UUID,
-      defaultValue: DataType.UUIDV4,
-      primaryKey: true
-    },
+  const Locality = sequelize.define('locality', {
     name: {
       type: DataType.STRING,
       allowNull: false
@@ -14,5 +9,5 @@ module.exports = (sequelize, DataType) => {
       values: ['JURISDICTION', 'COUNTY_OR_SERVICE_AREA']
     }
   });
-  return WorkRequest;
+  return Locality;
 }

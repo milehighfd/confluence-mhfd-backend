@@ -22,6 +22,7 @@ const zoomareaRouter = require('./routes/zoomarea.route');
 const favoriteRouter = require('./routes/favorite.route');
 const newProjectRouter = require('./routes/new-project.route');
 const boardRouter = require('./routes/board.route');
+const localityRouter = require('./routes/locality.route');
 const db = require('./config/db');
 db.sequelize.sync();
 const cacheTime = 1000 * 60 * 60;
@@ -64,5 +65,6 @@ app.use('/zoomarea', zoomareaRouter);
 app.use('/favorites', favoriteRouter);
 app.use('/create', newProjectRouter);
 app.use('/board', boardRouter);
+app.use('/locality', localityRouter);
 
 module.exports = server;
