@@ -23,8 +23,7 @@ const getData = async (req, res, next) => {
         where: {
           name: req.user.organization
         }
-      })
-      organization
+      });
       res.locals.data = localities;
     }
   }
