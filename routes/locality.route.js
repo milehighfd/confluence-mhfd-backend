@@ -6,32 +6,33 @@ const router = express.Router();
 const db = require('../config/db');
 const Locality = db.locality; 
 
-const auth = require('../auth/auth');
+const auth2 = require('../auth/auth2');
 
 const getData = async (req, res, next) => {
-  if(req.user.designation === ROLES.MFHD_STAFF) {
-    let localities = await Locality.findAll({
-      where: {
-        type: 'JURISDICTION'
-      }
-    })
-    res.locals.data = localities;
-    next();
-  } else if (req.user.designation === ROLES.GOVERNMENT_STAFF) {
-    let localities = await Locality.findAll({
-      where: {
-        name: req.user.organization
-      }
-    })
-    organization
-    res.locals.data = localities;
-    next();
-  } else {
-    return res.status(403).send({ error: `You're not allowed to do that` });
+  res.locals.data = [];
+  console.log('req.user', req.user);
+  if (req.user) {
+    if(req.user.designation === ROLES.MFHD_STAFF) {
+      let localities = await Locality.findAll({
+        where: {
+          type: 'JURISDICTION'
+        }
+      })
+      res.locals.data = localities;
+    } else if (req.user.designation === ROLES.GOVERNMENT_STAFF) {
+      let localities = await Locality.findAll({
+        where: {
+          name: req.user.organization
+        }
+      })
+      organization
+      res.locals.data = localities;
+    }
   }
+  next();
 }
 
-router.get('/', [auth, getData],  (req, res) => {
+router.get('/', [auth2, getData],  (req, res) => {
     res.send({
         localities: res.locals.data
     })
