@@ -10,7 +10,6 @@ const auth2 = require('../auth/auth2');
 
 const getData = async (req, res, next) => {
   res.locals.data = [];
-  console.log('req.user', req.user);
   if (req.user) {
     if(req.user.designation === ROLES.MFHD_STAFF) {
       let localities = await Locality.findAll({
