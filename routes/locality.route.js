@@ -8,13 +8,23 @@ const Locality = db.locality;
 
 const auth = require('../auth/auth');
 
-const getData = (req, res, next) => {
+const getData = async (req, res, next) => {
   if(req.user.designation === ROLES.MFHD_STAFF) {
-
-    res.locals.data = ['ROLES.MFHD_STAFF']
+    let localities = await Locality.findAll({
+      where: {
+        type: 'JURISDICTION'
+      }
+    })
+    res.locals.data = localities;
     next();
   } else if (req.user.designation === ROLES.GOVERNMENT_STAFF) {
-    res.locals.data = ['ROLES.GOVERNMENT_STAFF']
+    let localities = await Locality.findAll({
+      where: {
+        name: req.user.organization
+      }
+    })
+    organization
+    res.locals.data = localities;
     next();
   } else {
     return res.status(403).send({ error: `You're not allowed to do that` });
