@@ -33,12 +33,17 @@ router.post('/', async (req, res) => {
             } catch(e) {
                 console.log('e', e);
             }
-            return {
+            let newObject = {
                 project_id: bp.project_id,
-                column: bp.column,
-                position: bp.position,
-                project
+                projectData: project,
             }
+            for (var i = 0 ; i <= 5; i ++) {
+                newObject[`position${i}`] = bp[`position${i}`];
+                if (i > 0) {
+                    newObject[`req${i}`] = bp[`req${i}`];
+                }
+            }
+            return newObject;
         })
         let resolvedProjects = await Promise.all(projectsPromises);
         let projects = resolvedProjects;

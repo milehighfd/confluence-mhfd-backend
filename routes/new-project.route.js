@@ -996,17 +996,10 @@ const addProjectToBoard = async (locality, projecttype, project_id) => {
     await newBoard.save();
     board = newBoard;
   }
-  console.log('new BoardProject', {
-    board_id: board._id,
-    project_id: `${project_id}`,
-    column: 0,
-    position: 0
-  })
   let boardProject = new BoardProject({
     board_id: board._id,
     project_id: project_id,
-    column: 0,
-    position: 0
+    position0: 0
   })
   boardProject.save().then(function (boardProjectSaved) {
     console.log('saved', boardProjectSaved)
