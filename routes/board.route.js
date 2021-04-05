@@ -1,10 +1,18 @@
 const express = require('express');
+const needle = require('needle');
 const router = express.Router();
+
+
+const auth = require('../auth/auth');
+const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('../config/config');
+const logger = require('../config/logger');
+
 
 const db = require('../config/db');
 const { getDataByProjectIds } = require('./mapgallery.service');
 const Board = db.board; 
 const BoardProject = db.boardProject;
+const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
 router.get('/', async (req, res) => {
     let boards = await Board.findAll();
@@ -73,6 +81,28 @@ router.get('/:type/:year/', async (req, res) => {
     });
     console.log(`boards by type ${type} and year ${year}`, boards.lenght);
     res.send(boards);
-})
+});
+
+router.delete('/project', [auth], async (req, res) => {
+    let { projectid } = req.body;
+    const sql = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
+    const query = {
+        q: sql
+    };
+    try {
+        const data = await needle('post', URL, query, { json: true });
+        //console.log('STATUS', data.statusCode);
+        if (data.statusCode === 200) {
+          result = data.body;
+          res.send(result);
+        } else {
+          logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+          return res.status(data.statusCode).send(data.body);
+        }
+     } catch (error) {
+        logger.error(error);
+        res.status(500).send(error);
+     };
+});
 
 module.exports = router;
