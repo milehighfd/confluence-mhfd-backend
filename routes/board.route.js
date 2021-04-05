@@ -83,8 +83,9 @@ router.get('/:type/:year/', async (req, res) => {
     res.send(boards);
 });
 
-router.delete('/project', [auth], async (req, res) => {
-    let { projectid } = req.body;
+router.delete('/project/:projectid', [auth], async (req, res) => {
+    //TODO Pachon add logic to delete from board
+    const { projectid } = req.params;
     const sql = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
     const query = {
         q: sql
