@@ -71,17 +71,7 @@ router.post('/', async (req, res) => {
     }
 });
 
-router.get('/:type/:year/', async (req, res) => {
-    let { type, year } = req.params;
-    let boards = await Board.findAll({
-        where: {
-            type,
-            year
-        }
-    });
-    console.log(`boards by type ${type} and year ${year}`, boards.lenght);
-    res.send(boards);
-});
+
 
 router.delete('/project/:projectid', [auth], async (req, res) => {
     //TODO Pachon add logic to delete from board
@@ -104,6 +94,41 @@ router.delete('/project/:projectid', [auth], async (req, res) => {
         logger.error(error);
         res.status(500).send(error);
      };
+});
+
+router.get('/bbox/:projectid', [auth], async (req, res) => {
+    const { projectid } = req.params;
+    const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as bbox FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
+    const query = {
+        q: sql
+    };
+    logger.info(sql);
+    try {
+        const data = await needle('post', URL, query, { json: true });
+        //console.log('STATUS', data.statusCode);
+        if (data.statusCode === 200) {
+          result = data.body;
+          res.send(result.rows[0]);
+        } else {
+          logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+          return res.status(data.statusCode).send(data.body);
+        }
+     } catch (error) {
+        logger.error(error);
+        res.status(500).send(error);
+     };
+});
+
+router.get('/:type/:year/', async (req, res) => {
+    let { type, year } = req.params;
+    let boards = await Board.findAll({
+        where: {
+            type,
+            year
+        }
+    });
+    console.log(`boards by type ${type} and year ${year}`, boards.lenght);
+    res.send(boards);
 });
 
 module.exports = router;
