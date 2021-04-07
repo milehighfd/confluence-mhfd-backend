@@ -96,7 +96,7 @@ router.delete('/project/:projectid', [auth], async (req, res) => {
      };
 });
 
-router.get('/bbox/:projectid', [auth], async (req, res) => {
+router.get('/bbox/:projectid', async (req, res) => {
     const { projectid } = req.params;
     const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as bbox FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
     const query = {
