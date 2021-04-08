@@ -34,6 +34,12 @@ module.exports = (sequelize, DataType) => {
     reqmanager5: {
       type: DataType.DOUBLE,
     },
+    status: {
+      type: DataType.STRING,
+    },
+    comment: {
+      type: DataType.STRING,
+    },
   });
   return WorkRequest;
 }
