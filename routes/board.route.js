@@ -54,6 +54,7 @@ router.post('/', async (req, res) => {
             return newObject;
         })
         let resolvedProjects = await Promise.all(projectsPromises);
+        resolvedProjects = resolvedProjects.filter(bp => bp.projectData != null);
         let projects = resolvedProjects;
         res.send({
             board,
