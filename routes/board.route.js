@@ -72,7 +72,28 @@ router.post('/', async (req, res) => {
     }
 });
 
+router.put('/:boardId', [auth], async (req, res) => {
+    console.log('here')
+    const { boardId } = req.params;
+    console.log('boardId', boardId)
+    const { status, comment } = req.body;
+    console.log('status, comment', status, comment)
+    let board = await Board.findOne({
+        where: {
+            _id: boardId
+        }
+    })
+    if (board) {
+        await board.update({
+            status,
+            comment
+        })
+        res.status(200).send({status: 'updated'})
+    } else {
+        res.status(404).send({error: 'not found'})
+    }
 
+})
 
 router.delete('/project/:projectid', [auth], async (req, res) => {
     const { projectid } = req.params;
