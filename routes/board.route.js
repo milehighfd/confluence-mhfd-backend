@@ -74,8 +74,17 @@ router.post('/', async (req, res) => {
 
 
 router.delete('/project/:projectid', [auth], async (req, res) => {
-    //TODO Pachon add logic to delete from board
     const { projectid } = req.params;
+
+    let boardProjects = await BoardProject.findAll({
+        where: {
+            project_id: projectid
+        }
+    });
+    boardProjects.forEach((bp) => {
+        bp.destroy();
+    })
+
     const sql = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
     const query = {
         q: sql
