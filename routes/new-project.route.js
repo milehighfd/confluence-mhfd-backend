@@ -933,6 +933,47 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
       }
   } catch (error) {
     logger.error(error);
+    return res.status(500).send(eroor);
+  };
+  res.send(result);
+});
+
+router.post('/study/:projectid', [auth, multer.array('files')], async (req, res) => {
+  const user = req.user;
+  const projectid = req.params.projectid;
+  const {projectname, description, servicearea, county, ids, cosponsor, geom} = req.body;
+  const sponsor = req.body.sponsor || user.organization;
+  const status = 'Draft';
+  const projecttype = 'Study';
+  let jurisdiction = await getJurisdictionByGeom(geom);
+  const projectsubtype = 'Master Plan';
+  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET
+  the_geom = (SELECT ST_Collect(the_geom) FROM streams WHERE cartodb_id IN(${ids})), jurisdiction = '${jurisdiction}',
+   projectname = '${projectname}', description = '${description}',
+    servicearea = '${servicearea}', county = '${county}',
+     status = '${status}', projecttype = '${projecttype}', 
+     projectsubtype = '${projectsubtype}', cosponsor = '${cosponsor}',
+      sponsor = '${sponsor}' WHERE projectid = ${projectid}
+  `;
+  const query = {
+    q: updateQuery
+  };
+  console.log('my query ' , query)
+  let result = {};
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    //console.log('STATUS', data.statusCode);
+    if (data.statusCode === 200) {
+      result = data.body;
+      logger.info(JSON.stringify(result));
+      await attachmentService.uploadFiles(user, req.files);
+    } else {
+       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+       return res.status(data.statusCode).send(data.body);
+      }
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).send(eroor);
   };
   res.send(result);
 });
