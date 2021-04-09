@@ -949,7 +949,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
   const query = {
     q: insertQuery
   };
-  console.log('my query ' , query)
+  logger.info('my query ' + query);
   let result = {};
   try {
     const data = await needle('post', URL, query, { json: true });
@@ -970,6 +970,46 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
     }
   } catch (error) {
     logger.error(error);
+    return res.status(500).send(error);
+  };
+  res.send(result);
+});
+
+router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req, res) => {
+  const user = req.user;
+  const projectid = req.params.projectid;
+  const sponsor = user.organization;
+  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate} = req.body;
+  const status = 'Draft';
+  const projecttype = 'Acquisition';
+  let jurisdiction = await getJurisdictionByGeom(geom);
+  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} 
+  SET the_geom = VALUES(ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}',
+   projectname = '${projectname}', description = '${description}', 
+   servicearea = '${servicearea}', county = '${county}', status = '${status}', 
+   projecttype = '${projecttype}', acquisitionprogress = '${acquisitionprogress}', 
+   acquisitionanticipateddate = ${acquisitionanticipateddate}, sponsor = '${sponsor}'
+   WHERE  projectid = ${projectid}
+   `;
+  const query = {
+    q: updateQuery
+  };
+  logger.info('my query ' + query);
+  let result = {};
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    //console.log('STATUS', data.statusCode);
+    if (data.statusCode === 200) {
+      result = data.body;
+      logger.info(result);
+      await attachmentService.uploadFiles(user, req.files);
+    } else {
+      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      return res.status(data.statusCode).send(data.body);
+    }
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).send(error);
   };
   res.send(result);
 });
