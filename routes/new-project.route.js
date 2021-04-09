@@ -1048,7 +1048,7 @@ const addProjectToBoard = async (locality, projecttype, project_id) => {
   });
 }
 
-router.post('/special', [ multer.array('files')], async (req, res) => {
+router.post('/special', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom} = req.body;
   let jurisdiction = await getJurisdictionByGeom(geom);
@@ -1086,7 +1086,7 @@ router.post('/special', [ multer.array('files')], async (req, res) => {
   res.send(result);
 });
 
-router.post('/special/:projectid', [ multer.array('files')], async (req, res) => {
+router.post('/special/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const projectid = req.params.projectid;
   const {projectname, description, servicearea, county, geom} = req.body;
