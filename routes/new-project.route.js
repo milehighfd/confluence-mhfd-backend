@@ -1118,7 +1118,7 @@ router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req
   const projecttype = 'Acquisition';
   let jurisdiction = await getJurisdictionByGeom(geom);
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} 
-  SET the_geom = VALUES(ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}',
+  SET the_geom = ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}',
    projectname = '${projectname}', description = '${description}', 
    servicearea = '${servicearea}', county = '${county}', status = '${status}', 
    projecttype = '${projecttype}', acquisitionprogress = '${acquisitionprogress}', 
@@ -1129,7 +1129,6 @@ router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req
   const query = {
     q: updateQuery
   };
-  logger.info('my query ' + query);
   let result = {};
   try {
     const data = await needle('post', URL, query, { json: true });
