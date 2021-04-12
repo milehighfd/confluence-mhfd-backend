@@ -1125,6 +1125,7 @@ router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req
    acquisitionanticipateddate = ${acquisitionanticipateddate}, sponsor = '${sponsor}'
    WHERE  projectid = ${projectid}
    `;
+  logger.info('THE QUERY IS ' + updateQuery);
   const query = {
     q: updateQuery
   };
