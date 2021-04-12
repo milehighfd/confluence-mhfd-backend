@@ -859,6 +859,44 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
   res.send(result);
 });
 
+router.post('/capital/:projectid', [auth, multer.array('files')], async (req, res) => {
+  const user = req.user;
+  const {projectname, description, servicearea, county, geom, 
+    overheadcost, overheadcostdescription, additionalcost, additionalcostdescription} = req.body;
+  const sponsor = user.organization;
+  const projectid = req.params.projectid;
+  const status = 'Draft';
+  let jurisdiction = await getJurisdictionByGeom(geom);
+  const projecttype = 'Capital';
+  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = VALUES(ST_GeomFromGeoJSON('${geom}'),
+   jurisdiction = '${jurisdiction}', projectname = '${projectname}', 
+   description = '${description}', servicearea = '${servicearea}', county = '${county}',
+    status = '${status}', projecttype = '${projecttype}', sponsor = '${sponsor}', 
+    overheadcost = '${overheadcost}', overheadcostdescription = '${overheadcostdescription}', 
+    additionalcost = '${additionalcost}', additionalcostdescription = '${additionalcostdescription}'
+    WHERE  projectid = ${projectid}`;
+  const query = {
+    q: updateQuery
+  };
+  console.log('my query ' , query)
+  let result = {};
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    //console.log('STATUS', data.statusCode);
+    if (data.statusCode === 200) {
+      result = data.body;
+      logger.info(JSON.stringify(result));
+      await attachmentService.uploadFiles(user, req.files);
+    } else {
+       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+       return res.status(data.statusCode).send(data.body);
+    }
+  } catch (error) {
+    logger.error(error);
+  };
+  res.send(result);
+});
+
 router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   console.log('the user ', user);
@@ -886,6 +924,43 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
         return;
       }
       await addProjectToBoard(jurisdiction, projecttype, projectId);
+      await attachmentService.uploadFiles(user, req.files);
+    } else {
+       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+       return res.status(data.statusCode).send(data.body);
+    }
+  } catch (error) {
+    logger.error(error);
+  };
+  res.send(result);
+});
+
+router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req, res) => {
+  const user = req.user;
+  console.log('the user ', user);
+  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership} = req.body;
+  const sponsor = user.organization;
+  const projectid = req.params.projectid;
+  const status = 'Draft';
+  let jurisdiction = await getJurisdictionByGeom(geom);
+  const projecttype = 'Maintenance';
+  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = VALUES(ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}',
+   projectname = '${projectname}', description = '${description}', servicearea = '${servicearea}',
+    county = '${county}', status = '${status}', projecttype = '${projecttype}',
+     projectsubtype = '${projectsubtype}', frequency = '${frequency}', 
+     sponsor = '${sponsor}', maintenanceeligibility = '${maintenanceeligibility}, 
+     ownership = '${ownership}' WHERE projectid ${projectid}`;
+  const query = {
+    q: updateQuery
+  };
+  console.log('my query ' , query)
+  let result = {};
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    //console.log('STATUS', data.statusCode);
+    if (data.statusCode === 200) {
+      result = data.body;
+      logger.info(JSON.stringify(result));
       await attachmentService.uploadFiles(user, req.files);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
