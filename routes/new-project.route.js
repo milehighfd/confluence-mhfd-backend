@@ -923,7 +923,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(jurisdiction, projecttype, projectId);
+      await addProjectToBoard(jurisdiction, projecttype, projectId, projectsubtype);
       await attachmentService.uploadFiles(user, req.files);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
@@ -1137,7 +1137,7 @@ const getJurisdictionByGeom = async (geom) => {
   return data.body.rows[0].jurisdiction;
 }
 
-const addProjectToBoard = async (locality, projecttype, project_id) => {
+const addProjectToBoard = async (locality, projecttype, project_id, projectsubtype) => {
   let type = 'WORK_REQUEST';
   let year = '2021';
   let board = await Board.findOne({
@@ -1152,11 +1152,24 @@ const addProjectToBoard = async (locality, projecttype, project_id) => {
     await newBoard.save();
     board = newBoard;
   }
-  let boardProject = new BoardProject({
+  let boardProjectObject = {
     board_id: board._id,
-    project_id: project_id,
-    position0: 0
-  })
+    project_id: project_id
+  }
+  if (projecttype === 'Maintenance') {
+    let subtypes = ['Debris Management', 'Vegetation Management', 'Sediment Removal', 'Minor Repairs', 'Restoration'];
+    let index = subtypes.indexOf(projectsubtype);
+    if (index === -1) {
+      boardProjectObject.position0 = 0;
+    } else {
+      boardProjectObject[`position${index + 1}`] = 0;
+    }
+  } else {
+    boardProjectObject.position0 = 0;
+  }
+
+  let boardProject = new BoardProject(boardProjectObject);
+
   boardProject.save().then(function (boardProjectSaved) {
     console.log('saved', boardProjectSaved)
   }).catch(function (err) {
