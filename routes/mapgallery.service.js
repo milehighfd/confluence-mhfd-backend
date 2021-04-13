@@ -93,7 +93,9 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
       attachments: attachmentFinal,
       problems: problems,
       components: components,
-      coordinates: coordinates
+      coordinates: coordinates,
+      acquisitionprogress: result.acquisitionprogress,
+      acquisitionanticipateddate: result.acquisitionprogress,
     };
   } else {
     console.log('getDataByProjectIds error', data.statusCode, data.body);
