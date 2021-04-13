@@ -22,7 +22,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
     let attachmentFinal = [];
     let components = [];
     let coordinates = [];
-
+    let geometry = [];
     if (result.projectid !== null && result.projectid !== undefined && result.projectid) {
       problems = await getProblemByProjectId(result.projectid, 'problemname', 'asc');
       components = await getCoordinatesOfComponents(result.projectid, 'projectid');
@@ -30,6 +30,9 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
 
     if (result.attachments) {
       attachmentFinal = await attachmentService.findByName(result.attachments);
+    }
+    if (JSON.parse(result.the_geom).coordinates) {
+      geometry = JSON.parse(result.the_geom).coordinates;
     }
     result.the_geom = result.the_geom2;
     if (JSON.parse(result.the_geom).coordinates) {
@@ -94,6 +97,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
       problems: problems,
       components: components,
       coordinates: coordinates,
+      geometry: geometry,
       acquisitionprogress: result.acquisitionprogress,
       acquisitionanticipateddate: result.acquisitionprogress,
     };
