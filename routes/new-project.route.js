@@ -12,6 +12,7 @@ const Board = db.board;
 const BoardProject = db.boardProject;
 //const User = require('../models/user.model');
 const User = db.user;
+const IndependentComponent = db.independentComponent;
 const UserService = require('../services/user.service');
 const auth = require('../auth/auth');
 const { validator } = require('../utils/utils');
@@ -841,7 +842,8 @@ const setProjectID = async (res, projectId) => {
 router.post('/capital', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
-    overheadcost, overheadcostdescription, additionalcost, additionalcostdescription} = req.body;
+    overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
+    independetComponent} = req.body;
   const sponsor = user.organization;
   const status = 'Draft';
   let jurisdiction = await getJurisdictionByGeom(geom);
@@ -867,6 +869,10 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
       }
       await addProjectToBoard(jurisdiction, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files);
+      for (const independent of JSON.parse(independetComponent)) {
+        const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId};
+        IndependentComponent.save(element);
+      }
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);

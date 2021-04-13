@@ -29,6 +29,7 @@ db.favorites = require('../models/favorites.model.js')(sequelize, Sequelize);
 db.board = require('../models/board.model.js')(sequelize, Sequelize);
 db.locality = require('../models/locality.model.js')(sequelize, Sequelize);
 db.boardProject = require('../models/boardProject.model.js')(sequelize, Sequelize);
+db.independentComponent = require('../models/independentComponent.model.js')(sequelize, Sequelize);
 
 db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
