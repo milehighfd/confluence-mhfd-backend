@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataType) => {
-  const WorkRequest = sequelize.define('board', {
+  const board = sequelize.define('board', {
     _id: {
       type: DataType.UUID,
       defaultValue: DataType.UUIDV4,
@@ -41,5 +41,5 @@ module.exports = (sequelize, DataType) => {
       type: DataType.STRING,
     },
   });
-  return WorkRequest;
+  return board;
 }
