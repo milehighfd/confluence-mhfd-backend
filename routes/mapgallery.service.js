@@ -5,6 +5,7 @@ const attachmentService = require('../services/attachment.service');
 
 const { CARTO_TOKEN } = require('../config/config');
 
+// in the future change isDev for is board project , don't delete the variable please @pachon
 const getDataByProjectIds = async (projectid, type, isDev) => {
   let SQL = '';
   let URL = '';
@@ -31,6 +32,10 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
     if (result.attachments) {
       attachmentFinal = await attachmentService.findByName(result.attachments);
     }
+    let createdCoordinates = {};
+    if (isDev) {
+      createdCoordinates = result.the_geom;
+    }
     result.the_geom = result.the_geom2;
     if (JSON.parse(result.the_geom).coordinates) {
       coordinates = JSON.parse(result.the_geom).coordinates;
@@ -38,6 +43,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
     return {
       cartodb_id: result.cartodb_id,
       objectid: result.objectid,
+      createdCoordinates: createdCoordinates,
       projectid: result.projectid,
       onbaseid: result.onbaseid,
       projectname: result.projectname,
