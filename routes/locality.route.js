@@ -30,10 +30,48 @@ const getData = async (req, res, next) => {
   next();
 }
 
+const getData2 = async (req, res, next) => {
+  const { type } = req.params;
+  res.locals.data = [];
+  if (req.user) {
+    if (type === 'WORK_REQUEST') {
+      if(req.user.designation === ROLES.MFHD_STAFF) {
+        let localities = await Locality.findAll({
+          where: {
+            type: 'JURISDICTION'
+          }
+        })
+        res.locals.data = localities;
+      } else if (req.user.designation === ROLES.GOVERNMENT_STAFF) {
+        let localities = await Locality.findAll({
+          where: {
+            name: req.user.organization
+          }
+        });
+        res.locals.data = localities;
+      }
+    } else if (type === 'WORK_PLAN') {
+      let localities = await Locality.findAll({
+        where: {
+          type: 'COUNTY_OR_SERVICE_AREA'
+        }
+      })
+      res.locals.data = localities;
+    }
+  }
+  next();
+}
+
 router.get('/', [auth2, getData],  (req, res) => {
     res.send({
         localities: res.locals.data
     })
+})
+
+router.get('/:type', [auth2, getData2],  (req, res) => {
+  res.send({
+      localities: res.locals.data
+  })
 })
 
 module.exports = router;
