@@ -31,13 +31,16 @@ db.locality = require('../models/locality.model.js')(sequelize, Sequelize);
 db.boardProject = require('../models/boardProject.model.js')(sequelize, Sequelize);
 db.independentComponent = require('../models/independentComponent.model.js')(sequelize, Sequelize);
 db.boardLocality = require('../models/boardLocality.model.js')(sequelize, Sequelize);
+db.note = require('../models/note.model.js')(sequelize, Sequelize);
 
 db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
+db.user.hasMany(db.note, {foreignKey: 'user_id'});
 db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
 db.favorites.belongsTo(db.user, {foreignKey: 'user_id'});
 db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
 db.attachment.belongsTo(db.user, {foreignKey: 'user_id'});
+db.note.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.components.belongsTo(db.projects);
 // db.projects.hasMany(db.components);
 
