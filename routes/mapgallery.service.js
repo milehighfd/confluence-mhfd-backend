@@ -14,7 +14,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
   if (isDev) {
     table = 'mhfd_projects_copy'
   }
-  SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom2, ST_AsGeoJSON(the_geom) as geom3 FROM ${table} where  projectid=${projectid} `;
+  SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom2, ST_AsGeoJSON(the_geom) as the_geom3 FROM ${table} where  projectid=${projectid} `;
   URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
   const data = await needle('get', URL, { json: true });
   if (data.statusCode === 200 && data.body.rows.length > 0) {
