@@ -1171,7 +1171,7 @@ const addProjectToBoard = async (locality, projecttype, project_id, projectsubty
   });
   if (!board) {
     let newBoard = new Board({
-      type, year, locality, projecttype
+      type, year, locality, projecttype, status: 'Under Review'
     });
     await newBoard.save();
     board = newBoard;
