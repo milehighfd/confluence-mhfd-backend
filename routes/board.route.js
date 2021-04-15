@@ -12,6 +12,7 @@ const db = require('../config/db');
 const { getDataByProjectIds } = require('./mapgallery.service');
 const Board = db.board; 
 const BoardProject = db.boardProject;
+const BoardLocality = db.boardLocality;
 const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
 router.get('/', async (req, res) => {
@@ -62,7 +63,7 @@ router.post('/', async (req, res) => {
         });
     } else {
         let newBoard = new Board({
-            type, year, locality, projecttype
+            type, year, locality, projecttype, status: 'Under Review'
         });
         newBoard.save();
         res.send({
@@ -72,12 +73,100 @@ router.post('/', async (req, res) => {
     }
 });
 
+const getBoard = async (type, locality, year, projecttype) => {
+    let board = await Board.findOne({
+        where: {
+            type, year, locality, projecttype
+        }
+    });
+    if (board) {
+        return board;
+    } else {
+        let newBoard = new Board({
+            type, year, locality, projecttype, status: 'Under Review'
+        });
+        newBoard.save();
+        return newBoard;
+    }
+}
+
+const sendBoardProjectsTo = async (boards, boardLocality) => {
+    for (var i = 0 ; i < boards.length ; i++) {
+        let board = boards[i];
+        let destinyBoard = await getBoard('WORK_PLAN', boardLocality.toLocality, board.year, board.projecttype);
+        let boardProjects = await BoardProject.findAll({
+            where: {
+                board_id: board._id
+            }
+        });
+        boardProjects.forEach((bp) => {
+            let newBoardProject = new BoardProject({
+                board_id: destinyBoard._id,
+                project_id: bp.project_id,
+                position0: bp.position0,
+                position1: bp.position1,
+                position2: bp.position2,
+                position3: bp.position3,
+                position4: bp.position4,
+                position5: bp.position5,
+                req1: bp.req1,
+                req2: bp.req2,
+                req3: bp.req3,
+                req4: bp.req4,
+                req5: bp.req5,
+            })
+            newBoardProject.save();
+        })
+    }
+}
+
+const moveCardsToNextLevel = async (board) => {
+    let boards = await Board.findAll({
+        where: {
+            type: board.type,
+            year: board.year,
+            locality: board.locality
+        }
+    });
+
+    let boardsToCounty = boards.filter((board) => {
+        return ['Capital', 'Maintenance'].includes(board.projecttype)
+    })
+    let boardsToServiceArea = boards.filter((board) => {
+        return ['Study', 'Acquisition', 'Special'].includes(board.projecttype)
+    })
+
+    let boardLocalities = await BoardLocality.findAll({
+        where: {
+            fromLocality: board.locality
+        }
+    });
+    let COUNTY_WORK_PLAN = boardLocalities.find((bl) => {
+        return bl.type === 'COUNTY_WORK_PLAN'
+    })
+
+    let SERVICE_AREA_WORK_PLAN = boardLocalities.find((bl) => {
+        return bl.type === 'SERVICE_AREA_WORK_PLAN'
+    })
+    let toCounty;
+    if (COUNTY_WORK_PLAN) {
+        toCounty = COUNTY_WORK_PLAN.toLocality;
+        await sendBoardProjectsTo(boardsToCounty, COUNTY_WORK_PLAN);
+    }
+    let toServiceArea;
+    if (SERVICE_AREA_WORK_PLAN) {
+        toServiceArea = SERVICE_AREA_WORK_PLAN.toLocality;
+        await sendBoardProjectsTo(boardsToServiceArea, SERVICE_AREA_WORK_PLAN);
+    }
+    return {
+        toCounty,
+        toServiceArea
+    }
+}
+
 router.put('/:boardId', [auth], async (req, res) => {
-    console.log('here')
     const { boardId } = req.params;
-    console.log('boardId', boardId)
     const { status, comment } = req.body;
-    console.log('status, comment', status, comment)
     let board = await Board.findOne({
         where: {
             _id: boardId
@@ -88,7 +177,15 @@ router.put('/:boardId', [auth], async (req, res) => {
             status,
             comment
         })
-        res.status(200).send({status: 'updated'})
+        let bodyResponse = {status: 'updated'};
+        if (status === 'Approved') {
+            let r = await moveCardsToNextLevel(board);
+            bodyResponse = {
+                ...bodyResponse,
+                ...r
+            }
+        }
+        res.status(200).send(bodyResponse)
     } else {
         res.status(404).send({error: 'not found'})
     }
@@ -158,7 +255,6 @@ router.get('/:type/:year/', async (req, res) => {
             year
         }
     });
-    console.log(`boards by type ${type} and year ${year}`, boards.lenght);
     res.send(boards);
 });
 
