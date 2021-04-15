@@ -6,7 +6,7 @@ module.exports = (sequelize, DataType) => {
     },
     type: {
       type: DataType.ENUM,
-      values: ['JURISDICTION', 'COUNTY_OR_SERVICE_AREA']
+      values: ['JURISDICTION', 'COUNTY', 'SERVICE_AREA']
     }
   });
   return Locality;
