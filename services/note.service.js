@@ -37,8 +37,27 @@ const saveNote = async (note) => {
   }
 }
 
+const updateNote = async (id, note) => {
+  logger.info('update note ' + JSON.stringify(note));
+  try {
+    let updateNote = await Note.findOne({
+      where: {
+        _id: id
+      }
+    });
+    if (updateNote) {
+      updateNote = await updateNote.update(note);
+    } 
+    return updateNote;
+  } catch(error) {
+    console.log('the error ', error);
+    throw error;
+  }
+}
+
 module.exports = {
   getAllNotesByUser,
   deleteNote,
-  saveNote
+  saveNote,
+  updateNote
 };
