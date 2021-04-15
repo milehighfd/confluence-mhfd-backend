@@ -1,4 +1,6 @@
 const express = require('express');
+const { Op } = require("sequelize");
+
 const { ROLES } = require('../lib/enumConstants');
 
 const router = express.Router();
@@ -53,7 +55,9 @@ const getData2 = async (req, res, next) => {
     } else if (type === 'WORK_PLAN') {
       let localities = await Locality.findAll({
         where: {
-          type: 'COUNTY_OR_SERVICE_AREA'
+          type: {
+            [Op.not]: 'JURISDICTION'
+          }
         }
       })
       res.locals.data = localities;
