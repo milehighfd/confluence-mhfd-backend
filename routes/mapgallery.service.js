@@ -101,7 +101,18 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
       components: components,
       coordinates: coordinates,
       acquisitionprogress: result.acquisitionprogress,
-      acquisitionanticipateddate: result.acquisitionprogress,
+      acquisitionanticipateddate: result.acquisitionanticipateddate,
+      acquisitionprogress: result.acquisitionprogress,
+      acquisitionanticipateddate: result.acquisitionanticipateddate,
+      sponsor: result.sponsor,
+      cosponsor: result.cosponsor,
+      frequency: result.frequency,
+      maintenanceeligibility: result.maintenanceeligibility,
+      ownership: result.ownership,
+      overheadcost: result.overheadcost,
+      overheadcostdescription: result.overheadcostdescription,
+      additionalcost: result.additionalcost,
+      additionalcostdescription: result.additionalcostdescription,
     };
   } else {
     console.log('getDataByProjectIds error', data.statusCode, data.body);
