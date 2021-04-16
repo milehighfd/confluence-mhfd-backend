@@ -35,8 +35,8 @@ const getData = async (req, res, next) => {
 const getData2 = async (req, res, next) => {
   const { type } = req.params;
   res.locals.data = [];
-  if (req.user) {
-    if (type === 'WORK_REQUEST') {
+  if (type === 'WORK_REQUEST') {
+    if (req.user) {
       if(req.user.designation === ROLES.MFHD_STAFF) {
         let localities = await Locality.findAll({
           where: {
@@ -52,16 +52,16 @@ const getData2 = async (req, res, next) => {
         });
         res.locals.data = localities;
       }
-    } else if (type === 'WORK_PLAN') {
-      let localities = await Locality.findAll({
-        where: {
-          type: {
-            [Op.not]: 'JURISDICTION'
-          }
-        }
-      })
-      res.locals.data = localities;
     }
+  } else if (type === 'WORK_PLAN') {
+    let localities = await Locality.findAll({
+      where: {
+        type: {
+          [Op.in]: ['SERVICE_AREA', 'COUNTY']
+        }
+      }
+    })
+    res.locals.data = localities;
   }
   next();
 }
