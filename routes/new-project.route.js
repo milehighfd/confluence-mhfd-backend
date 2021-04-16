@@ -433,7 +433,9 @@ router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
     const data = await needle('post', URL, query, { json: true });
     if (data.statusCode === 200) {
       const body = data.body;
-      const answer = {};
+      let answer = {
+        jurisdiction: await getJurisdictionByGeom(JSON.stringify(geom))
+      };
       body.rows.forEach(row => {
         if (row.filter) {
           answer[row.filter] = row.aoi;
@@ -462,7 +464,10 @@ router.post('/get-countyservicearea-for-point', auth, async (req, res) => {
     const data = await needle('post', URL, query, { json: true });
     if (data.statusCode === 200) {
       const body = data.body;
-      const answer = {};
+      let answer = {
+        jurisdiction: await getJurisdictionByGeom(JSON.stringify(geom))
+      };
+
       body.rows.forEach(row => {
         if (row.filter) {
           answer[row.filter] = row.aoi;
