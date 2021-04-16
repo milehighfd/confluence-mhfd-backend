@@ -6,7 +6,8 @@ const { ROLES } = require('../lib/enumConstants');
 const router = express.Router();
 
 const db = require('../config/db');
-const Locality = db.locality; 
+const Locality = db.locality;
+const Board = db.board;
 
 const auth2 = require('../auth/auth2');
 
@@ -72,10 +73,29 @@ router.get('/', [auth2, getData],  (req, res) => {
     })
 })
 
-router.get('/:type', [auth2, getData2],  (req, res) => {
-  res.send({
-      localities: res.locals.data
-  })
+router.get('/:type', [auth2, getData2], async (req, res) => {
+  const { type } = req.params;
+  let localities = res.locals.data;
+  let arr = [];
+  for (var i = 0 ; i < localities.length ; i++) {
+    let locality = localities[i];
+    let board = await Board.findOne({
+      where: {
+        type,
+        locality: locality.name
+      }
+    })
+    let approved = false;
+    if (board) {
+      approved = board.status === 'Approved'
+    }
+    arr.push({
+      name: locality.name,
+      type: locality.type,
+      approved
+    });
+  }
+  res.send({ localities: arr });
 })
 
 module.exports = router;
