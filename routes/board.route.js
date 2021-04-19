@@ -44,6 +44,7 @@ router.post('/', async (req, res) => {
             }
             let newObject = {
                 project_id: bp.project_id,
+                from: bp.from,
                 projectData: project,
             }
             for (var i = 0 ; i <= 5; i ++) {
