@@ -166,6 +166,40 @@ const moveCardsToNextLevel = async (board) => {
     }
 }
 
+router.get('/:boardId/boards/:type', async (req, res) => {
+    const { boardId, type } = req.params;
+    let board = await Board.findOne({
+        where: {
+            _id: boardId
+        }
+    })
+    let boardLocalities = await BoardLocality.findAll({
+        where: {
+            toLocality: board.locality
+        }
+    });
+    let bids = []
+    for (var i = 0 ; i < boardLocalities.length ; i++) {
+        let bl = boardLocalities[i];
+        let locality = bl.fromLocality;
+        let boardFrom = await Board.findOne({
+            where: {
+                locality,
+                type,
+                year: board.year,
+                status: 'Approved'
+            }
+        })
+        bids.push({
+            locality,
+            status: boardFrom ? boardFrom.status : 'Under Review'
+        })
+    }
+    res.status(200).send({
+        boards: bids
+    });
+})
+
 router.put('/:boardId', [auth], async (req, res) => {
     const { boardId } = req.params;
     const { status, comment } = req.body;
