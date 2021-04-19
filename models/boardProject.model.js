@@ -40,6 +40,9 @@ module.exports = (sequelize, DataType) => {
     req5: {
       type: DataType.DOUBLE,
     },
+    from: {
+      type: DataType.STRING,
+    }
   });
   return boardProject;
 }
