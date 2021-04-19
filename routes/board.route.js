@@ -114,6 +114,7 @@ const sendBoardProjectsTo = async (boards, boardLocality) => {
                 req3: bp.req3,
                 req4: bp.req4,
                 req5: bp.req5,
+                from: boardLocality.fromLocality,
             })
             newBoardProject.save();
         })
