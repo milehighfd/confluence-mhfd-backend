@@ -10,6 +10,7 @@ const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('../config/config');
 const db = require('../config/db');
 const Board = db.board;
 const BoardProject = db.boardProject;
+const Locality = db.locality;
 //const User = require('../models/user.model');
 const User = db.user;
 const IndependentComponent = db.independentComponent;
@@ -1167,7 +1168,19 @@ const getJurisdictionByGeom = async (geom) => {
 }
 
 const addProjectToBoard = async (locality, projecttype, project_id, projectsubtype) => {
+  let dbLoc = await Locality.findOne({
+    where: {
+      name: locality
+    }
+  });
   let type = 'WORK_REQUEST';
+  if (dbLoc) {
+    if (dbLoc.type === 'JURISDICTION') {
+      type = 'WORK_REQUEST';
+    } else if (dbLoc.type === 'COUNTY' || dbLoc.type === 'SERVICE_AREA') {
+      type = 'WORK_PLAN';
+    }
+  }
   let year = '2021';
   let board = await Board.findOne({
     where: {
