@@ -132,10 +132,12 @@ const updateBoards = async (board, status, comment) => {
             locality: board.locality,
             projecttype: pjt
         };
-        console.log(body)
         let b = await Board.findOne({
             where: body
         });
+        if (status === 'Approved') {
+            body['submissionDate'] = new Date();
+        }
         if (!b) {
             let newBoard = new Board({
                 ...body,
@@ -144,10 +146,14 @@ const updateBoards = async (board, status, comment) => {
             }); 
             await newBoard.save();
         } else {
-            await board.update({
+            let newFields = {
                 status,
                 comment
-            })
+            };
+            if (status === 'Approved') {
+                newFields['submissionDate'] = new Date();
+            }
+            await b.update(newFields)
         }
     }
 }
