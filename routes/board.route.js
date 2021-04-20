@@ -122,6 +122,36 @@ const sendBoardProjectsTo = async (boards, boardLocality) => {
     }
 }
 
+const updateBoards = async (board, status, comment) => {
+    let pjts = ['Capital', 'Maintenance', 'Study', 'Acquisition', 'Special'];
+    for (var i = 0 ; i < pjts.length ; i++) {
+        let pjt = pjts[i];
+        let body = {
+            type: board.type,
+            year: board.year,
+            locality: board.locality,
+            projecttype: pjt
+        };
+        console.log(body)
+        let b = await Board.findOne({
+            where: body
+        });
+        if (!b) {
+            let newBoard = new Board({
+                ...body,
+                status,
+                comment
+            }); 
+            await newBoard.save();
+        } else {
+            await board.update({
+                status,
+                comment
+            })
+        }
+    }
+}
+
 const moveCardsToNextLevel = async (board) => {
     let boards = await Board.findAll({
         where: {
@@ -209,11 +239,8 @@ router.put('/:boardId', [auth], async (req, res) => {
         }
     })
     if (board) {
-        await board.update({
-            status,
-            comment
-        })
-        let bodyResponse = {status: 'updated'};
+        await updateBoards(board, status, comment);
+        let bodyResponse = { status: 'updated' };
         if (status === 'Approved') {
             let r = await moveCardsToNextLevel(board);
             bodyResponse = {
