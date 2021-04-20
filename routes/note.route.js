@@ -4,7 +4,6 @@ const router = express.Router();
 
 const NoteService = require('../services/note.service');
 const auth = require('../auth/auth');
-const { content } = require('googleapis/build/src/apis/content');
 
 router.get('/', [auth], async (req, res) => {
   const user = req.user;
