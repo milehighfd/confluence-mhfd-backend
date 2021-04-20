@@ -228,8 +228,9 @@ router.get('/:boardId/boards/:type', async (req, res) => {
         })
         bids.push({
             locality,
-            status: boardFrom ? boardFrom.status : 'Under Review'
-        })
+            status: boardFrom ? boardFrom.status : 'Under Review',
+            submissionDate: boardFrom ? boardFrom.submissionDate : null
+        });
     }
     res.status(200).send({
         boards: bids
