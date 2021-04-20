@@ -40,6 +40,9 @@ module.exports = (sequelize, DataType) => {
     comment: {
       type: DataType.STRING,
     },
+    submissionDate: {
+      type: DataType.DATE
+    }
   });
   return board;
 }
