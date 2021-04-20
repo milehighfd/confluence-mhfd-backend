@@ -371,9 +371,10 @@ router.post('/streams-data', auth, async (req, res) => {
       j.jurisdiction, 
       streamsIntersected.str_name, 
       streamsIntersected.cartodb_id,  
+      streamsIntersected.mhfd_code,
       ST_length(ST_intersection(streamsIntersected.the_geom, j.the_geom)::geography) as length
       FROM 
-      ( SELECT cartodb_id, str_name, the_geom FROM streams WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) ) streamsIntersected ,
+      ( SELECT mhfd_code, cartodb_id, str_name, the_geom FROM streams WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) ) streamsIntersected ,
       jurisidictions j 
       WHERE
       ST_DWithin(streamsIntersected.the_geom, j.the_geom, 0)
@@ -584,7 +585,7 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
 
 router.post('/get-all-streams', auth, async (req, res) => {
   const geom = req.body.geom;
-  const sql = `SELECT cartodb_id FROM streams WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom)`;
+  const sql = `SELECT cartodb_id, mhfd_code FROM streams WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom)`;
   const query = {
     q: sql
   };
@@ -595,7 +596,9 @@ router.post('/get-all-streams', auth, async (req, res) => {
     if (data.statusCode === 200) {
       body = data.body;
       logger.info(JSON.stringify(body.rows));
-      body.rows = body.rows.map(data => data.cartodb_id);
+      body.rows = body.rows.map(data => { 
+        return {cartodb_id: data.cartodb_id, mhfd_code: data.mhfd_code}
+      });
       res.send(body.rows);
       //logger.info(JSON.stringify(body, null, 2));
     } else {
@@ -1013,7 +1016,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, cosponsor, sponsor, projectid)
   (SELECT ST_Collect(the_geom) as the_geom, '${jurisdiction}' as jurisdiction, '${projectname}' as projectname , '${description}' as description, '${servicearea}' as servicearea,
   '${county}' as county, '${status}' as status, '${projecttype}' as projecttype, '${projectsubtype}' as projectsubtype, '${cosponsor}' as cosponsor,
-   '${sponsor}' as sponsor, ${-1} as projectid FROM streams WHERE cartodb_id IN(${ids}))`;
+   '${sponsor}' as sponsor, ${-1} as projectid FROM streams WHERE mhfd_code IN(${ids}))`;
   const query = {
     q: insertQuery
   };
@@ -1053,7 +1056,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
   let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projectsubtype = 'Master Plan';
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET
-  the_geom = (SELECT ST_Collect(the_geom) FROM streams WHERE cartodb_id IN(${ids})), jurisdiction = '${jurisdiction}',
+  the_geom = (SELECT ST_Collect(the_geom) FROM streams WHERE mhfd_code IN(${ids})), jurisdiction = '${jurisdiction}',
    projectname = '${projectname}', description = '${description}',
     servicearea = '${servicearea}', county = '${county}',
      status = '${status}', projecttype = '${projecttype}', 
