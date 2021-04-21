@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const https = require('https');
 const needle = require('needle');
 const attachmentService = require('../services/attachment.service');
+const projectStreamService = require('../services/projectStream.service');
 const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('../config/config');
 
 const db = require('../config/db');
@@ -1035,6 +1036,12 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
       }
       await addProjectToBoard(jurisdiction, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files);
+      for (const id of ids) {
+        projectStreamService.saveProjectStream({
+          projectid: projectId,
+          mhfd_code: id
+        });
+      }
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
@@ -1044,6 +1051,16 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
     return res.status(500).send(eroor);
   };
   res.send(result);
+});
+
+router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
+  const projectid = req.params.projectid;
+  try {
+    const streams = await projectStreamService.getAll(projectid);
+    return res.send(streams);
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 
 router.post('/study/:projectid', [auth, multer.array('files')], async (req, res) => {
@@ -1075,6 +1092,13 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
       result = data.body;
       logger.info(JSON.stringify(result));
       await attachmentService.uploadFiles(user, req.files);
+      await projectStreamService.deleteByProjectId(projectid);
+      for (const id of ids) {
+        projectStreamService.saveProjectStream({
+          projectid: projectId,
+          mhfd_code: id
+        });
+      }
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
