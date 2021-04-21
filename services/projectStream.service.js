@@ -8,6 +8,7 @@ const getAll = (projectid) => {
       projectid: projectid
     }
   });
+  console.log("GETTING STREAMS BY PROJ ", list);
   return list;
 }
 
