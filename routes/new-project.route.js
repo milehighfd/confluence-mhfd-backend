@@ -1070,6 +1070,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
 router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
   const projectid = req.params.projectid;
   try {
+    console.log("THE PROJECT ID WITH STREAMS IS ", projectid);
     const streams = await projectStreamService.getAll(projectid);
     return res.send(streams);
   } catch (error) {
