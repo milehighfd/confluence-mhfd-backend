@@ -33,6 +33,7 @@ db.independentComponent = require('../models/independentComponent.model.js')(seq
 db.boardLocality = require('../models/boardLocality.model.js')(sequelize, Sequelize);
 db.note = require('../models/note.model.js')(sequelize, Sequelize);
 db.projectStream = require('../models/projectstream.model.js')(sequelize, Sequelize);
+db.projectComponent = require('../models/projectComponent.model.js')(sequelize, Sequelize);
 
 db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
