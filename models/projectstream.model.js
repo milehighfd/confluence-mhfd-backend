@@ -1,6 +1,6 @@
 
 module.exports = (sequelize, DataType) => {
-  const ProjectStream = sequelize.define('note', {
+  const ProjectStream = sequelize.define('project-stream', {
     _id: {
       type: DataType.UUID,
       defaultValue: DataType.UUIDV4,
