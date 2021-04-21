@@ -1021,7 +1021,8 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
   let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projectsubtype = 'Master Plan';
   let parsedIds = '';
-  for (const id of ids) {
+  let idsArray = JSON.parse(ids);
+  for (const id of idsArray) {
     if (parsedIds) {
       parsedIds += ',';
     }
