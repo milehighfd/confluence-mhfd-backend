@@ -1,15 +1,19 @@
 const db = require('../config/db');
 const logger = require('../config/logger');
-const ProjectStream = db.projectstream;
+const ProjectStream = db.projectStream;
 
 const getAll = (projectid) => {
-  const list = ProjectStream.findAll({
-    where: {
-      projectid: projectid
-    }
-  });
-  console.log("GETTING STREAMS BY PROJ ", list);
-  return list;
+  try {
+    const list = ProjectStream.findAll({
+      where: {
+        projectid: projectid
+      }
+    });
+    return list;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 }
 
 const deleteByProjectId= async (projectid) => {
