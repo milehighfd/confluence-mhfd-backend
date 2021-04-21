@@ -1050,7 +1050,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
       }
       await addProjectToBoard(jurisdiction, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files);
-      for (const id of ids) {
+      for (const id of idsArray) {
         projectStreamService.saveProjectStream({
           projectid: projectId,
           mhfd_code: id
