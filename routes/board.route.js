@@ -135,7 +135,7 @@ const updateBoards = async (board, status, comment) => {
         let b = await Board.findOne({
             where: body
         });
-        if (status === 'Approved') {
+        if (status === 'Approved' && board.status !== status) {
             body['submissionDate'] = new Date();
         }
         if (!b) {
@@ -150,7 +150,7 @@ const updateBoards = async (board, status, comment) => {
                 status,
                 comment
             };
-            if (status === 'Approved') {
+            if (status === 'Approved' && board.status !== status) {
                 newFields['submissionDate'] = new Date();
             }
             await b.update(newFields)
@@ -159,6 +159,7 @@ const updateBoards = async (board, status, comment) => {
 }
 
 const moveCardsToNextLevel = async (board) => {
+    console.log('moveCardsToNextLevel');
     let boards = await Board.findAll({
         where: {
             type: board.type,
@@ -248,7 +249,7 @@ router.put('/:boardId', [auth], async (req, res) => {
     if (board) {
         await updateBoards(board, status, comment);
         let bodyResponse = { status: 'updated' };
-        if (status === 'Approved') {
+        if (status === 'Approved' && board.status !== status) {
             let r = await moveCardsToNextLevel(board);
             bodyResponse = {
                 ...bodyResponse,
