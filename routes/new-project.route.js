@@ -52,7 +52,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
       if (!usableComponents[component.table]) {
         usableComponents[component.table] = [];
       }
-      usableComponents[component.table].push(component.cartodb_id);
+      usableComponents[component.table].push(component.object_id);
     }
   }
   logger.info('my usable components ' + JSON.stringify(usableComponents, null, 2));
@@ -63,7 +63,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
     }
     let queryWhere = '';
     if (usableComponents[component]) {
-      queryWhere = `cartodb_id IN(${usableComponents[component].join(',')})`;
+      queryWhere = `object_id IN(${usableComponents[component].join(',')})`;
     }
     if (where) {
       if (queryWhere) {
@@ -72,7 +72,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
         queryWhere = where;
       }
     }
-    const sql = `SELECT cartodb_id, type, jurisdiction, status, original_cost, problemid  FROM ${component} 
+    const sql = `SELECT object_id, cartodb_id, type, jurisdiction, status, original_cost, problemid  FROM ${component} 
     WHERE  ${queryWhere} AND projectid is null `;
     const query = {
       q: sql
