@@ -882,7 +882,12 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
       await attachmentService.uploadFiles(user, req.files);
       for (const independent of JSON.parse(independetComponent)) {
         const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId};
-        IndependentComponent.save(element);
+        try {
+          IndependentComponent.create(element);
+          logger.info('create independent component');
+        } catch(error) {
+          logger.error('cannot create independent component ' + error);
+        }
       }
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
