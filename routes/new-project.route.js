@@ -398,6 +398,7 @@ router.post('/streams-data', auth, async (req, res) => {
             jurisdiction: row.jurisdiction,
             length: row.length,
             cartodb_id: row.cartodb_id,
+            mhfd_code: row.mhfd_code,
             drainage: 0
           });
         }
