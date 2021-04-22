@@ -6,6 +6,8 @@ const https = require('https');
 const needle = require('needle');
 const attachmentService = require('../services/attachment.service');
 const projectStreamService = require('../services/projectStream.service');
+const projectComponentService = require('../services/projectComponent.service');
+const indepdendentService = require('../services/independent.service');
 const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('../config/config');
 
 const db = require('../config/db');
@@ -854,7 +856,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality} = req.body;
+    independetComponent, locality, components} = req.body;
   const sponsor = user.organization;
   const status = 'Draft';
   let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
@@ -888,6 +890,14 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
         } catch(error) {
           logger.error('cannot create independent component ' + error);
         }
+      }
+      for (const component of JSON.parse(components)) { 
+        const data = {
+          table: component.table,
+          projectid: projectId,
+          object_id: component.object_id
+        };
+        projectComponentService.saveProjectComponent(component);
       }
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
@@ -1077,6 +1087,29 @@ router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
     res.status(500).send(error);
   }
 });
+
+router.get('/get-components-by-projectid/:projectid', [auth], async (req, res) => {
+  const projectid = req.params.projectid;
+  try {
+    console.log("THE PROJECT ID WITH COMPONENTS IS ", projectid);
+    const components = await projectComponentService.getAll(projectid);
+    return res.send(components);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+router.get('/get-independent-components-by-projectid/:projectid', [auth], async (req, res) => {
+  const projectid = req.params.projectid;
+  try {
+    console.log("THE PROJECT ID WITH INDEPENDENT COMPONENTS IS ", projectid);
+    const components = await indepdendentService.getAll(projectid);
+    return res.send(components);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 
 router.post('/study/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
