@@ -955,7 +955,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
           projectid: projectId,
           objectid: component.objectid
         };
-        projectComponentService.saveProjectComponent(component);
+        projectComponentService.saveProjectComponent(data);
       }
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
@@ -1140,8 +1140,15 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
   const projecttype = 'Study';
   let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projectsubtype = 'Master Plan';
+  let idsArray = JSON.parse(ids);
+  for (const id of idsArray) {
+    if (parsedIds) {
+      parsedIds += ',';
+    }
+    parsedIds += "'" + id + "'";
+  }
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET
-  the_geom = (SELECT ST_Collect(the_geom) FROM streams WHERE mhfd_code IN(${ids})), jurisdiction = '${jurisdiction}',
+  the_geom = (SELECT ST_Collect(the_geom) FROM streams WHERE mhfd_code IN(${parsedIds})), jurisdiction = '${jurisdiction}',
    projectname = '${projectname}', description = '${description}',
     servicearea = '${servicearea}', county = '${county}',
      status = '${status}', projecttype = '${projecttype}', 
@@ -1161,7 +1168,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
       logger.info(JSON.stringify(result));
       await attachmentService.uploadFiles(user, req.files);
       await projectStreamService.deleteByProjectId(projectid);
-      for (const id of ids) {
+      for (const id of idsArray) {
         projectStreamService.saveProjectStream({
           projectid: projectId,
           mhfd_code: id
