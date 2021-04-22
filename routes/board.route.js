@@ -9,7 +9,7 @@ const logger = require('../config/logger');
 
 
 const db = require('../config/db');
-const { getDataByProjectIds } = require('./mapgallery.service');
+const { getDataByProjectIds, getMinimumDateByProjectId } = require('./mapgallery.service');
 const Board = db.board; 
 const BoardProject = db.boardProject;
 const BoardLocality = db.boardLocality;
@@ -91,16 +91,21 @@ const getBoard = async (type, locality, year, projecttype) => {
     }
 }
 
-const sendBoardProjectsTo = async (boards, boardLocality) => {
+const sendBoardProjectsToProp = async (boards, prop) => {
     for (var i = 0 ; i < boards.length ; i++) {
         let board = boards[i];
-        let destinyBoard = await getBoard('WORK_PLAN', boardLocality.toLocality, board.year, board.projecttype);
         let boardProjects = await BoardProject.findAll({
             where: {
                 board_id: board._id
             }
         });
-        boardProjects.forEach((bp) => {
+        for (var j = 0 ; j < boardProjects.length ; j++) {
+            let bp = boardProjects[j];
+            let p = await getMinimumDateByProjectId(bp.project_id, true);
+
+            let destinyBoard = await getBoard('WORK_PLAN', p[prop], board.year, board.projecttype);
+            //TODO: improve to avoid multiple queries to same board
+
             let newBoardProject = new BoardProject({
                 board_id: destinyBoard._id,
                 project_id: bp.project_id,
@@ -115,10 +120,44 @@ const sendBoardProjectsTo = async (boards, boardLocality) => {
                 req3: bp.req3,
                 req4: bp.req4,
                 req5: bp.req5,
-                from: boardLocality.fromLocality,
+                from: p[prop],
             })
-            newBoardProject.save();
-        })
+            await newBoardProject.save();
+        }
+    }
+}
+
+const sendBoardProjectsToDistrict = async (boards) => {
+    for (var i = 0 ; i < boards.length ; i++) {
+        let board = boards[i];
+        let boardProjects = await BoardProject.findAll({
+            where: {
+                board_id: board._id
+            }
+        });
+        for (var j = 0 ; j < boardProjects.length ; j++) {
+            let bp = boardProjects[j];
+            let destinyBoard = await getBoard('WORK_PLAN', 'MHFD District Work Plan', board.year, board.projecttype);
+            //TODO: improve to avoid multiple queries to same board
+
+            let newBoardProject = new BoardProject({
+                board_id: destinyBoard._id,
+                project_id: bp.project_id,
+                position0: bp.position0,
+                position1: bp.position1,
+                position2: bp.position2,
+                position3: bp.position3,
+                position4: bp.position4,
+                position5: bp.position5,
+                req1: bp.req1,
+                req2: bp.req2,
+                req3: bp.req3,
+                req4: bp.req4,
+                req5: bp.req5,
+                from: board.locality,
+            })
+            await newBoardProject.save();
+        }
     }
 }
 
@@ -168,38 +207,20 @@ const moveCardsToNextLevel = async (board) => {
         }
     });
 
-    let boardsToCounty = boards.filter((board) => {
-        return ['Capital', 'Maintenance'].includes(board.projecttype)
-    })
-    let boardsToServiceArea = boards.filter((board) => {
-        return ['Study', 'Acquisition', 'Special'].includes(board.projecttype)
-    })
+    if (board.type === 'WORK_REQUEST') {
+        let boardsToCounty = boards.filter((board) => {
+            return ['Capital', 'Maintenance'].includes(board.projecttype)
+        })
+        await sendBoardProjectsToProp(boardsToCounty, 'county');
+        let boardsToServiceArea = boards.filter((board) => {
+            return ['Study', 'Acquisition', 'Special'].includes(board.projecttype)
+        })
+        await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea');
 
-    let boardLocalities = await BoardLocality.findAll({
-        where: {
-            fromLocality: board.locality
-        }
-    });
-    let COUNTY_WORK_PLAN = boardLocalities.find((bl) => {
-        return bl.type === 'COUNTY_WORK_PLAN'
-    })
-
-    let SERVICE_AREA_WORK_PLAN = boardLocalities.find((bl) => {
-        return bl.type === 'SERVICE_AREA_WORK_PLAN'
-    })
-    let toCounty;
-    if (COUNTY_WORK_PLAN) {
-        toCounty = COUNTY_WORK_PLAN.toLocality;
-        await sendBoardProjectsTo(boardsToCounty, COUNTY_WORK_PLAN);
-    }
-    let toServiceArea;
-    if (SERVICE_AREA_WORK_PLAN) {
-        toServiceArea = SERVICE_AREA_WORK_PLAN.toLocality;
-        await sendBoardProjectsTo(boardsToServiceArea, SERVICE_AREA_WORK_PLAN);
-    }
-    return {
-        toCounty,
-        toServiceArea
+        return {}
+    } else if (board.type === 'WORK_PLAN') {
+        await sendBoardProjectsToDistrict(boards);
+        return {}
     }
 }
 
