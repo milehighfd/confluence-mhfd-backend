@@ -897,7 +897,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
           projectid: projectId,
           objectid: component.objectid
         };
-        projectComponentService.saveProjectComponent(component);
+        projectComponentService.saveProjectComponent(data);
       }
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
