@@ -11,7 +11,16 @@ module.exports = (sequelize, DataType) => {
     },
     mhfd_code: {
       type: DataType.STRING
-    }  
+    },
+    length: {
+      type: DataType.FLOAT
+    },
+    jurisdiction: {
+      type: DataType.STRING
+    },
+    drainage: {
+      type: DataType.FLOAT
+    }
   });
 
   return ProjectStream;

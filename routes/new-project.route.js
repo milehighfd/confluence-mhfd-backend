@@ -1044,7 +1044,7 @@ router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req
 
 router.post('/study', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, ids, cosponsor, geom, locality} = req.body;
+  const {projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality} = req.body;
   const sponsor = req.body.sponsor || user.organization;
   const status = 'Draft';
   const projecttype = 'Study';
@@ -1080,10 +1080,13 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
       }
       await addProjectToBoard(jurisdiction, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files);
-      for (const id of idsArray) {
+      for (const stream of JSON.stringify(streams)) {
         projectStreamService.saveProjectStream({
           projectid: projectId,
-          mhfd_code: id
+          mhfd_code: stream.mhfd_code,
+          length: stream.length,
+          drainage: stream.drainage,
+          jurisdiction: stream.jurisdiction
         });
       }
     } else {
@@ -1168,10 +1171,13 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
       logger.info(JSON.stringify(result));
       await attachmentService.uploadFiles(user, req.files);
       await projectStreamService.deleteByProjectId(projectid);
-      for (const id of idsArray) {
+      for (const stream of JSON.stringify(streams)) {
         projectStreamService.saveProjectStream({
           projectid: projectId,
-          mhfd_code: id
+          mhfd_code: stream.mhfd_code,
+          length: stream.length,
+          drainage: stream.drainage,
+          jurisdiction: stream.jurisdiction
         });
       }
     } else {
