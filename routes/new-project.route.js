@@ -1304,7 +1304,8 @@ const addProjectToBoard = async (locality, projecttype, project_id, projectsubty
   }
   let boardProjectObject = {
     board_id: board._id,
-    project_id: project_id
+    project_id: project_id,
+    from: locality
   }
   if (projecttype === 'Maintenance') {
     let subtypes = ['Debris Management', 'Vegetation Management', 'Sediment Removal', 'Minor Repairs', 'Restoration'];
