@@ -912,7 +912,8 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
 router.post('/capital/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
-    overheadcost, overheadcostdescription, additionalcost, additionalcostdescription, locality} = req.body;
+    overheadcost, overheadcostdescription, additionalcost, additionalcostdescription, locality,
+  components} = req.body;
   const sponsor = user.organization;
   const projectid = req.params.projectid;
   const status = 'Draft';
@@ -937,6 +938,25 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
       result = data.body;
       logger.info(JSON.stringify(result));
       await attachmentService.uploadFiles(user, req.files);
+      await projectComponentService.deleteByProjectId(projectid);
+      await indepdendentService.deleteByProjectId(projectid);
+      for (const independent of JSON.parse(independetComponent)) {
+        const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId};
+        try {
+          IndependentComponent.create(element);
+          logger.info('create independent component');
+        } catch(error) {
+          logger.error('cannot create independent component ' + error);
+        }
+      }
+      for (const component of JSON.parse(components)) { 
+        const data = {
+          table: component.table,
+          projectid: projectId,
+          object_id: component.object_id
+        };
+        projectComponentService.saveProjectComponent(component);
+      }
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
