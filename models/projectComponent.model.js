@@ -9,7 +9,7 @@ module.exports = (sequelize, DataType) => {
     projectid: {
       type: DataType.INTEGER
     },
-    object_id: {
+    objectid: {
       type: DataType.INTEGER
     },
     table: {
