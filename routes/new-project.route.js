@@ -959,7 +959,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
         projectComponentService.saveProjectComponent(data);
       }
     } else {
-       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2))    ;
        return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
@@ -1015,16 +1015,16 @@ router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req
   const status = 'Draft';
   let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projecttype = 'Maintenance';
-  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = VALUES(ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}',
+  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}',
    projectname = '${projectname}', description = '${description}', servicearea = '${servicearea}',
     county = '${county}', status = '${status}', projecttype = '${projecttype}',
      projectsubtype = '${projectsubtype}', frequency = '${frequency}', 
-     sponsor = '${sponsor}', maintenanceeligibility = '${maintenanceeligibility}, 
-     ownership = '${ownership}' WHERE projectid ${projectid}`;
+     sponsor = '${sponsor}', maintenanceeligibility = '${maintenanceeligibility}', 
+     ownership = '${ownership}' WHERE projectid = ${projectid}`;
   const query = {
     q: updateQuery
   };
-  console.log('my query ' , query)
+  console.log('my query ' , updateQuery)
   let result = {};
   try {
     const data = await needle('post', URL, query, { json: true });
