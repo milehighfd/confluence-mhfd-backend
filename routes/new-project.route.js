@@ -913,14 +913,14 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
 router.post('/capital/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
-    overheadcost, overheadcostdescription, additionalcost, additionalcostdescription, locality,
-  components} = req.body;
+    overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
+    independetComponent, locality, components} = req.body;
   const sponsor = user.organization;
   const projectid = req.params.projectid;
   const status = 'Draft';
   let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projecttype = 'Capital';
-  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = VALUES(ST_GeomFromGeoJSON('${geom}'),
+  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = ST_GeomFromGeoJSON('${geom}'),
    jurisdiction = '${jurisdiction}', projectname = '${projectname}', 
    description = '${description}', servicearea = '${servicearea}', county = '${county}',
     status = '${status}', projecttype = '${projecttype}', sponsor = '${sponsor}', 
@@ -953,7 +953,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
       for (const component of JSON.parse(components)) { 
         const data = {
           table: component.table,
-          projectid: projectId,
+          projectid: projectid,
           objectid: component.objectid
         };
         projectComponentService.saveProjectComponent(data);
