@@ -392,15 +392,16 @@ router.post('/streams-data', auth, async (req, res) => {
       const body = data.body;
       const answer = {};
       body.rows.forEach(row => {
-        if (row.str_name) {
-          if (!answer[row.str_name]) {
-            answer[row.str_name] = [];
+        if (row.mhfd_code) {
+          if (!answer[row.mhfd_code]) {
+            answer[row.mhfd_code] = [];
           }
-          answer[row.str_name].push({
+          answer[row.mhfd_code].push({
             jurisdiction: row.jurisdiction,
             length: row.length,
             cartodb_id: row.cartodb_id,
             mhfd_code: row.mhfd_code,
+            str_name: row.str_name,
             drainage: 0
           });
         }
@@ -1105,6 +1106,14 @@ router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
   try {
     console.log("THE PROJECT ID WITH STREAMS IS ", projectid);
     const streams = await projectStreamService.getAll(projectid);
+    const ids = streams.map(stream => stream.mhfd_code);
+    const obj = {};
+    for (const id of ids) {
+      obj[id] = [];
+    }
+    for (const stream of streams) {
+      obj[stream.mhfd_code].push(stream);
+    }
     return res.send(streams);
   } catch (error) {
     res.status(500).send(error);
