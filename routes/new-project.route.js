@@ -1108,6 +1108,7 @@ router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
     console.log("THE PROJECT ID WITH STREAMS IS ", projectid);
     const streams = await projectStreamService.getAll(projectid);
     const ids = streams.map(stream => stream.str_name);
+    const mhfd_codes = streams.map(stream => stream.mhfd_code);
     const obj = {};
     for (const id of ids) {
       obj[id] = [];
@@ -1115,7 +1116,7 @@ router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
     for (const stream of streams) {
       obj[stream.str_name].push(stream);
     }
-    return res.send(obj);
+    return res.send({listStreams:obj, mhfd_codes:mhfd_codes });
   } catch (error) {
     res.status(500).send(error);
   }
