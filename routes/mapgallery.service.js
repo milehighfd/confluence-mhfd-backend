@@ -32,7 +32,7 @@ const getMidByProjectId = async (projectid, isDev) => {
   }
   let fields = [
     'projectid', 'cartodb_id', 'county', 'jurisdiction', 'servicearea', 'projectname',
-    'status', 'description', 'acquisitionprogress', 'acquisitionanticipateddate'];
+    'status', 'description', 'acquisitionprogress', 'acquisitionanticipateddate', 'projecttype'];
   let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
   let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
   const data = await needle('get', URL, { json: true });
