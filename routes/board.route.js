@@ -126,7 +126,7 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                 req3: bp.req3,
                 req4: bp.req4,
                 req5: bp.req5,
-                from: p[prop],
+                from: board.locality,
             })
             await newBoardProject.save();
         }
