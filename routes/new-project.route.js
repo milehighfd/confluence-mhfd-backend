@@ -1115,7 +1115,7 @@ router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
     for (const stream of streams) {
       obj[stream.str_name].push(stream);
     }
-    return res.send({obj});
+    return res.send(obj);
   } catch (error) {
     res.status(500).send(error);
   }
