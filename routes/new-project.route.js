@@ -1147,13 +1147,15 @@ router.get('/get-independent-components-by-projectid/:projectid', [auth], async 
 router.post('/study/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const projectid = req.params.projectid;
-  const {projectname, description, servicearea, county, ids, cosponsor, geom, locality} = req.body;
+  const {projectname, description, servicearea, county, ids, cosponsor, geom, locality,
+  streams} = req.body;
   const sponsor = req.body.sponsor || user.organization;
   const status = 'Draft';
   const projecttype = 'Study';
   let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projectsubtype = 'Master Plan';
   let idsArray = JSON.parse(ids);
+  let parsedIds = '';
   for (const id of idsArray) {
     if (parsedIds) {
       parsedIds += ',';
@@ -1181,13 +1183,14 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
       logger.info(JSON.stringify(result));
       await attachmentService.uploadFiles(user, req.files);
       await projectStreamService.deleteByProjectId(projectid);
-      for (const stream of JSON.stringify(streams)) {
+      for (const stream of JSON.parse(streams)) {
         projectStreamService.saveProjectStream({
-          projectid: projectId,
+          projectid: projectid,
           mhfd_code: stream.mhfd_code,
           length: stream.length,
           drainage: stream.drainage,
-          jurisdiction: stream.jurisdiction
+          jurisdiction: stream.jurisdiction,
+          str_name: stream.str_name
         });
       }
     } else {
@@ -1196,7 +1199,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
       }
   } catch (error) {
     logger.error(error);
-    return res.status(500).send(eroor);
+    return res.status(500).send(error);
   };
   res.send(result);
 });
