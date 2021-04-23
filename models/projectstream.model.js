@@ -20,6 +20,9 @@ module.exports = (sequelize, DataType) => {
     },
     drainage: {
       type: DataType.FLOAT
+    },
+    str_name: {
+      type: DataType.STRING
     }
   });
 

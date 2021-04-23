@@ -1081,13 +1081,14 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
       }
       await addProjectToBoard(jurisdiction, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files);
-      for (const stream of JSON.stringify(streams)) {
+      for (const stream of JSON.parse(streams)) {
         projectStreamService.saveProjectStream({
           projectid: projectId,
           mhfd_code: stream.mhfd_code,
           length: stream.length,
           drainage: stream.drainage,
-          jurisdiction: stream.jurisdiction
+          jurisdiction: stream.jurisdiction,
+          str_name: stream.str_name
         });
       }
     } else {
