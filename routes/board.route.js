@@ -284,36 +284,41 @@ router.put('/:boardId', [auth], async (req, res) => {
 
 })
 
-router.delete('/project/:projectid', [auth], async (req, res) => {
-    const { projectid } = req.params;
+router.delete('/project/:projectid/:namespaceId', [auth], async (req, res) => {
+    const { projectid, namespaceId } = req.params;
 
     let boardProjects = await BoardProject.findAll({
         where: {
+            board_id: namespaceId,
             project_id: projectid
         }
     });
     boardProjects.forEach((bp) => {
         bp.destroy();
     })
-
-    const sql = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
-    const query = {
-        q: sql
-    };
-    try {
-        const data = await needle('post', URL, query, { json: true });
-        //console.log('STATUS', data.statusCode);
-        if (data.statusCode === 200) {
-          result = data.body;
-          res.send(result);
-        } else {
-          logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
-          return res.status(data.statusCode).send(data.body);
-        }
-     } catch (error) {
-        logger.error(error);
-        res.status(500).send(error);
-     };
+    if (boardProjects.length === 0) {
+        res.status(404).send({ status: 'notfound' })
+    } else {
+        res.send({ status: 'ok' })
+    }
+    // const sql = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
+    // const query = {
+    //     q: sql
+    // };
+    // try {
+    //     const data = await needle('post', URL, query, { json: true });
+    //     //console.log('STATUS', data.statusCode);
+    //     if (data.statusCode === 200) {
+    //       result = data.body;
+    //       res.send(result);
+    //     } else {
+    //       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+    //       return res.status(data.statusCode).send(data.body);
+    //     }
+    //  } catch (error) {
+    //     logger.error(error);
+    //     res.status(500).send(error);
+    //  };
 });
 
 router.get('/bbox/:projectid', async (req, res) => {
