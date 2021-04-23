@@ -9,11 +9,17 @@ const logger = require('../config/logger');
 
 
 const db = require('../config/db');
-const { getMidByProjectId, getMinimumDateByProjectId } = require('./mapgallery.service');
+const { getCoordsByProjectId, getMidByProjectId, getMinimumDateByProjectId } = require('./mapgallery.service');
 const Board = db.board; 
 const BoardProject = db.boardProject;
 const BoardLocality = db.boardLocality;
 const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+
+router.get('/coordinates/:pid', async (req, res) => {
+    let { pid } = req.params;
+    let r = await getCoordsByProjectId(pid, true);
+    res.send(r);
+});
 
 router.get('/', async (req, res) => {
     let boards = await Board.findAll();
