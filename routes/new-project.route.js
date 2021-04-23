@@ -401,6 +401,7 @@ router.post('/streams-data', auth, async (req, res) => {
             length: row.length,
             cartodb_id: row.cartodb_id,
             mhfd_code: row.mhfd_code,
+            str_name: row.str_name,
             drainage: 0
           });
         }
