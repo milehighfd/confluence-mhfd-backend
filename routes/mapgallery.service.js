@@ -5,6 +5,36 @@ const attachmentService = require('../services/attachment.service');
 
 const { CARTO_TOKEN } = require('../config/config');
 
+const getMidByProjectId = async (projectid, isDev) => {
+  let table = 'mhfd_projects'
+  if (isDev) {
+    table = 'mhfd_projects_copy'
+  }
+  let fields = [
+    'projectid', 'cartodb_id', 'county', 'jurisdiction', 'servicearea', 'projectname',
+    'status', 'description', 'acquisitionprogress', 
+    'acquisitionanticipateddate', 'ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom2', 'ST_AsGeoJSON(the_geom) as the_geom3'];
+  let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
+  let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
+  const data = await needle('get', URL, { json: true });
+  if (data.statusCode === 200 && data.body.rows.length > 0) {
+    let obj = data.body.rows[0];
+    obj.the_geom = obj.the_geom2;
+    if (JSON.parse(obj.the_geom).coordinates) {
+      coordinates = JSON.parse(obj.the_geom).coordinates;
+    }
+    let createdCoordinates = {};
+    if (isDev) {
+      createdCoordinates = obj.the_geom3;
+    }
+    obj.createdCoordinates = createdCoordinates;
+    return obj;
+  } else {
+    console.log('getMinimumDateByProjectId error', data.statusCode, data.body);
+    throw new Error('Project not found');
+  }
+}
+
 const getMinimumDateByProjectId = async (projectid, isDev) => {
   let table = 'mhfd_projects'
   if (isDev) {
@@ -249,5 +279,6 @@ module.exports = {
   getDataByProjectIds,
   getProblemByProjectId,
   getCoordinatesOfComponents,
-  getMinimumDateByProjectId
+  getMinimumDateByProjectId,
+  getMidByProjectId
 }

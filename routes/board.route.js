@@ -9,7 +9,7 @@ const logger = require('../config/logger');
 
 
 const db = require('../config/db');
-const { getDataByProjectIds, getMinimumDateByProjectId } = require('./mapgallery.service');
+const { getMidByProjectId, getMinimumDateByProjectId } = require('./mapgallery.service');
 const Board = db.board; 
 const BoardProject = db.boardProject;
 const BoardLocality = db.boardLocality;
@@ -38,7 +38,7 @@ router.post('/', async (req, res) => {
         let projectsPromises = boardProjects.map(async (bp) => {
             let project = null;
             try {
-                project = await getDataByProjectIds(bp.project_id, null, true);
+                project = await getMidByProjectId(bp.project_id, true);
             } catch(e) {
                 console.log('e', e);
             }
