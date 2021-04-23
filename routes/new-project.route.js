@@ -942,10 +942,10 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
       await projectComponentService.deleteByProjectId(projectid);
       await indepdendentService.deleteByProjectId(projectid);
       for (const independent of JSON.parse(independetComponent)) {
-        const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId};
+        const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectid};
         try {
           IndependentComponent.create(element);
-          logger.info('create independent component');
+          logger.info('create independent component' + JSON.stringify(element));
         } catch(error) {
           logger.error('cannot create independent component ' + error);
         }
