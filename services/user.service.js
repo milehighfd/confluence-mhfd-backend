@@ -118,7 +118,39 @@ const sendConfirmAccount = async (user) => {
     from: MHFD_EMAIL,
     to: email,
     subject: "MHFD Confluence App - Account created",
-    html: emailToSend
+    html: emailToSend,
+    attachments: [
+      {
+        filename: 'logo.png',
+        path: `${__dirname}/images/logo.png`,
+        cid: 'logo'
+      },
+      {
+        filename: 'facebook.png',
+        path: `${__dirname}/images/facebook.png`,
+        cid: 'facebook'
+      },
+      {
+        filename: 'youtube.png',
+        path: `${__dirname}/images/youtube.png`,
+        cid: 'youtube'
+      },
+      {
+        filename: 'twitter.png',
+        path: `${__dirname}/images/twitter.png`,
+        cid: 'twitter'
+      },
+      {
+        filename: 'linkedin.png',
+        path: `${__dirname}/images/linkedin.png`,
+        cid: 'linkedin'
+      },
+      {
+        filename: 'map.png',
+        path: `${__dirname}/images/map.png`,
+        cid: 'map'
+      }
+    ]
   };
   const info = await transporter.sendMail(options); 
 
