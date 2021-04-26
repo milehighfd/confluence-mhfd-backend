@@ -55,8 +55,34 @@ const sendRecoverPasswordEmail = async (user) => {
     to: email,
     subject: "MHFD Confluence App - Reset your password",
     html: emailToSend,
+    attachments: [
+      {
+        filename: 'logo.png',
+        path: `${__dirname}/images/logo.png`,
+        cid: 'logo'
+      },
+      {
+        filename: 'facebook.png',
+        path: `${__dirname}/images/facebook.png`,
+        cid: 'facebook'
+      },
+      {
+        filename: 'youtube.png',
+        path: `${__dirname}/images/youtube.png`,
+        cid: 'youtube'
+      },
+      {
+        filename: 'twitter.png',
+        path: `${__dirname}/images/twitter.png`,
+        cid: 'twitter'
+      },
+      {
+        filename: 'linkedin.png',
+        path: `${__dirname}/images/linkedin.png`,
+        cid: 'linkedin'
+      }
+    ]
   };
-
   const info = await transporter.sendMail(options);
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 };
