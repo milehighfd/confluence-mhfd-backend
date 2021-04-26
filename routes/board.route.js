@@ -361,4 +361,35 @@ router.get('/:type/:year/', async (req, res) => {
     res.send(boards);
 });
 
+router.post('/projects-bbox', async (req, res) => {
+    const { projects } = req.body;
+    console.log(projects);
+    let projectsParsed = '';
+    for (const project of projects) {
+        if (projectsParsed) {
+            projectsParsed += ',';
+        }
+        projectsParsed += project;
+    }
+    const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as bbox FROM ${CREATE_PROJECT_TABLE} WHERE projectid IN (${projectsParsed})`;
+    const query = {
+        q: sql
+    };
+    logger.info(sql);
+    try {
+        const data = await needle('post', URL, query, { json: true });
+        //console.log('STATUS', data.statusCode);
+        if (data.statusCode === 200) {
+          result = data.body;
+          res.send(result.rows[0]);
+        } else {
+          logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+          return res.status(data.statusCode).send(data.body);
+        }
+     } catch (error) {
+        logger.error(error);
+        res.status(500).send(error);
+     };
+});
+
 module.exports = router;
