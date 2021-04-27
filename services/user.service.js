@@ -42,6 +42,16 @@ const findAllUsers = () => {
   return users;
 }
 
+const getAttachmentsCidList = (cids) => {
+  return cids.map((cid) => {
+    return {
+      filename: `${cid}.png`,
+      path: `${__dirname}/images/${cid}.png`,
+      cid: `${cid}`
+    }
+  })
+}
+
 const sendRecoverPasswordEmail = async (user) => {
   const email = user.email;
   const changePasswordId = user.changePasswordId;
@@ -55,33 +65,7 @@ const sendRecoverPasswordEmail = async (user) => {
     to: email,
     subject: "MHFD Confluence App - Reset your password",
     html: emailToSend,
-    attachments: [
-      {
-        filename: 'logo.png',
-        path: `${__dirname}/images/logo.png`,
-        cid: 'logo'
-      },
-      {
-        filename: 'facebook.png',
-        path: `${__dirname}/images/facebook.png`,
-        cid: 'facebook'
-      },
-      {
-        filename: 'youtube.png',
-        path: `${__dirname}/images/youtube.png`,
-        cid: 'youtube'
-      },
-      {
-        filename: 'twitter.png',
-        path: `${__dirname}/images/twitter.png`,
-        cid: 'twitter'
-      },
-      {
-        filename: 'linkedin.png',
-        path: `${__dirname}/images/linkedin.png`,
-        cid: 'linkedin'
-      }
-    ]
+    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin'])
   };
   const info = await transporter.sendMail(options);
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
@@ -119,38 +103,7 @@ const sendConfirmAccount = async (user) => {
     to: email,
     subject: "MHFD Confluence App - Account created",
     html: emailToSend,
-    attachments: [
-      {
-        filename: 'logo.png',
-        path: `${__dirname}/images/logo.png`,
-        cid: 'logo'
-      },
-      {
-        filename: 'facebook.png',
-        path: `${__dirname}/images/facebook.png`,
-        cid: 'facebook'
-      },
-      {
-        filename: 'youtube.png',
-        path: `${__dirname}/images/youtube.png`,
-        cid: 'youtube'
-      },
-      {
-        filename: 'twitter.png',
-        path: `${__dirname}/images/twitter.png`,
-        cid: 'twitter'
-      },
-      {
-        filename: 'linkedin.png',
-        path: `${__dirname}/images/linkedin.png`,
-        cid: 'linkedin'
-      },
-      {
-        filename: 'map.png',
-        path: `${__dirname}/images/map.png`,
-        cid: 'map'
-      }
-    ]
+    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
   };
   const info = await transporter.sendMail(options); 
 
