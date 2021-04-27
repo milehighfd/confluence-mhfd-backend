@@ -18,14 +18,20 @@ function getPublicUrl(filename) {
   return `${STORAGE_URL}/${STORAGE_NAME}/${filename}`;
 }
 
-const listAttachments = async (page, limit, sortByField, sortType) => {
-  const attachments = await Attachment.findAll({
+const listAttachments = async (page, limit, sortByField, sortType, projectid) => {
+  const json = {
     offset: limit * (page - 1),
     limit: limit,
     order: [
       [sortByField, sortType]
     ]
-  });
+  };
+  if (projectid) {
+    json['where'] = {
+      projectid: projectid
+    }
+  }
+  const attachments = await Attachment.findAll(json);
   return attachments.map((resp) => {
     return {
       '_id': resp._id,

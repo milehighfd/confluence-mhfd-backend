@@ -40,12 +40,12 @@ router.get('/list-files', async (req, res) => {
    }
 })
 
-router.get('/get-files', auth, async (req, res) => {
+router.get('/get-files', async (req, res) => {
    try {
       const { page = 1, limit = 10, sort = 'register_date',
-          sorttype = 'desc' } = req.query;
+          sorttype = 'desc', projectid } = req.query;
       //console.log('sort', sortby);
-      const files = await attachmentService.listAttachments(page, limit, sort, sorttype);
+      const files = await attachmentService.listAttachments(page, limit, sort, sorttype, projectid);
       const count = await attachmentService.countAttachments();
       const result = {
          data: files,
