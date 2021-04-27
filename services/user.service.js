@@ -110,6 +110,41 @@ const sendConfirmAccount = async (user) => {
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 }
 
+const sendBoardNotification = async (email, type, locality, year, tabKey) => {
+  let bodyOptions;
+  let url = `${MHFD_FRONTEND}/work-plan?year=${year}&locality=${locality}&tabKey=${tabKey}`
+  if (type === 'WORK_REQUEST') {
+    bodyOptions = {
+      title: `${locality}'s Work Request has been submitted!`,
+      body: 'All projects from the jurisdiction are now viewable in your County or Service Area Work Plan. Click below to reprioritize projects and revise or approve funding allocations.',
+      url,
+      buttonName: 'View Work Plan',
+    }
+  } else {
+    bodyOptions = {
+      title: `${locality}'s Work Request has been approved!`,
+      body: `MHFD's County and Service Area Managers have reviewed ${locality}'s Work Requested and have submitted a Work Plan, pending approval from the Board. To view ${locality}'s pending Work Plan click below.`,
+      url,
+      buttonName: 'View Work Plan',
+    }
+  }
+  const template = fs.readFileSync(__dirname + '/templates/email_board-notification.html', 'utf8');
+  let content = template;
+  Object.keys(bodyOptions).forEach((key) => {
+    content = content.split(`{{${key}}}`).join(bodyOptions[key]);
+  });
+  const transporter = getTransporter();
+  const options = {
+    from: MHFD_EMAIL,
+    to: email,
+    subject: `MHFD Confluence App - ${bodyOptions.title}`,
+    html: content,
+    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
+  };
+  const info = await transporter.sendMail(options);
+  logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
+}
+
 const uploadPhoto = async (user, files) => {
   const bucket = storage.bucket(STORAGE_NAME);
 
@@ -210,6 +245,7 @@ const requiredFields = (type) => {
 }
 
 module.exports = {
+  sendBoardNotification,
   sendRecoverPasswordEmail,
   changePassword,
   requiredFields,
