@@ -28,7 +28,7 @@ const listAttachments = async (page, limit, sortByField, sortType, projectid) =>
   };
   if (projectid) {
     json['where'] = {
-      projectid: projectid
+      project_id: projectid
     }
   }
   const attachments = await Attachment.findAll(json);
