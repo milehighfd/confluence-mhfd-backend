@@ -426,6 +426,25 @@ router.post('/streams-data', auth, async (req, res) => {
   };
 });
 
+
+router.post('/get-jurisdiction-for-polygon', async (req, res) => {
+  const { geom } = req.body;
+  const sql = `SELECT jurisdiction FROM "denver-mile-high-admin".jurisidictions WHERE ST_Dwithin(the_geom, ST_Centroid(ST_GeomFromGeoJSON('${JSON.stringify(geom)}')), 0)`;
+  logger.info(sql);
+  const query = { q: sql };
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    console.log(JSON.stringify(data.body));
+    if (data.statusCode === 200) {
+      return res.send({jurisdiction: data.body.rows[0].jurisdiction});
+    }
+    logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+    return res.status(data.statusCode).send(data);
+  } catch (error) {
+    res.status(500).send({error: error});
+  }
+});
+
 router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
   const geom = req.body.geom;
   const sql = `SELECT aoi, filter FROM mhfd_zoom_to_areas where filter SIMILAR TO '%(Service Area|County)%'
