@@ -253,7 +253,7 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
     const hullSQL = `
     SELECT ST_AsGeoJSON(
       ST_Intersection(ST_ConvexHull(ST_COLLECT(ARRAY(SELECT the_geom FROM aux_${current}))),
-                      ST_COLLECT(ARRAY(SELECT the_geom FROM streams)))
+                      ST_COLLECT(ARRAY(SELECT the_geom FROM mhfd_stream_reaches)))
     ) as geom`;
     const hullQuery = {
       q: hullSQL
@@ -365,7 +365,7 @@ router.post('/streams-data', auth, async (req, res) => {
   //       s.str_name, 
   //       s.cartodb_id, 
   //       ST_length(ST_intersection(s.the_geom, j.the_geom)::geography) as length  
-  //         FROM streams s, jurisidictions j 
+  //         FROM mhfd_stream_reaches s, jurisidictions j 
   //         where ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), s.the_geom, 0) 
   //         and ST_DWithin(s.the_geom, j.the_geom, 0) `;
 
@@ -377,7 +377,7 @@ router.post('/streams-data', auth, async (req, res) => {
       streamsIntersected.mhfd_code,
       ST_length(ST_intersection(streamsIntersected.the_geom, j.the_geom)::geography) as length
       FROM 
-      ( SELECT mhfd_code, cartodb_id, str_name, the_geom FROM streams WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) ) streamsIntersected ,
+      ( SELECT mhfd_code, cartodb_id, str_name, the_geom FROM mhfd_stream_reaches WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) ) streamsIntersected ,
       jurisidictions j 
       WHERE
       ST_DWithin(streamsIntersected.the_geom, j.the_geom, 0)
@@ -408,12 +408,12 @@ router.post('/streams-data', auth, async (req, res) => {
       });
       /*
       const drainageQuery = `SELECT s.str_name, j.jurisdiction, ST_AREA(ST_Intersection(c.the_geom, j.the_geom)::geography) 
-      as area FROM streams s,  mhfd_catchments_simple_v1 c, jurisidictions j WHERE 
+      as area FROM mhfd_stream_reaches s,  mhfd_catchments_simple_v1 c, jurisidictions j WHERE 
       ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), s.the_geom, 0) AND s.reach_code is not distinct from c.reach_code 
       and s.trib_code1 is not distinct from c.trib_code1 and s.trib_code2 is not distinct from c.trib_code2 and s.trib_code3 is not distinct from c.trib_code3
       and s.trib_code4 is not distinct from c.trib_code4 and s.trib_code5 is not distinct from c.trib_code5
       and s.trib_code6 is not distinct from c.trib_code6 and s.trib_code7 is not distinct from c.trib_code7 AND ST_DWithin(c.the_geom, j.the_geom, 0) 
-      AND s.reach_code is not distinct from (SELECT max(reach_code) FROM streams WHERE ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0)) `;
+      AND s.reach_code is not distinct from (SELECT max(reach_code) FROM mhfd_stream_reaches WHERE ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0)) `;
       */
       res.send(answer);
     } else {
@@ -430,7 +430,7 @@ router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
   const geom = req.body.geom;
   const sql = `SELECT aoi, filter FROM mhfd_zoom_to_areas where filter SIMILAR TO '%(Service Area|County)%'
   AND ST_DWithin((SELECT ST_Centroid(ST_Collect(ST_Intersection(
-          streams.the_geom, ST_GeomFromGeoJSON('${JSON.stringify(geom)}')))) FROM streams), mhfd_zoom_to_areas.the_geom, 0)
+    mhfd_stream_reaches.the_geom, ST_GeomFromGeoJSON('${JSON.stringify(geom)}')))) FROM mhfd_stream_reaches), mhfd_zoom_to_areas.the_geom, 0)
   `;
   const query = {
     q: sql
@@ -557,7 +557,7 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
     const hullSQL = `
     SELECT ST_AsGeoJSON(
       ST_Intersection(ST_ConvexHull(ST_COLLECT(ARRAY(SELECT the_geom FROM aux_${current}))),
-                      ST_COLLECT(ARRAY(SELECT the_geom FROM streams)))
+                      ST_COLLECT(ARRAY(SELECT the_geom FROM mhfd_stream_reaches)))
     ) as geom`;
     const hullQuery = {
       q: hullSQL
@@ -590,7 +590,7 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
 
 router.post('/get-all-streams', auth, async (req, res) => {
   const geom = req.body.geom;
-  const sql = `SELECT cartodb_id, mhfd_code FROM streams WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom)`;
+  const sql = `SELECT cartodb_id, mhfd_code FROM mhfd_stream_reaches WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom)`;
   const query = {
     q: sql
   };
@@ -621,7 +621,7 @@ router.post('/get-stream', auth, async (req, res) => {
   let result = {};
   const sql = `SELECT ST_AsGeoJSON(
     ST_Intersection(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'),
-                    ST_COLLECT(ARRAY(SELECT the_geom FROM streams)))
+                    ST_COLLECT(ARRAY(SELECT the_geom FROM mhfd_stream_reaches)))
   ) as geom`;
   const query = {
     q: sql
@@ -690,7 +690,7 @@ router.post('/get-stream-convexhull', auth, async (req, res) => {
         const hullSQL = `
         SELECT ST_AsGeoJSON(
           ST_Intersection(ST_ConvexHull(ST_COLLECT(ARRAY(SELECT the_geom FROM aux_${current}))),
-                          ST_COLLECT(ARRAY(SELECT the_geom FROM streams)))
+                          ST_COLLECT(ARRAY(SELECT the_geom FROM mhfd_stream_reaches)))
         ) as geom`;
         const hullQuery = {
           q: hullSQL
@@ -1062,7 +1062,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, cosponsor, sponsor, projectid)
   (SELECT ST_Collect(the_geom) as the_geom, '${jurisdiction}' as jurisdiction, '${projectname}' as projectname , '${description}' as description, '${servicearea}' as servicearea,
   '${county}' as county, '${status}' as status, '${projecttype}' as projecttype, '${projectsubtype}' as projectsubtype, '${cosponsor}' as cosponsor,
-   '${sponsor}' as sponsor, ${-1} as projectid FROM streams WHERE mhfd_code IN(${parsedIds}))`;
+   '${sponsor}' as sponsor, ${-1} as projectid FROM mhfd_stream_reaches WHERE mhfd_code IN(${parsedIds}))`;
   const query = {
     q: insertQuery
   };
@@ -1163,7 +1163,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
     parsedIds += "'" + id + "'";
   }
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET
-  the_geom = (SELECT ST_Collect(the_geom) FROM streams WHERE mhfd_code IN(${parsedIds})), jurisdiction = '${jurisdiction}',
+  the_geom = (SELECT ST_Collect(the_geom) FROM mhfd_stream_reaches WHERE mhfd_code IN(${parsedIds})), jurisdiction = '${jurisdiction}',
    projectname = '${projectname}', description = '${description}',
     servicearea = '${servicearea}', county = '${county}',
      status = '${status}', projecttype = '${projecttype}', 
