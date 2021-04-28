@@ -441,11 +441,11 @@ router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
     if (data.statusCode === 200) {
       const body = data.body;
       let answer = {
-        jurisdiction: await getJurisdictionByGeom(JSON.stringify(geom))
+        jurisdiction: [await getJurisdictionByGeom(JSON.stringify(geom))]
       };
       body.rows.forEach(row => {
         if (row.filter) {
-          answer[row.filter] = row.aoi;
+          answer[row.filter] = [row.aoi];
         }
       });
       res.send(answer);
