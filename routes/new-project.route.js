@@ -857,8 +857,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality, components, jurisdiction} = req.body;
-  const sponsor = user.organization;
+    independetComponent, locality, components, jurisdiction, sponsor} = req.body;
   const status = 'Draft';
   // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projecttype = 'Capital';
@@ -881,7 +880,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(jurisdiction, projecttype, projectId);
+      await addProjectToBoard(sponsor, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files, projectId);
       for (const independent of JSON.parse(independetComponent)) {
         const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId};
@@ -914,8 +913,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality, components, jurisdiction} = req.body;
-  const sponsor = user.organization;
+    independetComponent, locality, components, jurisdiction, sponsor} = req.body;
   const projectid = req.params.projectid;
   const status = 'Draft';
   // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
@@ -971,8 +969,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
 router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   console.log('the user ', user);
-  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction} = req.body;
-  const sponsor = user.organization;
+  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor} = req.body;
   const status = 'Draft';
   // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projecttype = 'Maintenance';
@@ -994,7 +991,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(jurisdiction, projecttype, projectId, projectsubtype);
+      await addProjectToBoard(sponsor, projecttype, projectId, projectsubtype);
       await attachmentService.uploadFiles(user, req.files, projectId);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
@@ -1009,8 +1006,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
 router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   console.log('the user ', user);
-  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction} = req.body;
-  const sponsor = user.organization;
+  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor} = req.body;
   const projectid = req.params.projectid;
   const status = 'Draft';
   // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
@@ -1045,8 +1041,7 @@ router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req
 
 router.post('/study', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction} = req.body;
-  const sponsor = req.body.sponsor || user.organization;
+  const {projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor} = req.body;
   const status = 'Draft';
   const projecttype = 'Study';
   // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
@@ -1079,7 +1074,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(jurisdiction, projecttype, projectId);
+      await addProjectToBoard(sponsor, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files, projectId);
       for (const stream of JSON.parse(streams)) {
         projectStreamService.saveProjectStream({
@@ -1148,8 +1143,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
   const user = req.user;
   const projectid = req.params.projectid;
   const {projectname, description, servicearea, county, ids, cosponsor, geom, locality,
-  streams, jurisdiction} = req.body;
-  const sponsor = req.body.sponsor || user.organization;
+  streams, jurisdiction, sponsor} = req.body;
   const status = 'Draft';
   const projecttype = 'Study';
   // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
@@ -1206,8 +1200,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
 
 router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const sponsor = user.organization;
-  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction} = req.body;
+  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor} = req.body;
   const status = 'Draft';
   const projecttype = 'Acquisition';
   // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
@@ -1229,7 +1222,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(jurisdiction, projecttype, projectId);
+      await addProjectToBoard(sponsor, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files, projectId);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
@@ -1245,8 +1238,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
 router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const projectid = req.params.projectid;
-  const sponsor = user.organization;
-  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction} = req.body;
+  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor} = req.body;
   const status = 'Draft';
   const projecttype = 'Acquisition';
   // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
@@ -1343,7 +1335,7 @@ const addProjectToBoard = async (locality, projecttype, project_id, projectsubty
 
 router.post('/special', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, geom, locality, jurisdiction} = req.body;
+  const {projectname, description, servicearea, county, geom, locality, jurisdiction, sponsor} = req.body;
   // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const status = 'Draft';
   const projecttype = 'Special';
@@ -1366,7 +1358,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(jurisdiction, projecttype, projectId);
+      await addProjectToBoard(sponsor, projecttype, projectId);
       await attachmentService.uploadFiles(user, req.files, projectId);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
@@ -1382,7 +1374,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
 router.post('/special/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const projectid = req.params.projectid;
-  const {projectname, description, servicearea, county, geom, locality, jurisdiction} = req.body;
+  const {projectname, description, servicearea, county, geom, locality, jurisdiction, sponsor} = req.body;
   // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const status = 'Draft';
   const projecttype = 'Special';
