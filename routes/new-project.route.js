@@ -857,13 +857,12 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality, components, jurisdiction, sponsor} = req.body;
+    independetComponent, locality, components, jurisdiction, sponsor, cosponsor} = req.body;
   const status = 'Draft';
-  // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projecttype = 'Capital';
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost, overheadcostdescription, additionalcost, additionalcostdescription, projectid)
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost, overheadcostdescription, additionalcost, additionalcostdescription, cosponsor, projectid)
    VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}',
-   '${overheadcostdescription}', '${additionalcost}', '${additionalcostdescription}', ${-1})`;
+   '${overheadcostdescription}', '${additionalcost}', '${additionalcostdescription}', '${cosponsor}', ${-1})`;
   const query = {
     q: insertQuery
   };
@@ -913,17 +912,17 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality, components, jurisdiction, sponsor} = req.body;
+    independetComponent, locality, components, jurisdiction, sponsor, cosponsor} = req.body;
   const projectid = req.params.projectid;
   const status = 'Draft';
-  // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projecttype = 'Capital';
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = ST_GeomFromGeoJSON('${geom}'),
    jurisdiction = '${jurisdiction}', projectname = '${projectname}', 
    description = '${description}', servicearea = '${servicearea}', county = '${county}',
     status = '${status}', projecttype = '${projecttype}', sponsor = '${sponsor}', 
     overheadcost = '${overheadcost}', overheadcostdescription = '${overheadcostdescription}', 
-    additionalcost = '${additionalcost}', additionalcostdescription = '${additionalcostdescription}'
+    additionalcost = '${additionalcost}', additionalcostdescription = '${additionalcostdescription}',
+    cosponsor = '${cosponsor}'
     WHERE  projectid = ${projectid}`;
   const query = {
     q: updateQuery
@@ -969,12 +968,11 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
 router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   console.log('the user ', user);
-  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor} = req.body;
+  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor} = req.body;
   const status = 'Draft';
-  // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projecttype = 'Maintenance';
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, frequency, sponsor, maintenanceeligibility, ownership, projectid)
-   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${frequency}', '${sponsor}', '${maintenanceeligibility}', '${ownership}', ${-1})`;
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, frequency, sponsor, maintenanceeligibility, ownership, cosponsor, projectid)
+   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${frequency}', '${sponsor}', '${maintenanceeligibility}', '${ownership}', '${cosponsor}' ${-1})`;
   const query = {
     q: insertQuery
   };
@@ -1006,17 +1004,16 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
 router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   console.log('the user ', user);
-  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor} = req.body;
+  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor} = req.body;
   const projectid = req.params.projectid;
   const status = 'Draft';
-  // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projecttype = 'Maintenance';
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}',
    projectname = '${projectname}', description = '${description}', servicearea = '${servicearea}',
     county = '${county}', status = '${status}', projecttype = '${projecttype}',
      projectsubtype = '${projectsubtype}', frequency = '${frequency}', 
      sponsor = '${sponsor}', maintenanceeligibility = '${maintenanceeligibility}', 
-     ownership = '${ownership}' WHERE projectid = ${projectid}`;
+     ownership = '${ownership}', cosponsor = '${cosponsor}' WHERE projectid = ${projectid}`;
   const query = {
     q: updateQuery
   };
@@ -1044,7 +1041,6 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
   const {projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor} = req.body;
   const status = 'Draft';
   const projecttype = 'Study';
-  // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projectsubtype = 'Master Plan';
   let parsedIds = '';
   let idsArray = JSON.parse(ids);
@@ -1146,7 +1142,6 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
   streams, jurisdiction, sponsor} = req.body;
   const status = 'Draft';
   const projecttype = 'Study';
-  // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const projectsubtype = 'Master Plan';
   let idsArray = JSON.parse(ids);
   let parsedIds = '';
@@ -1200,12 +1195,11 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
 
 router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor} = req.body;
+  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor, cosponsor} = req.body;
   const status = 'Draft';
   const projecttype = 'Acquisition';
-  // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, acquisitionprogress, acquisitionanticipateddate, sponsor, projectid)
-   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${acquisitionprogress}', ${acquisitionanticipateddate}, '${sponsor}', ${-1})`;
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, acquisitionprogress, acquisitionanticipateddate, sponsor, cosponsor, projectid)
+   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${acquisitionprogress}', ${acquisitionanticipateddate}, '${sponsor}', '${cosponsor}', ${-1})`;
   const query = {
     q: insertQuery
   };
@@ -1238,16 +1232,16 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
 router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const projectid = req.params.projectid;
-  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor} = req.body;
+  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor, cosponsor} = req.body;
   const status = 'Draft';
   const projecttype = 'Acquisition';
-  // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} 
   SET the_geom = ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}',
    projectname = '${projectname}', description = '${description}', 
    servicearea = '${servicearea}', county = '${county}', status = '${status}', 
    projecttype = '${projecttype}', acquisitionprogress = '${acquisitionprogress}', 
-   acquisitionanticipateddate = ${acquisitionanticipateddate}, sponsor = '${sponsor}'
+   acquisitionanticipateddate = ${acquisitionanticipateddate}, sponsor = '${sponsor}',
+   cosponsor = '${cosponsor}'
    WHERE  projectid = ${projectid}
    `;
   logger.info('THE QUERY IS ' + updateQuery);
@@ -1335,12 +1329,11 @@ const addProjectToBoard = async (locality, projecttype, project_id, projectsubty
 
 router.post('/special', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, geom, locality, jurisdiction, sponsor} = req.body;
-  // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
+  const {projectname, description, servicearea, county, geom, locality, jurisdiction, sponsor, cosponsor} = req.body;
   const status = 'Draft';
   const projecttype = 'Special';
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectid) 
-  VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', -1)`;
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, cosponsor, projectid) 
+  VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${cosponsor}, -1)`;
   const query = {
     q: insertQuery
   };
@@ -1374,15 +1367,15 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
 router.post('/special/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const projectid = req.params.projectid;
-  const {projectname, description, servicearea, county, geom, locality, jurisdiction, sponsor} = req.body;
-  // let jurisdiction = locality;//TODO set jurisdiction corresponding to locality
+  const {projectname, description, servicearea, county, geom, locality, jurisdiction, sponsor, cosponsor} = req.bo
   const status = 'Draft';
   const projecttype = 'Special';
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE}
   SET the_geom = ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}', 
   projectname = '${projectname}', description = '${description}',
    servicearea = '${servicearea}', county = '${county}', 
-   status = '${status}', projecttype = '${projecttype}' WHERE  projectid = ${projectid}`;
+   status = '${status}', projecttype = '${projecttype}', sponsor = '${sponsor}',
+   cosponsor = '${cosponsor}' WHERE  projectid = ${projectid}`;
   const query = {
     q: updateQuery
   };
