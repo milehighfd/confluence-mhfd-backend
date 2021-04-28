@@ -1333,7 +1333,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
   const status = 'Draft';
   const projecttype = 'Special';
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, cosponsor, projectid) 
-  VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${cosponsor}, -1)`;
+  VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${cosponsor}', -1)`;
   const query = {
     q: insertQuery
   };
