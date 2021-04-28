@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const Attachement = require('../models/attachment.model');
+const db = require('../config/db');
+const Attachment = db.attachment;
 const path = require('path');
 const auth = require('../auth/auth');
 var fs = require('fs');
@@ -38,6 +39,18 @@ router.get('/list-files', async (req, res) => {
       logger.error(error);
       res.status(500).send(error);
    }
+})
+
+router.get('/by-project/:projectid', async (req, res) => {
+   const { projectid } = req.params;
+   let attachments = await Attachment.findAll({
+      where: {
+         project_id: projectid
+      }
+   })
+   res.send({
+      attachments 
+   })
 })
 
 router.get('/get-files', async (req, res) => {
