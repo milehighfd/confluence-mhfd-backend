@@ -201,7 +201,7 @@ const isImage = (type) => {
   }
 }
 
-const uploadFiles = async (user, files) => {
+const uploadFiles = async (user, files, projectid) => {
   const bucket = storage.bucket(STORAGE_NAME);
   const compressBucket = storage.bucket(STORAGE_NAME);
   if (!fs.existsSync(__dirname + '/tmp/')) {
@@ -223,6 +223,9 @@ const uploadFiles = async (user, files) => {
     attach.mimetype = file.mimetype;
     attach.register_date = new Date();
     attach.filesize = file.size;
+    if (projectid) {
+      attach.project_id = projectid
+    }
     Attachment.create(attach);
     console.log(file.mimetype);
     const complete = path.join(__dirname, './tmp/' + file.originalname);

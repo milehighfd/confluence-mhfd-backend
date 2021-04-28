@@ -25,7 +25,7 @@ module.exports = (sequelize, DataType) => {
       type: DataType.FLOAT
     },
     project_id: {
-      type: DataType.UUID,
+      type: DataType.STRING,
       allowNull: true
     }
   });

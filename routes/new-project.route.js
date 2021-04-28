@@ -882,7 +882,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
         return;
       }
       await addProjectToBoard(jurisdiction, projecttype, projectId);
-      await attachmentService.uploadFiles(user, req.files);
+      await attachmentService.uploadFiles(user, req.files, projectId);
       for (const independent of JSON.parse(independetComponent)) {
         const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId};
         try {
@@ -938,7 +938,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(JSON.stringify(result));
-      await attachmentService.uploadFiles(user, req.files);
+      await attachmentService.uploadFiles(user, req.files, projectid);
       await projectComponentService.deleteByProjectId(projectid);
       await indepdendentService.deleteByProjectId(projectid);
       for (const independent of JSON.parse(independetComponent)) {
@@ -995,7 +995,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
         return;
       }
       await addProjectToBoard(jurisdiction, projecttype, projectId, projectsubtype);
-      await attachmentService.uploadFiles(user, req.files);
+      await attachmentService.uploadFiles(user, req.files, projectId);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
@@ -1032,7 +1032,7 @@ router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(JSON.stringify(result));
-      await attachmentService.uploadFiles(user, req.files);
+      await attachmentService.uploadFiles(user, req.files, projectid);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
@@ -1080,7 +1080,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
         return;
       }
       await addProjectToBoard(jurisdiction, projecttype, projectId);
-      await attachmentService.uploadFiles(user, req.files);
+      await attachmentService.uploadFiles(user, req.files, projectId);
       for (const stream of JSON.parse(streams)) {
         projectStreamService.saveProjectStream({
           projectid: projectId,
@@ -1181,7 +1181,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(JSON.stringify(result));
-      await attachmentService.uploadFiles(user, req.files);
+      await attachmentService.uploadFiles(user, req.files, projectid);
       await projectStreamService.deleteByProjectId(projectid);
       for (const stream of JSON.parse(streams)) {
         projectStreamService.saveProjectStream({
@@ -1230,7 +1230,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
         return;
       }
       await addProjectToBoard(jurisdiction, projecttype, projectId);
-      await attachmentService.uploadFiles(user, req.files);
+      await attachmentService.uploadFiles(user, req.files, projectId);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
       return res.status(data.statusCode).send(data.body);
@@ -1269,7 +1269,7 @@ router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(result);
-      await attachmentService.uploadFiles(user, req.files);
+      await attachmentService.uploadFiles(user, req.files, projectid);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
       return res.status(data.statusCode).send(data.body);
@@ -1367,7 +1367,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
         return;
       }
       await addProjectToBoard(jurisdiction, projecttype, projectId);
-      await attachmentService.uploadFiles(user, req.files);
+      await attachmentService.uploadFiles(user, req.files, projectId);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
       return res.status(data.statusCode).send(data.body);
@@ -1402,7 +1402,7 @@ router.post('/special/:projectid', [auth, multer.array('files')], async (req, re
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(JSON.stringify(result));
-      await attachmentService.uploadFiles(user, req.files);
+      await attachmentService.uploadFiles(user, req.files, projectid);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
       return res.status(data.statusCode).send(data.body);
