@@ -448,8 +448,8 @@ router.post('/get-jurisdiction-for-polygon', async (req, res) => {
 router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
   const geom = req.body.geom;
   const sql = `SELECT aoi, filter FROM mhfd_zoom_to_areas where filter SIMILAR TO '%(Service Area|County)%'
-  AND ST_DWithin((SELECT ST_Centroid(ST_Collect(ST_Intersection(
-    mhfd_stream_reaches.the_geom, ST_GeomFromGeoJSON('${JSON.stringify(geom)}')))) FROM mhfd_stream_reaches), mhfd_zoom_to_areas.the_geom, 0)
+  AND ST_DWithin((SELECT ST_Collect(ST_Intersection(
+    mhfd_stream_reaches.the_geom, ST_GeomFromGeoJSON('${JSON.stringify(geom)}'))) FROM mhfd_stream_reaches), mhfd_zoom_to_areas.the_geom, 0)
   `;
   const query = {
     q: sql
@@ -460,11 +460,14 @@ router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
     if (data.statusCode === 200) {
       const body = data.body;
       let answer = {
-        jurisdiction: [await getJurisdictionByGeom(JSON.stringify(geom))]
+        jurisdiction: [await getAllJurisdictionByGeom(JSON.stringify(geom))]
       };
       body.rows.forEach(row => {
         if (row.filter) {
-          answer[row.filter] = [row.aoi];
+          if (!answer[row.filter]) {
+            answer[row.filter] = [];
+          }
+          answer[row.filter].push(row.aoi);
         }
       });
       res.send(answer);
@@ -1291,6 +1294,13 @@ const getJurisdictionByGeom = async (geom) => {
   const query = { q: sql };
   const data = await needle('post', URL, query, { json: true });
   return data.body.rows[0].jurisdiction;
+}
+
+const getAllJurisdictionByGeom = async (geom) => {
+  let sql = `SELECT jurisdiction FROM "denver-mile-high-admin".jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
+  const query = { q: sql };
+  const data = await needle('post', URL, query, { json: true });
+  return data.body.rows.map(element => element.jurisdiction);
 }
 
 const addProjectToBoard = async (locality, projecttype, project_id, projectsubtype) => {
