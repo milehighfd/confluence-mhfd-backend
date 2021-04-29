@@ -471,7 +471,7 @@ router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
     if (data.statusCode === 200) {
       const body = data.body;
       let answer = {
-        jurisdiction: [await getAllJurisdictionByGeom(JSON.stringify(geom))]
+        jurisdiction: await getAllJurisdictionByGeom(JSON.stringify(geom))
       };
       body.rows.forEach(row => {
         if (row.filter) {
