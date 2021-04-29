@@ -72,6 +72,12 @@ router.get('/get-files', async (req, res) => {
    }
 });
 
+router.put('/toggle/:id', auth, async (req, res) => {
+   const id = req.params.id;
+   let attach = await attachmentService.toggle(id);
+   res.send(attach);
+})
+
 router.delete('/remove/:id', auth, async (req, res) => {
    try {
       const id = req.params.id;

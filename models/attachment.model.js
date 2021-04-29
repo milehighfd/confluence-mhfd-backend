@@ -27,6 +27,12 @@ module.exports = (sequelize, DataType) => {
     project_id: {
       type: DataType.STRING,
       allowNull: true
+    },
+    type: {
+      type: DataType.STRING
+    },
+    isCover: {
+      type: DataType.BOOLEAN
     }
   });
   return Attachment;

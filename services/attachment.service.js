@@ -325,6 +325,14 @@ const uploadFiles = async (user, files, projectid) => {
   }
 }
 
+const toggle = async (id) => {
+  const attach = await Attachment.findByPk(id);
+  attach.update({
+    isCover: !attach.isCover
+  });
+  return attach;
+}
+
 module.exports = {
   listAttachments,
   uploadFiles,
@@ -334,5 +342,6 @@ module.exports = {
   findByName,
   findCoverImage,
   exists,
-  findByFilename
+  findByFilename,
+  toggle
 }
