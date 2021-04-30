@@ -519,7 +519,7 @@ router.post('/get-countyservicearea-for-geom', auth, async (req, res) => {
           if (!answer[row.filter]) {
             answer[row.filter]  = [];
           }
-          answer[row.filter].push([row.aoi]);
+          answer[row.filter].push(row.aoi);
         }
       });
       res.send(answer);
