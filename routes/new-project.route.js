@@ -500,6 +500,36 @@ AND ST_DWithin(
   };
 });
 
+router.post('/get-countyservicearea-for-geom', auth, async (req, res) => {
+  const geom = req.body.geom;
+  const sql = `SELECT aoi, filter FROM mhfd_zoom_to_areas where filter SIMILAR TO '%(Service Area|County|Jurisdiction)%' 
+  AND ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0)`;
+  const query = {
+    q: sql
+  };
+  logger.info(sql)
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    if (data.statusCode === 200) {
+      const body = data.body;
+      let answer = {};
+
+      body.rows.forEach(row => {
+        if (row.filter) {
+          answer[row.filter] = [row.aoi];
+        }
+      });
+      res.send(answer);
+    } else {
+      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      res.status(data.statusCode).send(data);
+    }
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send(error);
+  };
+});
+
 router.post('/get-countyservicearea-for-point', auth, async (req, res) => {
   const geom = req.body.geom;
   const sql = `SELECT aoi, filter FROM mhfd_zoom_to_areas where filter SIMILAR TO '%(Service Area|County)%' 
