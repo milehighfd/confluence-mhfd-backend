@@ -890,7 +890,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality, components, jurisdiction, sponsor, cosponsor} = req.body;
+    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover} = req.body;
   const status = 'Draft';
   const projecttype = 'Capital';
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost, overheadcostdescription, additionalcost, additionalcostdescription, cosponsor, projectid)
@@ -913,7 +913,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
         return;
       }
       await addProjectToBoard(sponsor, projecttype, projectId);
-      await attachmentService.uploadFiles(user, req.files, projectId);
+      await attachmentService.uploadFiles(user, req.files, projectId, cover);
       for (const independent of JSON.parse(independetComponent)) {
         const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId};
         try {
@@ -945,7 +945,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality, components, jurisdiction, sponsor, cosponsor} = req.body;
+    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover} = req.body;
   const projectid = req.params.projectid;
   const status = 'Draft';
   const projecttype = 'Capital';
@@ -968,7 +968,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(JSON.stringify(result));
-      await attachmentService.uploadFiles(user, req.files, projectid);
+      await attachmentService.uploadFiles(user, req.files, projectid, cover);
       await projectComponentService.deleteByProjectId(projectid);
       await indepdendentService.deleteByProjectId(projectid);
       for (const independent of JSON.parse(independetComponent)) {
@@ -1001,7 +1001,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
 router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   console.log('the user ', user);
-  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor} = req.body;
+  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor, cover} = req.body;
   const status = 'Draft';
   const projecttype = 'Maintenance';
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, frequency, sponsor, maintenanceeligibility, ownership, cosponsor, projectid)
@@ -1023,7 +1023,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
         return;
       }
       await addProjectToBoard(sponsor, projecttype, projectId, projectsubtype);
-      await attachmentService.uploadFiles(user, req.files, projectId);
+      await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
@@ -1037,7 +1037,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
 router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   console.log('the user ', user);
-  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor} = req.body;
+  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor, cover} = req.body;
   const projectid = req.params.projectid;
   const status = 'Draft';
   const projecttype = 'Maintenance';
@@ -1058,7 +1058,7 @@ router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(JSON.stringify(result));
-      await attachmentService.uploadFiles(user, req.files, projectid);
+      await attachmentService.uploadFiles(user, req.files, projectid, cover);
     } else {
        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
@@ -1071,7 +1071,7 @@ router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req
 
 router.post('/study', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor} = req.body;
+  const {projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor, cover} = req.body;
   const status = 'Draft';
   const projecttype = 'Study';
   const projectsubtype = 'Master Plan';
@@ -1104,7 +1104,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
         return;
       }
       await addProjectToBoard(sponsor, projecttype, projectId);
-      await attachmentService.uploadFiles(user, req.files, projectId);
+      await attachmentService.uploadFiles(user, req.files, projectId, cover);
       for (const stream of JSON.parse(streams)) {
         projectStreamService.saveProjectStream({
           projectid: projectId,
@@ -1172,7 +1172,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
   const user = req.user;
   const projectid = req.params.projectid;
   const {projectname, description, servicearea, county, ids, cosponsor, geom, locality,
-  streams, jurisdiction, sponsor} = req.body;
+  streams, jurisdiction, sponsor, cover} = req.body;
   const status = 'Draft';
   const projecttype = 'Study';
   const projectsubtype = 'Master Plan';
@@ -1203,7 +1203,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(JSON.stringify(result));
-      await attachmentService.uploadFiles(user, req.files, projectid);
+      await attachmentService.uploadFiles(user, req.files, projectid, cover);
       await projectStreamService.deleteByProjectId(projectid);
       for (const stream of JSON.parse(streams)) {
         projectStreamService.saveProjectStream({
@@ -1228,7 +1228,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
 
 router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor, cosponsor} = req.body;
+  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor, cosponsor, cover} = req.body;
   const status = 'Draft';
   const projecttype = 'Acquisition';
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, acquisitionprogress, acquisitionanticipateddate, sponsor, cosponsor, projectid)
@@ -1250,7 +1250,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
         return;
       }
       await addProjectToBoard(sponsor, projecttype, projectId);
-      await attachmentService.uploadFiles(user, req.files, projectId);
+      await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
       return res.status(data.statusCode).send(data.body);
@@ -1265,7 +1265,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
 router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const projectid = req.params.projectid;
-  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor, cosponsor} = req.body;
+  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor, cosponsor, cover} = req.body;
   const status = 'Draft';
   const projecttype = 'Acquisition';
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} 
@@ -1288,7 +1288,7 @@ router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(result);
-      await attachmentService.uploadFiles(user, req.files, projectid);
+      await attachmentService.uploadFiles(user, req.files, projectid, cover);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
       return res.status(data.statusCode).send(data.body);
@@ -1369,7 +1369,7 @@ const addProjectToBoard = async (locality, projecttype, project_id, projectsubty
 
 router.post('/special', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, geom, locality, jurisdiction, sponsor, cosponsor} = req.body;
+  const {projectname, description, servicearea, county, geom, locality, jurisdiction, sponsor, cosponsor, cover} = req.body;
   const status = 'Draft';
   const projecttype = 'Special';
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, cosponsor, projectid) 
@@ -1392,7 +1392,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
         return;
       }
       await addProjectToBoard(sponsor, projecttype, projectId);
-      await attachmentService.uploadFiles(user, req.files, projectId);
+      await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
       return res.status(data.statusCode).send(data.body);
@@ -1427,7 +1427,7 @@ router.post('/special/:projectid', [auth, multer.array('files')], async (req, re
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(JSON.stringify(result));
-      await attachmentService.uploadFiles(user, req.files, projectid);
+      await attachmentService.uploadFiles(user, req.files, projectid, cover);
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
       return res.status(data.statusCode).send(data.body);
