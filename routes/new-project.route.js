@@ -502,7 +502,7 @@ AND ST_DWithin(
 
 router.post('/get-countyservicearea-for-geom', auth, async (req, res) => {
   const geom = req.body.geom;
-  const sql = `SELECT aoi, filter FROM mhfd_zoom_to_areas where filter SIMILAR TO '%(Service Area|County|Jurisdiction)%' 
+  const sql = `SELECT aoi, filter FROM mhfd_zoom_to_areas where filter SIMILAR TO '%(Service Area|County)%' 
   AND ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0)`;
   const query = {
     q: sql
@@ -512,8 +512,9 @@ router.post('/get-countyservicearea-for-geom', auth, async (req, res) => {
     const data = await needle('post', URL, query, { json: true });
     if (data.statusCode === 200) {
       const body = data.body;
-      let answer = {};
-
+      let answer = {
+        jurisdiction: await getAllJurisdictionByGeom(JSON.stringify(geom))
+      };
       body.rows.forEach(row => {
         if (row.filter) {
           if (!answer[row.filter]) {
