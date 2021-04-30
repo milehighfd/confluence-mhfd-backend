@@ -445,7 +445,7 @@ router.post('/get-jurisdiction-for-polygon', async (req, res) => {
   }
 });
 
-router.post('/get-countyservicearea-for-polygon', async (req, res) => {
+router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
   const geom = req.body.geom;
   const sql = `WITH dumped AS (
     SELECT  (
