@@ -445,22 +445,30 @@ router.post('/get-jurisdiction-for-polygon', async (req, res) => {
   }
 });
 
-router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
+router.post('/get-countyservicearea-for-polygon', async (req, res) => {
   const geom = req.body.geom;
-  const sql = `SELECT aoi, filter 
-    FROM mhfd_zoom_to_areas 
-    WHERE filter SIMILAR TO '%(Service Area|County)%' 
-    AND ST_DWithin( 
-      (SELECT (ST_Dump(
-                  ST_Intersection( 
+  const sql = `WITH dumped AS (
+    SELECT  (
+            ST_Dump(
+                ST_Intersection( 
                     mhfd_stream_reaches.the_geom, 
-                    ST_GeomFromGeoJSON('${JSON.stringify(geom)}')
-                  )
-             )).geom AS the_geom
-       FROM mhfd_stream_reaches), 
-       mhfd_zoom_to_areas.the_geom, 
-       0
-    )
+        ST_GeomFromGeoJSON('${JSON.stringify(geom)}')
+                )
+            )
+        ).geom AS the_geom
+    FROM mhfd_stream_reaches
+),
+unioned AS (
+    SELECT ST_Union(the_geom) AS the_geom FROM dumped
+)
+SELECT aoi, filter 
+FROM mhfd_zoom_to_areas, unioned 
+WHERE filter SIMILAR TO '%(Service Area|County)%' 
+AND ST_DWithin( 
+    unioned.the_geom, 
+    mhfd_zoom_to_areas.the_geom, 
+    0
+)
     `;
   const query = {
     q: sql
