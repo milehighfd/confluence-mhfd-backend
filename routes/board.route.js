@@ -108,27 +108,29 @@ const sendBoardProjectsToProp = async (boards, prop) => {
         for (var j = 0 ; j < boardProjects.length ; j++) {
             let bp = boardProjects[j];
             let p = await getMinimumDateByProjectId(bp.project_id, true);
-
-            let destinyBoard = await getBoard('WORK_PLAN', p[prop], board.year, board.projecttype);
-            //TODO: improve to avoid multiple queries to same board
-
-            let newBoardProject = new BoardProject({
-                board_id: destinyBoard._id,
-                project_id: bp.project_id,
-                position0: bp.position0,
-                position1: bp.position1,
-                position2: bp.position2,
-                position3: bp.position3,
-                position4: bp.position4,
-                position5: bp.position5,
-                req1: bp.req1,
-                req2: bp.req2,
-                req3: bp.req3,
-                req4: bp.req4,
-                req5: bp.req5,
-                from: board.locality,
-            })
-            await newBoardProject.save();
+            let propValues = p[prop].split(',');
+            for (let k = 0 ; k < propValues.length ; k++) {
+                let propVal = propValues[k];
+                let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype);
+                //TODO: improve to avoid multiple queries to same board
+                let newBoardProject = new BoardProject({
+                    board_id: destinyBoard._id,
+                    project_id: bp.project_id,
+                    position0: bp.position0,
+                    position1: bp.position1,
+                    position2: bp.position2,
+                    position3: bp.position3,
+                    position4: bp.position4,
+                    position5: bp.position5,
+                    req1: bp.req1,
+                    req2: bp.req2,
+                    req3: bp.req3,
+                    req4: bp.req4,
+                    req5: bp.req5,
+                    from: board.locality,
+                })
+                await newBoardProject.save();
+            }
         }
     }
 }
