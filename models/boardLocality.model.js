@@ -10,6 +10,12 @@ module.exports = (sequelize, DataType) => {
       type: DataType.ENUM,
       values: ['COUNTY_WORK_PLAN', 'SERVICE_AREA_WORK_PLAN']
     },
+    staff: {
+      type: DataType.STRING,
+    },
+    email: {
+      type: DataType.STRING,
+    }
   });
   return boardLocality;
 }
