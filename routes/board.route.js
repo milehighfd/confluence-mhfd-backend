@@ -10,7 +10,9 @@ const logger = require('../config/logger');
 
 const db = require('../config/db');
 const { getCoordsByProjectId, getMidByProjectId, getMinimumDateByProjectId } = require('./mapgallery.service');
-const Board = db.board; 
+const { sendBoardNotification } = require('../services/user.service');
+const Board = db.board;
+const User = db.user;
 const BoardProject = db.boardProject;
 const BoardLocality = db.boardLocality;
 const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
@@ -267,6 +269,69 @@ router.get('/:boardId/boards/:type', async (req, res) => {
     });
 })
 
+const getEmailsForWR = async (board) => {
+    let emails = [];
+    let boardLocalities = await BoardLocality.findAll({
+        where: {
+            fromLocality: board.locality
+        }
+    });
+    boardLocalities.forEach((bl) => {
+        emails.push(bl.email)
+    });
+    let users = await User.findAll({
+        where: {
+            organization: board.locality
+        }
+    })
+    users.forEach((u) => {
+        emails.push(u.email)
+    })
+    return emails;
+}
+
+const getEmailsForWP = async (board) => {
+    //TODO: maybe replace it with a distinct on board localities
+    let emails = [];
+    let allStaffEmails = ['dskuodas@mhfd.org', 'kbauer@mhfd.org', 'jwatt@mhfd.org', 'bseymour@mhfd.org', 'mlynch@mhfd.org', 'jvillines@mhfd.org', 'bkohlenberg@mhfd.org', 'tpatterson@mhfd.org', 'bchongtoua@mhfd.org']
+    allStaffEmails.forEach((ase) => {
+        emails.push(ase);
+    })
+    let boardLocalities = await BoardLocality.findAll({
+        where: {
+            toLocality: board.locality
+        }
+    });
+    for (let i = 0 ; i < boardLocalities.length ; i++) {
+        let bl = boardLocalities[i];
+        let jurisdiction = bl.fromLocality;
+        let users = await User.findAll({
+            where: {
+                organization: jurisdiction
+            }
+        })
+        users.forEach((u) => {
+            emails.push(u.email)
+        })
+    }
+    return emails;
+}
+
+const sendMails = async (board, fullName) => {
+    let emails = [];
+    if (board.type === 'WORK_REQUEST') {
+        emails = await getEmailsForWR(board);
+    } else {
+        emails = await getEmailsForWP(board);
+    }
+    emails = emails.filter ((value, index, array) => { 
+        return array.indexOf(value) == index;
+    });
+    emails.forEach((email) => {
+        sendBoardNotification(email, board.type, board.locality, board.year, fullName)
+    })
+}
+
 router.put('/:boardId', [auth], async (req, res) => {
     const { boardId } = req.params;
     const { status, comment } = req.body;
@@ -279,6 +344,7 @@ router.put('/:boardId', [auth], async (req, res) => {
         await updateBoards(board, status, comment);
         let bodyResponse = { status: 'updated' };
         if (status === 'Approved' && board.status !== status) {
+            sendMails(board, req.user.name)
             let r = await moveCardsToNextLevel(board);
             bodyResponse = {
                 ...bodyResponse,

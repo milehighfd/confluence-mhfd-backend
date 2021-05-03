@@ -110,20 +110,25 @@ const sendConfirmAccount = async (user) => {
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 }
 
-const sendBoardNotification = async (email, type, locality, year, tabKey) => {
+const sendBoardNotification = async (email, type, locality, year, fullName) => {
   let bodyOptions;
-  let url = `${MHFD_FRONTEND}/work-plan?year=${year}&locality=${locality}&tabKey=${tabKey}`
+  let url;
   if (type === 'WORK_REQUEST') {
+    url = `${MHFD_FRONTEND}/work-request?year=${year}&locality=${locality}`
     bodyOptions = {
       title: `${locality}'s Work Request has been submitted!`,
-      body: 'All projects from the jurisdiction are now viewable in your County or Service Area Work Plan. Click below to reprioritize projects and revise or approve funding allocations.',
+      body: `${fullName} has submitted all requested projects from ${locality} Jurisdiction are now viewable in the applicable County and Service Area Work Plans on Confluence for MHFD review.`,
       url,
-      buttonName: 'View Work Plan',
+      buttonName: 'View Work Request',
     }
   } else {
+    url = `${MHFD_FRONTEND}/work-plan?year=${year}&locality=${locality}`
     bodyOptions = {
-      title: `${locality}'s Work Request has been approved!`,
-      body: `MHFD's County and Service Area Managers have reviewed ${locality}'s Work Requested and have submitted a Work Plan, pending approval from the Board. To view ${locality}'s pending Work Plan click below.`,
+      title: `${locality}'s Work Plan has been approved!`,
+      body: `
+      The ${locality} Manager has reviewed and approved the ${locality} Work Plan, and it is ready for final management review and approval by the Board.
+      A final notification will be provided when the MHFD Board has approved the Work Plan.
+      `,
       url,
       buttonName: 'View Work Plan',
     }
