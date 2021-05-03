@@ -122,11 +122,11 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                     position3: bp.position3,
                     position4: bp.position4,
                     position5: bp.position5,
-                    req1: bp.req1,
-                    req2: bp.req2,
-                    req3: bp.req3,
-                    req4: bp.req4,
-                    req5: bp.req5,
+                    req1: bp.req1 == null ? null : (bp.req1 / propValues.length),
+                    req2: bp.req2 == null ? null : (bp.req2 / propValues.length),
+                    req3: bp.req3 == null ? null : (bp.req3 / propValues.length),
+                    req4: bp.req4 == null ? null : (bp.req4 / propValues.length),
+                    req5: bp.req5 == null ? null : (bp.req5 / propValues.length),
                     from: board.locality,
                 })
                 await newBoardProject.save();
