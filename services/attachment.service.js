@@ -14,8 +14,12 @@ const storage = new Storage({
   projectId: 'mhfd-cloud'
 });
 
-function getPublicUrl(filename) {
-  return `${STORAGE_URL}/${STORAGE_NAME}/${filename}`;
+function getPublicUrl(filename, projectid) {
+  if (projectid) {
+    return `${STORAGE_URL}/${STORAGE_NAME}/${projectid}/${filename}`;
+  } else {
+    return `${STORAGE_URL}/${STORAGE_NAME}/${filename}`;
+  }
 }
 
 const listAttachments = async (page, limit, sortByField, sortType, projectid) => {
@@ -149,7 +153,11 @@ const countAttachments = async () => {
 
 const removeAttachment = async (id) => {
   const attach = await Attachment.findByPk(id, { raw: true });
-  await storage.bucket(STORAGE_NAME).file(attach.filename).delete();
+  if (attach.project_id) {
+    await storage.bucket(STORAGE_NAME).file(`${attach.project_id}/${attach.filename}`).delete();
+  } else {
+    await storage.bucket(STORAGE_NAME).file(attach.filename).delete();
+  }
   try {
     await storage.bucket(STORAGE_NAME).file('compressed/' + attach.filename).delete();
   } catch (err) {
@@ -214,10 +222,13 @@ const uploadFiles = async (user, files, projectid, cover) => {
   }
 
   for (const file of files) {
-    const name = file.originalname;
+    let name = file.originalname;
+    if (projectid) {
+      name = `${projectid}/${name}`
+    }
     const blob = bucket.file(name);
     let attach = {};
-    attach.value = getPublicUrl(name);
+    attach.value = getPublicUrl(name, projectid);
     attach.user_id = user._id;
     attach.filename = file.originalname;
     attach.mimetype = file.mimetype;
