@@ -82,7 +82,8 @@ const sendApprovedAccount = async (user) => {
     from: MHFD_EMAIL,
     to: email,
     subject: "MHFD Confluence App - Account approved",
-    html: emailToSend
+    html: emailToSend,
+    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin'])
   };
   const info = await transporter.sendMail(options);
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
