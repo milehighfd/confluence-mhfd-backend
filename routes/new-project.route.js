@@ -1025,7 +1025,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
   }
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
-    notRequiredValues += `, ${notRequiredValues}`;
+    notRequiredValues = `, ${notRequiredValues}`;
   }
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost ${notRequiredFields} ,projectid)
    VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}' 
@@ -1033,7 +1033,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
   const query = {
     q: insertQuery
   };
-  console.log('my query ' , query)
+  console.log('my query ' , insertQuery)
   let result = {};
   try {
     const data = await needle('post', URL, query, { json: true });
@@ -1200,7 +1200,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
   }
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
-    notRequiredValues += `, ${notRequiredValues}`;
+    notRequiredValues = `, ${notRequiredValues}`;
   }
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor ${notRequiredFields} ,projectid)
    VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
@@ -1324,7 +1324,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
   }
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
-    notRequiredValues += `, ${notRequiredValues}`;
+    notRequiredValues = `, ${notRequiredValues}`;
   }
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor ${notRequiredFields} ,projectid)
   (SELECT ST_Collect(the_geom) as the_geom, '${jurisdiction}' as jurisdiction, '${projectname}' as projectname , '${description}' as description, '${servicearea}' as servicearea,
@@ -1516,7 +1516,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
   }
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
-    notRequiredValues += `, ${notRequiredValues}`;
+    notRequiredValues = `, ${notRequiredValues}`;
   }
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor ${notRequiredFields}  ,projectid)
    VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
@@ -1694,7 +1694,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
   }
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
-    notRequiredValues += `, ${notRequiredValues}`;
+    notRequiredValues = `, ${notRequiredValues}`;
   }
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor ${notRequiredFields} ,projectid) 
   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}' ${notRequiredValues} , -1)`;
