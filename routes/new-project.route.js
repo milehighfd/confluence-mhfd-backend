@@ -1024,8 +1024,8 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
     notRequiredValues += `'${cosponsor}'`;
   }
   if (notRequiredFields) {
-    notRequiredFields += ', ';
-    notRequiredValues += ', ';
+    notRequiredFields = `, ${notRequiredFields}`;
+    notRequiredValues += `, ${notRequiredValues}`;
   }
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost ${notRequiredFields} ,projectid)
    VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}' 
@@ -1109,7 +1109,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
     notRequiredFields += `cosponsor = '${cosponsor}'`;
   }
   if (notRequiredFields) {
-    notRequiredFields += ', ';
+    notRequiredFields = `, ${notRequiredFields}`;
   }
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = ST_GeomFromGeoJSON('${geom}'),
    jurisdiction = '${jurisdiction}', projectname = '${projectname}', 
@@ -1164,8 +1164,46 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
   const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor, cover} = req.body;
   const status = 'Draft';
   const projecttype = 'Maintenance';
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, frequency, sponsor, maintenanceeligibility, ownership, cosponsor, projectid)
-   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${frequency}', '${sponsor}', '${maintenanceeligibility}', '${ownership}', '${cosponsor}', ${-1})`;
+  let notRequiredFields = ``;
+  let notRequiredValues = ``;
+  if (frequency) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += 'frequency';
+    notRequiredValues += `'${frequency}'`;
+  }
+  if (maintenanceeligibility) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += 'maintenanceeligibility';
+    notRequiredValues += `'${maintenanceeligibility}'`;
+  }
+  if (ownership) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += 'ownership';
+    notRequiredValues += `'${ownership}'`;
+  }
+  if (cosponsor) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += 'cosponsor';
+    notRequiredValues += `'${cosponsor}'`;
+  }
+  if (notRequiredFields) {
+    notRequiredFields = `, ${notRequiredFields}`;
+    notRequiredValues += `, ${notRequiredValues}`;
+  }
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor ${notRequiredFields} ,projectid)
+   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
   const query = {
     q: insertQuery
   };
@@ -1201,12 +1239,43 @@ router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req
   const projectid = req.params.projectid;
   const status = 'Draft';
   const projecttype = 'Maintenance';
+  let notRequiredFields = ``;
+  if (frequency) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+    }
+    notRequiredFields += `frequency = '${frequency}'`;
+  }
+  if (maintenanceeligibility) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+    }
+    notRequiredFields += `maintenanceeligibility = '${maintenanceeligibility}'`;
+  }
+  if (ownership) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += `ownership = '${ownership}'`;
+  }
+  if (cosponsor) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += `cosponsor = '${cosponsor}'`;
+  }
+  if (notRequiredFields) {
+    notRequiredFields = `, ${notRequiredFields}`;
+  }
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}',
    projectname = '${projectname}', description = '${description}', servicearea = '${servicearea}',
     county = '${county}', status = '${status}', projecttype = '${projecttype}',
-     projectsubtype = '${projectsubtype}', frequency = '${frequency}', 
-     sponsor = '${sponsor}', maintenanceeligibility = '${maintenanceeligibility}', 
-     ownership = '${ownership}', cosponsor = '${cosponsor}' WHERE projectid = ${projectid}`;
+     projectsubtype = '${projectsubtype}',  
+     sponsor = '${sponsor}'
+     ${notRequiredFields} 
+       WHERE projectid = ${projectid}`;
   const query = {
     q: updateQuery
   };
