@@ -1430,7 +1430,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
     if (notRequiredFields) {
       notRequiredFields += ', ';
     }
-    notRequiredFields += `cosponsor = '${cosponsor}`;
+    notRequiredFields += `cosponsor = '${cosponsor}'`;
   }
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
