@@ -1488,11 +1488,42 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
   const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor, cosponsor, cover} = req.body;
   const status = 'Draft';
   const projecttype = 'Acquisition';
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, acquisitionprogress, acquisitionanticipateddate, sponsor, cosponsor, projectid)
-   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${acquisitionprogress}', ${acquisitionanticipateddate}, '${sponsor}', '${cosponsor}', ${-1})`;
+  let notRequiredFields = ``;
+  let notRequiredValues = ``;
+  if (acquisitionprogress) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += 'acquisitionprogress';
+    notRequiredValues += `'${acquisitionprogress}'`;
+  }
+  if (acquisitionanticipateddate) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += 'acquisitionanticipateddate';
+    notRequiredValues += `${acquisitionanticipateddate}`;
+  }
+  if (cosponsor) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += 'cosponsor';
+    notRequiredValues += `'${cosponsor}'`;
+  }
+  if (notRequiredFields) {
+    notRequiredFields = `, ${notRequiredFields}`;
+    notRequiredValues += `, ${notRequiredValues}`;
+  }
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor ${notRequiredFields}  ,projectid)
+   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
   const query = {
     q: insertQuery
   };
+  
   logger.info('my query ' + query);
   let result = {};
   try {
@@ -1525,13 +1556,35 @@ router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req
   const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor, cosponsor, cover} = req.body;
   const status = 'Draft';
   const projecttype = 'Acquisition';
+  let notRequiredFields = ``;
+  if (acquisitionprogress) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+    }
+    notRequiredFields += `acquisitionprogress = '${acquisitionprogress}'`;
+  }
+  if (acquisitionanticipateddate) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+    }
+    notRequiredFields += `acquisitionanticipateddate = ${acquisitionanticipateddate}`;
+  }
+  if (cosponsor) {
+    if (notRequiredFields) {
+      notRequiredFields += `, `;
+    }
+    notRequiredFields += `cosponsor = '${cosponsor}'`;
+  }
+  if (notRequiredFields) {
+    notRequiredFields = `, ${notRequiredFields}`;
+  }
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} 
   SET the_geom = ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}',
    projectname = '${projectname}', description = '${description}', 
    servicearea = '${servicearea}', county = '${county}', status = '${status}', 
-   projecttype = '${projecttype}', acquisitionprogress = '${acquisitionprogress}', 
-   acquisitionanticipateddate = ${acquisitionanticipateddate}, sponsor = '${sponsor}',
-   cosponsor = '${cosponsor}'
+   projecttype = '${projecttype}',  
+   sponsor = '${sponsor}'
+   ${notRequiredFields}
    WHERE  projectid = ${projectid}
    `;
   logger.info('THE QUERY IS ' + updateQuery);
