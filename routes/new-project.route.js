@@ -1255,14 +1255,12 @@ router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req
   if (ownership) {
     if (notRequiredFields) {
       notRequiredFields += ', ';
-      notRequiredValues += ', ';
     }
     notRequiredFields += `ownership = '${ownership}'`;
   }
   if (cosponsor) {
     if (notRequiredFields) {
       notRequiredFields += ', ';
-      notRequiredValues += ', ';
     }
     notRequiredFields += `cosponsor = '${cosponsor}'`;
   }
@@ -1428,14 +1426,11 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
     parsedIds += "'" + id + "'";
   }
   let notRequiredFields = ``;
-  let notRequiredValues = ``;
   if (cosponsor) {
     if (notRequiredFields) {
       notRequiredFields += ', ';
-      notRequiredValues += ', ';
     }
     notRequiredFields += 'cosponsor';
-    notRequiredValues += `cosponsor = '${cosponsor}'`;
   }
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
