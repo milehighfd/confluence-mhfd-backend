@@ -1312,10 +1312,24 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
     }
     parsedIds += "'" + id + "'";
   }
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, cosponsor, sponsor, projectid)
+  let notRequiredFields = ``;
+  let notRequiredValues = ``;
+  if (cosponsor) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += 'cosponsor';
+    notRequiredValues += `'${cosponsor}' as cosponsor`;
+  }
+  if (notRequiredFields) {
+    notRequiredFields = `, ${notRequiredFields}`;
+    notRequiredValues += `, ${notRequiredValues}`;
+  }
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor ${notRequiredFields} ,projectid)
   (SELECT ST_Collect(the_geom) as the_geom, '${jurisdiction}' as jurisdiction, '${projectname}' as projectname , '${description}' as description, '${servicearea}' as servicearea,
-  '${county}' as county, '${status}' as status, '${projecttype}' as projecttype, '${projectsubtype}' as projectsubtype, '${cosponsor}' as cosponsor,
-   '${sponsor}' as sponsor, ${-1} as projectid FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds}))`;
+  '${county}' as county, '${status}' as status, '${projecttype}' as projecttype, '${projectsubtype}' as projectsubtype,
+   '${sponsor}' as sponsor ${notRequiredValues} ,${-1} as projectid FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds}))`;
   const query = {
     q: insertQuery
   };
@@ -1413,13 +1427,27 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
     }
     parsedIds += "'" + id + "'";
   }
+  let notRequiredFields = ``;
+  let notRequiredValues = ``;
+  if (cosponsor) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += 'cosponsor';
+    notRequiredValues += `cosponsor = '${cosponsor}'`;
+  }
+  if (notRequiredFields) {
+    notRequiredFields = `, ${notRequiredFields}`;
+    notRequiredValues += `, ${notRequiredValues}`;
+  }
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET
   the_geom = (SELECT ST_Collect(the_geom) FROM mhfd_stream_reaches WHERE unique_mhfd_code IN(${parsedIds})), jurisdiction = '${jurisdiction}',
    projectname = '${projectname}', description = '${description}',
     servicearea = '${servicearea}', county = '${county}',
      status = '${status}', projecttype = '${projecttype}', 
-     projectsubtype = '${projectsubtype}', cosponsor = '${cosponsor}',
-      sponsor = '${sponsor}' WHERE projectid = ${projectid}
+     projectsubtype = '${projectsubtype}',
+      sponsor = '${sponsor}' ${notRequiredFields} WHERE projectid = ${projectid}
   `;
   const query = {
     q: updateQuery
