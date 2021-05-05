@@ -375,9 +375,18 @@ router.post('/streams-data', auth, async (req, res) => {
       streamsIntersected.str_name, 
       streamsIntersected.cartodb_id,  
       streamsIntersected.mhfd_code,
+      streamsIntersected.reach_code,
+      streamsIntersected.trib_code1,
+      streamsIntersected.trib_code2,
+      streamsIntersected.trib_code3,
+      streamsIntersected.trib_code4,
+      streamsIntersected.trib_code5,
+      streamsIntersected.trib_code6,
+      streamsIntersected.trib_code7,
       ST_length(ST_intersection(streamsIntersected.the_geom, j.the_geom)::geography) as length
       FROM 
-      ( SELECT unique_mhfd_code as mhfd_code, cartodb_id, str_name, the_geom FROM mhfd_stream_reaches WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) ) streamsIntersected ,
+      ( SELECT unique_mhfd_code as mhfd_code, reach_code, trib_code1, trib_code2, trib_code3, trib_code4, trib_code5, trib_code6, trib_code7, 
+        cartodb_id, str_name, the_geom FROM mhfd_stream_reaches WHERE ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0) ) streamsIntersected ,
       jurisidictions j 
       WHERE
       ST_DWithin(streamsIntersected.the_geom, j.the_geom, 0)
@@ -385,11 +394,13 @@ router.post('/streams-data', auth, async (req, res) => {
   const query = {
     q: sql
   }
-  logger.info(sql)
+  logger.info(sql);
+  let streamsInfo = [];
   try {
     const data = await needle('post', URL, query, { json: true });
     if (data.statusCode === 200) {
       const body = data.body;
+      streamsInfo = body.rows;
       const answer = {};
       body.rows.forEach(row => {
         if (row.str_name) {
@@ -406,16 +417,58 @@ router.post('/streams-data', auth, async (req, res) => {
           });
         }
       });
-      /*
-      const drainageQuery = `SELECT s.str_name, j.jurisdiction, ST_AREA(ST_Intersection(c.the_geom, j.the_geom)::geography) 
-      as area FROM mhfd_stream_reaches s,  mhfd_catchments_simple_v1 c, jurisidictions j WHERE 
-      ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), s.the_geom, 0) AND s.reach_code is not distinct from c.reach_code 
-      and s.trib_code1 is not distinct from c.trib_code1 and s.trib_code2 is not distinct from c.trib_code2 and s.trib_code3 is not distinct from c.trib_code3
-      and s.trib_code4 is not distinct from c.trib_code4 and s.trib_code5 is not distinct from c.trib_code5
-      and s.trib_code6 is not distinct from c.trib_code6 and s.trib_code7 is not distinct from c.trib_code7 AND ST_DWithin(c.the_geom, j.the_geom, 0) 
-      AND s.reach_code is not distinct from (SELECT max(reach_code) FROM mhfd_stream_reaches WHERE ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0)) `;
-      */
-      res.send(answer);
+      const promises = [];
+      for (const stream of streamsInfo) {
+        const drainageSQL = `select st_area(st_intersection(j.the_geom, union_c.the_geom) ) as area , j.jurisdiction from jurisidictions j , (select st_union(the_geom) as the_geom from catchments c where 
+         '${stream.reach_code}' is not distinct from c.reach_code 
+          and ${stream.trib_code1} is not distinct from c.trib_code1 
+          and ${stream.trib_code2} is not distinct from c.trib_code2 
+          and ${stream.trib_code3} is not distinct from c.trib_code3
+          and ${stream.trib_code4} is not distinct from c.trib_code4 
+          and ${stream.trib_code5} is not distinct from c.trib_code5
+          and ${stream.trib_code6} is not distinct from c.trib_code6 
+          and ${stream.trib_code7} is not distinct from c.trib_code7 ) union_c 
+          where ST_DWithin(ST_SimplifyPreserveTopology(j.the_geom, 0.1), ST_SimplifyPreserveTopology(union_c.the_geom, 0.1), 0) `;
+          console.log(drainageSQL);
+          const drainageQuery = {
+            q: drainageSQL
+          };
+          const promise = new Promise((resolve, reject) => {
+            needle('post', URL, drainageQuery, { json: true })
+            .then(response => {
+              if (response.statusCode === 200) {
+                logger.info('I reached ', JSON.stringify(response.body.rows));
+                resolve({
+                  str_name: stream.str_name,
+                  drainage: response.body.rows
+                });
+              } else {
+                logger.info('for query '+ drainageSQL);
+                logger.error(response.statusCode + ' ' + JSON.stringify(response.body));
+                resolve({
+                  str_name: stream.str_name,
+                  drainage: []
+                });
+              }
+            })
+            .catch(error => {
+              logger.info('crashed');
+              reject({
+                str_name: stream.str_name,
+                drainage: []
+              });
+            });
+          });
+          promises.push(promise);
+      }
+      Promise.all(promises).then(async (values) => {
+        logger.info('my values ', values);
+        values.forEach(value => {
+          logger.info(value);
+          //answer[value.str_name].push(value.drainage);
+        });
+        res.send(answer);
+      });
     } else {
       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data);
@@ -935,9 +988,47 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
     independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover} = req.body;
   const status = 'Draft';
   const projecttype = 'Capital';
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost, overheadcostdescription, additionalcost, additionalcostdescription, cosponsor, projectid)
-   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}',
-   '${overheadcostdescription}', '${additionalcost}', '${additionalcostdescription}', '${cosponsor}', ${-1})`;
+  let notRequiredFields = ``;
+  let notRequiredValues = ``;
+  if (overheadcostdescription) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += 'overheadcostdescription';
+    notRequiredValues += `'${overheadcostdescription}'`;
+  }
+  if (additionalcost) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += 'additionalcost';
+    notRequiredValues += `'${additionalcost}'`;
+  }
+  if (additionalcostdescription) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += 'additionalcostdescription';
+    notRequiredValues += `'${additionalcostdescription}'`;
+  }
+  if (cosponsor) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+      notRequiredValues += ', ';
+    }
+    notRequiredFields += 'cosponsor';
+    notRequiredValues += `'${cosponsor}'`;
+  }
+  if (notRequiredFields) {
+    notRequiredFields += ', ';
+    notRequiredValues += ', ';
+  }
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost ${notRequiredFields} ,projectid)
+   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}' 
+   ${notRequiredValues} ,${-1})`;
   const query = {
     q: insertQuery
   };
@@ -991,13 +1082,39 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
   const projectid = req.params.projectid;
   const status = 'Draft';
   const projecttype = 'Capital';
+  let notRequiredFields = ``;
+  if (overheadcostdescription) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+    }
+    notRequiredFields += `overheadcostdescription = '${overheadcostdescription}'`;
+  }
+  if (additionalcost) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+    }
+    notRequiredFields += `additionalcost = '${additionalcost}'`;
+  }
+  if (additionalcostdescription) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+    }
+    notRequiredFields += `additionalcostdescription = '${additionalcostdescription}'`;
+  }
+  if (cosponsor) {
+    if (notRequiredFields) {
+      notRequiredFields += ', ';
+    }
+    notRequiredFields += `cosponsor = '${cosponsor}'`;
+  }
+  if (notRequiredFields) {
+    notRequiredFields += ', ';
+  }
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = ST_GeomFromGeoJSON('${geom}'),
    jurisdiction = '${jurisdiction}', projectname = '${projectname}', 
    description = '${description}', servicearea = '${servicearea}', county = '${county}',
     status = '${status}', projecttype = '${projecttype}', sponsor = '${sponsor}', 
-    overheadcost = '${overheadcost}', overheadcostdescription = '${overheadcostdescription}', 
-    additionalcost = '${additionalcost}', additionalcostdescription = '${additionalcostdescription}',
-    cosponsor = '${cosponsor}'
+    overheadcost = '${overheadcost}' ${notRequiredFields}
     WHERE  projectid = ${projectid}`;
   const query = {
     q: updateQuery
