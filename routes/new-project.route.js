@@ -1430,11 +1430,10 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
     if (notRequiredFields) {
       notRequiredFields += ', ';
     }
-    notRequiredFields += 'cosponsor';
+    notRequiredFields += `cosponsor = '${cosponsor}`;
   }
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
-    notRequiredValues += `, ${notRequiredValues}`;
   }
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET
   the_geom = (SELECT ST_Collect(the_geom) FROM mhfd_stream_reaches WHERE unique_mhfd_code IN(${parsedIds})), jurisdiction = '${jurisdiction}',
