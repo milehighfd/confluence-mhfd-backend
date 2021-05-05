@@ -403,19 +403,20 @@ router.post('/streams-data', auth, async (req, res) => {
       streamsInfo = body.rows;
       const answer = {};
       body.rows.forEach(row => {
-        if (row.str_name) {
-          if (!answer[row.str_name]) {
-            answer[row.str_name] = [];
+        let str_name = row.str_name?row.str_name:'Unnamed Streams';
+        
+          if (!answer[str_name]) {
+            answer[str_name] = [];
           }
-          answer[row.str_name].push({
+          answer[str_name].push({
             jurisdiction: row.jurisdiction,
             length: row.length,
             cartodb_id: row.cartodb_id,
             mhfd_code: row.mhfd_code,
-            str_name: row.str_name,
+            str_name: str_name,
             drainage: 0
           });
-        }
+        
       });
       const promises = [];
       for (const stream of streamsInfo) {
