@@ -37,7 +37,7 @@ const getData2 = async (req, res, next) => {
   res.locals.data = [];
   if (type === 'WORK_REQUEST') {
     if (req.user) {
-      if(req.user.designation === ROLES.MFHD_STAFF) {
+      if(req.user.designation === ROLES.MFHD_STAFF || req.user.designation === ROLES.MFHD_ADMIN) {
         let localities = await Locality.findAll({
           where: {
             type: 'JURISDICTION'
