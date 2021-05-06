@@ -420,7 +420,7 @@ router.post('/streams-data', auth, async (req, res) => {
       });
       const promises = [];
       for (const stream of streamsInfo) {
-        const drainageSQL = `select st_area(st_intersection(j.the_geom, union_c.the_geom) ) as area , j.jurisdiction from jurisidictions j , (select st_union(the_geom) as the_geom from catchments c where 
+        const drainageSQL = `select st_area(ST_transform(st_intersection(j.the_geom, union_c.the_geom), 26986) ) as area , j.jurisdiction from jurisidictions j , (select st_union(the_geom) as the_geom from catchments c where 
          '${stream.reach_code}' is not distinct from c.reach_code 
           and ${stream.trib_code1} is not distinct from c.trib_code1 
           and ${stream.trib_code2} is not distinct from c.trib_code2 
@@ -429,7 +429,7 @@ router.post('/streams-data', auth, async (req, res) => {
           and ${stream.trib_code5} is not distinct from c.trib_code5
           and ${stream.trib_code6} is not distinct from c.trib_code6 
           and ${stream.trib_code7} is not distinct from c.trib_code7 ) union_c 
-          where ST_DWithin(ST_SimplifyPreserveTopology(j.the_geom, 0.1), ST_SimplifyPreserveTopology(union_c.the_geom, 0.1), 0) `;
+          where ST_INTERSECTS(ST_SimplifyPreserveTopology(j.the_geom, 0.1), ST_SimplifyPreserveTopology(union_c.the_geom, 0.1)) `;
           console.log(drainageSQL);
           const drainageQuery = {
             q: drainageSQL
@@ -462,10 +462,22 @@ router.post('/streams-data', auth, async (req, res) => {
           });
           promises.push(promise);
       }
-      Promise.all(promises).then(async (values) => {
-        logger.info('my values ', values);
-        values.forEach(value => {
-          logger.info(value);
+      Promise.all(promises).then(async (promiseData) => {
+        logger.info('my values '+ JSON.stringify(promiseData));
+        promiseData.forEach(bucket => {
+          //Disclaimer: I don't create a more optimal solution because we don't have enough time
+          // will be work fine for most cases 
+          logger.info('bucket ' + JSON.stringify(bucket));
+          const str_name = bucket.str_name? bucket.str_name : 'Unnamed Streams';
+          for (const array of answer[str_name]) {
+            logger.info('array '+ JSON.stringify(array));
+            for (const info of bucket.drainage) {
+              if (array.jurisdiction === info.jurisdiction) {
+                array.drainage += (info.area * 3.86102e-7);
+              }
+            }
+          }
+          
           //answer[value.str_name].push(value.drainage);
         });
         res.send(answer);
