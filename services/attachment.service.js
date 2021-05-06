@@ -14,12 +14,8 @@ const storage = new Storage({
   projectId: 'mhfd-cloud'
 });
 
-function getPublicUrl(filename, projectid) {
-  if (projectid) {
-    return `${STORAGE_URL}/${STORAGE_NAME}/${projectid}/${filename}`;
-  } else {
-    return `${STORAGE_URL}/${STORAGE_NAME}/${filename}`;
-  }
+function getPublicUrl(filename) {
+  return `${STORAGE_URL}/${STORAGE_NAME}/${filename}`;
 }
 
 const listAttachments = async (page, limit, sortByField, sortType, projectid) => {
@@ -228,7 +224,7 @@ const uploadFiles = async (user, files, projectid, cover) => {
     }
     const blob = bucket.file(name);
     let attach = {};
-    attach.value = getPublicUrl(name, projectid);
+    attach.value = getPublicUrl(name);
     attach.user_id = user._id;
     attach.filename = file.originalname;
     attach.mimetype = file.mimetype;
