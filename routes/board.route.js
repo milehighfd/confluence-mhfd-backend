@@ -171,7 +171,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
     }
 }
 
-const updateBoards = async (board, status, comment) => {
+const updateBoards = async (board, status, comment, substatus) => {
     let pjts = ['Capital', 'Maintenance', 'Study', 'Acquisition', 'Special'];
     for (var i = 0 ; i < pjts.length ; i++) {
         let pjt = pjts[i];
@@ -191,13 +191,15 @@ const updateBoards = async (board, status, comment) => {
             let newBoard = new Board({
                 ...body,
                 status,
-                comment
+                comment,
+                substatus
             }); 
             await newBoard.save();
         } else {
             let newFields = {
                 status,
-                comment
+                comment,
+                substatus
             };
             if (status === 'Approved' && board.status !== status) {
                 newFields['submissionDate'] = new Date();
@@ -261,7 +263,8 @@ router.get('/:boardId/boards/:type', async (req, res) => {
         bids.push({
             locality,
             status: boardFrom ? boardFrom.status : 'Under Review',
-            submissionDate: boardFrom ? boardFrom.submissionDate : null
+            submissionDate: boardFrom ? boardFrom.submissionDate : null,
+            substatus: boardFrom ? boardFrom.substatus : ''
         });
     }
     res.status(200).send({
@@ -334,14 +337,14 @@ const sendMails = async (board, fullName) => {
 
 router.put('/:boardId', [auth], async (req, res) => {
     const { boardId } = req.params;
-    const { status, comment } = req.body;
+    const { status, comment, substatus } = req.body;
     let board = await Board.findOne({
         where: {
             _id: boardId
         }
     })
     if (board) {
-        await updateBoards(board, status, comment);
+        await updateBoards(board, status, comment, substatus);
         let bodyResponse = { status: 'updated' };
         if (status === 'Approved' && board.status !== status) {
             sendMails(board, req.user.name)
