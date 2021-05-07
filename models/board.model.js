@@ -37,6 +37,9 @@ module.exports = (sequelize, DataType) => {
     status: {
       type: DataType.STRING,
     },
+    substatus: {
+      type: DataType.STRING(512),
+    },
     comment: {
       type: DataType.STRING,
     },
