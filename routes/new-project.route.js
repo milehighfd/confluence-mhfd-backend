@@ -286,7 +286,7 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
 
 router.get('/components-by-problemid', auth, async (req, res) => {
   const problemid = req.query.problemid;
-  const sql = `SELECT problemname, problemid, jurisdiction, solutionstatus FROM problems WHERE problemid = ${problemid}`;
+  const sql = `SELECT problemname, problemid, jurisdiction, solutionstatus, objectid FROM problems WHERE problemid = ${problemid}`;
   const query = {
     q: sql
   };
@@ -306,7 +306,7 @@ router.get('/components-by-problemid', auth, async (req, res) => {
         };
       });
       for (const component of COMPONENTS_TABLES) {
-        const componentSQL = `SELECT cartodb_id, type, jurisdiction, status, original_cost, problemid 
+        const componentSQL = `SELECT cartodb_id, type, jurisdiction, status, original_cost, problemid, objectid
          FROM ${component} WHERE problemid = ${problemid} AND projectid is null`;
         logger.info(componentSQL);
         const componentQuery = {
