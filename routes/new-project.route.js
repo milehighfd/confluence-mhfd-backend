@@ -283,7 +283,6 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
     }
   });
 });
-
 router.get('/components-by-problemid', auth, async (req, res) => {
   const problemid = req.query.problemid;
   const sql = `SELECT problemname, problemid, jurisdiction, solutionstatus, objectid FROM problems WHERE problemid = ${problemid}`;
@@ -357,7 +356,31 @@ router.get('/components-by-problemid', auth, async (req, res) => {
     res.status(500).send(error);
   };
 });
+router.post('/component-geom', async (req,res) => {
+  let table = req.body.table; 
+  let objectid = req.body.objectid;
+  let sql = `SELECT the_geom from ${table} where objectid=${objectid}`;
+  const query = {
+    q: sql
+  };
+  logger.info(sql);
+  let streamsInfo = [];
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    if (data.statusCode === 200) {
+      const body = data.body;
+      res.send({geom:body.rows[0].the_geom});
+    
+    } else {
+      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      res.status(data.statusCode).send(data);
+    }
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send(error);
+  };
 
+});
 router.post('/streams-data', auth, async (req, res) => {
   const geom = req.body.geom;
   // const sql = `SELECT  
