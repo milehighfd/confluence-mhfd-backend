@@ -1653,6 +1653,21 @@ const getAllJurisdictionByGeom = async (geom) => {
   return data.body.rows.map(element => element.jurisdiction);
 }
 
+const updateBoardProjectAtIndex = async (boardId, index) => {
+  let bps = await BoardProject.findAll({
+    where: {
+      board_id: boardId
+    }
+  });
+  bps.forEach(async (bp) => {
+    if (bp[`position${index}`] != null) {
+      await bp.update({
+        [`position${index}`]: bp[`position${index}`] + 1
+      })
+    }
+  })
+}
+
 const addProjectToBoard = async (locality, projecttype, project_id, projectsubtype) => {
   let dbLoc = await Locality.findOne({
     where: {
@@ -1693,8 +1708,10 @@ const addProjectToBoard = async (locality, projecttype, project_id, projectsubty
     } else {
       boardProjectObject[`position${index + 1}`] = 0;
     }
+    updateBoardProjectAtIndex(board._id, index + 1);
   } else {
     boardProjectObject.position0 = 0;
+    updateBoardProjectAtIndex(board._id, 0);
   }
 
   let boardProject = new BoardProject(boardProjectObject);
