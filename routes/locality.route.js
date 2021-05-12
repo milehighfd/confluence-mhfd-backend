@@ -63,8 +63,8 @@ const getData2 = async (req, res, next) => {
         type: {
           [Op.in]: ['SERVICE_AREA', 'COUNTY']
         },
-        order: [['name', 'ASC']]
-      }
+      },
+      order: [['name', 'ASC']]
     })
     res.locals.data = localities;
   }
