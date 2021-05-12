@@ -5,7 +5,8 @@ const priceFormatter = (value) => {
   return `$${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 const percentageFormatter = (value) => {
-  return Math.round(value * 10) /10 + '%'
+  value = value * 100;
+  return Math.round(value * 100) / 100 + '%'
 }
 
 module.exports = {
@@ -54,15 +55,14 @@ module.exports = {
       original_cost: 0,
       percen: 0
     }]
-    let sum = 0;
+    let sum = _components.reduce((prev, curr) => curr.estimated_cost + prev, 0);;
     let componentRows = _components.map((c) => {
-      sum += c.estimated_cost;
       return `
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
           <td width="40%" style="padding: 17px 20px;">${c.type}</td>
           <td width="20%" style="padding: 17px 20px;">${priceFormatter(c.estimated_cost)}</td>
           <td width="20%" style="padding: 17px 20px;">${percentageFormatter(c.percen)}</td>
-          <td width="20%" style="padding: 17px 20px;">${percentageFormatter(c.original_cost)}</td>
+          <td width="20%" style="padding: 17px 20px;">${percentageFormatter(sum == 0 ? 0 : c.estimated_cost / sum)}</td>
         </tr>
       `
     }).join('')
@@ -211,15 +211,14 @@ module.exports = {
       original_cost: 0,
       percen: 0
     }]
-    let sum = 0;
+    let sum = _components.reduce((prev, curr) => curr.estimated_cost + prev, 0);
     let componentRows = _components.map((c, i) => {
-      sum += c.estimated_cost;
       let str = `
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
           <td width="40%" style="padding: 17px 20px;">${c.type}</td>
           <td width="20%" style="padding: 17px 20px;">${priceFormatter(c.estimated_cost)}</td>
           <td width="20%" style="padding: 17px 20px;">${priceFormatter(c.original_cost)}</td>
-          <td width="20%" style="padding: 17px 20px;">${c.percen}%</td>
+          <td width="20%" style="padding: 17px 20px;">${percentageFormatter(sum == 0 ? 0 : c.estimated_cost / sum)}</td>
         </tr>
       `
       if (components.length === 9 && i === 6) {
