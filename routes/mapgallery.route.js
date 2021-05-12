@@ -876,7 +876,10 @@ router.get('/problem-by-id/:id', async (req, res) => {
       res.status(500).send({ error: 'No there data with ID' });
    }
 });
-
+const percentageFormatter = (value) => {
+   value = value * 100;
+   return Math.round(value * 100) / 100 + '%'
+ }
 router.post('/problems-by-projectid', async (req, res) => {
    try {
       const id = req.body.id;
@@ -925,7 +928,7 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
    const data = await needle('post', URL, componentQuery, { json: true });
    if (data.statusCode === 200) {
-      const result = data.body.rows.map(element => {
+      let result = data.body.rows.map(element => {
          return {
             type: element.type + ' (' + element.count + ')',
             estimated_cost: element.estimated_cost,
@@ -933,7 +936,15 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
             percen: element.percen
          }
       })
-      return result;
+      let sum = result.reduce((prev, curr) => curr.estimated_cost + prev, 0);
+      return result.map((element) => {
+         return {
+            type: element.type,
+            estimated_cost: element.estimated_cost,
+            original_cost: element.original_cost,
+            percen: percentageFormatter(sum == 0 ? 0 : element.estimated_cost / sum)
+         }
+      });
    } else {
       console.log('bad status ', response.statusCode, response.body);
       throw new Error('');
