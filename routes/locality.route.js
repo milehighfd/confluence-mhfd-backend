@@ -17,14 +17,16 @@ const getData = async (req, res, next) => {
       let localities = await Locality.findAll({
         where: {
           type: 'JURISDICTION'
-        }
+        },
+        order: [['name', 'ASC']]
       })
       res.locals.data = localities;
     } else if (req.user.designation === ROLES.GOVERNMENT_STAFF) {
       let localities = await Locality.findAll({
         where: {
           name: req.user.organization
-        }
+        },
+        order: [['name', 'ASC']]
       });
       res.locals.data = localities;
     }
@@ -41,14 +43,16 @@ const getData2 = async (req, res, next) => {
         let localities = await Locality.findAll({
           where: {
             type: 'JURISDICTION'
-          }
+          },
+          order: [['name', 'ASC']]
         })
         res.locals.data = localities;
       } else if (req.user.designation === ROLES.GOVERNMENT_STAFF) {
         let localities = await Locality.findAll({
           where: {
             name: req.user.organization
-          }
+          },
+          order: [['name', 'ASC']]
         });
         res.locals.data = localities;
       }
@@ -58,7 +62,8 @@ const getData2 = async (req, res, next) => {
       where: {
         type: {
           [Op.in]: ['SERVICE_AREA', 'COUNTY']
-        }
+        },
+        order: [['name', 'ASC']]
       }
     })
     res.locals.data = localities;
