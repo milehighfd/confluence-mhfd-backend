@@ -936,6 +936,15 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
             percen: element.percen
          }
       })
+      if (sortby === 'percen') {
+         result.sort((a, b) => {
+            if (sorttype === 'asc') {
+               return a.estimated_cost - b.estimated_cost;
+            } else {
+               return b.estimated_cost - a.estimated_cost;
+            }
+         })
+      }
       let sum = result.reduce((prev, curr) => curr.estimated_cost + prev, 0);
       return result.map((element) => {
          return {
