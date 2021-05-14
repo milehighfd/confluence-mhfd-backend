@@ -381,6 +381,30 @@ router.post('/component-geom', async (req,res) => {
   };
 
 });
+router.post('/problem-geom', async (req,res) => {
+  let problemid = req.body.problemid;
+  let sql = `SELECT ST_ASGEOJSON(the_geom) as the_geom from problems where problemid=${problemid}`;
+  const query = {
+    q: sql
+  };
+  logger.info(sql);
+  let streamsInfo = [];
+  try {
+    const data = await needle('post', URL, query, { json: true });
+    if (data.statusCode === 200) {
+      const body = data.body;
+      res.send({geom:body.rows[0].the_geom});
+    
+    } else {
+      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      res.status(data.statusCode).send(data);
+    }
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send(error);
+  };
+
+});
 router.post('/streams-data', auth, async (req, res) => {
   const geom = req.body.geom;
   // const sql = `SELECT  
