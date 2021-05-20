@@ -1045,7 +1045,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover} = req.body;
+    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, finalcost} = req.body;
   const status = 'Draft';
   const projecttype = 'Capital';
   let notRequiredFields = ``;
@@ -1086,16 +1086,16 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
     notRequiredFields = `, ${notRequiredFields}`;
     notRequiredValues = `, ${notRequiredValues}`;
   }
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost ${notRequiredFields} ,projectid)
+  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost ${notRequiredFields} ,projectid, finalcost)
    VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}' 
-   ${notRequiredValues} ,${-1})`;
+   ${notRequiredValues} ,${-1}, ${finalcost})`;
   const query = {
     q: insertQuery
   };
   console.log('my query ' , insertQuery)
   let result = {};
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', URL, query,   { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
