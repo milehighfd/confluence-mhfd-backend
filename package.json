@@ -13,7 +13,7 @@
     "cors": "^2.8.5",
     "debug": "~2.6.9",
     "express": "~4.16.1",
-    "express-fileupload": "^1.1.6",
+    "express-fileupload": "^1.1.10",
     "giflossy": "^3.0.41",
     "googleapis": "^39.2.0",
     "html-pdf": "^2.2.0",
