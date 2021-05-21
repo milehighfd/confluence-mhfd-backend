@@ -1138,7 +1138,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover} = req.body;
+    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, finalcost} = req.body;
   const projectid = req.params.projectid;
   const status = 'Draft';
   const projecttype = 'Capital';
@@ -1174,7 +1174,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
    jurisdiction = '${jurisdiction}', projectname = '${projectname}', 
    description = '${description}', servicearea = '${servicearea}', county = '${county}',
     status = '${status}', projecttype = '${projecttype}', sponsor = '${sponsor}', 
-    overheadcost = '${overheadcost}' ${notRequiredFields}
+    overheadcost = '${overheadcost}', finalcost = ${finalcost} ${notRequiredFields}
     WHERE  projectid = ${projectid}`;
   const query = {
     q: updateQuery
