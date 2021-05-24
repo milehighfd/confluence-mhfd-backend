@@ -18,7 +18,6 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-db.project = require('../models/project.model.js')(sequelize, Sequelize);
 db.user = require('../models/user.model.js')(sequelize, Sequelize);
 db.attachment = require('../models/attachment.model.js')(sequelize, Sequelize);
 db.coordinate = require('../models/coordinate.model.js')(sequelize, Sequelize);
@@ -41,7 +40,5 @@ db.favorites.belongsTo(db.user, {foreignKey: 'user_id'});
 db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
 db.attachment.belongsTo(db.user, {foreignKey: 'user_id'});
 db.note.belongsTo(db.user, {foreignKey: 'user_id'});
-// db.components.belongsTo(db.projects);
-// db.projects.hasMany(db.components);
 
 module.exports = db;

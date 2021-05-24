@@ -8,7 +8,6 @@ const logger = require('./config/logger');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users.route');
 const authRouter = require('./routes/auth.route');
-const projectRouter = require('./routes/project.route');
 const adminRouter = require('./routes/admin.route');
 const logActivityRouter = require('./routes/logActivity.route');
 const mapRouter = require('./routes/map.route');
@@ -53,7 +52,6 @@ app.use(express.static('public'))
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
-app.use('/projects', projectRouter);
 app.use('/admin', adminRouter);
 app.use('/admin/user-activity', logActivityRouter);
 app.use('/map', mapRouter);
