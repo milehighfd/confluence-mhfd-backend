@@ -20,7 +20,6 @@ db.sequelize = sequelize;
 
 db.user = require('../models/user.model.js')(sequelize, Sequelize);
 db.attachment = require('../models/attachment.model.js')(sequelize, Sequelize);
-db.coordinate = require('../models/coordinate.model.js')(sequelize, Sequelize);
 db.logActivity = require('../models/logActivity.model.js')(sequelize, Sequelize);
 db.favorites = require('../models/favorites.model.js')(sequelize, Sequelize);
 db.board = require('../models/board.model.js')(sequelize, Sequelize);
