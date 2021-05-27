@@ -46,7 +46,7 @@ router.post('/', async (req, res) => {
         let projectsPromises = boardProjects.map(async (bp) => {
             let project = null;
             try {
-                project = await getMidByProjectId(bp.project_id, true);
+                project = await getMidByProjectId(bp.project_id, true, projecttype);
             } catch(e) {
                 console.log('e', e);
             }
