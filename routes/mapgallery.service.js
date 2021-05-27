@@ -25,12 +25,15 @@ const getCoordsByProjectId = async (projectid, isDev) => {
   }
 }
 
-const getMidByProjectId = async (projectid, isDev) => {
+const getMidByProjectId = async (projectid, isDev, projecttype) => {
   let table = 'mhfd_projects'
   if (isDev) {
     table = 'mhfd_projects_copy'
   }
   let fields = ["projectid", "cartodb_id", "county", "jurisdiction", "servicearea", "projectname", "status", "description", "acquisitionprogress", "acquisitionanticipateddate", "projecttype", "projectsubtype", "additionalcost", "additionalcostdescription", "cosponsor", "frequency", "maintenanceeligibility", "overheadcost", "overheadcostdescription", "ownership", "sponsor", 'finalcost'];
+  if (projecttype === 'Acquisition' || projecttype === 'Special') {
+    fields.push('ST_AsGeoJSON(the_geom) as the_geom')
+  }
   let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
   let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
   const data = await needle('get', URL, { json: true });
