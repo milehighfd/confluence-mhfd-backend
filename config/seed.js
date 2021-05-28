@@ -17,7 +17,9 @@ const seed = async () => {
       firstName: "admin",
       lastName: "admin",
       name: "admin",
-      status: "approved"
+      status: "approved",
+      organization: 'Mile High Flood Control District',
+      zoomarea: 'Mile High Flood District'
     };
     userAdmin.password = await bcrypt.hash('admin', 8);
     User.create(userAdmin);
