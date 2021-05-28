@@ -6,10 +6,10 @@ module.exports = (sequelize, DataType) => {
       primaryKey: true
     },
     value: {
-      type: DataType.STRING
+      type: DataType.STRING(512)
     },
     filename: {
-      type: DataType.STRING
+      type: DataType.STRING(512)
     },
     mimetype: {
       type: DataType.STRING
