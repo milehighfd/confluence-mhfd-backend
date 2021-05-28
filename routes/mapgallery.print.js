@@ -44,6 +44,7 @@ module.exports = {
     html = html.split('${problemdescription}').join(problemdescription);
     html = html.split('${map}').join(map);
     html = html.split('${mainImage}').join(mainImage);
+    html = html.split('${mapHeight}').join((components.length) ? 500 : 400);
 
     let solutionstatusVal = solutionstatus ? solutionstatus : 0;
     solutionstatusVal = Math.floor((solutionstatusVal / 100) * 150)
@@ -92,7 +93,7 @@ module.exports = {
       case 0:
       case 1:
       case 2:
-        q = 40;
+        q = 0;
         break
       case 3:
         q = 35;
@@ -193,6 +194,7 @@ module.exports = {
     html = html.split('${description}').join(description);
     html = html.split('${contractor}').join(contractor);
     html = html.split('${consultant}').join(consultant);
+    html = html.split('${mapHeight}').join((problems.length + components.length) ? 500 : 300);
 
     let _problems = problems.length > 0 ? problems : [{ problemname: '', problempriority: '' }]
 
@@ -250,7 +252,7 @@ module.exports = {
     let spaceBetween = '';
     switch(components.length) {
       case 0:
-        q = 30;
+        q = 0;
         break;
       case 1:
         q = 25;
