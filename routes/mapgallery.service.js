@@ -2,6 +2,7 @@ const needle = require('needle');
 const https = require('https');
 
 const attachmentService = require('../services/attachment.service');
+const projectStreamService = require('../services/projectStream.service');
 
 const { CARTO_TOKEN } = require('../config/config');
 
@@ -31,7 +32,7 @@ const getMidByProjectId = async (projectid, isDev, projecttype) => {
     table = 'mhfd_projects_copy'
   }
   let fields = ["projectid", "cartodb_id", "county", "jurisdiction", "servicearea", "projectname", "status", "description", "acquisitionprogress", "acquisitionanticipateddate", "projecttype", "projectsubtype", "additionalcost", "additionalcostdescription", "cosponsor", "frequency", "maintenanceeligibility", "overheadcost", "overheadcostdescription", "ownership", "sponsor", 'finalcost'];
-  if (projecttype === 'Acquisition' || projecttype === 'Special') {
+  if (['Acquisition', 'Special', 'Maintenance'].includes(projecttype)) {
     fields.push('ST_AsGeoJSON(the_geom) as the_geom')
   }
   let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
@@ -39,6 +40,10 @@ const getMidByProjectId = async (projectid, isDev, projecttype) => {
   const data = await needle('get', URL, { json: true });
   if (data.statusCode === 200 && data.body.rows.length > 0) {
     let obj = data.body.rows[0];
+    if (projecttype === 'Study') {
+      const streams = await projectStreamService.getAll(projectid);
+      obj.streams = streams.map(r => r.mhfd_code);
+    }
     return obj;
   } else {
     console.log('getMinimumDateByProjectId error', data.statusCode, data.body);
