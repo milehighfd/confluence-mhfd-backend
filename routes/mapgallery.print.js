@@ -9,7 +9,7 @@ const percentageFormatter = (value) => {
   value = value * 100;
   return Math.round(value * 100) / 100 + '%'
 }
-/**  mapHeight = 500, 400, 300; mapWidth = 750*/
+
 const base64ImageCrop = async (map, mapHeight, mapWidth) => {
   let initialString = 'data:image/png;base64,'; 
   if (map.startsWith(initialString)) {
@@ -53,7 +53,7 @@ module.exports = {
 
     let mainImage = problemtype ? `http://confluence.mhfd.org/gallery/${problemtype}.jpg` : 'https://i.imgur.com/kLyZbrB.jpg'
 
-    const mapHeight = (components.length) ? 500 : 400;
+    const mapHeight = 500;
     const mapWidth = 750;
     // if (!components.length) {
     //   map = await base64ImageCrop(map, mapHeight, mapWidth);
@@ -206,11 +206,11 @@ module.exports = {
     } else if (estimatedcost) {
       cost = estimatedcost;
     }
-    const mapHeight = (problems.length + components.length) ? 500 : 300;
+    const mapHeight = 500;
     const mapWidth = 750;
-    if (!(problems.length + components.length)) {
-      map = await base64ImageCrop(map, mapHeight, mapWidth);
-    }
+    // if (!(problems.length + components.length)) {
+    //   map = await base64ImageCrop(map, mapHeight, mapWidth);
+    // }
 
     html = html.split('${projectname}').join(projectname);
     html = html.split('${projecttype}').join(projecttype + ' Project');
@@ -317,6 +317,9 @@ module.exports = {
     html = html.split('${spaceBetween}').join(spaceBetween);
     let width = 1200;
     let height = 1550;
+    if (!(problems.length + components.length)) {
+      height += 180
+    }
 
     var options = {
       width: `${width}px`,
