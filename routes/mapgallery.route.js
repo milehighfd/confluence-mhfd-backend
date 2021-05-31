@@ -789,11 +789,12 @@ router.post('/project-by-ids/pdf', async (req, res) => {
    if (data.projectid) {
      components = await componentsByEntityId(data.projectid, 'projectid', 'type', 'asc');
    }
-   printProject(data, components, map).toBuffer(function (err, buffer) {
+   let pdfObject = await printProject(data, components, map);
+   pdfObject.toBuffer(function (err, buffer) {
       if (err) return res.send(err);
       res.type('pdf');
       res.end(buffer, 'binary');
-  })
+   })
 })
 
 router.get('/project-by-ids', async (req, res) => {
@@ -854,8 +855,9 @@ router.post('/problem-by-id/:id/pdf', async (req, res) => {
    const map = req.body.map;
    try {
       let data = await getDataByProblemId(id);
-      let components = await componentsByEntityId(id, 'problemid', 'type', 'asc')
-      printProblem(data, components, map).toBuffer(function (err, buffer) {
+      let components = await componentsByEntityId(id, 'problemid', 'type', 'asc');
+      let pdfObject = await printProblem(data, components, map);
+      pdfObject.toBuffer(function (err, buffer) {
          if (err) return res.send(err);
          res.type('pdf');
          res.end(buffer, 'binary');

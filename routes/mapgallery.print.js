@@ -1,5 +1,6 @@
 var fs = require('fs');
 var pdf = require('html-pdf');
+var Jimp = require('jimp');
 
 const priceFormatter = (value) => {
   return `$${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -8,9 +9,32 @@ const percentageFormatter = (value) => {
   value = value * 100;
   return Math.round(value * 100) / 100 + '%'
 }
+/**  mapHeight = 500, 400, 300; mapWidth = 750*/
+const base64ImageCrop = async (map, mapHeight, mapWidth) => {
+  let initialString = 'data:image/png;base64,'; 
+  if (map.startsWith(initialString)) {
+    map = map.substr(initialString.length);
+  }
+  const buf = Buffer.from(map, 'base64');
+  let image = await Jimp.read(buf);
+  let promise = new Promise((resolve, reject) => {
+    let difference = Math.abs(image.bitmap.width - mapHeight);
+    let margin = 25//parseInt(difference / 8);
+    console.log('margin', margin);
+    image.crop(0, margin, image.bitmap.width, mapHeight)
+    .quality(100)
+    .getBase64(Jimp.MIME_JPEG, (err, src) => {
+      if (err) reject(err);
+      resolve(src)
+    });
+  })
+  let b64 = await promise;
+  return b64;
+}
+
 
 module.exports = {
-  printProblem: (data, components, map) => {
+  printProblem: async (data, components, map) => {
     var html = fs.readFileSync('./pdf-templates/Problems.html', 'utf8');
     const {
       problemname,
@@ -29,6 +53,12 @@ module.exports = {
 
     let mainImage = problemtype ? `http://confluence.mhfd.org/gallery/${problemtype}.jpg` : 'https://i.imgur.com/kLyZbrB.jpg'
 
+    const mapHeight = (components.length) ? 500 : 400;
+    const mapWidth = 750;
+    // if (!components.length) {
+    //   map = await base64ImageCrop(map, mapHeight, mapWidth);
+    // }
+    
     html = html.split('${problemname}').join(problemname);
 
     html = html.split('${problemtype}').join(problemtype + ' Problem');
@@ -44,7 +74,7 @@ module.exports = {
     html = html.split('${problemdescription}').join(problemdescription);
     html = html.split('${map}').join(map);
     html = html.split('${mainImage}').join(mainImage);
-    html = html.split('${mapHeight}').join((components.length) ? 500 : 400);
+    html = html.split('${mapHeight}').join(mapHeight);
 
     let solutionstatusVal = solutionstatus ? solutionstatus : 0;
     solutionstatusVal = Math.floor((solutionstatusVal / 100) * 150)
@@ -62,7 +92,7 @@ module.exports = {
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
           <td width="40%" style="padding: 17px 20px;">${c.type}</td>
           <td width="20%" style="padding: 17px 20px;">${priceFormatter(c.estimated_cost)}</td>
-          <td width="20%" style="padding: 17px 20px;">${percentageFormatter(c.percen)}</td>
+          <td width="20%" style="padding: 17px 20px;">${(c.percen)}</td>
           <td width="20%" style="padding: 17px 20px;">${percentageFormatter(sum == 0 ? 0 : c.estimated_cost / sum)}</td>
         </tr>
       `
@@ -136,7 +166,7 @@ module.exports = {
 
     return pdf.create(html, options);
   },
-  printProject: (_data, components, map) => {
+  printProject: async (_data, components, map) => {
     let data = {};
     Object.keys(_data).forEach(k => {
       if (k.includes('cost')) {
@@ -176,6 +206,11 @@ module.exports = {
     } else if (estimatedcost) {
       cost = estimatedcost;
     }
+    const mapHeight = (problems.length + components.length) ? 500 : 300;
+    const mapWidth = 750;
+    if (!(problems.length + components.length)) {
+      map = await base64ImageCrop(map, mapHeight, mapWidth);
+    }
 
     html = html.split('${projectname}').join(projectname);
     html = html.split('${projecttype}').join(projecttype + ' Project');
@@ -194,7 +229,7 @@ module.exports = {
     html = html.split('${description}').join(description);
     html = html.split('${contractor}').join(contractor);
     html = html.split('${consultant}').join(consultant);
-    html = html.split('${mapHeight}').join((problems.length + components.length) ? 500 : 300);
+    html = html.split('${mapHeight}').join(mapHeight);
 
     let _problems = problems.length > 0 ? problems : [{ problemname: '', problempriority: '' }]
 
