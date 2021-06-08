@@ -1724,7 +1724,8 @@ const addProjectToBoard = async (locality, projecttype, project_id, projectsubty
     project_id: project_id,
     from: locality
   }
-  if (projecttype === 'Maintenance') {
+  // if (projecttype === 'Maintenance') {
+  if(false) {
     let subtypes = ['Debris Management', 'Vegetation Management', 'Sediment Removal', 'Minor Repairs', 'Restoration'];
     let index = subtypes.indexOf(projectsubtype);
     if (index === -1) {
