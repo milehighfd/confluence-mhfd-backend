@@ -118,7 +118,7 @@ const sendBoardNotification = async (email, type, locality, year, fullName) => {
     url = `${MHFD_FRONTEND}/work-request?year=${year}&locality=${locality}`
     bodyOptions = {
       title: `${locality}'s Work Request has been submitted!`,
-      body: `${fullName} has submitted all requested projects from ${locality} Jurisdiction are now viewable in the applicable County and Service Area Work Plans on Confluence for MHFD review.`,
+      body: `${fullName} has submitted all requested projects from ${locality} Jurisdiction. They are now available in the applicable County and Service Area Work Plans on Confluence and ready for MHFD review.`,
       url,
       buttonName: 'View Work Request',
     }
