@@ -1,9 +1,9 @@
 module.exports = (sequelize, DataType) => {
   const board = sequelize.define('board', {
     _id: {
-      type: DataType.UUID,
-      defaultValue: DataType.UUIDV4,
-      primaryKey: true
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
     },
     locality: {
       type: DataType.STRING,

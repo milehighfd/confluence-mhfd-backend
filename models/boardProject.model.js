@@ -1,8 +1,7 @@
 module.exports = (sequelize, DataType) => {
   const boardProject = sequelize.define('boardProject', {
     board_id: {
-      type: DataType.UUID,
-      defaultValue: DataType.UUIDV4,
+      type: DataTypes.INTEGER
     },
     project_id: {
       type: DataType.STRING,
