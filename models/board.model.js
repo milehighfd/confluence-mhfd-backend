@@ -19,19 +19,19 @@ module.exports = (sequelize, DataType) => {
       type: DataType.ENUM,
       values: ['WORK_REQUEST', 'WORK_PLAN']
     },
-    reqmanager1: {
+    targetcost1: {
       type: DataType.DOUBLE,
     },
-    reqmanager2: {
+    targetcost2: {
       type: DataType.DOUBLE,
     },
-    reqmanager3: {
+    targetcost3: {
       type: DataType.DOUBLE,
     },
-    reqmanager4: {
+    targetcost4: {
       type: DataType.DOUBLE,
     },
-    reqmanager5: {
+    targetcost5: {
       type: DataType.DOUBLE,
     },
     status: {
