@@ -1724,7 +1724,7 @@ const addProjectToBoard = async (locality, projecttype, project_id, year) => {
   let boardProjectObject = {
     board_id: board._id,
     project_id: project_id,
-    from: locality
+    origin: locality
   }
   boardProjectObject.position0 = 0;
   updateBoardProjectAtIndex(board._id, 0);
