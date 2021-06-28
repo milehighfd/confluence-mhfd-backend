@@ -32,6 +32,9 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     let body = req.body;
     let { type, year, locality, projecttype } = body;
+    if (!type || !year || !locality || !projecttype) {
+        res.sendStatus(404);
+    }
     let board = await Board.findOne({
         where: {
             type, year, locality, projecttype
@@ -52,7 +55,7 @@ router.post('/', async (req, res) => {
             }
             let newObject = {
                 project_id: bp.project_id,
-                from: bp.from,
+                origin: bp.origin,
                 projectData: project,
             }
             for (var i = 0 ; i <= 5; i ++) {
@@ -129,7 +132,7 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                     req3: bp.req3 == null ? null : (bp.req3 / propValues.length),
                     req4: bp.req4 == null ? null : (bp.req4 / propValues.length),
                     req5: bp.req5 == null ? null : (bp.req5 / propValues.length),
-                    from: board.locality,
+                    origin: board.locality,
                 })
                 await newBoardProject.save();
             }
@@ -164,7 +167,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
                 req3: bp.req3,
                 req4: bp.req4,
                 req5: bp.req5,
-                from: board.locality,
+                origin: board.locality,
             })
             await newBoardProject.save();
         }
