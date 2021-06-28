@@ -33,7 +33,7 @@ router.post('/', async (req, res) => {
     let body = req.body;
     let { type, year, locality, projecttype } = body;
     if (!type || !year || !locality || !projecttype) {
-        res.sendStatus(404);
+        return res.sendStatus(404);
     }
     let board = await Board.findOne({
         where: {
