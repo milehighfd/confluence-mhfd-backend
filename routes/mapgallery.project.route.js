@@ -107,6 +107,10 @@ async function getValuesByColumnWithOutCountProject(table, column, bounds, body)
                      return { value: r.value, counter: 0 }
                   })
                );
+               answer = answer.filter(r => r.value >= 2004);
+               answer.sort((a, b) => {
+                  return a.value - b.value;
+               })
             }
          }
       }
