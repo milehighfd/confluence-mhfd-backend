@@ -935,7 +935,7 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
             type: element.type + ' (' + element.count + ')',
             estimated_cost: element.estimated_cost,
             original_cost: element.original_cost,
-            percen: element.percen
+            percen: element.estimated_cost / sum
          }
       })
       if (sortby === 'percen') {
