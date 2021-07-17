@@ -5,10 +5,6 @@ var Jimp = require('jimp');
 const priceFormatter = (value) => {
   return `$${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
-const percentageFormatter = (value) => {
-  value = value * 100;
-  return Math.round(value * 100) / 100 + '%'
-}
 
 const base64ImageCrop = async (map, mapHeight, mapWidth) => {
   let initialString = 'data:image/png;base64,'; 
@@ -92,8 +88,8 @@ module.exports = {
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
           <td width="40%" style="padding: 17px 20px;">${c.type}</td>
           <td width="20%" style="padding: 17px 20px;">${priceFormatter(c.estimated_cost)}</td>
-          <td width="20%" style="padding: 17px 20px;">${(c.percen)}</td>
-          <td width="20%" style="padding: 17px 20px;">${percentageFormatter(sum == 0 ? 0 : c.estimated_cost / sum)}</td>
+          <td width="20%" style="padding: 17px 20px;">${c.original_cost ? (Math.round(c.original_cost * 10) /10) : 0}%</td>
+          <td width="20%" style="padding: 17px 20px;">${c.percen}%</td>
         </tr>
       `
     }).join('')
@@ -254,8 +250,8 @@ module.exports = {
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
           <td width="40%" style="padding: 17px 20px;">${c.type}</td>
           <td width="20%" style="padding: 17px 20px;">${priceFormatter(c.estimated_cost)}</td>
-          <td width="20%" style="padding: 17px 20px;">${priceFormatter(c.original_cost)}</td>
-          <td width="20%" style="padding: 17px 20px;">${percentageFormatter(sum == 0 ? 0 : c.estimated_cost / sum)}</td>
+          <td width="20%" style="padding: 17px 20px;">${c.original_cost ? (Math.round(c.original_cost * 10) /10) : 0}%</td>
+          <td width="20%" style="padding: 17px 20px;">${c.percen}%</td>
         </tr>
       `
       if (components.length === 9 && i === 6) {

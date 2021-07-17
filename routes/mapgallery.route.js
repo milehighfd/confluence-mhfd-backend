@@ -880,7 +880,7 @@ router.get('/problem-by-id/:id', async (req, res) => {
 });
 const percentageFormatter = (value) => {
    value = value * 100;
-   return Math.round(value * 100) / 100 + '%'
+   return Math.round(value * 100) / 100
  }
 router.post('/problems-by-projectid', async (req, res) => {
    try {
@@ -912,8 +912,7 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
    let union = '';
    for (const component of TABLES_COMPONENTS) {
       COMPONENTS_SQL += union + `SELECT type, count(*), coalesce(sum(original_cost), 0) as estimated_cost, 
-     case when cast(${finalcost} as integer) > 0 then coalesce(sum(original_cost),0)/cast(${finalcost} as integer) else 0 END as original_cost,
-     ((select count(*) from ${component} where ${typeid}=${id} and status='Completed')/count(*)) percen
+     case when cast(${finalcost} as integer) > 0 then coalesce(sum(original_cost),0)/cast(${finalcost} as integer) else 0 END as original_cost
      FROM ${component}, ${table}
      where ${component}.${typeid}=${id} and ${table}.${typeid}=${id} group by type, ${finalcost}`;
       union = ' union ';
@@ -934,8 +933,7 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
          return {
             type: element.type + ' (' + element.count + ')',
             estimated_cost: element.estimated_cost,
-            original_cost: element.original_cost,
-            percen: element.estimated_cost / sum
+            original_cost: element.original_cost
          }
       })
       if (sortby === 'percen') {
