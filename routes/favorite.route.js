@@ -13,18 +13,12 @@ const { CARTO_TOKEN } = require('../config/config');
 const needle = require('needle');
 const auth = require('../auth/auth');
 
-function getFilters(params) {
-   //console.log('PARAMS', params);
+function getFilters(params, ids) {
    let filters = '';
    let tipoid = '';
    let hasProjectType = false;
-   const VALUES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
-      'special_item_linear', 'special_item_area', 'channel_improvements_linear',
-      'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
-      'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
 
    if (params.isproblem) {
-      console.log('PROBLEMS');
       tipoid = 'problemid';
       if (params.name) {
          if (filters.length > 0) {
@@ -88,6 +82,10 @@ function getFilters(params) {
       hasProjectType = true;
    }
 
+   if (filters.length > 0) {
+      filters += ` and`
+   }
+   filters += ` ${tipoid} in ('${ids.join("','")}')`
 
    if (filters.length > 0) {
       filters = ' where ' + filters;
@@ -194,10 +192,24 @@ router.delete('/', auth, async (req, res) => {
   }
 });
 router.post('/favorite-list', auth, async (req, res) => {
+   const user = req.user;
+   const favorite = await favoritesService.getFavorites(user._id);
+   const ids = favorite
+      .filter(fav => {
+         if (req.body.isproblem) {
+            return fav.table === 'problems';
+         } else {
+            return fav.table === PROJECT_TABLES[0];
+         }
+      })
+      .map(fav => `${fav.id}`);
+   if (ids.length === 0) {
+      return res.send([]);
+   }
   try {
      if (req.body.isproblem) {
       let filters = '';
-      filters = getFilters(req.body);
+      filters = getFilters(req.body, ids);
         // 
         const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype, county, ${getCounters('problems', 'problemid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM problems `;
         //const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
@@ -231,40 +243,20 @@ router.post('/favorite-list', auth, async (req, res) => {
                     coordinates: JSON.parse(element.the_geom).coordinates ? JSON.parse(element.the_geom).coordinates : []
                  }
               })
+              console.log('answer', answer);
            } else {
-              console.log('bad status', response.statusCode, response.body);
-              logger.error('bad status', response.statusCode, response.body);
+              console.log('bad status', data.statusCode, data.body);
+              logger.error('bad status', data.statusCode, data.body);
            }
         } catch (error) {
            console.log('Error', error);
         }
-
-        const email = req.user.email;
-        const user = req.user;
-        try {  
-          
-         const favorite = await favoritesService.getFavorites(user._id);
-          const ids = favorite.map(fav => {
-            return {id: fav.id, table: fav.table};
-          });
-          logger.log('filtered favorite ids ', ids);
-          answer = answer.filter(element => {
-            for (const id of ids) {
-              if (element.type === id.table && element.problemid === id.id) {
-                return true;
-              }
-            }
-            return false;
-          });
-          return res.send(answer);
-         } catch(error) {
-            return res.send([]);
-          }
+         return res.send(answer);
      } else {
         let filters = '';
         let send = [];
         
-        filters = getFilters(req.body);
+        filters = getFilters(req.body, ids);
         const PROJECT_FIELDS = 'cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, ' +
            'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county ';
 
@@ -328,7 +320,8 @@ router.post('/favorite-list', auth, async (req, res) => {
                     }
                     send = send.concat(answer);
                  } else {
-                    logger.error('bad status ', response.statusCode, response.body);
+                     console.log('bad status ', data.statusCode, data.body);
+                    logger.error('bad status ', data.statusCode, data.body);
                  }
               } catch (error) {
                  logger.error(error);
@@ -336,24 +329,7 @@ router.post('/favorite-list', auth, async (req, res) => {
            }
         }
         const user = req.user;
-        try {  
-          const favorite = await favoritesService.getFavorites(user._id);
-          const ids = favorite.map(fav => {
-            return {id: fav.id, table: fav.table};
-          });
-          logger.info('my favorite ids ', ids);
-          send = send.filter(element => {
-            for (const id of ids) {
-              if (element.type === id.table && element.projectid === id.id) {
-                return true;
-              }
-            }
-            return false;
-          });
-          return res.send(send);
-        } catch(error) {
-          return res.send([]);
-        }
+        return res.send(send);
      }
   } catch (error) {
      logger.error(error);
