@@ -97,9 +97,7 @@ module.exports = (sequelize, DataType) => {
   
   User.findByEmail = async (email) => {
     const user = await User.findOne({where: {
-      email: {
-        [Op.iLike]: '%' + email + '%'
-      }
+        [Op.like]: '%' + email + '%'
       }
     });
 
@@ -134,7 +132,7 @@ module.exports = (sequelize, DataType) => {
     const user = await User.findOne({
       where: {
         email: {
-          [Op.iLike]: '%' + email + '%'
+          [Op.like]: '%' + email + '%'
         },
         status: {
           [Op.not]: 'deleted'

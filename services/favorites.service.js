@@ -31,7 +31,7 @@ const getOne = async (data) => {
   const favorite = await Favorites.findOne({
     where: {
       table: {
-        [Op.iLike]: '%' + data.table + '%'
+        [Op.like]: '%' + data.table + '%'
       },
       id: data.id,
       user_id: data.user_id
@@ -44,7 +44,7 @@ const saveFavorite = async (favorite) => {
   const fav = await Favorites.findOne({
     where: {
       table: {
-        [Op.iLike]: '%' + favorite.table + '%'
+        [Op.like]: '%' + favorite.table + '%'
       },
       id: favorite.id,
       user_id: favorite.user_id

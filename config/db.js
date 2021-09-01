@@ -2,10 +2,15 @@ const config = require('./config');
 const Sequelize = require('sequelize');
 
 const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, config.POSTGRESQL_PASSWORD, {
+  dialect: "mssql",
   host: config.POSTGRESQL_HOST,
-  dialect: "postgres",
-  //operatorAliases: false,
-
+  databaseVersion: '10.50.6000',
+  dialectOptions: {
+    instanceName: 'SQLEXPRESS',
+    options:{
+      encrypt: false
+    }
+  },
   pool: {
     max: 5,
     min: 0,
@@ -39,5 +44,11 @@ db.favorites.belongsTo(db.user, {foreignKey: 'user_id'});
 db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
 db.attachment.belongsTo(db.user, {foreignKey: 'user_id'});
 db.note.belongsTo(db.user, {foreignKey: 'user_id'});
+
+db.sequelize.authenticate().then(()=>{
+  console.log("Connected to Database");
+}).catch((error)=>{
+  console.log("Error" + error);
+});
 
 module.exports = db;

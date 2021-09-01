@@ -77,7 +77,7 @@ const findCoverImage = async (name) => {
   try {
     const attach = await Attachment.findOne({
       where: {
-        filename: { [Op.iLike]: '%' + name + '%' }
+        filename: { [Op.like]: '%' + name + '%' }
       }
     });
     if (attach) {
@@ -104,7 +104,7 @@ const findByName = async (name) => {
   try {
     const attach = await Attachment.findAll({
       where: {
-        filename: { [Op.iLike]: '%' + name + '%' }
+        filename: { [Op.like]: '%' + name + '%' }
       }
     });
 
@@ -126,7 +126,7 @@ const findByFilename = async (name) => {
   try {
     const attach = await Attachment.findAll({
       where: {
-        filename: { [Op.iLike]: '%' + name + '%' }
+        filename: { [Op.like]: '%' + name + '%' }
       }
     });
 
