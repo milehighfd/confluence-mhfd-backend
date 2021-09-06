@@ -2,6 +2,7 @@ const POSTGRESQL_DB = process.env.POSTGRESQL_DB || 'mhfd';
 const POSTGRESQL_HOST = process.env.POSTGRESQL_HOST || 'localhost';
 const POSTGRESQL_USER = process.env.POSTGRESQL_USER || 'mhfd';
 const POSTGRESQL_PASSWORD = process.env.POSTGRESQL_PASSWORD || 'mhfd';
+const DB_DIALECT = process.env.DB_DIALECT || 'postgres';
 const JWT_KEY = process.env.JWT_KEY || 'jwtkey';
 const POSTGRESQL_URL = process.env.POSTGRESQL_URL || 'POSTGRESQL://' + POSTGRESQL_HOST + '/' + POSTGRESQL_DB;
 const JWT_EXPIRANCY = process.env.JWT_EXPIRANCY || 60 * 60 * 24 * 1000;
@@ -24,6 +25,7 @@ module.exports = {
   POSTGRESQL_DB,
   POSTGRESQL_USER,
   POSTGRESQL_PASSWORD,
+  DB_DIALECT,
   JWT_EXPIRANCY,
   MHFD_FRONTEND,
   MHFD_EMAIL,
