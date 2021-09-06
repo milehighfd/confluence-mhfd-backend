@@ -46,7 +46,7 @@ router.post('/', async (req, res) => {
                 board_id: board._id
             }
         });
-        let projectsPromises = boardProjects.map(async (bp) => {
+        let projectsPromises = boardProjects.filter(bp => !!bp.project_id).map(async (bp) => {
             let project = null;
             try {
                 project = await getMidByProjectId(bp.project_id, true, projecttype);
@@ -112,7 +112,12 @@ const sendBoardProjectsToProp = async (boards, prop) => {
         });
         for (var j = 0 ; j < boardProjects.length ; j++) {
             let bp = boardProjects[j];
-            let p = await getMinimumDateByProjectId(bp.project_id, true);
+            let p;
+            try {
+                p = await getMinimumDateByProjectId(bp.project_id, true);
+            } catch(e) {
+                continue;
+            }
             let propValues = p[prop].split(',');
             for (let k = 0 ; k < propValues.length ; k++) {
                 let propVal = propValues[k];
