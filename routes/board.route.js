@@ -118,6 +118,9 @@ const sendBoardProjectsToProp = async (boards, prop) => {
             } catch(e) {
                 continue;
             }
+            if (!p[prop]) {
+                continue;
+            }
             let propValues = p[prop].split(',');
             for (let k = 0 ; k < propValues.length ; k++) {
                 let propVal = propValues[k];
