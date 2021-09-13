@@ -239,10 +239,10 @@ const moveCardsToNextLevel = async (board) => {
             return ['Study', 'Acquisition', 'Special'].includes(board.projecttype)
         })
         await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea');
+        await sendBoardProjectsToDistrict(boards);
 
         return {}
     } else if (board.type === 'WORK_PLAN') {
-        await sendBoardProjectsToDistrict(boards);
         return {}
     }
 }
