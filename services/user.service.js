@@ -7,6 +7,7 @@ const {
   MHFD_EMAIL,
   MHFD_PASSWORD,
   SMTP_HOST,
+  SMTP_PORT,
 } = require('../config/config');
 const nodemailer = require('nodemailer');
 const path = require('path');
@@ -29,11 +30,11 @@ const getTransporter = () => {
   const transporter = nodemailer.createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
-    secure: true,
-    auth: {
-      user: MHFD_EMAIL,
-      pass: MHFD_PASSWORD,
-    }
+    //secure: true,
+    //auth: {
+    //  user: MHFD_EMAIL,
+    //  pass: MHFD_PASSWORD,
+    //}
   });
   return transporter;
 };

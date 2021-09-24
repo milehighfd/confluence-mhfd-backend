@@ -7,6 +7,7 @@ const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, co
   port: config.DB_PORT,
   databaseVersion: '10.50.6000',
   dialectOptions: {
+	instancName: 'XXX',
     options:{
       encrypt: false
     }
