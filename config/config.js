@@ -4,7 +4,6 @@ const POSTGRESQL_USER = process.env.POSTGRESQL_USER || 'mhfd';
 const POSTGRESQL_PASSWORD = process.env.POSTGRESQL_PASSWORD || 'mhfd';
 const DB_DIALECT = process.env.DB_DIALECT || 'postgres';
 const JWT_KEY = process.env.JWT_KEY || 'jwtkey';
-const POSTGRESQL_URL = process.env.POSTGRESQL_URL || 'POSTGRESQL://' + POSTGRESQL_HOST + '/' + POSTGRESQL_DB;
 const JWT_EXPIRANCY = process.env.JWT_EXPIRANCY || 60 * 60 * 24 * 1000;
 const MHFD_FRONTEND = process.env.MHFD_FRONTEND || 'http://localhost/';
 const MHFD_EMAIL = process.env.MHFD_EMAIL || 'email';
@@ -18,9 +17,11 @@ const PROJECT_TABLE = process.env.PROJECT_TABLE || 'projects';
 const GUEST_USER = process.env.GUEST_USER || 'guest@mhfd.com';
 const DEFAULT_PASSWORD = process.env.DEFAULT_PASSWORD || 'example-password';
 const CREATE_PROJECT_TABLE = process.env.CREATE_PROJECT_TABLE || 'mhfd_projects_copy';
+const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
+const SMTP_PORT = process.env.SMTP_PORT || 465;
+const DB_PORT = process.env.DB_PORT || 5432;
 module.exports = {
   JWT_KEY,
-  POSTGRESQL_URL,
   POSTGRESQL_HOST,
   POSTGRESQL_DB,
   POSTGRESQL_USER,
@@ -38,5 +39,8 @@ module.exports = {
   PROJECT_TABLE,
   GUEST_USER,
   DEFAULT_PASSWORD,
-  CREATE_PROJECT_TABLE
+  CREATE_PROJECT_TABLE,
+  SMTP_HOST,
+  SMTP_PORT,
+  DB_PORT,
 };

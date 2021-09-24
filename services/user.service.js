@@ -6,6 +6,7 @@ const {
   MHFD_FRONTEND,
   MHFD_EMAIL,
   MHFD_PASSWORD,
+  SMTP_HOST,
 } = require('../config/config');
 const nodemailer = require('nodemailer');
 const path = require('path');
@@ -26,8 +27,8 @@ function getPublicUrl(filename) {
 
 const getTransporter = () => {
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
+    host: SMTP_HOST,
+    port: SMTP_PORT,
     secure: true,
     auth: {
       user: MHFD_EMAIL,

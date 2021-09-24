@@ -4,6 +4,7 @@ var cookieParser = require('cookie-parser');
 var morgan = require('morgan');
 var http = require('http');
 const logger = require('./config/logger');
+const cors = require('cors');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users.route');
@@ -38,6 +39,7 @@ app.use(express.json({limit: '20mb'}));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+app.use(cors());
 // add CORS headers
 app.use(function(res, res, next) {
   res.header("Access-Control-Allow-Origin", "*");

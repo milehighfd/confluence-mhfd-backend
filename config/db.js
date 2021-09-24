@@ -4,13 +4,13 @@ const Sequelize = require('sequelize');
 const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, config.POSTGRESQL_PASSWORD, {
   dialect: config.DB_DIALECT,
   host: config.POSTGRESQL_HOST,
-  // databaseVersion: '10.50.6000',
-  // dialectOptions: {
-  //   instanceName: 'SQLEXPRESS',
-  //   options:{
-  //     encrypt: false
-  //   }
-  // },
+  port: config.DB_PORT,
+  databaseVersion: '10.50.6000',
+  dialectOptions: {
+    options:{
+      encrypt: false
+    }
+  },
   pool: {
     max: 5,
     min: 0,
