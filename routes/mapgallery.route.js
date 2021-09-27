@@ -792,6 +792,7 @@ router.post('/project-by-ids/pdf', async (req, res) => {
          res.end(buffer, 'binary');
       })
    } catch (e) {
+      logger.error(e);
       res.status(500).send({ error: 'Not able to generated PDF.' });
    }
 })
@@ -863,6 +864,7 @@ router.post('/problem-by-id/:id/pdf', async (req, res) => {
             res.end(buffer, 'binary');
          })
       } catch (e) {
+         logger.error(e);
          res.status(500).send({ error: 'Not able to generated PDF.' });
       }
    } catch (error) {
