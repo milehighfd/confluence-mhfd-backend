@@ -26,14 +26,14 @@ router.get('/get-images-drive', async (req, res) => {
 
     const newProm = new Promise((resolve, reject) => {
       let images = [];
-      fs.readdir(IMAGES_FROM_GOOGLE_DRIVE, async (err, files) => {
-        if (err) throw err;
+      // fs.readdir(IMAGES_FROM_GOOGLE_DRIVE, async (err, files) => {
+      //   if (err) throw err;
   
-        for (const file of files) {
-          await images.push(file);
-        }
-        resolve(images);
-      });
+      //   for (const file of files) {
+      //     await images.push(file);
+      //   }
+        resolve(["Confluence Park25.jpg", "Drainageway A25.jpg", "Eco Park25.jpg", "Low drop25.jpg", "Westminster Station25.jpg"]);
+      // });
     });
     
     imagesFinal = await newProm;
