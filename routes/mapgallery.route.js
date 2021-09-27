@@ -784,12 +784,16 @@ router.post('/project-by-ids/pdf', async (req, res) => {
    if (data.projectid) {
      components = await componentsByEntityId(data.projectid, 'projectid', 'type', 'asc');
    }
-   let pdfObject = await printProject(data, components, map);
-   pdfObject.toBuffer(function (err, buffer) {
-      if (err) return res.send(err);
-      res.type('pdf');
-      res.end(buffer, 'binary');
-   })
+   try {
+      let pdfObject = await printProject(data, components, map);
+      pdfObject.toBuffer(function (err, buffer) {
+         if (err) return res.send(err);
+         res.type('pdf');
+         res.end(buffer, 'binary');
+      })
+   } catch (e) {
+      res.status(500).send({ error: 'Not able to generated PDF.' });
+   }
 })
 
 router.get('/project-by-ids', async (req, res) => {
@@ -851,12 +855,16 @@ router.post('/problem-by-id/:id/pdf', async (req, res) => {
    try {
       let data = await getDataByProblemId(id);
       let components = await componentsByEntityId(id, 'problemid', 'type', 'asc');
-      let pdfObject = await printProblem(data, components, map);
-      pdfObject.toBuffer(function (err, buffer) {
-         if (err) return res.send(err);
-         res.type('pdf');
-         res.end(buffer, 'binary');
-      })
+      try {
+         let pdfObject = await printProblem(data, components, map);
+         pdfObject.toBuffer(function (err, buffer) {
+            if (err) return res.send(err);
+            res.type('pdf');
+            res.end(buffer, 'binary');
+         })
+      } catch (e) {
+         res.status(500).send({ error: 'Not able to generated PDF.' });
+      }
    } catch (error) {
       logger.error(error);
       res.status(500).send({ error: 'No there data with ID' });
