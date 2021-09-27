@@ -89,7 +89,12 @@ const migrateFilesFromCloud = async () => {
         destination: getDestFile(file.name),
       };
       if (!fs.existsSync(options.destination)) {
-        await storage.bucket(STORAGE_NAME).file(file.name).download(options);
+        try {
+          await storage.bucket(STORAGE_NAME).file(file.name).download(options);
+        } catch (e) {
+          console.log(e);
+          console.log('Error while downloading')
+        }
       }
     }
   }
