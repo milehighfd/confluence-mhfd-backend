@@ -11,19 +11,13 @@ const {
 } = require('../config/config');
 const nodemailer = require('nodemailer');
 const path = require('path');
-const { Storage } = require('@google-cloud/storage');
 const { FIELDS } = require('../lib/enumConstants');
 const logger = require('../config/logger');
-const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
+const { BASE_SERVER_URL } = require('../config/config');
 const LogActivity = db.logActivity;
 
-const storage = new Storage({
-  keyFilename: path.join(__dirname, '../config/mhfd-cloud-8212a0689e50.json'),
-  projectId: 'mhfd-cloud'
-});
-
 function getPublicUrl(filename) {
-  return `${STORAGE_URL}/${STORAGE_NAME}/${filename}`;
+  return `${BASE_SERVER_URL}/${'images'}/${filename}`;
 }
 
 const getTransporter = () => {
@@ -152,25 +146,24 @@ const sendBoardNotification = async (email, type, locality, year, fullName) => {
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 }
 
-const uploadPhoto = async (user, files) => {
-  const bucket = storage.bucket(STORAGE_NAME);
+function getDestFile(filename) {
+  let root = path.join(__dirname, `../public/images`);
+  return path.join(root, `/${filename}`); 
+}
 
+const uploadPhoto = async (user, files) => {
   const newPromise = new Promise((resolve, reject) => {
     files.forEach(file => {
       const name = Date.now() + file.originalname;
-      console.log('NAME USER', name);
       user.photo = getPublicUrl(name);
       user.save();
-      const blob = bucket.file(name);
-      console.log('BUFFER', file.buffer);
-      blob.createWriteStream({
-        metadata: { contentType: file.mimetype }
-      }).on('finish', async response => {
-        await blob.makePublic();
-        resolve(getPublicUrl(name));
-      }).on('error', err => {
-        reject('upload error: ', err);
-      }).end(file.buffer);
+      try {
+        fs.writeFileSync(getDestFile(name), file.buffer);
+        resolve(user.photo);
+      } catch (e) {
+        console.log(e);
+        reject(e)
+      }
     });
   });
   await newPromise;

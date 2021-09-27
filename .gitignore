@@ -67,5 +67,6 @@ config/mhfd-cloud-8212a0689e50.json
 # images download from google drive
 images/drive/
 public/images/drive/
+public/images/
 services/compressed/
 services/tmp/

@@ -20,6 +20,7 @@ const CREATE_PROJECT_TABLE = process.env.CREATE_PROJECT_TABLE || 'mhfd_projects_
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
 const SMTP_PORT = process.env.SMTP_PORT || 465;
 const DB_PORT = process.env.DB_PORT || 5432;
+const BASE_SERVER_URL = process.env.BASE_SERVER_URL || 'http://localhost:3003';
 module.exports = {
   JWT_KEY,
   POSTGRESQL_HOST,
@@ -43,4 +44,5 @@ module.exports = {
   SMTP_HOST,
   SMTP_PORT,
   DB_PORT,
+  BASE_SERVER_URL,
 };

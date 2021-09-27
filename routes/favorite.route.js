@@ -283,11 +283,6 @@ router.post('/favorite-list', auth, async (req, res) => {
                        let valor = '';
                        if (element.attachments) {
                           valor = await attachmentService.findCoverImage(element.attachments);
-                          //console.log('mi valor ', valor);
-                          if (valor) {
-                             valor = valor.split('https://storage.googleapis.com/mhfd-cloud.appspot.com/');
-                             valor = 'https://storage.googleapis.com/mhfd-cloud.appspot.com/compressed/' + valor[1];
-                          }
                        }
                        let coordinates = [];
                        if (element.the_geom && JSON.parse(element.the_geom).coordinates) {

@@ -6,7 +6,7 @@ const Attachment = db.attachment;
 const User = db.user;
 const path = require('path');
 const { Storage } = require('@google-cloud/storage');
-const { STORAGE_NAME, STORAGE_URL } = require('../config/config');
+const { STORAGE_NAME, BASE_SERVER_URL } = require('../config/config');
 const { Op } = require("sequelize");
 
 const storage = new Storage({
@@ -15,7 +15,24 @@ const storage = new Storage({
 });
 
 function getPublicUrl(filename) {
-  return `${STORAGE_URL}/${STORAGE_NAME}/${filename}`;
+  return `${BASE_SERVER_URL}/${'images'}/${filename}`;
+}
+
+function getDestFile(filename) {
+  let root = path.join(__dirname, `../public/images`);
+  if (filename.includes('/')) {
+    let folders = filename.split('/');
+    for (var i = 0 ; i < folders.length - 1; i++) {
+      root = path.join(root, folders[i]);
+      if (!fs.existsSync(root)) {
+        console.log('creating', root)
+        fs.mkdirSync(root);
+      }
+    }
+    return path.join(root, `/${folders[folders.length - 1]}`);
+  } else {
+    return path.join(root, `/${filename}`); 
+  }
 }
 
 const listAttachments = async (page, limit, sortByField, sortType, projectid) => {
@@ -51,14 +68,15 @@ const listAttachments = async (page, limit, sortByField, sortType, projectid) =>
 }
 
 const migrateFilesFromCloud = async () => {
-
   const attachments = await Attachment.findAll();
   if (attachments.length === 0) {
     const [files] = await storage.bucket(STORAGE_NAME).getFiles();
     const users = await User.findAll();
-
     const user = users[0];
-    files.forEach(file => {
+    for (var i = 0 ; i < files.length ; i++) {
+      let file = files[i];
+      if (file.metadata.size == 0) continue;
+      console.log(file);
       let attach = {};
       attach.value = getPublicUrl(file.name);
       attach.user_id = user._id;
@@ -67,7 +85,13 @@ const migrateFilesFromCloud = async () => {
       attach.register_date = new Date();
       attach.filesize = file.metadata.size;
       Attachment.create(attach);
-    });
+      const options = {
+        destination: getDestFile(file.name),
+      };
+      if (!fs.existsSync(options.destination)) {
+        await storage.bucket(STORAGE_NAME).file(file.name).download(options);
+      }
+    }
   }
 
 }
@@ -91,12 +115,6 @@ const findCoverImage = async (name) => {
   }
 
   return await urlImage;
-}
-
-const exists = async (name) => {
-  console.log('NAME', name);
-  const file = await storage.bucket(STORAGE_NAME).file(name).exists();
-  console.log('ATTACHMENTSSSSS', file);
 }
 
 const findByName = async (name) => {
@@ -149,17 +167,20 @@ const countAttachments = async () => {
 
 const removeAttachment = async (id) => {
   const attach = await Attachment.findByPk(id, { raw: true });
+  // TODO: review delete image from folder
+  let name;
   if (attach.project_id) {
-    await storage.bucket(STORAGE_NAME).file(`${attach.project_id}/${attach.filename}`).delete();
+    name = `${attach.project_id}/${attach.filename}`;
   } else {
-    await storage.bucket(STORAGE_NAME).file(attach.filename).delete();
+    name = attach.filename;
   }
+  let fileName = getDestFile(name);
   try {
-    await storage.bucket(STORAGE_NAME).file('compressed/' + attach.filename).delete();
-  } catch (err) {
-    console.log('Doesnt exist compress file');
+    fs.unlinkSync(fileName);
+  } catch (e) {
+    console.log(e);
+    console.log('Not able to delete file');
   }
-  console.log(attach.filename);
   await Attachment.destroy({
     where: {
       _id: attach._id
@@ -170,6 +191,7 @@ const removeAttachment = async (id) => {
 
 
 const compress_images = require("compress-images");
+const { file } = require('googleapis/build/src/apis/file');
 const INPUT_path_to_your_images = __dirname + '/tmp/*.{jpg,JPG,jpeg,JPEG,png,svg,gif}';
 const OUTPUT_path = __dirname + "/compressed/";
 
@@ -206,23 +228,21 @@ const isImage = (type) => {
 }
 
 const uploadFiles = async (user, files, projectid, cover) => {
-  const bucket = storage.bucket(STORAGE_NAME);
-  const compressBucket = storage.bucket(STORAGE_NAME);
-  if (!fs.existsSync(__dirname + '/tmp/')) {
-    console.log('creating /tmp/', __dirname + '/tmp/')
-    fs.mkdirSync(__dirname + '/tmp/');
-  }
-  if (!fs.existsSync(__dirname + '/compressed/')) {
-    console.log('creating /compressed/', __dirname + '/compressed/')
-    fs.mkdirSync(__dirname + '/compressed/');
-  }
+  // const bucket = storage.bucket(STORAGE_NAME);
+  // if (!fs.existsSync(__dirname + '/tmp/')) {
+  //   console.log('creating /tmp/', __dirname + '/tmp/')
+  //   fs.mkdirSync(__dirname + '/tmp/');
+  // }
+  // if (!fs.existsSync(__dirname + '/compressed/')) {
+  //   console.log('creating /compressed/', __dirname + '/compressed/')
+  //   fs.mkdirSync(__dirname + '/compressed/');
+  // }
 
   for (const file of files) {
     let name = file.originalname;
     if (projectid) {
       name = `${projectid}/${name}`
     }
-    const blob = bucket.file(name);
     let attach = {};
     attach.value = getPublicUrl(name);
     attach.user_id = user._id;
@@ -236,100 +256,114 @@ const uploadFiles = async (user, files, projectid, cover) => {
     }
     Attachment.create(attach);
     console.log(file.mimetype);
-    const complete = path.join(__dirname, './tmp/' + file.originalname);
-    const compressedrRoute = __dirname + '/compressed/' + file.originalname;
+    const complete = getDestFile(name); //path.join(__dirname, './tmp/' + file.originalname);
+    // const compressedrRoute = __dirname + '/compressed/' + file.originalname;
     logger.info(complete);
-    logger.info(compressedrRoute);
+    // logger.info(compressedrRoute);
+    const prom = new Promise((resolve, reject) => {
+      fs.writeFile(complete, file.buffer, (error) => {
+        if (error) {
+          logger.error('error ' + JSON.stringify(error));
+          reject({error: error});
+        }
+        resolve('OK');
+      });
+    });
+    try {
+      await prom;
+    } catch (error) {
+      throw error;
+    }
     if (isImage(file.mimetype)) {
       
-      const prom = new Promise((resolve, reject) => {
-        fs.writeFile(complete, file.buffer, (error) => {
-          if (error) {
-            logger.error('error ' + JSON.stringify(error));
-            reject({error: error});
-          }
-          resolve('OK');
-        });
-      });
-      try {
-        await prom;
-      } catch (error) {
-        throw error;
-      }
-      const read = new Promise((res, rej) => {
-        fs.readFile(complete, (error, data) => {
-          console.log(error, data);
-          if (error) {
-            return rej({ error: 'Cannot read data' });
-          }
-          return res({ data: data });
-        });
-      });
-      let file2;
-      try {
-        file2 = await read;
-      } catch(err) {
-        throw err;
-      }
-      if (file2) {
-        const didCompression = await compress();
-        if (didCompression) {
-          try {
-            bucket.makePublic(function (err) { });
-            await bucket.upload(compressedrRoute, {
-              destination: `compressed/${file.originalname}`,
-              metadata: {
-                cacheControl: 'public'
-              }
-            });
+      // const prom = new Promise((resolve, reject) => {
+      //   fs.writeFile(complete, file.buffer, (error) => {
+      //     if (error) {
+      //       logger.error('error ' + JSON.stringify(error));
+      //       reject({error: error});
+      //     }
+      //     resolve('OK');
+      //   });
+      // });
+      // try {
+      //   await prom;
+      // } catch (error) {
+      //   throw error;
+      // }
+      // const read = new Promise((res, rej) => {
+      //   fs.readFile(complete, (error, data) => {
+      //     console.log(error, data);
+      //     if (error) {
+      //       return rej({ error: 'Cannot read data' });
+      //     }
+      //     return res({ data: data });
+      //   });
+      // });
+      // let file2;
+      // try {
+      //   file2 = await read;
+      // } catch(err) {
+      //   throw err;
+      // }
+      // if (file2) {
+      //   const didCompression = await compress();
+      //   if (didCompression) {
+      //     try {
+      //       bucket.makePublic(function (err) { });
+      //       await bucket.upload(compressedrRoute, {
+      //         destination: `compressed/${file.originalname}`,
+      //         metadata: {
+      //           cacheControl: 'public'
+      //         }
+      //       });
 
-          } catch (err) {
-            throw err;
-          }
-        }
-      }
+      //     } catch (err) {
+      //       throw err;
+      //     }
+      //   }
+      // }
     }
 
-    const newPromise = new Promise((resolve, reject) => {
-      const blob = bucket.file(name);
-      blob.createWriteStream({
-        metadata: { contentType: file.mimetype }
-      }).on('finish', async response => {
-        await blob.makePublic();
-        resolve(attach);
+    // const newPromise = new Promise((resolve, reject) => {
+    //   const blob = bucket.file(name);
+    //   blob.createWriteStream({
+    //     metadata: { contentType: file.mimetype }
+    //   }).on('finish', async response => {
+    //     await blob.makePublic();
+    //     resolve(attach);
 
-      }).on('error', err => {
-        reject('upload error: '+ JSON.stringify(err));
-      }).end(file.buffer);
-    });
-    try {
-      await newPromise;
-    } catch (error) {
-      throw error;
-    }
-    const delelteFile = new Promise((resolve, rejected) => {
-      fs.unlink(complete, function (err) {
-        if (err) {
-          console.log('problem deleting ', complete, ' with error ', err);
-          return rejected(false);
-        }
-        // if no error, file has been deleted successfully
-        console.log('File deleted! ', complete);
-        resolve(true);
-      });
-    });
-    try {
-      await delelteFile;
-    } catch (error) {
-      throw error;
-    }
-    fs.unlink(compressedrRoute, function (err) {
-      if (err) {
-        console.log('problem deleting ', compressedrRoute, ' with error ', err);
-      }
-      // if no error, file has been deleted successfully
-      console.log('File deleted! ', compressedrRoute);
-    }); 
+    //   }).on('error', err => {
+    //     reject('upload error: '+ JSON.stringify(err));
+    //   }).end(file.buffer);
+    // });
+    // try {
+    //   await newPromise;
+    // } catch (error) {
+    //   throw error;
+    // }
+    // const delelteFile = new Promise((resolve, rejected) => {
+    //   fs.unlink(complete, function (err) {
+    //     if (err) {
+    //       console.log('problem deleting ', complete, ' with error ', err);
+    //       return rejected(false);
+    //     }
+    //     // if no error, file has been deleted successfully
+    //     console.log('File deleted! ', complete);
+    //     resolve(true);
+    //   });
+    // });
+    // try {
+    //   await delelteFile;
+    // } catch (error) {
+    //   throw error;
+    // }
+    // fs.unlink(compressedrRoute, function (err) {
+    //   if (err) {
+    //     console.log('problem deleting ', compressedrRoute, ' with error ', err);
+    //   }
+    //   // if no error, file has been deleted successfully
+    //   console.log('File deleted! ', compressedrRoute);
+    // }); 
   }
 }
 
@@ -349,7 +383,6 @@ module.exports = {
   migrateFilesFromCloud,
   findByName,
   findCoverImage,
-  exists,
   findByFilename,
   toggle
 }
