@@ -51,7 +51,7 @@ const getAttachmentsCidList = (cids) => {
 const sendRecoverPasswordEmail = async (user) => {
   const email = user.email;
   const changePasswordId = user.changePasswordId;
-  const redirectUrl = MHFD_FRONTEND + '/confirm-password/' + changePasswordId;
+  const redirectUrl = MHFD_FRONTEND + '/confirm-password/?id=' + changePasswordId;
   const template = fs.readFileSync(__dirname + '/templates/email_reset-pass-MHFD.html', 'utf8');
   const emailToSend = template.split('{{url}}').join(redirectUrl);
 
