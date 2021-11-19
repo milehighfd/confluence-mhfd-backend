@@ -30,14 +30,19 @@ router.post('/', async (req, res) => {
   const table = req.body.table;
   const sql = `SELECT * FROM ${table}`;
   var mapConfig = {
+    "version": '1.3.1',
+    "buffersize": {mvt: 8},
     "layers":[ {
       "id":"pluto15v1",
+      "type": 'mapnik',
       "options": {
-        "sql": sql
+        "sql": sql,
+        "vector_extent": 4096,
+        "bufferSize": 8,
+        "version": '1.3.1'
       }
     }
   ]};
-  console.log('TABLA', table);
   mapConfig =  encodeURIComponent(JSON.stringify(mapConfig));
   const URL = `https://denver-mile-high-admin.carto.com/api/v1/map?config=${mapConfig}&api_key=${CARTO_TOKEN}`;
   
@@ -50,6 +55,7 @@ router.post('/', async (req, res) => {
       });
       response.on('end', function () {
         const tiles = JSON.parse(str).metadata.tilejson.vector.tiles;
+        console.log("THIS ARE THE TILES", tiles);
         return res.send(tiles);
       });
     } else {
