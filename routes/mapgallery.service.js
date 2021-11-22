@@ -76,18 +76,23 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
   let SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom2, ST_AsGeoJSON(the_geom) as the_geom3 FROM ${table} where  projectid=${projectid} `;
   let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
   const data = await needle('get', URL, { json: true });
+  // console.log("SQL", SQL);
   if (data.statusCode === 200 && data.body.rows.length > 0) {
     const result = data.body.rows[0];
     let problems = [];
     let attachmentFinal = [];
     let components = [];
     let coordinates = [];
-
+    let convexhull = [];
     if (result.projectid !== null && result.projectid !== undefined && result.projectid) {
       problems = await getProblemByProjectId(result.projectid, 'problemname', 'asc');
       components = await getCoordinatesOfComponents(result.projectid, 'projectid');
+      convexhull = await getEnvelopeProblemsComponentsAndProject(result.projectid, 'projectid');
+      if(convexhull[0]){
+        convexhull = JSON.parse(convexhull[0].envelope).coordinates;
+      }
     }
-
+    
     if (result.attachments) {
       attachmentFinal = await attachmentService.findByName(result.attachments);
     }
@@ -96,7 +101,10 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
       createdCoordinates = result.the_geom3;
     }
     result.the_geom = result.the_geom2;
-    if (JSON.parse(result.the_geom).coordinates) {
+    if(convexhull[0].length > 0){
+      coordinates = convexhull;
+      // console.log("CONVEX HULL", coordinates);
+    } else if (JSON.parse(result.the_geom).coordinates) {
       coordinates = JSON.parse(result.the_geom).coordinates;
     }
     return {
@@ -211,6 +219,8 @@ async function getProblemByProjectId(projectid, sortby, sorttype) {
      `SELECT problemid FROM landscaping_area 
    where projectid=${projectid} and projectid>0) 
    order by ${sortby} ${sorttype}`;
+
+  //  console.log("LINES QL", LINE_SQL);
   const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
   //console.log(LINE_URL);
   const newProm1 = new Promise((resolve, reject) => {
@@ -230,6 +240,61 @@ async function getProblemByProjectId(projectid, sortby, sorttype) {
   return data;
 }
 
+async function getEnvelopeProblemsComponentsAndProject(id, field) {
+  const SQL = `select ST_ASGEOJSON(ST_EXTENT(the_geom)) as envelope from (
+  SELECT the_geom FROM mhfd_projects where  projectid=${id}
+  union 
+  select the_geom from problems  
+   where problemid in (SELECT problemid FROM grade_control_structure 
+     where projectid=${id} and projectid>0  union SELECT problemid FROM pipe_appurtenances 
+     where projectid=${id} and projectid>0  union SELECT problemid FROM special_item_point 
+     where projectid=${id} and projectid>0  union SELECT problemid FROM special_item_linear 
+     where projectid=${id} and projectid>0  union SELECT problemid FROM special_item_area 
+     where projectid=${id} and projectid>0  union SELECT problemid FROM channel_improvements_linear 
+     where projectid=${id} and projectid>0  union SELECT problemid FROM channel_improvements_area 
+     where projectid=${id} and projectid>0  union SELECT problemid FROM removal_line 
+     where projectid=${id} and projectid>0  union SELECT problemid FROM removal_area 
+     where projectid=${id} and projectid>0  union SELECT problemid FROM storm_drain 
+     where projectid=${id} and projectid>0  union SELECT problemid FROM detention_facilities 
+     where projectid=${id} and projectid>0  union SELECT problemid FROM maintenance_trails 
+     where projectid=${id} and projectid>0  union SELECT problemid FROM land_acquisition 
+     where projectid=${id} and projectid>0  union SELECT problemid FROM landscaping_area 
+     where projectid=${id} and projectid>0) 
+  union  
+   SELECT the_geom FROM grade_control_structure where ${field}=${id}  
+   union SELECT the_geom FROM pipe_appurtenances where ${field}=${id}  
+   union SELECT the_geom FROM special_item_point where ${field}=${id}  
+   union SELECT the_geom FROM special_item_linear where ${field}=${id}  
+   union SELECT the_geom FROM special_item_area where ${field}=${id}  
+   union SELECT the_geom FROM channel_improvements_linear where ${field}=${id}  
+   union SELECT the_geom FROM channel_improvements_area where ${field}=${id}  
+   union SELECT the_geom FROM removal_line where ${field}=${id}  
+   union SELECT the_geom FROM removal_area where ${field}=${id}  
+   union SELECT the_geom FROM storm_drain where ${field}=${id}  
+   union SELECT the_geom FROM detention_facilities where ${field}=${id}  
+   union SELECT the_geom FROM maintenance_trails where ${field}=${id}  
+   union SELECT the_geom FROM land_acquisition where ${field}=${id}  
+   union SELECT the_geom FROM landscaping_area where ${field}=${id}  
+  ) joinall
+  
+`    
+  const SQL_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
+  const newProm1 = new Promise((resolve, reject) => {
+    https.get(SQL_URL, response => {
+        if (response.statusCode === 200) {
+          let str = '';
+          response.on('data', function (chunk) {
+              str += chunk;
+          });
+          response.on('end', async function () {
+              resolve(JSON.parse(str).rows);
+          })
+        }
+    });
+  });
+  data = await newProm1;
+  return data;
+}
 async function getCoordinatesOfComponents(id, field) {
   const COMPONENTS_SQL = `SELECT type, 'grade_control_structure' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM grade_control_structure 
      where ${field}=${id}  union ` +
@@ -259,7 +324,7 @@ async function getCoordinatesOfComponents(id, field) {
      where ${field}=${id}  union ` +
      `SELECT type, 'landscaping_area' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM landscaping_area 
      where ${field}=${id}  `;
-
+  // console.log("COMPONENTS SQL", COMPONENTS_SQL);
   const newProm1 = new Promise((resolve, reject) => {
      const COMPONENT_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL}&api_key=${CARTO_TOKEN}`);
      https.get(COMPONENT_URL, response => {
