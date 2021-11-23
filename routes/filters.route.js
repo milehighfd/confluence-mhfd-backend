@@ -97,7 +97,8 @@ router.get('/search/:type', async (req, res) => {
   const field = req.query.field ? req.query.field : '';
   let data = {};
   if (type === 'problems') {
-    const query = {q: `SELECT cartodb_id FROM problems WHERE problemname ILIKE '%${field}%'`};
+    const query = {q: `SELECT cartodb_id FROM problems WHERE problemname ILIKE '%${field}%' OR problemid::text ilike '%${field}%'`};
+    // console.log("QUERY PROBLEM", query);
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
     let answer = [];
     try {
@@ -113,7 +114,8 @@ router.get('/search/:type', async (req, res) => {
     data['problems'] = answer;
   } else {
     for (const project of PROJECT_TABLES) {
-      const query = {q: `SELECT cartodb_id FROM ${project} WHERE projectname ILIKE '%${field}%'`};
+      const query = {q: `SELECT cartodb_id FROM ${project} WHERE projectname ILIKE '%${field}%' OR onbaseid::text ilike '%${field}%'`};
+      // console.log("QUERY PROJ", query);
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       let answer = [];
       try {

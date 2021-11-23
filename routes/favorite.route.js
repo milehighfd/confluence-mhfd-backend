@@ -38,7 +38,7 @@ function getFilters(params, ids) {
          }
       }
    } else {
-      console.log('PROJECTS');
+      // console.log('PROJECTS');
       tipoid = 'projectid';
       if (params.name) {
          if (filters.length > 0) {
@@ -46,6 +46,7 @@ function getFilters(params, ids) {
          } else {
             filters = ` projectname ilike '%${params.name}%' `;
          }
+         // console.log("ID", filters);
       }
 
       if (params.problemtype) {

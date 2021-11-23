@@ -94,7 +94,7 @@ router.post('/', async (req, res) => {
                let query = ''
                if (table === 'mhfd_projects') {
                   query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('mhfd_projects', 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
-                  console.log(query);
+                  console.log("THIS QUERY ROUTER",query);
                }
 
                const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
@@ -185,14 +185,14 @@ function getFilters(params) {
       'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
 
    if (params.isproblem) {
-      console.log('PROBLEMS');
+      // console.log('PROBLEMS');
       tipoid = 'problemid';
       if (params.name) {
          if (filters.length > 0) {
-            filters = filters = ` and problemname ilike '%${params.name}%'`;
+            filters = filters = ` and (problemname ilike '%${params.name}%' OR problemid::text ilike '%${params.name}%')`;
          }
          else {
-            filters = ` problemname ilike '%${params.name}%' `;
+            filters = ` (problemname ilike '%${params.name}%' OR problemid::text ilike '%${params.name}%') `;
          }
       }
 
@@ -205,16 +205,16 @@ function getFilters(params) {
          }
       }
    } else {
-      console.log('PROJECTS');
+      // console.log('PROJECTS ROU');
       tipoid = 'projectid';
       if (params.name) {
          if (filters.length > 0) {
-            filters = ` and projectname ilike '%${params.name}%' `;
+            filters = ` and (projectname ilike '%${params.name}%' OR onbaseid::text ilike '%${params.name}%') `;
          } else {
-            filters = ` projectname ilike '%${params.name}%' `;
+            filters = ` (projectname ilike '%${params.name}%' OR onbaseid::text ilike '%${params.name}%') `;
          }
       }
-
+      // console.log("ID AQUI", params );
       if (params.problemtype) {
 
       }
@@ -1135,7 +1135,7 @@ router.post('/group-by', async (req, res) => {
    try {
       const table = req.body.table;
       const column = req.body.column;
-      console.log(table, column);
+      // console.log(table, column);
       const LINE_SQL = `SELECT ${column} FROM ${table} group by ${column} order by ${column}`;
       //console.log(LINE_SQL);
       const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
