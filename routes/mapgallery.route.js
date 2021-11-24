@@ -917,9 +917,9 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
    let union = '';
    for (const component of TABLES_COMPONENTS) {
       COMPONENTS_SQL += union + `SELECT type, count(*), coalesce(sum(original_cost), 0) as estimated_cost, 
-     case when cast(${finalcost} as integer) > 0 then coalesce(sum(original_cost),0)/cast(${finalcost} as integer) else 0 END as original_cost
-     FROM ${component}, ${table}
-     where ${component}.${typeid}=${id} and ${table}.${typeid}=${id} group by type, ${finalcost}`;
+     case when cast(${finalcost} as integer) > 0 then coalesce(sum(original_cost),0)/cast(${finalcost} as integer) else 0 END as original_cost, coalesce(complete_t.sum, 0) as complete_cost
+     FROM ${component}, ${table}, ( select sum(estimated_cost) as sum from ${component} where ${component}.status = 'Complete' ) complete_t
+     where ${component}.${typeid}=${id} and ${table}.${typeid}=${id} group by type, ${finalcost}, complete_t.sum`;
       union = ' union ';
    }
 
@@ -938,7 +938,8 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
          return {
             type: element.type + ' (' + element.count + ')',
             estimated_cost: element.estimated_cost,
-            original_cost: element.original_cost
+            original_cost: element.original_cost,
+            complete_cost: element.complete_cost
          }
       })
       if (sortby === 'percen') {
@@ -956,7 +957,8 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
             type: element.type,
             estimated_cost: element.estimated_cost,
             original_cost: element.original_cost,
-            percen: percentageFormatter(sum == 0 ? 0 : element.estimated_cost / sum)
+            percen: percentageFormatter(sum == 0 ? 0 : element.estimated_cost / sum),
+            complete_cost: element.complete_cost
          }
       });
    } else {
