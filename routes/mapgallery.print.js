@@ -47,7 +47,7 @@ module.exports = {
       problemdescription,
     } = data;
 
-    let mainImage = problemtype ? `http://confluence.mhfd.org/gallery/${problemtype}.jpg` : 'https://i.imgur.com/kLyZbrB.jpg'
+    let mainImage = problemtype ? `https://confluence.mhfd.org/gallery/${problemtype}.jpg` : 'https://i.imgur.com/kLyZbrB.jpg'
 
     const mapHeight = 500;
     const mapWidth = 750;
