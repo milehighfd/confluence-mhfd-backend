@@ -151,7 +151,8 @@ module.exports = {
     }
     html = html.split('${spaceBetween}').join(spaceBetween);
 
-    let width = 1200;
+    // let width = 1200;
+    let width = 800;
     let height = 1550;
 
     var options = {
@@ -311,7 +312,7 @@ module.exports = {
       spaceBetween += '<br/>'
     }
     html = html.split('${spaceBetween}').join(spaceBetween);
-    let width = 1200;
+    let width = 800;
     let height = 1550;
     if (!(problems.length + components.length)) {
       height += 180
