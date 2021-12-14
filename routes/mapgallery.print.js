@@ -1,7 +1,7 @@
 var fs = require('fs');
 var pdf = require('html-pdf');
 var Jimp = require('jimp');
-
+var limit = 3;
 const priceFormatter = (value) => {
   return `$${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
@@ -149,7 +149,7 @@ module.exports = {
     for (var i = 0 ; i < q ; i++) {
       spaceBetween += '<br/>'
     }
-    html = html.split('${spaceBetween}').join(spaceBetween);
+    html = html.split('${spaceBetween}').join(components.length > limit ?`<br><div style="page-break-after:always;"></div>`: '');
 
     // let width = 1200;
     let width = 900;
@@ -311,7 +311,7 @@ module.exports = {
     for (var i = 0 ; i < q ; i++) {
       spaceBetween += '<br/>'
     }
-    html = html.split('${spaceBetween}').join(spaceBetween);
+    html = html.split('${spaceBetween}').join(components.length > limit ?`<br><div style="page-break-after:always;"></div>`: '');
     let width = 900;
     let height = 1000;
     if (!(problems.length + components.length)) {
