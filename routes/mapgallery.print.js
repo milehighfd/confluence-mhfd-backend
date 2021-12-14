@@ -1,7 +1,7 @@
 var fs = require('fs');
 var pdf = require('html-pdf');
 var Jimp = require('jimp');
-var limit = 3;
+var limit = 2;
 const priceFormatter = (value) => {
   return `$${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
