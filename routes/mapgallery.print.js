@@ -153,7 +153,7 @@ module.exports = {
 
     // let width = 1200;
     let width = 900;
-    let height = 1000;
+    let height = 1150;
 
     var options = {
       width: `${width}px`,
@@ -313,7 +313,7 @@ module.exports = {
     }
     html = html.split('${spaceBetween}').join(components.length > limit ?`<br><div style="page-break-after:always;"></div>`: '');
     let width = 900;
-    let height = 1000;
+    let height = 1150;
     if (!(problems.length + components.length)) {
       height += 180
     }
