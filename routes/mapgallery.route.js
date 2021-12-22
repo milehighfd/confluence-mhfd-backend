@@ -14,6 +14,7 @@ const {
 const {
    projectCounterRoute,
    projectParamFilterRoute,
+   projectStatistics,
 } = require('./mapgallery.project.route');
 const {
    problemCounterRoute,
@@ -2071,6 +2072,8 @@ router.get('/params-filters', async (req, res) => {
 router.post('/params-filter-components', componentParamFilterRoute)
 router.post('/params-filter-projects', projectParamFilterRoute)
 router.post('/params-filter-problems', problemParamFilterRoute)
+
+router.post('/project-statistics', projectStatistics)
 
 /* Tab counter routes */
 router.post('/problems-counter', problemCounterRoute)

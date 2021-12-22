@@ -3,6 +3,7 @@ const logger = require('../config/logger');
 const needle = require('needle');
 
 const PROJECT_TABLES = ['mhfd_projects'];
+const COMPLETE_YEAR_COLUMN = 'completeyear';
 
 const getNewFilter = (filters, body) => {
    if (body.status) {
@@ -42,7 +43,7 @@ const getNewFilter = (filters, body) => {
    }
    if (body.completedyear) {
      let splitted = body.completedyear.split(',');
-     let column = 'completedyear';
+     let column = COMPLETE_YEAR_COLUMN;
      let minimumValue = splitted[0];
      let maximumValue = splitted[splitted.length - 1];
      filters += `and ${column} between ${minimumValue} and ${maximumValue}`;
@@ -76,7 +77,7 @@ const getNewFilter = (filters, body) => {
    return filters;
  }
 
-async function getValuesByColumnWithOutCountProject(table, column, bounds, body) {
+async function getValuesByColumnWithOutCountProject(column, bounds, body) {
    let result = [];
    try {
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
@@ -93,11 +94,11 @@ async function getValuesByColumnWithOutCountProject(table, column, bounds, body)
          if (data.statusCode === 200) {
             answer = answer.concat(data.body.rows);
          } else {
-            console.log('data.statusCode', data.statusCode, table, column, data.body)
+            console.log('data.statusCode', data.statusCode, column, data.body)
             console.log('query.q', query.q)
          }
       }
-      if (column === 'startyear' || column === 'completedyear') {
+      if (column === 'startyear' || column === COMPLETE_YEAR_COLUMN) {
          for (const table1 of PROJECT_TABLES) {
             const query = { q: `select DISTINCT(${column}) as value from ${table1} order by ${column} ` };
             const data = await needle('post', URL, query, { json: true });
@@ -133,13 +134,13 @@ async function getValuesByColumnWithOutCountProject(table, column, bounds, body)
       }
    } catch (error) {
       logger.error(error);
-      logger.error(`Get Value by Column, Table: ${table} Column: ${column} Connection error`);
+      logger.error(`Get Value by Column, Column: ${column} Connection error`);
    }
 
    return result;
 }
 
-async function getCountByArrayColumnsProject(table, column, columns, bounds, body) {
+async function getCountByArrayColumnsProject(column, columns, bounds, body) {
    let result = [];
    try {
       const coords = bounds.split(',');
@@ -164,7 +165,7 @@ async function getCountByArrayColumnsProject(table, column, columns, bounds, bod
                   answer = answer.concat(data.body.rows);
                }
             } else {
-               console.log('data.statusCode', data.statusCode, table, column, data.body)
+               console.log('data.statusCode', data.statusCode, column, data.body)
                console.log('query.q', query.q)
             }
          }
@@ -184,13 +185,13 @@ async function getCountByArrayColumnsProject(table, column, columns, bounds, bod
 
    } catch (error) {
       logger.error(error);
-      logger.error(`getCountByArrayColumnsProject Table: ${table}, Column: ${column} Connection error`);
+      logger.error(`getCountByArrayColumnsProject Column: ${column} Connection error`);
    }
 
    return result;
 }
 
-async function getValuesByRangeProject(table, column, range, bounds, body) {  
+async function getValuesByRangeProject(column, bounds, body) {  
    let result = [];
    try {
       const coords = bounds.split(',');
@@ -216,6 +217,7 @@ async function getValuesByRangeProject(table, column, range, bounds, body) {
                   return `SELECT max(${column}) as max, min(${column}) as min FROM ${t} where ${filters}`;
                }).join(' union ')
             }
+            console.log('query', minMaxQuery);
             const minMaxData = await needle('post', URL, minMaxQuery, { json: true });
             const minMaxResult = minMaxData.body.rows;
             minRange = Math.min.apply(Math, minMaxResult.map(function (element) { return element.min }));
@@ -245,7 +247,7 @@ async function getValuesByRangeProject(table, column, range, bounds, body) {
                   const rows = data.body.rows;
                   counter += rows[0].count;
                } else {
-                  console.log('data.statusCode', data.statusCode, table, column, data.body)
+                  console.log('data.statusCode', data.statusCode, column, data.body)
                   console.log('query.q', query.q)
                }
             }
@@ -394,73 +396,29 @@ async function projectParamFilterRoute(req, res) {
 
       let requests = [];
 
-      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'creator', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'mhfdmanager', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('creator', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('mhfdmanager', bounds, body));
 
-      requests.push(getCountByArrayColumnsProject('mhfd_projects', 'projecttype', ['Maintenance', 'Study', 'Capital'], bounds, body));
-      requests.push(getCountByArrayColumnsProject('mhfd_projects', 'status', ['Draft', 'Requested',
+      requests.push(getCountByArrayColumnsProject('projecttype', ['Maintenance', 'Study', 'Capital'], bounds, body));
+      requests.push(getCountByArrayColumnsProject('status', ['Draft', 'Requested',
          'Approved', 'Idle', 'Initiated', 'Ongoing',
          'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
          'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete'], bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'startyear', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'completedyear', bounds, body));
-      const rangeMhfdDollarsAllocated = [
-         {
-            min: 0,
-            max: 250000
-         },
-         {
-            min: 250001,
-            max: 500000
-         },
-         {
-            min: 500001,
-            max: 750000
-         },
-         {
-            min: 750001,
-            max: 1000000
-         },
-         {
-            min: 1000001,
-            max: 50000000
-         }
-      ];
-      requests.push(getValuesByRangeProject('mhfd_projects', 'mhfddollarsallocated', rangeMhfdDollarsAllocated, bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('startyear', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject(COMPLETE_YEAR_COLUMN, bounds, body));
+      requests.push(getValuesByRangeProject('mhfddollarsallocated', bounds, body));
       requests.push(getCountWorkYearProject([{ year: 2019, column: 'workplanyr1' }, { year: 2020, column: 'workplanyr2' },
       { year: 2021, column: 'workplanyr3' }, { year: 2022, column: 'workplanyr4' }, { year: 2023, column: 'workplanyr5' }], bounds, body));
       requests.push(getProjectByProblemTypeProject(bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'lgmanager', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'streamname', bounds, body));
-      const rangeTotalCost = [
-         {
-            min: 0,
-            max: 250000
-         },
-         {
-            min: 250001,
-            max: 500000
-         },
-         {
-            min: 500001,
-            max: 750000
-         },
-         {
-            min: 750001,
-            max: 1000000
-         },
-         {
-            min: 1000001,
-            max: 50000000
-         }
-      ];
-      requests.push(getValuesByRangeProject('mhfd_projects', 'estimatedcost', rangeTotalCost, bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'consultant', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'contractor', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('lgmanager', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('streamname', bounds, body));
+      requests.push(getValuesByRangeProject('estimatedcost', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('consultant', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('contractor', bounds, body));
 
-      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'jurisdiction', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'county', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('mhfd_projects', 'servicearea', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('jurisdiction', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('county', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('servicearea', bounds, body));
 
       const promises = await Promise.all(requests);
 
@@ -490,13 +448,40 @@ async function projectParamFilterRoute(req, res) {
    }
 }
 
+const projectStatistics = async (request, response) => {
+   const column = request.query.column;
+   const bounds = request.query.bounds;
+   const body = request.body;
+   if (!column) {
+      return response.status(404).send({error: 'Query param "column" is required'});
+   }
+   const columnsWithoutCount = ['creator', 'mhfdmanager', 'startyear', COMPLETE_YEAR_COLUMN, 'lgmanager', 'streamname', 'consultant', 'contractor', 'jurisdiction', 'county', 'servicearea'];
+   const columnsWithCount = ['projecttype', 'status'];
+   const columnsWithRanges = ['mhfddollarsallocated', 'estimatedcost'];
+   if (columnsWithoutCount.includes(column)) {
+      return response.status(200).send(await getValuesByColumnWithOutCountProject(column, bounds, body));
+   } else if (columnsWithCount.includes(column)) {
+      const mapColumnsWithCount = {
+         'projecttype': ['Maintenance', 'Study', 'Capital'],
+         'status': ['Draft', 'Requested',
+         'Approved', 'Idle', 'Initiated', 'Ongoing',
+         'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
+         'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete']
+      }
+      return response.status(200).send(await getCountByArrayColumnsProject(column, mapColumnsWithCount[column], bounds, body))
+   } else if (columnsWithRanges.includes(column)) {
+      return response.status(200).send(await getValuesByRangeProject(column, bounds, body))
+   } else if (column === 'workplanyr') {
+      const yearArray = [{ year: 2019, column: 'workplanyr1' }, { year: 2020, column: 'workplanyr2' },
+      { year: 2021, column: 'workplanyr3' }, { year: 2022, column: 'workplanyr4' }, { year: 2023, column: 'workplanyr5' }];
+      return response.status(200).send(await getCountWorkYearProject(yearArray, bounds, body));
+   } else if (column === 'problemtype') {
+      return response.status(200).send(await getProjectByProblemTypeProject(bounds, body))
+   }
+}
+
 module.exports = {
+   projectStatistics,
    projectParamFilterRoute,
-   projectCounterRoute,
-   countTotalProjects,
-   getValuesByColumnWithOutCountProject,
-   getCountByArrayColumnsProject,
-   getValuesByRangeProject,
-   getCountWorkYearProject,
-   getProjectByProblemTypeProject
+   projectCounterRoute
 }
