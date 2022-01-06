@@ -231,16 +231,27 @@ const moveCardsToNextLevel = async (board) => {
     });
 
     if (board.type === 'WORK_REQUEST') {
-        let boardsToCounty = boards.filter((board) => {
-            return ['Capital', 'Maintenance'].includes(board.projecttype)
-        })
-        await sendBoardProjectsToProp(boardsToCounty, 'county');
-        let boardsToServiceArea = boards.filter((board) => {
-            return ['Study', 'Acquisition', 'Special'].includes(board.projecttype)
-        })
+        let boardsToCounty;
+        let boardsToServiceArea
+        if (+board.year < 2022) {
+            boardsToCounty = boards.filter((board) => {
+                return ['Capital', 'Maintenance'].includes(board.projecttype)
+            })
+            await sendBoardProjectsToProp(boardsToCounty, 'county');
+            boardsToServiceArea = boards.filter((board) => {
+                return ['Study', 'Acquisition', 'Special'].includes(board.projecttype)
+            })
+        } else {
+            boardsToCounty = boards.filter((board) => {
+                return ['Capital', 'Maintenance', 'Acquisition', 'Special'].includes(board.projecttype)
+            })
+            await sendBoardProjectsToProp(boardsToCounty, 'county');
+            boardsToServiceArea = boards.filter((board) => {
+                return ['Study'].includes(board.projecttype)
+            })
+        }
         await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea');
         await sendBoardProjectsToDistrict(boards);
-
         return {}
     } else if (board.type === 'WORK_PLAN') {
         return {}
