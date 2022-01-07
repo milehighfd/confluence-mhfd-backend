@@ -1357,7 +1357,7 @@ router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req
 
 router.post('/study', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor, cover, year} = req.body;
+  const {projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor, cover, year, studyreason, studysubreason} = req.body;
   const status = 'Draft';
   const projecttype = 'Study';
   const projectsubtype = 'Master Plan';
@@ -1386,7 +1386,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor ${notRequiredFields} ,projectid)
   (SELECT ST_Collect(the_geom) as the_geom, '${jurisdiction}' as jurisdiction, '${projectname}' as projectname , '${description}' as description, '${servicearea}' as servicearea,
   '${county}' as county, '${status}' as status, '${projecttype}' as projecttype, '${projectsubtype}' as projectsubtype,
-   '${sponsor}' as sponsor ${notRequiredValues} ,${-1} as projectid FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds}))`;
+   '${sponsor}' as sponsor, '${studyreason}' as studyreason, '${studysubreason}' as studysubreason, ${notRequiredValues} ,${-1} as projectid FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds}))`;
   const query = {
     q: insertQuery
   };
@@ -1500,7 +1500,8 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
     servicearea = '${servicearea}', county = '${county}',
      status = '${status}', projecttype = '${projecttype}', 
      projectsubtype = '${projectsubtype}',
-      sponsor = '${sponsor}' ${notRequiredFields} WHERE projectid = ${projectid}
+      sponsor = '${sponsor}',
+      studyreason= '${studyreason}', studysubreason= '${studysubreason}', ${notRequiredFields} WHERE projectid = ${projectid}
   `;
   const query = {
     q: updateQuery
