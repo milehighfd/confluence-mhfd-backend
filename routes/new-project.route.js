@@ -1386,7 +1386,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
   const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor ${notRequiredFields} ,projectid)
   (SELECT ST_Collect(the_geom) as the_geom, '${jurisdiction}' as jurisdiction, '${projectname}' as projectname , '${description}' as description, '${servicearea}' as servicearea,
   '${county}' as county, '${status}' as status, '${projecttype}' as projecttype, '${projectsubtype}' as projectsubtype,
-   '${sponsor}' as sponsor, '${studyreason}' as studyreason, '${studysubreason}' as studysubreason, ${notRequiredValues} ,${-1} as projectid FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds}))`;
+   '${sponsor}' as sponsor, '${studyreason}' as studyreason, '${studysubreason}' as studysubreason ${notRequiredValues} ,${-1} as projectid FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds}))`;
   const query = {
     q: insertQuery
   };
@@ -1501,7 +1501,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
      status = '${status}', projecttype = '${projecttype}', 
      projectsubtype = '${projectsubtype}',
       sponsor = '${sponsor}',
-      studyreason= '${studyreason}', studysubreason= '${studysubreason}', ${notRequiredFields} WHERE projectid = ${projectid}
+      studyreason= '${studyreason}', studysubreason= '${studysubreason}' ${notRequiredFields} WHERE projectid = ${projectid}
   `;
   const query = {
     q: updateQuery
