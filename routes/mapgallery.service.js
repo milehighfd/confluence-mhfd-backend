@@ -31,7 +31,7 @@ const getMidByProjectId = async (projectid, isDev, projecttype) => {
   if (isDev) {
     table = 'mhfd_projects_copy'
   }
-  let fields = ["projectid", "cartodb_id", "county", "jurisdiction", "servicearea", "projectname", "status", "description", "acquisitionprogress", "acquisitionanticipateddate", "projecttype", "projectsubtype", "additionalcost", "additionalcostdescription", "cosponsor", "frequency", "maintenanceeligibility", "overheadcost", "overheadcostdescription", "ownership", "sponsor", 'estimatedcost'];
+  let fields = ["projectid", "cartodb_id", "county", "jurisdiction", "servicearea", "projectname", "status", "description", "acquisitionprogress", "acquisitionanticipateddate", "projecttype", "projectsubtype", "additionalcost", "additionalcostdescription", "cosponsor", "frequency", "maintenanceeligibility", "overheadcost", "overheadcostdescription", "ownership", "sponsor", 'estimatedcost', 'studyreason', 'studysubreason'];
   if (['Acquisition', 'Special', 'Maintenance', 'Capital'].includes(projecttype)) {
     fields.push('ST_AsGeoJSON(the_geom) as the_geom')
   }
