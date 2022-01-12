@@ -62,7 +62,7 @@ router.get('/fix', async (req, res) => {
         }
     }
     // let c = 0;
-    let updateBoards = await Board.update(
+    let updateBoardsPlan = await Board.update(
         {
             "status": "Approved"
         },{
@@ -71,6 +71,7 @@ router.get('/fix', async (req, res) => {
             type: 'WORK_PLAN'
         }
     });
+    console.log(updateBoardsPlan);
     console.log('boards', boards, boards.length);
     res.send({boards: boards, count: c});
 });
