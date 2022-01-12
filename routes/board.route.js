@@ -11,6 +11,7 @@ const logger = require('../config/logger');
 const db = require('../config/db');
 const { getCoordsByProjectId, getMidByProjectId, getMinimumDateByProjectId } = require('./mapgallery.service');
 const { sendBoardNotification } = require('../services/user.service');
+const { board } = require('../config/db');
 const Board = db.board;
 const User = db.user;
 const BoardProject = db.boardProject;
@@ -23,9 +24,59 @@ router.get('/coordinates/:pid', async (req, res) => {
     res.send(r);
 });
 
+router.get('/fix', async (req, res) => {
+   /* let boards = await Board.update(
+        {
+            "status": "Under Review",
+            "substatus": "",
+        },{
+        where: {
+            year: ['2018', '2019', '2020', '2021'],
+            type: 'WORK_REQUEST'
+        }
+    });*/
+    let boards = await Board.findAll(
+        {
+        where: {
+            year: ['2018', '2019', '2020', '2021'],
+            type: 'WORK_REQUEST',
+            status: 'Under Review'
+        }
+    });
+    let updateBoards = await Board.update(
+        {
+            "status": "Approved",
+            "substatus": "Capital,Study,Maintenance,Acquisition,Special",
+        },{
+        where: {
+            year: ['2018', '2019', '2020', '2021'],
+            type: 'WORK_REQUEST'
+        }
+    });
+    console.log('UPDATED ' + updateBoards);
+    let c = 0;
+    if (boards) {
+        for (const board of boards) { 
+            let r = await moveCardsToNextLevel(board);
+            c++;
+        }
+    }
+    // let c = 0;
+    let updateBoards = await Board.update(
+        {
+            "status": "Approved"
+        },{
+        where: {
+            year: ['2018', '2019', '2020', '2021'],
+            type: 'WORK_PLAN'
+        }
+    });
+    console.log('boards', boards, boards.length);
+    res.send({boards: boards, count: c});
+});
 router.get('/', async (req, res) => {
     let boards = await Board.findAll();
-    console.log('boards', boards);
+    console.log('boards', boards, boards.length);
     res.send(boards);
 });
 
