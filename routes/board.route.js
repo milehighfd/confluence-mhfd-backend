@@ -40,7 +40,7 @@ router.get('/fix', async (req, res) => {
         where: {
             year: ['2018', '2019', '2020', '2021'],
             type: 'WORK_REQUEST',
-            status: 'Under Review'
+            status: 'Approved'
         }
     });
     let updateBoards = await Board.update(
