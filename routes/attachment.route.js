@@ -16,6 +16,10 @@ const multer = Multer({
    }
  });
 
+router.get('/', (req, res) => {
+   let boards = await Attachment.findAll();
+  res.send(boards);
+});
 router.post('/upload-file', [auth, multer.array('file')], async (req, res) => {
    try {
       if (!req.files) {
