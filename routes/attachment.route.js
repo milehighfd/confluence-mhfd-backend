@@ -16,7 +16,7 @@ const multer = Multer({
    }
  });
 
-router.get('/', async (req, res) => {
+router.get('/all', async (req, res) => {
    let boards = await Attachment.findAll();
   res.send(boards);
 });
