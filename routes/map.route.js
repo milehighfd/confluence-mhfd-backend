@@ -28,7 +28,12 @@ router.get('/organization', async (req, res) => {
 
 router.post('/', async (req, res) => { 
   const table = req.body.table;
-  const sql = `SELECT * FROM ${table}`;
+  let sql = `SELECT * FROM ${table}`;
+  if(table.includes('mep_outfalls') || table.includes('mep_channels')){
+    sql =  `SELECT the_geom, the_geom_webmercator, projectname, mep_eligibilitystatus, projectno, mep_summarynotes, mhfd_servicearea, mep_date_designapproval::text,mep_date_constructionapproval::text,mep_date_finalacceptance::text,mep_date_ineligible::text FROM ${table}` 
+  } else if(table.includes('mep')){
+    sql =  `SELECT the_geom, the_geom_webmercator, projectname, mep_eligibilitystatus, projectno, mep_summarynotes, mhfd_servicearea, mep_date_designapproval::text,mep_date_constructionapproval::text,mep_date_finalacceptance::text,mep_date_ineligible::text, pondname FROM ${table}` 
+  }
   var mapConfig = {
     "version": '1.3.1',
     "buffersize": {mvt: 8},
