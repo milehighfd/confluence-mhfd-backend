@@ -8,6 +8,8 @@ var fs = require('fs');
 const Multer = require('multer');
 const attachmentService = require('../services/attachment.service');
 const logger = require('../config/logger');
+const { sequelize } = require('../config/db');
+const { BASE_SERVER_URL } = require('../config/config');
 
 const multer = Multer({
    storage: Multer.MemoryStorage,
@@ -16,10 +18,21 @@ const multer = Multer({
    }
  });
 
-router.get('/', async (req, res) => {
+ function getImageURL() {
+   return `${BASE_SERVER_URL}/${'images'}/`;
+ }
+
+router.get('/update-gs', async (req, res) => {
+   const update = await sequelize.query(`UPDATE attachments 
+   SET 
+       value = REPLACE(value,
+           'https://storage.googleapis.com/mhfd-cloud.appspot.com/',
+           '${getImageURL()}')`);
+   console.log(update);
    let boards = await Attachment.findAll();
   res.send(boards);
 });
+
 router.post('/upload-file', [auth, multer.array('file')], async (req, res) => {
    try {
       if (!req.files) {
