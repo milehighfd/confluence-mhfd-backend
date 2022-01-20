@@ -34,6 +34,9 @@ router.post('/', async (req, res) => {
   } else if(table.includes('mep')){
     sql =  `SELECT the_geom, the_geom_webmercator, projectname, mep_eligibilitystatus, projectno, mep_summarynotes, mhfd_servicearea, mep_date_designapproval::text,mep_date_constructionapproval::text,mep_date_finalacceptance::text,mep_date_ineligible::text, pondname FROM ${table}` 
   }
+  if (table === 'bcz_prebles_meadow_jumping_mouse' || table === 'bcz_ute_ladies_tresses_orchid') {
+    sql = `SELECT the_geom, the_geom_webmercator, expiration_date::text, website, letter, map FROM ${table}`;
+  }
   var mapConfig = {
     "version": '1.3.1',
     "buffersize": {mvt: 8},
