@@ -918,7 +918,8 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
    let union = '';
    for (const component of TABLES_COMPONENTS) {
       COMPONENTS_SQL += union + `SELECT type, count(*), coalesce(sum(original_cost), 0) as estimated_cost, 
-     case when cast(${finalcost} as integer) > 0 then coalesce(sum(original_cost),0)/cast(${finalcost} as integer) else 0 END as original_cost, coalesce(complete_t.sum, 0) as complete_cost
+     case when cast(${finalcost} as integer) > 0 then coalesce(
+        (select sum(original_cost) as sum from ${component} where ${component}.status = 'Complete') com ,0)/cast(${finalcost} as integer) else 0 END as original_cost, coalesce(complete_t.sum, 0) as complete_cost
      FROM ${component}, ${table}, ( select sum(estimated_cost) as sum from ${component} where ${component}.status = 'Complete' ) complete_t
      where ${component}.${typeid}=${id} and ${table}.${typeid}=${id} group by type, ${finalcost}, complete_t.sum`;
       union = ' union ';
