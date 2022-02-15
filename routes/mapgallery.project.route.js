@@ -362,8 +362,8 @@ async function getProjectByProblemTypeProject(bounds, body) {
 
 async function countTotalProjects(bounds, body) {
    const coords = bounds.split(',');
-   let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom_simplify1) or `;
-     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom_simplify1))`;
+   let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
      filters = getNewFilter(filters, body);
  
      let COUNTSQL = PROJECT_TABLES.map(t => {
