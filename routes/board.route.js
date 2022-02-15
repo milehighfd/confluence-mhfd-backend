@@ -84,6 +84,8 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     let body = req.body;
     let { type, year, locality, projecttype } = body;
+    console.log(body);
+    console.log(type, year, locality, projecttype);
     if (!type || !year || !locality || !projecttype) {
         return res.sendStatus(404);
     }
