@@ -9,7 +9,7 @@ const { CARTO_TOKEN } = require('../config/config');
 const getCoordsByProjectId = async (projectid, isDev) => {
   let table = 'mhfd_projects'
   if (isDev) {
-    table = 'mhfd_projects_copy'
+    table = 'mhfd_projects_created'
   }
   let fields = ['ST_AsGeoJSON(the_geom) as the_geom3'];
   let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
@@ -29,7 +29,7 @@ const getCoordsByProjectId = async (projectid, isDev) => {
 const getMidByProjectId = async (projectid, isDev, projecttype) => {
   let table = 'mhfd_projects'
   if (isDev) {
-    table = 'mhfd_projects_copy'
+    table = 'mhfd_projects_created'
   }
   let fields = ["projectid", "cartodb_id", "county", "jurisdiction", "servicearea", "projectname", "status", "description", "acquisitionprogress", "acquisitionanticipateddate", "projecttype", "projectsubtype", "additionalcost", "additionalcostdescription", "cosponsor", "frequency", "maintenanceeligibility", "overheadcost", "overheadcostdescription", "ownership", "sponsor", 'estimatedcost', 'studyreason', 'studysubreason'];
   if (['Acquisition', 'Special', 'Maintenance', 'Capital'].includes(projecttype)) {
@@ -54,7 +54,7 @@ const getMidByProjectId = async (projectid, isDev, projecttype) => {
 const getMinimumDateByProjectId = async (projectid, isDev) => {
   let table = 'mhfd_projects'
   if (isDev) {
-    table = 'mhfd_projects_copy'
+    table = 'mhfd_projects_created'
   }
   let SQL = `SELECT county, servicearea FROM ${table} where projectid=${projectid}`;
   let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
@@ -71,7 +71,7 @@ const getMinimumDateByProjectId = async (projectid, isDev) => {
 const getDataByProjectIds = async (projectid, type, isDev) => {
   let table = 'mhfd_projects'
   if (isDev) {
-    table = 'mhfd_projects_copy'
+    table = 'mhfd_projects_created'
   }
   let SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom2, ST_AsGeoJSON(the_geom) as the_geom3 FROM ${table} where  projectid=${projectid} `;
   let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
