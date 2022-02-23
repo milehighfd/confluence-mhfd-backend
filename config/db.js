@@ -51,6 +51,8 @@ db.user.hasMany(db.newnotes, {foreignKey: 'user_id'});
 db.newnotes.belongsTo(db.user, {foreignKey: 'user_id'});
 db.newnotes.belongsTo(db.groupnotes, {foreignKey: 'group_id'});``
 db.groupnotes.hasMany(db.newnotes, { foreignKey: 'group_id' });
+db.groupnotes.belongsTo(db.user, {foreignKey: 'user_id'});
+db.user.hasMany(db.groupnotes, {foreignKey: 'user_id'});
 
 db.sequelize.authenticate().then(()=>{
   console.log("Connected to Database");

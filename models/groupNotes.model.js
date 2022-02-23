@@ -8,6 +8,9 @@ module.exports = (sequelize, DataType) => {
     },
     name: {
       type: DataType.STRING
+    },
+    user_id: {
+      type: DataType.UUID
     }
   });
 

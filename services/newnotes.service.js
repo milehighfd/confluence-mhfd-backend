@@ -8,13 +8,13 @@ const getAllNotes = () => {
   return notes;
 }
 
-const getGroups = async () => {
-  const groups = await GroupNotes.findAll({});
+const getGroups = async (id) => {
+  const groups = await GroupNotes.findAll({ userId: id });
   return groups;
 }
 
-const createGroup = async (name) => {
-  const group = await NewNotes.create({name: name});
+const createGroup = async (name, user_id) => {
+  const group = await NewNotes.create({name: name, user_id: user_id});
   return group;
 }
 

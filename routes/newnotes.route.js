@@ -14,10 +14,20 @@ router.get('/get-notes', [auth], async (req, res) => {
   }
 });
 
+router.get('/get-groups', [auth], async (req, res) => {
+  const user = req.user;
+  try {
+    const groups = await NoteService.getGroups(user._id);
+    return res.send(groups);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 router.post('/create-group', [auth], async (req, res) => {
   const { name } = req.body;
   try {
-    const group = await NoteService.createGroup(name);
+    const group = await NoteService.createGroup(name, user._id);
     return res.send(group);
   } catch (error) {
     res.status(500).send(error);
