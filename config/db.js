@@ -34,17 +34,23 @@ db.boardProject = require('../models/boardProject.model.js')(sequelize, Sequeliz
 db.independentComponent = require('../models/independentComponent.model.js')(sequelize, Sequelize);
 db.boardLocality = require('../models/boardLocality.model.js')(sequelize, Sequelize);
 db.note = require('../models/note.model.js')(sequelize, Sequelize);
+db.newnotes = require('../models/newnotes.model.js')(sequelize, Sequelize);
+db.groupnotes = require('../models/groupNotes.model.js')(sequelize, Sequelize);
 db.projectStream = require('../models/projectstream.model.js')(sequelize, Sequelize);
 db.projectComponent = require('../models/projectComponent.model.js')(sequelize, Sequelize);
 
 db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
-db.user.hasMany(db.note, {foreignKey: 'user_id'});
 db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
 db.favorites.belongsTo(db.user, {foreignKey: 'user_id'});
 db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
 db.attachment.belongsTo(db.user, {foreignKey: 'user_id'});
 db.note.belongsTo(db.user, {foreignKey: 'user_id'});
+db.user.hasMany(db.note, {foreignKey: 'user_id'});
+db.user.hasMany(db.newnotes, {foreignKey: 'user_id'});
+db.newnotes.belongsTo(db.user, {foreignKey: 'user_id'});
+db.newnotes.belongsTo(db.groupnotes, {foreignKey: 'group_id'});``
+db.groupnotes.hasMany(db.newnotes, { foreignKey: 'group_id' });
 
 db.sequelize.authenticate().then(()=>{
   console.log("Connected to Database");

@@ -1,6 +1,7 @@
 //const User = require('../models/user.model');
 const db = require('../config/db');
 const User = db.user;
+const GroupNotes = db.groupnotes;
 const bcrypt = require('bcryptjs');
 const attachmentService = require('../services/attachment.service');
 const config = require('./config');
@@ -23,7 +24,11 @@ const seed = async () => {
     };
     userAdmin.password = await bcrypt.hash('admin', 8);
     User.create(userAdmin);
-    
+  }
+  const countGroup = await GroupNotes.count();
+  if (countGroup == 0) {
+    const group = {name: 'nogroup'};
+    GroupNotes.create(group);
   }
   attachmentService.migrateFilesFromCloud();
 };
