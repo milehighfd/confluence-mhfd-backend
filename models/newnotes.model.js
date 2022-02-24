@@ -1,6 +1,6 @@
 
 module.exports = (sequelize, DataType) => {
-  const NewNotes = sequelize.define('newnotes', {
+  const NewNotes = sequelize.define('newnote', {
     _id: {
       type: DataType.UUID,
       defaultValue: DataType.UUIDV4,
