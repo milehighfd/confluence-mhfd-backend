@@ -26,8 +26,7 @@ module.exports = (sequelize, DataType) => {
       type: DataType.INTEGER
     },
     group_id: {
-      type: DataType.UUID,
-      allowNull: false
+      type: DataType.UUID
     }
   });
 

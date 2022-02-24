@@ -25,11 +25,11 @@ const seed = async () => {
     userAdmin.password = await bcrypt.hash('admin', 8);
     User.create(userAdmin);
   }
-  const countGroup = await GroupNotes.count();
+  /*const countGroup = await GroupNotes.count();
   if (countGroup == 0) {
     const group = {name: 'nogroup'};
     GroupNotes.create(group);
-  }
+  }*/
   attachmentService.migrateFilesFromCloud();
 };
 seed();
