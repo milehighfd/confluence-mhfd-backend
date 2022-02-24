@@ -24,6 +24,7 @@ const newProjectRouter = require('./routes/new-project.route');
 const boardRouter = require('./routes/board.route');
 const localityRouter = require('./routes/locality.route');
 const noteRouter = require('./routes/note.route');
+const newnoteRouter = require('./routes/newnotes.route');
 const db = require('./config/db');
 db.sequelize.sync();
 const cacheTime = 1000 * 60 * 60;
@@ -68,5 +69,6 @@ app.use('/create', newProjectRouter);
 app.use('/board', boardRouter);
 app.use('/locality', localityRouter);
 app.use('/notes', noteRouter);
+app.use('/newnotes', newnoteRouter);
 
 module.exports = server;
