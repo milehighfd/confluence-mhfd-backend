@@ -232,7 +232,7 @@ async function getValuesByRangeProblem(table, column, range, bounds, body) {
             q: `SELECT max(${column}) as max, min(${column}) as min FROM ${table} where ${filters}`
         }
         const minMaxData = await needle('post', URL, minMaxQuery, { json: true });
-        const minMaxResult = minMaxData.body.rows;
+        const minMaxResult = minMaxData.body.rows || [];
         minRange = Math.min.apply(Math, minMaxResult.map(function (element) { return element.min }));
         maxRange = Math.max.apply(Math, minMaxResult.map(function (element) { return element.max }));
       }

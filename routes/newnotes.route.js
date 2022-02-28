@@ -27,10 +27,12 @@ router.get('/group', [auth], async (req, res) => {
 
 router.post('/group', [auth], async (req, res) => {
   const { name } = req.body;
+  const user = req.user;
   try {
     const group = await NoteService.createGroup(name, user._id);
     return res.send(group);
   } catch (error) {
+    console.log(error);
     res.status(500).send(error);
   }
 });

@@ -9,12 +9,14 @@ const getAllNotes = () => {
 }
 
 const getGroups = async (id) => {
-  const groups = await GroupNotes.findAll({ userId: id });
+  console.log(id);
+  const groups = await GroupNotes.findAll({ user_id: id });
   return groups;
 }
 
 const createGroup = async (name, user_id) => {
-  const group = await NewNotes.create({name: name, user_id: user_id});
+  console.log(name, user_id);
+  const group = await GroupNotes.create({name: name, user_id: user_id});
   return group;
 }
 
@@ -43,7 +45,8 @@ const updateGroup = async (id, name) => {
       }
     });
     if (updateGroup) {
-      updateGroup = await updateGroup.update(name);
+      console.log('update group ', updateGroup, name);
+      updateGroup = await updateGroup.update({name: name});
     } 
     return updateGroup;
   } catch(error) {
