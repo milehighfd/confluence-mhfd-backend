@@ -80,7 +80,7 @@ router.delete('/group/:id', [auth], async (req, res) => {
 router.put('/note/:id', [auth], async (req, res) => {
   const id = req.params.id;
   const user = req.user;
-  const {content, latitude, longitude, color} = req.body;
+  const {content, latitude, longitude, color, group_id} = req.body;
   const note = {};
   if (content) {
     note['content'] = content;
@@ -94,6 +94,7 @@ router.put('/note/:id', [auth], async (req, res) => {
   if (color) {
     note['color'] = color;
   }
+  note['group_id'] = group_id;
   note['user_id'] = user._id;
   try {
     const savedNote = await NoteService.updateNote(id, note);

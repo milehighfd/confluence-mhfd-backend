@@ -39,16 +39,16 @@ const deleteGroups = async (id) => {
 const updateGroup = async (id, name) => {
   logger.info('update group ' + JSON.stringify(name));
   try {
-    let updateGroup = await GroupNotes.findOne({
+    let toUpdate = await GroupNotes.findOne({
       where: {
         _id: id
       }
     });
-    if (updateGroup) {
-      console.log('update group ', updateGroup, name);
-      updateGroup = await updateGroup.update({name: name});
+    if (toUpdate) {
+      console.log('update group ', toUpdate, name);
+      updateGroup = await toUpdate.update({name: name});
     } 
-    return updateGroup;
+    return toUpdate;
   } catch(error) {
     console.log('the error ', error);
     throw error;
@@ -69,6 +69,7 @@ const deleteNote = async (id) => {
     where: {
       _id: id 
     }});
+    console.log(id, note);
   if (note) {
     logger.info('note destroyed ');
     note.destroy();
@@ -93,15 +94,17 @@ const saveNote = async (note) => {
 const updateNote = async (id, note) => {
   logger.info('update note ' + JSON.stringify(note));
   try {
-    let updateNote = await NewNotes.findOne({
+    let toUpdate = await NewNotes.findOne({
       where: {
         _id: id
       }
     });
-    if (updateNote) {
-      updateNote = await updateNote.update(note);
+    if (toUpdate) {
+      // console.log({...note});
+      toUpdate = await toUpdate.update({...note});
+      // console.log(toUpdate);
     } 
-    return updateNote;
+    return toUpdate;
   } catch(error) {
     console.log('the error ', error);
     throw error;
