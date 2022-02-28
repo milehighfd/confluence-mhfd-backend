@@ -27,7 +27,7 @@ const deleteGroups = async (id) => {
       _id: id 
     }});
   if (group) {
-    logger.info('group destroyed ');
+    NewNotes.destroy({ where: { group_id: id } });
     group.destroy();
     return true;
   } else {
@@ -46,7 +46,7 @@ const updateGroup = async (id, name) => {
     });
     if (toUpdate) {
       console.log('update group ', toUpdate, name);
-      updateGroup = await toUpdate.update({name: name});
+      toUpdate = await toUpdate.update({name: name});
     } 
     return toUpdate;
   } catch(error) {
