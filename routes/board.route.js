@@ -117,6 +117,9 @@ router.post('/', async (req, res) => {
                 if (i > 0) {
                     newObject[`req${i}`] = bp[`req${i}`];
                 }
+                if (1 <= i && i <= 2) {
+                    newObject[`year${i}`] = bp[`year${i}`];
+                }
             }
             return newObject;
         })
@@ -194,6 +197,8 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                     req3: bp.req3 == null ? null : (bp.req3 / propValues.length),
                     req4: bp.req4 == null ? null : (bp.req4 / propValues.length),
                     req5: bp.req5 == null ? null : (bp.req5 / propValues.length),
+                    year1: bp.year1,
+                    year2: bp.year2,
                     origin: board.locality,
                 })
                 await newBoardProject.save();
@@ -229,6 +234,8 @@ const sendBoardProjectsToDistrict = async (boards) => {
                 req3: bp.req3,
                 req4: bp.req4,
                 req5: bp.req5,
+                year1: bp.year1,
+                year2: bp.year2,
                 origin: board.locality,
             })
             await newBoardProject.save();

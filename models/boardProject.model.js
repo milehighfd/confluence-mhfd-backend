@@ -39,6 +39,12 @@ module.exports = (sequelize, DataType) => {
     req5: {
       type: DataType.DOUBLE,
     },
+    year1: {
+      type: DataType.DOUBLE,
+    },
+    year2: {
+      type: DataType.DOUBLE,
+    },
     origin: {
       type: DataType.STRING,
     }
