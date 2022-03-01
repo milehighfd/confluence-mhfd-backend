@@ -7,7 +7,7 @@ module.exports = (sequelize, DataType) => {
       primaryKey: true
     },
     content: {
-      type: DataType.STRING
+      type: DataType.TEXT
     },
     latitude: {
       type: DataType.FLOAT
