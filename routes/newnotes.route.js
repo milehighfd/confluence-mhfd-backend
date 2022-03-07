@@ -49,7 +49,7 @@ router.post('/group', [auth], async (req, res) => {
 
 router.post('/note', [auth], async (req, res) => {
   const user = req.user;
-  const note = {content, latitude, longitude, color} = req.body;
+  const note = {content, latitude, longitude, color_id} = req.body;
   note['user_id'] = user._id;
   try {
     const savedNote = await NoteService.saveNote(note);
@@ -115,7 +115,7 @@ router.delete('/color/:id', [auth], async (req, res) => {
 router.put('/note/:id', [auth], async (req, res) => {
   const id = req.params.id;
   const user = req.user;
-  const {content, latitude, longitude, color, group_id} = req.body;
+  const {content, latitude, longitude, color_id, group_id} = req.body;
   const note = {};
   if (content) {
     note['content'] = content;
@@ -126,8 +126,8 @@ router.put('/note/:id', [auth], async (req, res) => {
   if (longitude) {
     note['longitude'] = longitude;
   }
-  if (color) {
-    note['color'] = color;
+  if (color_id) {
+    note['color_id'] = color_id;
   }
   note['group_id'] = group_id;
   note['user_id'] = user._id;
