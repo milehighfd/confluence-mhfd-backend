@@ -35,12 +35,17 @@ db.independentComponent = require('../models/independentComponent.model.js')(seq
 db.boardLocality = require('../models/boardLocality.model.js')(sequelize, Sequelize);
 db.note = require('../models/note.model.js')(sequelize, Sequelize);
 db.newnotes = require('../models/newnotes.model.js')(sequelize, Sequelize);
+db.color = require('../models/color.model.js')(sequelize, Sequelize);
 db.groupnotes = require('../models/groupNotes.model.js')(sequelize, Sequelize);
 db.projectStream = require('../models/projectstream.model.js')(sequelize, Sequelize);
 db.projectComponent = require('../models/projectComponent.model.js')(sequelize, Sequelize);
 
 db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
+db.user.hasMany(db.color, {foreignKey: 'user_id'});
+db.color.belongsTo(db.user, {foreignKey: 'user_id'});
+db.newnotes.belongsTo(db.color, {foreignKey: {name: 'color_id', allowNull: true}});
+db.color.hasMany(db.newnotes, {foreignKey: {name: 'color_id', allowNull: true}});
 db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
 db.favorites.belongsTo(db.user, {foreignKey: 'user_id'});
 db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
