@@ -15,7 +15,7 @@ module.exports = (sequelize, DataType) => {
     longitude: {
       type: DataType.FLOAT
     },
-    color: {
+    color_id: {
       type: DataType.UUID
     },
     user_id: {
