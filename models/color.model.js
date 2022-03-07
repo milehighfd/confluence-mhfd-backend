@@ -1,6 +1,6 @@
 
 module.exports = (sequelize, DataType) => {
-  const NewNotes = sequelize.define('notelist', {
+  const ColorNotes = sequelize.define('color', {
     _id: {
       type: DataType.UUID,
       defaultValue: DataType.UUIDV4,
@@ -12,12 +12,15 @@ module.exports = (sequelize, DataType) => {
     color: {
       type: DataType.STRING
     },
+    opacity: {
+      type: DataType.FLOAT
+    },
     user_id: {
       type: DataType.UUID,
       allowNull: false
     },
   });
 
-  return NewNotes;
+  return ColorNotes;
 }
 

@@ -16,7 +16,7 @@ module.exports = (sequelize, DataType) => {
       type: DataType.FLOAT
     },
     color: {
-      type: DataType.STRING
+      type: DataType.UUID
     },
     user_id: {
       type: DataType.UUID,

@@ -2,6 +2,7 @@ const db = require('../config/db');
 const logger = require('../config/logger');
 const NewNotes = db.newnotes;
 const GroupNotes = db.groupnotes;
+const ColorNotes = db.color;
 
 const getAllNotes = () => {
   const notes = NewNotes.findAll({});
@@ -14,10 +15,29 @@ const getGroups = async (id) => {
   return groups;
 }
 
+const getColors = async (userId) => {
+  const colors = await ColorNotes.findAll({
+    where: {
+      user_id: userId
+    }
+  });
+  return colors;
+}
+
 const createGroup = async (name, user_id) => {
   console.log(name, user_id);
   const group = await GroupNotes.create({name: name, user_id: user_id});
   return group;
+}
+
+const saveColor = async (label, color, opacity, userId) => {
+  try {
+    const newColor = await ColorNotes.create({label: label, color: color, opacity: opacity, user_id: userId});
+    return newColor;
+  } catch(error) {
+    console.log('the error ', error);
+    throw error;
+  }
 }
 
 
@@ -36,6 +56,21 @@ const deleteGroups = async (id) => {
   }
 }
 
+const deleteColor = async (id) => {
+  const color = await ColorNotes.findOne({
+    where: {
+      _id: id 
+    }});
+  if (color) {
+    logger.info('color destroyed ');
+    color.destroy();
+    return true;
+  } else {
+    logger.info('color not found');
+    return false;
+  }
+}
+
 const updateGroup = async (id, name) => {
   logger.info('update group ' + JSON.stringify(name));
   try {
@@ -47,6 +82,24 @@ const updateGroup = async (id, name) => {
     if (toUpdate) {
       console.log('update group ', toUpdate, name);
       toUpdate = await toUpdate.update({name: name});
+    } 
+    return toUpdate;
+  } catch(error) {
+    console.log('the error ', error);
+    throw error;
+  }
+}
+
+const updateColor = async (id, label, color, opacity) => {
+  logger.info('update color ', + color);
+  try {
+    let toUpdate = await ColorNotes.findOne({
+      where: {
+        _id: id
+      }
+    });
+    if (toUpdate) {
+      toUpdate = await toUpdate.update({label: label, color: color, opacity: opacity});
     } 
     return toUpdate;
   } catch(error) {
@@ -113,12 +166,16 @@ const updateNote = async (id, note) => {
 
 module.exports = {
   getAllNotesByUser,
-  deleteNote,
-  saveNote,
-  updateNote,
-  updateGroup,
   getAllNotes,
   getGroups,
+  getColors,
+  saveNote,
   createGroup,
-  deleteGroups
+  saveColor,
+  updateNote,
+  updateGroup,
+  updateColor,
+  deleteGroups,
+  deleteNote,
+  deleteColor
 };
