@@ -4,46 +4,34 @@ const NewNotes = db.newnotes;
 const GroupNotes = db.groupnotes;
 const ColorNotes = db.color;
 
-const getAllNotes = async (userId) => {
-  try {
-    const notes = await NewNotes.aggregate([
-      { $match: { user_id: userId } },
-      { 
-        $lookup: {
-          from: 'colors',
-          localField: 'color_id',
-          foreignField: '_id',
-          as: 'color'
-        }
-      }
-    ]);
-    return notes;
-  } catch (error) {
-    console.log('the error ', error);
-    throw error;
-  }
+const getAllNotes = async(userId) => {
+  const notes = NewNotes.findAll({
+    where: {
+      user_id: userId
+    },
+    order: [
+      ['createdAt', 'ASC']
+    ]
+  });
+  return notes;
 }
 
 const getNotesByColor = async (userId, colorId) => {
-  try {
-    const notes = await NewNotes.aggregate([
-      {
-        $match: { color_id: colorId, user_id: userId }
-      },
+  const notes = NewNotes.findAll({
+    where: {
+      user_id: userId,
+      color_id: colorId
+    },
+    order: [
+      ['createdAt', 'ASC']
+    ],
+    include: [
       { 
-        $lookup: {
-          from: 'colors',
-          localField: 'color_id',
-          foreignField: '_id',
-          as: 'color'
-        }
+        model: ColorNotes,
+        attributes: ['label', 'color', 'opacity'] 
       }
-    ]);
-    return notes;
-  } catch (error) {
-    console.log('the error ', error);
-    throw error;
-  }
+    ]
+  })
 }
 
 const getGroups = async (id) => {
@@ -204,7 +192,6 @@ const updateNote = async (id, note) => {
 module.exports = {
   getAllNotesByUser,
   getAllNotes,
-  getNotesByColor,
   getGroups,
   getColors,
   saveNote,
