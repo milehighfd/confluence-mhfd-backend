@@ -5,7 +5,16 @@ const GroupNotes = db.groupnotes;
 const ColorNotes = db.color;
 
 const getAllNotes = () => {
-  const notes = NewNotes.findAll({});
+  const notes = NewNotes.aggregate([
+    { 
+      $lookup: {
+        from: 'colors',
+        localField: 'color_id',
+        foreignField: '_id',
+        as: 'color'
+      }
+    }
+  ]);
   return notes;
 }
 
