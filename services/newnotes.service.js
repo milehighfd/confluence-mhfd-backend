@@ -21,7 +21,7 @@ const getColors = async (userId) => {
       user_id: userId
     },
     order: {
-      createdAt: 'asc'
+      createdAt: 'ASC'
     }
   });
   return colors;
