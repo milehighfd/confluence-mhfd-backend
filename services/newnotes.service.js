@@ -32,6 +32,7 @@ const getNotesByColor = async (userId, colorId) => {
         }
       ]
     });
+    return notes;
   } catch(error) {
     console.log('the error ', error);
     throw error;
