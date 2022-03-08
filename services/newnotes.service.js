@@ -5,35 +5,45 @@ const GroupNotes = db.groupnotes;
 const ColorNotes = db.color;
 
 const getAllNotes = async (userId) => {
-  const notes = await NewNotes.aggregate([
-    { $match: { user_id: userId } },
-    { 
-      $lookup: {
-        from: 'colors',
-        localField: 'color_id',
-        foreignField: '_id',
-        as: 'color'
+  try {
+    const notes = await NewNotes.aggregate([
+      { $match: { user_id: userId } },
+      { 
+        $lookup: {
+          from: 'colors',
+          localField: 'color_id',
+          foreignField: '_id',
+          as: 'color'
+        }
       }
-    }
-  ]);
-  return notes;
+    ]);
+    return notes;
+  } catch (error) {
+    console.log('the error ', error);
+    throw error;
+  }
 }
 
 const getNotesByColor = async (userId, colorId) => {
-  const notes = await NewNotes.aggregate([
-    {
-      $match: { color_id: colorId, user_id: userId }
-    },
-    { 
-      $lookup: {
-        from: 'colors',
-        localField: 'color_id',
-        foreignField: '_id',
-        as: 'color'
+  try {
+    const notes = await NewNotes.aggregate([
+      {
+        $match: { color_id: colorId, user_id: userId }
+      },
+      { 
+        $lookup: {
+          from: 'colors',
+          localField: 'color_id',
+          foreignField: '_id',
+          as: 'color'
+        }
       }
-    }
-  ]);
-  return notes;
+    ]);
+    return notes;
+  } catch (error) {
+    console.log('the error ', error);
+    throw error;
+  }
 }
 
 const getGroups = async (id) => {
