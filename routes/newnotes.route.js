@@ -8,7 +8,14 @@ const db = require('../config/db');
 router.get('/note', [auth], async (req, res) => {
   const user = req.user;
   try {
-    const notes = await NoteService.getAllNotesByUser(user._id);
+    const color_id = req.query.color_id;
+    let notes = null;
+    if (!color_id) {
+      notes = await NoteService.getAllNotes(user.id);
+    } else {
+      notes = await NoteService.getNotesByColor(user.id, color_id);
+    }
+    //const notes = await NoteService.getAllNotesByUser(user._id);
     return res.send(notes);
   } catch (error) {
     res.status(500).send(error);

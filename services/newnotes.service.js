@@ -4,8 +4,26 @@ const NewNotes = db.newnotes;
 const GroupNotes = db.groupnotes;
 const ColorNotes = db.color;
 
-const getAllNotes = () => {
-  const notes = NewNotes.aggregate([
+const getAllNotes = async (userId) => {
+  const notes = await NewNotes.aggregate([
+    { $match: { user_id: userId } },
+    { 
+      $lookup: {
+        from: 'colors',
+        localField: 'color_id',
+        foreignField: '_id',
+        as: 'color'
+      }
+    }
+  ]);
+  return notes;
+}
+
+const getNotesByColor = async (userId, colorId) => {
+  const notes = await NewNotes.aggregate([
+    {
+      $match: { color_id: colorId, user_id: userId }
+    },
     { 
       $lookup: {
         from: 'colors',
@@ -176,6 +194,7 @@ const updateNote = async (id, note) => {
 module.exports = {
   getAllNotesByUser,
   getAllNotes,
+  getNotesByColor,
   getGroups,
   getColors,
   saveNote,
