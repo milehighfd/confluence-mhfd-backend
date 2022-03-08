@@ -19,11 +19,8 @@ const getColors = async (userId) => {
   const colors = await ColorNotes.findAll({
     where: {
       user_id: userId
-    },
-    order: {
-      createdAt: 'ASC'
     }
-  });
+  }).sort({ createdAt: 1});
   return colors;
 }
 
