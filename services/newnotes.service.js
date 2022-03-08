@@ -9,10 +9,7 @@ const getAllNotes = async(userId) => {
     const notes = NewNotes.findAll({
       where: {
         user_id: userId
-      },
-      order: [
-        ['createdAt', 'ASC']
-      ]
+      }
     });
     return notes;
   } catch (error) {
@@ -28,9 +25,6 @@ const getNotesByColor = async (userId, colorId) => {
         user_id: userId,
         color_id: colorId
       },
-      order: [
-        ['createdAt', 'ASC']
-      ],
       include: [
         { 
           model: ColorNotes,
@@ -56,7 +50,7 @@ const getColors = async (userId) => {
       user_id: userId
     },
     order: [
-      ['createdAt', 'ASC']
+      ['createdAt', 'DESC']
     ]
   });
   return colors;
