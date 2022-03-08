@@ -20,7 +20,7 @@ const getColors = async (userId) => {
     where: {
       user_id: userId
     }
-  }).sort({ createdAt: 1});
+  });
   return colors;
 }
 
