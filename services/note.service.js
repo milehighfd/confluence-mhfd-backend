@@ -3,12 +3,17 @@ const logger = require('../config/logger');
 const Note = db.note;
 
 const getAllNotesByUser = (userId) => {
-  const notes = Note.findAll({
-    where: {
-      user_id: userId
-    }
-  });
-  return notes;
+  try {
+    const notes = Note.findAll({
+      where: {
+        user_id: userId
+      }
+    });
+    return notes;
+  } catch(error) {
+    console.log('the error ', error);
+    throw error;
+  }
 }
 
 const deleteNote = async (id) => {
