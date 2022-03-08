@@ -54,7 +54,10 @@ const getColors = async (userId) => {
   const colors = await ColorNotes.findAll({
     where: {
       user_id: userId
-    }
+    },
+    order: [
+      ['createdAt', 'ASC']
+    ]
   });
   return colors;
 }
