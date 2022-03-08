@@ -9,6 +9,9 @@ const getAllNotes = async(userId) => {
     const notes = NewNotes.findAll({
       where: {
         user_id: userId
+      }, include: {
+        model: ColorNotes,
+        as: 'color'
       }
     });
     return notes;
@@ -25,12 +28,10 @@ const getNotesByColor = async (userId, colorId) => {
         user_id: userId,
         color_id: colorId
       },
-      include: [
-        { 
-          model: ColorNotes,
-          attributes: ['label', 'color', 'opacity'] 
-        }
-      ]
+      include: {
+        model: ColorNotes,
+        as: 'color'
+      }
     });
     return notes;
   } catch(error) {
