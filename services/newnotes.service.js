@@ -5,33 +5,43 @@ const GroupNotes = db.groupnotes;
 const ColorNotes = db.color;
 
 const getAllNotes = async(userId) => {
-  const notes = NewNotes.findAll({
-    where: {
-      user_id: userId
-    },
-    order: [
-      ['createdAt', 'ASC']
-    ]
-  });
-  return notes;
+  try {
+    const notes = NewNotes.findAll({
+      where: {
+        user_id: userId
+      },
+      order: [
+        ['createdAt', 'ASC']
+      ]
+    });
+    return notes;
+  } catch (error) {
+    console.log('the error ', error);
+    throw error;
+  }
 }
 
 const getNotesByColor = async (userId, colorId) => {
-  const notes = NewNotes.findAll({
-    where: {
-      user_id: userId,
-      color_id: colorId
-    },
-    order: [
-      ['createdAt', 'ASC']
-    ],
-    include: [
-      { 
-        model: ColorNotes,
-        attributes: ['label', 'color', 'opacity'] 
-      }
-    ]
-  })
+  try{
+    const notes = NewNotes.findAll({
+      where: {
+        user_id: userId,
+        color_id: colorId
+      },
+      order: [
+        ['createdAt', 'ASC']
+      ],
+      include: [
+        { 
+          model: ColorNotes,
+          attributes: ['label', 'color', 'opacity'] 
+        }
+      ]
+    });
+  } catch(error) {
+    console.log('the error ', error);
+    throw error;
+  }
 }
 
 const getGroups = async (id) => {
@@ -194,6 +204,7 @@ module.exports = {
   getAllNotes,
   getGroups,
   getColors,
+  getNotesByColor,
   saveNote,
   createGroup,
   saveColor,
