@@ -23,6 +23,7 @@ const getAllNotes = async(userId) => {
 
 const getNotesByColor = async (userId, colorIds) => {
   try{
+    console.log(colorIds);
     const notes = NewNotes.findAll({
       where: {
         user_id: userId,
