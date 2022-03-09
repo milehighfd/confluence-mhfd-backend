@@ -13,7 +13,7 @@ router.get('/note', [auth], async (req, res) => {
     if (!color_id) {
       notes = await NoteService.getAllNotes(user._id);
     } else {
-      notes = await NoteService.getNotesByColor(user._id, color_id);
+      notes = await NoteService.getNotesByColor(user._id, color_id.split(','));
     }
     //const notes = await NoteService.getAllNotesByUser(user._id);
     return res.send(notes);

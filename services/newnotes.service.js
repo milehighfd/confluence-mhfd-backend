@@ -21,12 +21,14 @@ const getAllNotes = async(userId) => {
   }
 }
 
-const getNotesByColor = async (userId, colorId) => {
+const getNotesByColor = async (userId, colorIds) => {
   try{
     const notes = NewNotes.findAll({
       where: {
         user_id: userId,
-        color_id: colorId
+        color_id: {
+          $in: colorIds
+        }
       },
       include: {
         model: ColorNotes,
