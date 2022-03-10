@@ -96,6 +96,16 @@ const deleteColor = async (id) => {
     where: {
       _id: id 
     }});
+  await NewNotes.update(
+    {
+      color_id: null
+    },
+    {
+    where: {
+      color_id: id
+    }
+  });
+
   if (color) {
     logger.info('color destroyed ');
     color.destroy();
