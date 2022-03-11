@@ -172,7 +172,7 @@ const components = [
 ];
 router.get('/get-aoi-from-center', async (req, res) => {
   const coord = (req.query.coord || '0,0');
-  const sql = `SELECT * FROM mhfd_zoom_to_areas where ST_CONTAINS(the_geom, ST_SetSRID(ST_MakePoint(${coord}), 4326))`;
+  const sql = `SELECT cartodb_id, aoi, filter, ST_AsGeoJSON(the_geom) FROM mhfd_zoom_to_areas where ST_CONTAINS(the_geom, ST_SetSRID(ST_MakePoint(${coord}), 4326))`;
   const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
   try {
     https.get(URL, response => {   
