@@ -56,6 +56,18 @@ const getColors = async (userId) => {
       ['createdAt', 'DESC']
     ]
   });
+  colors.sort((a, b) => {
+    if (a.label === 'Map Note' && a.label === b.label) {
+      return a.createdAt - b.createdAt;
+    }
+    if (a.label === 'Map Note') {
+      return -1;
+    }
+    if (b.label === 'Map Note') {
+      return 1;
+    }
+    return a.label.localeCompare(b.label);
+  });
   return colors;
 }
 
