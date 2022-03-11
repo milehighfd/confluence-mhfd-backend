@@ -4,6 +4,9 @@ const NewNotes = db.newnotes;
 const GroupNotes = db.groupnotes;
 const ColorNotes = db.color;
 
+
+const SIZE_OF_BUCKET = 15000;
+
 const getAllNotes = async(userId) => {
   try {
     const notes = NewNotes.findAll({
@@ -71,21 +74,6 @@ const getColors = async (userId) => {
   return colors;
 }
 
-const createGroup = async (name, user_id) => {
-  console.log(name, user_id);
-  const group = await GroupNotes.create({name: name, user_id: user_id});
-  return group;
-}
-
-const saveColor = async (label, color, opacity, userId) => {
-  try {
-    const newColor = await ColorNotes.create({label: label, color: color, opacity: opacity, user_id: userId});
-    return newColor;
-  } catch(error) {
-    console.log('the error ', error);
-    throw error;
-  }
-}
 
 
 const deleteGroups = async (id) => {
@@ -190,11 +178,57 @@ const deleteNote = async (id) => {
   }
 }
 
+const getNextBucket = async (userId) => {
+  const noteWithMaxPosition = await NewNotes.findAll({
+    where: {
+      user_id: userId
+    },
+    order: [[
+      'position', 'DESC'
+    ]],
+    limit: 1
+  });
+  const groupWithMaxPosition = await GroupNotes.findAll({
+    where: {
+      user_id: userId
+    },
+    order: [[
+      'position', 'DESC'
+    ]],
+    limit: 1
+  });
+  if (!noteWithMaxPosition.length) {
+    noteWithMaxPosition.push({position: SIZE_OF_BUCKET});
+  }
+  if (!groupWithMaxPosition.length) {
+    groupWithMaxPosition.push({position: noteWithMaxPosition[0].position});
+  }
+  const newBucket = Math.max(noteWithMaxPosition[0].position, groupWithMaxPosition[0].position) + SIZE_OF_BUCKET;
+  return newBucket;
+}
 const saveNote = async (note) => {
   logger.info('create note ' + JSON.stringify(note));
   try {
+    note.position = await getNextBucket(note.user_id);
     const newNote = await NewNotes.create(note);
     return newNote;
+  } catch(error) {
+    console.log('the error ', error);
+    throw error;
+  }
+}
+const saveGroup = async (name, user_id) => {
+  console.log(name, user_id);
+  const myGroup = {name: name, user_id: user_id};
+  myGroup.position = await getNextBucket(user_id);
+  const group = await GroupNotes.create(myGroup);
+  return group;
+}
+
+const saveColor = async (label, color, opacity, userId) => {
+  try {
+    const newColor = await ColorNotes.create({label: label, color: color, opacity: opacity, user_id: userId});
+    return newColor;
   } catch(error) {
     console.log('the error ', error);
     throw error;
@@ -228,7 +262,7 @@ module.exports = {
   getColors,
   getNotesByColor,
   saveNote,
-  createGroup,
+  saveGroup,
   saveColor,
   updateNote,
   updateGroup,

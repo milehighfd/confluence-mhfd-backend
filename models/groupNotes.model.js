@@ -9,6 +9,9 @@ module.exports = (sequelize, DataType) => {
     name: {
       type: DataType.STRING
     },
+    position: {
+      type: DataType.INTEGER
+    },
     user_id: {
       type: DataType.UUID
     }
