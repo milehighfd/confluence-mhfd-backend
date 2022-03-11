@@ -53,7 +53,6 @@ router.post('/', async (req, res) => {
   ]};
   mapConfig =  encodeURIComponent(JSON.stringify(mapConfig));
   const URL = `https://denver-mile-high-admin.carto.com/api/v1/map?config=${mapConfig}&api_key=${CARTO_TOKEN}`;
-  
   https.get(URL, response => {
     
     if (response.statusCode == 200) {
@@ -171,6 +170,35 @@ const components = [
   { key: 'land_acquisition', value: 'Land Acquisition' },
   { key: 'landscaping_area', value: 'Landscaping Area' }
 ];
+router.get('/get-aoi-from-center', async (req, res) => {
+  const coord = (req.query.coord || '0,0');
+  const sql = `SELECT * FROM mhfd_zoom_to_areas where ST_CONTAINS(the_geom, ST_SetSRID(ST_MakePoint(${coord}), 4326))`;
+  const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
+  try {
+    https.get(URL, response => {   
+      if (response.statusCode == 200) {
+        let str = '';
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+        response.on('end', function () {
+          const rows = JSON.parse(str).rows;
+          console.log(rows);
+          res.send({data: rows});
+        });
+      } else {
+        console.log('status ', response.statusCode, URL);
+        resolve([]);
+      }
+    }).on('error', err => {
+      console.log('failed call to ', URL, 'with error ', err);
+      res.send({data: []});
+    });
+  } catch(error) {
+    res.send({error: error});
+  }
+  
+});
 router.get('/bbox-components', async (req, res) => {
   const id = req.query.id;
   const table = req.query.table;
