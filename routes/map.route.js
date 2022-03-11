@@ -188,7 +188,7 @@ router.get('/get-aoi-from-center', async (req, res) => {
         });
       } else {
         console.log('status ', response.statusCode, URL);
-        resolve([]);
+        res.send({data: []});
       }
     }).on('error', err => {
       console.log('failed call to ', URL, 'with error ', err);
