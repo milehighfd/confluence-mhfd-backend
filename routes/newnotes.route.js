@@ -122,7 +122,7 @@ router.delete('/color/:id', [auth], async (req, res) => {
 router.put('/note/:id', [auth], async (req, res) => {
   const id = req.params.id;
   const user = req.user;
-  const {content, latitude, longitude, color_id, group_id} = req.body;
+  const {content, latitude, longitude, color_id, group_id, position} = req.body;
   const note = {};
   if (content) {
     note['content'] = content;
@@ -135,6 +135,9 @@ router.put('/note/:id', [auth], async (req, res) => {
   }
   if (color_id) {
     note['color_id'] = color_id;
+  }
+  if (position) {
+    note['position'] = position;
   }
   note['group_id'] = group_id;
   note['user_id'] = user._id;
