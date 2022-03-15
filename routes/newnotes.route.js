@@ -165,9 +165,9 @@ router.put('/note/:id', [auth], async (req, res) => {
 
 router.put('/group/:id', [auth], async (req, res) => {
   const id = req.params.id;
-  const { name } = req.body;
+  const { name, position } = req.body;
   try {
-    const group = await NoteService.updateGroup(id, name);
+    const group = await NoteService.updateGroup(id, name, position);
     return res.send(group);
   } catch (error) {
     res.status(500).send(error);

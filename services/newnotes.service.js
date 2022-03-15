@@ -130,7 +130,7 @@ const deleteColor = async (id) => {
   }
 }
 
-const updateGroup = async (id, name) => {
+const updateGroup = async (id, name, position) => {
   logger.info('update group ' + JSON.stringify(name));
   try {
     let toUpdate = await GroupNotes.findOne({
@@ -140,7 +140,7 @@ const updateGroup = async (id, name) => {
     });
     if (toUpdate) {
       console.log('update group ', toUpdate, name);
-      toUpdate = await toUpdate.update({name: name});
+      toUpdate = await toUpdate.update({name: name, position: position});
     } 
     return toUpdate;
   } catch(error) {
