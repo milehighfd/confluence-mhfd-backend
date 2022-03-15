@@ -42,6 +42,16 @@ router.get('/color-list', [auth], async (req, res) => {
   }
 });
 
+router.get('/get-available-colors', [auth], async (req, res) => {
+  const user = req.user;
+  try {
+    const colors = await NoteService.getColorsByNote(user._id);
+    return res.send(colors);
+  } catch(error) {
+    res.status(500).send(error);
+  }
+})
+
 router.post('/group', [auth], async (req, res) => {
   const { name } = req.body;
   const user = req.user;

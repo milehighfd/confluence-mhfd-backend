@@ -44,6 +44,21 @@ const getNotesByColor = async (userId, colorIds) => {
   }
 }
 
+const getColorsByNote = async (userId) => {
+  try {
+    const colors = NewNotes.findAll({
+      attributes: ['color_id'],
+      where: {
+        user_id: userId
+      }
+    });
+    return colors;
+  } catch(error) {
+    console.log(`the error ${error}`);
+    throw error;
+  }
+}
+
 const getGroups = async (id) => {
   console.log(id);
   const groups = await GroupNotes.findAll({ user_id: id });
@@ -73,7 +88,6 @@ const getColors = async (userId) => {
   });
   return colors;
 }
-
 
 
 const deleteGroups = async (id) => {
@@ -261,6 +275,7 @@ module.exports = {
   getGroups,
   getColors,
   getNotesByColor,
+  getColorsByNote,
   saveNote,
   saveGroup,
   saveColor,
