@@ -61,7 +61,11 @@ const getColorsByNote = async (userId) => {
 
 const getGroups = async (id) => {
   console.log(id);
-  const groups = await GroupNotes.findAll({ user_id: id });
+  const groups = await GroupNotes.findAll({ 
+    where: {
+      user_id: id 
+    }
+  });
   return groups;
 }
 
