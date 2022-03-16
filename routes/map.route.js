@@ -345,7 +345,7 @@ router.get('/bbox-components', async (req, res) => {
   });
 });
 router.get('/problemname/:problemid', async (req, res) => {
-  const problemid = req.params.query;
+  const problemid = req.params.problemid;
   const sql = `select problemname from problems where problemid = ${problemid}`;
   const sqlURI =  encodeURIComponent(sql);
   const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sqlURI}&api_key=${CARTO_TOKEN}`;
