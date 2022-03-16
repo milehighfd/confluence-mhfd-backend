@@ -202,7 +202,7 @@ const getNextBucket = async (userId) => {
       user_id: userId
     },
     order: [[
-      'position', 'DESC'
+      'position', 'ASC'
     ]],
     limit: 1
   });
@@ -211,7 +211,7 @@ const getNextBucket = async (userId) => {
       user_id: userId
     },
     order: [[
-      'position', 'DESC'
+      'position', 'ASC'
     ]],
     limit: 1
   });
@@ -221,7 +221,7 @@ const getNextBucket = async (userId) => {
   if (!groupWithMaxPosition.length) {
     groupWithMaxPosition.push({position: noteWithMaxPosition[0].position});
   }
-  const newBucket = Math.max(noteWithMaxPosition[0].position, groupWithMaxPosition[0].position) + SIZE_OF_BUCKET;
+  const newBucket = Math.min(noteWithMaxPosition[0].position, groupWithMaxPosition[0].position) - SIZE_OF_BUCKET;
   return newBucket;
 }
 const saveNote = async (note) => {
