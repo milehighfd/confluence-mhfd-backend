@@ -344,5 +344,32 @@ router.get('/bbox-components', async (req, res) => {
     centroids
   });
 });
-
+router.get('/problemname/:problemid', async (req, res) => {
+  const problemid = req.params.query;
+  const sql = `select problemname from problems where problemid = ${problemid}`;
+  const sqlURI =  encodeURIComponent(sql);
+  const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
+  try {
+    https.get(URL, response => {   
+      if (response.statusCode == 200) {
+        let str = '';
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+        response.on('end', function () {
+          const rows = JSON.parse(str).rows;
+          res.send({problemname: rows});
+        });
+      } else {
+        console.log('status ', response.statusCode, URL);
+        res.send({problemname: []});
+      }
+    }).on('error', err => {
+      console.log('failed at problemname call to ', URL, 'with error ', err);
+      res.send({problemname: []});
+    });
+  } catch(error) {
+    res.send({error: error});
+  }
+})
 module.exports = (router);
