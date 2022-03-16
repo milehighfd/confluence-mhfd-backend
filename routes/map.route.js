@@ -359,11 +359,11 @@ router.get('/problemname/:problemid', async (req, res) => {
         });
         response.on('end', function () {
           const rows = JSON.parse(str).rows;
-          return res.status(200).send(result);
+          return res.status(200).send(rows);
         });
       } else {
         console.log('status ', response.statusCode, URL);
-        return res.status(320).send(result);
+        return res.status(320).send(response.statusCode);
       }
     }).on('error', err => {
       console.log('failed at problemname call to ', URL, 'with error ', err);
