@@ -3,7 +3,7 @@ const logger = require('../config/logger');
 const NewNotes = db.newnotes;
 const GroupNotes = db.groupnotes;
 const ColorNotes = db.color;
-
+const DEFAULT_COLOR = '#FFE121';
 
 const SIZE_OF_BUCKET = 15000;
 
@@ -79,13 +79,13 @@ const getColors = async (userId) => {
     ]
   });
   colors.sort((a, b) => {
-    if (a.label === 'Map Note' && a.label === b.label) {
+    if (a.label === 'Map Note' && a.label === b.label && a.color === DEFAULT_COLOR && b.color === DEFAULT_COLOR) {
       return a.createdAt - b.createdAt;
     }
-    if (a.label === 'Map Note') {
+    if (a.label === 'Map Note' && a.color === DEFAULT_COLOR) {
       return -1;
     }
-    if (b.label === 'Map Note') {
+    if (b.label === 'Map Note' && b.color === DEFAULT_COLOR) {
       return 1;
     }
     return a.label.localeCompare(b.label);
