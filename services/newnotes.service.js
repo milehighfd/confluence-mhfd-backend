@@ -76,6 +76,7 @@ const getColorsByNote = async (userId) => {
         }
       }
     });
+    console.log(countNotesWithNoColor);
     if (countNotesWithNoColor[0].count > 0) {
       colors.push({
         _id: null,
