@@ -48,7 +48,9 @@ const getNotesByColor = async (userId, colorIds, hasNull) => {
         model: ColorNotes,
         as: 'color'
       },
-      ...where
+      where: {
+        ...where
+      }
     });
     return notes;
   } catch(error) {
