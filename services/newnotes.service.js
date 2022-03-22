@@ -35,6 +35,7 @@ const getNotesByColor = async (userId, colorIds, hasNull) => {
     };
     if (hasNull) {
       where = {
+        user_id: userId,
         [Op.or]: [
           {
             color_id: {
