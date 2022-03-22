@@ -62,13 +62,13 @@ const getNotesByColor = async (userId, colorIds, hasNull) => {
 
 const getColorsByNote = async (userId) => {
   try {
-    const colors = NewNotes.findAll({
+    const colors = await NewNotes.findAll({
       attributes: ['color_id'],
       where: {
         user_id: userId
       }
     });
-    const countNotesWithNoColor = NewNotes.count({
+    const countNotesWithNoColor = await NewNotes.count({
       where: {
         user_id: userId,
         color_id: {
