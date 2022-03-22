@@ -68,6 +68,21 @@ const getColorsByNote = async (userId) => {
         user_id: userId
       }
     });
+    const countNotesWithNoColor = NewNotes.findAll({
+      where: {
+        user_id: userId,
+        color_id: {
+          [Op.is]: null
+        }
+      }
+    });
+    if (countNotesWithNoColor[0].count > 0) {
+      colors.push({
+        _id: null,
+        color: DEFAULT_COLOR,
+        label: 'Default label'
+      });
+    }
     return colors;
   } catch(error) {
     console.log(`the error ${error}`);
