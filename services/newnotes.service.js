@@ -47,7 +47,8 @@ const getNotesByColor = async (userId, colorIds, hasNull) => {
       include: {
         model: ColorNotes,
         as: 'color'
-      }
+      },
+      ...where
     });
     return notes;
   } catch(error) {
