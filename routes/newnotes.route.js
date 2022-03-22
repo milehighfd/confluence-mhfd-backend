@@ -8,12 +8,12 @@ const db = require('../config/db');
 router.get('/note', [auth], async (req, res) => {
   const user = req.user;
   try {
-    const color_id = req.query.color_id;
+    const { color_id, hasNull } = req.query;
     let notes = null;
-    if (!color_id) {
+    if (!color_id && hasNull === undefined) {
       notes = await NoteService.getAllNotes(user._id);
     } else {
-      notes = await NoteService.getNotesByColor(user._id, color_id.split(','));
+      notes = await NoteService.getNotesByColor(user._id, (color_id || '').split(','), hasNull);
     }
     //const notes = await NoteService.getAllNotesByUser(user._id);
     return res.send(notes);

@@ -24,14 +24,26 @@ const getAllNotes = async(userId) => {
   }
 }
 
-const getNotesByColor = async (userId, colorIds) => {
+const getNotesByColor = async (userId, colorIds, hasNull) => {
   try{
-    console.log(colorIds);  
+    const where = {
+      user_id: userId,
+    };
+    if (hasNull) {
+      where.$or = [
+        {
+          color_id: colorIds
+        },
+        {
+          color_id: {
+            $eq: null
+          }
+        }
+      ]
+    } else {
+      where.color_id = colorIds;
+    }
     const notes = NewNotes.findAll({
-      where: {
-        user_id: userId,
-        color_id: colorIds
-      },
       include: {
         model: ColorNotes,
         as: 'color'
