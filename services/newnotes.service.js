@@ -29,16 +29,22 @@ const getAllNotes = async(userId) => {
 
 const getNotesByColor = async (userId, colorIds, hasNull) => {
   try{
-    const where = {
+    let where = {
       user_id: userId,
+      color_id: colorIds
     };
     if (hasNull) {
-      where[[Op.or]] = [{color_id: {
-        [Op.is]: null
-      }}, {color_id: colorIds}];
-    } else {
-      where.color_id = colorIds;
-    }
+      where = {
+        [Op.or]: [
+          {
+            color_id: {
+              [Op.is]: null
+            }
+          }, 
+          {color_id: colorIds}
+        ]
+      };
+    } 
     const notes = NewNotes.findAll({
       where: {...where },
       include: {
