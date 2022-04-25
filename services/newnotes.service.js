@@ -4,6 +4,9 @@ const NewNotes = db.newnotes;
 const GroupNotes = db.groupnotes;
 const ColorNotes = db.color;
 const DEFAULT_COLOR = '#FFE121';
+const Sequelize = require('sequelize');
+
+const Op = Sequelize.Op;
 
 const SIZE_OF_BUCKET = 15000;
 
@@ -26,14 +29,25 @@ const getAllNotes = async(userId) => {
 
 const getNotesByColor = async (userId, colorIds, hasNull) => {
   try{
+    let where = {
+      user_id: userId,
+      color_id: colorIds
+    };
     if (hasNull) {
-      colorIds.push(null);
-    }
-    const notes = NewNotes.findAll({
-      where: {
+      where = {
         user_id: userId,
-        color_id: colorIds
-      },
+        [Op.or]: [
+          {
+            color_id: {
+              [Op.is]: null
+            }
+          }, 
+          {color_id: colorIds}
+        ]
+      };
+    } 
+    const notes = NewNotes.findAll({
+      where: {...where },
       include: {
         model: ColorNotes,
         as: 'color'
@@ -48,7 +62,7 @@ const getNotesByColor = async (userId, colorIds, hasNull) => {
 
 const getColorsByNote = async (userId) => {
   try {
-    const colors = NewNotes.findAll({
+    const colors = await NewNotes.findAll({
       attributes: ['color_id'],
       where: {
         user_id: userId
