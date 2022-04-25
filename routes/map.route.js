@@ -30,9 +30,11 @@ router.post('/', async (req, res) => {
   const table = req.body.table;
   let sql = `SELECT * FROM ${table}`;
   if(table.includes('mep_outfalls') || table.includes('mep_channels')){
-    sql =  `SELECT the_geom, the_geom_webmercator, projectname, mep_eligibilitystatus, projectno, mhfd_servicearea, mep_date_designapproval::text,mep_date_constructionapproval::text,mep_date_finalacceptance::text,mep_date_ineligible::text FROM ${table}` 
+    sql =  `SELECT the_geom, the_geom_webmercator, projectname, mep_eligibilitystatus, projectno, mhfd_servicearea, mep_date_designapproval::text,mep_date_constructionapproval::text,mep_date_finalacceptance::text,mep_date_ineligible::text FROM ${table}` ;
+  } else if(table.includes('mep_projects_temp_locations')) {
+    sql = `SELECT the_geom, the_geom_webmercator FROM ${table}`;
   } else if(table.includes('mep')){
-    sql =  `SELECT the_geom, the_geom_webmercator, projectname, mep_eligibilitystatus, projectno, mhfd_servicearea, mep_date_designapproval::text,mep_date_constructionapproval::text,mep_date_finalacceptance::text,mep_date_ineligible::text, pondname FROM ${table}` 
+    sql =  `SELECT the_geom, the_geom_webmercator, projectname, mep_eligibilitystatus, projectno, mhfd_servicearea, mep_date_designapproval::text,mep_date_constructionapproval::text,mep_date_finalacceptance::text,mep_date_ineligible::text, pondname FROM ${table}` ;
   }
   if (table === 'bcz_prebles_meadow_jumping_mouse' || table === 'bcz_ute_ladies_tresses_orchid') {
     sql = `SELECT the_geom, the_geom_webmercator, expiration_date::text, website, letter, map FROM ${table}`;
