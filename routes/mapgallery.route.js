@@ -815,7 +815,7 @@ let getDataByProblemId = async (id) => {
     objectid, problemid, problemname, problemdescription, problemtype,
     problempriority, source, sourcename, solutioncost, solutionstatus,
     mhfdmanager, servicearea, county, jurisdiction, streamname,
-    problemsubtype, sourcedate, shape_length, shape_area 
+    problemsubtype, sourcedate, shape_length, shape_area, status_date, effective_date
     FROM problems where problemid='${id}'`;
    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} &api_key=${CARTO_TOKEN}`);
    const data = await needle('get', URL, { json: true });
@@ -843,6 +843,8 @@ let getDataByProblemId = async (id) => {
          jurisdiction: result.jurisdiction,
          shape_length: result.shape_length,
          shape_area: result.shape_area,
+         status_date: result.status_date,
+         effective_date: result.effective_date,
          components: resultComponents,
          coordinates: JSON.parse(result.the_geom).coordinates
       };
