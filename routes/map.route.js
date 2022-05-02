@@ -40,7 +40,7 @@ router.post('/', async (req, res) => {
     sql = `SELECT the_geom, the_geom_webmercator, expiration_date::text, website, letter, map FROM ${table}`;
   }
   if(table.includes('active_lomcs')){
-    sql =  `SELECT cartodb_id, the_geom, the_geom_webmercator, objectid, globalid, projectno, shape_area, shape_length, creationdate::text, creator , editdate::text, editor, lomc_case, lomc_type, lomc_identifier, status_date::text, status, notes, effective_date::text FROM ${table}` ;
+    sql =  `SELECT cartodb_id, the_geom, the_geom_webmercator, objectid, globalid, shape_area, shape_length, creationdate::text, creator , editdate::text, editor, lomc_case, lomc_type, lomc_identifier, status_date::text, status, notes, effective_date::text FROM ${table}` ;
   }
   var mapConfig = {
     "version": '1.3.1',
