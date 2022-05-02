@@ -39,6 +39,9 @@ router.post('/', async (req, res) => {
   if (table === 'bcz_prebles_meadow_jumping_mouse' || table === 'bcz_ute_ladies_tresses_orchid') {
     sql = `SELECT the_geom, the_geom_webmercator, expiration_date::text, website, letter, map FROM ${table}`;
   }
+  if(table.includes('active_lomcs')){
+    sql =  `SELECT cartodb_id, the_geom, the_geom_webmercator, objectid, globalid, projectno, shape_area, shape_length, creationdate::text, creator , editdate::text, editor, lomc_case, lomc_type, lomc_identifier, status_date::text, status, notes, effective_date::text FROM ${table}` ;
+  }
   var mapConfig = {
     "version": '1.3.1',
     "buffersize": {mvt: 8},
