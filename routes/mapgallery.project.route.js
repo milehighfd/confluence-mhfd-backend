@@ -4,6 +4,9 @@ const needle = require('needle');
 
 const PROJECT_TABLES = ['mhfd_projects'];
 const COMPLETE_YEAR_COLUMN = 'completeyear';
+const {
+   statusList
+} = require('./gallery.constants');
 
 const getNewFilter = (filters, body) => {
    if (body.status) {
@@ -406,10 +409,7 @@ async function projectParamFilterRoute(req, res) {
       requests.push(getValuesByColumnWithOutCountProject('mhfdmanager', bounds, body));
 
       requests.push(getCountByArrayColumnsProject('projecttype', ['Maintenance', 'Study', 'Capital'], bounds, body));
-      requests.push(getCountByArrayColumnsProject('status', ['Draft', 'Requested',
-         'Approved', 'Idle', 'Initiated', 'Ongoing',
-         'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
-         'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete'], bounds, body));
+      requests.push(getCountByArrayColumnsProject('status', statusList, bounds, body));
       requests.push(getValuesByColumnWithOutCountProject('startyear', bounds, body));
       requests.push(getValuesByColumnWithOutCountProject(COMPLETE_YEAR_COLUMN, bounds, body));
       requests.push(getValuesByRangeProject('mhfddollarsallocated', bounds, body));
@@ -469,10 +469,7 @@ const projectStatistics = async (request, response) => {
    } else if (columnsWithCount.includes(column)) {
       const mapColumnsWithCount = {
          'projecttype': ['Maintenance', 'Study', 'Capital'],
-         'status': ['Draft', 'Requested',
-         'Approved', 'Idle', 'Initiated', 'Ongoing',
-         'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
-         'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete']
+         'status': statusList
       }
       return response.status(200).send(await getCountByArrayColumnsProject(column, mapColumnsWithCount[column], bounds, body))
    } else if (columnsWithRanges.includes(column)) {

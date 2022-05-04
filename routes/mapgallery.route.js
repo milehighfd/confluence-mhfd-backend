@@ -26,6 +26,9 @@ const {
    getProblemByProjectId,
    getCoordinatesOfComponents
 } = require('./mapgallery.service');
+const {
+   statusList
+} = require('./gallery.constants');
 const PROJECT_TABLES = ['mhfd_projects'];
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
    'special_item_linear', 'special_item_area', 'channel_improvements_linear',
@@ -103,7 +106,7 @@ router.post('/', async (req, res) => {
                let answer = [];
                try {
                   const data = await needle('post', URL, query, { json: true });
-                  //console.log('STATUS', data.statusCode);
+                  console.log('STATUS', data.statusCode);
                   if (data.statusCode === 200) {
                      const result = data.body.rows;
                      for (const element of result) {
@@ -1911,10 +1914,7 @@ router.get('/params-filters', async (req, res) => {
       requests.push(getValuesByColumnWithOutCount('mhfd_projects', 'creator', bounds));
       requests.push(getValuesByColumnWithOutCount('mhfd_projects', 'mhfdmanager', bounds));
       requests.push(getCountByArrayColumns('mhfd_projects', 'projecttype', ['Maintenance', 'Study', 'Capital'], bounds));
-      requests.push(getCountByArrayColumns('mhfd_projects', 'status', ['Draft', 'Requested',
-         'Approved', 'Idle', 'Initiated', 'Ongoing',
-         'Preliminary Design', 'Construction', 'Final Design', 'Permit Monitoring',
-         'Hydrology', 'Floodplain', 'Alternatives', 'Conceptual', 'Complete'], bounds));
+      requests.push(getCountByArrayColumns('mhfd_projects', 'status', statusList, bounds));
       requests.push(getValuesByColumn('mhfd_projects', 'startyear', bounds));
       requests.push(getValuesByColumn('mhfd_projects', 'completedyear', bounds));
       const rangeMhfdDollarsAllocated = [
