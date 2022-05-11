@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
          let filters = '';
          filters = getFilters(req.body);
          // 
-         const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, component_cost, jurisdiction, problempriority, solutionstatus, problemtype, county, ${getCounters('problems', 'problemid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM problems `;
+         const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, component_cost, component_count,  jurisdiction, problempriority, solutionstatus, problemtype, county, ${getCounters('problems', 'problemid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM problems `;
          //const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
          const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
          const query = { q: `${PROBLEM_SQL} ${filters}` };
@@ -68,10 +68,7 @@ router.post('/', async (req, res) => {
                      solutionstatus: element.solutionstatus,
                      problemtype: element.problemtype,
                      county: element.county,
-                     totalComponents: element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
-                        element.count_cia + element.count_sia + element.count_rl + element.count_ra +
-                        element.count_sd + element.count_df + element.count_mt + element.count_la +
-                        element.count_la + element.count_la1 + element.count_cila,
+                     totalComponents: element.component_count,
                      coordinates: JSON.parse(element.the_geom).coordinates ? JSON.parse(element.the_geom).coordinates : []
                   }
                })
@@ -89,7 +86,7 @@ router.post('/', async (req, res) => {
 
          filters = getFilters(req.body);
          const PROJECT_FIELDS = 'cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, ' +
-            'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county, component_cost ';
+            'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county, component_cost, component_count ';
 
          if (req.body.problemtype) {
             const result = await queriesByProblemTypeInProject(PROJECT_FIELDS, filters, req.body.problemtype);
@@ -138,10 +135,7 @@ router.post('/', async (req, res) => {
                            streamname: element.streamname,
                            county: element.county,
                            attachments: valor,
-                           totalComponents: element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
-                              element.count_cia + element.count_sia + element.count_rl + element.count_ra +
-                              element.count_sd + element.count_df + element.count_mt + element.count_la +
-                              element.count_la + element.count_la1 + element.count_cila,
+                           totalComponents: element.component_count,
                            coordinates: coordinates
                         });
                      }
