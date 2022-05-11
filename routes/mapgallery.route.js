@@ -818,7 +818,7 @@ router.get('/project-by-ids', async (req, res) => {
 let getDataByProblemId = async (id) => {
    const PROBLEM_SQL = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom, cartodb_id,
     objectid, problemid, problemname, problemdescription, problemtype,
-    problempriority, source, sourcename, solutioncost, solutionstatus,
+    problempriority, source, sourcename, solutioncost, component_cost, solutionstatus,
     mhfdmanager, servicearea, county, jurisdiction, streamname,
     problemsubtype, sourcedate, shape_length, shape_area
     FROM problems where problemid='${id}'`;
@@ -838,6 +838,7 @@ let getDataByProblemId = async (id) => {
          source: result.source,
          solutioncost: result.solutioncost,
          solutionstatus: result.solutionstatus,
+         component_cost: result.component_cost,
          sourcename: result.sourcename,
          mhfdmanager: result.mhfdmanager,
          servicearea: result.servicearea,
