@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
          let filters = '';
          filters = getFilters(req.body);
          // 
-         const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype, county, ${getCounters('problems', 'problemid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM problems `;
+         const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, component_cost, jurisdiction, problempriority, solutionstatus, problemtype, county, ${getCounters('problems', 'problemid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM problems `;
          //const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
          const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
          const query = { q: `${PROBLEM_SQL} ${filters}` };
@@ -62,6 +62,7 @@ router.post('/', async (req, res) => {
                      problemid: element.problemid,
                      problemname: element.problemname,
                      solutioncost: element.solutioncost,
+                     component_cost: element.component_cost,
                      jurisdiction: element.jurisdiction,
                      problempriority: element.problempriority,
                      solutionstatus: element.solutionstatus,
