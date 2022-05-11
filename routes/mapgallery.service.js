@@ -125,6 +125,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
       frequency: result.frequency,
       mhfddollarsrequested: result.mhfddollarsrequested,
       estimatedcost: result.estimatedcost,
+      componentcost: result.component_cost,
       mhfddollarsallocated: result.mhfddollarsallocated,
       finalcost: result.finalcost,
       startyear: result.startyear,
