@@ -88,7 +88,7 @@ router.post('/', async (req, res) => {
 
          filters = getFilters(req.body);
          const PROJECT_FIELDS = 'cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, ' +
-            'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county ';
+            'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county, component_cost ';
 
          if (req.body.problemtype) {
             const result = await queriesByProblemTypeInProject(PROJECT_FIELDS, filters, req.body.problemtype);
@@ -128,6 +128,7 @@ router.post('/', async (req, res) => {
                            coverimage: element.coverimage,
                            sponsor: element.sponsor,
                            finalcost: element.finalcost,
+                           component_cost: element.component_cost,
                            estimatedcost: element.estimatedcost,
                            status: element.status,
                            attachments: element.attachments,
