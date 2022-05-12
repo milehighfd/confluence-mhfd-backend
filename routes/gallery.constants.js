@@ -1,12 +1,15 @@
 const statusList = [
-    'Approved',
+    /*'Approved',
     'Idle',
     'Complete',
     'Requested',
     'Construction',
     'Final Design',
     'Active',
-    'Ongoing'
+    'Ongoing'*/
+    'Active',
+    'Closeout',
+    'Closed'
     /*
     'Draft',
     'Requested',
