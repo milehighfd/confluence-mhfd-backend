@@ -16,11 +16,13 @@ const INITIAL_PAGE = process.env.INITIAL_PAGE || 1;
 const PROJECT_TABLE = process.env.PROJECT_TABLE || 'projects';
 const GUEST_USER = process.env.GUEST_USER || 'guest@mhfd.com';
 const DEFAULT_PASSWORD = process.env.DEFAULT_PASSWORD || 'example-password';
-const CREATE_PROJECT_TABLE = process.env.CREATE_PROJECT_TABLE || 'mhfd_projects_created';
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
 const SMTP_PORT = process.env.SMTP_PORT || 465;
 const DB_PORT = process.env.DB_PORT || 5432;
 const BASE_SERVER_URL = process.env.BASE_SERVER_URL || 'http://localhost:3003';
+// NODE_ENV has three posible values dev, test y prod
+const MHFD_PROJECTS_COPY = 'mhfd_projects_copy' + "_" + (process.env.NODE_ENV ?? 'dev');
+const CREATE_PROJECT_TABLE = process.env.CREATE_PROJECT_TABLE ? (process.env.CREATE_PROJECT_TABLE + '_' + (process.env.NODE_ENV ?? 'dev')) : MHFD_PROJECTS_COPY;
 module.exports = {
   JWT_KEY,
   POSTGRESQL_HOST,
@@ -45,4 +47,5 @@ module.exports = {
   SMTP_PORT,
   DB_PORT,
   BASE_SERVER_URL,
+  MHFD_PROJECTS_COPY
 };
