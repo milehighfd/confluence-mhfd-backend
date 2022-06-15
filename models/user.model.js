@@ -112,18 +112,18 @@ module.exports = (sequelize, DataType) => {
   // 
   User.prototype.generateChangePassword = async function () {
     const user = this;
-    const random = crypto.randomBytes(16).toString('base64');
-    const salt = new Buffer(random, 'base64');
-    const newId = this._id + (new Date().getTime());
-    const result = crypto.pbkdf2Sync(newId, salt, 10000, 64, 'sha512').toString('base64');
-    user.changePasswordId = "";
-    for (var i = 0; i < result.length; i++) {
-      if (result.charAt(i) == '/') {
-        this.changePasswordId = this.changePasswordId + '-';
-      } else {
-        this.changePasswordId = this.changePasswordId + result.charAt(i);
-      }
-    }
+    const random = crypto.randomBytes(16).toString('hex');
+    // const salt = new Buffer(random, 'base64');
+    // const newId = this._id + (new Date().getTime());
+    // const result = crypto.pbkdf2Sync(newId, salt, 10000, 64, 'sha512').toString('base64');
+    user.changePasswordId = random;
+    // for (var i = 0; i < result.length; i++) {
+    //   if (result.charAt(i) == '/') {
+    //     this.changePasswordId = this.changePasswordId + '-';
+    //   } else {
+    //     this.changePasswordId = this.changePasswordId + result.charAt(i);
+    //   }
+    // }
     this.changePasswordExpiration = new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
     this.save();
   };
