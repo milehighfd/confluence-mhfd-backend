@@ -21,8 +21,8 @@ const SMTP_PORT = process.env.SMTP_PORT || 465;
 const DB_PORT = process.env.DB_PORT || 5432;
 const BASE_SERVER_URL = process.env.BASE_SERVER_URL || 'http://localhost:3003';
 // NODE_ENV has three posible values dev, test y prod
-const MHFD_PROJECTS_COPY = 'mhfd_projects_copy' + "_" + (process.env.NODE_ENV ?? 'dev');
-const CREATE_PROJECT_TABLE = process.env.CREATE_PROJECT_TABLE ? (process.env.CREATE_PROJECT_TABLE + '_' + (process.env.NODE_ENV ?? 'dev')) : MHFD_PROJECTS_COPY;
+const MHFD_PROJECTS_COPY = 'mhfd_projects_copy' + "_" + (process.env.NODE_ENV ? process.env.NODE_ENV : 'dev');
+const CREATE_PROJECT_TABLE = process.env.CREATE_PROJECT_TABLE ? (process.env.CREATE_PROJECT_TABLE + '_' + (process.env.NODE_ENV ? process.env.NODE_ENV : 'dev')) : MHFD_PROJECTS_COPY;
 module.exports = {
   JWT_KEY,
   POSTGRESQL_HOST,
