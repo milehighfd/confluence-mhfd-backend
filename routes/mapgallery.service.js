@@ -3,7 +3,7 @@ const https = require('https');
 const attachmentService = require('../services/attachment.service');
 const projectStreamService = require('../services/projectStream.service');
 
-const { CARTO_TOKEN, MHFD_PROJECTS_COPY } = require('../config/config');
+const { CARTO_TOKEN, MHFD_PROJECTS_COPY, CREATE_PROJECT_TABLE } = require('../config/config');
 
 const getCoordsByProjectId = async (projectid, isDev) => {
   let table = 'mhfd_projects'
@@ -25,11 +25,8 @@ const getCoordsByProjectId = async (projectid, isDev) => {
   }
 }
 
-const getMidByProjectId = async (projectid, isDev, projecttype) => {
-  let table = 'mhfd_projects'
-  if (isDev) {
-    table = MHFD_PROJECTS_COPY;
-  }
+const getMidByProjectId = async (projectid, projecttype) => {
+  let table = CREATE_PROJECT_TABLE;
   let fields = ["projectid", "cartodb_id", "county", "jurisdiction", "servicearea", "projectname", "status", "description", "acquisitionprogress", "acquisitionanticipateddate", "projecttype", "projectsubtype", "additionalcost", "additionalcostdescription", "cosponsor", "frequency", "maintenanceeligibility", "overheadcost", "overheadcostdescription", "ownership", "sponsor", 'estimatedcost', 'studyreason', 'studysubreason'];
   if (['Acquisition', 'Special', 'Maintenance', 'Capital'].includes(projecttype)) {
     fields.push('ST_AsGeoJSON(the_geom) as the_geom')
