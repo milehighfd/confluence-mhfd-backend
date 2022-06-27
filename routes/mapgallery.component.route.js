@@ -193,7 +193,7 @@ async function getCountByYearStudyWithFilter(bounds, body) {
   return result;
 }
 
-async function getComponentsValuesByColumnWithCountWithFilter(column, bounds, body) {
+async function getComponentsValuesByColumnWithCountWithFilter(column, bounds, body, needCount) {
   let result = [];
   try {
     const coords = bounds.split(',');
@@ -203,7 +203,7 @@ async function getComponentsValuesByColumnWithCountWithFilter(column, bounds, bo
     filters = getNewFilter(filters, body);
 
     const LINE_SQL = TABLES_COMPONENTS.map((t) => {
-      return `SELECT ${column} as column FROM ${t} where ${filters} group by ${column}`
+      return `SELECT ${needCount ? 'count(*) as count, ': ''} ${column} as column FROM ${t} where ${filters} group by ${column}`
     }).join(' union ')
 
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
@@ -332,8 +332,8 @@ async function componentParamFilterRoute(req, res) {
      requests.push(getComponentsValuesByColumnWithCountWithFilter('mhfdmanager', bounds, body));
      requests.push(getQuintilComponentValuesWithFilter('estimated_cost', bounds, body));
      requests.push(getComponentsValuesByColumnWithCountWithFilter('jurisdiction', bounds, body));
-     requests.push(getComponentsValuesByColumnWithCountWithFilter('county', bounds, body));
-     requests.push(getComponentsValuesByColumnWithCountWithFilter('servicearea', bounds, body));
+     requests.push(getComponentsValuesByColumnWithCountWithFilter('county', bounds, body, true));
+     requests.push(getComponentsValuesByColumnWithCountWithFilter('servicearea', bounds, body, true));
 
      const promises = await Promise.all(requests);
 
