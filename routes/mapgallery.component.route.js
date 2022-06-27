@@ -79,23 +79,18 @@ async function getCounterComponentsWithFilter(bounds, body) {
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
     for (const component of TABLES_COMPONENTS) {
       let answer = [];
-      let counter = 0;
       const SQL = `SELECT type FROM ${component} where ${filters} group by type `;
       const query = { q: ` ${SQL} ` };
       const data = await needle('post', URL, query, { json: true });
       if (data.statusCode === 200) {
         answer = data.body.rows;
-        if (data.body.rows.length > 0) {
-          counter = answer[0].count;
-        }
       }
       if (data.statusCode === 400) {
         console.log('data.statusCode 400', data.body);
       }
       result.push({
         key: component,
-        value: CapitalLetter(component),
-        counter: counter
+        value: CapitalLetter(component)
       });
     }
 
@@ -283,22 +278,7 @@ async function getQuintilComponentValuesWithFilter(column, bounds, body) {
         limitCount = max1;
       }
 
-      let query1 = TABLES_COMPONENTS.map(t => {
-        return `SELECT count(*) FROM ${t} where (${column} between ${min1} and ${limitCount}) and ${filters}`
-      }).join(' union ');
-
-      const query = { q: `${query1} ` };
-      const data = await needle('post', URL, query, { json: true });
-      if (data.statusCode === 200) {
-        const result = data.body.rows;
-        for (const row of result) {
-          counter += row.count;
-        }
-      } else {
-        console.log('error');
-      }
-
-      finalResult.push({ min: min1, max: max1, label: label, counter: counter });
+      finalResult.push({ min: min1, max: max1, label: label });
       min = (difference * (i + 1));
     }
 
@@ -348,7 +328,7 @@ async function componentParamFilterRoute(req, res) {
      let requests = [];
      requests.push(getCounterComponentsWithFilter(bounds, body));
      requests.push(getComponentsValuesByColumnWithFilter('status', bounds, body));
-     // requests.push(getCountByYearStudyWithFilter(bounds, body));
+     requests.push(getCountByYearStudyWithFilter(bounds, body));
      requests.push(getComponentsValuesByColumnWithCountWithFilter('mhfdmanager', bounds, body));
      requests.push(getQuintilComponentValuesWithFilter('estimated_cost', bounds, body));
      requests.push(getComponentsValuesByColumnWithCountWithFilter('jurisdiction', bounds, body));
