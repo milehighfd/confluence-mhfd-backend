@@ -116,7 +116,7 @@ async function getValuesByColumnWithOutCountProject(column, bounds, body, needCo
                });
                while (answer[answer.length - 1].value < 2030) {
                   answer.push({
-                     value: answer[answer.length - 1].value,
+                     value: answer[answer.length - 1].value + 1,
                      count: 0
                   });
                }
