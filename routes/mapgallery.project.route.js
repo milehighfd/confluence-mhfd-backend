@@ -110,10 +110,16 @@ async function getValuesByColumnWithOutCountProject(column, bounds, body, needCo
                      return { value: r.value, counter: 0 }
                   })
                );
-               answer = answer.filter(r => r.value >= 2004);
+               answer = answer.filter(r => r.value >= 2000);
                answer.sort((a, b) => {
                   return a.value - b.value;
-               })
+               });
+               while (answer[answer.length - 1].value < 2030) {
+                  answer.push({
+                     value: answer[answer.length - 1].value,
+                     count: 0
+                  });
+               }
             }
          }
       }

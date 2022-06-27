@@ -2,7 +2,7 @@ const { CARTO_TOKEN } = require('../config/config');
 const logger = require('../config/logger');
 const needle = require('needle');
 
-const distanceInYears = 5;
+const distanceInYears = 1;
 
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
   'special_item_linear', 'special_item_area', 'channel_improvements_linear',
@@ -152,14 +152,14 @@ async function getCountByYearStudyWithFilter(bounds, body) {
     filters = getNewFilter(filters, body);
 
     let values = [];
-    for (var y = 1970; y <= 2020; y += distanceInYears) {
+    for (var y = 1970; y <= 2030; y += distanceInYears) {
       values.push(y);
     }
 
     for (const value of values) {
       const initValue = Number(value);
       let endValue = 0;
-      if (value === 2020) {
+      if (value === 2030) {
         endValue = initValue + 10;
       } else {
         endValue = initValue + (distanceInYears - 1);
@@ -175,10 +175,6 @@ async function getCountByYearStudyWithFilter(bounds, body) {
       let counter = 0;
 
       if (data.statusCode === 200) {
-        const result1 = data.body.rows;
-        for (const val of result1) {
-          counter += val.count;
-        }
         result.push({
           value: value,
           count: counter
