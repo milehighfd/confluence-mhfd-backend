@@ -260,22 +260,37 @@ async function getQuintilComponentValuesWithFilter(column, bounds, body) {
     }
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
-    for (let i = 0; i < numberOfPartitions; i++) {
-      let min1 = Math.round(min);
-      let max1 = 0;
-      let limitCount = 0;
-      let counter = 0;
+    // for (let i = 0; i < numberOfPartitions; i++) {
+    //   let min1 = Math.round(min);
+    //   let max1 = 0;
+    //   let limitCount = 0;
+    //   let counter = 0;
 
-      if (i === numberOfPartitions - 1) {
-        max1 = max;
-        limitCount = max;
-      } else {
-        max1 = Math.round(difference * (i + 1));
-        limitCount = max1;
+    //   if (i === numberOfPartitions - 1) {
+    //     max1 = max;
+    //     limitCount = max;
+    //   } else {
+    //     max1 = Math.round(difference * (i + 1));
+    //     limitCount = max1;
+    //   }
+
+    //   finalResult.push({ min: min1, max: max1, label: label });
+    //   min = (difference * (i + 1));
+    // }
+    let minRange = 0;
+    let maxRange = 50000000;
+    let intervalWidth = 1000000;
+    const lenRange = ( maxRange / intervalWidth ) + 1;
+    let result2 = [];
+    let epsilon = 0.001;
+    for (let i = 0 ; i < lenRange ; i++) {
+      const isLast = i === (lenRange - 1);
+      let values = {
+          min: minRange + i * intervalWidth,
+          max: minRange + (i + 1) * intervalWidth - (isLast ? 0 : epsilon)
       }
 
-      finalResult.push({ min: min1, max: max1, label: label });
-      min = (difference * (i + 1));
+      finalResult.push({ min: values.min, max: values.max, label: 'M' });
     }
 
   } catch (error) {
