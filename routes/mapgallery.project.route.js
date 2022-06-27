@@ -212,32 +212,31 @@ async function getValuesByRangeProject(column, bounds, body) {
          let minRange, maxRange;
 
          let bodyColumn = column === 'estimatedcost' ? body['totalcost'] : body[column];
-         if (bodyColumn && bodyColumn.length !== 0) {
-            let minPair = bodyColumn[0];
-            let maxPair = bodyColumn[bodyColumn.length - 1];
-            let minimumValue = minPair.split(',')[0];
-            let maximumValue = maxPair.split(',')[1];
-            minRange = +minimumValue;
-            maxRange = +maximumValue;
-         } else {
-            const minMaxQuery = {
-               q: PROJECT_TABLES.map(t => {
-                  return `SELECT max(${column}) as max, min(${column}) as min FROM ${t} where ${filters}`;
-               }).join(' union ')
-            }
-            console.log('query', minMaxQuery);
-            const minMaxData = await needle('post', URL, minMaxQuery, { json: true });
-            const minMaxResult = minMaxData.body.rows;
-            minRange = Math.min.apply(Math, minMaxResult.map(function (element) { return element.min }));
-            maxRange = Math.max.apply(Math, minMaxResult.map(function (element) { return element.max }));
-         }
-
-         let width = maxRange - minRange;
-         const lenRange = 20;
-         let intervalWidth = width / lenRange;
+        //  if (bodyColumn && bodyColumn.length !== 0) {
+        //     let minPair = bodyColumn[0];
+        //     let maxPair = bodyColumn[bodyColumn.length - 1];
+        //     let minimumValue = minPair.split(',')[0];
+        //     let maximumValue = maxPair.split(',')[1];
+        //     minRange = +minimumValue;
+        //     maxRange = +maximumValue;
+        //  } else {
+        //     const minMaxQuery = {
+        //        q: PROJECT_TABLES.map(t => {
+        //           return `SELECT max(${column}) as max, min(${column}) as min FROM ${t} where ${filters}`;
+        //        }).join(' union ')
+        //     }
+        //     console.log('query', minMaxQuery);
+        //     const minMaxData = await needle('post', URL, minMaxQuery, { json: true });
+        //     const minMaxResult = minMaxData.body.rows;
+        //     minRange = Math.min.apply(Math, minMaxResult.map(function (element) { return element.min }));
+        //     maxRange = Math.max.apply(Math, minMaxResult.map(function (element) { return element.max }));
+        //  }
+        minRange = 0;
+        maxRange = 60000000;
+         let intervalWidth = 1000000;
+         const lenRange = ( maxRange / intervalWidth ) + 1;
          let result2 = [];
          let epsilon = 0.001;
-
          for (let i = 0 ; i < lenRange ; i++) {
             const isLast = i === (lenRange - 1);
             let values = {
