@@ -220,7 +220,10 @@ async function getValuesByRangeProblem(table, column, range, bounds, body) {
     const newProm1 = new Promise(async (resolve, reject) => {
       let minRange, maxRange;
       let bodyColumn = column === 'solutioncost' ? body['cost'] : body[column];
-      if (bodyColumn && bodyColumn.length !== 0) {
+      if (column === 'solutioncost') {
+        minRange = 0;
+        maxRange = 12000000;
+      } else if (bodyColumn && bodyColumn.length !== 0) {
         let minPair = bodyColumn[0];
         let maxPair = bodyColumn[bodyColumn.length - 1];
         let minimumValue = minPair.split(',')[0];
@@ -238,8 +241,8 @@ async function getValuesByRangeProblem(table, column, range, bounds, body) {
       }
 
       let width = maxRange - minRange;
-      const lenRange = 20;
-      let intervalWidth = width / lenRange;
+      const lenRange = column === 'solutioncost' ? 13 : 20;
+      let intervalWidth = column === 'solutioncost' ? 1000000 : width / lenRange;
       let result2 = [];
       let epsilon = 0.001;
 
