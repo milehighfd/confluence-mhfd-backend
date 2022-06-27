@@ -80,7 +80,7 @@ async function getCounterComponentsWithFilter(bounds, body) {
     for (const component of TABLES_COMPONENTS) {
       let answer = [];
       let counter = 0;
-      const SQL = `SELECT type, count(*) as count FROM ${component} where ${filters} group by type `;
+      const SQL = `SELECT type FROM ${component} where ${filters} group by type `;
       const query = { q: ` ${SQL} ` };
       const data = await needle('post', URL, query, { json: true });
       if (data.statusCode === 200) {
@@ -118,7 +118,7 @@ async function getComponentsValuesByColumnWithFilter(column, bounds, body) {
     filters = getNewFilter(filters, body);
 
     const LINE_SQL = TABLES_COMPONENTS.map((t) => {
-      return `SELECT ${column} as column, count(*) as count FROM ${t} where ${filters} group by ${column}`
+      return `SELECT ${column} as column FROM ${t} where ${filters} group by ${column}`
     }).join(' union ')
 
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
@@ -208,7 +208,7 @@ async function getComponentsValuesByColumnWithCountWithFilter(column, bounds, bo
     filters = getNewFilter(filters, body);
 
     const LINE_SQL = TABLES_COMPONENTS.map((t) => {
-      return `SELECT count(*) as count, ${column} as column FROM ${t} where ${filters} group by ${column}`
+      return `SELECT ${column} as column FROM ${t} where ${filters} group by ${column}`
     }).join(' union ')
 
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
@@ -348,7 +348,7 @@ async function componentParamFilterRoute(req, res) {
      let requests = [];
      requests.push(getCounterComponentsWithFilter(bounds, body));
      requests.push(getComponentsValuesByColumnWithFilter('status', bounds, body));
-     requests.push(getCountByYearStudyWithFilter(bounds, body));
+     // requests.push(getCountByYearStudyWithFilter(bounds, body));
      requests.push(getComponentsValuesByColumnWithCountWithFilter('mhfdmanager', bounds, body));
      requests.push(getQuintilComponentValuesWithFilter('estimated_cost', bounds, body));
      requests.push(getComponentsValuesByColumnWithCountWithFilter('jurisdiction', bounds, body));
