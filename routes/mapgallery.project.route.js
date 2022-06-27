@@ -80,7 +80,7 @@ const getNewFilter = (filters, body) => {
    return filters;
  }
 
-async function getValuesByColumnWithOutCountProject(column, bounds, body) {
+async function getValuesByColumnWithOutCountProject(column, bounds, body, needCount) {
    let result = [];
    try {
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
@@ -92,7 +92,7 @@ async function getValuesByColumnWithOutCountProject(column, bounds, body) {
       filters = getNewFilter(filters, body);
 
       for (const table1 of PROJECT_TABLES) {
-         const query = { q: `select ${column} as value, count(*) as counter from ${table1} where ${filters} group by ${column} order by ${column} ` };
+         const query = { q: `select ${needCount ? 'count(*) as count, ' : ''} ${column} as value from ${table1} where ${filters} group by ${column} order by ${column} ` };
          console.log("POST ", URL, query);
          const data = await needle('post', URL, query, { json: true });
          if (data.statusCode === 200) {
@@ -144,7 +144,7 @@ async function getValuesByColumnWithOutCountProject(column, bounds, body) {
    return result;
 }
 
-async function getCountByArrayColumnsProject(column, columns, bounds, body) {
+async function getCountByArrayColumnsProject(column, columns, bounds, body, needsCount) {
    let result = [];
    try {
       const coords = bounds.split(',');
@@ -159,7 +159,7 @@ async function getCountByArrayColumnsProject(column, columns, bounds, body) {
          let counter = 0;
          for (const table1 of PROJECT_TABLES) {
             const query = {
-               q: `select ${column} as column, count(*) as count from ${table1} 
+               q: `select ${needsCount? 'count(*) as count, ': ''} ${column} as column from ${table1} 
        where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
             };
             const data = await needle('post', URL, query, { json: true });
@@ -241,22 +241,7 @@ async function getValuesByRangeProject(column, bounds, body) {
                max: minRange + (i + 1) * intervalWidth - (isLast ? 0 : epsilon)
             }
 
-            let counter = 0;
-            for (const table1 of PROJECT_TABLES) {
-               const query = {
-                  q: `select count(*) from ${table1} where (cast(${column} as real) between ${values.min} and ${values.max}) and ${filters}`
-               };
-               const data = await needle('post', URL, query, { json: true });
-               if (data.statusCode === 200) {
-                  const rows = data.body.rows;
-                  counter += rows[0].count;
-               } else {
-                  console.log('data.statusCode', data.statusCode, column, data.body)
-                  console.log('query.q', query.q)
-               }
-            }
-
-            result2.push({ min: values.min, max: values.max, counter: counter, last: isLast });
+            result2.push({ min: values.min, max: values.max, last: isLast });
          }
          resolve(result2);
       });
@@ -408,7 +393,7 @@ async function projectParamFilterRoute(req, res) {
       requests.push(getValuesByColumnWithOutCountProject('creator', bounds, body));
       requests.push(getValuesByColumnWithOutCountProject('mhfdmanager', bounds, body));
 
-      requests.push(getCountByArrayColumnsProject('projecttype', ['Maintenance', 'Study', 'Capital'], bounds, body));
+      requests.push(getCountByArrayColumnsProject('projecttype', ['Maintenance', 'Study', 'Capital'], bounds, body, true));
       requests.push(getCountByArrayColumnsProject('status', statusList, bounds, body));
       requests.push(getValuesByColumnWithOutCountProject('startyear', bounds, body));
       requests.push(getValuesByColumnWithOutCountProject(COMPLETE_YEAR_COLUMN, bounds, body));
@@ -423,8 +408,8 @@ async function projectParamFilterRoute(req, res) {
       requests.push(getValuesByColumnWithOutCountProject('contractor', bounds, body));
 
       requests.push(getValuesByColumnWithOutCountProject('jurisdiction', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('county', bounds, body));
-      requests.push(getValuesByColumnWithOutCountProject('servicearea', bounds, body));
+      requests.push(getValuesByColumnWithOutCountProject('county', bounds, body, true));
+      requests.push(getValuesByColumnWithOutCountProject('servicearea', bounds, body, true));
 
       const promises = await Promise.all(requests);
 
