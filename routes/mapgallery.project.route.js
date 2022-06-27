@@ -90,10 +90,8 @@ async function getValuesByColumnWithOutCountProject(column, bounds, body, needCo
       filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
 
       filters = getNewFilter(filters, body);
-
       for (const table1 of PROJECT_TABLES) {
-         const query = { q: `select ${needCount ? 'count(*) as count, ' : ''} ${column} as value from ${table1} where ${filters} group by ${column} order by ${column} ` };
-         console.log("POST ", URL, query);
+         const query = { q: `select ${needCount ? 'count(*) as counter, ' : ''} ${column} as value from ${table1} where ${filters} group by ${column} order by ${column} ` };
          const data = await needle('post', URL, query, { json: true });
          if (data.statusCode === 200) {
             answer = answer.concat(data.body.rows);
@@ -119,7 +117,7 @@ async function getValuesByColumnWithOutCountProject(column, bounds, body, needCo
             }
          }
       }
-
+      
       for (const row of answer) {
          if (row.value) {
             const search = result.filter(item => item.value === row.value);
