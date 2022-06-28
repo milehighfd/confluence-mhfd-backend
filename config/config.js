@@ -1,7 +1,7 @@
 const POSTGRESQL_DB = process.env.POSTGRESQL_DB || 'mhfd';
 const POSTGRESQL_HOST = process.env.POSTGRESQL_HOST || 'localhost';
-const POSTGRESQL_USER = process.env.POSTGRESQL_USER || 'mhfd';
-const POSTGRESQL_PASSWORD = process.env.POSTGRESQL_PASSWORD || 'mhfd';
+const POSTGRESQL_USER = process.env.POSTGRESQL_USER || 'postgres';
+const POSTGRESQL_PASSWORD = process.env.POSTGRESQL_PASSWORD || 'postgres';
 const DB_DIALECT = process.env.DB_DIALECT || 'postgres';
 const JWT_KEY = process.env.JWT_KEY || 'jwtkey';
 const JWT_EXPIRANCY = process.env.JWT_EXPIRANCY || 60 * 60 * 24 * 1000;
@@ -21,7 +21,6 @@ const SMTP_PORT = process.env.SMTP_PORT || 465;
 const DB_PORT = process.env.DB_PORT || 5432;
 const BASE_SERVER_URL = process.env.BASE_SERVER_URL || 'http://localhost:3003';
 // NODE_ENV has three posible values dev, test y prod
-const MHFD_PROJECTS_COPY = 'mhfd_projects_copy' + "_" + (process.env.NODE_ENV ? process.env.NODE_ENV : 'dev');
 const CREATE_PROJECT_TABLE = process.env.CREATE_PROJECT_TABLE ? (process.env.CREATE_PROJECT_TABLE + '_' + (process.env.NODE_ENV ? process.env.NODE_ENV : 'dev')) : MHFD_PROJECTS_COPY;
 module.exports = {
   JWT_KEY,
@@ -46,6 +45,5 @@ module.exports = {
   SMTP_HOST,
   SMTP_PORT,
   DB_PORT,
-  BASE_SERVER_URL,
-  MHFD_PROJECTS_COPY
+  BASE_SERVER_URL
 };

@@ -3,12 +3,12 @@ const https = require('https');
 const attachmentService = require('../services/attachment.service');
 const projectStreamService = require('../services/projectStream.service');
 
-const { CARTO_TOKEN, MHFD_PROJECTS_COPY, CREATE_PROJECT_TABLE } = require('../config/config');
+const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('../config/config');
 
 const getCoordsByProjectId = async (projectid, isDev) => {
   let table = 'mhfd_projects'
   if (isDev) {
-    table = MHFD_PROJECTS_COPY;
+    table = CREATE_PROJECT_TABLE;
   }
   let fields = ['ST_AsGeoJSON(the_geom) as the_geom3'];
   let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
@@ -50,7 +50,7 @@ const getMidByProjectId = async (projectid, projecttype) => {
 const getMinimumDateByProjectId = async (projectid, isDev) => {
   let table = 'mhfd_projects'
   if (isDev) {
-    table = MHFD_PROJECTS_COPY;
+    table = CREATE_PROJECT_TABLE;
   }
   let SQL = `SELECT county, servicearea FROM ${table} where projectid=${projectid}`;
   let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
@@ -67,7 +67,7 @@ const getMinimumDateByProjectId = async (projectid, isDev) => {
 const getDataByProjectIds = async (projectid, type, isDev) => {
   let table = 'mhfd_projects'
   if (isDev) {
-    table = MHFD_PROJECTS_COPY;
+    table = CREATE_PROJECT_TABLE;
   }
   let SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom2, ST_AsGeoJSON(the_geom) as the_geom3 FROM ${table} where  projectid=${projectid} `;
   let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);

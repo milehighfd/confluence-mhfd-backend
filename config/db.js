@@ -7,7 +7,7 @@ const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, co
   port: config.DB_PORT,
   databaseVersion: '10.50.6000',
   dialectOptions: {
-	instancName: 'XXX',
+    instancName: 'XXX',
     options:{
       encrypt: false
     }
@@ -33,7 +33,6 @@ db.locality = require('../models/locality.model.js')(sequelize, Sequelize);
 db.boardProject = require('../models/boardProject.model.js')(sequelize, Sequelize);
 db.independentComponent = require('../models/independentComponent.model.js')(sequelize, Sequelize);
 db.boardLocality = require('../models/boardLocality.model.js')(sequelize, Sequelize);
-db.note = require('../models/note.model.js')(sequelize, Sequelize);
 db.newnotes = require('../models/newnotes.model.js')(sequelize, Sequelize);
 db.color = require('../models/color.model.js')(sequelize, Sequelize);
 db.groupnotes = require('../models/groupNotes.model.js')(sequelize, Sequelize);
@@ -50,8 +49,6 @@ db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
 db.favorites.belongsTo(db.user, {foreignKey: 'user_id'});
 db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
 db.attachment.belongsTo(db.user, {foreignKey: 'user_id'});
-db.note.belongsTo(db.user, {foreignKey: 'user_id'});
-db.user.hasMany(db.note, {foreignKey: 'user_id'});
 db.user.hasMany(db.newnotes, {foreignKey: 'user_id'});
 db.newnotes.belongsTo(db.user, {foreignKey: 'user_id'});
 db.newnotes.belongsTo(db.groupnotes, {foreignKey: {name: 'group_id', allowNull: true}});
