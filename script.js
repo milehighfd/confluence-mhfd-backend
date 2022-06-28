@@ -44,6 +44,7 @@ const BoardProject = db.boardProject;
             }
         }
     }
+    console.log(projectsMap);
     let keys = Object.keys(projectsMap);
     for (var i = 0 ; i < keys.length ; i++) {
         let project_id = keys[i];
