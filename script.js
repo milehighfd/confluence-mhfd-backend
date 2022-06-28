@@ -1,3 +1,4 @@
+require('dotenv').config()
 const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('./config/config');
 const db = require('./config/db');
 db.sequelize.sync();
