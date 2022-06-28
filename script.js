@@ -5,6 +5,7 @@ db.sequelize.sync();
 const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
 const Board = db.board;
+const BoardProject = db.boardProject;
 
 (async () => {
     let boards = await Board.findAll({});
