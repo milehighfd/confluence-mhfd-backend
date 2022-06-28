@@ -37,12 +37,17 @@ const BoardProject = db.boardProject;
                     projectStatus = 3;
                 }
             }
-            projectsMap[bp.project_id] = Math.max(projectStatus, statusesList.indexOf(projectsMap[bp.project_id]));
+            if (!projectsMap[bp.project_id]) {
+                projectsMap[bp.project_id] = statusesList[projectStatus];
+            } else {
+                projectsMap[bp.project_id] = Math.max(statusesList[projectStatus], statusesList.indexOf(projectsMap[bp.project_id]));
+            }
         }
     }
     let keys = Object.keys(projectsMap);
     for (var i = 0 ; i < keys.length ; i++) {
         let project_id = keys[i];
+        console.log('Project: ' + project_id);
         let status = projectsMap[project_id];
         try {
             const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET status = '${status}' WHERE  projectid = ${project_id}`;
