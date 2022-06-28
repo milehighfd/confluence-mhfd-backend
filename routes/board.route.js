@@ -171,7 +171,7 @@ const sendBoardProjectsToProp = async (boards, prop) => {
             let bp = boardProjects[j];
             let p;
             try {
-                p = await getMinimumDateByProjectId(bp.project_id, true);
+                p = await getMinimumDateByProjectId(bp.project_id);
             } catch(e) {
                 continue;
             }
@@ -202,6 +202,35 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                     origin: board.locality,
                 })
                 await newBoardProject.save();
+            }
+        }
+    }
+}
+
+const updateProjectStatus = async (boards, status) => {
+    for (var i = 0 ; i < boards.length ; i++) {
+        let board = boards[i];
+        let boardProjects = await BoardProject.findAll({
+            where: {
+                board_id: board._id
+            }
+        });
+        for (var j = 0 ; j < boardProjects.length ; j++) {
+            let bp = boardProjects[j];
+            try {
+                const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET status = '${status}' WHERE  projectid = ${bp.project_id}`;
+                const query = {
+                    q: updateQuery
+                };
+                const data = await needle('post', URL, query, { json: true });
+                if (data.statusCode === 200) {
+                    result = data.body;
+                    logger.log(result);
+                } else {
+                    logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2))    ;
+                }
+            } catch(e) {
+                continue;
             }
         }
     }
@@ -297,24 +326,29 @@ const moveCardsToNextLevel = async (board) => {
         if (+board.year < 2022) {
             boardsToCounty = boards.filter((board) => {
                 return ['Capital', 'Maintenance'].includes(board.projecttype)
-            })
-            await sendBoardProjectsToProp(boardsToCounty, 'county');
+            });
             boardsToServiceArea = boards.filter((board) => {
                 return ['Study', 'Acquisition', 'Special'].includes(board.projecttype)
-            })
+            });
         } else {
             boardsToCounty = boards.filter((board) => {
                 return ['Capital', 'Maintenance', 'Acquisition', 'Special'].includes(board.projecttype)
-            })
-            await sendBoardProjectsToProp(boardsToCounty, 'county');
+            });
             boardsToServiceArea = boards.filter((board) => {
                 return ['Study'].includes(board.projecttype)
-            })
+            });
         }
+        await sendBoardProjectsToProp(boardsToCounty, 'county');
         await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea');
         await sendBoardProjectsToDistrict(boards);
+        await updateProjectStatus(boards, 'Requested');
         return {}
     } else if (board.type === 'WORK_PLAN') {
+        if (board.locality !== 'MHFD District Work Plan') {
+            await updateProjectStatus(boards, 'Submitted');
+        } else {
+            await updateProjectStatus(boards, 'Approved');
+        }
         return {}
     }
 }

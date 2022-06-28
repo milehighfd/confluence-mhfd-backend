@@ -20,7 +20,7 @@ const getCoordsByProjectId = async (projectid, isDev) => {
     o.createdCoordinates = obj.the_geom3;
     return o;
   } else {
-    console.log('getMinimumDateByProjectId error', data.statusCode, data.body);
+    console.log('getCoordsByProjectId error', data.statusCode, data.body);
     throw new Error('Project not found');
   }
 }
@@ -42,16 +42,13 @@ const getMidByProjectId = async (projectid, projecttype) => {
     }
     return obj;
   } else {
-    console.log('getMinimumDateByProjectId error', data.statusCode, data.body);
+    console.log('getMidByProjectId error', data.statusCode, data.body);
     throw new Error('Project not found');
   }
 }
 
-const getMinimumDateByProjectId = async (projectid, isDev) => {
-  let table = 'mhfd_projects'
-  if (isDev) {
-    table = CREATE_PROJECT_TABLE;
-  }
+const getMinimumDateByProjectId = async (projectid) => {
+  let table = CREATE_PROJECT_TABLE;
   let SQL = `SELECT county, servicearea FROM ${table} where projectid=${projectid}`;
   let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
   const data = await needle('get', URL, { json: true });
