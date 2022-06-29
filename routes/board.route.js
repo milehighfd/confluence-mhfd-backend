@@ -88,7 +88,7 @@ router.get('/projects/:bid', async (req, res) => {
             board_id: bid
         }
     });
-    console.log('boards', boards, boards.length);
+    console.log('boardProjects', boardProjects, boardProjects.length);
     res.send(boardProjects);
 });
 
