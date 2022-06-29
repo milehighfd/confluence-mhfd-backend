@@ -58,7 +58,7 @@ needle.defaults({ open_timeout: 60000 });
             if (!projectsMap[bp.project_id]) {
                 projectsMap[bp.project_id] = statusesList[projectStatusIndex];
             } else {
-                projectsMap[bp.project_id] = Math.max(statusesList[projectStatusIndex], statusesList.indexOf(projectsMap[bp.project_id]));
+                projectsMap[bp.project_id] = statusesList[Math.max(projectStatusIndex, statusesList.indexOf(projectsMap[bp.project_id]))];
             }
         }
     }
