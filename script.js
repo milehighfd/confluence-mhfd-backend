@@ -21,26 +21,36 @@ const BoardProject = db.boardProject;
         });
         let isBoardApproved = board.status === 'Approved';
         let isWorkRequest = board.type === 'WORK_REQUEST';
+        let isWorkDistrict = board.locality === 'MHFD District Work Plan';
         for (var j = 0 ; j < boardProjects.length ; j++) {
             let bp = boardProjects[j];
-            let projectStatus = null;
+            if (!bp.project_id) continue;
+            let projectStatusIndex = null;
             if (isWorkRequest) {
                 if (!isBoardApproved) {
-                    projectStatus = 0;
+                    projectStatusIndex = 0;
                 } else {
-                    projectStatus = 1;
+                    projectStatusIndex = 1;
                 }
             } else {
-                if (!isBoardApproved) {
-                    projectStatus = 2;
+                if (!isWorkDistrict) {
+                    if (!isBoardApproved) {
+                        projectStatusIndex = 1;
+                    } else {
+                        projectStatusIndex = 2;
+                    }
                 } else {
-                    projectStatus = 3;
+                    if (!isBoardApproved) {
+                        projectStatusIndex = 2;
+                    } else {
+                        projectStatusIndex = 3;
+                    }
                 }
             }
             if (!projectsMap[bp.project_id]) {
-                projectsMap[bp.project_id] = statusesList[projectStatus];
+                projectsMap[bp.project_id] = statusesList[projectStatusIndex];
             } else {
-                projectsMap[bp.project_id] = Math.max(statusesList[projectStatus], statusesList.indexOf(projectsMap[bp.project_id]));
+                projectsMap[bp.project_id] = Math.max(statusesList[projectStatusIndex], statusesList.indexOf(projectsMap[bp.project_id]));
             }
         }
     }
