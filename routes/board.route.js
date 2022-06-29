@@ -81,6 +81,17 @@ router.get('/', async (req, res) => {
     res.send(boards);
 });
 
+router.get('/projects/:bid', async (req, res) => {
+    let { bid } = req.params;
+    let boardProjects = await BoardProject.findAll({
+        where: {
+            board_id: bid
+        }
+    });
+    console.log('boards', boards, boards.length);
+    res.send(boardProjects);
+});
+
 router.post('/', async (req, res) => {
     let body = req.body;
     let { type, year, locality, projecttype } = body;
