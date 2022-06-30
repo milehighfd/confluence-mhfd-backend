@@ -6,26 +6,6 @@ const needle = require('needle');
 
 const {CARTO_TOKEN} = require('../config/config');
 
-router.get('/organization', async (req, res) => {
-  // where {_user} = 'Local Gov'
-  const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=select type, name from organizations group by type,name order by type &api_key=${CARTO_TOKEN}`;
-  console.log(URL);
-  https.get(URL, response => {
-    if (response.statusCode == 200) {
-      let str = '';
-      response.on('data', function (chunk) {
-        str += chunk;
-      });
-      response.on('end', function () {
-        const tiles = JSON.parse(str).rows;
-        return res.send(tiles);
-      });
-    } else {
-      return res.status(response.statusCode).send({error: 'error'});
-    }
-  });
-})
-
 router.post('/', async (req, res) => { 
   const table = req.body.table;
   let sql = `SELECT * FROM ${table}`;

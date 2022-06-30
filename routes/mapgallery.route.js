@@ -1084,57 +1084,6 @@ router.post('/component-counter', async (req, res) => {
    }
 })
 
-router.get('/group-organization', async (req, res) => {
-   try {
-      const sql = `SELECT type, name, ST_AsGeoJSON(ST_Envelope(the_geom)) from organizations group by type, name, the_geom order by type`;
-      const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`);
-      //console.log(LINE_URL);
-      https.get(LINE_URL, response => {
-         if (response.statusCode === 200) {
-            let str = '';
-            response.on('data', function (chunk) {
-               str += chunk;
-            });
-            response.on('end', async function () {
-               let data = [];
-               let result = JSON.parse(str).rows;
-               let coordinates = [];
-               if (result.length > 0) {
-                  let type = result[0].type;
-                  let subtypes = [];
-                  for (const res of result) {
-                     if (res.type === type) {
-                        subtypes.push({
-                           name: res.name,
-                           coordinates: JSON.parse(res.st_asgeojson).coordinates
-                        });
-                     } else {
-                        data.push({
-                           type: type,
-                           values: subtypes
-                        });
-                        subtypes = [];
-                        type = res.type;
-                        subtypes.push({
-                           name: res.name,
-                           coordinates: JSON.parse(res.st_asgeojson).coordinates
-                        });
-                     }
-                  }
-                  data.push({
-                     type: type,
-                     values: subtypes
-                  });
-               }
-               return res.status(200).send(data);
-            })
-         }
-      });
-   } catch (error) {
-      logger.error(error);
-      res.status(500).send({ error: error }).send({ error: 'Connection error' });
-   }
-});
 router.post('/group-by', async (req, res) => {
    try {
       const table = req.body.table;
