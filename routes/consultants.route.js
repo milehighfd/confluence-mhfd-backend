@@ -10,4 +10,11 @@ router.get('/', async (req, res) => {
   return res.send(consultants);
 });
 
+router.post('/', async (req, res) => {
+  const { body } = req;
+  let newConsultant = new Consultants(body);
+  await newConsultant.save();
+  return res.send(newConsultant);
+});
+
 module.exports = router;
