@@ -9,3 +9,5 @@ router.get('/', async (req, res) => {
   const consultants = Consultants.findAll();
   return res.send(consultants);
 });
+
+module.exports = router;

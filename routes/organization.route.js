@@ -9,3 +9,5 @@ router.get('/', async (req, res) => {
   const localities = Locality.findAll();
   return res.send(localities);
 });
+
+module.exports = router;
