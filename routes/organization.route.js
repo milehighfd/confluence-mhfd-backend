@@ -6,7 +6,7 @@ const db = require('../config/db');
 const Locality = db.locality;
 
 router.get('/', async (req, res) => {
-  const localities = Locality.findAll();
+  const localities = await Locality.findAll();
   return res.send(localities);
 });
 

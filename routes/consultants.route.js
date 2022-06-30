@@ -6,7 +6,7 @@ const db = require('../config/db');
 const Consultants = db.consultants;
 
 router.get('/', async (req, res) => {
-  const consultants = Consultants.findAll();
+  const consultants = await Consultants.findAll();
   return res.send(consultants);
 });
 
