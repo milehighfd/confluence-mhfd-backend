@@ -1,11 +1,9 @@
-//const User = require('../models/user.model');
 const db = require('../config/db');
 const User = db.user;
-const GroupNotes = db.groupnotes;
+const Consultants = db.consultants;
 const bcrypt = require('bcryptjs');
-const attachmentService = require('../services/attachment.service');
 const config = require('./config');
-
+const defaultData = require('./defaultdata');
 
 const seed = async () => {
   const count = await User.count(); 
@@ -25,11 +23,13 @@ const seed = async () => {
     userAdmin.password = await bcrypt.hash('admin', 8);
     User.create(userAdmin);
   }
-  /*const countGroup = await GroupNotes.count();
-  if (countGroup == 0) {
-    const group = {name: 'nogroup'};
-    GroupNotes.create(group);
-  }*/
-  attachmentService.migrateFilesFromCloud();
+  const consultantsCount = await Consultants.count();
+  if (consultantsCount) {
+    for (var i = 0 ; i < defaultData.consultants.length ; i++) {
+      await Consultants.save({ name: defaultData.consultants[i] });
+    }
+    console.log(`Added ${defaultData.consultants.length} consultants`);
+  }
 };
+
 seed();

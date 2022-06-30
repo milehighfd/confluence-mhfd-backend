@@ -25,9 +25,10 @@ const boardRouter = require('./routes/board.route');
 const localityRouter = require('./routes/locality.route');
 const noteRouter = require('./routes/note.route');
 const newnoteRouter = require('./routes/newnotes.route');
+const consultantsRouter = require('./routes/consultants.route');
+const organizationRouter = require('./routes/organization.route');
 const db = require('./config/db');
 db.sequelize.sync();
-const cacheTime = 1000 * 60 * 60;
 
 require('./config/seed');
 
@@ -70,5 +71,7 @@ app.use('/board', boardRouter);
 app.use('/locality', localityRouter);
 app.use('/notes', noteRouter);
 app.use('/newnotes', newnoteRouter);
+app.use('/consultants', consultantsRouter);
+app.use('/organizations', organizationRouter);
 
 module.exports = server;
