@@ -26,7 +26,7 @@ const seed = async () => {
   const consultantsCount = await Consultants.count();
   if (consultantsCount) {
     for (var i = 0 ; i < defaultData.consultants.length ; i++) {
-      await Consultants.save({ name: defaultData.consultants[i] });
+      await Consultants.create({ name: defaultData.consultants[i] });
     }
     console.log(`Added ${defaultData.consultants.length} consultants`);
   }
