@@ -1,4 +1,4 @@
-const { CARTO_TOKEN } = require('../config/config');
+const { CARTO_TOKEN, PROBLEM_TABLE } = require('../config/config');
 const logger = require('../config/logger');
 const needle = require('needle');
 
@@ -305,8 +305,8 @@ function createQueryByProblemType(problemType, project) {
    let operator = '';
    let query = '';
    for (const component of VALUES_COMPONENTS) {
-      query += operator + ` select projectid from ${component}, problems where projectid = ${project}.projectid 
-   and ${component}.problemid = problems.problemid and problemtype='${problemType}' `;
+      query += operator + ` select projectid from ${component}, ${PROBLEM_TABLE}} where projectid = ${project}.projectid 
+   and ${component}.problemid = ${PROBLEM_TABLE}}.problemid and problemtype='${problemType}' `;
       operator = ' union ';
 
    }

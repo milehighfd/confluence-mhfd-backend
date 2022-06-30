@@ -8,7 +8,7 @@ const attachmentService = require('../services/attachment.service');
 const projectStreamService = require('../services/projectStream.service');
 const projectComponentService = require('../services/projectComponent.service');
 const indepdendentService = require('../services/independent.service');
-const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('../config/config');
+const { CARTO_TOKEN, CREATE_PROJECT_TABLE, PROBLEM_TABLE } = require('../config/config');
 
 const db = require('../config/db');
 const Board = db.board;
@@ -119,7 +119,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
   }};
   let problems = ['No problem'];
   if (inn) {
-    const sqlProblems = `SELECT problemname, problemid, jurisdiction, solutionstatus FROM problems WHERE problemid IN (${inn})`;
+    const sqlProblems = `SELECT problemname, problemid, jurisdiction, solutionstatus FROM ${PROBLEM_TABLE} WHERE problemid IN (${inn})`;
     const queryProblems = {
       q: sqlProblems
     }
@@ -285,7 +285,7 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
 });
 router.get('/components-by-problemid', auth, async (req, res) => {
   const problemid = req.query.problemid;
-  const sql = `SELECT problemname, problemid, jurisdiction, solutionstatus, objectid FROM problems WHERE problemid = ${problemid}`;
+  const sql = `SELECT problemname, problemid, jurisdiction, solutionstatus, objectid FROM ${PROBLEM_TABLE} WHERE problemid = ${problemid}`;
   const query = {
     q: sql
   };
@@ -383,7 +383,7 @@ router.post('/component-geom', async (req,res) => {
 });
 router.post('/problem-geom', async (req,res) => {
   let problemid = req.body.problemid;
-  let sql = `SELECT ST_ASGEOJSON(the_geom) as the_geom from problems where problemid=${problemid}`;
+  let sql = `SELECT ST_ASGEOJSON(the_geom) as the_geom from ${PROBLEM_TABLE} where problemid=${problemid}`;
   const query = {
     q: sql
   };
@@ -965,7 +965,7 @@ router.post('/showcomponents', auth, async (req, res) => {
     }};
     let problems = ['No problem'];
     if (inn) {
-      const sqlProblems = `SELECT problemname, problemid, jurisdiction, solutionstatus FROM problems WHERE problemid IN (${inn})`;
+      const sqlProblems = `SELECT problemname, problemid, jurisdiction, solutionstatus FROM ${PROBLEM_TABLE} WHERE problemid IN (${inn})`;
       const queryProblems = {
         q: sqlProblems
       }

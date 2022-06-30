@@ -1,7 +1,6 @@
-const { CARTO_TOKEN } = require('../config/config');
+const { CARTO_TOKEN, PROBLEM_TABLE } = require('../config/config');
 const logger = require('../config/logger');
 const needle = require('needle');
-
 const getNewFilter = (filters, body, withPrefix) => {
   let prefix = '';
   if (withPrefix) {
@@ -146,7 +145,7 @@ async function getCountSolutionStatusProblem(range, bounds, body) {
         endValue = value + 24;
       }
 
-      const query = { q: `select count(*) as count from problems where ${filters} and solutionstatus between ${value} and ${endValue} ` };
+      const query = { q: `select count(*) as count from ${PROBLEM_TABLE} where ${filters} and solutionstatus between ${value} and ${endValue} ` };
       const data = await needle('post', URL, query, { json: true });
       let counter = 0;
       if (data.statusCode === 200) {
@@ -185,7 +184,7 @@ async function getSubtotalsByComponentProblem(table, column, bounds, body) {
 
       filters = getNewFilter(filters, body, true);
 
-      const query = { q: `select count(*) from ${table}, problems where problems.${column}= ${table}.${column} and ${filters} ` };
+      const query = { q: `select count(*) from ${table}, ${PROBLEM_TABLE} where ${PROBLEM_TABLE}.${column}= ${table}.${column} and ${filters} ` };
       const data = await needle('post', URL, query, { json: true });
       let counter = 0;
       if (data.statusCode === 200) {
@@ -279,7 +278,7 @@ async function countTotalProblems(bounds, body) {
     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
     filters = getNewFilter(filters, body);
 
-    let COUNTSQL = `SELECT count(*) FROM problems where ${filters}`;
+    let COUNTSQL = `SELECT count(*) FROM ${PROBLEM_TABLE} where ${filters}`;
 
     const query = { q: ` ${COUNTSQL} ` };
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
@@ -309,11 +308,11 @@ async function problemParamFilterRoute(req, res) {
      const body = req.body;
      let requests = [];
      let problemTypesConst = ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'];
-     requests.push(getCountByArrayColumnsProblem('problems', 'problempriority', ['High', 'Medium', 'Low'], bounds, body));
+     requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, 'problempriority', ['High', 'Medium', 'Low'], bounds, body));
      requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body));
-     requests.push(getCountByColumnProblem('problems', 'mhfdmanager', bounds, body));
-     requests.push(getCountByColumnProblem('problems', 'source', bounds, body));
-     requests.push(getSubtotalsByComponentProblem('problems', 'problemid', bounds, body));
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'mhfdmanager', bounds, body));
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'source', bounds, body));
+     requests.push(getSubtotalsByComponentProblem(PROBLEM_TABLE, 'problemid', bounds, body));
      const rangeSolution = [
         {
            min: 0,
@@ -332,11 +331,11 @@ async function problemParamFilterRoute(req, res) {
            max: 50000000
         }
      ]
-     requests.push(getValuesByRangeProblem('problems', 'solutioncost', rangeSolution, bounds, body));
-     requests.push(getCountByColumnProblem('problems', 'jurisdiction', bounds, body));
-     requests.push(getCountByColumnProblem('problems', 'servicearea', bounds, body));
-     requests.push(getCountByColumnProblem('problems', 'county', bounds, body));
-     requests.push(getCountByArrayColumnsProblem('problems', 'problemtype', problemTypesConst, bounds, body));
+     requests.push(getValuesByRangeProblem(PROBLEM_TABLE, 'solutioncost', rangeSolution, bounds, body));
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'jurisdiction', bounds, body));
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'servicearea', bounds, body));
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'county', bounds, body));
+     requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, 'problemtype', problemTypesConst, bounds, body));
 
      const promises = await Promise.all(requests);
      const result = {

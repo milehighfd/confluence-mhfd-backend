@@ -22,6 +22,7 @@ const DB_PORT = process.env.DB_PORT || 5432;
 const BASE_SERVER_URL = process.env.BASE_SERVER_URL || 'http://localhost:3003';
 // NODE_ENV has three posible values dev, test y prod
 const CREATE_PROJECT_TABLE = process.env.CREATE_PROJECT_TABLE + '_' + (process.env.NODE_ENV ? process.env.NODE_ENV : 'dev');
+const PROBLEM_TABLE = 'problems';
 module.exports = {
   JWT_KEY,
   POSTGRESQL_HOST,
@@ -45,5 +46,6 @@ module.exports = {
   SMTP_HOST,
   SMTP_PORT,
   DB_PORT,
-  BASE_SERVER_URL
+  BASE_SERVER_URL,
+  PROBLEM_TABLE
 };

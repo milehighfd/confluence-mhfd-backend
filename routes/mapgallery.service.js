@@ -3,7 +3,7 @@ const https = require('https');
 const attachmentService = require('../services/attachment.service');
 const projectStreamService = require('../services/projectStream.service');
 
-const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('../config/config');
+const { CARTO_TOKEN, CREATE_PROJECT_TABLE, PROBLEM_TABLE } = require('../config/config');
 
 const getCoordsByProjectId = async (projectid, isDev) => {
   let table = 'mhfd_projects'
@@ -183,7 +183,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
 
 async function getProblemByProjectId(projectid, sortby, sorttype) {
   let data = [];
-  const LINE_SQL = `select problemid, problemname, problempriority from problems  
+  const LINE_SQL = `select problemid, problemname, problempriority from ${PROBLEM_TABLE}  
  where problemid in (SELECT problemid FROM grade_control_structure 
    where projectid=${projectid} and projectid>0  union ` +
      `SELECT problemid FROM pipe_appurtenances 
@@ -238,7 +238,7 @@ async function getEnvelopeProblemsComponentsAndProject(id, field) {
   const SQL = `select ST_ASGEOJSON(ST_EXTENT(the_geom)) as envelope from (
   SELECT the_geom FROM mhfd_projects where  projectid=${id}
   union 
-  select the_geom from problems  
+  select the_geom from ${PROBLEM_TABLE}  
    where problemid in (SELECT problemid FROM grade_control_structure 
      where projectid=${id} and projectid>0  union SELECT problemid FROM pipe_appurtenances 
      where projectid=${id} and projectid>0  union SELECT problemid FROM special_item_point 

@@ -3,7 +3,7 @@ const router = express.Router();
 const https = require('https');
 const needle = require('needle');
 
-const {CARTO_TOKEN} = require('../config/config');
+const {CARTO_TOKEN, PROBLEM_TABLE} = require('../config/config');
 const { response } = require('../app');
 const { component } = require('../config/db');
 const { add } = require('../config/logger');
@@ -27,7 +27,6 @@ const components = [
   { key: 'landscaping_area', value: 'Landscaping Area' }
 ];
 const PROJECT_TABLES = ['mhfd_projects'];
-const PROBLEM_TABLE = 'problems';
 router.get('/', async (req, res) => {
   const tables = req.query.tables ? req.query.tables.split(',') : [];
   let send = [];
@@ -52,7 +51,7 @@ router.get('/', async (req, res) => {
 
 router.get('/project-filter', async (req, res) => {
   const problemtype = req.query.problemtype ? req.query.problemtype : '';
-  const problemtypeFilter = problemtype.length ? 'AND problems.problemtype IN(' + problemtype.split(',').map(element => `'${element}'`).join(',') + ')' : '';
+  const problemtypeFilter = problemtype.length ? `AND ${PROBLEM_TABLE}.problemtype IN(` + problemtype.split(',').map(element => `'${element}'`).join(',') + ')' : '';
   if (!problemtype.length) {
     return res.send(null);
   }
@@ -61,7 +60,7 @@ router.get('/project-filter', async (req, res) => {
     const component = element.key;
     for (const table of PROJECT_TABLES) {
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-      const query = {q: `SELECT DISTINCT ${table}.projectid FROM ${table}, problems, ${component}   WHERE ${table}.projectid = ${component}.projectid and problems.problemid = ${component}.problemid ${problemtypeFilter}`};
+      const query = {q: `SELECT DISTINCT ${table}.projectid FROM ${table}, ${PROBLEM_TABLE}, ${component}   WHERE ${table}.projectid = ${component}.projectid and ${PROBLEM_TABLE}.problemid = ${component}.problemid ${problemtypeFilter}`};
       console.log(query.q);
       try {
         send.push(new Promise(resolve => {
@@ -97,7 +96,7 @@ router.get('/search/:type', async (req, res) => {
   const field = req.query.field ? req.query.field : '';
   let data = {};
   if (type === 'problems') {
-    const query = {q: `SELECT cartodb_id FROM problems WHERE problemname ILIKE '%${field}%' OR problemid::text ilike '%${field}%'`};
+    const query = {q: `SELECT cartodb_id FROM ${PROBLEM_TABLE} WHERE problemname ILIKE '%${field}%' OR problemid::text ilike '%${field}%'`};
     // console.log("QUERY PROBLEM", query);
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
     let answer = [];
@@ -201,7 +200,7 @@ router.post('/by-components', async (req, res) => {
     let extraConditions = '';
     for (const component of componentArray) {
       if (type === 'problems') {
-        const condition = `problems.problemid=${component}.problemid`;
+        const condition = `${PROBLEM_TABLE}.problemid=${component}.problemid`;
         extraConditions = addCondition(extraConditions, condition, 'OR');
       } else {
         const condition = `${type}.projectid=${component}.projectid`;
@@ -297,7 +296,7 @@ router.post('/v2/by-components', async (req, res) => {
       } 
       let extraConditions = '';
       if (type === 'problems') {
-        const condition = `problems.problemid=${component}.problemid`;
+        const condition = `${PROBLEM_TABLE}.problemid=${component}.problemid`;
         extraConditions = addCondition(extraConditions, condition, 'OR');
       } else {
         const condition = `${type}.projectid=${component}.projectid`;

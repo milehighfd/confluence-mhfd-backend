@@ -12,7 +12,7 @@ const PROJECT_TABLES = ['mhfd_projects'];
 const { CARTO_TOKEN } = require('../config/config');
 const needle = require('needle');
 const auth = require('../auth/auth');
-
+const PROBLEMS_TABLE = 'problems';
 function getFilters(params, ids) {
    let filters = '';
    let tipoid = '';
@@ -198,7 +198,7 @@ router.post('/favorite-list', auth, async (req, res) => {
    const ids = favorite
       .filter(fav => {
          if (req.body.isproblem) {
-            return fav.table === 'problems';
+            return fav.table === PROBLEMS_TABLE;
          } else {
             return fav.table === PROJECT_TABLES[0];
          }
@@ -212,7 +212,7 @@ router.post('/favorite-list', auth, async (req, res) => {
       let filters = '';
       filters = getFilters(req.body, ids);
         // 
-        const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype, county, ${getCounters('problems', 'problemid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM problems `;
+        const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, jurisdiction, problempriority, solutionstatus, problemtype, county, ${getCounters('problems', 'problemid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEMS_TABLE} `;
         //const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
         const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
         const query = { q: `${PROBLEM_SQL}  ${filters} ` };

@@ -4,7 +4,7 @@ const router = express.Router();
 const auth = require('../auth/auth');
 const logger = require('../config/logger');
 const https = require('https');
-
+const { PROBLEM_TABLE } = require('../config/config');
 const CARTO_TOKEN = 'a53AsTjS8iBMU83uEaj3dw';
 
 router.post('/filters', async (req, res) => {
@@ -12,7 +12,7 @@ router.post('/filters', async (req, res) => {
     var filters = req.body;
     let where = '';
     //console.log('filtros',filters);
-    let sql = `select * from problems `;
+    let sql = `select * from ${PROBLEM_TABLE} `;
     if(filters) {
       //console.log(filters);
       where = '';

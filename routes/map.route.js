@@ -4,6 +4,7 @@ const https = require('https');
 const logger = require('../config/logger');
 const needle = require('needle');
 
+const PROBLEM_TABLE = 'problems';
 const {CARTO_TOKEN} = require('../config/config');
 
 router.get('/organization', async (req, res) => {
@@ -207,7 +208,7 @@ router.get('/bbox-components', async (req, res) => {
   const id = req.query.id;
   const table = req.query.table;
   let field = 'projectid';
-  if (table === 'problems') {
+  if (table === PROBLEM_TABLE) {
     field = 'problemid';
   }
   const promises = [];
@@ -350,7 +351,7 @@ router.get('/bbox-components', async (req, res) => {
 });
 router.get('/problemname/:problemid', async (req, res) => {
   const problemid = req.params.problemid;
-  const sql = `select problemname from problems where problemid = ${problemid}`;
+  const sql = `select problemname from ${PROBLEM_TABLE} where problemid = ${problemid}`;
   const sqlURI =  encodeURIComponent(sql);
   const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sqlURI}&api_key=${CARTO_TOKEN}`;
   console.log("SQL", sql)
