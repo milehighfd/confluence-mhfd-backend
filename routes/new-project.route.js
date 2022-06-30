@@ -467,7 +467,7 @@ router.post('/streams-data', auth, async (req, res) => {
       });
       const promises = [];
       for (const stream of streamsInfo) {
-        const drainageSQL = `select st_area(ST_transform(st_intersection(j.the_geom, union_c.the_geom), 26986) ) as area , j.jurisdiction from jurisidictions j , (select st_union(the_geom) as the_geom from catchments c where 
+        const drainageSQL = `select st_area(ST_transform(st_intersection(j.the_geom, union_c.the_geom), 26986) ) as area , j.jurisdiction from jurisidictions j , (select st_union(the_geom) as the_geom from mhfd_catchments_simple_v1 c where 
          '${stream.reach_code}' is not distinct from c.reach_code 
           and ${stream.trib_code1} is not distinct from c.trib_code1 
           and ${stream.trib_code2} is not distinct from c.trib_code2 
@@ -477,7 +477,7 @@ router.post('/streams-data', auth, async (req, res) => {
           and ${stream.trib_code6} is not distinct from c.trib_code6 
           and ${stream.trib_code7} is not distinct from c.trib_code7 ) union_c 
           where ST_INTERSECTS(ST_SimplifyPreserveTopology(j.the_geom, 0.1), ST_SimplifyPreserveTopology(union_c.the_geom, 0.1)) `;
-          console.log(drainageSQL);
+          console.log('drainageSQL', drainageSQL);
           const drainageQuery = {
             q: drainageSQL
           };
