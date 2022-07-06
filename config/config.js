@@ -22,7 +22,47 @@ const DB_PORT = process.env.DB_PORT || 5432;
 const BASE_SERVER_URL = process.env.BASE_SERVER_URL || 'http://localhost:3003';
 // NODE_ENV has three posible values dev, test y prod
 const CREATE_PROJECT_TABLE = process.env.CREATE_PROJECT_TABLE + '_' + (process.env.NODE_ENV ? process.env.NODE_ENV : 'dev');
-const PROBLEM_TABLE = 'problems';
+const PROBLEM_TABLE = 'problem_boundary';
+const PROPSPROBLEMTABLES = {
+  problems: [
+    'solutioncost',
+    'solutionstatus',
+    'jurisdiction',
+    'mhfdmanager',
+    'problemdescription',
+    'problemid',
+    'problemname',
+    'problempriority',
+    'problemtype',
+    'servicearea',
+    'shape_area',
+    'shape_length',
+    'sourcedate',
+    'sourcename',
+    'source',
+    'streamname',
+    'component_cost'
+  ], 
+  problem_boundary: [
+    'estimated_cost',
+    'component_status',
+    'local_government',
+    'mhfd_manager',
+    'problem_description',
+    'problem_id',
+    'problem_name',
+    'problem_severity',
+    'problem_type',
+    'service_area',
+    'shape_starea',
+    'shape_stlength',
+    'source_complete_year',
+    'source_name',
+    'source_type',
+    'stream_name',
+    'component_const'
+  ]
+}
 module.exports = {
   JWT_KEY,
   POSTGRESQL_HOST,
@@ -47,5 +87,6 @@ module.exports = {
   SMTP_PORT,
   DB_PORT,
   BASE_SERVER_URL,
-  PROBLEM_TABLE
+  PROBLEM_TABLE,
+  PROPSPROBLEMTABLES
 };
