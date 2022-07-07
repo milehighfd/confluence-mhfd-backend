@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
          let filters = '';
          filters = getFilters(req.body);
          // 
-         const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, 0 as component_count,  ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problem_boundary[8]}, county, ${getCountersProblems(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[5], PROPSPROBLEMTABLES.problem_boundary[5] )}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEM_TABLE} `;
+         const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, 0 as component_count,  ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCountersProblems(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[5], PROPSPROBLEMTABLES.problem_boundary[5] )}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEM_TABLE} `;
          //const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
          const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
          const query = { q: `${PROBLEM_SQL} ${filters}` };
@@ -58,7 +58,7 @@ router.post('/', async (req, res) => {
                answer = data.body.rows.map(element => {
                   return {
                      cartodb_id: element.cartodb_id,
-                     type: 'problems',
+                     type: 'problem_boundary',
                      problemid: element.problemid,
                      problemname: element.problemname,
                      solutioncost: element.solutioncost,
@@ -944,7 +944,6 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
      where ${component}.${typeid}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum`;
       union = ' union ';
    }
-   console.log('\n\n\n COMPONENT SQL \n\n\n', COMPONENTS_SQL);
    if (sortby) {
       if (!sorttype) {
          sorttype = 'desc';
