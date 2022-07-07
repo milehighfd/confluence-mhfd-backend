@@ -4,7 +4,7 @@ const https = require('https');
 const logger = require('../config/logger');
 const needle = require('needle');
 
-const { CARTO_TOKEN, PROBLEM_TABLE } = require('../config/config');
+const { CARTO_TOKEN, PROBLEM_TABLE, PROPSPROBLEMTABLES } = require('../config/config');
 const attachmentService = require('../services/attachment.service');
 const { response } = require('express');
 const {
@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
          let filters = '';
          filters = getFilters(req.body);
          // 
-         const PROBLEM_SQL = `SELECT cartodb_id, problemid, problemname, solutioncost, component_cost, component_count,  jurisdiction, problempriority, solutionstatus, problemtype, county, ${getCounters(PROBLEM_TABLE, 'problemid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEM_TABLE} `;
+         const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, 0 as component_count,  ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problem_boundary[8]}, county, ${getCountersProblems(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[5], PROPSPROBLEMTABLES.problem_boundary[5] )}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEM_TABLE} `;
          //const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
          const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
          const query = { q: `${PROBLEM_SQL} ${filters}` };
@@ -172,6 +172,22 @@ function getCounters(table, column) {
       (select count(*) from maintenance_trails where ${column} = cast(${table}.${column} as integer) ) as count_mt, 
       (select count(*) from land_acquisition where ${column} = cast(${table}.${column} as integer) ) as count_la, 
       (select count(*) from landscaping_area where ${column} = cast(${table}.${column} as integer) ) as count_la1 `;
+}
+function getCountersProblems(table, column, newcolumn) {
+  return ` (select count(*) from grade_control_structure where ${column} = cast(${table}.${newcolumn} as integer) ) as count_gcs, 
+     (select count(*) from pipe_appurtenances where ${column} = cast(${table}.${newcolumn} as integer) ) as count_pa,
+     (select count(*) from special_item_point where ${column} = cast(${table}.${newcolumn} as integer) ) as count_sip, 
+     (select count(*) from special_item_linear where ${column} = cast(${table}.${newcolumn} as integer) ) as count_sil, 
+     (select count(*) from special_item_area where ${column} = cast(${table}.${newcolumn} as integer) ) as count_sia, 
+     (select count(*) from channel_improvements_linear where ${column} = cast(${table}.${newcolumn} as integer) ) as count_cila, 
+     (select count(*) from channel_improvements_area where ${column} = cast(${table}.${newcolumn} as integer) ) as count_cia, 
+     (select count(*) from  removal_line where ${column} = cast(${table}.${newcolumn} as integer) ) as count_rl, 
+     (select count(*) from removal_area where ${column} = cast(${table}.${newcolumn} as integer) ) as count_ra, 
+     (select count(*) from storm_drain where ${column} = cast(${table}.${newcolumn} as integer) ) as count_sd, 
+     (select count(*) from detention_facilities where ${column} = cast(${table}.${newcolumn} as integer) ) as count_df, 
+     (select count(*) from maintenance_trails where ${column} = cast(${table}.${newcolumn} as integer) ) as count_mt, 
+     (select count(*) from land_acquisition where ${column} = cast(${table}.${newcolumn} as integer) ) as count_la, 
+     (select count(*) from landscaping_area where ${column} = cast(${table}.${newcolumn} as integer) ) as count_la1 `;
 }
 
 function getFilters(params) {
@@ -811,11 +827,11 @@ router.get('/project-by-ids', async (req, res) => {
 
 let getDataByProblemId = async (id) => {
    const PROBLEM_SQL = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom, cartodb_id,
-    objectid, problemid, problemname, problemdescription, problemtype,
-    problempriority, source, sourcename, solutioncost, component_cost, solutionstatus,
-    mhfdmanager, servicearea, county, jurisdiction, streamname,
-    problemsubtype, sourcedate, shape_length, shape_area
-    FROM ${PROBLEM_TABLE} where problemid='${id}'`;
+    objectid, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[4]} as ${PROPSPROBLEMTABLES.problems[4]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]},
+    ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[14]} as ${PROPSPROBLEMTABLES.problems[14]}, ${PROPSPROBLEMTABLES.problem_boundary[13]} as ${PROPSPROBLEMTABLES.problems[13]}, ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]},
+    ${PROPSPROBLEMTABLES.problem_boundary[3]} as ${PROPSPROBLEMTABLES.problems[3]}, ${PROPSPROBLEMTABLES.problem_boundary[9]} as ${PROPSPROBLEMTABLES.problems[9]}, county,${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[15]} as ${PROPSPROBLEMTABLES.problems[15]},
+    ${PROPSPROBLEMTABLES.problem_boundary[12]} as ${PROPSPROBLEMTABLES.problems[12]}, ${PROPSPROBLEMTABLES.problem_boundary[11]} as ${PROPSPROBLEMTABLES.problems[11]}, ${PROPSPROBLEMTABLES.problem_boundary[10]} as ${PROPSPROBLEMTABLES.problems[10]}
+    FROM ${PROBLEM_TABLE} where ${PROPSPROBLEMTABLES.problem_boundary[5]}='${id}'`;
    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} &api_key=${CARTO_TOKEN}`);
    const data = await needle('get', URL, { json: true });
    if (data.statusCode === 200) {
@@ -838,7 +854,6 @@ let getDataByProblemId = async (id) => {
          servicearea: result.servicearea,
          county: result.county,
          streamname: result.streamname,
-         problemsubtype: result.problemsubtype,
          sourcedate: result.sourcedate,
          jurisdiction: result.jurisdiction,
          shape_length: result.shape_length,
@@ -856,7 +871,7 @@ router.post('/problem-by-id/:id/pdf', async (req, res) => {
    const map = req.body.map;
    try {
       let data = await getDataByProblemId(id);
-      let components = await componentsByEntityId(id, 'problemid', 'type', 'asc');
+      let components = await componentsByEntityId(id, PROPSPROBLEMTABLES.problems[5], 'type', 'asc');
       try {
          let pdfObject = await printProblem(data, components, map);
          pdfObject.toBuffer(function (err, buffer) {
@@ -907,12 +922,17 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
    }
    let table = '';
    let finalcost = '';
+   let extraColumnProb = typeid;
    if (typeid === 'projectid') {
       table = 'mhfd_projects';
       finalcost = 'finalcost';
+   } else if (typeid === PROPSPROBLEMTABLES.problems[5]) {
+      table = PROBLEM_TABLE;
+      finalcost = `${PROBLEM_TABLE}.${PROPSPROBLEMTABLES.problem_boundary[0]}`;
+      extraColumnProb = PROPSPROBLEMTABLES.problem_boundary[5];
    } else {
       table = PROBLEM_TABLE;
-      finalcost = 'solutioncost';
+      finalcost = PROPSPROBLEMTABLES.problem_boundary[0];
    }
    let COMPONENTS_SQL = '';
    let union = '';
@@ -921,10 +941,10 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
      case when cast(${finalcost} as integer) > 0 then coalesce(
         (select sum(original_cost) as aux from ${component} where ${component}.status = 'Complete') ,0)/cast(${finalcost} as integer) else 0 END as original_cost, coalesce(complete_t.sum, 0) as complete_cost
      FROM ${component}, ${table}, ( select sum(estimated_cost) as sum from ${component} where ${component}.status = 'Complete' ) complete_t
-     where ${component}.${typeid}=${id} and ${table}.${typeid}=${id} group by type, ${finalcost}, complete_t.sum`;
+     where ${component}.${typeid}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum`;
       union = ' union ';
    }
-   console.log(COMPONENTS_SQL);
+   console.log('\n\n\n COMPONENT SQL \n\n\n', COMPONENTS_SQL);
    if (sortby) {
       if (!sorttype) {
          sorttype = 'desc';
@@ -1022,7 +1042,7 @@ router.post('/component-counter', async (req, res) => {
       const column = req.body.column;
       const value = req.body.value;
       let answer = [];
-      if (column === 'problemid') {
+      if (column === PROPSPROBLEMTABLES.problems[5] || column === PROPSPROBLEMTABLES.problem_boundary[5]) {
          //console.log(column, value);
          if (value === null || value === 0) {
             return res.status(200).send({
@@ -1030,8 +1050,8 @@ router.post('/component-counter', async (req, res) => {
             });
          } else {
             const query = {
-               q: `select problemid, problemname, ${getCounters(PROBLEM_TABLE, column)} from ${PROBLEM_TABLE} 
-          where problemid = ${value} `
+               q: `select ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${getCountersProblems(PROBLEM_TABLE, column)} from ${PROBLEM_TABLE} 
+                where ${PROPSPROBLEMTABLES.problems[5]} = ${value} `
             };
             const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
             const data = await needle('post', URL, query, { json: true });

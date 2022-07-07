@@ -3,7 +3,7 @@ const router = express.Router();
 const https = require('https');
 const needle = require('needle');
 
-const {CARTO_TOKEN, PROBLEM_TABLE} = require('../config/config');
+const {CARTO_TOKEN, PROBLEM_TABLE, PROPSPROBLEMTABLES} = require('../config/config');
 const { response } = require('../app');
 const { component } = require('../config/db');
 const { add } = require('../config/logger');
@@ -96,7 +96,7 @@ router.get('/search/:type', async (req, res) => {
   const field = req.query.field ? req.query.field : '';
   let data = {};
   if (type === 'problems') {
-    const query = {q: `SELECT cartodb_id FROM ${PROBLEM_TABLE} WHERE problemname ILIKE '%${field}%' OR problemid::text ilike '%${field}%'`};
+    const query = {q: `SELECT cartodb_id FROM ${PROBLEM_TABLE} WHERE ${PROPSPROBLEMTABLES.problem_boundary[6]} ILIKE '%${field}%' OR ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${field}%'`};
     // console.log("QUERY PROBLEM", query);
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
     let answer = [];

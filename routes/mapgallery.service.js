@@ -3,7 +3,7 @@ const https = require('https');
 const attachmentService = require('../services/attachment.service');
 const projectStreamService = require('../services/projectStream.service');
 
-const { CARTO_TOKEN, CREATE_PROJECT_TABLE, PROBLEM_TABLE } = require('../config/config');
+const { CARTO_TOKEN, CREATE_PROJECT_TABLE, PROBLEM_TABLE, PROPSPROBLEMTABLES } = require('../config/config');
 
 const getCoordsByProjectId = async (projectid, isDev) => {
   let table = 'mhfd_projects'
@@ -78,7 +78,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
     let coordinates = [];
     let convexhull = [];
     if (result.projectid !== null && result.projectid !== undefined && result.projectid) {
-      problems = await getProblemByProjectId(result.projectid, 'problemname', 'asc');
+      problems = await getProblemByProjectId(result.projectid, PROPSPROBLEMTABLES.problems[6], 'asc');
       components = await getCoordinatesOfComponents(result.projectid, 'projectid');
       convexhull = await getEnvelopeProblemsComponentsAndProject(result.projectid, 'projectid');
       if(convexhull[0]){
@@ -183,7 +183,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
 
 async function getProblemByProjectId(projectid, sortby, sorttype) {
   let data = [];
-  const LINE_SQL = `select problemid, problemname, problempriority from ${PROBLEM_TABLE}  
+  const LINE_SQL = `select ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[7]}  as ${PROPSPROBLEMTABLES.problems[7]} from ${PROBLEM_TABLE}  
  where problemid in (SELECT problemid FROM grade_control_structure 
    where projectid=${projectid} and projectid>0  union ` +
      `SELECT problemid FROM pipe_appurtenances 

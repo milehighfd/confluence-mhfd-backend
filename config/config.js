@@ -25,42 +25,42 @@ const CREATE_PROJECT_TABLE = process.env.CREATE_PROJECT_TABLE + '_' + (process.e
 const PROBLEM_TABLE = 'problem_boundary';
 const PROPSPROBLEMTABLES = {
   problems: [
-    'solutioncost',
-    'solutionstatus',
-    'jurisdiction',
-    'mhfdmanager',
-    'problemdescription',
-    'problemid',
-    'problemname',
-    'problempriority',
-    'problemtype',
-    'servicearea',
-    'shape_area',
-    'shape_length',
-    'sourcedate',
-    'sourcename',
-    'source',
-    'streamname',
-    'component_cost'
+    'solutioncost',  //0
+    'solutionstatus',  //1
+    'jurisdiction',   //2
+    'mhfdmanager',   //3
+    'problemdescription',   //4
+    'problemid',    //5
+    'problemname',    //6
+    'problempriority',    //7
+    'problemtype',    //8
+    'servicearea',    //9
+    'shape_area',    //10
+    'shape_length',  //11
+    'sourcedate',    //12
+    'sourcename',    //13
+    'source',       //14
+    'streamname',   //15
+    'component_cost'   //16
   ], 
   problem_boundary: [
-    'estimated_cost',
-    'component_status',
-    'local_government',
-    'mhfd_manager',
-    'problem_description',
-    'problem_id',
-    'problem_name',
-    'problem_severity',
-    'problem_type',
-    'service_area',
-    'shape_starea',
-    'shape_stlength',
-    'source_complete_year',
-    'source_name',
-    'source_type',
-    'stream_name',
-    'component_const'
+    'estimated_cost',  //0
+    'component_status',  //1
+    'local_government',  //2
+    'mhfd_manager',  //3
+    'problem_description',  //4
+    'problem_id',  //5
+    'problem_name',  //6
+    'problem_severity',  //7
+    'problem_type',  //8
+    'service_area',  //9
+    'shape_starea',  //10
+    'shape_stlength',  //11
+    'source_complete_year',  //12
+    'source_name',  //13
+    'source_type',  //14
+    'stream_name',  //15
+    'component_cost'  //16
   ]
 }
 module.exports = {

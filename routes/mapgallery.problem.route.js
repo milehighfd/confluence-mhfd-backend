@@ -1,18 +1,18 @@
-const { CARTO_TOKEN, PROBLEM_TABLE } = require('../config/config');
+const { CARTO_TOKEN, PROBLEM_TABLE, PROPSPROBLEMTABLES } = require('../config/config');
 const logger = require('../config/logger');
 const needle = require('needle');
 const getNewFilter = (filters, body, withPrefix) => {
   let prefix = '';
   if (withPrefix) {
-    prefix = 'problems.'
+    prefix = `${PROBLEM_TABLE}.`;
   }
   if (body.problemtype) {
     let problemtype = body.problemtype.split(',');
     let problemtypeIn = problemtype.map(s => `'${s}'`)
-    filters += ` and ${prefix}problemtype in (${problemtypeIn.join(',')})`
+    filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[8]} in (${problemtypeIn.join(',')})`
   }
   if (body.cost && body.cost.length !== 0) {
-    let column = `${prefix}solutioncost`;
+    let column = `${prefix}${PROPSPROBLEMTABLES.problem_boundary[0]}`;
     let minPair = body.cost[0];
     let maxPair = body.cost[body.cost.length - 1];
     let minimumValue = minPair.split(',')[0];
@@ -20,12 +20,12 @@ const getNewFilter = (filters, body, withPrefix) => {
     filters += ` and ${column} between ${minimumValue} and ${maximumValue}`
   }
   if (body.solutionstatus) {
-    filters += ` and ${prefix}solutionstatus in (${body.solutionstatus})`
+    filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[1]} in (${body.solutionstatus})`
   }
   if (body.priority) {
     let priorities = body.priority.split(',');
     let prioritiesIn = priorities.map(s => `'${s}'`)
-    filters += ` and ${prefix}problempriority in (${prioritiesIn.join(',')})`
+    filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[7]} in (${prioritiesIn.join(',')})`
   }
   if (body.county) {
     let counties = body.county.split(',');
@@ -45,13 +45,13 @@ const getNewFilter = (filters, body, withPrefix) => {
       }
       return `'${s}'`
     })
-    filters += ` and ${prefix}servicearea in (${serviceareasIn.join(',')})`
+    filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[9]} in (${serviceareasIn.join(',')})`
   }
   if (body.jurisdiction) {
-    filters += ` and jurisdiction = '${body.jurisdiction}'`;
+    filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[2]} = '${body.jurisdiction}'`;
   }
   if (body.mhfdmanager) {
-    filters += ` and mhfdmanager = '${body.mhfdmanager}'`;
+    filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[3]} = '${body.mhfdmanager}'`;
   }
   return filters;
 }
@@ -145,7 +145,7 @@ async function getCountSolutionStatusProblem(range, bounds, body) {
         endValue = value + 24;
       }
 
-      const query = { q: `select count(*) as count from ${PROBLEM_TABLE} where ${filters} and solutionstatus between ${value} and ${endValue} ` };
+      const query = { q: `select count(*) as count from ${PROBLEM_TABLE} where ${filters} and ${PROPSPROBLEMTABLES.problem_boundary[1]} between ${value} and ${endValue} ` };
       const data = await needle('post', URL, query, { json: true });
       let counter = 0;
       if (data.statusCode === 200) {
@@ -218,8 +218,8 @@ async function getValuesByRangeProblem(table, column, range, bounds, body) {
 
     const newProm1 = new Promise(async (resolve, reject) => {
       let minRange, maxRange;
-      let bodyColumn = column === 'solutioncost' ? body['cost'] : body[column];
-      if (column === 'solutioncost') {
+      let bodyColumn = column === PROPSPROBLEMTABLES.problem_boundary[0] ? body['cost'] : body[column];
+      if (column === PROPSPROBLEMTABLES.problem_boundary[0]) {
         minRange = 0;
         maxRange = 12000000;
       } else if (bodyColumn && bodyColumn.length !== 0) {
@@ -240,8 +240,8 @@ async function getValuesByRangeProblem(table, column, range, bounds, body) {
       }
 
       let width = maxRange - minRange;
-      const lenRange = column === 'solutioncost' ? 13 : 20;
-      let intervalWidth = column === 'solutioncost' ? 1000000 : width / lenRange;
+      const lenRange = column === PROPSPROBLEMTABLES.problem_boundary[0] ? 13 : 20;
+      let intervalWidth = column === PROPSPROBLEMTABLES.problem_boundary[0] ? 1000000 : width / lenRange;
       let result2 = [];
       let epsilon = 0.001;
 
@@ -308,11 +308,11 @@ async function problemParamFilterRoute(req, res) {
      const body = req.body;
      let requests = [];
      let problemTypesConst = ['Human Connection', 'Geomorphology', 'Vegetation', 'Hydrology', 'Hydraulics'];
-     requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, 'problempriority', ['High', 'Medium', 'Low'], bounds, body));
+     requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], ['High', 'Medium', 'Low'], bounds, body));
      requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body));
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'mhfdmanager', bounds, body));
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'source', bounds, body));
-     requests.push(getSubtotalsByComponentProblem(PROBLEM_TABLE, 'problemid', bounds, body));
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], bounds, body));
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[14], bounds, body));
+     requests.push(getSubtotalsByComponentProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[5], bounds, body));
      const rangeSolution = [
         {
            min: 0,
@@ -331,11 +331,11 @@ async function problemParamFilterRoute(req, res) {
            max: 50000000
         }
      ]
-     requests.push(getValuesByRangeProblem(PROBLEM_TABLE, 'solutioncost', rangeSolution, bounds, body));
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'jurisdiction', bounds, body));
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'servicearea', bounds, body));
+     requests.push(getValuesByRangeProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[0], rangeSolution, bounds, body));
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[2], bounds, body));
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[9], bounds, body));
      requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'county', bounds, body));
-     requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, 'problemtype', problemTypesConst, bounds, body));
+     requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[8], problemTypesConst, bounds, body));
 
      const promises = await Promise.all(requests);
      const result = {

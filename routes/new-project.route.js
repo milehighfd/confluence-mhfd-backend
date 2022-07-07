@@ -8,7 +8,7 @@ const attachmentService = require('../services/attachment.service');
 const projectStreamService = require('../services/projectStream.service');
 const projectComponentService = require('../services/projectComponent.service');
 const indepdendentService = require('../services/independent.service');
-const { CARTO_TOKEN, CREATE_PROJECT_TABLE, PROBLEM_TABLE } = require('../config/config');
+const { CARTO_TOKEN, CREATE_PROJECT_TABLE, PROBLEM_TABLE, PROPSPROBLEMTABLES } = require('../config/config');
 
 const db = require('../config/db');
 const Board = db.board;
@@ -119,7 +119,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
   }};
   let problems = ['No problem'];
   if (inn) {
-    const sqlProblems = `SELECT problemname, problemid, jurisdiction, solutionstatus FROM ${PROBLEM_TABLE} WHERE problemid IN (${inn})`;
+    const sqlProblems = `SELECT ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]} FROM ${PROBLEM_TABLE} WHERE ${PROPSPROBLEMTABLES.problems[5]} IN (${inn})`;
     const queryProblems = {
       q: sqlProblems
     }
