@@ -344,7 +344,7 @@ router.post('/upload-photo', [auth, multer.array('file')], async (req, res) => {
     }
 
     const newProm = new Promise((resolve, reject) => {
-      const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM organizations WHERE name = '${organization_query}' `;
+      const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM mhfd_zoom_to_areas WHERE aoi = '${organization_query}' `;
       const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
       let result = [];
       //console.log('URL', URL);
@@ -451,66 +451,6 @@ router.post('/recovery-password', async (req, res) => {
   await user.generateChangePassword();
   await userService.sendRecoverPasswordEmail(user);
   res.send(user);
-});
-
-router.get('/get-position', auth, async (req, res) => {
-  let organization_query = '';
-  if (req.user.designation === ROLES.MFHD_ADMIN ||
-    req.user.designation === ROLES.OTHER) {
-    organization_query = ORGANIZATION_DEFAULT;
-  } else {
-    organization_query = req.user.organization;
-  }
-
-  try {
-    const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM organizations WHERE name = '${organization_query}' `;
-    const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
-    let result = [];
-    console.log('URL', URL);
-    https.get(URL, response => {
-      console.log('status ' + response.statusCode);
-      if (response.statusCode === 200) {
-        let str = '';
-        response.on('data', function (chunk) {
-          str += chunk;
-        });
-        response.on('end', function () {
-          result = JSON.parse(str).rows;
-          if (result.length > 0) {
-            //console.log('datos');
-            const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
-            let coordinates = [];
-            for (const key in all_coordinates[0]) {
-              const row = JSON.stringify(all_coordinates[0][key]).replace("[", "").replace("]", "").split(',')
-              let coordinate_num = [];
-              coordinate_num.push(parseFloat(row[0]));
-              coordinate_num.push(parseFloat(row[1]));
-              coordinates.push(coordinate_num);
-            }
-            let coordinates1 = {
-              longitude: coordinates[0][0],
-              latitude: coordinates[0][1]
-            };
-            return res.status(200).send(coordinates1);
-          } else {
-            let coordinates = {
-              longitude: -105.28208041754,
-              latitude: 40.087323445772
-            };
-            return res.status(200).send(coordinates);
-          }
-
-        });
-      }
-    }).on('error', err => {
-      console.log('failed call to ', URL, 'with error ', err);
-      logger.error(`failed call to ${URL}  with error  ${err}`)
-      res.status(500).send({ error: err });
-    });
-  } catch (error) {
-    logger.error(error);
-    res.status(500).send({ error: error });
-  }
 });
 
 router.post('/change-password', validator(['email', 'password', 'newpassword']), async (req, res) =>{
