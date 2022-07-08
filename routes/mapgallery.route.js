@@ -205,19 +205,19 @@ function getFilters(params) {
       tipoid = 'problemid';
       if (params.name) {
          if (filters.length > 0) {
-            filters = filters = ` and (problemname ilike '%${params.name}%' OR problemid::text ilike '%${params.name}%')`;
+            filters = filters = ` and (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${params.name}%' OR ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${params.name}%')`;
          }
          else {
-            filters = ` (problemname ilike '%${params.name}%' OR problemid::text ilike '%${params.name}%') `;
+            filters = ` (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${params.name}%' OR ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${params.name}%') `;
          }
       }
 
       if (params.problemtype) {
          const query = createQueryForIn(params.problemtype.split(','));
          if (filters.length > 0) {
-            filters = filters + ` and problemtype in (${query}) `;
+            filters = filters + ` and ${PROPSPROBLEMTABLES.problem_boundary[8]} in (${query}) `;
          } else {
-            filters = ` problemtype in (${query}) `;
+            filters = ` ${PROPSPROBLEMTABLES.problem_boundary[8]} in (${query}) `;
          }
       }
    } else {
@@ -342,7 +342,7 @@ function getFilters(params) {
       //const initValue = value;
       for (const component of VALUES_COMPONENTS) {
          query += operator +
-            ` ${tipoid} in (select ${tipoid} from ${component} where ${component}.${tipoid}=${tipoid} and jurisdiction in (${values}) ) `;
+            ` ${tipoid} in (select ${tipoid} from ${component} where ${component}.${tipoid}=${tipoid} and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[2] : PROPSPROBLEMTABLES.problems[2]} in (${values}) ) `;
          operator = ' or ';
       }
 
@@ -376,9 +376,9 @@ function getFilters(params) {
    if (params.priority) {
       const query = createQueryForIn(params.priority.split(','));
       if (filters.length > 0) {
-         filters = filters + ` and problempriority in (${query})`;
+         filters = filters + ` and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[7] : PROPSPROBLEMTABLES.problems[7]} in (${query})`;
       } else {
-         filters = ` problempriority in (${query})`;
+         filters = ` ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[7] : PROPSPROBLEMTABLES.problems[7]} in (${query})`;
       }
    }
 
@@ -391,7 +391,7 @@ function getFilters(params) {
       for (const val of values) {
 
          limite = Number(val) + 25;
-         query += operator + ` (cast(solutionstatus as int) between ${val} and ${limite}) `;
+         query += operator + ` (cast(${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[1] : PROPSPROBLEMTABLES.problems[1]} as int) between ${val} and ${limite}) `;
          operator = ' or ';
       }
 
@@ -408,7 +408,7 @@ function getFilters(params) {
       for (const val of params.cost) {
          const values = val.split(',');
 
-         query += operator + ` (cast(solutioncost as bigint) between ${values[0]} and ${values[1]})`;
+         query += operator + ` (cast(${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[0] : PROPSPROBLEMTABLES.problems[0]} as bigint) between ${values[0]} and ${values[1]})`;
          operator = ' or ';
       }
 
@@ -422,27 +422,27 @@ function getFilters(params) {
    if (params.servicearea) {
       const query = createQueryForIn(params.servicearea.split(','));
       if (filters.length > 0) {
-         filters += ` and servicearea in (${query})`;
+         filters += ` and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[9] : PROPSPROBLEMTABLES.problems[9]} in (${query})`;
       } else {
-         filters = ` servicearea in (${query})`;
+         filters = ` ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[9] : PROPSPROBLEMTABLES.problems[9]} in (${query})`;
       }
    }
 
    if (params.mhfdmanager) {
       const query = createQueryForIn(params.mhfdmanager.split(','));
       if (filters.length > 0) {
-         filters = filters + ` and mhfdmanager in (${query})`;
+         filters = filters + ` and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[3] : PROPSPROBLEMTABLES.problems[3]} in (${query})`;
       } else {
-         filters = `mhfdmanager in (${query})`;
+         filters = `${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[3] : PROPSPROBLEMTABLES.problems[3]} in (${query})`;
       }
    }
 
    if (params.source) {
       const query = createQueryForIn(params.source.split(','));
       if (filters.length > 0) {
-         filters = filters + ` and source in (${query}) `;
+         filters = filters + ` and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[14] : PROPSPROBLEMTABLES.problems[14]} in (${query}) `;
       } else {
-         filters = ` source in (${query}) `;
+         filters = ` ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[14] : PROPSPROBLEMTABLES.problems[14]} in (${query}) `;
       }
    }
 
@@ -452,7 +452,7 @@ function getFilters(params) {
       let query = '';
       let operator = '';
       for (const val of values) {
-         query += operator + ` problemid in (select problemid from ${val})`;
+         query += operator + ` ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[5] : PROPSPROBLEMTABLES.problems[5]} in (select ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[5] : PROPSPROBLEMTABLES.problems[5]} from ${val})`;
          operator = ' or ';
       }
 
@@ -601,9 +601,9 @@ function getFilters(params) {
    if (params.streamname) {
       const query = createQueryForIn(params.streamname.split(','));
       if (filters.length > 0) {
-         filters = filters + ` and streamname in (${query}) `;
+         filters = filters + ` and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[15] : PROPSPROBLEMTABLES.problems[15]} in (${query}) `;
       } else {
-         filters = ` streamname in (${query}) `;
+         filters = ` ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[15] : PROPSPROBLEMTABLES.problems[15]} in (${query}) `;
       }
    }
 
@@ -643,9 +643,9 @@ function getFilters(params) {
       //const data = params.jurisdiction.split(',');
       const query = createQueryForIn(params.jurisdiction.split(','));
       if (filters.length > 0) {
-         filters = filters + ` and jurisdiction in (${query})`;
+         filters = filters + ` and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[2] : PROPSPROBLEMTABLES.problems[2]} in (${query})`;
       } else {
-         filters = ` jurisdiction in (${query})`;
+         filters = ` ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[2] : PROPSPROBLEMTABLES.problems[2]} in (${query})`;
       }
    }
 
