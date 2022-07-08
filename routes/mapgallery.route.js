@@ -2035,6 +2035,45 @@ router.get('/params-filters', async (req, res) => {
    }
 });
 
+
+router.get('/problem_part/:id', async (req, res) => {
+   const id = req.params.id;
+   const promises = [];
+   const tables = ['flood_hazard_polygon_', 'flood_hazard_line_', 'flood_hazard_point_'];
+   for (const element of tables) {
+     let sql = `SELECT problem_type, problem_part_category, problem_part_subcategory, globalid FROM ${element}
+     WHERE problem_id = ${id}`;
+     console.log('my sql ', sql);
+     sql = encodeURIComponent(sql);
+     const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
+     promises.push(new Promise((resolve, reject) => {
+       https.get(URL, response => {   
+         if (response.statusCode == 200) {
+           let str = '';
+           response.on('data', function (chunk) {
+             str += chunk;
+           });
+           response.on('end', function () {
+             const rows = JSON.parse(str).rows;
+             console.log(rows);
+             resolve(rows);
+           });
+         } else {
+           console.log('status ', response.statusCode, URL);
+           resolve([]);
+         }
+       }).on('error', err => {
+         console.log('failed call to ', URL, 'with error ', err);
+         resolve([]);
+       })})
+     );  
+   }
+   const all = await Promise.all(promises);
+   res.send({
+      data: all
+   });
+ });
+
 router.post('/params-filter-components', componentParamFilterRoute)
 router.post('/params-filter-projects', projectParamFilterRoute)
 router.post('/params-filter-problems', problemParamFilterRoute)
