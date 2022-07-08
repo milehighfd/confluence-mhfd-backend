@@ -184,7 +184,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
 async function getProblemByProjectId(projectid, sortby, sorttype) {
   let data = [];
   const LINE_SQL = `select ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[7]}  as ${PROPSPROBLEMTABLES.problems[7]} from ${PROBLEM_TABLE}  
- where problemid in (SELECT problemid FROM grade_control_structure 
+ where ${PROPSPROBLEMTABLES.problem_boundary[5]} in (SELECT problemid FROM grade_control_structure 
    where projectid=${projectid} and projectid>0  union ` +
      `SELECT problemid FROM pipe_appurtenances 
    where projectid=${projectid} and projectid>0  union ` +
@@ -214,64 +214,68 @@ async function getProblemByProjectId(projectid, sortby, sorttype) {
    where projectid=${projectid} and projectid>0) 
    order by ${sortby} ${sorttype}`;
 
-  //  console.log("LINES QL", LINE_SQL);
   const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
   //console.log(LINE_URL);
-  const newProm1 = new Promise((resolve, reject) => {
-     https.get(LINE_URL, response => {
-        if (response.statusCode === 200) {
-           let str = '';
-           response.on('data', function (chunk) {
-              str += chunk;
-           });
-           response.on('end', async function () {
-              resolve(JSON.parse(str).rows);
-           })
-        }
-     });
-  });
-  data = await newProm1;
-  return data;
+  try {
+    const newProm1 = new Promise((resolve, reject) => {
+      https.get(LINE_URL, response => {
+         if (response.statusCode === 200) {
+            let str = '';
+            response.on('data', function (chunk) {
+               str += chunk;
+            });
+            response.on('end', async function () {
+               resolve(JSON.parse(str).rows);
+            })
+         }
+      });
+   });
+    data = await newProm1;
+    return data;
+  } catch (e) {
+    console.error('Error with QUERY ', LINE_SQL);
+  }
 }
 
 async function getEnvelopeProblemsComponentsAndProject(id, field) {
-  const SQL = `select ST_ASGEOJSON(ST_EXTENT(the_geom)) as envelope from (
-  SELECT the_geom FROM mhfd_projects where  projectid=${id}
+  const SQL = `
+  select ST_ASGEOJSON(ST_EXTENT(the_geom)) as envelope
+    from (
+    SELECT the_geom FROM mhfd_projects where  projectid=${id}
   union 
-  select the_geom from ${PROBLEM_TABLE}  
-   where problemid in (SELECT problemid FROM grade_control_structure 
-     where projectid=${id} and projectid>0  union SELECT problemid FROM pipe_appurtenances 
-     where projectid=${id} and projectid>0  union SELECT problemid FROM special_item_point 
-     where projectid=${id} and projectid>0  union SELECT problemid FROM special_item_linear 
-     where projectid=${id} and projectid>0  union SELECT problemid FROM special_item_area 
-     where projectid=${id} and projectid>0  union SELECT problemid FROM channel_improvements_linear 
-     where projectid=${id} and projectid>0  union SELECT problemid FROM channel_improvements_area 
-     where projectid=${id} and projectid>0  union SELECT problemid FROM removal_line 
-     where projectid=${id} and projectid>0  union SELECT problemid FROM removal_area 
-     where projectid=${id} and projectid>0  union SELECT problemid FROM storm_drain 
-     where projectid=${id} and projectid>0  union SELECT problemid FROM detention_facilities 
-     where projectid=${id} and projectid>0  union SELECT problemid FROM maintenance_trails 
-     where projectid=${id} and projectid>0  union SELECT problemid FROM land_acquisition 
-     where projectid=${id} and projectid>0  union SELECT problemid FROM landscaping_area 
-     where projectid=${id} and projectid>0) 
+    select the_geom from ${PROBLEM_TABLE}  
+      where ${PROPSPROBLEMTABLES.problem_boundary[5]} in (SELECT problemid FROM grade_control_structure 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM pipe_appurtenances 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM special_item_point 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM special_item_linear 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM special_item_area 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM channel_improvements_linear 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM channel_improvements_area 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM removal_line 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM removal_area 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM storm_drain 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM detention_facilities 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM maintenance_trails 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM land_acquisition 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM landscaping_area 
+        where projectid=${id} and projectid>0) 
   union  
-   SELECT the_geom FROM grade_control_structure where ${field}=${id}  
-   union SELECT the_geom FROM pipe_appurtenances where ${field}=${id}  
-   union SELECT the_geom FROM special_item_point where ${field}=${id}  
-   union SELECT the_geom FROM special_item_linear where ${field}=${id}  
-   union SELECT the_geom FROM special_item_area where ${field}=${id}  
-   union SELECT the_geom FROM channel_improvements_linear where ${field}=${id}  
-   union SELECT the_geom FROM channel_improvements_area where ${field}=${id}  
-   union SELECT the_geom FROM removal_line where ${field}=${id}  
-   union SELECT the_geom FROM removal_area where ${field}=${id}  
-   union SELECT the_geom FROM storm_drain where ${field}=${id}  
-   union SELECT the_geom FROM detention_facilities where ${field}=${id}  
-   union SELECT the_geom FROM maintenance_trails where ${field}=${id}  
-   union SELECT the_geom FROM land_acquisition where ${field}=${id}  
-   union SELECT the_geom FROM landscaping_area where ${field}=${id}  
+    SELECT the_geom FROM grade_control_structure where ${field}=${id}  
+      union SELECT the_geom FROM pipe_appurtenances where ${field}=${id}  
+      union SELECT the_geom FROM special_item_point where ${field}=${id}  
+      union SELECT the_geom FROM special_item_linear where ${field}=${id}  
+      union SELECT the_geom FROM special_item_area where ${field}=${id}  
+      union SELECT the_geom FROM channel_improvements_linear where ${field}=${id}  
+      union SELECT the_geom FROM channel_improvements_area where ${field}=${id}  
+      union SELECT the_geom FROM removal_line where ${field}=${id}  
+      union SELECT the_geom FROM removal_area where ${field}=${id}  
+      union SELECT the_geom FROM storm_drain where ${field}=${id}  
+      union SELECT the_geom FROM detention_facilities where ${field}=${id}  
+      union SELECT the_geom FROM maintenance_trails where ${field}=${id}  
+      union SELECT the_geom FROM land_acquisition where ${field}=${id}  
+      union SELECT the_geom FROM landscaping_area where ${field}=${id}  
   ) joinall
-  
-`    
+` ;   
   const SQL_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
   const newProm1 = new Promise((resolve, reject) => {
     https.get(SQL_URL, response => {
