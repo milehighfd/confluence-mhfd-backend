@@ -96,10 +96,10 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
         logger.info('length ' + result.length);
         //logger.info(JSON.stringify(body, null, 2));
       } else {
-        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+        logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       }
     } catch (error) {
-      logger.error(error);
+      logger.error(error, 'at', sql);
     };
   }
   let inn = '';
@@ -119,7 +119,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
   }};
   let problems = ['No problem'];
   if (inn) {
-    const sqlProblems = `SELECT ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]} FROM ${PROBLEM_TABLE} WHERE ${PROPSPROBLEMTABLES.problems[5]} IN (${inn})`;
+    const sqlProblems = `SELECT ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]} FROM ${PROBLEM_TABLE} WHERE ${PROPSPROBLEMTABLES.problem_boundary[5]} IN (${inn})`;
     const queryProblems = {
       q: sqlProblems
     }
@@ -143,10 +143,10 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
         logger.info('length of problems' + problems.length);
         //logger.info(JSON.stringify(body, null, 2));
       } else {
-        logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+        logger.error('bad status ' + data.statusCode + '  -- '+ sqlProblems +  JSON.stringify(data.body, null, 2));
       }
     } catch (error) {
-      logger.error(error);
+      logger.error(error, 'at', sql);
     };
   }
   for (const project of result) {
@@ -214,11 +214,11 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
           logger.info('TABLE CREATED ' + component);
           //logger.info(JSON.stringify(body, null, 2));
         } else {
-          logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+          logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
           res.status(data.statusCode).send(data);
         }
       } catch (error) {
-        logger.error(error);
+        logger.error(error, 'at', sql);
         res.status(500).send(error);
       };
     } else {
@@ -279,13 +279,13 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
       logger.info('length ' + result.length);
       //logger.info(JSON.stringify(body, null, 2));
     } else {
-      logger.error('bad status ' + intersectionData.statusCode + ' ' +  JSON.stringify(intersectionData.body, null, 2));
+      logger.error('bad status ' + intersectionData.statusCode + '  -- '+ sql +  JSON.stringify(intersectionData.body, null, 2));
     }
   });
 });
 router.get('/components-by-problemid', auth, async (req, res) => {
   const problemid = req.query.problemid;
-  const sql = `SELECT problemname, problemid, jurisdiction, solutionstatus, objectid FROM ${PROBLEM_TABLE} WHERE problemid = ${problemid}`;
+  const sql = `SELECT ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, objectid FROM ${PROBLEM_TABLE} WHERE ${PROPSPROBLEMTABLES.problem_boundary[5]} = ${problemid}`;
   const query = {
     q: sql
   };
@@ -348,11 +348,11 @@ router.get('/components-by-problemid', auth, async (req, res) => {
         });
       });
     } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     res.status(500).send(error);
   };
 });
@@ -372,11 +372,11 @@ router.post('/component-geom', async (req,res) => {
       res.send({geom:body.rows[0].the_geom});
     
     } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     res.status(500).send(error);
   };
 
@@ -396,11 +396,11 @@ router.post('/problem-geom', async (req,res) => {
       res.send({geom:body.rows[0].the_geom});
     
     } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     res.status(500).send(error);
   };
 
@@ -530,11 +530,11 @@ router.post('/streams-data', auth, async (req, res) => {
         res.send(answer);
       });
     } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     res.status(500).send(error);
   };
 });
@@ -551,7 +551,7 @@ router.post('/get-jurisdiction-for-polygon', async (req, res) => {
     if (data.statusCode === 200) {
       return res.send({jurisdiction: data.body.rows[0].jurisdiction});
     }
-    logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+    logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
     return res.status(data.statusCode).send(data);
   } catch (error) {
     res.status(500).send({error: error});
@@ -604,11 +604,11 @@ AND ST_DWithin(
       });
       res.send(answer);
     } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     res.status(500).send(error);
   };
 });
@@ -638,11 +638,11 @@ router.post('/get-countyservicearea-for-geom', auth, async (req, res) => {
       });
       res.send(answer);
     } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     res.status(500).send(error);
   };
 });
@@ -670,11 +670,11 @@ router.post('/get-countyservicearea-for-point', auth, async (req, res) => {
       });
       res.send(answer);
     } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     res.status(500).send(error);
   };
 });
@@ -707,11 +707,11 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
           logger.info('TABLE CREATED ');
           //logger.info(JSON.stringify(body, null, 2));
         } else {
-          logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+          logger.error('bad status ' + data.statusCode + '  -- '+ createSQL +  JSON.stringify(data.body, null, 2));
           res.status(data.statusCode).send(data);
         }
       } catch (error) {
-        logger.error(error);
+        logger.error(error, 'at', sql);
         res.status(500).send(error);
       };
     } else {
@@ -771,7 +771,7 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
       logger.info('length ' + result.length);
       //logger.info(JSON.stringify(body, null, 2));
     } else {
-      logger.error('bad status ' + intersectionData.statusCode + ' ' +  JSON.stringify(intersectionData.body, null, 2));
+      logger.error('bad status ' + intersectionData.statusCode + '  -- '+ sql +  JSON.stringify(intersectionData.body, null, 2));
     }
   });
 });
@@ -795,11 +795,11 @@ router.post('/get-all-streams', auth, async (req, res) => {
       res.send(body.rows);
       //logger.info(JSON.stringify(body, null, 2));
     } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     res.status(500).send(error);
   };
 });
@@ -825,11 +825,11 @@ router.post('/get-stream', auth, async (req, res) => {
       res.send(body.rows[0]);
       //logger.info(JSON.stringify(body, null, 2));
     } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     res.status(500).send(error);
   };
 });
@@ -904,7 +904,7 @@ router.post('/get-stream-convexhull', auth, async (req, res) => {
           logger.info('length ' + result.length);
           //logger.info(JSON.stringify(body, null, 2));
         } else {
-          logger.error('bad status ' + intersectionData.statusCode + ' ' +  JSON.stringify(intersectionData.body, null, 2));
+          logger.error('bad status ' + intersectionData.statusCode + '  -- '+ sql +  JSON.stringify(intersectionData.body, null, 2));
         }
       });
     } else {
@@ -942,10 +942,10 @@ router.post('/showcomponents', auth, async (req, res) => {
           logger.info('length ' + result.length);
           //logger.info(JSON.stringify(body, null, 2));
         } else {
-          logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+          logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
         }
       } catch (error) {
-        logger.error(error);
+        logger.error(error, 'at', sql);
       };
     }
     let inn = '';
@@ -989,10 +989,10 @@ router.post('/showcomponents', auth, async (req, res) => {
           logger.info('length of problems' + problems.length);
           //logger.info(JSON.stringify(body, null, 2));
         } else {
-          logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+          logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
         }
       } catch (error) {
-        logger.error(error);
+        logger.error(error, 'at', sql);
       };
     }
     for (const project of result) {
@@ -1031,12 +1031,12 @@ const setProjectID = async (res, projectId) => {
     if (data.statusCode === 200) {
       return true;
     } else {
-       logger.error('bad status on UPDATE projectid ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+       logger.error('bad status on UPDATE projectid ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
        res.status(data.statusCode).send(data.body);
        return false;
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
   };
   return true;
 }
@@ -1125,11 +1125,11 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
         projectComponentService.saveProjectComponent(data);
       }
     } else {
-       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
   };
   res.send(result);
 });
@@ -1208,11 +1208,11 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
         projectComponentService.saveProjectComponent(data);
       }
     } else {
-       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2))    ;
+       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2))    ;
        return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
   };
   res.send(result);
 });
@@ -1282,11 +1282,11 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
       await addProjectToBoard(sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
-       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
   };
   res.send(result);
 });
@@ -1346,11 +1346,11 @@ router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req
       logger.info(JSON.stringify(result));
       await attachmentService.uploadFiles(user, req.files, projectid, cover);
     } else {
-       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
   };
   res.send(result);
 });
@@ -1416,11 +1416,11 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
         });
       }
     } else {
-       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
       }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     return res.status(500).send(eroor);
   };
   res.send(result);
@@ -1527,11 +1527,11 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
         });
       }
     } else {
-       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
       }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     return res.status(500).send(error);
   };
   res.send(result);
@@ -1594,11 +1594,11 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
       await addProjectToBoard(sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     return res.status(500).send(error);
   };
   res.send(result);
@@ -1654,11 +1654,11 @@ router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req
       logger.info(result);
       await attachmentService.uploadFiles(user, req.files, projectid, cover);
     } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     return res.status(500).send(error);
   };
   res.send(result);
@@ -1780,11 +1780,11 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
       await addProjectToBoard(sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       return res.status(data.statusCode).send(data.body);
     }
  } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     return res.status(500).send(error);
  };
   res.send(result);
@@ -1827,11 +1827,11 @@ router.post('/special/:projectid', [auth, multer.array('files')], async (req, re
       logger.info(JSON.stringify(result));
       await attachmentService.uploadFiles(user, req.files, projectid, cover);
     } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       return res.status(data.statusCode).send(data.body);
     }
  } catch (error) {
-    logger.error(error);
+    logger.error(error, 'at', sql);
     return res.status(500).send(error);
  };
   res.send(result);
