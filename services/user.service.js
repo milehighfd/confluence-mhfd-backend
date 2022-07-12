@@ -98,7 +98,7 @@ const sendConfirmAccount = async (user) => {
   const options = {
     from: MHFD_EMAIL,
     to: email,
-    subject: "MHFD Confluence App - Account created",
+    subject: "Welcome to MHFD Confluence!",
     html: emailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
   };
