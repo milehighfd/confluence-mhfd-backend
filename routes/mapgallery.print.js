@@ -73,7 +73,6 @@ module.exports = {
     let solutionstatusVal = solutionstatus ? solutionstatus : 0;
     solutionstatusVal = Math.floor((solutionstatusVal / 100) * 150)
     html = html.split('${solutionstatusVal}').join(solutionstatusVal);
-
     let _components = components.length > 0 ? components : [{
       type: '',
       estimated_cost: 0,
@@ -91,7 +90,6 @@ module.exports = {
         </tr>
       `
     }).join('')
-
     let problempartRows = problempart.map((c) => {
       return `
       <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
@@ -101,8 +99,8 @@ module.exports = {
       </tr>
     `
     }).join('');
-    html = html.split('${problempartRows}').join(problempartRows);
-    if (sum) {
+    html = html.split('${problempartRows}').join(problempartRows); 
+    if (sum >= 0) {
       html = html.split('${componentRows}').join(componentRows);
       html = html.split('${totalEstimatedCost}').join(`<tfoot>
       <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
@@ -111,14 +109,7 @@ module.exports = {
       </tr>
     </tfoot>`);
     } else {
-      html = html.split('${componentRows}').join( `
-      <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-        <td width="40%" style="padding: 17px 20px;"></td>
-        <td width="20%" style="padding: 17px 20px;"></td>
-        <td width="20%" style="padding: 17px 20px;"></td>
-        <td width="20%" style="padding: 17px 20px;"></td>
-      </tr>
-    `);
+      html = html.split('${componentRows}').join( componentRows);
       html = html.split('${totalEstimatedCost}').join('');
     }
     let q = 0;
