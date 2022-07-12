@@ -30,7 +30,7 @@ const base64ImageCrop = async (map, mapHeight, mapWidth) => {
 
 
 module.exports = {
-  printProblem: async (data, components, map) => {
+  printProblem: async (data, components, map, problempart) => {
     var html = fs.readFileSync('./pdf-templates/Problems.html', 'utf8');
     const {
       problemname,
@@ -92,6 +92,16 @@ module.exports = {
       `
     }).join('')
 
+    let problempartRows = problempart.map((c) => {
+      return `
+      <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
+        <td width="40%" style="padding: 17px 20px;">${c.problem_type}</td>
+        <td width="25%" style="padding: 17px 20px;">${(c.problem_part_category)}</td>
+        <td width="25%" style="padding: 17px 20px;">${c.problem_part_subcategory}%</td>
+      </tr>
+    `
+    }).join('');
+    html = html.split('${problempartRows}').join(problempartRows);
     if (sum) {
       html = html.split('${componentRows}').join(componentRows);
       html = html.split('${totalEstimatedCost}').join(`<tfoot>
