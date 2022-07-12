@@ -46,9 +46,7 @@ module.exports = {
       source,
       problemdescription,
     } = data;
-
-    let mainImage = problemtype ? `https://confluence.mhfd.org/gallery/${problemtype}.jpg` : 'https://i.imgur.com/kLyZbrB.jpg'
-
+    let mainImage = problemtype ? `https://confdev.mhfd.org/detailed/${problemtype}.png` : 'https://i.imgur.com/kLyZbrB.jpg'
     const mapHeight = 500;
     const mapWidth = 750;
     // if (!components.length) {
@@ -61,7 +59,7 @@ module.exports = {
     html = html.split('${jurisdiction}').join(jurisdiction + ', CO' );
     html = html.split('${county}').join(county);
     html = html.split('${servicearea}').join(servicearea);
-    html = html.split('${solutionstatus}').join(solutionstatus);
+    html = html.split('${solutionstatus}').join(solutionstatus ? solutionstatus : 0);
     html = html.split('${solutioncost}').join(solutioncost ? priceFormatter(solutioncost) : 'No Cost Data');
     html = html.split('${streamname}').join(streamname);
     html = html.split('${problempriority}').join(problempriority);
