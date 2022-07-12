@@ -206,6 +206,15 @@ module.exports = {
     // if (!(problems.length + components.length)) {
     //   map = await base64ImageCrop(map, mapHeight, mapWidth);
     // }
+    const URL_BASE = 'https://confdev.mhfd.org/';
+    const urlImage = projecttype === 'Capital' ? `${URL_BASE}detailed/capital.png` :
+    projecttype === 'Study' ? `${URL_BASE}projectImages/study.jpg` :
+      projecttype === 'Maintenance' ?
+        (projectsubtype === 'Vegetation Management' ? `${URL_BASE}detailed/vegetation-management.png` :
+          projectsubtype === 'Sediment Removal' ? `${URL_BASE}detailed/sediment-removal.png` :
+            projectsubtype === 'Restoration' ? `${URL_BASE}detailed/restoration.png` :
+              projectsubtype === 'Minor Repairs' ? `${URL_BASE}detailed/minor-repairs.png` :
+                `${URL_BASE}detailed/debris-management.png`) : 'https://i.imgur.com/kLyZbrB.jpg'
 
     html = html.split('${projectname}').join(projectname);
     html = html.split('${projecttype}').join(projecttype + ' Project');
@@ -216,7 +225,7 @@ module.exports = {
     html = html.split('${status}').join(status);
     html = html.split('${streamname}').join(streamname);
     html = html.split('${projectsubtype}').join(projectsubtype);
-    html = html.split('${attachmentUrl}').join(attachments.length > 0 ? attachments[0] : 'https://i.imgur.com/kLyZbrB.jpg');
+    html = html.split('${attachmentUrl}').join(attachments.length > 0 ? attachments[0] : urlImage);
     html = html.split('${startyear}').join(startyear);
     html = html.split('${completedyear}').join(completedyear);
     html = html.split('${frequency}').join(frequency);
