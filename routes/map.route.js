@@ -4,8 +4,7 @@ const https = require('https');
 const logger = require('../config/logger');
 const needle = require('needle');
 
-const PROBLEM_TABLE = 'problems';
-const {CARTO_TOKEN, PROPSPROBLEMTABLES} = require('../config/config');
+const {CARTO_TOKEN, PROPSPROBLEMTABLES, PROBLEM_TABLE} = require('../config/config');
 
 router.post('/', async (req, res) => { 
   const table = req.body.table;
