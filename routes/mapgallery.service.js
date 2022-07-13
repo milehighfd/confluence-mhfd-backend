@@ -320,6 +320,8 @@ async function getCoordinatesOfComponents(id, field) {
      where ${field}=${id}  union ` +
      `SELECT type, 'land_acquisition' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM land_acquisition 
      where ${field}=${id}  union ` +
+     `SELECT type, 'stream_improvement_measure' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM stream_improvement_measure 
+     where ${field}=${id}  union ` +
      `SELECT type, 'landscaping_area' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM landscaping_area 
      where ${field}=${id}  `;
   // console.log("COMPONENTS SQL", COMPONENTS_SQL);

@@ -33,7 +33,7 @@ const PROJECT_TABLES = ['mhfd_projects'];
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
    'special_item_linear', 'special_item_area', 'channel_improvements_linear',
    'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
-   'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
+   'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area', 'stream_improvement_measure'];
 
 router.post('/', async (req, res) => {
    try {
