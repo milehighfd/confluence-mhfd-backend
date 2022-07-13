@@ -307,7 +307,7 @@ async function problemParamFilterRoute(req, res) {
      const bounds = req.query.bounds;
      const body = req.body;
      let requests = [];
-     let problemTypesConst = [ 'Flood Hazard', 'Future Development', 'Watershed Change'];
+     let problemTypesConst = [ 'Flood Hazard', 'Stream Function', 'Watershed Change'];
      requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], ['High', 'Medium', 'Low'], bounds, body));
      requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body));
      requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], bounds, body));

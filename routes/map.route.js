@@ -46,7 +46,6 @@ router.post('/', async (req, res) => {
       });
       response.on('end', function () {
         const tiles = JSON.parse(str).metadata.tilejson.vector.tiles;
-        console.log("THIS ARE THE TILES", tiles);
         return res.send(tiles);
       });
     } else {

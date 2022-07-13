@@ -1000,7 +1000,6 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
       COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
    }
    const componentQuery = { q: `${COMPONENTS_SQL}` };
-
    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
    const data = await needle('post', URL, componentQuery, { json: true });
    if (data.statusCode === 200) {
