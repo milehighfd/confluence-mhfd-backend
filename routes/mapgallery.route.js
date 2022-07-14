@@ -987,16 +987,17 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
    let union = '';
    for (const component of TABLES_COMPONENTS) {
       if (component === 'stream_improvement_measure') {
-         COMPONENTS_SQL += union + `SELECT component_part_category, count(*), 0 as estimated_cost, 
+         let typeidSp = 'projectid' ? 'project_id' : 'problem_id';
+         COMPONENTS_SQL += union + `SELECT component_part_category as type, count(*), 0 as estimated_cost, 
      0 as complete_cost
      FROM ${component}, ${table}, ( select sum(estimated_cost_base) as sum from ${component} where ${component}.status = 'Complete' ) complete_t
-     where ${component}.${typeid}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum`;
+     where ${component}.${typeidSp}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum`;
       } else {
          COMPONENTS_SQL += union + `SELECT type, count(*), coalesce(sum(original_cost), 0) as estimated_cost, 
          case when cast(${finalcost} as integer) > 0 then coalesce(
             (select sum(original_cost) as aux from ${component} where ${component}.status = 'Complete') ,0)/cast(${finalcost} as integer) else 0 END as original_cost, coalesce(complete_t.sum, 0) as complete_cost
          FROM ${component}, ${table}, ( select sum(estimated_cost) as sum from ${component} where ${component}.status = 'Complete' ) complete_t
-         where ${component}.${typeid}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum`;
+         where ${component}.${typeid}=${id} and ${table}.${extraColumnProb}=${id} group by component_part_category, ${finalcost}, complete_t.sum`;
       }
       union = ' union ';
    }
