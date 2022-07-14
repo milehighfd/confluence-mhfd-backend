@@ -69,7 +69,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
   let SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom2, ST_AsGeoJSON(the_geom) as the_geom3 FROM ${table} where  projectid=${projectid} `;
   let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
   const data = await needle('get', URL, { json: true });
-  // console.log("SQL", SQL);
+  console.log("\n\n\n\nSQL\n\n\n\n", SQL);
   if (data.statusCode === 200 && data.body.rows.length > 0) {
     const result = data.body.rows[0];
     let problems = [];
@@ -320,8 +320,8 @@ async function getCoordinatesOfComponents(id, field) {
      where ${field}=${id}  union ` +
      `SELECT type, 'land_acquisition' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM land_acquisition 
      where ${field}=${id}  union ` +
-     `SELECT type, 'stream_improvement_measure' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM stream_improvement_measure 
-     where ${field}=${id}  union ` +
+    //  `SELECT type, 'stream_improvement_measure' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM stream_improvement_measure 
+    //  where ${field}=${id}  union ` +
      `SELECT type, 'landscaping_area' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM landscaping_area 
      where ${field}=${id}  `;
   // console.log("COMPONENTS SQL", COMPONENTS_SQL);
