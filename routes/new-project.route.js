@@ -74,7 +74,11 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
         queryWhere = where;
       }
     }
-    const sql = `SELECT objectid, cartodb_id, type, jurisdiction, status, original_cost, problemid  FROM ${component} 
+    const type = component === 'stream_improvement_measure' ? 'component_part_category as type' : 'type';
+    const jurisdiction = component === 'stream_improvement_measure' ? 'service_area as jurisdiction' : 'jurisdiction'; 
+    const cost = component === 'stream_improvement_measure' ? '0 as original_cost' : 'original_cost';
+    const problemid = component === 'stream_improvement_measure' ? 'problem_id' : 'problemid';
+    const sql = `SELECT objectid, cartodb_id, ${type}, ${jurisdiction}, status, ${cost}, ${problemid}  FROM ${component} 
     WHERE  ${queryWhere} AND projectid is null `;
     const query = {
       q: sql
