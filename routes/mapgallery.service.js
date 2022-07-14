@@ -325,7 +325,6 @@ async function getCoordinatesOfComponents(id, field) {
       where ${fixedField}=${id}  union ` +
      `SELECT type, 'landscaping_area' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM landscaping_area 
      where ${field}=${id}  `;
-  // console.log("COMPONENTS SQL", COMPONENTS_SQL);
   const newProm1 = new Promise((resolve, reject) => {
      const COMPONENT_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL}&api_key=${CARTO_TOKEN}`);
      https.get(COMPONENT_URL, response => {

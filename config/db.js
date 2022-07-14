@@ -39,6 +39,7 @@ db.groupnotes = require('../models/groupNotes.model.js')(sequelize, Sequelize);
 db.projectStream = require('../models/projectstream.model.js')(sequelize, Sequelize);
 db.projectComponent = require('../models/projectComponent.model.js')(sequelize, Sequelize);
 db.consultants = require('../models/consultants.model')(sequelize, Sequelize);
+db.componentdependency = require('../models/componentDependency.model')(sequelize, Sequelize);
 
 db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
