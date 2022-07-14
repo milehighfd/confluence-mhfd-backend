@@ -1,8 +1,8 @@
-const { CARTO_TOKEN, PROBLEM_TABLE } = require('../config/config');
+const { CARTO_TOKEN, PROBLEM_TABLE, MAIN_PROJECT_TABLE } = require('../config/config');
 const logger = require('../config/logger');
 const needle = require('needle');
 
-const PROJECT_TABLES = ['mhfd_projects'];
+const PROJECT_TABLES = [MAIN_PROJECT_TABLE];
 const COMPLETE_YEAR_COLUMN = 'completeyear';
 const {
    statusList

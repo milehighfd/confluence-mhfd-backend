@@ -3,12 +3,8 @@ const router = express.Router();
 const https = require('https');
 const needle = require('needle');
 
-const {CARTO_TOKEN, PROBLEM_TABLE, PROPSPROBLEMTABLES} = require('../config/config');
+const {CARTO_TOKEN, PROBLEM_TABLE, PROPSPROBLEMTABLES, MAIN_PROJECT_TABLE} = require('../config/config');
 const { response } = require('../app');
-const { component } = require('../config/db');
-const { add } = require('../config/logger');
-const { table } = require('console');
-const { resolve } = require('path');
 
 const components = [
   { key: 'grade_control_structure', value: 'Grade Control Structure' },
@@ -26,7 +22,7 @@ const components = [
   { key: 'land_acquisition', value: 'Land Acquisition' },
   { key: 'landscaping_area', value: 'Landscaping Area' }
 ];
-const PROJECT_TABLES = ['mhfd_projects'];
+const PROJECT_TABLES = [MAIN_PROJECT_TABLE];
 router.get('/', async (req, res) => {
   const tables = req.query.tables ? req.query.tables.split(',') : [];
   let send = [];

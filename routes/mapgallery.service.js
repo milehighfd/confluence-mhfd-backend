@@ -3,10 +3,10 @@ const https = require('https');
 const attachmentService = require('../services/attachment.service');
 const projectStreamService = require('../services/projectStream.service');
 
-const { CARTO_TOKEN, CREATE_PROJECT_TABLE, PROBLEM_TABLE, PROPSPROBLEMTABLES } = require('../config/config');
+const { CARTO_TOKEN, CREATE_PROJECT_TABLE, PROBLEM_TABLE, PROPSPROBLEMTABLES, MAIN_PROJECT_TABLE } = require('../config/config');
 
 const getCoordsByProjectId = async (projectid, isDev) => {
-  let table = 'mhfd_projects'
+  let table = MAIN_PROJECT_TABLE;
   if (isDev) {
     table = CREATE_PROJECT_TABLE;
   }
@@ -62,7 +62,7 @@ const getMinimumDateByProjectId = async (projectid) => {
 
 // in the future change isDev for is board project , don't delete the variable please @pachon
 const getDataByProjectIds = async (projectid, type, isDev) => {
-  let table = 'mhfd_projects'
+  let table = MAIN_PROJECT_TABLE;
   if (isDev) {
     table = CREATE_PROJECT_TABLE;
   }
@@ -80,7 +80,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
     if (result.projectid !== null && result.projectid !== undefined && result.projectid) {
       problems = await getProblemByProjectId(result.projectid, PROPSPROBLEMTABLES.problems[6], 'asc');
       components = await getCoordinatesOfComponents(result.projectid, 'projectid');
-      convexhull = await getEnvelopeProblemsComponentsAndProject(result.projectid, 'projectid');
+      convexhull = await getEnvelopeProblemsComponentsAndProject(result.projectid, table, 'projectid');
       if(convexhull[0]){
         convexhull = JSON.parse(convexhull[0].envelope).coordinates;
       }
@@ -237,11 +237,11 @@ async function getProblemByProjectId(projectid, sortby, sorttype) {
   }
 }
 
-async function getEnvelopeProblemsComponentsAndProject(id, field) {
+async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
   const SQL = `
   select ST_ASGEOJSON(ST_EXTENT(the_geom)) as envelope
     from (
-    SELECT the_geom FROM mhfd_projects where  projectid=${id}
+    SELECT the_geom FROM ${table} where  projectid=${id}
   union 
     select the_geom from ${PROBLEM_TABLE}  
       where ${PROPSPROBLEMTABLES.problem_boundary[5]} in (SELECT problemid FROM grade_control_structure 
