@@ -109,7 +109,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
   }
   let inn = '';
   for (const element of result) {
-    if (element.problemid) {
+    if (element.problemid || element.problem_id) {
       if (inn) {
         inn += ',';
       }
@@ -161,6 +161,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
       groups[project.problemid].components.push(project);
     }
   }
+  logger.info("RESULT IS => " + JSON.stringify(result, null, 2));
   res.send({
     result: result,
     problems: problems,
