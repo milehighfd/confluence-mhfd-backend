@@ -78,8 +78,9 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
     const jurisdiction = component === 'stream_improvement_measure' ? 'service_area as jurisdiction' : 'jurisdiction'; 
     const cost = component === 'stream_improvement_measure' ? '0 as original_cost' : 'original_cost';
     const problemid = component === 'stream_improvement_measure' ? 'problem_id' : 'problemid';
+    const projectid = component === 'stream_improvement_measure' ? 'project_id' : 'projectid';
     const sql = `SELECT objectid, cartodb_id, ${type}, ${jurisdiction}, status, ${cost}, ${problemid}  FROM ${component} 
-    WHERE  ${queryWhere} AND projectid is null `;
+    WHERE  ${queryWhere} AND ${projectid} is null `;
     const query = {
       q: sql
     };
