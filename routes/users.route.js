@@ -15,7 +15,7 @@ const userService = require('../services/user.service');
 const UPDATEABLE_FIELDS = userService.requiredFields('edit');
 const logger = require('../config/logger');
 const ORGANIZATION_DEFAULT = 'Mile High Flood District'; // 'Mile High Flood Control District';
-const { CARTO_TOKEN } = require('../config/config');
+const { CARTO_TOKEN, MAIN_PROJECT_TABLE } = require('../config/config');
 const { count } = require('console');
 const { PROJECT_TYPES_AND_NAME } = require('../lib/enumConstants');
 const multer = Multer({
@@ -262,7 +262,7 @@ router.get('/me', auth, async (req, res) => {
   }
   result1['coordinates'] = coordinates;
   result1['polygon'] = polygon;
-  for (const table of ['mhfd_projects']) {
+  for (const table of [MAIN_PROJECT_TABLE]) {
     let condition = '';
     if (user.zoomarea) {
       condition = `WHERE jurisdiction='${user.zoomarea}'`;

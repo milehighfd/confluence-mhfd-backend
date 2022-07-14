@@ -2,14 +2,12 @@ const express = require('express');
 const db = require('../config/db');
 const logger = require('../config/logger');
 
-const User = db.user;
-const Favorites = db.favorites;
 const favoritesService = require('../services/favorites.service');
 const attachmentService = require('../services/attachment.service');
 
 const router = express.Router();
-const PROJECT_TABLES = ['mhfd_projects'];
-const { CARTO_TOKEN, PROPSPROBLEMTABLES } = require('../config/config');
+const { CARTO_TOKEN, PROPSPROBLEMTABLES, MAIN_PROJECT_TABLE } = require('../config/config');
+const PROJECT_TABLES = [MAIN_PROJECT_TABLE];
 const needle = require('needle');
 const auth = require('../auth/auth');
 const PROBLEMS_TABLE = 'problems';
@@ -268,8 +266,8 @@ router.post('/favorite-list', auth, async (req, res) => {
           console.log('miau miau miau');
            for (const table of PROJECT_TABLES) {
               let query = ''
-              if (table === 'mhfd_projects') {
-                 query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters('mhfd_projects', 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
+              if (table === MAIN_PROJECT_TABLE) {
+                 query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters(MAIN_PROJECT_TABLE, 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
               }
               console.log(query);
               const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);

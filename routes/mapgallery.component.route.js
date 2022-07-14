@@ -313,9 +313,14 @@ async function countTotalComponent(bounds, body) {
     const query = { q: ` ${COUNTSQL} ` };
     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
     const lineData = await needle('post', URL, query, { json: true });
-    
-    let total = lineData.body.rows.reduce((p, c) => p + c.count, 0)
-    return total;
+    if (lineData.statusCode === 200) {
+      let total = lineData.body.rows.reduce((p, c) => p + c.count, 0)
+      return total;
+    } else {
+      logger.error('countTotalComponent error');
+      logger.error(lineData.statusCode);
+      logger.error(lineData.body);
+    }
 }
 
 async function componentCounterRoute(req, res) {

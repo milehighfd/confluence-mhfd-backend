@@ -4,7 +4,12 @@ const https = require('https');
 const logger = require('../config/logger');
 const needle = require('needle');
 
-const {CARTO_TOKEN, PROPSPROBLEMTABLES, PROBLEM_TABLE} = require('../config/config');
+const {
+  CARTO_TOKEN,
+  PROPSPROBLEMTABLES,
+  PROBLEM_TABLE,
+  MAIN_PROJECT_TABLE
+} = require('../config/config');
 
 router.post('/', async (req, res) => { 
   const table = req.body.table;
@@ -297,9 +302,9 @@ router.get('/bbox-components', async (req, res) => {
     component: 'self',
     centroid: [(minLat + maxLat) / 2, (minLng + maxLng) / 2]
   };
-  if (table === 'mhfd_projects') {
+  if (table === MAIN_PROJECT_TABLE) {
     const queryProjectLine = {
-      q: ['mhfd_projects'/*, 'projects_polygon_'*/].map(t => 
+      q: [table].map(t => 
         `SELECT ST_AsGeoJSON(the_geom) as geojson from ${t} where projectid = ${id}`
       ).join(' union ')
     }
