@@ -152,6 +152,10 @@ async function getCountSolutionStatusProblem(range, bounds, body) {
         if (data.body.rows.length > 0) {
           counter = data.body.rows[0].count;
         }
+      } else {
+        logger.error('getCountSolutionStatusProblem error');
+        logger.error(data.statusCode);
+        logger.error(data.body);
       }
       result.push({
         value: value,

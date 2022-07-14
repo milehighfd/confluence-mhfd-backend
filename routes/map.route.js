@@ -302,7 +302,7 @@ router.get('/bbox-components', async (req, res) => {
     component: 'self',
     centroid: [(minLat + maxLat) / 2, (minLng + maxLng) / 2]
   };
-  if (table === 'mhfd_projects' || table === MAIN_PROJECT_TABLE) {
+  if (table === MAIN_PROJECT_TABLE) {
     const queryProjectLine = {
       q: [table].map(t => 
         `SELECT ST_AsGeoJSON(the_geom) as geojson from ${t} where projectid = ${id}`

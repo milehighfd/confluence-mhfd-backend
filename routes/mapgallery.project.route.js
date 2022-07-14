@@ -259,7 +259,6 @@ async function getValuesByRangeProject(column, bounds, body) {
 async function getCountWorkYearProject(data, bounds, body) {
    let result = [];
    try {
-      console.log("\n\n\n\n\ CARTO TOKEN _ >>>>>>>>>>>>>>>>>", `https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       const coords = bounds.split(',');
       let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
@@ -278,8 +277,13 @@ async function getCountWorkYearProject(data, bounds, body) {
                      counter += d.body.rows[0].count;
                   }
                } else {
-                  console.log('data.statusCode', data.statusCode, table, value.column, data.body)
-                  console.log('query.q', query.q)
+                  logger.error('getCountWorkYearProject');
+                  logger.error(query.statusCode);
+                  logger.error(table);
+                  logger.error(value.column);
+                  logger.error(data.body);
+                  logger.error('query.q');
+                  logger.error(query.q);
                }
             }
          }
@@ -305,8 +309,8 @@ function createQueryByProblemType(problemType, project) {
    let operator = '';
    let query = '';
    for (const component of VALUES_COMPONENTS) {
-      query += operator + ` select projectid from ${component}, ${PROBLEM_TABLE}} where projectid = ${project}.projectid 
-   and ${component}.problemid = ${PROBLEM_TABLE}}.problemid and problemtype='${problemType}' `;
+      query += operator + ` select projectid from ${component}, ${PROBLEM_TABLE} where projectid = ${project}.projectid 
+   and ${component}.problemid = ${PROBLEM_TABLE}.problemid and problemtype='${problemType}' `;
       operator = ' union ';
 
    }
@@ -334,7 +338,7 @@ async function getProjectByProblemTypeProject(bounds, body) {
             if (data.statusCode === 200) {
                counter += data.body.rows[0].count;
             } else {
-               console.log('data.statusCode', data.statusCode, table, data.body)
+               console.log('data.statusCode 2', data.statusCode, table, data.body)
                console.log('query.q', query.q)
             }
          }
