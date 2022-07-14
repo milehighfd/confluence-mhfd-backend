@@ -39,7 +39,7 @@ const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_k
 const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
 'special_item_linear', 'special_item_area', 'channel_improvements_linear',
 'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
-'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
+'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area', 'stream_improvement_measure'];
 
 router.post('/get-components-by-components-and-geom', auth, async (req, res) => {
   const geom = req.body.geom;
@@ -74,8 +74,13 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
         queryWhere = where;
       }
     }
-    const sql = `SELECT objectid, cartodb_id, type, jurisdiction, status, original_cost, problemid  FROM ${component} 
-    WHERE  ${queryWhere} AND projectid is null `;
+    const type = component === 'stream_improvement_measure' ? 'component_part_category as type' : 'type';
+    const jurisdiction = component === 'stream_improvement_measure' ? 'service_area as jurisdiction' : 'jurisdiction'; 
+    const cost = component === 'stream_improvement_measure' ? '0 as original_cost' : 'original_cost';
+    const problemid = component === 'stream_improvement_measure' ? 'problem_id' : 'problemid';
+    const projectid = component === 'stream_improvement_measure' ? 'project_id' : 'projectid';
+    const sql = `SELECT objectid, cartodb_id, ${type}, ${jurisdiction}, status, ${cost}, ${problemid}  FROM ${component} 
+    WHERE  ${queryWhere} AND ${projectid} is null `;
     const query = {
       q: sql
     };
