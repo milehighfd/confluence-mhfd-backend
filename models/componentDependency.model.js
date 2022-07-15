@@ -1,7 +1,6 @@
 
 module.exports = (sequelize, DataType) => {
   const ComponentDependency = sequelize.define('componentdependecy', {
-
     objectid: {
       type: DataType.INTEGER,
     },

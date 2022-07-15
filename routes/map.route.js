@@ -12,7 +12,10 @@ const {
 const db = require('../config/db');
 const router = express.Router();
 
-const ComponentDependency = db.ComponentDependency;
+const ComponentDependency = db.componentdependency;
+
+
+
 
 router.post('/', async (req, res) => { 
   const table = req.body.table;
@@ -200,9 +203,10 @@ router.get('/bbox-components', async (req, res) => {
   const promises = [];
   const extraQueries = [];
   if (table === PROBLEM_TABLE) {
-    field = 'problem_id';
-    const comps = await ComponentDependency.find({
-      problem_id: id
+    field = 'problemid';
+    const comps = await ComponentDependency.findAll({
+      where: {'problem_id': id},
+      attributes: ['component_id']
     });
     logger.info(`COMPONENTS FROM Component dependency table ${JSON.stringify(comps)}`);
     for (const component of comps) {
@@ -284,6 +288,7 @@ router.get('/bbox-components', async (req, res) => {
       `SELECT ST_AsGeoJSON(the_geom) as geojson, '${t.key}' as component, original_cost as cost from ${t.key} where ${field} = ${id}` 
     ).concat(extraQueries).join(' union ')
   }
+  console.log('JSON.stringify(query)\n\n\n\n', JSON.stringify(query));
   const datap = await needle('post', CARTO_URL, query, { json: true });
   let centroids = datap.body.rows.map((r) => {
     let geojson = JSON.parse(r.geojson);
