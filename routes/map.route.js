@@ -9,7 +9,7 @@ const {
   PROBLEM_TABLE,
   MAIN_PROJECT_TABLE
 } = require('../config/config');
-
+const db = require('../config/db');
 const router = express.Router();
 
 const ComponentDependency = db.ComponentDependency;
