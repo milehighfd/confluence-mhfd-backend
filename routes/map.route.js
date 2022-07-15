@@ -193,6 +193,7 @@ router.get('/get-aoi-from-center', async (req, res) => {
   
 });
 router.get('/bbox-components', async (req, res) => {
+  logger.info('BBOX components executing');
   const id = req.query.id;
   const table = req.query.table;
   let field = 'projectid';
