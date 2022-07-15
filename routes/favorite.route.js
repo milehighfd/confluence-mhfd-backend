@@ -1,16 +1,15 @@
 const express = require('express');
-const db = require('../config/db');
+const needle = require('needle');
 const logger = require('../config/logger');
-
 const favoritesService = require('../services/favorites.service');
 const attachmentService = require('../services/attachment.service');
+const { CARTO_URL, PROPSPROBLEMTABLES, MAIN_PROJECT_TABLE } = require('../config/config');
+const auth = require('../auth/auth');
 
 const router = express.Router();
-const { CARTO_TOKEN, PROPSPROBLEMTABLES, MAIN_PROJECT_TABLE } = require('../config/config');
 const PROJECT_TABLES = [MAIN_PROJECT_TABLE];
-const needle = require('needle');
-const auth = require('../auth/auth');
 const PROBLEMS_TABLE = 'problems';
+
 function getFilters(params, ids) {
    let filters = '';
    let tipoid = '';
@@ -209,14 +208,11 @@ router.post('/favorite-list', auth, async (req, res) => {
      if (req.body.isproblem) {
       let filters = '';
       filters = getFilters(req.body, ids);
-        // 
         const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCounters(PROBLEMS_TABLE, PROPSPROBLEMTABLES.problem_boundary[5])}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEMS_TABLE} `;
-        //const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${PROBLEM_SQL} ${filters} &api_key=${CARTO_TOKEN}`);
-        const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
         const query = { q: `${PROBLEM_SQL}  ${filters} ` };
         let answer = [];
         try {
-           const data = await needle('post', URL, query, { json: true });
+           const data = await needle('post', CARTO_URL, query, { json: true });
            //console.log('status', data.statusCode);
            if (data.statusCode === 200) {
               /* let coordinates = [];
@@ -270,11 +266,10 @@ router.post('/favorite-list', auth, async (req, res) => {
                  query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters(MAIN_PROJECT_TABLE, 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
               }
               console.log(query);
-              const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
               let answer = [];
               try {
-                console.log(URL, query);
-                 const data = await needle('post', URL, query, { json: true });
+                console.log(CARTO_URL, query);
+                 const data = await needle('post', CARTO_URL, query, { json: true });
                  //console.log('STATUS', data.statusCode);
                  if (data.statusCode === 200) {
                     const result = data.body.rows;

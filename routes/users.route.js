@@ -1,23 +1,20 @@
 const express = require('express');
-const router = express.Router();
 const Multer = require('multer');
 const bcrypt = require('bcryptjs');
 const https = require('https');
-
-//const User = require('../models/user.model');
 const db = require('../config/db');
-const User = db.user;
 const UserService = require('../services/user.service');
 const auth = require('../auth/auth');
 const { validator } = require('../utils/utils');
-const { EMAIL_VALIDATOR, ROLES } = require('../lib/enumConstants');
+const { EMAIL_VALIDATOR } = require('../lib/enumConstants');
 const userService = require('../services/user.service');
-const UPDATEABLE_FIELDS = userService.requiredFields('edit');
 const logger = require('../config/logger');
-const ORGANIZATION_DEFAULT = 'Mile High Flood District'; // 'Mile High Flood Control District';
-const { CARTO_TOKEN, MAIN_PROJECT_TABLE } = require('../config/config');
-const { count } = require('console');
+const { CARTO_URL, MAIN_PROJECT_TABLE } = require('../config/config');
 const { PROJECT_TYPES_AND_NAME } = require('../lib/enumConstants');
+
+const router = express.Router();
+const User = db.user;
+const ORGANIZATION_DEFAULT = 'Mile High Flood District';
 const multer = Multer({
   storage: Multer.MemoryStorage,
   limits: {
@@ -169,7 +166,7 @@ router.get('/me', auth, async (req, res) => {
   try {
     const newProm = new Promise((resolve, reject) => {
       const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM mhfd_zoom_to_areas WHERE aoi = '${organization_query}' `;
-      const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
+      const URL = `${CARTO_URL}&q=${sql}`;
       let result = [];
       //console.log('URL', URL);
       https.get(URL, response => {
@@ -267,9 +264,9 @@ router.get('/me', auth, async (req, res) => {
     if (user.zoomarea) {
       condition = `WHERE jurisdiction='${user.zoomarea}'`;
     }
-    const sql = `SELECT COUNT( projecttype), projecttype  FROM "denver-mile-high-admin".${table}  ${condition} group by projecttype`;
+    const sql = `SELECT COUNT( projecttype), projecttype  FROM ${table}  ${condition} group by projecttype`;
     console.log('my zoom area sql is ', sql);
-    const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
+    const URL = `${CARTO_URL}&q=${sql}`;
     const promise = await new Promise(resolve => {
       https.get(URL, response => {
         console.log('status ' + response.statusCode);
@@ -345,7 +342,7 @@ router.post('/upload-photo', [auth, multer.array('file')], async (req, res) => {
 
     const newProm = new Promise((resolve, reject) => {
       const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM mhfd_zoom_to_areas WHERE aoi = '${organization_query}' `;
-      const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
+      const URL = `${CARTO_URL}&q=${sql}`;
       let result = [];
       //console.log('URL', URL);
       https.get(URL, response => {

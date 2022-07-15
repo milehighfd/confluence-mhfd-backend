@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const https = require('https');
-const { CARTO_TOKEN } = require('../config/config');
+const { CARTO_URL } = require('../config/config');
 
 router.get('/', async (req, res) => {
   try {
     const newProm = new Promise((resolve, reject) => {
       const sql = `select cartodb_id, aoi, filter, ST_AsGeoJSON(ST_Envelope(the_geom)) from mhfd_zoom_to_areas order by aoi`;
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`);
+      const URL = encodeURI(`${CARTO_URL}&q=${sql}`);
       let result = [];
       https.get(URL, response => {
         if (response.statusCode === 200) {
@@ -55,7 +55,7 @@ router.get('/complete', async (req, res) => {
   try {
     const newProm = new Promise((resolve, reject) => {
       const sql = `select cartodb_id, aoi, filter, ST_AsGeoJSON(the_geom) from mhfd_zoom_to_areas order by aoi`;
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`);
+      const URL = encodeURI(`${CARTO_URL}&q=${sql}`);
       let result = [];
       https.get(URL, response => {
         if (response.statusCode === 200) {
@@ -102,7 +102,7 @@ router.get('/get-zoom-filter', async (req, res) => {
   try {
     const newProm = new Promise((resolve, reject) => {
       const sql = `select filter, aoi from mhfd_zoom_to_areas group by filter, aoi order by filter, aoi`;
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`);
+      const URL = encodeURI(`${CARTO_URL}&q=${sql}`);
       let result = [];
       https.get(URL, response => {
         if (response.statusCode === 200) {

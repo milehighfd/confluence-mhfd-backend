@@ -1,22 +1,20 @@
 const express = require('express');
 const needle = require('needle');
 const router = express.Router();
-
-
 const auth = require('../auth/auth');
-const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('../config/config');
+const { CREATE_PROJECT_TABLE, CARTO_URL } = require('../config/config');
 const logger = require('../config/logger');
-
-
 const db = require('../config/db');
-const { getCoordsByProjectId, getMidByProjectId, getMinimumDateByProjectId } = require('./mapgallery.service');
-const { sendBoardNotification } = require('../services/user.service');
-const { board } = require('../config/db');
+const {
+    getCoordsByProjectId,
+    getMidByProjectId,
+    getMinimumDateByProjectId
+} = require('./mapgallery.service');
+
 const Board = db.board;
 const User = db.user;
 const BoardProject = db.boardProject;
 const BoardLocality = db.boardLocality;
-const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
 router.get('/coordinates/:pid', async (req, res) => {
     let { pid } = req.params;
@@ -233,7 +231,7 @@ const updateProjectStatus = async (boards, status) => {
                 const query = {
                     q: updateQuery
                 };
-                const data = await needle('post', URL, query, { json: true });
+                const data = await needle('post', CARTO_URL, query, { json: true });
                 if (data.statusCode === 200) {
                     result = data.body;
                     logger.log(result);
@@ -511,7 +509,7 @@ router.delete('/project/:projectid/:namespaceId', [auth], async (req, res) => {
     //     q: sql
     // };
     // try {
-    //     const data = await needle('post', URL, query, { json: true });
+    //     const data = await needle('post', CARTO_URL, query, { json: true });
     //     //console.log('STATUS', data.statusCode);
     //     if (data.statusCode === 200) {
     //       result = data.body;
@@ -534,7 +532,7 @@ router.get('/bbox/:projectid', async (req, res) => {
     };
     logger.info(sql);
     try {
-        const data = await needle('post', URL, query, { json: true });
+        const data = await needle('post', CARTO_URL, query, { json: true });
         //console.log('STATUS', data.statusCode);
         if (data.statusCode === 200) {
           result = data.body;
@@ -576,7 +574,7 @@ router.post('/projects-bbox', async (req, res) => {
     };
     logger.info(sql);
     try {
-        const data = await needle('post', URL, query, { json: true });
+        const data = await needle('post', CARTO_URL, query, { json: true });
         //console.log('STATUS', data.statusCode);
         if (data.statusCode === 200) {
           result = data.body;

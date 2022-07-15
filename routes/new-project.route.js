@@ -1,41 +1,31 @@
 const express = require('express');
-const router = express.Router();
 const Multer = require('multer');
-const bcrypt = require('bcryptjs');
-const https = require('https');
 const needle = require('needle');
 const attachmentService = require('../services/attachment.service');
 const projectStreamService = require('../services/projectStream.service');
 const projectComponentService = require('../services/projectComponent.service');
 const indepdendentService = require('../services/independent.service');
-const { CARTO_TOKEN, CREATE_PROJECT_TABLE, PROBLEM_TABLE, PROPSPROBLEMTABLES } = require('../config/config');
-
+const {
+  CARTO_URL,
+  CREATE_PROJECT_TABLE,
+  PROBLEM_TABLE,
+  PROPSPROBLEMTABLES
+} = require('../config/config');
 const db = require('../config/db');
+const auth = require('../auth/auth');
+const logger = require('../config/logger');
+
+const router = express.Router();
 const Board = db.board;
 const BoardProject = db.boardProject;
 const Locality = db.locality;
-//const User = require('../models/user.model');
-const User = db.user;
 const IndependentComponent = db.independentComponent;
-const UserService = require('../services/user.service');
-const auth = require('../auth/auth');
-const { validator } = require('../utils/utils');
-const { EMAIL_VALIDATOR, ROLES } = require('../lib/enumConstants');
-const userService = require('../services/user.service');
-const UPDATEABLE_FIELDS = userService.requiredFields('edit');
-const logger = require('../config/logger');
-const ORGANIZATION_DEFAULT = 'Mile High Flood District'; // 'Mile High Flood Control District';
-const { count, group } = require('console');
-const { PROJECT_TYPES_AND_NAME } = require('../lib/enumConstants');
 const multer = Multer({
   storage: Multer.MemoryStorage,
   limits: {
     fileSize: 50 * 1024 * 1024
   }
 });
-
-const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-
 const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
 'special_item_linear', 'special_item_area', 'channel_improvements_linear',
 'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
@@ -87,7 +77,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
     console.log(sql);
     let body = {};
     try {
-      const data = await needle('post', URL, query, { json: true });
+      const data = await needle('post', CARTO_URL, query, { json: true });
       //console.log('STATUS', data.statusCode);
       if (data.statusCode === 200) {
         body = data.body;
@@ -548,7 +538,7 @@ router.post('/streams-data', auth, async (req, res) => {
 
 router.post('/get-jurisdiction-for-polygon', async (req, res) => {
   const { geom } = req.body;
-  const sql = `SELECT jurisdiction FROM "denver-mile-high-admin".jurisidictions WHERE ST_Dwithin(the_geom, ST_Centroid(ST_GeomFromGeoJSON('${JSON.stringify(geom)}')), 0)`;
+  const sql = `SELECT jurisdiction FROM jurisidictions WHERE ST_Dwithin(the_geom, ST_Centroid(ST_GeomFromGeoJSON('${JSON.stringify(geom)}')), 0)`;
   logger.info(sql);
   const query = { q: sql };
   try {
@@ -1671,14 +1661,14 @@ router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req
 });
 
 const getJurisdictionByGeom = async (geom) => {
-  let sql = `SELECT jurisdiction FROM "denver-mile-high-admin".jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
+  let sql = `SELECT jurisdiction FROM jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
   const query = { q: sql };
   const data = await needle('post', URL, query, { json: true });
   return data.body.rows[0].jurisdiction;
 }
 
 const getAllJurisdictionByGeom = async (geom) => {
-  let sql = `SELECT jurisdiction FROM "denver-mile-high-admin".jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
+  let sql = `SELECT jurisdiction FROM jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
   const query = { q: sql };
   const data = await needle('post', URL, query, { json: true });
   return data.body.rows.map(element => element.jurisdiction);

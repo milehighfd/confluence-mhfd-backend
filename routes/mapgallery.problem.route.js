@@ -1,6 +1,11 @@
-const { CARTO_TOKEN, PROBLEM_TABLE, PROPSPROBLEMTABLES } = require('../config/config');
-const logger = require('../config/logger');
 const needle = require('needle');
+const {
+  CARTO_URL,
+  PROBLEM_TABLE,
+  PROPSPROBLEMTABLES
+} = require('../config/config');
+const logger = require('../config/logger');
+
 const getNewFilter = (filters, body, withPrefix) => {
   let prefix = '';
   if (withPrefix) {
@@ -66,13 +71,12 @@ async function getCountByArrayColumnsProblem(table, column, columns, bounds, bod
     filters = getNewFilter(filters, body);
 
     for (const value of columns) {
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       const query = {
         q: `select ${column} as column, count(*) as count from ${table} 
              where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
       };
       let counter = 0;
-      const data = await needle('post', URL, query, { json: true });
+      const data = await needle('post', CARTO_URL, query, { json: true });
 
       //console.log('STATUS', data.statusCode);
       if (data.statusCode === 200) {
@@ -107,12 +111,11 @@ async function getCountByColumnProblem(table, column, bounds, body) {
 
     filters = getNewFilter(filters, body);
 
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       const query = {
         q: `select ${column} as value, count(*) as counter from ${table} 
              where ${filters} group by ${column} order by ${column} `
       };
-      const data = await needle('post', URL, query, { json: true });
+      const data = await needle('post', CARTO_URL, query, { json: true });
       if (data.statusCode === 200) {
         if (data.body.rows.length > 0) {
           result = result.concat(data.body.rows)
@@ -136,7 +139,6 @@ async function getCountSolutionStatusProblem(range, bounds, body) {
 
     filters = getNewFilter(filters, body);
 
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
     for (const value of range) {
       let endValue = 0;
       if (value === 75) {
@@ -146,7 +148,7 @@ async function getCountSolutionStatusProblem(range, bounds, body) {
       }
 
       const query = { q: `select count(*) as count from ${PROBLEM_TABLE} where ${filters} and ${PROPSPROBLEMTABLES.problem_boundary[1]} between ${value} and ${endValue} ` };
-      const data = await needle('post', URL, query, { json: true });
+      const data = await needle('post', CARTO_URL, query, { json: true });
       let counter = 0;
       if (data.statusCode === 200) {
         if (data.body.rows.length > 0) {
@@ -180,7 +182,6 @@ async function getSubtotalsByComponentProblem(table, column, bounds, body) {
       'Channel Improvements Area', 'Removal Line', 'Removal Area', 'Storm Drain',
       'Detention Facilities', 'Maintenance Trails', 'Land Acquisition', 'Landscaping Area'];
 
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
     for (const tablename of COMPONENTS) {
       const table = tablename.toLowerCase().split(' ').join('_');
       let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), ${table}.the_geom) or `;
@@ -189,12 +190,16 @@ async function getSubtotalsByComponentProblem(table, column, bounds, body) {
       filters = getNewFilter(filters, body, true);
 
       const query = { q: `select count(*) from ${table}, ${PROBLEM_TABLE} where ${PROBLEM_TABLE}.${column}= ${table}.${column} and ${filters} ` };
-      const data = await needle('post', URL, query, { json: true });
+      const data = await needle('post', CARTO_URL, query, { json: true });
       let counter = 0;
       if (data.statusCode === 200) {
         if (data.body.rows.length > 0) {
           counter = data.body.rows[0].count;
         }
+      } else {
+        logger.error('getSubtotalsByComponentProblem error');
+        logger.error(data.statusCode);
+        logger.error(data.body);
       }
       result.push({
         key: table,
@@ -218,7 +223,6 @@ async function getValuesByRangeProblem(table, column, range, bounds, body) {
     let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
     filters = getNewFilter(filters, body);
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
     const newProm1 = new Promise(async (resolve, reject) => {
       let minRange, maxRange;
@@ -237,7 +241,7 @@ async function getValuesByRangeProblem(table, column, range, bounds, body) {
         const minMaxQuery = {
             q: `SELECT max(${column}) as max, min(${column}) as min FROM ${table} where ${filters}`
         }
-        const minMaxData = await needle('post', URL, minMaxQuery, { json: true });
+        const minMaxData = await needle('post', CARTO_URL, minMaxQuery, { json: true });
         const minMaxResult = minMaxData.body.rows || [];
         minRange = Math.min.apply(Math, minMaxResult.map(function (element) { return element.min }));
         maxRange = Math.max.apply(Math, minMaxResult.map(function (element) { return element.max }));
@@ -257,7 +261,7 @@ async function getValuesByRangeProblem(table, column, range, bounds, body) {
         }
         let counter = 0;
         const query = { q: `select count(*) from ${table} where (${column} between ${values.min} and ${values.max}) and ${filters} ` };
-        const data = await needle('post', URL, query, { json: true });
+        const data = await needle('post', CARTO_URL, query, { json: true });
         if (data.statusCode === 200) {
           const rows = data.body.rows;
           counter = rows[0].count;
@@ -285,8 +289,7 @@ async function countTotalProblems(bounds, body) {
     let COUNTSQL = `SELECT count(*) FROM ${PROBLEM_TABLE} where ${filters}`;
 
     const query = { q: ` ${COUNTSQL} ` };
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-    const lineData = await needle('post', URL, query, { json: true });
+    const lineData = await needle('post', CARTO_URL, query, { json: true });
 
     let total = lineData.body.rows[0].count;
     return total;
@@ -314,7 +317,7 @@ async function problemParamFilterRoute(req, res) {
      let problemTypesConst = [ 'Flood Hazard', 'Stream Function', 'Watershed Change'];
      requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], ['High', 'Medium', 'Low'], bounds, body));
      requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body));
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], bounds, body));
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[3], bounds, body));
      requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[14], bounds, body));
      requests.push(getSubtotalsByComponentProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[5], bounds, body));
      const rangeSolution = [
