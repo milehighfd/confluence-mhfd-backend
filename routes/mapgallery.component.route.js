@@ -358,17 +358,17 @@ async function componentParamFilterRoute(req, res) {
      requests.push(getComponentsValuesByColumnWithCountWithFilter('county', bounds, body, true));
      requests.push(getComponentsValuesByColumnWithCountWithFilter('servicearea', bounds, body, true));
 
-     const promises = await Promise.allsettled(requests);
+     const promises = await Promise.allSettled(requests);
 
      const result = {
-        "component_type": promises[0],
-        "status": promises[1],
-        "yearofstudy": promises[2],
-        "watershed": promises[3],
-        "estimatedcost": promises[4],
-        "jurisdiction": promises[5],
-        "county": promises[6],
-        "servicearea": promises[7]
+        "component_type": promises[0].status === 'fulfilled' ? promises[0].value : null,
+        "status": promises[1].status === 'fulfilled' ? promises[1].value : null,
+        "yearofstudy": promises[2].status === 'fulfilled' ? promises[2].value : null,
+        "watershed": promises[3].status === 'fulfilled' ? promises[3].value : null,
+        "estimatedcost": promises[4].status === 'fulfilled' ? promises[4].value : null,
+        "jurisdiction": promises[5].status === 'fulfilled' ? promises[5].value : null,
+        "county": promises[6].status === 'fulfilled' ? promises[6].value : null,
+        "servicearea": promises[7].status === 'fulfilled' ? promises[7].value : null
      };
      res.status(200).send(result);
   } catch (error) {
