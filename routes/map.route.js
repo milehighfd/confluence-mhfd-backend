@@ -355,7 +355,7 @@ router.get('/bbox-components', async (req, res) => {
         `SELECT ST_AsGeoJSON(the_geom) as geojson from ${t} where projectid = ${id}`
       ).join(' union ')
     }
-    const dataProjectLine = await needle('post', URL2, queryProjectLine, { json: true });
+    const dataProjectLine = await needle('post', CARTO_URL, queryProjectLine, { json: true });
     let r = dataProjectLine.body.rows[0];
     let geojson = JSON.parse(r.geojson);
     let projectCenter = [0, 0];
