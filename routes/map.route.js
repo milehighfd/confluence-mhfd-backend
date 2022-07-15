@@ -12,6 +12,8 @@ const {
 
 const router = express.Router();
 
+const ComponentDependency = db.ComponentDependency;
+
 router.post('/', async (req, res) => { 
   const table = req.body.table;
   let sql = `SELECT * FROM ${table}`;
@@ -194,15 +196,57 @@ router.get('/bbox-components', async (req, res) => {
   const id = req.query.id;
   const table = req.query.table;
   let field = 'projectid';
-  if (table === PROBLEM_TABLE) {
-    field = 'problemid';
-  }
   const promises = [];
+  const extraQueries = [];
+  if (table === PROBLEM_TABLE) {
+    field = 'problem_id';
+    const comps = await ComponentDependency.find({
+      problem_id: id
+    });
+    logger.info(`COMPONENTS FROM Component dependency table ${JSON.stringify(comps)}`);
+    for (const component of comps) {
+      let sql = `SELECT ST_extent(detention_facilities.the_geom) as bbox FROM detention_facilities
+        where detention_facilities.component_id = ${component.component_id}`;
+        logger.info(`SQL FOR Component dependency : ${sql}`);
+        sql = encodeURIComponent(sql);
+        const extra = `SELECT ST_AsGeoJSON(the_geom) as geojson, 'detention_facilities' as component, 
+        original_cost as cost from detention_facilities where component_id = ${component.component_id}`;
+        extraQueries.push(extra);
+        const URL = `${CARTO_URL}&q=${sql}`;
+        promises.push(new Promise((resolve, reject) => {
+          https.get(URL, response => {   
+            if (response.statusCode == 200) {
+              let str = '';
+              response.on('data', function (chunk) {
+                str += chunk;
+              });
+              response.on('end', function () {
+                const rows = JSON.parse(str).rows;
+                console.log(rows);
+                if (rows[0].bbox != null) {
+                  rows[0].bbox = rows[0].bbox.replace('BOX(', '').replace(')', '').replace(/ /g, ',').split(',');
+                }
+                resolve({
+                  bbox: rows[0].bbox,
+                  component: 'detention_facilities'
+                });
+              });
+            } else {
+              console.log('status ', response.statusCode, URL);
+              resolve([]);
+            }
+          }).on('error', err => {
+            console.log('failed call to ', URL, 'with error ', err);
+            resolve([]);
+          })})
+        );  
+    }
+  }
   for (const element of components) {
     const component = element.key;
     let sql = `SELECT ST_extent(${component}.the_geom) as bbox FROM ${component} 
     where ${component}.${field} = ${id}`;
-    console.log('my sql ', sql);
+    logger.info(`SQL FOR BBOX: ${sql}`);
     sql = encodeURIComponent(sql);
     const URL = `${CARTO_URL}&q=${sql}`;
     promises.push(new Promise((resolve, reject) => {
@@ -237,7 +281,7 @@ router.get('/bbox-components', async (req, res) => {
   const query = {
     q: components.map(t => 
       `SELECT ST_AsGeoJSON(the_geom) as geojson, '${t.key}' as component, original_cost as cost from ${t.key} where ${field} = ${id}` 
-    ).join(' union ')
+    ).concat(extraQueries).join(' union ')
   }
   const datap = await needle('post', CARTO_URL, query, { json: true });
   let centroids = datap.body.rows.map((r) => {
