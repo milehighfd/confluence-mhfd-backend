@@ -63,7 +63,15 @@ const PROPSPROBLEMTABLES = {
     'stream_name',  //15
     'component_cost'  //16
   ]
-}
+};
+const CARTO_DOMAIN = 'denver-mile-high-admin';
+const CARTO_URL = encodeURI(
+  `https://${CARTO_DOMAIN}.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`
+);
+const CARTO_URL_MAP = encodeURI(
+  `https://${CARTO_DOMAIN}.carto.com/api/v1/map?api_key=${CARTO_TOKEN}`
+);
+
 module.exports = {
   JWT_KEY,
   POSTGRESQL_HOST,
@@ -90,5 +98,7 @@ module.exports = {
   BASE_SERVER_URL,
   PROBLEM_TABLE,
   PROPSPROBLEMTABLES,
-  MAIN_PROJECT_TABLE
+  MAIN_PROJECT_TABLE,
+  CARTO_URL,
+  CARTO_URL_MAP
 };

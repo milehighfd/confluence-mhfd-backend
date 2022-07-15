@@ -1,8 +1,8 @@
 require('dotenv').config()
 const needle = require('needle');
-const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('./config/config');
+const { CARTO_URL, CREATE_PROJECT_TABLE } = require('./config/config');
 const URL = 'https://confdevbc.mhfd.org';
-const URL_MHFD = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
+
 needle.defaults({ open_timeout: 60000 });
 (async () => {
     process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
@@ -73,7 +73,7 @@ needle.defaults({ open_timeout: 60000 });
             const query = {
                 q: updateQuery
             };
-            const data = await needle('post', URL_MHFD, query, { json: true });
+            const data = await needle('post', CARTO_URL, query, { json: true });
             if (data.statusCode === 200) {
                 result = data.body;
                 console.log(result);

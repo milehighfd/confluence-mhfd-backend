@@ -1,15 +1,16 @@
 const express = require('express');
-const router = express.Router();
 const https = require('https');
 const logger = require('../config/logger');
 const needle = require('needle');
-
 const {
-  CARTO_TOKEN,
+  CARTO_URL,
+  CARTO_URL_MAP,
   PROPSPROBLEMTABLES,
   PROBLEM_TABLE,
   MAIN_PROJECT_TABLE
 } = require('../config/config');
+
+const router = express.Router();
 
 router.post('/', async (req, res) => { 
   const table = req.body.table;
@@ -27,6 +28,7 @@ router.post('/', async (req, res) => {
   if(table.includes('active_lomcs')){
     sql =  `SELECT cartodb_id, the_geom, the_geom_webmercator, objectid, globalid, shape_area, shape_length, creationdate::text, creator , editdate::text, editor, lomc_case, lomc_type, lomc_identifier, status_date::text, status, notes, effective_date::text FROM ${table}` ;
   }
+  logger.info(sql);
   var mapConfig = {
     "version": '1.3.1',
     "buffersize": {mvt: 8},
@@ -42,7 +44,8 @@ router.post('/', async (req, res) => {
     }
   ]};
   mapConfig =  encodeURIComponent(JSON.stringify(mapConfig));
-  const URL = `https://denver-mile-high-admin.carto.com/api/v1/map?config=${mapConfig}&api_key=${CARTO_TOKEN}`;
+  const URL = `${CARTO_URL_MAP}&config=${mapConfig}`;
+  logger.info(URL);
   https.get(URL, response => {
     if (response.statusCode == 200) {
       let str = '';
@@ -99,7 +102,7 @@ router.get('/search/:query', async (req, res) => {
   let sql = `SELECT ST_x(ST_LineInterpolatePoint(st_makeline(st_linemerge(the_geom)), 0.5)) as x, ST_y(ST_LineInterpolatePoint(st_makeline(st_linemerge(the_geom)), 0.5)) as y, str_name FROM streams WHERE  str_name ILIKE '${query}%' AND ST_IsEmpty(the_geom) = false group by str_name`;
   console.log('el query ' , sql);
   sql =  encodeURIComponent(sql);
-  const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
+  const URL = `${CARTO_URL}&q=${sql}`;
   promises.push(new Promise((resolve, reject) => {
     https.get(URL, response => {   
       if (response.statusCode == 200) {
@@ -161,7 +164,7 @@ const components = [
 router.get('/get-aoi-from-center', async (req, res) => {
   const coord = (req.query.coord || '0,0');
   const sql = `SELECT cartodb_id, aoi, filter, ST_AsGeoJSON(the_geom) FROM mhfd_zoom_to_areas where ST_CONTAINS(the_geom, ST_SetSRID(ST_MakePoint(${coord}), 4326))`;
-  const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
+  const URL = `${CARTO_URL}&q=${sql}`;
   try {
     https.get(URL, response => {   
       if (response.statusCode == 200) {
@@ -197,11 +200,11 @@ router.get('/bbox-components', async (req, res) => {
   const promises = [];
   for (const element of components) {
     const component = element.key;
-    let sql = `SELECT ST_extent(${component}.the_geom) as bbox FROM "denver-mile-high-admin".${component} 
+    let sql = `SELECT ST_extent(${component}.the_geom) as bbox FROM ${component} 
     where ${component}.${field} = ${id}`;
     console.log('my sql ', sql);
     sql = encodeURIComponent(sql);
-    const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`;
+    const URL = `${CARTO_URL}&q=${sql}`;
     promises.push(new Promise((resolve, reject) => {
       https.get(URL, response => {   
         if (response.statusCode == 200) {
@@ -231,13 +234,12 @@ router.get('/bbox-components', async (req, res) => {
     );  
   }
   const all = await Promise.all(promises);
-  const URL2 = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
   const query = {
     q: components.map(t => 
       `SELECT ST_AsGeoJSON(the_geom) as geojson, '${t.key}' as component, original_cost as cost from ${t.key} where ${field} = ${id}` 
     ).join(' union ')
   }
-  const datap = await needle('post', URL2, query, { json: true });
+  const datap = await needle('post', CARTO_URL, query, { json: true });
   let centroids = datap.body.rows.map((r) => {
     let geojson = JSON.parse(r.geojson);
     let center = [0, 0];
@@ -336,7 +338,7 @@ router.get('/problemname/:problemid', async (req, res) => {
   const problemid = req.params.problemid;
   const sql = `select ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} from ${PROBLEM_TABLE} where ${PROPSPROBLEMTABLES.problem_boundary[5]} = ${problemid}`;
   const sqlURI =  encodeURIComponent(sql);
-  const URL = `https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sqlURI}&api_key=${CARTO_TOKEN}`;
+  const URL = `${CARTO_URL}&q=${sqlURI}`;
   console.log("SQL", sql)
   try {
     https.get(URL, response => {   

@@ -1,12 +1,14 @@
-const { CARTO_TOKEN, PROBLEM_TABLE, MAIN_PROJECT_TABLE } = require('../config/config');
-const logger = require('../config/logger');
 const needle = require('needle');
+const {
+   CARTO_URL,
+   PROBLEM_TABLE,
+   MAIN_PROJECT_TABLE
+} = require('../config/config');
+const logger = require('../config/logger');
+const { statusList } = require('./gallery.constants');
 
 const PROJECT_TABLES = [MAIN_PROJECT_TABLE];
 const COMPLETE_YEAR_COLUMN = 'completeyear';
-const {
-   statusList
-} = require('./gallery.constants');
 
 const getNewFilter = (filters, body) => {
    if (body.status) {
@@ -83,7 +85,6 @@ const getNewFilter = (filters, body) => {
 async function getValuesByColumnWithOutCountProject(column, bounds, body, needCount) {
    let result = [];
    try {
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       let answer = [];
       const coords = bounds.split(',');
       let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
@@ -92,7 +93,7 @@ async function getValuesByColumnWithOutCountProject(column, bounds, body, needCo
       filters = getNewFilter(filters, body);
       for (const table1 of PROJECT_TABLES) {
          const query = { q: `select ${needCount ? 'count(*) as counter, ' : ''} ${column} as value from ${table1} where ${filters} group by ${column} order by ${column} ` };
-         const data = await needle('post', URL, query, { json: true });
+         const data = await needle('post', CARTO_URL, query, { json: true });
          if (data.statusCode === 200) {
             answer = answer.concat(data.body.rows);
          } else {
@@ -103,7 +104,7 @@ async function getValuesByColumnWithOutCountProject(column, bounds, body, needCo
       if (column === 'startyear' || column === COMPLETE_YEAR_COLUMN) {
          for (const table1 of PROJECT_TABLES) {
             const query = { q: `select DISTINCT(${column}) as value from ${table1} order by ${column} ` };
-            const data = await needle('post', URL, query, { json: true });
+            const data = await needle('post', CARTO_URL, query, { json: true });
             if (data.statusCode === 200) {
                answer = answer.concat(data.body.rows
                   .map((r) => {
@@ -159,14 +160,13 @@ async function getCountByArrayColumnsProject(column, columns, bounds, body, need
 
       for (const value of columns) {
          let answer = [];
-         const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
          let counter = 0;
          for (const table1 of PROJECT_TABLES) {
             const query = {
                q: `select ${needsCount? 'count(*) as count, ': ''} ${column} as column from ${table1} 
        where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
             };
-            const data = await needle('post', URL, query, { json: true });
+            const data = await needle('post', CARTO_URL, query, { json: true });
 
             if (data.statusCode === 200) {
                if (data.body.rows.length > 0) {
@@ -206,31 +206,9 @@ async function getValuesByRangeProject(column, bounds, body) {
       let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
       filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
       filters = getNewFilter(filters, body);
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
       const newProm1 = new Promise(async (resolve, reject) => {
          let minRange, maxRange;
-
-         let bodyColumn = column === 'estimatedcost' ? body['totalcost'] : body[column];
-        //  if (bodyColumn && bodyColumn.length !== 0) {
-        //     let minPair = bodyColumn[0];
-        //     let maxPair = bodyColumn[bodyColumn.length - 1];
-        //     let minimumValue = minPair.split(',')[0];
-        //     let maximumValue = maxPair.split(',')[1];
-        //     minRange = +minimumValue;
-        //     maxRange = +maximumValue;
-        //  } else {
-        //     const minMaxQuery = {
-        //        q: PROJECT_TABLES.map(t => {
-        //           return `SELECT max(${column}) as max, min(${column}) as min FROM ${t} where ${filters}`;
-        //        }).join(' union ')
-        //     }
-        //     console.log('query', minMaxQuery);
-        //     const minMaxData = await needle('post', URL, minMaxQuery, { json: true });
-        //     const minMaxResult = minMaxData.body.rows;
-        //     minRange = Math.min.apply(Math, minMaxResult.map(function (element) { return element.min }));
-        //     maxRange = Math.max.apply(Math, minMaxResult.map(function (element) { return element.max }));
-        //  }
         minRange = 0;
         maxRange = 60000000;
          let intervalWidth = 1000000;
@@ -259,7 +237,6 @@ async function getValuesByRangeProject(column, bounds, body) {
 async function getCountWorkYearProject(data, bounds, body) {
    let result = [];
    try {
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       const coords = bounds.split(',');
       let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
       filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
@@ -271,7 +248,7 @@ async function getCountWorkYearProject(data, bounds, body) {
          if (!body.workplanyear || value.year == `${body.workplanyear}`) {
             for (const table of PROJECT_TABLES) {
                const query = { q: `select count(*) as count from ${table} where ${filters} and ${value.column} > 0 ` };
-               const d = await needle('post', URL, query, { json: true });
+               const d = await needle('post', CARTO_URL, query, { json: true });
                if (d.statusCode === 200) {
                   if (d.body.rows.length > 0) {
                      counter += d.body.rows[0].count;
@@ -322,7 +299,6 @@ async function getProjectByProblemTypeProject(bounds, body) {
    let result = [];
    try {
       const coords = bounds.split(',');
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
       filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
       filters = getNewFilter(filters, body);
@@ -333,13 +309,21 @@ async function getProjectByProblemTypeProject(bounds, body) {
          for (const table of PROJECT_TABLES) {
             const newfilter = createQueryByProblemType(type, table);
             const query = { q: `select count(*) as count from ${table} where ${filters} and ${newfilter} ` };
-            const data = await needle('post', URL, query, { json: true });
+            const data = await needle('post', CARTO_URL, query, { json: true });
 
             if (data.statusCode === 200) {
                counter += data.body.rows[0].count;
             } else {
-               console.log('data.statusCode 2', data.statusCode, table, data.body)
-               console.log('query.q', query.q)
+               logger.error('Error on getProjectByProblemTypeProject');
+               logger.error(data.statusCode);
+               logger.error(table);
+               if (data.body.error && data.body.hint) {
+                  logger.error(data.body.error);
+                  logger.error(data.body.hint);
+               } else {
+                  logger.error(JSON.stringify(data.body));
+               }
+               logger.error('query.q', query.q);
             }
          }
          result.push({
@@ -365,9 +349,8 @@ async function countTotalProjects(bounds, body) {
        return `SELECT count(*) FROM ${t} where ${filters}`
      }).join(' union ');
      const query = { q: ` ${COUNTSQL} ` };
-     const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
      try {
-      const lineData = await needle('post', URL, query, { json: true });
+      const lineData = await needle('post', CARTO_URL, query, { json: true });
       let total = lineData.body.rows.reduce((p, c) => p + c.count, 0)
       return total;   
      } catch (error) {

@@ -3,8 +3,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var morgan = require('morgan');
 var http = require('http');
-const logger = require('./config/logger');
 const cors = require('cors');
+const logger = require('./config/logger');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users.route');
@@ -12,7 +12,6 @@ const authRouter = require('./routes/auth.route');
 const adminRouter = require('./routes/admin.route');
 const logActivityRouter = require('./routes/logActivity.route');
 const mapRouter = require('./routes/map.route');
-const mapGalleryRouter = require('./routes/mapgallery.route');
 const problemRouter = require('./routes/problem.route');
 const driveRouter = require('./routes/drive.route');
 const attachmentRouter = require('./routes/attachment.route');

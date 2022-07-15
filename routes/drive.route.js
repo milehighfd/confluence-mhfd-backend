@@ -3,22 +3,16 @@ const readline = require('readline');
 const { google } = require('googleapis');
 const express = require('express');
 const router = express.Router();
-const path = require('path');
-const auth = require('../auth/auth');
 const logger = require('../config/logger');
 
 const SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly'];
 const TOKEN_PATH = __dirname + '/token.json';
 const CREDENTIALS_PATH = __dirname + '/credentials.json';
-const https = require('https');
 const request = require('request');
 var schedule = require('node-schedule');
-const { MHFD_BACKEND } = require('../config/config');
 
 const FOLDER_CONFLUENCE_IMAGES = '1KxAtCizoff5g__SEj3ESs5unPZHD4n3W';
 const IMAGES_FROM_GOOGLE_DRIVE = './public/images/';
-const IMAGES_URL = '/images/';
-
 
 router.get('/get-images-drive', async (req, res) => {
   try {

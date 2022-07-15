@@ -1,4 +1,4 @@
-const { CARTO_TOKEN } = require('../config/config');
+const { CARTO_URL } = require('../config/config');
 const logger = require('../config/logger');
 const needle = require('needle');
 
@@ -76,17 +76,19 @@ async function getCounterComponentsWithFilter(bounds, body) {
 
     filters = getNewFilter(filters, body);
 
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
     for (const component of TABLES_COMPONENTS) {
       let answer = [];
       const SQL = `SELECT type FROM ${component} where ${filters} group by type `;
       const query = { q: ` ${SQL} ` };
-      const data = await needle('post', URL, query, { json: true });
+      const data = await needle('post', CARTO_URL, query, { json: true });
       if (data.statusCode === 200) {
         answer = data.body.rows;
-      }
-      if (data.statusCode === 400) {
-        console.log('data.statusCode 400', data.body);
+      } else if (data.statusCode === 400) {
+        logger.error('data.statusCode 400', data.body);
+      } else {
+        logger.error('Error on getCounterComponentsWithFilter');
+        logger.error(data.statusCode);
+        logger.error(data.body);
       }
       result.push({
         key: component,
@@ -116,13 +118,16 @@ async function getComponentsValuesByColumnWithFilter(column, bounds, body) {
       return `SELECT ${column} as column FROM ${t} where ${filters} group by ${column}`
     }).join(' union ')
 
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
     const query = { q: ` ${LINE_SQL} ` };
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     let answer = [];
 
     if (data.statusCode === 200) {
       answer = data.body.rows;
+    } else {
+      logger.error('Error on getComponentsValuesByColumnWithFilter');
+      logger.error(data.statusCode);
+      logger.error(data.body);
     }
     for (const row of answer) {
       const search = result.filter(item => item.value === row.column);
@@ -136,7 +141,7 @@ async function getComponentsValuesByColumnWithFilter(column, bounds, body) {
     }
   } catch (error) {
     logger.error(error);
-    logger.error(`getComponentsValuesByColumn, Column ${column} Connection error`);
+    logger.error(`getComponentsValuesByColumnWithFilter, Column ${column} Connection error`);
   }
 
   return result;
@@ -165,13 +170,12 @@ async function getCountByYearStudyWithFilter(bounds, body) {
         endValue = initValue + (distanceInYears - 1);
       }
 
-      const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
       const SQL = TABLES_COMPONENTS.map((t) => {
         return `SELECT count(*) as count FROM ${t} where ${filters} and year_of_study between ${initValue} and ${endValue}`
       }).join(' union ')
 
       const query = { q: ` ${SQL} ` };
-      const data = await needle('post', URL, query, { json: true });
+      const data = await needle('post', CARTO_URL, query, { json: true });
       let counter = 0;
 
       if (data.statusCode === 200) {
@@ -179,6 +183,10 @@ async function getCountByYearStudyWithFilter(bounds, body) {
           value: value,
           count: counter
         });
+      } else {
+        logger.error('Error on getCountByYearStudyWithFilter');
+        logger.error(data.statusCode);
+        logger.error(data.body);
       }
     }
   } catch (error) {
@@ -202,13 +210,15 @@ async function getComponentsValuesByColumnWithCountWithFilter(column, bounds, bo
       return `SELECT ${needCount ? 'count(*) as count, ': ''} ${column} as column FROM ${t} where ${filters} group by ${column}`
     }).join(' union ')
 
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-
     const query = { q: ` ${LINE_SQL} ` };
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     let answer = [];
     if (data.statusCode === 200) {
       answer = data.body.rows;
+    } else {
+      logger.error('Error on getComponentsValuesByColumnWithCountWithFilter');
+      logger.error(data.statusCode);
+      logger.error(data.body);
     }
     for (const row of answer) {
       const search = result.filter(item => item.value === row.column);
@@ -222,7 +232,7 @@ async function getComponentsValuesByColumnWithCountWithFilter(column, bounds, bo
     }
   } catch (error) {
     logger.error(error);
-    logger.error(`getComponentsValuesByColumn, Column ${column} Connection error`);
+    logger.error(`getComponentsValuesByColumnWithCountWithFilter, Column ${column} Connection error`);
   }
 
   return result;
@@ -243,9 +253,8 @@ async function getQuintilComponentValuesWithFilter(column, bounds, body) {
       return `SELECT max(${column}) as max, min(${column}) as min FROM ${t} where ${filters}`
     }).join(' union ');
     const lineQuery = { q: ` ${MINMAXSQL} ` };
-    const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
-    const lineData = await needle('post', LINE_URL, lineQuery, { json: true });
+    const lineData = await needle('post', CARTO_URL, lineQuery, { json: true });
 
     const lineResult = lineData.body.rows;
     const max = Math.max.apply(Math, lineResult.map(function (element) { return element.max }));
@@ -258,7 +267,6 @@ async function getQuintilComponentValuesWithFilter(column, bounds, body) {
     } else {
       label = 'M';
     }
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
     // for (let i = 0; i < numberOfPartitions; i++) {
     //   let min1 = Math.round(min);
@@ -311,8 +319,7 @@ async function countTotalComponent(bounds, body) {
       return `SELECT count(*) FROM ${t} where ${filters}`
     }).join(' union ');
     const query = { q: ` ${COUNTSQL} ` };
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
-    const lineData = await needle('post', URL, query, { json: true });
+    const lineData = await needle('post', CARTO_URL, query, { json: true });
     if (lineData.statusCode === 200) {
       let total = lineData.body.rows.reduce((p, c) => p + c.count, 0)
       return total;
@@ -351,17 +358,17 @@ async function componentParamFilterRoute(req, res) {
      requests.push(getComponentsValuesByColumnWithCountWithFilter('county', bounds, body, true));
      requests.push(getComponentsValuesByColumnWithCountWithFilter('servicearea', bounds, body, true));
 
-     const promises = await Promise.all(requests);
+     const promises = await Promise.allSettled(requests);
 
      const result = {
-        "component_type": promises[0],
-        "status": promises[1],
-        "yearofstudy": promises[2],
-        "watershed": promises[3],
-        "estimatedcost": promises[4],
-        "jurisdiction": promises[5],
-        "county": promises[6],
-        "servicearea": promises[7]
+        "component_type": promises[0].status === 'fulfilled' ? promises[0].value : null,
+        "status": promises[1].status === 'fulfilled' ? promises[1].value : null,
+        "yearofstudy": promises[2].status === 'fulfilled' ? promises[2].value : null,
+        "watershed": promises[3].status === 'fulfilled' ? promises[3].value : null,
+        "estimatedcost": promises[4].status === 'fulfilled' ? promises[4].value : null,
+        "jurisdiction": promises[5].status === 'fulfilled' ? promises[5].value : null,
+        "county": promises[6].status === 'fulfilled' ? promises[6].value : null,
+        "servicearea": promises[7].status === 'fulfilled' ? promises[7].value : null
      };
      res.status(200).send(result);
   } catch (error) {

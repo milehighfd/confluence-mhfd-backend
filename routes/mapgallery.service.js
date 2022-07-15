@@ -2,8 +2,13 @@ const needle = require('needle');
 const https = require('https');
 const attachmentService = require('../services/attachment.service');
 const projectStreamService = require('../services/projectStream.service');
-
-const { CARTO_TOKEN, CREATE_PROJECT_TABLE, PROBLEM_TABLE, PROPSPROBLEMTABLES, MAIN_PROJECT_TABLE } = require('../config/config');
+const {
+  CARTO_URL,
+  CREATE_PROJECT_TABLE,
+  PROBLEM_TABLE,
+  PROPSPROBLEMTABLES,
+  MAIN_PROJECT_TABLE
+} = require('../config/config');
 
 const getCoordsByProjectId = async (projectid, isDev) => {
   let table = MAIN_PROJECT_TABLE;
@@ -12,7 +17,7 @@ const getCoordsByProjectId = async (projectid, isDev) => {
   }
   let fields = ['ST_AsGeoJSON(the_geom) as the_geom3'];
   let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
-  let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
+  let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   const data = await needle('get', URL, { json: true });
   if (data.statusCode === 200 && data.body.rows.length > 0) {
     let obj = data.body.rows[0];
@@ -32,7 +37,7 @@ const getMidByProjectId = async (projectid, projecttype) => {
     fields.push('ST_AsGeoJSON(the_geom) as the_geom')
   }
   let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
-  let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
+  let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   const data = await needle('get', URL, { json: true });
   if (data.statusCode === 200 && data.body.rows.length > 0) {
     let obj = data.body.rows[0];
@@ -50,7 +55,7 @@ const getMidByProjectId = async (projectid, projecttype) => {
 const getMinimumDateByProjectId = async (projectid) => {
   let table = CREATE_PROJECT_TABLE;
   let SQL = `SELECT county, servicearea FROM ${table} where projectid=${projectid}`;
-  let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
+  let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   const data = await needle('get', URL, { json: true });
   if (data.statusCode === 200 && data.body.rows.length > 0) {
     return data.body.rows[0];
@@ -67,7 +72,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
     table = CREATE_PROJECT_TABLE;
   }
   let SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom2, ST_AsGeoJSON(the_geom) as the_geom3 FROM ${table} where  projectid=${projectid} `;
-  let URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
+  let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   const data = await needle('get', URL, { json: true });
   console.log("\n\n\n\nSQL\n\n\n\n", SQL);
   if (data.statusCode === 200 && data.body.rows.length > 0) {
@@ -214,7 +219,7 @@ async function getProblemByProjectId(projectid, sortby, sorttype) {
    where projectid=${projectid} and projectid>0) 
    order by ${sortby} ${sorttype}`;
 
-  const LINE_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${LINE_SQL}&api_key=${CARTO_TOKEN}`);
+  const LINE_URL = encodeURI(`${CARTO_URL}&q=${LINE_SQL}`);
   //console.log(LINE_URL);
   try {
     const newProm1 = new Promise((resolve, reject) => {
@@ -276,7 +281,7 @@ async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
       union SELECT the_geom FROM landscaping_area where ${field}=${id}  
   ) joinall
 ` ;   
-  const SQL_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${SQL}&api_key=${CARTO_TOKEN}`);
+  const SQL_URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   const newProm1 = new Promise((resolve, reject) => {
     https.get(SQL_URL, response => {
         if (response.statusCode === 200) {
@@ -326,7 +331,7 @@ async function getCoordinatesOfComponents(id, field) {
      `SELECT type, 'landscaping_area' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM landscaping_area 
      where ${field}=${id}  `;
   const newProm1 = new Promise((resolve, reject) => {
-     const COMPONENT_URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${COMPONENTS_SQL}&api_key=${CARTO_TOKEN}`);
+     const COMPONENT_URL = encodeURI(`${CARTO_URL}&q=${COMPONENTS_SQL}`);
      https.get(COMPONENT_URL, response => {
         if (response.statusCode === 200) {
            let str = '';

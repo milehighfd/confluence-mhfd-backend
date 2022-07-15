@@ -1,10 +1,10 @@
-const { CARTO_TOKEN, PROBLEM_TABLE } = require('../config/config');
+const { CARTO_URL, PROBLEM_TABLE } = require('../config/config');
 const https = require('https');
 
 const getZoomareaFilters = async () => {
   const newProm = new Promise((resolve, reject) => {
     const sql = `select filter, aoi from mhfd_zoom_to_areas group by filter, aoi order by filter, aoi`;
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`);
+    const URL = encodeURI(`${CARTO_URL}&q=${sql}`);
     let result = [];
     https.get(URL, response => {
       if (response.statusCode === 200) {
@@ -56,7 +56,7 @@ const countZoomareaFilter = async (filter) => {
       from mhfd_zoom_to_areas left outer join ${PROBLEM_TABLE} on  
       mhfd_zoom_to_areas.aoi = ${PROBLEM_TABLE}.county 
       where mhfd_zoom_to_areas.filter='${filter}' group by mhfd_zoom_to_areas.aoi`;
-    const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?q=${sql}&api_key=${CARTO_TOKEN}`);
+    const URL = encodeURI(`${CARTO_URL}&q=${sql}`);
     let result = [];
     https.get(URL, response => {
       if (response.statusCode === 200) {

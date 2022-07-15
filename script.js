@@ -1,8 +1,7 @@
 require('dotenv').config()
-const { CARTO_TOKEN, CREATE_PROJECT_TABLE } = require('./config/config');
+const { CARTO_URL, CREATE_PROJECT_TABLE } = require('./config/config');
 const db = require('./config/db');
 db.sequelize.sync();
-const URL = encodeURI(`https://denver-mile-high-admin.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`);
 
 const Board = db.board;
 const BoardProject = db.boardProject;
@@ -65,7 +64,7 @@ const BoardProject = db.boardProject;
             const query = {
                 q: updateQuery
             };
-            const data = await needle('post', URL, query, { json: true });
+            const data = await needle('post', CARTO_URL, query, { json: true });
             if (data.statusCode === 200) {
                 result = data.body;
                 logger.log(result);

@@ -24,7 +24,7 @@ const seed = async () => {
     User.create(userAdmin);
   }
   const consultantsCount = await Consultants.count();
-  if (consultantsCount) {
+  if (consultantsCount === 0) {
     for (var i = 0 ; i < defaultData.consultants.length ; i++) {
       await Consultants.create({ name: defaultData.consultants[i] });
     }
