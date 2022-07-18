@@ -23,7 +23,7 @@ router.put('/:key', async (req, res) => {
     }
   });
   logger.info(configuration);
-  if (configuration === null) {
+  if (configuration !== null) {
     const value = req.body.value;
     configuration.value = value;
     await configuration.save();
