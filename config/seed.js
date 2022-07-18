@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const User = db.user;
 const Consultants = db.consultants;
+const Configuration = db.configuration;
 const bcrypt = require('bcryptjs');
 const config = require('./config');
 const defaultData = require('./defaultdata');
@@ -29,6 +30,15 @@ const seed = async () => {
       await Consultants.create({ name: defaultData.consultants[i] });
     }
     console.log(`Added ${defaultData.consultants.length} consultants`);
+  }
+  const configurations = await Configuration.count();
+  if (configurations === 0) {
+    await Configuration.create({
+      key: 'BOARD_YEAR',
+      description: 'Current board year',
+      value: '2022',
+      type: 'NUMBER'
+    });
   }
 };
 
