@@ -1121,11 +1121,11 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
         projectComponentService.saveProjectComponent(data);
       }
     } else {
-       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
+       logger.error('bad status ' + data.statusCode + '  -- '+ insertQuery +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
-    logger.error(error, 'at', sql);
+    logger.error(error, 'at', insertQuery);
   };
   res.send(result);
 });
