@@ -1,6 +1,7 @@
 const express = require('express');
-
 const db = require('../config/db');
+const logger = require('../config/logger');
+
 const Configuration = db.configuration;
 const router = express.Router();
 
@@ -21,6 +22,7 @@ router.put('/:key', async (req, res) => {
       key
     }
   });
+  logger.info(configuration);
   if (configuration === null) {
     const value = req.body.value;
     configuration.value = value;
