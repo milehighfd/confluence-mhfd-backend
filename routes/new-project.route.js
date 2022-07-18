@@ -120,7 +120,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
     }
     let body = {};
     try {
-      const data = await needle('post', URL, queryProblems, { json: true });
+      const data = await needle('post', CARTO_URL, queryProblems, { json: true });
       //console.log('STATUS', data.statusCode);
       if (data.statusCode === 200) {
         body = data.body;
@@ -204,7 +204,7 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
       };
       logger.info(createSQL);
       try {
-        const data = await needle('post', URL, createQuery, { json: true });
+        const data = await needle('post', CARTO_URL, createQuery, { json: true });
         //console.log('STATUS', data.statusCode);
         if (data.statusCode === 200) {
           logger.info('TABLE CREATED ' + component);
@@ -226,7 +226,7 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
         q: updateSQL
       };
       const promise = new Promise((resolve, reject) => {
-        needle('post', URL, updateQuery, { json: true })
+        needle('post', CARTO_URL, updateQuery, { json: true })
         .then(response => {
           if (response.statusCode === 200) {
             logger.info('INSERT '+ component);
@@ -255,7 +255,7 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
       q: hullSQL
     };
     logger.info(hullSQL);
-    const intersectionData = await needle('post', URL, hullQuery, { json: true });
+    const intersectionData = await needle('post', CARTO_URL, hullQuery, { json: true });
     if (intersectionData.statusCode === 200) {
       const body = intersectionData.body;
       logger.info(JSON.stringify(body.rows));
@@ -265,7 +265,7 @@ router.post('/get-stream-by-components-and-geom', auth, async (req, res) => {
         q: dropSQL
       }
       console.log(dropSQL);
-      const deleted = await needle('post', URL, dropQuery, { json: true });
+      const deleted = await needle('post', CARTO_URL, dropQuery, { json: true });
       if (deleted.statusCode === 200) {
         logger.info('DELETE TABLE aux_' + current);
       } else {
@@ -289,7 +289,7 @@ router.get('/components-by-problemid', auth, async (req, res) => {
   const result = [];
   const promises = [];
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     if (data.statusCode === 200) {
       const body = data.body;
       body.rows.forEach(problem => {
@@ -308,7 +308,7 @@ router.get('/components-by-problemid', auth, async (req, res) => {
           q: componentSQL
         };
         const promise = new Promise((resolve, reject) => {
-          needle('post', URL, componentQuery, { json: true })
+          needle('post', CARTO_URL, componentQuery, { json: true })
           .then(response => {
             if (response.statusCode === 200) {
               const body = response.body;
@@ -362,7 +362,7 @@ router.post('/component-geom', async (req,res) => {
   logger.info(sql);
   let streamsInfo = [];
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     if (data.statusCode === 200) {
       const body = data.body;
       res.send({geom:body.rows[0].the_geom});
@@ -386,7 +386,7 @@ router.post('/problem-geom', async (req,res) => {
   logger.info(sql);
   let streamsInfo = [];
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     if (data.statusCode === 200) {
       const body = data.body;
       res.send({geom:body.rows[0].the_geom});
@@ -440,7 +440,7 @@ router.post('/streams-data', auth, async (req, res) => {
   logger.info(sql);
   let streamsInfo = [];
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     if (data.statusCode === 200) {
       const body = data.body;
       streamsInfo = body.rows;
@@ -478,7 +478,7 @@ router.post('/streams-data', auth, async (req, res) => {
             q: drainageSQL
           };
           const promise = new Promise((resolve, reject) => {
-            needle('post', URL, drainageQuery, { json: true })
+            needle('post', CARTO_URL, drainageQuery, { json: true })
             .then(response => {
               if (response.statusCode === 200) {
                 logger.info('I reached ', JSON.stringify(response.body.rows));
@@ -542,14 +542,14 @@ router.post('/get-jurisdiction-for-polygon', async (req, res) => {
   logger.info(sql);
   const query = { q: sql };
   try {
-    const data = await needle('post', URL, query, { json: true });
-    console.log(JSON.stringify(data.body));
+    const data = await needle('post', CARTO_URL, query, { json: true });
     if (data.statusCode === 200) {
       return res.send({jurisdiction: data.body.rows[0].jurisdiction});
     }
-    logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
+    logger.error('\n\n\nbad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
     return res.status(data.statusCode).send(data);
   } catch (error) {
+    console.log('WHAT IS THE PROBLem', error);
     res.status(500).send({error: error});
   }
 });
@@ -584,7 +584,7 @@ AND ST_DWithin(
   }
   logger.info(sql)
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     if (data.statusCode === 200) {
       const body = data.body;
       let answer = {
@@ -618,7 +618,7 @@ router.post('/get-countyservicearea-for-geom', auth, async (req, res) => {
   };
   logger.info(sql)
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     if (data.statusCode === 200) {
       const body = data.body;
       let answer = {
@@ -652,7 +652,7 @@ router.post('/get-countyservicearea-for-point', auth, async (req, res) => {
   };
   logger.info(sql)
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     if (data.statusCode === 200) {
       const body = data.body;
       let answer = {
@@ -697,7 +697,7 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
         q: createSQL
       };
       try {
-        const data = await needle('post', URL, createQuery, { json: true });
+        const data = await needle('post', CARTO_URL, createQuery, { json: true });
         //console.log('STATUS', data.statusCode);
         if (data.statusCode === 200) {
           logger.info('TABLE CREATED ');
@@ -719,7 +719,7 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
         q: updateSQL
       };
       const promise = new Promise((resolve, reject) => {
-        needle('post', URL, updateQuery, { json: true })
+        needle('post', CARTO_URL, updateQuery, { json: true })
         .then(response => {
           if (response.statusCode === 200) {
             logger.info('INSERT ', component);
@@ -747,7 +747,7 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
       q: hullSQL
     };
     logger.info(hullSQL);
-    const intersectionData = await needle('post', URL, hullQuery, { json: true });
+    const intersectionData = await needle('post', CARTO_URL, hullQuery, { json: true });
     if (intersectionData.statusCode === 200) {
       const body = intersectionData.body;
       logger.info(JSON.stringify(body.rows));
@@ -757,7 +757,7 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
         q: dropSQL
       }
       console.log(dropSQL);
-      const deleted = await needle('post', URL, dropQuery, { json: true });
+      const deleted = await needle('post', CARTO_URL, dropQuery, { json: true });
       if (deleted.statusCode === 200) {
         logger.info('DELETE TABLE aux_' + current);
       } else {
@@ -780,7 +780,7 @@ router.post('/get-all-streams', auth, async (req, res) => {
   };
   let body = {}
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       body = data.body;
@@ -813,7 +813,7 @@ router.post('/get-stream', auth, async (req, res) => {
   console.log(sql)
   let body = {};
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       body = data.body;
@@ -841,7 +841,7 @@ router.post('/get-stream-convexhull', auth, async (req, res) => {
     q: createSQL
   }
   try {
-    const data = await needle('post', URL, createQuery, { json: true });
+    const data = await needle('post', CARTO_URL, createQuery, { json: true });
     if (data.statusCode === 200) {
       logger.info('CREATE');
       const promises = [];
@@ -854,7 +854,7 @@ router.post('/get-stream-convexhull', auth, async (req, res) => {
           q: updateSQL
         };
         const promise = new Promise((resolve, reject) => {
-          needle('post', URL, updateQuery, { json: true })
+          needle('post', CARTO_URL, updateQuery, { json: true })
           .then(response => {
             if (response.statusCode === 200) {
               logger.info('INSERT ', COMPONENTS_TABLES[i]);
@@ -880,7 +880,7 @@ router.post('/get-stream-convexhull', auth, async (req, res) => {
           q: hullSQL
         };
         logger.info(hullSQL);
-        const intersectionData = await needle('post', URL, hullQuery, { json: true });
+        const intersectionData = await needle('post', CARTO_URL, hullQuery, { json: true });
         if (intersectionData.statusCode === 200) {
           const body = intersectionData.body;
           logger.info(JSON.stringify(body.rows));
@@ -890,7 +890,7 @@ router.post('/get-stream-convexhull', auth, async (req, res) => {
             q: dropSQL
           }
           console.log(dropSQL);
-          const deleted = await needle('post', URL, dropQuery, { json: true });
+          const deleted = await needle('post', CARTO_URL, dropQuery, { json: true });
           if (deleted.statusCode === 200) {
             logger.info('DELETE TABLE aux_' + current);
           } else {
@@ -924,7 +924,7 @@ router.post('/showcomponents', auth, async (req, res) => {
 
       let body = {};
       try {
-        const data = await needle('post', URL, query, { json: true });
+        const data = await needle('post', CARTO_URL, query, { json: true });
         //console.log('STATUS', data.statusCode);
         if (data.statusCode === 200) {
           body = data.body;
@@ -967,7 +967,7 @@ router.post('/showcomponents', auth, async (req, res) => {
       }
       let body = {};
       try {
-        const data = await needle('post', URL, queryProblems, { json: true });
+        const data = await needle('post', CARTO_URL, queryProblems, { json: true });
         //console.log('STATUS', data.statusCode);
         if (data.statusCode === 200) {
           body = data.body;
@@ -1009,7 +1009,7 @@ const getNewProjectId = async () => {
   const query = {
     q: `SELECT GREATEST(max(projectid + 1), 800000) FROM ${CREATE_PROJECT_TABLE}`
   }
-  const data = await needle('post', URL, query, { json: true });
+  const data = await needle('post', CARTO_URL, query, { json: true });
   return data.body.rows[0].greatest;
 }
 
@@ -1022,7 +1022,7 @@ const setProjectID = async (res, projectId) => {
   };
   logger.info('update projectid query ' + JSON.stringify(updateQuery));
   try {
-    const data = await needle('post', URL, updateQuery, { json: true });
+    const data = await needle('post', CARTO_URL, updateQuery, { json: true });
     console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       return true;
@@ -1091,7 +1091,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
   console.log('my query ' , insertQuery)
   let result = {};
   try {
-    const data = await needle('post', URL, query,   { json: true });
+    const data = await needle('post', CARTO_URL, query,   { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
@@ -1178,7 +1178,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
   console.log('my query ' , query)
   let result = {};
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
@@ -1265,7 +1265,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
   console.log('my query ' , query)
   let result = {};
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
@@ -1335,7 +1335,7 @@ router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req
   console.log('my query ' , updateQuery)
   let result = {};
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
@@ -1389,7 +1389,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
   console.log('my query ' , query)
   let result = {};
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
@@ -1505,7 +1505,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
   console.log('my query ' , query)
   let result = {};
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
@@ -1577,7 +1577,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
   logger.info('my query ' + query);
   let result = {};
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
@@ -1643,7 +1643,7 @@ router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req
   };
   let result = {};
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
@@ -1663,14 +1663,14 @@ router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req
 const getJurisdictionByGeom = async (geom) => {
   let sql = `SELECT jurisdiction FROM jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
   const query = { q: sql };
-  const data = await needle('post', URL, query, { json: true });
+  const data = await needle('post', CARTO_URL, query, { json: true });
   return data.body.rows[0].jurisdiction;
 }
 
 const getAllJurisdictionByGeom = async (geom) => {
   let sql = `SELECT jurisdiction FROM jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
   const query = { q: sql };
-  const data = await needle('post', URL, query, { json: true });
+  const data = await needle('post', CARTO_URL, query, { json: true });
   return data.body.rows.map(element => element.jurisdiction);
 }
 
@@ -1762,7 +1762,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
   console.log('my query ' , JSON.stringify(query));
   let result = {};
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
@@ -1816,7 +1816,7 @@ router.post('/special/:projectid', [auth, multer.array('files')], async (req, re
   logger.info('my query ' + JSON.stringify(query));
   let result = {};
   try {
-    const data = await needle('post', URL, query, { json: true });
+    const data = await needle('post', CARTO_URL, query, { json: true });
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;

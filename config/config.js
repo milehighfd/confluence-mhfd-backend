@@ -42,7 +42,8 @@ const PROPSPROBLEMTABLES = {
     'sourcename',    //13
     'source',       //14
     'streamname',   //15
-    'component_cost'   //16
+    'component_cost',   //16
+    'component_count'
   ], 
   problem_boundary: [
     'estimated_cost',  //0
@@ -61,7 +62,8 @@ const PROPSPROBLEMTABLES = {
     'source_name',  //13
     'source_type',  //14
     'stream_name',  //15
-    'component_cost'  //16
+    'component_cost',  //16
+    'component_count'   //17
   ]
 };
 const CARTO_DOMAIN = 'denver-mile-high-admin';
