@@ -148,7 +148,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
     if (project.problemid == null) {
       groups['-1'].components.push(project);
     } else {
-      groups[project.problemid].components.push(project);
+      groups[project.problemid]?.components.push(project);
     }
   }
   logger.info("RESULT IS => " + JSON.stringify(result, null, 2));
