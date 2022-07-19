@@ -20,7 +20,6 @@ const Board = db.board;
 const BoardProject = db.boardProject;
 const Locality = db.locality;
 const IndependentComponent = db.independentComponent;
-const Configuration = db.configuration;
 const multer = Multer({
   storage: Multer.MemoryStorage,
   limits: {
@@ -67,7 +66,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
     }
     const type = component === 'stream_improvement_measure' ? 'component_part_category as type' : 'type';
     const jurisdiction = component === 'stream_improvement_measure' ? 'service_area as jurisdiction' : 'jurisdiction'; 
-    const cost = component === 'stream_improvement_measure' ? 'estimated_cost_base as original_cost' : 'original_cost';
+    const cost = component === 'stream_improvement_measure' ? '0 as original_cost' : 'original_cost';
     const problemid = component === 'stream_improvement_measure' ? 'problem_id' : 'problemid';
     const projectid = component === 'stream_improvement_measure' ? 'project_id' : 'projectid';
     const sql = `SELECT objectid, cartodb_id, ${type}, ${jurisdiction}, status, ${cost}, ${problemid}  FROM ${component} 
@@ -104,7 +103,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
       if (inn) {
         inn += ',';
       }
-      inn += element.problemid;
+      inn += element.problemid ? element.problemid : element.problem_id;
     }
   }
   const groups = {'-1': {
@@ -142,14 +141,14 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
         logger.error('bad status ' + data.statusCode + '  -- '+ sqlProblems +  JSON.stringify(data.body, null, 2));
       }
     } catch (error) {
-      logger.error(error, 'at', sqlProblems);
+      logger.error(error, 'at', sql);
     };
   }
   for (const project of result) {
     if (project.problemid == null) {
       groups['-1'].components.push(project);
     } else {
-      groups[project.problemid]?.components.push(project);
+      groups[project.problemid].components.push(project);
     }
   }
   logger.info("RESULT IS => " + JSON.stringify(result, null, 2));
@@ -544,13 +543,13 @@ router.post('/get-jurisdiction-for-polygon', async (req, res) => {
   const query = { q: sql };
   try {
     const data = await needle('post', CARTO_URL, query, { json: true });
+    console.log(JSON.stringify(data.body));
     if (data.statusCode === 200) {
       return res.send({jurisdiction: data.body.rows[0].jurisdiction});
     }
-    logger.error('\n\n\nbad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
+    logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
     return res.status(data.statusCode).send(data);
   } catch (error) {
-    console.log('WHAT IS THE PROBLem', error);
     res.status(500).send({error: error});
   }
 });
@@ -917,7 +916,12 @@ router.post('/showcomponents', auth, async (req, res) => {
    const geom = req.body.geom;
    let result = [];
    for (const component of COMPONENTS_TABLES) {
-      const sql = `SELECT cartodb_id, type, jurisdiction, status, original_cost, problemid  FROM ${component} WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) AND projectid is null `;
+      const type = component === 'stream_improvement_measure' ? 'component_part_category as type' : 'type';
+      const jurisdiction = component === 'stream_improvement_measure' ? 'service_area as jurisdiction' : 'jurisdiction'; 
+      const cost = component === 'stream_improvement_measure' ? '0 as original_cost' : 'original_cost';
+      const problemid = component === 'stream_improvement_measure' ? 'problem_id' : 'problemid';
+      const projectid = component === 'stream_improvement_measure' ? 'project_id' : 'projectid';
+      const sql = `SELECT cartodb_id, ${type}, ${jurisdiction}, status, ${cost}, ${problemid}  FROM ${component} WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) AND ${projectid} is null `;
       const query = {
         q: sql
       };
@@ -1102,7 +1106,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
+      await addProjectToBoard(sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
       for (const independent of JSON.parse(independetComponent)) {
         const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId};
@@ -1122,11 +1126,11 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
         projectComponentService.saveProjectComponent(data);
       }
     } else {
-       logger.error('bad status ' + data.statusCode + '  -- '+ insertQuery +  JSON.stringify(data.body, null, 2));
+       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
-    logger.error(error, 'at', insertQuery);
+    logger.error(error, 'at', sql);
   };
   res.send(result);
 });
@@ -1276,7 +1280,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
+      await addProjectToBoard(sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
        logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
@@ -1400,7 +1404,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
+      await addProjectToBoard(sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
       for (const stream of JSON.parse(streams)) {
         projectStreamService.saveProjectStream({
@@ -1588,7 +1592,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
+      await addProjectToBoard(sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
@@ -1690,7 +1694,7 @@ const updateBoardProjectAtIndex = async (boardId, index) => {
   })
 }
 
-const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year) => {
+const addProjectToBoard = async (locality, projecttype, project_id, year) => {
   let dbLoc = await Locality.findOne({
     where: {
       name: locality
@@ -1705,12 +1709,7 @@ const addProjectToBoard = async (user, servicearea, county, locality, projecttyp
     }
   }
   if (!year) {
-    let configuration = await Configuration.findOne({
-      where: {
-        key: 'BOARD_YEAR'
-      }
-    });
-    year = +configuration.value;
+    year = '2022';
   }
   let board = await Board.findOne({
     where: {
@@ -1734,62 +1733,11 @@ const addProjectToBoard = async (user, servicearea, county, locality, projecttyp
 
   let boardProject = new BoardProject(boardProjectObject);
 
-  let boardProjectSaved = await boardProject.save();
-  if (['admin', 'staff'].includes(user.designation)) {
-    await sendBoardsToProp(boardProjectSaved, board, servicearea, 'servicearea');
-    await sendBoardsToProp(boardProjectSaved, board, county, 'county');
-  }
-}
-
-const getBoard = async (type, locality, year, projecttype) => {
-  let board = await Board.findOne({
-      where: {
-          type, year, locality, projecttype
-      }
+  boardProject.save().then(function (boardProjectSaved) {
+    console.log('saved', boardProjectSaved)
+  }).catch(function (err) {
+    console.log('error', err)
   });
-  if (board) {
-      return board;
-  } else {
-      let newBoard = new Board({
-          type, year, locality, projecttype, status: 'Under Review'
-      });
-      newBoard.save();
-      return newBoard;
-  }
-}
-
-const sendBoardsToProp = async (bp, board, prop, propid) => {
-  console.log(bp, board, prop);
-  let propValues = prop.split(',');
-  for (let k = 0 ; k < propValues.length ; k++) {
-    let propVal = propValues[k];
-    if (propid === 'county' && !prop.includes('County')) {
-        propVal = propVal.trimEnd().concat(' County');
-    } else if (propid === 'servicearea' && !prop.includes(' Service Area')) {
-        propVal = propVal.trimEnd().concat(' Service Area');
-    }
-    let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype);
-    //TODO: improve to avoid multiple queries to same board
-    let newBoardProject = new BoardProject({
-        board_id: destinyBoard._id,
-        project_id: bp.project_id,
-        position0: bp.position0,
-        position1: bp.position1,
-        position2: bp.position2,
-        position3: bp.position3,
-        position4: bp.position4,
-        position5: bp.position5,
-        req1: bp.req1 == null ? null : (bp.req1 / propValues.length),
-        req2: bp.req2 == null ? null : (bp.req2 / propValues.length),
-        req3: bp.req3 == null ? null : (bp.req3 / propValues.length),
-        req4: bp.req4 == null ? null : (bp.req4 / propValues.length),
-        req5: bp.req5 == null ? null : (bp.req5 / propValues.length),
-        year1: bp.year1,
-        year2: bp.year2,
-        origin: board.locality,
-    })
-    await newBoardProject.save();
-  }
 }
 
 router.post('/special', [auth, multer.array('files')], async (req, res) => {
@@ -1830,7 +1778,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
+      await addProjectToBoard(sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
