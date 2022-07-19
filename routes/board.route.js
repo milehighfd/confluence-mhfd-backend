@@ -112,7 +112,7 @@ router.post('/', async (req, res) => {
         let projectsPromises = boardProjects.filter(bp => !!bp.project_id).map(async (bp) => {
             let project = null;
             try {
-                project = await getMidByProjectId(bp.project_id, true, projecttype);
+                project = await getMidByProjectId(bp.project_id, projecttype);
             } catch(e) {
                 console.log('e', e);
             }
