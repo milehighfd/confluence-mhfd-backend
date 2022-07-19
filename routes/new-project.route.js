@@ -1102,7 +1102,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(sponsor, projecttype, projectId, year);
+      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
       for (const independent of JSON.parse(independetComponent)) {
         const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId};
@@ -1276,7 +1276,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(sponsor, projecttype, projectId, year);
+      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
        logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
@@ -1400,7 +1400,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(sponsor, projecttype, projectId, year);
+      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
       for (const stream of JSON.parse(streams)) {
         projectStreamService.saveProjectStream({
@@ -1588,7 +1588,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(sponsor, projecttype, projectId, year);
+      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
@@ -1690,7 +1690,7 @@ const updateBoardProjectAtIndex = async (boardId, index) => {
   })
 }
 
-const addProjectToBoard = async (locality, projecttype, project_id, year) => {
+const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year) => {
   let dbLoc = await Locality.findOne({
     where: {
       name: locality
@@ -1734,11 +1734,44 @@ const addProjectToBoard = async (locality, projecttype, project_id, year) => {
 
   let boardProject = new BoardProject(boardProjectObject);
 
-  boardProject.save().then(function (boardProjectSaved) {
-    console.log('saved', boardProjectSaved)
-  }).catch(function (err) {
-    console.log('error', err)
-  });
+  let boardProjectSaved = await boardProject.save();
+  if (['admin', 'staff'].includes(user.designation)) {
+    await sendBoardsToProp(boardProjectSaved, board, servicearea);
+    await sendBoardsToProp(boardProjectSaved, board, county);
+  }
+}
+
+const sendBoardsToProp = async (bp, board, prop) => {
+  let propValues = prop.split(',');
+  for (let k = 0 ; k < propValues.length ; k++) {
+    let propVal = propValues[k];
+    if (prop === 'county' && !prop.includes('County')) {
+        propVal = propVal.trimEnd().concat(' County');
+    } else if (prop === 'servicearea' && !prop.includes(' Service Area')) {
+        propVal = propVal.trimEnd().concat(' Service Area');
+    }
+    let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype);
+    //TODO: improve to avoid multiple queries to same board
+    let newBoardProject = new BoardProject({
+        board_id: destinyBoard._id,
+        project_id: bp.project_id,
+        position0: bp.position0,
+        position1: bp.position1,
+        position2: bp.position2,
+        position3: bp.position3,
+        position4: bp.position4,
+        position5: bp.position5,
+        req1: bp.req1 == null ? null : (bp.req1 / propValues.length),
+        req2: bp.req2 == null ? null : (bp.req2 / propValues.length),
+        req3: bp.req3 == null ? null : (bp.req3 / propValues.length),
+        req4: bp.req4 == null ? null : (bp.req4 / propValues.length),
+        req5: bp.req5 == null ? null : (bp.req5 / propValues.length),
+        year1: bp.year1,
+        year2: bp.year2,
+        origin: board.locality,
+    })
+    await newBoardProject.save();
+  }
 }
 
 router.post('/special', [auth, multer.array('files')], async (req, res) => {
@@ -1779,7 +1812,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(sponsor, projecttype, projectId, year);
+      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
