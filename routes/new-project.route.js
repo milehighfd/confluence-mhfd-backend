@@ -20,6 +20,7 @@ const Board = db.board;
 const BoardProject = db.boardProject;
 const Locality = db.locality;
 const IndependentComponent = db.independentComponent;
+const Configuration = db.configuration;
 const multer = Multer({
   storage: Multer.MemoryStorage,
   limits: {
@@ -1704,7 +1705,12 @@ const addProjectToBoard = async (locality, projecttype, project_id, year) => {
     }
   }
   if (!year) {
-    year = '2022';
+    let configuration = await Configuration.findOne({
+      where: {
+        key: 'BOARD_YEAR'
+      }
+    });
+    year = +configuration.value;
   }
   let board = await Board.findOne({
     where: {
