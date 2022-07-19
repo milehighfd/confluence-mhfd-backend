@@ -1,6 +1,5 @@
 require('dotenv').config()
 const needle = require('needle');
-const { CARTO_URL, CREATE_PROJECT_TABLE } = require('./config/config');
 const URL = 'https://confdevbc.mhfd.org';
 
 needle.defaults({ open_timeout: 60000 });
@@ -71,7 +70,7 @@ needle.defaults({ open_timeout: 60000 });
     const types = ['WORK_REQUEST', 'WORK_PLAN'];
     for (var i = 0 ; i < localities.length ; i++) {
         let locality = localities[i];
-        let type = locality.type === "COUNTY" ? types[0] : types[1];
+        let type = locality.type === "JURISDICTION" ? types[0] : types[1];
         for (var j = 0 ; j < years.length ; j++){
             var year = years[j];
             for (var k = 0 ; k < projecttypes.length ; k++) {
