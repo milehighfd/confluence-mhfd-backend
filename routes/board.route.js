@@ -190,6 +190,11 @@ const sendBoardProjectsToProp = async (boards, prop) => {
             let propValues = p[prop].split(',');
             for (let k = 0 ; k < propValues.length ; k++) {
                 let propVal = propValues[k];
+                if (prop === 'county' && !prop.includes('County')) {
+                    propVal = propVal.trimEnd().concat(' County');
+                } else if (prop === 'servicearea' && !prop.includes(' Service Area')) {
+                    propVal = propVal.trimEnd().concat(' Service Area');
+                }
                 let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype);
                 //TODO: improve to avoid multiple queries to same board
                 let newBoardProject = new BoardProject({
