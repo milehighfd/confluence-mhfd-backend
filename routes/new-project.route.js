@@ -20,6 +20,7 @@ const Board = db.board;
 const BoardProject = db.boardProject;
 const Locality = db.locality;
 const IndependentComponent = db.independentComponent;
+const Configuration = db.configuration;
 const multer = Multer({
   storage: Multer.MemoryStorage,
   limits: {
@@ -1121,11 +1122,11 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
         projectComponentService.saveProjectComponent(data);
       }
     } else {
-       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
+       logger.error('bad status ' + data.statusCode + '  -- '+ insertQuery +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
-    logger.error(error, 'at', sql);
+    logger.error(error, 'at', insertQuery);
   };
   res.send(result);
 });
@@ -1704,7 +1705,12 @@ const addProjectToBoard = async (locality, projecttype, project_id, year) => {
     }
   }
   if (!year) {
-    year = '2022';
+    let configuration = await Configuration.findOne({
+      where: {
+        key: 'BOARD_YEAR'
+      }
+    });
+    year = +configuration.value;
   }
   let board = await Board.findOne({
     where: {

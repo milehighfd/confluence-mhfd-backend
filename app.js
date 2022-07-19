@@ -26,6 +26,7 @@ const noteRouter = require('./routes/note.route');
 const newnoteRouter = require('./routes/newnotes.route');
 const consultantsRouter = require('./routes/consultants.route');
 const organizationRouter = require('./routes/organization.route');
+const configurationRouter = require('./routes/configuration.route');
 const db = require('./config/db');
 db.sequelize.sync();
 
@@ -72,5 +73,6 @@ app.use('/notes', noteRouter);
 app.use('/newnotes', newnoteRouter);
 app.use('/consultants', consultantsRouter);
 app.use('/organizations', organizationRouter);
+app.use('/configuration', configurationRouter);
 
 module.exports = server;

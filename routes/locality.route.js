@@ -13,7 +13,7 @@ const auth2 = require('../auth/auth2');
 const getData = async (req, res, next) => {
   res.locals.data = [];
   if (req.user) {
-    if(req.user.designation === ROLES.MFHD_STAFF) {
+    if([ROLES.MFHD_STAFF, ROLES.GOVERNMENT_ADMIN, ROLES.MFHD_ADMIN].includes(req.user.designation)) {
       let localities = await Locality.findAll({
         where: {
           type: 'JURISDICTION'
