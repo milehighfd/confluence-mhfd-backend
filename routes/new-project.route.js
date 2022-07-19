@@ -142,7 +142,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
         logger.error('bad status ' + data.statusCode + '  -- '+ sqlProblems +  JSON.stringify(data.body, null, 2));
       }
     } catch (error) {
-      logger.error(error, 'at', sql);
+      logger.error(error, 'at', sqlProblems);
     };
   }
   for (const project of result) {
@@ -1736,18 +1736,36 @@ const addProjectToBoard = async (user, servicearea, county, locality, projecttyp
 
   let boardProjectSaved = await boardProject.save();
   if (['admin', 'staff'].includes(user.designation)) {
-    await sendBoardsToProp(boardProjectSaved, board, servicearea);
-    await sendBoardsToProp(boardProjectSaved, board, county);
+    await sendBoardsToProp(boardProjectSaved, board, servicearea, 'servicearea');
+    await sendBoardsToProp(boardProjectSaved, board, county, 'county');
   }
 }
 
-const sendBoardsToProp = async (bp, board, prop) => {
+const getBoard = async (type, locality, year, projecttype) => {
+  let board = await Board.findOne({
+      where: {
+          type, year, locality, projecttype
+      }
+  });
+  if (board) {
+      return board;
+  } else {
+      let newBoard = new Board({
+          type, year, locality, projecttype, status: 'Under Review'
+      });
+      newBoard.save();
+      return newBoard;
+  }
+}
+
+const sendBoardsToProp = async (bp, board, prop, propid) => {
+  console.log(bp, board, prop);
   let propValues = prop.split(',');
   for (let k = 0 ; k < propValues.length ; k++) {
     let propVal = propValues[k];
-    if (prop === 'county' && !prop.includes('County')) {
+    if (propid === 'county' && !prop.includes('County')) {
         propVal = propVal.trimEnd().concat(' County');
-    } else if (prop === 'servicearea' && !prop.includes(' Service Area')) {
+    } else if (propid === 'servicearea' && !prop.includes(' Service Area')) {
         propVal = propVal.trimEnd().concat(' Service Area');
     }
     let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype);
