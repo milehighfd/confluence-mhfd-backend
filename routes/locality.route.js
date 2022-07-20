@@ -59,7 +59,7 @@ const getData2 = async (req, res, next) => {
     } else {
       let localities = await Locality.findAll({
         where: {
-          name: req.user.organization
+          type: 'JURISDICTION'
         },
         order: [['name', 'ASC']]
       });
