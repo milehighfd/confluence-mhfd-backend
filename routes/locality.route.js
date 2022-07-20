@@ -77,7 +77,7 @@ router.get('/', [auth2, getData],  (req, res) => {
     })
 })
 
-router.get('/:type', [auth2, getData2], async (req, res) => {
+router.get('/:type', [getData2], async (req, res) => {
   let localities = res.locals.data;
   res.send({ localities });
 })
