@@ -465,15 +465,15 @@ router.post('/streams-data', auth, async (req, res) => {
       for (const stream of streamsInfo) {
         const drainageSQL = `select st_area(ST_transform(st_intersection(j.the_geom, union_c.the_geom), 26986) ) as area , j.jurisdiction from jurisidictions j , (select st_union(the_geom) as the_geom from mhfd_catchments_simple_v1 c where 
          '${stream.reach_code}' is not distinct from c.reach_code 
-          and ${stream.trib_code1} is not distinct from c.trib_code1 
-          and ${stream.trib_code2} is not distinct from c.trib_code2 
-          and ${stream.trib_code3} is not distinct from c.trib_code3
-          and ${stream.trib_code4} is not distinct from c.trib_code4 
-          and ${stream.trib_code5} is not distinct from c.trib_code5
-          and ${stream.trib_code6} is not distinct from c.trib_code6 
-          and ${stream.trib_code7} is not distinct from c.trib_code7 ) union_c 
+          ${stream.trib_code1 != null ? `and ${stream.trib_code1} is not distinct from c.trib_code1` : ''} 
+          ${stream.trib_code2 != null ? `and ${stream.trib_code2} is not distinct from c.trib_code1` : ''} 
+          ${stream.trib_code3 != null ? `and ${stream.trib_code3} is not distinct from c.trib_code1` : ''} 
+          ${stream.trib_code4 != null ? `and ${stream.trib_code4} is not distinct from c.trib_code1` : ''} 
+          ${stream.trib_code5 != null ? `and ${stream.trib_code5} is not distinct from c.trib_code1` : ''} 
+          ${stream.trib_code6 != null ? `and ${stream.trib_code6} is not distinct from c.trib_code1` : ''} 
+          ${stream.trib_code7 != null ? `and ${stream.trib_code7} is not distinct from c.trib_code1` : ''} 
+          ) union_c 
           where ST_INTERSECTS(ST_SimplifyPreserveTopology(j.the_geom, 0.1), ST_SimplifyPreserveTopology(union_c.the_geom, 0.1)) `;
-          console.log('drainageSQL', drainageSQL);
           const drainageQuery = {
             q: drainageSQL
           };
@@ -1093,7 +1093,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
   const query = {
     q: insertQuery
   };
-  console.log('my query ' , insertQuery)
+  // console.log('my query ' , insertQuery)
   let result = {};
   try {
     const data = await needle('post', CARTO_URL, query,   { json: true });
@@ -1180,7 +1180,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
   const query = {
     q: updateQuery
   };
-  console.log('my query ' , query)
+  // console.log('my query ' , query)
   let result = {};
   try {
     const data = await needle('post', CARTO_URL, query, { json: true });
@@ -1220,7 +1220,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
 
 router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  console.log('the user ', user);
+  // console.log('the user ', user);
   const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor, cover, year} = req.body;
   const status = 'Draft';
   const projecttype = 'Maintenance';
