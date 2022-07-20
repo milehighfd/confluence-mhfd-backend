@@ -56,6 +56,14 @@ const getData2 = async (req, res, next) => {
         });
         res.locals.data = localities;
       }
+    } else {
+      let localities = await Locality.findAll({
+        where: {
+          name: req.user.organization
+        },
+        order: [['name', 'ASC']]
+      });
+      res.locals.data = localities;
     }
   } else if (type === 'WORK_PLAN') {
     let localities = await Locality.findAll({
