@@ -7,13 +7,14 @@ const statusList = [
     'Final Design',
     'Active',
     'Ongoing'*/
+    'Approved',
     'Active',
-    'Closeout',
-    'Closed'
+    'Closed',
+    'Inactive',
+    'Cancelled',
     /*
     'Draft',
     'Requested',
-    'Approved',
     'Idle',
     'Initiated',
     'Ongoing',
