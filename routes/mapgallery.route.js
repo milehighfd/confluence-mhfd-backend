@@ -2053,7 +2053,9 @@ router.get('/params-filters', async (req, res) => {
 router.get('/problem_part/:id', async (req, res) => {
    const id = req.params.id;
    const promises = [];
-   const tables = ['flood_hazard_polygon_', 'flood_hazard_line_', 'flood_hazard_point_'];
+   const tables = ['flood_hazard_polygon_', 'flood_hazard_line_', 'flood_hazard_point_',
+      'stream_function_polygon_', 'stream_function_point_', 'future_development_polygon_',
+      'future_development_point_', 'future_development_line_'];
    for (const element of tables) {
      let sql = `SELECT problem_type, problem_part_category, problem_part_subcategory, globalid FROM ${element}
      WHERE problem_id = ${id}`;
