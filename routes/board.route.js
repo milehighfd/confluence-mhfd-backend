@@ -114,7 +114,7 @@ router.post('/', async (req, res) => {
             try {
                 project = await getMidByProjectId(bp.project_id, projecttype);
             } catch(e) {
-                console.log('e', e);
+                console.log('Error in project Promises ', e);
             }
             let newObject = {
                 project_id: bp.project_id,
