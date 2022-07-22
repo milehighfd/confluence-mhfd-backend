@@ -66,7 +66,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
     }
     const type = component === 'stream_improvement_measure' ? 'component_part_category as type' : 'type';
     const jurisdiction = component === 'stream_improvement_measure' ? 'service_area as jurisdiction' : 'jurisdiction'; 
-    const cost = component === 'stream_improvement_measure' ? '0 as original_cost' : 'original_cost';
+    const cost = component === 'stream_improvement_measure' ? 'estimated_cost_base as original_cost' : 'original_cost';
     const problemid = component === 'stream_improvement_measure' ? 'problem_id' : 'problemid';
     const projectid = component === 'stream_improvement_measure' ? 'project_id' : 'projectid';
     const sql = `SELECT objectid, cartodb_id, ${type}, ${jurisdiction}, status, ${cost}, ${problemid}  FROM ${component} 
@@ -918,7 +918,7 @@ router.post('/showcomponents', auth, async (req, res) => {
    for (const component of COMPONENTS_TABLES) {
       const type = component === 'stream_improvement_measure' ? 'component_part_category as type' : 'type';
       const jurisdiction = component === 'stream_improvement_measure' ? 'service_area as jurisdiction' : 'jurisdiction'; 
-      const cost = component === 'stream_improvement_measure' ? '0 as original_cost' : 'original_cost';
+      const cost = component === 'stream_improvement_measure' ? 'estimated_cost_base as original_cost' : 'original_cost';
       const problemid = component === 'stream_improvement_measure' ? 'problem_id' : 'problemid';
       const projectid = component === 'stream_improvement_measure' ? 'project_id' : 'projectid';
       const sql = `SELECT cartodb_id, ${type}, ${jurisdiction}, status, ${cost}, ${problemid}  FROM ${component} WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) AND ${projectid} is null `;
@@ -1106,6 +1106,9 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
+      // change sponsor by jurisdiction
+      // we can have a lot jurisdiction separated by comma. in a for
+      // poner if para los dos roles https://trello.com/c/xfBIveVT/1745-create-project-todos-types-agregar-el-checkbox-deseleccionado-por-defecto-y-label-solo-para-usuarios-mhfd-senior-managers-y-mhfd
       await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
       for (const independent of JSON.parse(independetComponent)) {

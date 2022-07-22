@@ -983,7 +983,7 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
       if (component === 'stream_improvement_measure') {
          let typeidSp = 'projectid' ? 'project_id' : 'problem_id';
          COMPONENTS_SQL += union + `SELECT component_part_category as type, count(*), 0 as estimated_cost, 
-         0 as original_cost,
+         estimated_cost_base as original_cost,
      0 as complete_cost
      FROM ${component}, ${table}, ( select sum(estimated_cost_base) as sum from ${component} where ${component}.status = 'Complete' ) complete_t
      where ${component}.${typeidSp}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum`;
