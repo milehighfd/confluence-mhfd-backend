@@ -1275,11 +1275,10 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
     const query = {
       q: insertQuery
     };
-    console.log('my query ' , query)
-    let result = {};
+    let result = [];
     try {
       const data = await needle('post', CARTO_URL, query, { json: true });
-      //console.log('STATUS', data.statusCode);
+      console.log('\n\n\nSTATUS', data.statusCode);
       if (data.statusCode === 200) {
         result.push(data.body);
         logger.info(JSON.stringify(result));
@@ -1291,11 +1290,11 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
         await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
       } else {
-        logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
+        logger.error('\n\n\nbad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
         return res.status(data.statusCode).send(data.body);
       }
     } catch (error) {
-      logger.error(error, 'at', sql);
+      logger.error(error, 'at', insertQuery);
     };
   }
   res.send(result);
@@ -1751,7 +1750,7 @@ const addProjectToBoard = async (user, servicearea, county, locality, projecttyp
   }
   boardProjectObject.position0 = 0;
   updateBoardProjectAtIndex(board._id, 0);
-
+  console.log('BOARD PROJECT OBJECT', boardProjectObject);
   let boardProject = new BoardProject(boardProjectObject);
 
   let boardProjectSaved = await boardProject.save();
