@@ -1267,33 +1267,37 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
     notRequiredFields = `, ${notRequiredFields}`;
     notRequiredValues = `, ${notRequiredValues}`;
   }
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor ${notRequiredFields} ,projectid)
-   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
-  const query = {
-    q: insertQuery
-  };
-  console.log('my query ' , query)
-  let result = {};
-  try {
-    const data = await needle('post', CARTO_URL, query, { json: true });
-    //console.log('STATUS', data.statusCode);
-    if (data.statusCode === 200) {
-      result = data.body;
-      logger.info(JSON.stringify(result));
-      let projectId = await getNewProjectId();
-      const updateId = await setProjectID(res, projectId);
-      if (!updateId) {
-        return;
+  let result = [];
+  const splittedJurisdiction = jurisdiction.split(',');
+  for (const j of splittedJurisdiction) {
+    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor ${notRequiredFields} ,projectid)
+    VALUES(ST_GeomFromGeoJSON('${geom}'), '${j}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
+    const query = {
+      q: insertQuery
+    };
+    console.log('my query ' , query)
+    let result = {};
+    try {
+      const data = await needle('post', CARTO_URL, query, { json: true });
+      //console.log('STATUS', data.statusCode);
+      if (data.statusCode === 200) {
+        result.push(data.body);
+        logger.info(JSON.stringify(result));
+        let projectId = await getNewProjectId();
+        const updateId = await setProjectID(res, projectId);
+        if (!updateId) {
+          return;
+        }
+        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year);
+        await attachmentService.uploadFiles(user, req.files, projectId, cover);
+      } else {
+        logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
+        return res.status(data.statusCode).send(data.body);
       }
-      await addProjectToBoard(user, servicearea, county, jurisdiction, projecttype, projectId, year);
-      await attachmentService.uploadFiles(user, req.files, projectId, cover);
-    } else {
-       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
-       return res.status(data.statusCode).send(data.body);
-    }
-  } catch (error) {
-    logger.error(error, 'at', sql);
-  };
+    } catch (error) {
+      logger.error(error, 'at', sql);
+    };
+  }
   res.send(result);
 });
 
@@ -1389,46 +1393,49 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
     notRequiredFields = `, ${notRequiredFields}`;
     notRequiredValues = `, ${notRequiredValues}`;
   }
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor, studyreason, studysubreason ${notRequiredFields} ,projectid)
-  (SELECT ST_Collect(the_geom) as the_geom, '${jurisdiction}' as jurisdiction, '${projectname}' as projectname , '${description}' as description, '${servicearea}' as servicearea,
-  '${county}' as county, '${status}' as status, '${projecttype}' as projecttype, '${projectsubtype}' as projectsubtype,
-   '${sponsor}' as sponsor, '${studyreason}' as studyreason, '${studysubreason}' as studysubreason ${notRequiredValues} ,${-1} as projectid FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds}))`;
-  const query = {
-    q: insertQuery
-  };
-  console.log('my query ' , query)
-  let result = {};
-  try {
-    const data = await needle('post', CARTO_URL, query, { json: true });
-    //console.log('STATUS', data.statusCode);
-    if (data.statusCode === 200) {
-      result = data.body;
-      logger.info(JSON.stringify(result));
-      let projectId = await getNewProjectId();
-      const updateId = await setProjectID(res, projectId);
-      if (!updateId) {
-        return;
-      }
-      await addProjectToBoard(user, servicearea, county, jurisdiction, projecttype, projectId, year);
-      await attachmentService.uploadFiles(user, req.files, projectId, cover);
-      for (const stream of JSON.parse(streams)) {
-        projectStreamService.saveProjectStream({
-          projectid: projectId,
-          mhfd_code: stream.mhfd_code,
-          length: stream.length,
-          drainage: stream.drainage,
-          jurisdiction: stream.jurisdiction,
-          str_name: stream.str_name
-        });
-      }
-    } else {
-       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
-       return res.status(data.statusCode).send(data.body);
-      }
-  } catch (error) {
-    logger.error(error, 'at', sql);
-    return res.status(500).send(eroor);
-  };
+  let result = [];
+  const splittedJurisdiction = jurisdiction.split(',');
+  for (const j of splittedJurisdiction) {
+    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor, studyreason, studysubreason ${notRequiredFields} ,projectid)
+    (SELECT ST_Collect(the_geom) as the_geom, '${j}' as jurisdiction, '${projectname}' as projectname , '${description}' as description, '${servicearea}' as servicearea,
+    '${county}' as county, '${status}' as status, '${projecttype}' as projecttype, '${projectsubtype}' as projectsubtype,
+    '${sponsor}' as sponsor, '${studyreason}' as studyreason, '${studysubreason}' as studysubreason ${notRequiredValues} ,${-1} as projectid FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds}))`;
+    const query = {
+      q: insertQuery
+    };
+    console.log('my query ' , query);
+    try {
+      const data = await needle('post', CARTO_URL, query, { json: true });
+      //console.log('STATUS', data.statusCode);
+      if (data.statusCode === 200) {
+        result = data.body;
+        logger.info(JSON.stringify(result));
+        let projectId = await getNewProjectId();
+        const updateId = await setProjectID(res, projectId);
+        if (!updateId) {
+          return;
+        }
+        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year);
+        await attachmentService.uploadFiles(user, req.files, projectId, cover);
+        for (const stream of JSON.parse(streams)) {
+          projectStreamService.saveProjectStream({
+            projectid: projectId,
+            mhfd_code: stream.mhfd_code,
+            length: stream.length,
+            drainage: stream.drainage,
+            jurisdiction: stream.jurisdiction,
+            str_name: stream.str_name
+          });
+        }
+      } else {
+        logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
+        return res.status(data.statusCode).send(data.body);
+        }
+    } catch (error) {
+      logger.error(error, 'at', sql);
+      return res.status(500).send(eroor);
+    };
+  }
   res.send(result);
 });
 
@@ -1578,35 +1585,39 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
     notRequiredFields = `, ${notRequiredFields}`;
     notRequiredValues = `, ${notRequiredValues}`;
   }
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor ${notRequiredFields}  ,projectid)
-   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
-  const query = {
-    q: insertQuery
-  };
-  
-  logger.info('my query ' + query);
-  let result = {};
-  try {
-    const data = await needle('post', CARTO_URL, query, { json: true });
-    //console.log('STATUS', data.statusCode);
-    if (data.statusCode === 200) {
-      result = data.body;
-      logger.info(result);
-      let projectId = await getNewProjectId();
-      const updateId = await setProjectID(res, projectId);
-      if (!updateId) {
-        return;
+  let result = [];
+  const splittedJurisdiction = jurisdiction.split(',');
+  for (const j of splittedJurisdiction) {
+    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor ${notRequiredFields}  ,projectid)
+    VALUES(ST_GeomFromGeoJSON('${geom}'), '${j}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
+    const query = {
+      q: insertQuery
+    };
+    
+    logger.info('my query ' + query);
+    let result = {};
+    try {
+      const data = await needle('post', CARTO_URL, query, { json: true });
+      //console.log('STATUS', data.statusCode);
+      if (data.statusCode === 200) {
+        result = data.body;
+        logger.info(result);
+        let projectId = await getNewProjectId();
+        const updateId = await setProjectID(res, projectId);
+        if (!updateId) {
+          return;
+        }
+        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year);
+        await attachmentService.uploadFiles(user, req.files, projectId, cover);
+      } else {
+        logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
+        return res.status(data.statusCode).send(data.body);
       }
-      await addProjectToBoard(user, servicearea, county, jurisdiction, projecttype, projectId, year);
-      await attachmentService.uploadFiles(user, req.files, projectId, cover);
-    } else {
-      logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
-      return res.status(data.statusCode).send(data.body);
-    }
-  } catch (error) {
-    logger.error(error, 'at', sql);
-    return res.status(500).send(error);
-  };
+    } catch (error) {
+      logger.error(error, 'at', sql);
+      return res.status(500).send(error);
+    };
+  }
   res.send(result);
 });
 
