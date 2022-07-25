@@ -1283,7 +1283,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
+      await addProjectToBoard(user, servicearea, county, jurisdiction, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
        logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
@@ -1407,7 +1407,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
+      await addProjectToBoard(user, servicearea, county, jurisdiction, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
       for (const stream of JSON.parse(streams)) {
         projectStreamService.saveProjectStream({
@@ -1595,7 +1595,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
+      await addProjectToBoard(user, servicearea, county, jurisdiction, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
@@ -1838,7 +1838,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
+      await addProjectToBoard(user, servicearea, county, jurisdiction, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
