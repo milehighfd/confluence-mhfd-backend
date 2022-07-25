@@ -1087,54 +1087,56 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
     notRequiredFields = `, ${notRequiredFields}`;
     notRequiredValues = `, ${notRequiredValues}`;
   }
-  const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost ${notRequiredFields} ,projectid, estimatedcost)
-   VALUES(ST_GeomFromGeoJSON('${geom}'), '${jurisdiction}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}' 
-   ${notRequiredValues} ,${-1}, ${estimatedcost})`;
-  const query = {
-    q: insertQuery
-  };
-  // console.log('my query ' , insertQuery)
-  let result = {};
-  try {
-    const data = await needle('post', CARTO_URL, query,   { json: true });
-    //console.log('STATUS', data.statusCode);
-    if (data.statusCode === 200) {
-      result = data.body;
-      logger.info(JSON.stringify(result));
-      let projectId = await getNewProjectId();
-      const updateId = await setProjectID(res, projectId);
-      if (!updateId) {
-        return;
-      }
-      // change sponsor by jurisdiction
-      // we can have a lot jurisdiction separated by comma. in a for
-      // poner if para los dos roles https://trello.com/c/xfBIveVT/1745-create-project-todos-types-agregar-el-checkbox-deseleccionado-por-defecto-y-label-solo-para-usuarios-mhfd-senior-managers-y-mhfd
-      await addProjectToBoard(user, servicearea, county, jurisdiction, projecttype, projectId, year);
-      await attachmentService.uploadFiles(user, req.files, projectId, cover);
-      for (const independent of JSON.parse(independetComponent)) {
-        const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId};
-        try {
-          IndependentComponent.create(element);
-          logger.info('create independent component');
-        } catch(error) {
-          logger.error('cannot create independent component ' + error);
+  let result = [];
+  const splittedJurisdiction = jurisdiction.split(',');
+  for (const j of splittedJurisdiction) {
+    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost ${notRequiredFields} ,projectid, estimatedcost)
+      VALUES(ST_GeomFromGeoJSON('${geom}'), '${j}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}' 
+      ${notRequiredValues} ,${-1}, ${estimatedcost})`;
+      const query = {
+        q: insertQuery
+      };
+    try {
+      const data = await needle('post', CARTO_URL, query,   { json: true });
+      //console.log('STATUS', data.statusCode);
+      if (data.statusCode === 200) {
+        result.push(data.body);
+        logger.info(JSON.stringify(result));
+        let projectId = await getNewProjectId();
+        const updateId = await setProjectID(res, projectId);
+        if (!updateId) {
+          return;
         }
+        // change sponsor by jurisdiction
+        // we can have a lot jurisdiction separated by comma. in a for
+        // poner if para los dos roles https://trello.com/c/xfBIveVT/1745-create-project-todos-types-agregar-el-checkbox-deseleccionado-por-defecto-y-label-solo-para-usuarios-mhfd-senior-managers-y-mhfd
+        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year);
+        await attachmentService.uploadFiles(user, req.files, projectId, cover);
+        for (const independent of JSON.parse(independetComponent)) {
+          const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId};
+          try {
+            IndependentComponent.create(element);
+            logger.info('create independent component');
+          } catch(error) {
+            logger.error('cannot create independent component ' + error);
+          }
+        }
+        for (const component of JSON.parse(components)) { 
+          const dataComponent = {
+            table: component.table,
+            projectid: projectId,
+            objectid: component.objectid
+          };
+          projectComponentService.saveProjectComponent(dataComponent);
+        }
+      } else {
+          logger.error('bad status ' + data.statusCode + '  -- '+ insertQuery +  JSON.stringify(data.body, null, 2));
+          return res.status(data.statusCode).send(data.body);
       }
-      for (const component of JSON.parse(components)) { 
-        const data = {
-          table: component.table,
-          projectid: projectId,
-          objectid: component.objectid
-        };
-        projectComponentService.saveProjectComponent(data);
-      }
-    } else {
-       logger.error('bad status ' + data.statusCode + '  -- '+ insertQuery +  JSON.stringify(data.body, null, 2));
-       return res.status(data.statusCode).send(data.body);
+    } catch (error) {
+      logger.error(error, 'at', insertQuery);
     }
-  } catch (error) {
-    logger.error(error, 'at', insertQuery);
-  };
+  }
   res.send(result);
 });
 
