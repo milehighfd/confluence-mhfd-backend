@@ -1109,7 +1109,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
       // change sponsor by jurisdiction
       // we can have a lot jurisdiction separated by comma. in a for
       // poner if para los dos roles https://trello.com/c/xfBIveVT/1745-create-project-todos-types-agregar-el-checkbox-deseleccionado-por-defecto-y-label-solo-para-usuarios-mhfd-senior-managers-y-mhfd
-      await addProjectToBoard(user, servicearea, county, sponsor, projecttype, projectId, year);
+      await addProjectToBoard(user, servicearea, county, jurisdiction, projecttype, projectId, year);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
       for (const independent of JSON.parse(independetComponent)) {
         const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId};
