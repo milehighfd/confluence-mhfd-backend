@@ -8,7 +8,7 @@ const auth = require('../auth/auth');
 
 const router = express.Router();
 const PROJECT_TABLES = [MAIN_PROJECT_TABLE];
-const PROBLEMS_TABLE = 'problems';
+const PROBLEMS_TABLE = 'problem_boundary';
 
 function getFilters(params, ids) {
    let filters = '';
@@ -16,7 +16,7 @@ function getFilters(params, ids) {
    let hasProjectType = false;
 
    if (params.isproblem) {
-      tipoid = 'problemid';
+      tipoid = 'problem_id';
       if (params.name) {
          if (filters.length > 0) {
             filters = filters = ` and problemname ilike '%${params.name}%'`;
@@ -192,6 +192,7 @@ router.delete('/', auth, async (req, res) => {
 router.post('/favorite-list', auth, async (req, res) => {
    const user = req.user;
    const favorite = await favoritesService.getFavorites(user._id);
+   console.log(favorite);
    const ids = favorite
       .filter(fav => {
          if (req.body.isproblem) {
@@ -223,7 +224,7 @@ router.post('/favorite-list', auth, async (req, res) => {
                  return {
                     cartodb_id: element.cartodb_id,
                     type: 'problems',
-                    problemid: element.problemid,
+                    problemid: element.problem_id,
                     problemname: element.problemname,
                     solutioncost: element.solutioncost,
                     jurisdiction: element.jurisdiction,
