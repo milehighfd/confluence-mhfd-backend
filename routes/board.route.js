@@ -98,17 +98,20 @@ router.post('/', async (req, res) => {
     if (!type || !year || !locality || !projecttype) {
         return res.sendStatus(404);
     }
+    logger.info('SEARCHING IN BOARD');
     let board = await Board.findOne({
         where: {
             type, year, locality, projecttype
         }
     });
     if (board) {
+        logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
         let boardProjects = await BoardProject.findAll({
             where: {
-                board_id: board._id
+                board_id: board._igetMidd
             }
         });
+        logger.info(`BOARD-PROJECTS ${JSON.stringify(boardProjects)}`);
         let projectsPromises = boardProjects.filter(bp => !!bp.project_id).map(async (bp) => {
             let project = null;
             try {
@@ -133,8 +136,10 @@ router.post('/', async (req, res) => {
             return newObject;
         })
         let resolvedProjects = await Promise.all(projectsPromises);
+        logger.info(`RESOLVERD PROJECTS: ${resolvedProjects}`)
         resolvedProjects = resolvedProjects.filter(bp => bp.projectData != null);
         let projects = resolvedProjects;
+        logger.info('FINISHING BOARD REQUEST');
         res.send({
             board,
             projects
