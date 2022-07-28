@@ -32,6 +32,7 @@ db.sequelize.sync();
 
 require('./config/seed');
 
+console.log(`ENVIRONMENT ${process.env.NODE_ENV}`);
 var app = express();
 
 var server = http.createServer(app);
