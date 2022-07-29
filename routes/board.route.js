@@ -108,7 +108,7 @@ router.post('/', async (req, res) => {
         logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
         let boardProjects = await BoardProject.findAll({
             where: {
-                board_id: board._igetMidd
+              board_id: board._id
             }
         });
         logger.info(`BOARD-PROJECTS ${JSON.stringify(boardProjects)}`);
