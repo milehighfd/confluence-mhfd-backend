@@ -1756,7 +1756,9 @@ const addProjectToBoard = async (user, servicearea, county, locality, projecttyp
   let boardProject = new BoardProject(boardProjectObject);
   let boardProjectSaved = boardProject;
   updateBoardProjectAtIndex(board._id, 0);
-  if (sendToWR) {
+  console.log('zxcSEND TO WORK REQUEST \n\n\n\n\n\n\n\n', sendToWR, typeof sendToWR);
+  if (sendToWR === 'true') {
+    console.log('\n\n\n\n\n\n zxcsent to Wokrrequest', sendToWR);
     boardProjectSaved = await boardProject.save();
   }
   if (['admin', 'staff'].includes(user.designation)) {
