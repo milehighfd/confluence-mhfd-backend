@@ -379,6 +379,13 @@ const toggle = async (id) => {
   });
   return attach;
 }
+const toggleValue = async (id, newIsCover) => {
+  const attach = await Attachment.findByPk(id);
+  attach.update({
+    isCover: newIsCover
+  });
+  return attach;
+}
 
 module.exports = {
   listAttachments,
@@ -389,5 +396,6 @@ module.exports = {
   findByName,
   findCoverImage,
   findByFilename,
-  toggle
+  toggle,
+  toggleValue
 }

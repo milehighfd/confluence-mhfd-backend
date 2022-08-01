@@ -95,6 +95,12 @@ router.put('/toggle/:id', auth, async (req, res) => {
    res.send(attach);
 })
 
+router.put('/toggleput/:id/:value', auth, async (req, res) => {
+  const id = req.params.id;
+  const newIsCover = req.params.value
+  let attach = await attachmentService.toggleValue(id, newIsCover);
+  res.send(attach);
+});
 router.delete('/remove/:id', auth, async (req, res) => {
    try {
       const id = req.params.id;
