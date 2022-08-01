@@ -1046,7 +1046,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost, year} = req.body;
+    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost, year, sendToWR} = req.body;
   const status = 'Draft';
   const projecttype = 'Capital';
   let notRequiredFields = ``;
@@ -1110,7 +1110,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
         // change sponsor by jurisdiction
         // we can have a lot jurisdiction separated by comma. in a for
         // poner if para los dos roles https://trello.com/c/xfBIveVT/1745-create-project-todos-types-agregar-el-checkbox-deseleccionado-por-defecto-y-label-solo-para-usuarios-mhfd-senior-managers-y-mhfd
-        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year);
+        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
         for (const independent of JSON.parse(independetComponent)) {
           const element = {name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId};
@@ -1144,7 +1144,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
   const user = req.user;
   const {projectname, description, servicearea, county, geom, 
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost} = req.body;
+    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost, sendToWR} = req.body;
   const projectid = req.params.projectid;
   const status = 'Draft';
   const projecttype = 'Capital';
@@ -1226,7 +1226,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
 router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   // console.log('the user ', user);
-  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor, cover, year} = req.body;
+  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor, cover, year, sendToWR} = req.body;
   const status = 'Draft';
   const projecttype = 'Maintenance';
   let notRequiredFields = ``;
@@ -1287,7 +1287,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
-        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year);
+        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
       } else {
         logger.error('\n\n\nbad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
@@ -1303,7 +1303,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
 router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   console.log('the user ', user);
-  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor, cover} = req.body;
+  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor, cover, sendToWR} = req.body;
   const projectid = req.params.projectid;
   const status = 'Draft';
   const projecttype = 'Maintenance';
@@ -1366,7 +1366,7 @@ router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req
 
 router.post('/study', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor, cover, year, studyreason, studysubreason} = req.body;
+  const {projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor, cover, year, studyreason, studysubreason, sendToWR} = req.body;
   const status = 'Draft';
   const projecttype = 'Study';
   const projectsubtype = 'Master Plan';
@@ -1414,7 +1414,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
-        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year);
+        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
         for (const stream of JSON.parse(streams)) {
           projectStreamService.saveProjectStream({
@@ -1484,7 +1484,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
   const user = req.user;
   const projectid = req.params.projectid;
   const {projectname, description, servicearea, county, ids, cosponsor, geom, locality,
-  streams, jurisdiction, sponsor, cover} = req.body;
+  streams, jurisdiction, sponsor, cover, sendToWR} = req.body;
   const status = 'Draft';
   const projecttype = 'Study';
   const projectsubtype = 'Master Plan';
@@ -1551,7 +1551,9 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
 
 router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor, cosponsor, cover, year} = req.body;
+  const {projectname, description, servicearea, county, geom,
+    acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor,
+    cosponsor, cover, year, sendToWR } = req.body;
   const status = 'Draft';
   const projecttype = 'Acquisition';
   let notRequiredFields = ``;
@@ -1606,7 +1608,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
-        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year);
+        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
       } else {
         logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
@@ -1623,7 +1625,8 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
 router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const projectid = req.params.projectid;
-  const {projectname, description, servicearea, county, geom, acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor, cosponsor, cover} = req.body;
+  const {projectname, description, servicearea, county, geom, acquisitionprogress,
+    acquisitionanticipateddate, locality, jurisdiction, sponsor, cosponsor, cover, sendToWR} = req.body;
   const status = 'Draft';
   const projecttype = 'Acquisition';
   let notRequiredFields = ``;
@@ -1709,7 +1712,7 @@ const updateBoardProjectAtIndex = async (boardId, index) => {
   })
 }
 
-const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year) => {
+const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year, sendToWR) => {
   let dbLoc = await Locality.findOne({
     where: {
       name: locality
@@ -1749,11 +1752,13 @@ const addProjectToBoard = async (user, servicearea, county, locality, projecttyp
     origin: locality
   }
   boardProjectObject.position0 = 0;
-  updateBoardProjectAtIndex(board._id, 0);
   console.log('BOARD PROJECT OBJECT', boardProjectObject);
   let boardProject = new BoardProject(boardProjectObject);
-
-  let boardProjectSaved = await boardProject.save();
+  let boardProjectSaved = boardProject;
+  updateBoardProjectAtIndex(board._id, 0);
+  if (sendToWR) {
+    boardProjectSaved = await boardProject.save();
+  }
   if (['admin', 'staff'].includes(user.designation)) {
     await sendBoardsToProp(boardProjectSaved, board, servicearea, 'servicearea');
     await sendBoardsToProp(boardProjectSaved, board, county, 'county');
@@ -1814,7 +1819,8 @@ const sendBoardsToProp = async (bp, board, prop, propid) => {
 
 router.post('/special', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, geom, locality, jurisdiction, sponsor, cosponsor, cover, year} = req.body;
+  const {projectname, description, servicearea, county, geom, locality,
+    jurisdiction, sponsor, cosponsor, cover, year, sendToWR} = req.body;
   const status = 'Draft';
   const projecttype = 'Special';
   let notRequiredFields = '';
@@ -1850,7 +1856,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
       if (!updateId) {
         return;
       }
-      await addProjectToBoard(user, servicearea, county, jurisdiction, projecttype, projectId, year);
+      await addProjectToBoard(user, servicearea, county, jurisdiction, projecttype, projectId, year, sendToWR);
       await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } else {
       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
@@ -1866,7 +1872,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
 router.post('/special/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const projectid = req.params.projectid;
-  const {projectname, description, servicearea, county, geom, locality, jurisdiction, sponsor, cosponsor} = req.body;
+  const {projectname, description, servicearea, county, geom, locality, jurisdiction, sponsor, cosponsor, sendToWR} = req.body;
   const status = 'Draft';
   const projecttype = 'Special';
   let notRequiredFields = '';
