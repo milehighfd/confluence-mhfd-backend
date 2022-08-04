@@ -7,7 +7,8 @@ const {
    CARTO_URL,
    PROBLEM_TABLE,
    PROPSPROBLEMTABLES,
-   MAIN_PROJECT_TABLE
+   MAIN_PROJECT_TABLE,
+   COMPLETE_YEAR_COLUMN
 } = require('../config/config');
 const attachmentService = require('../services/attachment.service');
 const {
@@ -511,9 +512,9 @@ function getFilters(params) {
 
    if (params.completedyear) {
       if (filters.length > 0) {
-         filters = filters + ` and completedyear = ${params.completedyear} `;
+         filters = filters + ` and ${COMPLETE_YEAR_COLUMN} = ${params.completedyear} `;
       } else {
-         filters = ` completedyear = ${params.completedyear} `;
+         filters = ` ${COMPLETE_YEAR_COLUMN} = ${params.completedyear} `;
       }
    }
 
@@ -1895,7 +1896,7 @@ router.get('/params-filters', async (req, res) => {
       requests.push(getCountByArrayColumns(MAIN_PROJECT_TABLE, 'projecttype', ['Maintenance', 'Study', 'Capital'], bounds));
       requests.push(getCountByArrayColumns(MAIN_PROJECT_TABLE, 'status', statusList, bounds));
       requests.push(getValuesByColumn(MAIN_PROJECT_TABLE, 'startyear', bounds));
-      requests.push(getValuesByColumn(MAIN_PROJECT_TABLE, 'completedyear', bounds));
+      requests.push(getValuesByColumn(MAIN_PROJECT_TABLE, COMPLETE_YEAR_COLUMN, bounds));
       const rangeMhfdDollarsAllocated = [
          {
             min: 0,

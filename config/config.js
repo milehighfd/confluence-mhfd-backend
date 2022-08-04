@@ -24,6 +24,9 @@ const BASE_SERVER_URL = process.env.BASE_SERVER_URL || 'http://localhost:3003';
 const MAIN_PROJECT_TABLE = 'mhfd_projects';
 const CREATE_PROJECT_TABLE = process.env.CREATE_PROJECT_TABLE + '_' + (process.env.NODE_ENV ? process.env.NODE_ENV : 'dev');
 const PROBLEM_TABLE = 'problem_boundary';
+const COMPLETE_YEAR_COLUMN = 'completeyear';
+const COSPONSOR1 = 'cosponsor1';
+const COSPONSOR = 'cosponsor';
 const PROPSPROBLEMTABLES = {
   problems: [
     'solutioncost',  //0
@@ -102,5 +105,8 @@ module.exports = {
   PROPSPROBLEMTABLES,
   MAIN_PROJECT_TABLE,
   CARTO_URL,
-  CARTO_URL_MAP
+  CARTO_URL_MAP,
+  COMPLETE_YEAR_COLUMN,
+  COSPONSOR1,
+  COSPONSOR
 };

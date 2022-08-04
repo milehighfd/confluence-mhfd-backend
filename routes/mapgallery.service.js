@@ -7,7 +7,9 @@ const {
   CREATE_PROJECT_TABLE,
   PROBLEM_TABLE,
   PROPSPROBLEMTABLES,
-  MAIN_PROJECT_TABLE
+  MAIN_PROJECT_TABLE,
+  COSPONSOR1,
+  COSPONSOR
 } = require('../config/config');
 
 const getCoordsByProjectId = async (projectid, isDev) => {
@@ -32,7 +34,7 @@ const getCoordsByProjectId = async (projectid, isDev) => {
 
 const getMidByProjectId = async (projectid, projecttype) => {
   let table = CREATE_PROJECT_TABLE;
-  let fields = ["projectid", "cartodb_id", "county", "jurisdiction", "servicearea", "projectname", "status", "description", "acquisitionprogress", "acquisitionanticipateddate", "projecttype", "projectsubtype", "additionalcost", "additionalcostdescription", "cosponsor", "frequency", "maintenanceeligibility", "overheadcost", "overheadcostdescription", "ownership", "sponsor", 'estimatedcost', 'studyreason', 'studysubreason'];
+  let fields = ["projectid", "cartodb_id", "county", "jurisdiction", "servicearea", "projectname", "status", "description", "acquisitionprogress", "acquisitionanticipateddate", "projecttype", "projectsubtype", "additionalcost", "additionalcostdescription", `${COSPONSOR1} as ${COSPONSOR}`, "frequency", "maintenanceeligibility", "overheadcost", "overheadcostdescription", "ownership", "sponsor", 'estimatedcost', 'studyreason', 'studysubreason'];
   if (['Acquisition', 'Special', 'Maintenance', 'Capital'].includes(projecttype)) {
     fields.push('ST_AsGeoJSON(the_geom) as the_geom')
   }

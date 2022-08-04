@@ -9,7 +9,8 @@ const {
   CARTO_URL,
   CREATE_PROJECT_TABLE,
   PROBLEM_TABLE,
-  PROPSPROBLEMTABLES
+  PROPSPROBLEMTABLES,
+  COSPONSOR1
 } = require('../config/config');
 const db = require('../config/db');
 const auth = require('../auth/auth');
@@ -1080,7 +1081,7 @@ router.post('/capital', [auth, multer.array('files')], async (req, res) => {
       notRequiredFields += ', ';
       notRequiredValues += ', ';
     }
-    notRequiredFields += 'cosponsor';
+    notRequiredFields += COSPONSOR1;
     notRequiredValues += `'${cosponsor}'`;
   }
   if (notRequiredFields) {
@@ -1176,7 +1177,7 @@ router.post('/capital/:projectid', [auth, multer.array('files')], async (req, re
     if (notRequiredFields) {
       notRequiredFields += ', ';
     }
-    notRequiredFields += `cosponsor = '${cosponsor}'`;
+    notRequiredFields += `${COSPONSOR1} = '${cosponsor}'`;
   }
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
@@ -1267,7 +1268,7 @@ router.post('/maintenance', [auth, multer.array('files')], async (req, res) => {
       notRequiredFields += ', ';
       notRequiredValues += ', ';
     }
-    notRequiredFields += 'cosponsor';
+    notRequiredFields += COSPONSOR1;
     notRequiredValues += `'${cosponsor}'`;
   }
   if (notRequiredFields) {
@@ -1336,7 +1337,7 @@ router.post('/maintenance/:projectid', [auth, multer.array('files')], async (req
     if (notRequiredFields) {
       notRequiredFields += ', ';
     }
-    notRequiredFields += `cosponsor = '${cosponsor}'`;
+    notRequiredFields += `${COSPONSOR1} = '${cosponsor}'`;
   }
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
@@ -1391,7 +1392,7 @@ router.post('/study', [auth, multer.array('files')], async (req, res) => {
       notRequiredFields += ', ';
       notRequiredValues += ', ';
     }
-    notRequiredFields += 'cosponsor';
+    notRequiredFields += COSPONSOR1;
     notRequiredValues += `'${cosponsor}' as cosponsor`;
   }
   if (notRequiredFields) {
@@ -1507,7 +1508,7 @@ router.post('/study/:projectid', [auth, multer.array('files')], async (req, res)
     if (notRequiredFields) {
       notRequiredFields += ', ';
     }
-    notRequiredFields += `cosponsor = '${cosponsor}'`;
+    notRequiredFields += `${COSPONSOR1} = '${cosponsor}'`;
   }
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
@@ -1585,7 +1586,7 @@ router.post('/acquisition', [auth, multer.array('files')], async (req, res) => {
       notRequiredFields += ', ';
       notRequiredValues += ', ';
     }
-    notRequiredFields += 'cosponsor';
+    notRequiredFields += COSPONSOR1;
     notRequiredValues += `'${cosponsor}'`;
   }
   if (notRequiredFields) {
@@ -1652,7 +1653,7 @@ router.post('/acquisition/:projectid', [auth, multer.array('files')], async (req
     if (notRequiredFields) {
       notRequiredFields += `, `;
     }
-    notRequiredFields += `cosponsor = '${cosponsor}'`;
+    notRequiredFields += `${COSPONSOR1} = '${cosponsor}'`;
   }
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
@@ -1838,7 +1839,7 @@ router.post('/special', [auth, multer.array('files')], async (req, res) => {
       notRequiredFields += ', ';
       notRequiredValues += ', ';
     }
-    notRequiredFields += 'cosponsor';
+    notRequiredFields += COSPONSOR1;
     notRequiredValues += `'${cosponsor}'`;
   }
   if (notRequiredFields) {
@@ -1889,7 +1890,7 @@ router.post('/special/:projectid', [auth, multer.array('files')], async (req, re
       notRequiredFields += ', ';
       notRequiredValues += ', ';
     }
-    notRequiredFields += `cosponsor = '${cosponsor}'`;
+    notRequiredFields += `${COSPONSOR1} = '${cosponsor}'`;
   }
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;

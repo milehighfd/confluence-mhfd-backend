@@ -260,13 +260,11 @@ router.post('/favorite-list', auth, async (req, res) => {
            const result = await queriesByProblemTypeInProject(PROJECT_FIELDS, filters, req.body.problemtype);
            return res.status(200).send(result);
         } else {
-          console.log('miau miau miau');
            for (const table of PROJECT_TABLES) {
               let query = ''
               if (table === MAIN_PROJECT_TABLE) {
                  query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters(MAIN_PROJECT_TABLE, 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
               }
-              console.log(query);
               let answer = [];
               try {
                 console.log(CARTO_URL, query);
