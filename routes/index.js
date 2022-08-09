@@ -4,8 +4,13 @@ const https = require('https');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.send(200, { title: 'Express' });
+  res.send(200, { title: 'Express', env: process.env.NODE_ENV });
 });
+
+router.get('/env', (_, res) => {
+  console.log('my env ', process.env.NODE_ENV);
+  res.send({ env: process.env.NODE_ENV });
+})
 const server_style = function(req, res, next) {
   var accessToken = req.params.accessToken;
   var styleUser = req.params.styleUser;
