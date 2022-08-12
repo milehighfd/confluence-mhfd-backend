@@ -8,7 +8,8 @@ const {
    PROBLEM_TABLE,
    PROPSPROBLEMTABLES,
    MAIN_PROJECT_TABLE,
-   COMPLETE_YEAR_COLUMN
+   COMPLETE_YEAR_COLUMN,
+   PROBLEM_PART_TABLES
 } = require('../config/config');
 const attachmentService = require('../services/attachment.service');
 const {
@@ -820,13 +821,23 @@ router.get('/project-by-ids', async (req, res) => {
    }
 });
 
+let getEnvelopeOfProblemAndProblemParts = (problem_id) => {
+  let querypart = [`select the_geom from ${PROBLEM_TABLE} where ${PROPSPROBLEMTABLES.problem_boundary[5]}='${problem_id}'`];
+  const tables = PROBLEM_PART_TABLES;
+  for (const element of tables) {
+    querypart.push(`select the_geom from ${element} where ${PROPSPROBLEMTABLES.problem_boundary[5]}='${problem_id}'`);
+  }
+
+  return `ST_Envelope(ST_collect(array(${querypart.join(' union ')})))`;
+}
 let getDataByProblemId = async (id) => {
-   const PROBLEM_SQL = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom, cartodb_id,
+   const PROBLEM_SQL = `SELECT ST_AsGeoJSON(${getEnvelopeOfProblemAndProblemParts(id)}) as the_geom, cartodb_id,
     objectid, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[4]} as ${PROPSPROBLEMTABLES.problems[4]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]},
     ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[14]} as ${PROPSPROBLEMTABLES.problems[14]}, ${PROPSPROBLEMTABLES.problem_boundary[13]} as ${PROPSPROBLEMTABLES.problems[13]}, ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]},
     ${PROPSPROBLEMTABLES.problem_boundary[3]} as ${PROPSPROBLEMTABLES.problems[3]}, ${PROPSPROBLEMTABLES.problem_boundary[9]} as ${PROPSPROBLEMTABLES.problems[9]}, county,${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[15]} as ${PROPSPROBLEMTABLES.problems[15]},
     ${PROPSPROBLEMTABLES.problem_boundary[12]} as ${PROPSPROBLEMTABLES.problems[12]}, ${PROPSPROBLEMTABLES.problem_boundary[11]} as ${PROPSPROBLEMTABLES.problems[11]}, ${PROPSPROBLEMTABLES.problem_boundary[10]} as ${PROPSPROBLEMTABLES.problems[10]}
     FROM ${PROBLEM_TABLE} where ${PROPSPROBLEMTABLES.problem_boundary[5]}='${id}'`;
+    console.log('PROBLEM SQL', PROBLEM_SQL);
    const URL = encodeURI(`${CARTO_URL}&q=${PROBLEM_SQL}`);
    const data = await needle('get', URL, { json: true });
    if (data.statusCode === 200) {
@@ -863,7 +874,7 @@ let getDataByProblemId = async (id) => {
 
 const getProblemParts = async (id) => {
    const promises = [];
-   const tables = ['flood_hazard_polygon_', 'flood_hazard_line_', 'flood_hazard_point_'];
+   const tables = PROBLEM_PART_TABLES;
    for (const element of tables) {
      let sql = `SELECT problem_type, problem_part_category, problem_part_subcategory, globalid FROM ${element}
      WHERE problem_id = ${id}`;
@@ -2054,9 +2065,7 @@ router.get('/params-filters', async (req, res) => {
 router.get('/problem_part/:id', async (req, res) => {
    const id = req.params.id;
    const promises = [];
-   const tables = ['flood_hazard_polygon_', 'flood_hazard_line_', 'flood_hazard_point_',
-      'stream_function_polygon_', 'stream_function_point_', 'future_development_polygon_',
-      'stream_function_line_', 'future_development_line_'];
+   const tables = PROBLEM_PART_TABLES;
    for (const element of tables) {
      let sql = `SELECT problem_type, problem_part_category, problem_part_subcategory, globalid FROM ${element}
      WHERE problem_id = ${id}`;

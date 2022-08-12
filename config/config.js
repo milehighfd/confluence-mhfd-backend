@@ -69,6 +69,9 @@ const PROPSPROBLEMTABLES = {
     'component_count'   //17
   ]
 };
+const PROBLEM_PART_TABLES = ['flood_hazard_polygon_', 'flood_hazard_line_', 'flood_hazard_point_',
+'stream_function_polygon_', 'stream_function_point_', 'future_development_polygon_',
+'stream_function_line_', 'future_development_line_'];
 const CARTO_DOMAIN = 'denver-mile-high-admin';
 const CARTO_URL = encodeURI(
   `https://${CARTO_DOMAIN}.carto.com/api/v2/sql?api_key=${CARTO_TOKEN}`
@@ -108,5 +111,6 @@ module.exports = {
   CARTO_URL_MAP,
   COMPLETE_YEAR_COLUMN,
   COSPONSOR1,
-  COSPONSOR
+  COSPONSOR,
+  PROBLEM_PART_TABLES
 };
