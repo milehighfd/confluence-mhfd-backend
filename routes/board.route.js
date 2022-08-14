@@ -157,14 +157,17 @@ router.post('/', async (req, res) => {
 });
 
 const getBoard = async (type, locality, year, projecttype) => {
+    logger.info(`Trying to insert create or insert(${type}, ${locality}, ${year}, ${projecttype})`);
     let board = await Board.findOne({
         where: {
             type, year, locality, projecttype
         }
     });
     if (board) {
+        logger.info('already exists');
         return board;
     } else {
+        logger.info('new board');
         let newBoard = new Board({
             type, year, locality, projecttype, status: 'Under Review'
         });
@@ -187,9 +190,11 @@ const sendBoardProjectsToProp = async (boards, prop) => {
             try {
                 p = await getMinimumDateByProjectId(bp.project_id);
             } catch(e) {
+                logger.info(`Project not found ${bp.project_id}`);
                 continue;
             }
             if (!p[prop]) {
+                logger.info(`Property not found ${prop}`);
                 continue;
             }
             let propValues = p[prop].split(',');
@@ -201,7 +206,11 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                     propVal = propVal.trimEnd().concat(' Service Area');
                 }
                 let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype);
+                logger.info(`Destiny board by prop ${prop} id is ${destinyBoard !== null ? destinyBoard._id : destinyBoard}`);
                 //TODO: improve to avoid multiple queries to same board
+                if (destinyBoard === null || destinyBoard._id === null) {
+                    logger.info('Destiny board not found');
+                }
                 let newBoardProject = new BoardProject({
                     board_id: destinyBoard._id,
                     project_id: bp.project_id,
@@ -219,7 +228,7 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                     year1: bp.year1,
                     year2: bp.year2,
                     origin: board.locality,
-                })
+                });
                 await newBoardProject.save();
             }
         }
@@ -292,6 +301,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
 }
 
 const updateBoards = async (board, status, comment, substatus) => {
+    logger.info('Updating all boards different project type');
     let pjts = ['Capital', 'Maintenance', 'Study', 'Acquisition', 'Special'];
     for (var i = 0 ; i < pjts.length ; i++) {
         let pjt = pjts[i];
@@ -307,15 +317,18 @@ const updateBoards = async (board, status, comment, substatus) => {
         if (status === 'Approved' && board.status !== status) {
             body['submissionDate'] = new Date();
         }
+        logger.info(`Project type ${pjt}`);
         if (!b) {
+            logger.info(`Creating new board for ${pjt}`);
             let newBoard = new Board({
                 ...body,
                 status,
                 comment,
                 substatus
-            }); 
+            });
             await newBoard.save();
         } else {
+            logger.info('Updating board');
             let newFields = {
                 status,
                 comment,
@@ -330,7 +343,7 @@ const updateBoards = async (board, status, comment, substatus) => {
 }
 
 const moveCardsToNextLevel = async (board) => {
-    console.log('moveCardsToNextLevel');
+    logger.info('moveCardsToNextLevel');
     let boards = await Board.findAll({
         where: {
             type: board.type,
@@ -357,9 +370,13 @@ const moveCardsToNextLevel = async (board) => {
                 return ['Study'].includes(board.projecttype)
             });
         }
+        logger.info(`Sending ${boardsToCounty.length} to county`);
         await sendBoardProjectsToProp(boardsToCounty, 'county');
+        logger.info(`Sending ${boardsToServiceArea.length} to service area`);
         await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea');
+        logger.info(`Sending ${boards.length} to district`);
         await sendBoardProjectsToDistrict(boards);
+        logger.info(`Update ${boards.length} as Requested`);
         await updateProjectStatus(boards, 'Requested');
         return {}
     } else if (board.type === 'WORK_PLAN') {
@@ -473,16 +490,18 @@ const sendMails = async (board, fullName) => {
 
 router.put('/:boardId', [auth], async (req, res) => {
     const { boardId } = req.params;
+    logger.info(`Attempting to update board ${boardId}`);
     const { status, comment, substatus } = req.body;
     let board = await Board.findOne({
         where: {
             _id: boardId
         }
-    })
+    });
     if (board) {
         await updateBoards(board, status, comment, substatus);
         let bodyResponse = { status: 'updated' };
         if (status === 'Approved' && board.status !== status) {
+            logger.info(`Approving board ${boardId}`);
             sendMails(board, req.user.name)
             let r = await moveCardsToNextLevel(board);
             bodyResponse = {
