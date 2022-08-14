@@ -148,7 +148,7 @@ router.post('/', async (req, res) => {
         let newBoard = new Board({
             type, year, locality, projecttype, status: 'Under Review'
         });
-        newBoard.save();
+        await newBoard.save();
         res.send({
             board: newBoard,
             projects: []
@@ -171,7 +171,7 @@ const getBoard = async (type, locality, year, projecttype) => {
         let newBoard = new Board({
             type, year, locality, projecttype, status: 'Under Review'
         });
-        newBoard.save();
+        await newBoard.save();
         return newBoard;
     }
 }
