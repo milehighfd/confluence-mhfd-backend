@@ -67,7 +67,7 @@ const BoardProject = db.boardProject;
             const data = await needle('post', CARTO_URL, query, { json: true });
             if (data.statusCode === 200) {
                 result = data.body;
-                logger.log(result);
+                logger.info(result);
             } else {
                 logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2))    ;
             }
