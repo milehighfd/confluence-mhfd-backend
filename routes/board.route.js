@@ -10,6 +10,7 @@ const {
     getMidByProjectId,
     getMinimumDateByProjectId
 } = require('./mapgallery.service');
+const { sendBoardNotification } = require('../services/user.service');
 
 const Board = db.board;
 const User = db.user;
@@ -474,7 +475,7 @@ const getEmailsForWP = async (board) => {
 }
 
 const sendMails = async (board, fullName) => {
-    /*let emails = [];
+    let emails = [];
     if (board.type === 'WORK_REQUEST') {
         emails = await getEmailsForWR(board);
     } else {
@@ -485,7 +486,7 @@ const sendMails = async (board, fullName) => {
     });
     emails.forEach((email) => {
         sendBoardNotification(email, board.type, board.locality, board.year, fullName)
-    })*/
+    });
 }
 
 router.put('/:boardId', [auth], async (req, res) => {
