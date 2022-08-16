@@ -85,6 +85,23 @@ router.get('/board-localities', async (req, res) => {
     res.send(boardLocalities);
 });
 
+router.put('/board-localities/:id', async (req, res) => {
+    let { id } = req.params;
+    const email = req.body.email;
+    let boardLocalities = await BoardLocality.findOne({
+        where: {
+            id
+        }
+    });
+    if (boardLocalities) {
+        boardLocalities.email = email;
+        await boardLocalities.save();
+        res.send(boardLocalities);
+    } else {
+        res.status(404).send({error: 'Not found'});
+    }
+});
+
 router.get('/projects/:bid', async (req, res) => {
     let { bid } = req.params;
     let boardProjects = await BoardProject.findAll({
