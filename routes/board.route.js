@@ -80,6 +80,11 @@ router.get('/', async (req, res) => {
     res.send(boards);
 });
 
+router.get('/board-localities', async (req, res) => {
+    let boardLocalities = await BoardLocality.findAll();
+    res.send(boardLocalities);
+});
+
 router.get('/projects/:bid', async (req, res) => {
     let { bid } = req.params;
     let boardProjects = await BoardProject.findAll({
