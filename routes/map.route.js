@@ -70,6 +70,114 @@ router.post('/', async (req, res) => {
     res.status(500).send(err);
   });
 });
+async function getGeojsonCentroids(bounds, body) {
+  let sql = `SELECT
+            ST_X(ST_Centroid(the_geom)) as lon,
+            ST_Y(ST_Centroid(the_geom)) as lat,
+            cartodb_id,
+            objectid,
+            problem_id,
+            problem_name,
+            problem_type,
+            problem_description,
+            problem_severity,
+            problem_score,
+            mhfd_scale,
+            estimated_cost,
+            component_cost,
+            component_status,
+            globalid,
+            created_user,
+            created_date,
+            last_edited_user,
+            last_edited_date,
+            mhfd_manager,
+            service_area,
+            county,
+            local_government,
+            special_district,
+            stream_name,
+            mhfd_code,
+            validationstatus,
+            study_id,
+            source_type,
+            source_name,
+            source_complete_year,
+            component_count,
+            shape_starea,
+            shape_stlength
+            from problem_boundary`;
+
+    const query = { q: ` ${sql} ` };
+    try {
+      const lineData = await needle('post', CARTO_URL, query, { json: true });
+      const geojson = {
+        type: "FeatureCollection",
+        features: lineData.body.rows.map((row) => {
+          return {
+            type: "Feature",
+            properties: {
+              "cartodb_id": row.cartodb_id,
+              "objectid": row.objectid,
+              "problem_id": row.problem_id,
+              "problem_name": row.problem_name,
+              "problem_type": row.problem_type,
+              "problem_description": row.problem_description,
+              "problem_severity": row.problem_severity,
+              "problem_score": row.problem_score,
+              "mhfd_scale": row.mhfd_scale,
+              "estimated_cost": row.estimated_cost,
+              "component_cost": row.component_cost,
+              "component_status": row.component_status,
+              "globalid": row.globalid,
+              "created_user": row.created_user,
+              "created_date": row.created_date,
+              "last_edited_user": row.last_edited_user,
+              "last_edited_date": row.last_edited_date,
+              "mhfd_manager": row.mhfd_manager,
+              "service_area": row.service_area,
+              "county": row.county,
+              "local_government": row.local_government,
+              "special_district": row.special_district,
+              "stream_name": row.stream_name,
+              "mhfd_code": row.mhfd_code,
+              "validationstatus": row.validationstatus,
+              "study_id": row.study_id,
+              "source_type": row.source_type,
+              "source_name": row.source_name,
+              "source_complete_year": row.source_complete_year,
+              "component_count": row.component_count,
+              "shape_starea": row.shape_starea,
+              "shape_stlength": row.shape_stlength
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [row.lon, row.lat, 0.0]
+            }
+          }
+        })
+      }
+     return geojson;   
+    } catch (error) {
+     logger.error("Count total projects error ->",error);
+    }
+    
+}
+
+async function getProbCentroids(req, res) {
+  try {
+     const bounds = req.query.bounds;
+     const body = req.body;
+     let geom = await getGeojsonCentroids(bounds, body);
+     res.status(200).send({
+        geom
+     });
+  } catch (error) {
+     logger.error(error);
+     logger.error(`countTotalProjects Connection error`);
+  }
+}
+router.get('/probs', getProbCentroids);
 
 
 router.get('/search/:query', async (req, res) => {
