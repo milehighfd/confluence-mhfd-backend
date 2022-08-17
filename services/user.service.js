@@ -59,7 +59,7 @@ const sendRecoverPasswordEmail = async (user) => {
   const options = {
     from: MHFD_EMAIL,
     to: email,
-    subject: "MHFD Confluence App - Reset your password",
+    subject: "MHFD Confluence - Reset your password",
     html: emailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin'])
   };
@@ -77,7 +77,7 @@ const sendApprovedAccount = async (user) => {
   const options = {
     from: MHFD_EMAIL,
     to: email,
-    subject: "MHFD Confluence App - Account approved",
+    subject: "MHFD Confluence - Account approved",
     html: emailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin'])
   };
@@ -138,7 +138,7 @@ const sendBoardNotification = async (email, type, locality, year, fullName) => {
   const options = {
     from: MHFD_EMAIL,
     to: email,
-    subject: `MHFD Confluence App - ${bodyOptions.title}`,
+    subject: `MHFD Confluence - ${bodyOptions.title}`,
     html: content,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
   };

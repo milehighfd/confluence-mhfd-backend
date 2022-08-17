@@ -10,6 +10,7 @@ const {
     getMidByProjectId,
     getMinimumDateByProjectId
 } = require('./mapgallery.service');
+const { sendBoardNotification } = require('../services/user.service');
 
 const Board = db.board;
 const User = db.user;
@@ -77,6 +78,28 @@ router.get('/', async (req, res) => {
     let boards = await Board.findAll();
     console.log('boards', boards, boards.length);
     res.send(boards);
+});
+
+router.get('/board-localities', async (req, res) => {
+    let boardLocalities = await BoardLocality.findAll();
+    res.send(boardLocalities);
+});
+
+router.put('/board-localities/:id', async (req, res) => {
+    let { id } = req.params;
+    const email = req.body.email;
+    let boardLocalities = await BoardLocality.findOne({
+        where: {
+            id
+        }
+    });
+    if (boardLocalities) {
+        boardLocalities.email = email;
+        await boardLocalities.save();
+        res.send(boardLocalities);
+    } else {
+        res.status(404).send({error: 'Not found'});
+    }
 });
 
 router.get('/projects/:bid', async (req, res) => {
@@ -474,7 +497,7 @@ const getEmailsForWP = async (board) => {
 }
 
 const sendMails = async (board, fullName) => {
-    /*let emails = [];
+    let emails = [];
     if (board.type === 'WORK_REQUEST') {
         emails = await getEmailsForWR(board);
     } else {
@@ -485,7 +508,7 @@ const sendMails = async (board, fullName) => {
     });
     emails.forEach((email) => {
         sendBoardNotification(email, board.type, board.locality, board.year, fullName)
-    })*/
+    });
 }
 
 router.put('/:boardId', [auth], async (req, res) => {
