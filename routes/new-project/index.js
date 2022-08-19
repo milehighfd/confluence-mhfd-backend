@@ -585,7 +585,7 @@ AND ST_DWithin(
     if (data.statusCode === 200) {
       const body = data.body;
       let answer = {
-        jurisdiction: await getAllJurisdictionByGeom(JSON.stringify(geom))
+        jurisdiction: await getAllJurisdictionByGeomStreams(JSON.stringify(geom))
       };
       body.rows.forEach(row => {
         if (row.filter) {
@@ -753,7 +753,6 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
       const dropQuery = {
         q: dropSQL
       }
-      console.log(dropSQL);
       const deleted = await needle('post', CARTO_URL, dropQuery, { json: true });
       if (deleted.statusCode === 200) {
         logger.info('DELETE TABLE aux_' + current);
@@ -1057,6 +1056,35 @@ const getJurisdictionByGeom = async (geom) => {
 
 const getAllJurisdictionByGeom = async (geom) => {
   let sql = `SELECT jurisdiction FROM jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
+  const query = { q: sql };
+  const data = await needle('post', CARTO_URL, query, { json: true });
+  return data.body.rows.map(element => element.jurisdiction);
+}
+
+const getAllJurisdictionByGeomStreams = async (geom) => {
+  
+  let sql = `
+  WITH dumped AS (
+    SELECT  (
+            ST_Dump(
+                ST_Intersection( 
+                    mhfd_stream_reaches.the_geom, 
+        ST_GeomFromGeoJSON('${geom}')
+                )
+            )
+        ).geom AS the_geom
+    FROM mhfd_stream_reaches
+),
+unioned AS (
+    SELECT ST_Union(the_geom) AS the_geom FROM dumped
+)
+SELECT jurisdiction 
+FROM jurisidictions, unioned 
+WHERE ST_DWithin( 
+    unioned.the_geom, 
+    jurisidictions.the_geom, 
+    0
+)`;
   const query = { q: sql };
   const data = await needle('post', CARTO_URL, query, { json: true });
   return data.body.rows.map(element => element.jurisdiction);
