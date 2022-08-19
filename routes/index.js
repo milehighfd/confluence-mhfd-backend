@@ -9,7 +9,7 @@ router.get('/', function(req, res, next) {
 
 router.get('/env', (_, res) => {
   console.log('my env ', process.env.NODE_ENV);
-  res.send({ env: process.env.NODE_ENV });
+  res.send({ env: process.env.NODE_ENV, version: 'Aug 19' });
 })
 const server_style = function(req, res, next) {
   var accessToken = req.params.accessToken;
