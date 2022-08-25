@@ -85,7 +85,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
       } else {
-        logger.error('\n\n\nbad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
+        logger.error('\n\n\nbad status ' + data.statusCode + '  -- '+ insertQuery +  JSON.stringify(data.body, null, 2));
         return res.status(data.statusCode).send(data.body);
       }
     } catch (error) {
@@ -100,7 +100,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   console.log('the user ', user);
   const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor, cover, sendToWR} = req.body;
   const projectid = req.params.projectid;
-  const status = 'Draft';
   const projecttype = 'Maintenance';
   let notRequiredFields = ``;
   if (frequency) {
@@ -132,7 +131,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   }
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}',
    projectname = '${projectname}', description = '${description}', servicearea = '${servicearea}',
-    county = '${county}', status = '${status}', projecttype = '${projecttype}',
+    county = '${county}', projecttype = '${projecttype}',
      projectsubtype = '${projectsubtype}',  
      sponsor = '${sponsor}'
      ${notRequiredFields} 
@@ -144,17 +143,16 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   let result = {};
   try {
     const data = await needle('post', CARTO_URL, query, { json: true });
-    //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(JSON.stringify(result));
       await attachmentService.uploadFiles(user, req.files, projectid, cover);
     } else {
-       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
+       logger.error('bad status ' + data.statusCode + '  -- '+ updateQuery +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
-    logger.error(error, 'at', sql);
+    logger.error(error, 'at', updateQuery);
   };
   res.send(result);
 });

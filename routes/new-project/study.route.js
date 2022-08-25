@@ -99,7 +99,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const projectid = req.params.projectid;
   const {projectname, description, servicearea, county, ids, cosponsor, geom, locality,
   streams, jurisdiction, sponsor, cover, sendToWR, studyreason, studysubreason } = req.body;
-  const status = 'Draft';
   const projecttype = 'Study';
   const projectsubtype = 'Master Plan';
   let idsArray = JSON.parse(ids);
@@ -124,7 +123,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   the_geom = (SELECT ST_Collect(the_geom) FROM mhfd_stream_reaches WHERE unique_mhfd_code IN(${parsedIds})), jurisdiction = '${jurisdiction}',
    projectname = '${projectname}', description = '${description}',
     servicearea = '${servicearea}', county = '${county}',
-     status = '${status}', projecttype = '${projecttype}', 
+     projecttype = '${projecttype}', 
      projectsubtype = '${projectsubtype}',
       sponsor = '${sponsor}',
       studyreason= '${studyreason}', studysubreason= '${studysubreason}' ${notRequiredFields} WHERE projectid = ${projectid}
@@ -136,7 +135,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   let result = {};
   try {
     const data = await needle('post', CARTO_URL, query, { json: true });
-    //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(JSON.stringify(result));
@@ -153,11 +151,11 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         });
       }
     } else {
-       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
+       logger.error('bad status ' + data.statusCode + '  -- '+ updateQuery +  JSON.stringify(data.body, null, 2));
        return res.status(data.statusCode).send(data.body);
       }
   } catch (error) {
-    logger.error(error, 'at', sql);
+    logger.error(error, 'at', updateQuery);
     return res.status(500).send(error);
   };
   res.send(result);

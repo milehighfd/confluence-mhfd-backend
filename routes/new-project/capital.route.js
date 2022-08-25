@@ -132,7 +132,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost, sendToWR,
     componentcost, componentcount } = req.body;
   const projectid = req.params.projectid;
-  const status = 'Draft';
   const projecttype = 'Capital';
   let notRequiredFields = ``;
   if (overheadcostdescription) {
@@ -166,10 +165,9 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = ST_GeomFromGeoJSON('${geom}'),
    jurisdiction = '${jurisdiction}', projectname = '${projectname}', 
    description = '${description}', servicearea = '${servicearea}', county = '${county}',
-    status = '${status}', projecttype = '${projecttype}', sponsor = '${sponsor}', 
+    projecttype = '${projecttype}', sponsor = '${sponsor}', 
     overheadcost = '${overheadcost}', estimatedcost = ${estimatedcost} ,  component_cost = ${componentcost}, component_count = ${componentcount}, costdewatering = ${(overHeadNumbers[0] / 100) * componentcost}, costmobilization = ${(overHeadNumbers[1] / 100) * componentcost}, costtraffic = ${(overHeadNumbers[2] / 100) * componentcost}, costutility = ${(overHeadNumbers[3] / 100) * componentcost}, coststormwater = ${(overHeadNumbers[4] / 100) * componentcost}, costengineering = ${(overHeadNumbers[5] / 100) * componentcost} ,costlegal = ${(overHeadNumbers[6] / 100) * componentcost}, costconstruction = ${(overHeadNumbers[7] / 100) * componentcost}, costcontingency = ${(overHeadNumbers[8] / 100) * componentcost}
      ${notRequiredFields}
-   
     WHERE  projectid = ${projectid}`;
   const query = {
     q: updateQuery
@@ -177,7 +175,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   let result = {};
   try {
     const data = await needle('post', CARTO_URL, query, { json: true });
-    //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(JSON.stringify(result));
@@ -202,11 +199,11 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         projectComponentService.saveProjectComponent(data);
       }
     } else {
-      logger.error('bad status ' + data.statusCode + '  -- ' + sql + JSON.stringify(data.body, null, 2));
+      logger.error('bad status ' + data.statusCode + '  -- ' + updateQuery + JSON.stringify(data.body, null, 2));
       return res.status(data.statusCode).send(data.body);
     }
   } catch (error) {
-    logger.error(error, 'at sql');
+    logger.error(error, 'at edit capital');
   };
   res.send(result);
 });

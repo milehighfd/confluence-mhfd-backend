@@ -75,7 +75,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const projectid = req.params.projectid;
   const {projectname, description, servicearea, county, geom, locality, jurisdiction, sponsor, cosponsor, sendToWR, cover} = req.body;
-  const status = 'Draft';
   const projecttype = 'Special';
   let notRequiredFields = '';
   if (cosponsor) {
@@ -92,7 +91,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   SET the_geom = ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}', 
   projectname = '${projectname}', description = '${description}',
    servicearea = '${servicearea}', county = '${county}', 
-   status = '${status}', projecttype = '${projecttype}', sponsor = '${sponsor}'
+   projecttype = '${projecttype}', sponsor = '${sponsor}'
    ${notRequiredFields}
    WHERE  projectid = ${projectid}`;
   const query = {
@@ -102,7 +101,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   let result = {};
   try {
     const data = await needle('post', CARTO_URL, query, { json: true });
-    //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
       logger.info(JSON.stringify(result));
