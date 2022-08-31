@@ -95,7 +95,7 @@ const sendConfirmAccount = async (user) => {
   logger.info(adminEmailToSend);
   const adminOptions = {
     from: MHFD_EMAIL,
-    to: 'xdaddisxd@gmail.com',
+    to: 'confluence.support@mhfd.org',
     subject: 'MHFD Confluence - New User Registered!',
     html: adminEmailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
