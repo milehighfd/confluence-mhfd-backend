@@ -86,15 +86,27 @@ const sendApprovedAccount = async (user) => {
 }
 
 const sendConfirmAccount = async (user) => {
+  const redirectUrl = MHFD_FRONTEND;
+  const transporter = getTransporter();
+  const completeName = user.firstName + ' ' + user.lastName;
+  // here
+  const adminTemplate = fs.readFileSync(__dirname + '/templates/email_admin_new_user.html', 'utf8');
+  const adminEmailToSend = adminTemplate.split('{{completeName}}').join(completeName).split('{{url}}').join(redirectUrl);
+  logger.info(adminEmailToSend);
+  const adminOptions = {
+    from: MHFD_EMAIL,
+    to: 'xdaddisxd@gmail.com',
+    subject: 'MHFD Confluence - New User Registered!',
+    html: adminEmailToSend,
+    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
+  };
+  //end here
   const email = user.email; 
 
-  const redirectUrl = MHFD_FRONTEND;
   const template = fs.readFileSync(__dirname + '/templates/email_registered-MHFD.html', 'utf8');
-  const completeName = user.firstName + ' ' + user.lastName;
   console.log(redirectUrl, completeName);
   const emailToSend = template.split('{{completeName}}').join(user.name).split('{{url}}').join(redirectUrl);
 
-  const transporter = getTransporter();
   const options = {
     from: MHFD_EMAIL,
     to: email,
@@ -102,6 +114,8 @@ const sendConfirmAccount = async (user) => {
     html: emailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
   };
+  const adminInfo = await transporter.sendMail(adminOptions);
+  logger.info(`Email sent to ADMIN: ${JSON.stringify(adminInfo, null, 2)}`);
   const info = await transporter.sendMail(options); 
 
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
