@@ -113,6 +113,31 @@ router.get('/projects/:bid', async (req, res) => {
     res.send(boardProjects);
 });
 
+router.put('/project/:id', async (req, res) => {
+    let { id } = req.params;
+    let { 
+        originPosition0,
+        originPosition1,
+        originPosition2,
+        originPosition3,
+        originPosition4,
+        originPosition5
+    } = req.body;
+    let boardProject = await BoardProject.findOne({
+        where: {
+            id
+        }
+    });
+    boardProject.originPosition0 = originPosition0;
+    boardProject.originPosition1 = originPosition1;
+    boardProject.originPosition2 = originPosition2;
+    boardProject.originPosition3 = originPosition3;
+    boardProject.originPosition4 = originPosition4;
+    boardProject.originPosition5 = originPosition5;
+    await boardProject.save();
+    res.send(boardProject);
+});
+
 router.post('/', async (req, res) => {
     let body = req.body;
     let { type, year, locality, projecttype } = body;
@@ -536,9 +561,9 @@ const sendMails = async (board, fullName) => {
     emails = emails.filter ((value, index, array) => { 
         return array.indexOf(value) == index;
     });
-    emails.forEach((email) => {
-        sendBoardNotification(email, board.type, board.locality, board.year, fullName)
-    });
+    // emails.forEach((email) => {
+    //     sendBoardNotification(email, board.type, board.locality, board.year, fullName)
+    // });
 }
 
 router.put('/:boardId', [auth], async (req, res) => {
