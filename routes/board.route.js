@@ -168,6 +168,7 @@ router.post('/', async (req, res) => {
                 console.log('Error in project Promises ', e);
             }
             let newObject = {
+                id: bp.id,
                 project_id: bp.project_id,
                 origin: bp.origin,
                 projectData: project,
