@@ -24,6 +24,24 @@ module.exports = (sequelize, DataType) => {
     position5: {
       type: DataType.INTEGER
     },
+    originPosition0: {
+      type: DataType.INTEGER
+    },
+    originPosition1: {
+      type: DataType.INTEGER
+    },
+    originPosition2: {
+      type: DataType.INTEGER
+    },
+    originPosition3: {
+      type: DataType.INTEGER
+    },
+    originPosition4: {
+      type: DataType.INTEGER
+    },
+    originPosition5: {
+      type: DataType.INTEGER
+    },
     req1: {
       type: DataType.DOUBLE,
     },

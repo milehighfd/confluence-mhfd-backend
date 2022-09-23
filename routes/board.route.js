@@ -149,6 +149,7 @@ router.post('/', async (req, res) => {
             }
             for (var i = 0 ; i <= 5; i ++) {
                 newObject[`position${i}`] = bp[`position${i}`];
+                newObject[`originPosition${i}`] = bp[`originPosition${i}`];
                 if (i > 0) {
                     newObject[`req${i}`] = bp[`req${i}`];
                 }
@@ -207,6 +208,29 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                 board_id: board._id
             }
         });
+        let map = {};
+        [0, 1, 2, 3, 4, 5].forEach(index => {
+            let arr = [];
+            for (var j = 0 ; j < boardProjects.length ; j++) {
+                let bp = boardProjects[j];
+                if (bp[`position${index}`] != null) {
+                    arr.push({
+                        bp,
+                        value: bp[`position${index}`]
+                    });
+                }
+            };
+            arr.sort((a, b) => {
+                return a.value - b.value;
+            });
+            arr
+                .forEach((r, i) => {
+                    if (!map[r.bp.project_id]) {
+                        map[r.bp.project_id] = {}
+                    }
+                    map[r.bp.project_id][index] = i;
+                });
+        });
         for (var j = 0 ; j < boardProjects.length ; j++) {
             let bp = boardProjects[j];
             let p;
@@ -243,6 +267,12 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                     position3: bp.position3,
                     position4: bp.position4,
                     position5: bp.position5,
+                    originPosition0: map[bp.project_id][0],
+                    originPosition1: map[bp.project_id][1],
+                    originPosition2: map[bp.project_id][2],
+                    originPosition3: map[bp.project_id][3],
+                    originPosition4: map[bp.project_id][4],
+                    originPosition5: map[bp.project_id][5],
                     req1: bp.req1 == null ? null : (bp.req1 / propValues.length),
                     req2: bp.req2 == null ? null : (bp.req2 / propValues.length),
                     req3: bp.req3 == null ? null : (bp.req3 / propValues.length),
