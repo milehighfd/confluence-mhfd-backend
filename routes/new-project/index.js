@@ -15,6 +15,7 @@ const maintenanceRouter = require('./maintenance.route');
 const studyRouter = require('./study.route');
 const acquisitionRouter = require('./acquisition.route');
 const specialRouter = require('./special.route');
+const copyRouter = require('./copy.route');
 
 const router = express.Router();
 const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
@@ -27,6 +28,7 @@ router.use('/maintenance', maintenanceRouter);
 router.use('/study', studyRouter);
 router.use('/acquisition', acquisitionRouter);
 router.use('/special', specialRouter);
+router.use('/copy', copyRouter);
 
 router.post('/get-components-by-components-and-geom', auth, async (req, res) => {
   const geom = req.body.geom;

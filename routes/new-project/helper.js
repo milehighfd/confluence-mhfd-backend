@@ -20,7 +20,7 @@ const updateBoardProjectAtIndex = async (boardId, index) => {
       })
     }
   })
-}
+};
 
 const getBoard = async (type, locality, year, projecttype) => {
   let board = await Board.findOne({
@@ -134,7 +134,32 @@ const getNewProjectId = async () => {
   }
   const data = await needle('post', CARTO_URL, query, { json: true });
   return data.body.rows[0].greatest;
-}
+};
+
+const copyProject = async (newProjectId, projectid) => {
+  let result = null;
+  try {
+    const updateQuery = `
+      INSERT INTO mhfd_projects_created_dev(the_geom, objectid, onbaseid, projectid, projectname, projecttype, projectsubtype, description, status, startyear, completeyear, sponsor, cosponsor1, cosponsor2, cosponsor3, frequency, maintenanceeligibility, ownership, acquisitionanticipateddate, acquisitionprogress, additionalcostdescription, overheadcostdescription, consultant, contractor, lgmanager, mhfdmanager, servicearea, county, jurisdiction, streamname, tasksedimentremoval, tasktreethinning, taskbankstabilization, taskdrainagestructure, taskregionaldetention, goalfloodrisk, goalwaterquality, goalstabilization, goalcaprecreation, goalcapvegetation, goalstudyovertopping, goalstudyconveyance, goalstudypeakflow, goalstudydevelopment, workplanyr1, workplanyr2, workplanyr3, workplanyr4, workplanyr5, attachments, coverimage, globalid, creationdate, creator, editdate, editor, shape_length, mhfddollarsrequested, mhfddollarsallocated, estimatedcost, finalcost, additionalcost, overheadcost, costdewatering, costmobilization, costtraffic, costutility, coststormwater, costengineering, costconstruction, costlegal, costcontingency, studyreason, studysubreason, component_cost, component_count)
+      SELECT the_geom, objectid, onbaseid, ${newProjectId}, projectname, projecttype, projectsubtype, description, status, startyear, completeyear, sponsor, cosponsor1, cosponsor2, cosponsor3, frequency, maintenanceeligibility, ownership, acquisitionanticipateddate, acquisitionprogress, additionalcostdescription, overheadcostdescription, consultant, contractor, lgmanager, mhfdmanager, servicearea, county, jurisdiction, streamname, tasksedimentremoval, tasktreethinning, taskbankstabilization, taskdrainagestructure, taskregionaldetention, goalfloodrisk, goalwaterquality, goalstabilization, goalcaprecreation, goalcapvegetation, goalstudyovertopping, goalstudyconveyance, goalstudypeakflow, goalstudydevelopment, workplanyr1, workplanyr2, workplanyr3, workplanyr4, workplanyr5, attachments, coverimage, globalid, creationdate, creator, editdate, editor, shape_length, mhfddollarsrequested, mhfddollarsallocated, estimatedcost, finalcost, additionalcost, overheadcost, costdewatering, costmobilization, costtraffic, costutility, coststormwater, costengineering, costconstruction, costlegal, costcontingency, studyreason, studysubreason, component_cost, component_count
+      FROM mhfd_projects_created_dev
+      WHERE projectid = ${projectid}
+    `;
+    const query = {
+      q: updateQuery
+    };
+    const data = await needle('post', CARTO_URL, query, { json: true });
+    if (data.statusCode === 200) {
+      result = data.body;
+      console.log(result);
+    } else {
+      console.error('bad status ' + data.statusCode + ' ' + JSON.stringify(data.body, null, 2));
+    }
+  } catch (e) {
+
+  }
+  return result;
+};
 
 const setProjectID = async (res, projectId) => {
   const update = `UPDATE ${CREATE_PROJECT_TABLE}
@@ -150,18 +175,19 @@ const setProjectID = async (res, projectId) => {
     if (data.statusCode === 200) {
       return true;
     } else {
-       logger.error('bad status on UPDATE projectid ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
-       res.status(data.statusCode).send(data.body);
-       return false;
+      logger.error('bad status on UPDATE projectid ' + data.statusCode + '  -- ' + sql + JSON.stringify(data.body, null, 2));
+      res.status(data.statusCode).send(data.body);
+      return false;
     }
   } catch (error) {
     logger.error(error, 'at', sql);
   };
   return true;
-}
+};
 
 module.exports = {
   addProjectToBoard,
   getNewProjectId,
-  setProjectID
+  setProjectID,
+  copyProject
 };
