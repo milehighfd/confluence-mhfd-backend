@@ -88,6 +88,7 @@ router.put('/update-budget/:id', async (req, res) => {
             id
         }
     });
+    console.log('=========================================');
     console.log(id, budget);
     console.log(board);
     if (board) {
