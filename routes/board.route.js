@@ -88,6 +88,8 @@ router.put('/update-budget/:id', async (req, res) => {
             id
         }
     });
+    console.log(id, budget);
+    console.log(board);
     if (board) {
         board.total_county_budget =  budget;
         await board.save();
