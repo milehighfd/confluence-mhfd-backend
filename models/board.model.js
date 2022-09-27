@@ -19,6 +19,9 @@ module.exports = (sequelize, DataType) => {
       type: DataType.ENUM,
       values: ['WORK_REQUEST', 'WORK_PLAN']
     },
+    total_county_budget: {
+      type: DataType.DOUBLE
+    },
     targetcost1: {
       type: DataType.DOUBLE,
     },
