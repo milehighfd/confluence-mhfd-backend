@@ -80,6 +80,23 @@ router.get('/', async (req, res) => {
     res.send(boards);
 });
 
+router.put('/update-budget/:id', async (req, res) => {
+    const { id } = req.params;
+    const budget = req.body.budget;
+    const board = Board.findOne({
+        where: {
+            id
+        }
+    });
+    if (board) {
+        board.total_county_budget =  budget;
+        await board.save();
+        res.send(board);
+    } else {
+        res.status(404).send({ error: 'Not found' });
+    }
+});
+
 router.get('/board-localities', async (req, res) => {
     let boardLocalities = await BoardLocality.findAll();
     res.send(boardLocalities);
