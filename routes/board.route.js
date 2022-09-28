@@ -83,10 +83,7 @@ router.get('/', async (req, res) => {
 router.put('/update-budget/:id', async (req, res) => {
     const { id } = req.params;
     const budget = req.body.budget;
-    const board = Board.findByPk(id);
-    console.log('=========================================');
-    console.log(id, budget);
-    console.log(board);
+    const board = await Board.findByPk(id);
     if (board) {
         board.total_county_budget =  budget;
         await board.save();
