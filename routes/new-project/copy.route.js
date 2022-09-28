@@ -69,7 +69,7 @@ router.post('/', async (req, res) => {
       projectid: projectid
     }
   });
-  for (const component of JSON.parse(components)) {
+  for (const component of components) {
     const dataComponent = {
       table: component.table,
       projectid: newProjectId,
@@ -82,7 +82,7 @@ router.post('/', async (req, res) => {
       projectid: projectid
     }
   });
-  for (const independent of JSON.parse(independentComponents)) {
+  for (const independent of independentComponents) {
     const element = {
       name: independent.name,
       cost: independent.cost,
