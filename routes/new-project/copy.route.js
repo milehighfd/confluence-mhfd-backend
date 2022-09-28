@@ -8,6 +8,7 @@ const Board = db.board;
 const Configuration = db.configuration;
 const BoardProject = db.boardProject;
 const ProjectComponent = db.projectComponent;
+const IndependentComponent = db.independentComponent;
 
 const getBoard = async (type, locality, year, projecttype) => {
   let board = await Board.findOne({
@@ -75,6 +76,20 @@ router.post('/', async (req, res) => {
       objectid: component.objectid
     };
     await ProjectComponent.create(dataComponent);
+  }
+  const independentComponents = await IndependentComponent.findAll({
+    where: {
+      projectid: projectid
+    }
+  });
+  for (const independent of JSON.parse(independentComponents)) {
+    const element = {
+      name: independent.name,
+      cost: independent.cost,
+      status: independent.status,
+      projectid: newProjectId
+    };
+    await IndependentComponent.create(element);
   }
   res.send(boardProject);
 });
