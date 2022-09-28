@@ -578,9 +578,9 @@ const sendMails = async (board, fullName) => {
     emails = emails.filter ((value, index, array) => { 
         return array.indexOf(value) == index;
     });
-    // emails.forEach((email) => {
-    //     sendBoardNotification(email, board.type, board.locality, board.year, fullName)
-    // });
+    emails.forEach((email) => {
+        sendBoardNotification(email, board.type, board.locality, board.year, fullName)
+    });
 }
 
 router.put('/:boardId', [auth], async (req, res) => {
