@@ -7,6 +7,7 @@ const router = express.Router();
 const Board = db.board;
 const Configuration = db.configuration;
 const BoardProject = db.boardProject;
+const ProjectComponent = db.projectComponent;
 
 const getBoard = async (type, locality, year, projecttype) => {
   let board = await Board.findOne({
@@ -62,6 +63,19 @@ router.post('/', async (req, res) => {
   const newProjectId = await getNewProjectId();
   await copyProject(newProjectId, projectid);
   const boardProject = await addProjectToBoard(board, newProjectId, boardProjectOriginal.origin);
+  const components = await ProjectComponent.findAll({
+    where: {
+      projectid: projectid
+    }
+  });
+  for (const component of JSON.parse(components)) {
+    const dataComponent = {
+      table: component.table,
+      projectid: newProjectId,
+      objectid: component.objectid
+    };
+    await ProjectComponent.create(dataComponent);
+  }
   res.send(boardProject);
 });
 
