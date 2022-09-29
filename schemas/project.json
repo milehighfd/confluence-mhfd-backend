@@ -1,0 +1,343 @@
+{
+    "properties": {
+        "fields": {
+            "cartodb_id": {
+                "type": "number",
+                "datasource": "carto",
+                "pgtype": "int4"
+            },
+            "the_geom": {
+                "type": "geometry",
+                "wkbtype": "Unknown",
+                "dims": 2,
+                "srid": 4326,
+                "datasource": "carto"
+            },
+            "the_geom_webmercator": {
+                "type": "geometry",
+                "wkbtype": "Unknown",
+                "dims": 2,
+                "srid": 3857,
+                "datasource": "carto"
+            },
+            "objectid": {
+                "type": "number",
+                "datasource": "carto",
+                "pgtype": "int4"
+            },
+            "onbaseid": {
+                "type": "number",
+                "datasource": "carto",
+                "pgtype": "int4"
+            },
+            "projectid": {
+                "type": "number",
+                "datasource": "SQL",
+                "pgtype": "int4"
+            },
+            "projectname": {
+                "type": "string",
+                "datasource": "SQL",
+                "pgtype": "text"
+            },
+            "projecttype": {
+                "type": "string",
+                "datasource": "SQL",
+                "pgtype": "text"
+            },
+            "projectsubtype": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "description": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "status": {
+                "type": "string",
+                "relationship": {
+                    "table": "projectstatus",
+                    "foreignKey": "projectid",
+                    "datasource": "SQL"
+                }
+            },
+            "startyear": {
+                "type": "number",
+                "datasource": "carto",
+                "pgtype": "int4"
+            },
+            "completeyear": {
+                "type": "number",
+                "datasource": "carto",
+                "pgtype": "int4"
+            },
+            "sponsor": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "cosponsor1": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "cosponsor2": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "cosponsor3": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "frequency": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "maintenanceeligibility": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "ownership": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "acquisitionanticipateddate": {
+                "type": "number",
+                "datasource": "carto",
+                "pgtype": "int4"
+            },
+            "acquisitionprogress": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "additionalcostdescription": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "overheadcostdescription": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "consultant": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "contractor": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "lgmanager": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "mhfdmanager": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "servicearea": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "county": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "jurisdiction": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "streamname": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "tasksedimentremoval": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "tasktreethinning": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "taskbankstabilization": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "taskdrainagestructure": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "taskregionaldetention": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "goalfloodrisk": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "goalwaterquality": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "goalstabilization": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "goalcaprecreation": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "goalcapvegetation": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "goalstudyovertopping": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "goalstudyconveyance": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "goalstudypeakflow": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "goalstudydevelopment": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "workplanyr1": {
+                "type": "number",
+                "datasource": "carto",
+                "pgtype": "int4"
+            },
+            "workplanyr2": {
+                "type": "number",
+                "datasource": "carto",
+                "pgtype": "int4"
+            },
+            "workplanyr3": {
+                "type": "number",
+                "datasource": "carto",
+                "pgtype": "int4"
+            },
+            "workplanyr4": {
+                "type": "number",
+                "datasource": "carto",
+                "pgtype": "int4"
+            },
+            "workplanyr5": {
+                "type": "number",
+                "datasource": "carto",
+                "pgtype": "int4"
+            },
+            "attachments": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "coverimage": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "globalid": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "creationdate": {
+                "type": "date",
+                "pgtype": "date"
+            },
+            "creator": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "editdate": {
+                "type": "date",
+                "pgtype": "date"
+            },
+            "editor": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "shape_length": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "mhfddollarsrequested": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "mhfddollarsallocated": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "estimatedcost": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "finalcost": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "additionalcost": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "overheadcost": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "costdewatering": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "costmobilization": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "costtraffic": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "costutility": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "coststormwater": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "costengineering": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "costconstruction": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "costlegal": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "costcontingency": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "studyreason": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "studysubreason": {
+                "type": "string",
+                "pgtype": "text"
+            },
+            "component_cost": {
+                "type": "number",
+                "pgtype": "float8"
+            },
+            "component_count": {
+                "type": "number",
+                "datasource": "carto",
+                "pgtype": "int4"
+            }
+        }
+    }
+}
