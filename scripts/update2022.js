@@ -71,7 +71,11 @@ const BoardProject = db.boardProject;
                 year2: bp.year2,
                 origin: bp.origin,
             };
-            await new BoardProject(newObject);
+            try {
+                await new BoardProject(newObject);
+            } catch (e) {
+                console.log(e);
+            }
         }
     }
 })();
