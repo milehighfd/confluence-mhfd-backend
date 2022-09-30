@@ -34,6 +34,18 @@ const BoardProject = db.boardProject;
         return a.projecttype.localeCompare(b.projecttype);
     });
     let labels = district.map(r => r.projecttype);
+    for (var i = 0 ; i < district.length ; i++) {
+        let board = district[i];
+        let boardProjects = await BoardProject.findAll({
+            where: {
+                board_id: board._id
+            }
+        });
+        for (var j = 0 ; j < boardProjects.length ; j++) {
+            let bp = boardProjects[j];
+            await bp.destroy();
+        }
+    }
     for (var i = 0 ; i < boards.length ; i++) {
         let board = boards[i];
         if (board.locality === 'MHFD District Work Plan') {
