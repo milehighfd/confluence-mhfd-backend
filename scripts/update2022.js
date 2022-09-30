@@ -28,6 +28,7 @@ const BoardProject = db.boardProject;
     console.log(`OTHER ${boards.length}`);
     if (district.length !== 5) {
         console.log(`CHECK DISTRICT ${district.length}`);
+        return;
     }
     district.sort((a,b) => {
         return a.projecttype.localeCompare(b.projecttype);
