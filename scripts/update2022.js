@@ -69,7 +69,7 @@ const BoardProject = db.boardProject;
                 req5: bp.req5,
                 year1: bp.year1,
                 year2: bp.year2,
-                origin: bp.origin,
+                origin: board.locality,
             };
             try {
                 const x = new BoardProject(newObject);
