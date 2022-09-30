@@ -72,7 +72,8 @@ const BoardProject = db.boardProject;
                 origin: bp.origin,
             };
             try {
-                await new BoardProject(newObject);
+                const x = new BoardProject(newObject);
+                await x.save();
             } catch (e) {
                 console.log(e);
             }
