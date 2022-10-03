@@ -22,7 +22,7 @@ const multer = Multer({
 
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor, cover, year, studyreason, studysubreason, sendToWR} = req.body;
+  const {isWorkPlan, projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor, cover, year, studyreason, studysubreason, sendToWR} = req.body;
   const status = 'Draft';
   const projecttype = 'Study';
   const projectsubtype = 'Master Plan';
@@ -49,7 +49,10 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     notRequiredValues = `, ${notRequiredValues}`;
   }
   let result = [];
-  const splittedJurisdiction = jurisdiction.split(',');
+  let splittedJurisdiction = jurisdiction.split(',');
+  if (isWorkPlan) {
+    splittedJurisdiction = [locality];
+  }
   for (const j of splittedJurisdiction) {
     const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor, studyreason, studysubreason ${notRequiredFields} ,projectid)
     (SELECT ST_Collect(the_geom) as the_geom, '${j}' as jurisdiction, '${projectname}' as projectname , '${description}' as description, '${servicearea}' as servicearea,
@@ -70,7 +73,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
-        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR);
+        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR, isWorkPlan);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
         for (const stream of JSON.parse(streams)) {
           projectStreamService.saveProjectStream({

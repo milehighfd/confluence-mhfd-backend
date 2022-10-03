@@ -22,7 +22,7 @@ const multer = Multer({
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   // console.log('the user ', user);
-  const {projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor, cover, year, sendToWR} = req.body;
+  const {isWorkPlan, projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor, cover, year, sendToWR} = req.body;
   const status = 'Draft';
   const projecttype = 'Maintenance';
   let notRequiredFields = ``;
@@ -64,7 +64,10 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     notRequiredValues = `, ${notRequiredValues}`;
   }
   let result = [];
-  const splittedJurisdiction = jurisdiction.split(',');
+  let splittedJurisdiction = jurisdiction.split(',');
+  if (isWorkPlan) {
+    splittedJurisdiction = [locality];
+  }
   for (const j of splittedJurisdiction) {
     const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor ${notRequiredFields} ,projectid)
     VALUES(ST_GeomFromGeoJSON('${geom}'), '${j}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
@@ -82,7 +85,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
-        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR);
+        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR, isWorkPlan);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
       } else {
         logger.error('\n\n\nbad status ' + data.statusCode + '  -- '+ insertQuery +  JSON.stringify(data.body, null, 2));

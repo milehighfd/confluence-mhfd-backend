@@ -73,7 +73,7 @@ const sendBoardsToProp = async (bp, board, prop, propid) => {
   }
 };
 
-const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year, sendToWR) => {
+const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year, sendToWR, isWorkPlan) => {
   let dbLoc = await Locality.findOne({
     where: {
       name: locality
@@ -112,17 +112,25 @@ const addProjectToBoard = async (user, servicearea, county, locality, projecttyp
     project_id: project_id,
     origin: locality
   }
+  if (type === 'WORK_PLAN') {
+    boardProjectObject.originPosition0 = -1;
+    boardProjectObject.originPosition1 = -1;
+    boardProjectObject.originPosition2 = -1;
+    boardProjectObject.originPosition3 = -1;
+    boardProjectObject.originPosition4 = -1;
+    boardProjectObject.originPosition5 = -1;
+  }
   boardProjectObject.position0 = 0;
   console.log('BOARD PROJECT OBJECT', boardProjectObject);
   let boardProject = new BoardProject(boardProjectObject);
   let boardProjectSaved = boardProject;
   updateBoardProjectAtIndex(board._id, 0);
   console.log('zxcSEND TO WORK REQUEST \n\n\n\n\n\n\n\n', sendToWR, typeof sendToWR);
-  if (sendToWR === 'true') {
+  if (sendToWR === 'true' || isWorkPlan) {
     console.log('\n\n\n\n\n\n zxcsent to Wokrrequest', sendToWR);
     boardProjectSaved = await boardProject.save();
   }
-  if (['admin', 'staff'].includes(user.designation)) {
+  if (['admin', 'staff'].includes(user.designation) && !isWorkPlan) {
     await sendBoardsToProp(boardProjectSaved, board, servicearea, 'servicearea');
     await sendBoardsToProp(boardProjectSaved, board, county, 'county');
   }
