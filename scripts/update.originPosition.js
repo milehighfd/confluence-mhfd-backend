@@ -1,6 +1,6 @@
 require('dotenv').config()
 const needle = require('needle');
-const URL = 'https://confdevbc.mhfd.org';
+const URL = 'https://confluencebc.mhfd.org';
 
 needle.defaults({ open_timeout: 60000 });
 (async () => {
@@ -21,6 +21,7 @@ needle.defaults({ open_timeout: 60000 });
         const locality = localities[i];
         for (var j = 0 ; j < projecttypes.length ; j++) {
             const projecttype = projecttypes[j];
+            // if (projecttype !== 'Maintenance') continue;
             let boardData;
             try {
                 boardData = await needle('post', URL + '/board/', {
@@ -28,6 +29,7 @@ needle.defaults({ open_timeout: 60000 });
                     locality,
                     projecttype
                 }, { json: true });
+                console.log(boardData.body.board);
                 const { projects } = boardData.body;
                 for (var k = 0 ; k < projects.length ; k++) {
                     const project = projects[k];
@@ -39,6 +41,22 @@ needle.defaults({ open_timeout: 60000 });
                             locality: origin,
                             projecttype
                         });
+                        if (boardOriginData.body.board === undefined || boardOriginData.body.board.type !== 'WORK_REQUEST') {
+                            try {
+                                let projectUpdateData = await needle('put', URL + '/board/project/' + project.id, {
+                                    originPosition0: -1,
+                                    originPosition1: -1,
+                                    originPosition2: -1,
+                                    originPosition3: -1,
+                                    originPosition4: -1,
+                                    originPosition5: -1,
+                                });
+                            } catch (e) {
+                                console.log(e);
+                            }
+                            continue;
+                        }
+                        
                         const { projects: boardOriginProjects } = boardOriginData.body;
                         let map = {};
                         [0, 1, 2, 3, 4, 5].forEach(index => {
