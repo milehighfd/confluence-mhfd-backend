@@ -65,6 +65,7 @@ module.exports = (sequelize, DataType) => {
     },
     origin: {
       type: DataType.STRING,
+      allowNull: false
     }
   }, {
     tableName: 'board-projects'
