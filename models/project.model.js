@@ -6,7 +6,7 @@ const logger = require('../config/logger');
 const { Op } = require("sequelize");
 
 module.exports = (sequelize, DataType) => {
-  const Project = sequelize.define('user', {
+  const Project = sequelize.define('mhfd_projects', {
     project_id: {
       type: DataType.INTEGER,
       primaryKey: true
@@ -24,7 +24,7 @@ module.exports = (sequelize, DataType) => {
       type: DataType.STRING
     },
     code_project_type_id: {
-      type: DataType.TINY_INT
+      type: DataType.INTEGER
     },
     start_date: {
       type: DataType.DATE
