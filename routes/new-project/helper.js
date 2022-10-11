@@ -193,7 +193,18 @@ const setProjectID = async (res, projectId) => {
   return true;
 };
 
+const cleanStringValue = (value) => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  if (typeof value === 'string' && value.length > 0) {
+    return value.replace("'", "''");
+  }
+  return value;
+};
+
 module.exports = {
+  cleanStringValue,
   addProjectToBoard,
   getNewProjectId,
   setProjectID,

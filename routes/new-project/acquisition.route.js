@@ -10,7 +10,7 @@ const {
 const db = require('../../config/db');
 const auth = require('../../auth/auth');
 const logger = require('../../config/logger');
-const { addProjectToBoard, getNewProjectId, setProjectID } = require('./helper');
+const { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue } = require('./helper');
 
 const router = express.Router();
 const multer = Multer({
@@ -64,7 +64,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   }
   for (const j of splittedJurisdiction) {
     const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor ${notRequiredFields}  ,projectid)
-    VALUES(ST_GeomFromGeoJSON('${geom}'), '${j}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
+    VALUES(ST_GeomFromGeoJSON('${geom}'), '${j}', '${cleanStringValue(projectname)}', '${cleanStringValue(description)}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
     const query = {
       q: insertQuery
     };
@@ -126,7 +126,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   }
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} 
   SET the_geom = ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}',
-   projectname = '${projectname}', description = '${description}', 
+   projectname = '${cleanStringValue(projectname)}', description = '${cleanStringValue(description)}', 
    servicearea = '${servicearea}', county = '${county}', 
    projecttype = '${projecttype}',  
    sponsor = '${sponsor}'

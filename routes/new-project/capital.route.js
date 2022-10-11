@@ -12,7 +12,7 @@ const {
 const db = require('../../config/db');
 const auth = require('../../auth/auth');
 const logger = require('../../config/logger');
-const { addProjectToBoard, getNewProjectId, setProjectID } = require('./helper');
+const { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue } = require('./helper');
 
 const router = express.Router();
 const IndependentComponent = db.independentComponent;
@@ -38,7 +38,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       notRequiredValues += ', ';
     }
     notRequiredFields += 'overheadcostdescription';
-    notRequiredValues += `'${overheadcostdescription}'`;
+    notRequiredValues += `'${cleanStringValue(overheadcostdescription)}'`;
   }
   if (additionalcost) {
     if (notRequiredFields) {
@@ -54,7 +54,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       notRequiredValues += ', ';
     }
     notRequiredFields += 'additionalcostdescription';
-    notRequiredValues += `'${additionalcostdescription}'`;
+    notRequiredValues += `'${cleanStringValue(additionalcostdescription)}'`;
   }
   if (cosponsor) {
     if (notRequiredFields) {
@@ -78,7 +78,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     // ,costdewatering, costmobilization, costtraffic, costutility, coststormwater, costengineering, costconstruction, costlegal, costcontingency, component_cost, component_count
 
     const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost ${notRequiredFields} ,projectid, estimatedcost, component_cost, component_count, costdewatering, costmobilization, costtraffic, costutility, coststormwater, costengineering,costlegal, costconstruction, costcontingency)
-      VALUES(ST_GeomFromGeoJSON('${geom}'), '${j}', '${projectname}', '${description}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}' 
+      VALUES(ST_GeomFromGeoJSON('${geom}'), '${j}', '${cleanStringValue(projectname)}', '${cleanStringValue(description)}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}' 
       ${notRequiredValues} ,${-1}, ${estimatedcost}, ${componentcost}, ${componentcount}, ${(overHeadNumbers[0] / 100) * componentcost}, ${(overHeadNumbers[1] / 100) * componentcost}, ${(overHeadNumbers[2] / 100) * componentcost}, ${(overHeadNumbers[3] / 100) * componentcost}, ${(overHeadNumbers[4] / 100) * componentcost}, ${(overHeadNumbers[5] / 100) * componentcost}, ${(overHeadNumbers[6] / 100) * componentcost}, ${(overHeadNumbers[7] / 100) * componentcost}, ${(overHeadNumbers[8] / 100) * componentcost})`;
     console.log('\n\ninsert query here:', insertQuery, '\n\n');
     const query = {
@@ -141,7 +141,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     if (notRequiredFields) {
       notRequiredFields += ', ';
     }
-    notRequiredFields += `overheadcostdescription = '${overheadcostdescription}'`;
+    notRequiredFields += `overheadcostdescription = '${cleanStringValue(overheadcostdescription)}'`;
   }
   if (additionalcost) {
     if (notRequiredFields) {
@@ -153,7 +153,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     if (notRequiredFields) {
       notRequiredFields += ', ';
     }
-    notRequiredFields += `additionalcostdescription = '${additionalcostdescription}'`;
+    notRequiredFields += `additionalcostdescription = '${cleanStringValue(additionalcostdescription)}'`;
   }
   if (cosponsor) {
     if (notRequiredFields) {
@@ -166,8 +166,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   }
   const overHeadNumbers = overheadcost.split(',');
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = ST_GeomFromGeoJSON('${geom}'),
-   jurisdiction = '${jurisdiction}', projectname = '${projectname}', 
-   description = '${description}', servicearea = '${servicearea}', county = '${county}',
+   jurisdiction = '${jurisdiction}', projectname = '${cleanStringValue(projectname)}', 
+   description = '${cleanStringValue(description)}', servicearea = '${servicearea}', county = '${county}',
     projecttype = '${projecttype}', sponsor = '${sponsor}', 
     overheadcost = '${overheadcost}', estimatedcost = ${estimatedcost} ,  component_cost = ${componentcost}, component_count = ${componentcount}, costdewatering = ${(overHeadNumbers[0] / 100) * componentcost}, costmobilization = ${(overHeadNumbers[1] / 100) * componentcost}, costtraffic = ${(overHeadNumbers[2] / 100) * componentcost}, costutility = ${(overHeadNumbers[3] / 100) * componentcost}, coststormwater = ${(overHeadNumbers[4] / 100) * componentcost}, costengineering = ${(overHeadNumbers[5] / 100) * componentcost} ,costlegal = ${(overHeadNumbers[6] / 100) * componentcost}, costconstruction = ${(overHeadNumbers[7] / 100) * componentcost}, costcontingency = ${(overHeadNumbers[8] / 100) * componentcost}
      ${notRequiredFields}
