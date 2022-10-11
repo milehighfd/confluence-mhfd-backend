@@ -70,3 +70,6 @@ public/images/drive/
 public/images/
 services/compressed/
 services/tmp/
+
+# dist files
+dist/
