@@ -91,7 +91,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         }
     } catch (error) {
       logger.error(error, 'at', insertQuery);
-      return res.status(500).send(eroor);
+      return res.status(500).send(error);
     };
   }
   res.send(result);
