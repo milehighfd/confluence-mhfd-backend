@@ -10,7 +10,7 @@ const {
 } = require('../../config/config');
 const auth = require('../../auth/auth');
 const logger = require('../../config/logger');
-const { addProjectToBoard, getNewProjectId, setProjectID } = require('./helper');
+const { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue } = require('./helper');
 
 const router = express.Router();
 const multer = Multer({
@@ -55,7 +55,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   }
   for (const j of splittedJurisdiction) {
     const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor, studyreason, studysubreason ${notRequiredFields} ,projectid)
-    (SELECT ST_Collect(the_geom) as the_geom, '${j}' as jurisdiction, '${projectname}' as projectname , '${description}' as description, '${servicearea}' as servicearea,
+    (SELECT ST_Collect(the_geom) as the_geom, '${j}' as jurisdiction, '${cleanStringValue(projectname)}' as projectname , '${cleanStringValue(description)}' as description, '${servicearea}' as servicearea,
     '${county}' as county, '${status}' as status, '${projecttype}' as projecttype, '${projectsubtype}' as projectsubtype,
     '${sponsor}' as sponsor, '${studyreason}' as studyreason, '${studysubreason}' as studysubreason ${notRequiredValues} ,${-1} as projectid FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds}))`;
     const query = {
@@ -124,7 +124,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   }
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET
   the_geom = (SELECT ST_Collect(the_geom) FROM mhfd_stream_reaches WHERE unique_mhfd_code IN(${parsedIds})), jurisdiction = '${jurisdiction}',
-   projectname = '${projectname}', description = '${description}',
+   projectname = '${cleanStringValue(projectname)}', description = '${cleanStringValue(description)}',
     servicearea = '${servicearea}', county = '${county}',
      projecttype = '${projecttype}', 
      projectsubtype = '${projectsubtype}',
