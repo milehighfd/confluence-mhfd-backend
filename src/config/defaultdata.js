@@ -76,6 +76,6 @@ const consultants = [
   "Wright Water Engineers, Inc."
 ];
 
-module.exports = {
+export default {
   consultants
 };

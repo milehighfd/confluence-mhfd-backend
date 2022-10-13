@@ -1,10 +1,11 @@
-const db = require('../config/db');
+import bcrypt from 'bcryptjs';
+import db from 'bc/config/db.js';
+import config from 'bc/config/config.js';
+import defaultData from 'bc/config/defaultdata.js';
+
 const User = db.user;
 const Consultants = db.consultants;
 const Configuration = db.configuration;
-const bcrypt = require('bcryptjs');
-const config = require('./config');
-const defaultData = require('./defaultdata');
 
 const seed = async () => {
   const count = await User.count(); 
@@ -42,4 +43,4 @@ const seed = async () => {
   }
 };
 
-seed();
+export default seed;

@@ -11,6 +11,7 @@
       "bc/services/*": ["./src/services/*"],
       "bc/auth/*": ["./src/auth/*"],
       "bc/lib/*": ["./src/lib/*"],
+      "bc/utils/*": ["./src/utils/*"]
     }
   },
   "exclude": [

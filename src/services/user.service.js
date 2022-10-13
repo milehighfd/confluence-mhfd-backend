@@ -33,7 +33,7 @@ const getTransporter = () => {
   return transporter;
 };
 
-const findAllUsers = () => {
+export const findAllUsers = () => {
   const users = User.findAll();
   return users;
 }
@@ -48,7 +48,7 @@ const getAttachmentsCidList = (cids) => {
   })
 }
 
-const sendRecoverPasswordEmail = async (user) => {
+export const sendRecoverPasswordEmail = async (user) => {
   const email = user.email;
   const changePasswordId = user.changePasswordId;
   const redirectUrl = MHFD_FRONTEND + '/confirm-password/?id=' + changePasswordId;
@@ -67,7 +67,7 @@ const sendRecoverPasswordEmail = async (user) => {
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 };
 
-const sendApprovedAccount = async (user) => {
+export const sendApprovedAccount = async (user) => {
   const email = user.email;
   const redirectUrl = MHFD_FRONTEND
   const template = fs.readFileSync(__dirname + '/templates/email_approved.html', 'utf8');
@@ -85,7 +85,7 @@ const sendApprovedAccount = async (user) => {
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 }
 
-const sendConfirmAccount = async (user) => {
+export const sendConfirmAccount = async (user) => {
   const redirectUrl = MHFD_FRONTEND;
   const transporter = getTransporter();
   const completeName = user.firstName + ' ' + user.lastName;
@@ -121,7 +121,7 @@ const sendConfirmAccount = async (user) => {
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 }
 
-const sendBoardNotification = async (email, type, locality, year, fullName) => {
+export const sendBoardNotification = async (email, type, locality, year, fullName) => {
   let bodyOptions;
   let url;
   if (type === 'WORK_REQUEST') {
@@ -165,7 +165,7 @@ function getDestFile(filename) {
   return path.join(root, `/${filename}`); 
 }
 
-const uploadPhoto = async (user, files) => {
+export const uploadPhoto = async (user, files) => {
   const newPromise = new Promise((resolve, reject) => {
     files.forEach(file => {
       const name = Date.now() + file.originalname;
@@ -183,11 +183,11 @@ const uploadPhoto = async (user, files) => {
   await newPromise;
 }
 
-const findById = async (userId) => {
+export const findById = async (userId) => {
   return await User.find({ _id: userId });
 }
 
-const deleteUser = async (userId) => {
+export const deleteUser = async (userId) => {
   LogActivity.destroy({
     where: {
       user_id: userId
@@ -202,7 +202,7 @@ const deleteUser = async (userId) => {
 
 }
 
-const changePassword = async (changePasswordId, password) => {
+export const changePassword = async (changePasswordId, password) => {
   const user = await User.findOne({
     changePasswordId
   });
@@ -235,7 +235,7 @@ const changePassword = async (changePasswordId, password) => {
   return user1;
 };
 
-const requiredFields = (type) => {
+export const requiredFields = (type) => {
   const {
     FIRST_NAME,
     LAST_NAME,
