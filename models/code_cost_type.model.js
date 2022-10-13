@@ -7,7 +7,7 @@ const { Op } = require("sequelize");
 
 module.exports = (sequelize, DataType) => {
   const CodeCostType = sequelize.define('code_cost_type', {
-    code_cost_type: {
+    code_cost_type_id: {
       type: DataType.INTEGER,
       primaryKey: true
     },
@@ -18,10 +18,14 @@ module.exports = (sequelize, DataType) => {
       type: DataType.STRING,
     },
     modified_by: {
-      type: DataType.INTEGER
-    },last_modified: {
+      type: DataType.STRING
+    },
+    last_modified: {
       type: DataType.DATE
-    },  
+    },
+    created: {
+      type: DataType.DATE
+    },
   });
   return CodeCostType;
 }

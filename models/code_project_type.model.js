@@ -14,6 +14,9 @@ module.exports = (sequelize, DataType) => {
     project_type_name: {
       type: DataType.STRING,
       allowNull: true
+    },
+    project_short_name: {
+      type: DataType.STRING
     }
   });
   return CodeProjectType;
