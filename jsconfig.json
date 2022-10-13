@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "baseUrl": ".",
+    "moduleResolution": "node",
+    "paths": {
+      "bc/config/*": ["./src/config/*"],
+      "bc/models/*": ["./src/models/*"],
+      "bc/routes/*": ["./src/routes/*"],
+      "bc/services/*": ["./src/services/*"],
+      "bc/auth/*": ["./src/auth/*"],
+      "bc/lib/*": ["./src/lib/*"],
+    }
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

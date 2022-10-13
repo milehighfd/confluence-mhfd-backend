@@ -1,5 +1,5 @@
 {
-  "name": "mhfd-backend-express",
+  "name": "bc",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -53,5 +53,14 @@
   "babel": {
     "presets": ["@babel/preset-env"]
   },
-  "type": "module"
+  "type": "module",
+  "exports": {
+    "./config/*.js": "./src/config/*.js",
+    "./models/*.js": "./src/models/*.js",
+    "./routes/*.js": "./src/routes/*.js",
+    "./services/*.js": "./src/services/*.js",
+    "./auth/*.js": "./src/auth/*.js",
+    "./lib/*.js": "./src/lib/*.js",
+    "./utils/*.js": "./src/utils/*.js"
+  }
 }

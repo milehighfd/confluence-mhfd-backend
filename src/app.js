@@ -3,9 +3,9 @@ import cookieParser from  'cookie-parser';
 import morgan from  'morgan';
 import http from  'http';
 import cors from  'cors';
-import logger from './config/logger.js';
-import indexRouter from './routes/index.js';
-// const usersRouter = require('./routes/users.route');
+import logger from 'bc/config/logger.js';
+import indexRouter from 'bc/routes/index.js';
+import usersRouter from 'bc/routes/users.route.js';
 // const authRouter = require('./routes/auth.route');
 // const adminRouter = require('./routes/admin.route');
 // const logActivityRouter = require('./routes/logActivity.route');
@@ -25,7 +25,7 @@ import indexRouter from './routes/index.js';
 // const consultantsRouter = require('./routes/consultants.route');
 // const organizationRouter = require('./routes/organization.route');
 // const configurationRouter = require('./routes/configuration.route');
-import db from './config/db.js';
+import db from 'bc/config/db.js';
 db.sequelize.sync();
 
 // require('./config/seed');
@@ -53,7 +53,7 @@ app.use(function(req, res, next) {
 
 app.use(express.static('public'))
 app.use('/', indexRouter);
-// app.use('/users', usersRouter);
+app.use('/users', usersRouter);
 // app.use('/auth', authRouter);
 // app.use('/admin', adminRouter);
 // app.use('/admin/user-activity', logActivityRouter);
