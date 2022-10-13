@@ -6,7 +6,7 @@ import cors from  'cors';
 import logger from 'bc/config/logger.js';
 import indexRouter from 'bc/routes/index.js';
 import usersRouter from 'bc/routes/users.route.js';
-// const authRouter = require('./routes/auth.route');
+import authRouter from 'bc/routes/auth.route.js';
 // const adminRouter = require('./routes/admin.route');
 // const logActivityRouter = require('./routes/logActivity.route');
 // const mapRouter = require('./routes/map.route');
@@ -54,7 +54,7 @@ app.use(function(req, res, next) {
 app.use(express.static('public'))
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-// app.use('/auth', authRouter);
+app.use('/auth', authRouter);
 // app.use('/admin', adminRouter);
 // app.use('/admin/user-activity', logActivityRouter);
 // app.use('/map', mapRouter);
