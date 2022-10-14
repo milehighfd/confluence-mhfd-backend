@@ -1,4 +1,4 @@
-module.exports = (sequelize, DataType) => {
+export default (sequelize, DataType) => {
   const Configuration = sequelize.define('configuration', {
     key: {
       type: DataType.STRING,

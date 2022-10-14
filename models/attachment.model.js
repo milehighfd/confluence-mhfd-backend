@@ -1,4 +1,4 @@
-module.exports = (sequelize, DataType) => {
+export default (sequelize, DataType) => {
   const Attachment = sequelize.define('attachment', {
     _id: {
       type: DataType.UUID,
