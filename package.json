@@ -6,7 +6,7 @@
     "start": "node ./bin/www",
     "transpile": "babel ./src --out-dir dist",
     "clean": "rimraf dist",
-    "dev": "NODE_ENV=development npm-run-all build server",
+    "dev": "npm-run-all build server",
     "build": "npm-run-all clean transpile",
     "server": "node ./src/bin/www"
   },
