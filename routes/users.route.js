@@ -265,7 +265,7 @@ router.get('/me', auth, async (req, res) => {
       condition = `WHERE jurisdiction='${user.zoomarea}'`;
     }
     const sql = `SELECT COUNT( projectType), projectType  FROM ${table}  ${condition} group by projectType`;
-    console.log('my zoom area sql is updated ', sql);
+    console.log('zoom sql ', sql);
     const URL = `${CARTO_URL}&q=${sql}`;
     const promise = await new Promise(resolve => {
       https.get(URL, response => {
