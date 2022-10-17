@@ -1,7 +1,9 @@
 import dotenv from 'dotenv';
 import debug from 'debug';
 
-dotenv.config();
+dotenv.config({
+  path: '../../.env'
+});
 
 import server from '../app.js';
 
