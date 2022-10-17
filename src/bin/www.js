@@ -2,8 +2,10 @@ import dotenv from 'dotenv';
 import debug from 'debug';
 
 dotenv.config({
-  path: '../../.env'
+  path: '.env'
 });
+console.log('POSTGRESQL_PASSWORD');
+console.log(process.env.POSTGRESQL_PASSWORD);
 
 import server from '../app.js';
 
