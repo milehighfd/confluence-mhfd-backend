@@ -1,3 +1,7 @@
+import dotenv from 'dotenv';
+dotenv.config({
+  path: '.env'
+});
 export const POSTGRESQL_DB = process.env.POSTGRESQL_DB || 'mhfd';
 export const POSTGRESQL_HOST = process.env.POSTGRESQL_HOST || 'localhost';
 export const POSTGRESQL_USER = process.env.POSTGRESQL_USER || 'postgres';
