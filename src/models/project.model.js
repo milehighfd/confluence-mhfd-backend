@@ -245,6 +245,10 @@ export default (sequelize, DataType) => {
     Shape: {
       type: DataType.GEOMETRY()
     }
+  }, {
+    timestamps: false,
+    createdAt: false,
+    updatedAt: false,
   });
   return Project;
 }
