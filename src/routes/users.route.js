@@ -276,7 +276,7 @@ router.get('/me', auth, async (req, res) => {
           });
           response.on('end', function () {
 
-            result = JSON.parse(str).rows;
+            const result = JSON.parse(str).rows;
             const counter = {};
             for (const element of result) {
               counter[mapProjects[element.projecttype]] = +element.count;
