@@ -263,7 +263,7 @@ router.get('/me', auth, async (req, res) => {
     if (user.zoomarea) {
       condition = `WHERE jurisdiction='${user.zoomarea}'`;
     }
-    const sql = `SELECT COUNT( projectType), projectType  FROM ${table}  ${condition} group by projectType`;
+    const sql = `SELECT COUNT( projecttype), projecttype  FROM ${table}  ${condition} group by projecttype`;
     console.log('my zoom area sql is now update', sql);
     const URL = `${CARTO_URL}&q=${sql}`;
     const promise = await new Promise(resolve => {
@@ -275,6 +275,7 @@ router.get('/me', auth, async (req, res) => {
             str += chunk;
           });
           response.on('end', function () {
+
             result = JSON.parse(str).rows;
             const counter = {};
             for (const element of result) {
