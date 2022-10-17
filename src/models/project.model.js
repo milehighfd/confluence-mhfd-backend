@@ -243,7 +243,7 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER
     },
     Shape: {
-      type: DataTypes.GEOMETRY()
+      type: DataType.GEOMETRY()
     }
   });
   return Project;
