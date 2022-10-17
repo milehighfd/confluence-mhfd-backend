@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import config from '../config/config.js';
-import logger from '../config/logger.js';
+import config from 'bc/config/config.js';
+import logger from 'bc/config/logger.js';
 import sequelize from 'sequelize';
 const { Op } = sequelize;
 
