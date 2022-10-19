@@ -6,7 +6,11 @@ const Projects = db.project;
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  let projects = await Projects.findAll();
+  const { offset = 0, limit = 10 } = req.query;
+  let projects = await Projects.findAll({
+    limit,
+    offset
+  });
   logger.info('projects being called');
   res.send(projects);
 });
