@@ -1,7 +1,8 @@
-import fs from 'fs';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
 import nodemailer from 'nodemailer';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import db from 'bc/config/db.js';
 import {
   MHFD_FRONTEND,
@@ -12,6 +13,9 @@ import {
 } from 'bc/config/config.js';
 import { FIELDS } from 'bc/lib/enumConstants.js';
 import logger from 'bc/config/logger.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const User = db.user; 
 const LogActivity = db.logActivity;
