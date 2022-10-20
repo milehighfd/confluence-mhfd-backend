@@ -41,7 +41,7 @@ router.get('/fix-study', async (req, res) => {
       if (data.statusCode === 200) {
         const results = data.body.rows;
         console.log('#############################################');
-        console.log(JSON.stringify(result));
+        console.log(JSON.stringify(results));
         for (const result of results) {
           const tmpnps = await projectStreamService.saveProjectStream({
             projectid: projectid,
@@ -63,6 +63,7 @@ router.get('/fix-study', async (req, res) => {
       return res.status(500).send(error);
     };
   }
+  console.log(nps.length);
   res.send(nps);
 });
 
