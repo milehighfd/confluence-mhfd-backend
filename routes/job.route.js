@@ -10,7 +10,7 @@ const {
 
 router.get('/fix-study', async (req, res) => {
   const toFix = [401947];
-  let nps = null;
+  let nps = [];
   for (const projectid of toFix) {
     const q = `SELECT 
     j.jurisdiction, 
@@ -39,17 +39,20 @@ router.get('/fix-study', async (req, res) => {
       const data = await needle('post', CARTO_URL, query, { json: true });
       console.log('data status ', data.statusCode);
       if (data.statusCode === 200) {
-        const result = data.body.rows[0];
+        const results = data.body.rows;
         console.log('#############################################');
         console.log(JSON.stringify(result));
-        nps = await projectStreamService.saveProjectStream({
-          projectid: projectid,
-          mhfd_code: result.mhfd_code,
-          length: result.length,
-          drainage: result.drainage,
-          jurisdiction: result.jurisdiction,
-          str_name: result.str_name
-        });
+        for (const result of results) {
+          const tmpnps = await projectStreamService.saveProjectStream({
+            projectid: projectid,
+            mhfd_code: result.mhfd_code,
+            length: result.length,
+            drainage: result.drainage,
+            jurisdiction: result.jurisdiction,
+            str_name: result.str_name
+          });
+          nps.push(tmpnps);
+        }
       } else {
         logger.error('bad status ' + data.statusCode + '  -- ' +  JSON.stringify(data.body, null, 2));
         return res.status(data.statusCode).send(data.body);
