@@ -8,8 +8,9 @@ const {
 } = require('../config/config');
 
 
-router.get('/fix-study', async (req, res) => {
-  const toFix = [401947];
+router.get('/fix-study/:projectid', async (req, res) => {
+  const { projectid } = req.params;
+  const toFix = [projectid];
   let nps = [];
   for (const projectid of toFix) {
     const q = `SELECT 
