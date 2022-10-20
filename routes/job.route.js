@@ -28,7 +28,7 @@ router.get('/fix-study', async (req, res) => {
     ST_length(ST_intersection(streamsIntersected.the_geom, j.the_geom)::geography) as length
     FROM 
     ( SELECT unique_mhfd_code as mhfd_code, reach_code, trib_code1, trib_code2, trib_code3, trib_code4, trib_code5, trib_code6, trib_code7, 
-      cartodb_id, str_name, the_geom FROM mhfd_stream_reaches WHERE ST_DWithin((SELECT the_geom from mhfd_projects_created_prod where projectid = ${projectid}), the_geom, 0) ) streamsIntersected ,
+      cartodb_id, str_name, the_geom FROM mhfd_stream_reaches WHERE ST_DWithin((SELECT ST_Envelope(the_geom) as the_geom from mhfd_projects_created_prod where projectid = ${projectid}), the_geom, 0) ) streamsIntersected ,
     jurisidictions j 
     WHERE
     ST_DWithin(streamsIntersected.the_geom, j.the_geom, 0)`;
