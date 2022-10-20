@@ -35,12 +35,13 @@ router.get('/fix-study', async (req, res) => {
     const query = {
       q: q
     };
-    let result = {};
     try {
       const data = await needle('post', CARTO_URL, query, { json: true });
+      console.log('data status ', data.statusCode);
       if (data.statusCode === 200) {
-        const result = data.body;
-        logger.info(JSON.stringify(result));
+        const result = data.body.rows[0];
+        console.log('#############################################');
+        console.log(JSON.stringify(result));
         nps = await projectStreamService.saveProjectStream({
           projectid: projectid,
           mhfd_code: result.mhfd_code,
