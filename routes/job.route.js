@@ -49,7 +49,7 @@ router.get('/fix-study', async (req, res) => {
             length: result.length,
             drainage: result.drainage,
             jurisdiction: result.jurisdiction,
-            str_name: result.str_name
+            str_name: result.str_name || 'Unnamed Streams'
           });
           nps.push(tmpnps);
         }
