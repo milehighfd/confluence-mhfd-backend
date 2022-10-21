@@ -41,6 +41,7 @@ db.projectComponent = require('../models/projectComponent.model.js')(sequelize, 
 db.consultants = require('../models/consultants.model')(sequelize, Sequelize);
 db.componentdependency = require('../models/componentDependency.model')(sequelize, Sequelize);
 db.configuration = require('../models/configuration.model')(sequelize, Sequelize);
+db.projectscarto = require('../models/projectscarto.model')(sequelize, Sequelize);
 
 db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});

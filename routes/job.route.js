@@ -3,10 +3,38 @@ const needle = require('needle');
 const projectStreamService = require('../services/projectStream.service');
 const logger = require('../config/logger');
 const router = express.Router();
+const projectsCarto = db.projectscarto;
 const {
   CARTO_URL
 } = require('../config/config');
 
+router.get('/createlist', async(req, res) => {
+  const q = `SELECT projectid FROM mhfd_projects_created_prod where projecttype = 'Study'`;
+  const query = {
+    q: q
+  };
+  try {
+    const data = await needle('post', CARTO_URL, query, { json: true });
+    if (data.statusCode === 200) {
+      const results = data.body.rows;
+      console.log('############################################# get projectsids');
+      console.log(JSON.stringify(results));
+      for (const result of results) {
+        let projectCarto = {
+          projectid: result
+        };
+        const newprojectCarto = new projectsCarto(projectCarto);
+        await newprojectCarto.save();
+      }
+      return res.status(data.statusCode).send(results);
+    } else {
+      logger.error('bad status ' + data.statusCode + '  -- ' +  JSON.stringify(data.body, null, 2));
+      return res.status(data.statusCode).send(data.body);
+    }
+  } catch (error) {
+    logger.error('error at create list', error);
+  }
+});
 
 router.get('/fix-study/:projectid', async (req, res) => {
   const { projectid } = req.params;
