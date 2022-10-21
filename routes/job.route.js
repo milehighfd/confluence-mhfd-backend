@@ -3,13 +3,13 @@ const needle = require('needle');
 const projectStreamService = require('../services/projectStream.service');
 const logger = require('../config/logger');
 const router = express.Router();
+const db = require('../config/db');
 const projectsCarto = db.projectscarto;
 const { Op } = require("sequelize");
 const projectStream = db.projectStream;
 const {
   CARTO_URL
 } = require('../config/config');
-const db = require('../config/db');
 
 router.get('/createlist', async(req, res) => {
   const q = `SELECT projectid FROM mhfd_projects_created_prod where projecttype = 'Study'`;
@@ -41,9 +41,11 @@ router.get('/createlist', async(req, res) => {
 
 router.get('/projectsids', async(req, res) => {
   const projectsListStreams = await projectStream.findAll();
+  const ids = projectsListStreams.map((element) => element.dataValues.projectid);
+  console.log('ids');
   const projectsToRestore = await projectsCarto.findAll({
     where: {
-      projectid: {[Op.notIn]: projectsListStreams}
+      projectid: {[Op.notIn]: ids}
     }
   })
   return res.status(200).send(projectsToRestore);
