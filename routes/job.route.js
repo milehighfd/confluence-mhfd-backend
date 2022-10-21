@@ -48,7 +48,7 @@ router.get('/projectsids', async(req, res) => {
       projectid: {[Op.notIn]: ids}
     }
   })
-  return res.status(200).send(projectsToRestore);
+  return res.status(200).send(projectsToRestore.map(pr => pr.projectid));
 });
 
 router.get('/fix-study/:projectid', async (req, res) => {
