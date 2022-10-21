@@ -24,7 +24,7 @@ router.get('/createlist', async(req, res) => {
       console.log(JSON.stringify(results));
       for (const result of results) {
         let projectCarto = {
-          projectid: result
+          projectid: +result.projectid
         };
         const newprojectCarto = new projectsCarto(projectCarto);
         await newprojectCarto.save();

@@ -7,7 +7,7 @@ module.exports = (sequelize, DataType) => {
       primaryKey: true
     },
     projectid: {
-      type: DataType.FLOAT
+      type: DataType.INTEGER
     }
   });
 
