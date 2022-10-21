@@ -53,7 +53,7 @@ router.get('/projectsids', async(req, res) => {
 
 router.get('/fix-study/:projectid', async (req, res) => {
   const { projectid } = req.params;
-  const toFix = [projectid];
+  const toFix = projectid.split(",");
   let nps = [];
   for (const projectid of toFix) {
     const q = `SELECT 
