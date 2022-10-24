@@ -69,7 +69,7 @@ export const getMinimumDateByProjectId = async (projectid) => {
 }
 
 // in the future change isDev for is board project , don't delete the variable please @pachon
-export const getDataByProjectIds = async (projectid, type, isDev) => {
+export const getDataByProjectIds = async (projectid, isDev) => {
   let table = MAIN_PROJECT_TABLE;
   if (isDev) {
     table = CREATE_PROJECT_TABLE;
@@ -298,9 +298,10 @@ async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
         }
     });
   });
-  data = await newProm1;
+  let data = await newProm1;
   return data;
 }
+
 export async function getCoordinatesOfComponents(id, field) {
   const fixedField = 'problemid' ? 'problem_id' : 'project_id';
   const COMPONENTS_SQL = `SELECT type, 'grade_control_structure' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM grade_control_structure 

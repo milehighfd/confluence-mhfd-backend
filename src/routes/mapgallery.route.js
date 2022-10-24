@@ -789,9 +789,8 @@ async function queriesByProblemTypeInProject(project_fields, filters, problemTyp
 
 router.post('/project-by-ids/pdf', async (req, res) => {
    const projectid = req.query.projectid;
-   const type = req.query.type;
    const map = req.body.map;
-   let data = await getDataByProjectIds(projectid, type, false);
+   let data = await getDataByProjectIds(projectid, false);
    let components = [];
    if (data.projectid) {
      components = await componentsByEntityId(data.projectid, 'projectid', 'type', 'asc');
@@ -811,9 +810,8 @@ router.post('/project-by-ids/pdf', async (req, res) => {
 
 router.get('/project-by-ids', async (req, res) => {
    const projectid = req.query.projectid;
-   const type = req.query.type;
    try {
-      let data = await getDataByProjectIds(projectid, type, false);
+      let data = await getDataByProjectIds(projectid, false);
       res.status(200).send(data);
    } catch (error) {
       logger.error(error);

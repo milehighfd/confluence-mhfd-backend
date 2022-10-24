@@ -5,7 +5,7 @@ import logger from 'bc/config/logger.js';
 const Projects = db.project;
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+const listProjects = async (req, res) => {
   const { offset = 0, limit = 10 } = req.query;
   let projects = await Projects.findAll({
     limit,
@@ -13,6 +13,9 @@ router.get('/', async (req, res) => {
   });
   logger.info('projects being called');
   res.send(projects);
-});
+};
+
+router.get('/', listProjects);
+router.post('/', listProjects);
 
 export default router;

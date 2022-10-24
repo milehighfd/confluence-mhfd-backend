@@ -10,6 +10,9 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       primaryKey: true
     },
+    projectName: {
+      type: DataType.STRING
+    },
     code_project_type_id: {
       type: DataType.INTEGER,
     },
@@ -242,9 +245,9 @@ export default (sequelize, DataType) => {
     Component_Count: {
       type: DataType.INTEGER
     },
-    Shape: {
-      type: DataType.GEOMETRY()
-    }
+    // Shape: {
+    //   type: DataType.GEOMETRY()
+    // }
   }, {
     timestamps: false,
     createdAt: false,
