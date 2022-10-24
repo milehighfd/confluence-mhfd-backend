@@ -93,14 +93,13 @@ router.get('/fix-study/:projectid', async (req, res) => {
               answer[str_name] = [];
             }
             answer[str_name].push({
+              projectid: projectid,
               jurisdiction: row.jurisdiction,
               length: row.length,
-              cartodb_id: row.cartodb_id,
               mhfd_code: row.mhfd_code,
               str_name: str_name,
               drainage: 0
-            });
-          
+            });          
         });
         const promises = [];
         console.log('diff STREAM INFO: \n', JSON.stringify(streamsInfo), '\n\nANSWER\n\n', JSON.stringify(answer));
@@ -154,15 +153,16 @@ router.get('/fix-study/:projectid', async (req, res) => {
             });
             promises.push(promise);
         }
+        console.log('promises ');
         Promise.all(promises).then(async (promiseData) => {
           logger.info('my values '+ JSON.stringify(promiseData));
           promiseData.forEach(bucket => {
             //Disclaimer: I don't create a more optimal solution because we don't have enough time
             // will be work fine for most cases 
-            logger.info('bucket ' + JSON.stringify(bucket));
+            // logger.info('bucket ' + JSON.stringify(bucket));
             const str_name = bucket.str_name? bucket.str_name : 'Unnamed Streams';
             for (const array of answer[str_name]) {
-              logger.info('array '+ JSON.stringify(array));
+              // logger.info('array '+ JSON.stringify(array));
               for (const info of bucket.drainage) {
                 if (array.jurisdiction === info.jurisdiction) {
                   array.drainage += (info.area * 3.86102e-7);
@@ -172,17 +172,24 @@ router.get('/fix-study/:projectid', async (req, res) => {
             
             //answer[value.str_name].push(value.drainage);
           });
-          // for (const streamD of streamInfo) {
-          //   // save stream data TODO: move after drainage
-          //   const tmpnps = await projectStreamService.saveProjectStream({
-          //     projectid: projectid,
-          //     mhfd_code: streamD.mhfd_code,
-          //     length: streamD.length,
-          //     drainage: streamD.drainage,
-          //     jurisdiction: streamD.jurisdiction,
-          //     str_name: streamD.str_name || 'Unnamed Streams'
-          //   });
-          //   //finish save
+          console.log('before check');
+          for( const ans in answer) {
+            const streamInfo = answer[ans];
+            for (const streamD of streamInfo) {
+            // save stream data TODO: move after drainage
+              console.log('SAVING THESE rivers ', streamD);
+              const tmpnps = await projectStreamService.saveProjectStream({
+                projectid: projectid,
+                mhfd_code: streamD.mhfd_code,
+                length: streamD.length,
+                drainage: streamD.drainage,
+                jurisdiction: streamD.jurisdiction,
+                str_name: streamD.str_name || 'Unnamed Streams'
+              });
+            }
+            //finish save
+          }
+          
           //   nps.push(tmpnps);
           // }
           res.send(answer);
