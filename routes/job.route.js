@@ -55,7 +55,7 @@ router.get('/fix-study/:projectid', async (req, res) => {
   const { projectid } = req.params;
   const toFix = projectid.split(",");
   console.log('ABOUT TO FIX');
-  let nps = [];
+  let nps = {};
   for (const projectid of toFix) {
     const q = `SELECT 
       j.jurisdiction, 
@@ -186,23 +186,28 @@ router.get('/fix-study/:projectid', async (req, res) => {
                 jurisdiction: streamD.jurisdiction,
                 str_name: streamD.str_name || 'Unnamed Streams'
               });
+              if (!nps[ans])
+                nps[ans] = [];
+              nps[ans].push(tmpnps);
             }
             //finish save
           }
           
-          //   nps.push(tmpnps);
           // }
-          res.send(answer);
+          ///res.send(answer);
         });
       } else {
         logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
         res.status(data.statusCode).send(data);
+        return;
       }
     } catch (error) {
       logger.error(error, 'at', sql);
       res.status(500).send(error);
+      return;
     };
   }
+  res.send(nps);
 });
 
 module.exports = (router);
