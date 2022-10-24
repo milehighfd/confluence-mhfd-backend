@@ -154,7 +154,7 @@ router.get('/fix-study/:projectid', async (req, res) => {
             promises.push(promise);
         }
         console.log('promises ');
-        Promise.all(promises).then(async (promiseData) => {
+        await Promise.all(promises).then(async (promiseData) => {
           logger.info('my values '+ JSON.stringify(promiseData));
           promiseData.forEach(bucket => {
             //Disclaimer: I don't create a more optimal solution because we don't have enough time
