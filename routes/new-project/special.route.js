@@ -64,7 +64,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
-        await addProjectToBoard(user, servicearea, county, jurisdiction, projecttype, projectId, year, sendToWR);
+        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
       } else {
         logger.error('bad status ' + data.statusCode + '  -- ' + sql + JSON.stringify(data.body, null, 2));
