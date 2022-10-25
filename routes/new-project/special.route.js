@@ -21,7 +21,7 @@ const multer = Multer({
 
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const { projectname, description, servicearea, county, geom, locality,
+  const { isWorkPlan, projectname, description, servicearea, county, geom, locality,
     jurisdiction, sponsor, cosponsor, cover, year, sendToWR } = req.body;
   const status = 'Draft';
   const projecttype = 'Special';
