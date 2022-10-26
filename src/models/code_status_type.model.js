@@ -8,6 +8,11 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     },
+  }, {
+    tableName: 'code_status_type',
+    timestamps: false,
+    createdAt: false,
+    updatedAt: false,
   });
   return CodeStatusType;
 }

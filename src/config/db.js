@@ -130,6 +130,23 @@ db.groupnotes.hasMany(db.newnotes, { foreignKey: {name: 'group_id', allowNull: t
 db.groupnotes.belongsTo(db.user, {foreignKey: 'user_id'});
 db.user.hasMany(db.groupnotes, {foreignKey: 'user_id'});
 
+db.project.hasOne(
+  db.projectStatus,
+  { foreignKey: 'project_id' }
+);
+db.projectStatus.belongsTo(
+  db.codePhaseType,
+  { foreignKey: 'code_phase_type_id' }
+);
+db.codePhaseType.belongsTo(
+  db.codeStatusType,
+  { foreignKey: 'code_status_type_id' }
+);
+db.codePhaseType.belongsTo(
+  db.codeProjectType,
+  { foreignKey: 'code_project_type_id' }
+);
+
 db.sequelize.authenticate().then(()=>{
   console.log("Connected to Database");
 }).catch((error)=>{

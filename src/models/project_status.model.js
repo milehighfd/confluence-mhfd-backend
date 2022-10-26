@@ -16,7 +16,7 @@ export default (sequelize, DataType) => {
       type: DataType.DATE,
       allowNull: false,
     },
-    create_date: {
+    created_date: {
       type: DataType.DATE,
       allowNull: false,
     },
@@ -24,7 +24,7 @@ export default (sequelize, DataType) => {
       type: DataType.DATE,
       allowNull: false,
     },
-    las_modified_by: {
+    last_modified_by: {
       type: DataType.STRING,
       allowNull: false,
     },
@@ -32,6 +32,11 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     }  
+  }, {
+    tableName: 'project_status',
+    timestamps: false,
+    createdAt: false,
+    updatedAt: false,
   });
   return ProjectStatus;
 }

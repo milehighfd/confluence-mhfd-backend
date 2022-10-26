@@ -11,6 +11,11 @@ export default (sequelize, DataType) => {
     project_short_name: {
       type: DataType.STRING
     }
+  }, {
+    tableName: 'code_project_type',
+    timestamps: false,
+    createdAt: false,
+    updatedAt: false,
   });
   return CodeProjectType;
 }

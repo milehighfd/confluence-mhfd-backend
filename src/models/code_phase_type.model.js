@@ -16,6 +16,11 @@ export default  (sequelize, DataType) => {
       type: DataType.INTEGER,
       allowNull: false
     }
+  }, {
+    tableName: 'code_phase_type',
+    timestamps: false,
+    createdAt: false,
+    updatedAt: false,
   });
   return CodePhaseType;
 }
