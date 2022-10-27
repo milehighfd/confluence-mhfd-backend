@@ -59,7 +59,7 @@ export const sendRecoverPasswordEmail = async (user) => {
   const template = fs.readFileSync(__dirname + '/templates/email_reset-pass-MHFD.html', 'utf8');
   const emailToSend = template.split('{{url}}').join(redirectUrl);
 
-  const transporter = getTransporter();
+  // const transporter = getTransporter();
   const options = {
     from: MHFD_EMAIL,
     to: email,
@@ -67,8 +67,8 @@ export const sendRecoverPasswordEmail = async (user) => {
     html: emailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin'])
   };
-  const info = await transporter.sendMail(options);
-  logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
+  // const info = await transporter.sendMail(options);
+  // logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 };
 
 export const sendApprovedAccount = async (user) => {
@@ -77,7 +77,7 @@ export const sendApprovedAccount = async (user) => {
   const template = fs.readFileSync(__dirname + '/templates/email_approved.html', 'utf8');
   const emailToSend = template.split('{{completeName}}').join(user.name).split('{{url}}').join(redirectUrl);
 
-  const transporter = getTransporter();
+  // const transporter = getTransporter();
   const options = {
     from: MHFD_EMAIL,
     to: email,
@@ -85,13 +85,13 @@ export const sendApprovedAccount = async (user) => {
     html: emailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin'])
   };
-  const info = await transporter.sendMail(options);
-  logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
+  // const info = await transporter.sendMail(options);
+  // logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 }
 
 export const sendConfirmAccount = async (user) => {
   const redirectUrl = MHFD_FRONTEND;
-  const transporter = getTransporter();
+  // const transporter = getTransporter();
   const completeName = user.firstName + ' ' + user.lastName;
   // here
   const adminTemplate = fs.readFileSync(__dirname + '/templates/email_admin_new_user.html', 'utf8');
@@ -118,11 +118,11 @@ export const sendConfirmAccount = async (user) => {
     html: emailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
   };
-  const adminInfo = await transporter.sendMail(adminOptions);
-  logger.info(`Email sent to ADMIN: ${JSON.stringify(adminInfo, null, 2)}`);
-  const info = await transporter.sendMail(options); 
+  // const adminInfo = await transporter.sendMail(adminOptions);
+  // logger.info(`Email sent to ADMIN: ${JSON.stringify(adminInfo, null, 2)}`);
+  // const info = await transporter.sendMail(options); 
 
-  logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
+  // logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
 }
 
 export const sendBoardNotification = async (email, type, locality, year, fullName) => {

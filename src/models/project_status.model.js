@@ -11,10 +11,29 @@ export default (sequelize, DataType) => {
     project_id: {
       type: DataType.INTEGER,
       allowNull: false,
-    }, 
-    status_change_date: {
+    },
+    phase_change_date: {
       type: DataType.DATE,
       allowNull: false,
+    },
+    planned_start_date: {
+      type: DataType.DATE,
+      allowNull: false,
+    },
+    actual_start_date: {
+      type: DataType.DATE,
+      allowNull: false,
+    },
+    planned_end_date: {
+      type: DataType.DATE,
+      allowNull: false,
+    },
+    actual_end_date: {
+      type: DataType.DATE,
+      allowNull: false,
+    },
+    duration: {
+      type: DataType.INTEGER,
     },
     created_date: {
       type: DataType.DATE,

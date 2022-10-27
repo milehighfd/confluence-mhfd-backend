@@ -25,22 +25,22 @@ const seed = async () => {
     userAdmin.password = await bcrypt.hash('admin', 8);
     User.create(userAdmin);
   }
-  const consultantsCount = await Consultants.count();
-  if (consultantsCount === 0) {
-    for (var i = 0 ; i < defaultData.consultants.length ; i++) {
-      await Consultants.create({ name: defaultData.consultants[i] });
-    }
-    console.log(`Added ${defaultData.consultants.length} consultants`);
-  }
-  const configurations = await Configuration.count();
-  if (configurations === 0) {
-    await Configuration.create({
-      key: 'BOARD_YEAR',
-      description: 'Current board year',
-      value: '2022',
-      type: 'NUMBER'
-    });
-  }
+  // const consultantsCount = await Consultants.count();
+  // if (consultantsCount === 0) {
+  //   for (var i = 0 ; i < defaultData.consultants.length ; i++) {
+  //     await Consultants.create({ name: defaultData.consultants[i] });
+  //   }
+  //   console.log(`Added ${defaultData.consultants.length} consultants`);
+  // }
+  // const configurations = await Configuration.count();
+  // if (configurations === 0) {
+  //   await Configuration.create({
+  //     key: 'BOARD_YEAR',
+  //     description: 'Current board year',
+  //     value: '2022',
+  //     type: 'NUMBER'
+  //   });
+  // }
 };
 
 export default seed;

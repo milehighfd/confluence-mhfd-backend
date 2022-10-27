@@ -3,10 +3,10 @@ import db from 'bc/config/db.js';
 import { CREATE_PROJECT_TABLE, CARTO_URL } from 'bc/config/config.js';
 import logger from 'bc/config/logger.js';
 
-const Locality = db.locality;
 const Configuration = db.configuration;
 const Board = db.board;
 const BoardProject = db.boardProject;
+const Project = db.project;
 
 export const updateBoardProjectAtIndex = async (boardId, index) => {
   let bps = await BoardProject.findAll({
@@ -75,11 +75,12 @@ export const sendBoardsToProp = async (bp, board, prop, propid) => {
 };
 
 export const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year, sendToWR, isWorkPlan) => {
-  let dbLoc = await Locality.findOne({
-    where: {
-      name: locality
-    }
-  });
+  const [dbLocs] = await db.sequelize.query(`SELECT name, type FROM Localities WHERE name = '${locality}'`);
+  let _dbLoc = null;
+  if (dbLocs.length > 0) {
+    _dbLoc = dbLocs[0];
+  }
+  const dbLoc = _dbLoc;
   let type = 'WORK_REQUEST';
   if (dbLoc) {
     if (dbLoc.type === 'JURISDICTION') {
@@ -142,6 +143,7 @@ export const getNewProjectId = async () => {
     q: `SELECT GREATEST(max(projectid + 1), 800000) FROM ${CREATE_PROJECT_TABLE}`
   }
   const data = await needle('post', CARTO_URL, query, { json: true });
+  // Project
   return data.body.rows[0].greatest;
 };
 
