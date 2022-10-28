@@ -73,7 +73,7 @@ const sendBoardsToProp = async (bp, board, prop, propid) => {
   }
 };
 
-const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year, sendToWR, isWorkPlan) => {
+const addProjectToBoard = async (user, servicearea, county,  x, projecttype, project_id, year, sendToWR, isWorkPlan) => {
   let dbLoc = await Locality.findOne({
     where: {
       name: locality
@@ -81,6 +81,8 @@ const addProjectToBoard = async (user, servicearea, county, locality, projecttyp
   });
   let type = 'WORK_REQUEST';
   if (dbLoc) {
+    console.log('THE LOCALITY ====== ', locality);
+    console.log(dbLoc);
     if (dbLoc.type === 'JURISDICTION') {
       type = 'WORK_REQUEST';
     } else if (dbLoc.type === 'COUNTY' || dbLoc.type === 'SERVICE_AREA') {
@@ -112,6 +114,8 @@ const addProjectToBoard = async (user, servicearea, county, locality, projecttyp
     project_id: project_id,
     origin: locality
   }
+  logger.info('my board is ' + JSON.stringify(board, null, 2));
+  logger.info('to save board project ' + JSON.stringify(boardProjectObject, null, 2))
   if (type === 'WORK_PLAN') {
     boardProjectObject.originPosition0 = -1;
     boardProjectObject.originPosition1 = -1;
@@ -125,10 +129,16 @@ const addProjectToBoard = async (user, servicearea, county, locality, projecttyp
   let boardProject = new BoardProject(boardProjectObject);
   let boardProjectSaved = boardProject;
   updateBoardProjectAtIndex(board._id, 0);
-  console.log('zxcSEND TO WORK REQUEST \n\n\n\n\n\n\n\n', sendToWR, typeof sendToWR);
+  console.log('zxcSEND TO WORK REQUEST \n\n\n\n\n\n\n\n', sendToWR, typeof sendToWR, isWorkPlan);
+  console.log('fuck ', sendToWR === 'true' || isWorkPlan);
   if (sendToWR === 'true' || isWorkPlan) {
+    console.log('wtf bro', (sendToWR === 'true' || isWorkPlan));
     console.log('\n\n\n\n\n\n zxcsent to Wokrrequest', sendToWR);
-    boardProjectSaved = await boardProject.save();
+    try {
+      boardProjectSaved = await boardProject.save();
+    } catch(error) {
+      logger.info(error);
+    }
   }
   if (['admin', 'staff'].includes(user.designation) && !isWorkPlan) {
     await sendBoardsToProp(boardProjectSaved, board, servicearea, 'servicearea');
