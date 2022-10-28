@@ -136,7 +136,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   }
   const hasGeom = (geom && geom !== 'undefined' && geom !== 'null');
   const geomQuery = hasGeom ? `the_geom = ST_GeomFromGeoJSON('${geom}'),` : '';
-  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET ${geomQuery}, jurisdiction = '${jurisdiction}',
+  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET ${geomQuery} jurisdiction = '${jurisdiction}',
    projectname = '${cleanStringValue(projectname)}', description = '${cleanStringValue(description)}', servicearea = '${servicearea}',
     county = '${county}', projecttype = '${projecttype}',
      projectsubtype = '${projectsubtype}',  
