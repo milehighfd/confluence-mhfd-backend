@@ -71,11 +71,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         await addProjectToBoard(user, servicearea, county, toBoard, projecttype, projectId, year, sendToWR);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
       } else {
-        logger.error('bad status ' + data.statusCode + '  -- ' + sql + JSON.stringify(data.body, null, 2));
+        logger.error('bad status ' + data.statusCode + '  -- ' + insertQuery + JSON.stringify(data.body, null, 2));
         return res.status(data.statusCode).send(data.body);
       }
     } catch (error) {
-      logger.error(error, 'at', sql);
+      logger.error(error, 'at', insertQuery);
       return res.status(500).send(error);
     };
   }
