@@ -73,7 +73,8 @@ const sendBoardsToProp = async (bp, board, prop, propid) => {
   }
 };
 
-const addProjectToBoard = async (user, servicearea, county,  x, projecttype, project_id, year, sendToWR, isWorkPlan) => {
+const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year, sendToWR, isWorkPlan) => {
+  logger.info('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nenter to add project to board');
   let dbLoc = await Locality.findOne({
     where: {
       name: locality
@@ -81,8 +82,6 @@ const addProjectToBoard = async (user, servicearea, county,  x, projecttype, pro
   });
   let type = 'WORK_REQUEST';
   if (dbLoc) {
-    console.log('THE LOCALITY ====== ', locality);
-    console.log(dbLoc);
     if (dbLoc.type === 'JURISDICTION') {
       type = 'WORK_REQUEST';
     } else if (dbLoc.type === 'COUNTY' || dbLoc.type === 'SERVICE_AREA') {
@@ -114,8 +113,6 @@ const addProjectToBoard = async (user, servicearea, county,  x, projecttype, pro
     project_id: project_id,
     origin: locality
   }
-  logger.info('my board is ' + JSON.stringify(board, null, 2));
-  logger.info('to save board project ' + JSON.stringify(boardProjectObject, null, 2))
   if (type === 'WORK_PLAN') {
     boardProjectObject.originPosition0 = -1;
     boardProjectObject.originPosition1 = -1;
@@ -129,16 +126,10 @@ const addProjectToBoard = async (user, servicearea, county,  x, projecttype, pro
   let boardProject = new BoardProject(boardProjectObject);
   let boardProjectSaved = boardProject;
   updateBoardProjectAtIndex(board._id, 0);
-  console.log('zxcSEND TO WORK REQUEST \n\n\n\n\n\n\n\n', sendToWR, typeof sendToWR, isWorkPlan);
-  console.log('fuck ', sendToWR === 'true' || isWorkPlan);
+  console.log('zxcSEND TO WORK REQUEST \n\n\n\n\n\n\n\n', sendToWR, typeof sendToWR);
   if (sendToWR === 'true' || isWorkPlan) {
-    console.log('wtf bro', (sendToWR === 'true' || isWorkPlan));
     console.log('\n\n\n\n\n\n zxcsent to Wokrrequest', sendToWR);
-    try {
-      boardProjectSaved = await boardProject.save();
-    } catch(error) {
-      logger.info(error);
-    }
+    boardProjectSaved = await boardProject.save();
   }
   if (['admin', 'staff'].includes(user.designation) && !isWorkPlan) {
     await sendBoardsToProp(boardProjectSaved, board, servicearea, 'servicearea');
