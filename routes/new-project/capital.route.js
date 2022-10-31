@@ -71,9 +71,9 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   let result = [];
   const overHeadNumbers = overheadcost.split(',');
   let splittedJurisdiction = jurisdiction.split(',');
-  if (isWorkPlan) {
-    splittedJurisdiction = [locality];
-  }
+  // if (isWorkPlan) {
+  //  splittedJurisdiction = [locality];
+  // }
   for (const j of splittedJurisdiction) {
     // ,costdewatering, costmobilization, costtraffic, costutility, coststormwater, costengineering, costconstruction, costlegal, costcontingency, component_cost, component_count
 
@@ -98,7 +98,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         // change sponsor by jurisdiction
         // we can have a lot jurisdiction separated by comma. in a for
         // poner if para los dos roles https://trello.com/c/xfBIveVT/1745-create-project-todos-types-agregar-el-checkbox-deseleccionado-por-defecto-y-label-solo-para-usuarios-mhfd-senior-managers-y-mhfd
-        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR, isWorkPlan);
+        let toBoard = j;
+        if (isWorkPlan) {
+          toBoard = locality;
+        }
+        await addProjectToBoard(user, servicearea, county, toBoard, projecttype, projectId, year, sendToWR, isWorkPlan);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
         for (const independent of JSON.parse(independetComponent)) {
           const element = { name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId };

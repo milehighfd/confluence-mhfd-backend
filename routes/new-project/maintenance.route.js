@@ -64,9 +64,9 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     notRequiredValues = `, ${notRequiredValues}`;
   }
   let splittedJurisdiction = jurisdiction.split(',');
-  if (isWorkPlan) {
-    splittedJurisdiction = [locality];
-  }
+  // if (isWorkPlan) {
+  //  splittedJurisdiction = [locality];
+  // }
   let result = [];
   for (const j of splittedJurisdiction) {
     const hasGeom = (geom && geom !== 'undefined' && geom !== 'null');
@@ -87,7 +87,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
-        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR, isWorkPlan);
+        let toBoard = j;
+        if (isWorkPlan) {
+          toBoard = locality;
+        }
+        await addProjectToBoard(user, servicearea, county, toBoard, projecttype, projectId, year, sendToWR, isWorkPlan);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
       } else {
         logger.error('\n\n\nbad status ' + data.statusCode + '  -- '+ insertQuery +  JSON.stringify(data.body, null, 2));
