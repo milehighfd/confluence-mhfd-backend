@@ -497,6 +497,7 @@ router.get('/:boardId/boards/:type', async (req, res) => {
     for (var i = 0 ; i < boardLocalities.length ; i++) {
         let bl = boardLocalities[i];
         let locality = bl.fromLocality;
+        logger.info(`BOARDS INFO locality: ${locality} type: ${type} year: ${board.year} status: Approved`);
         let boardFrom = await Board.findOne({
             where: {
                 locality,
@@ -505,6 +506,7 @@ router.get('/:boardId/boards/:type', async (req, res) => {
                 status: 'Approved'
             }
         })
+        logger.info (`BOARD FROM: ${boardFrom}`);
         bids.push({
             locality,
             status: boardFrom ? boardFrom.status : 'Under Review',
