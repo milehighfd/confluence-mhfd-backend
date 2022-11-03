@@ -74,7 +74,6 @@ const sendBoardsToProp = async (bp, board, prop, propid) => {
 };
 
 const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year, sendToWR, isWorkPlan) => {
-  logger.info('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nenter to add project to board');
   let dbLoc = await Locality.findOne({
     where: {
       name: locality
@@ -122,11 +121,9 @@ const addProjectToBoard = async (user, servicearea, county, locality, projecttyp
     boardProjectObject.originPosition5 = -1;
   }
   boardProjectObject.position0 = 0;
-  console.log('BOARD PROJECT OBJECT', boardProjectObject);
   let boardProject = new BoardProject(boardProjectObject);
   let boardProjectSaved = boardProject;
   updateBoardProjectAtIndex(board._id, 0);
-  console.log('zxcSEND TO WORK REQUEST \n\n\n\n\n\n\n\n', sendToWR, typeof sendToWR);
   if (sendToWR === 'true' || isWorkPlan) {
     console.log('\n\n\n\n\n\n zxcsent to Wokrrequest', sendToWR);
     boardProjectSaved = await boardProject.save();

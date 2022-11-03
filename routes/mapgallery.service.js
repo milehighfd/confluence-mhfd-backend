@@ -39,7 +39,7 @@ const getMidByProjectId = async (projectid, projecttype) => {
     fields.push('ST_AsGeoJSON(the_geom) as the_geom')
   }
   let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
-  console.log('SQL in get mid by project id ', SQL);
+  // console.log('SQL in get mid by project id ', SQL);
   let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   const data = await needle('get', URL, { json: true });
   if (data.statusCode === 200 && data.body.rows.length > 0) {
