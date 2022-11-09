@@ -25,9 +25,9 @@ export default (sequelize, DataType) => {
     start_date: {
       type: DataType.DATE,
     },
-    service_area_local_government_id: {
+   /*  service_area_local_government_id: {
       type: DataType.INTEGER,
-    },
+    }, */
     staff_lead_email: {
       type: DataType.STRING,
     },
