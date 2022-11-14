@@ -19,9 +19,9 @@ export default (sequelize, DataType) => {
     code_project_type_id: {
       type: DataType.INTEGER,
     },
-    code_project_subtype_id: {
+/*     code_project_subtype_id: {
       type: DataType.INTEGER,
-    },
+    }, */
     start_date: {
       type: DataType.DATE,
     },

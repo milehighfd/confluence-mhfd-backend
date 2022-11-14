@@ -20,10 +20,9 @@ router.get('/', async (req, res) => {
   await db.sequelize.transaction({ type: db.Sequelize.Transaction.TYPES.SERIALIZABLE }, async (transaction) => {
     db.sequelize.query('SET IDENTITY_INSERT [project] ON;', { transaction });
     let x = new Projects({
-      project_id: 1000404,
       project_name: 'test',
       code_project_type_id: 5,
-      code_project_subtype_id: 3,
+      // code_project_subtype_id: 3,
       start_date: '2022-10-24 21:54:00.000',
       created_date: '2022-10-24 21:54:00.000',
       modified_date: '2022-10-24 21:54:00.000',
