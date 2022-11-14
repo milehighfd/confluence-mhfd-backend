@@ -5,12 +5,12 @@ const router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.send(200, { title: 'Express', env: process.env.NODE_ENV });
+  res.send({ title: 'Express', env: process.env });
 });
 
 router.get('/env', (_, res) => {
   console.log('my env ', process.env.NODE_ENV);
-  res.send({ env: process.env.NODE_ENV, version: 'Aug 19' });
+  res.send({ env: process.env, version: 'Aug 233' });
 })
 const server_style = function(req, res, next) {
   var accessToken = req.params.accessToken;

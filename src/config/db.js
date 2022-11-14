@@ -44,6 +44,8 @@ import stream from 'bc/models/stream.model.js';
 import businessAssociateContact from 'bc/models/business_associate_contact.model.js';
 import businessAdress from 'bc/models/business_address.model.js';
 import businessAssociates from 'bc/models/business_associates.model.js';
+import codeLocalGoverment from 'bc/models/code_local_government.model.js';
+import codeStateCounty from 'bc/models/code_state_county.model.js';
 
 const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, config.POSTGRESQL_PASSWORD, {
   dialect: config.DB_DIALECT,
@@ -103,7 +105,11 @@ db.projectPartner = projectPartner(sequelize, Sequelize);
 db.codeProjectPartnerType = codeProjectPartnerType(sequelize, Sequelize);
 db.codeStudyReason = codeStudyReason(sequelize, Sequelize);
 db.codeStudySubreason = codeStudySubreason(sequelize, Sequelize);
+
 db.codeServiceArea = codeServiceArea(sequelize, Sequelize);
+db.codeLocalGoverment = codeLocalGoverment(sequelize, Sequelize);
+db.codeStateCounty = codeStateCounty(sequelize, Sequelize);
+
 db.localGovernment = localGovernment(sequelize, Sequelize);
 db.project_stream = project_stream(sequelize, Sequelize);
 db.projectAttachment = projectAttachment(sequelize, Sequelize);
