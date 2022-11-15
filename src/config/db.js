@@ -46,6 +46,7 @@ import businessAdress from 'bc/models/business_address.model.js';
 import businessAssociates from 'bc/models/business_associates.model.js';
 import codeLocalGoverment from 'bc/models/code_local_government.model.js';
 import codeStateCounty from 'bc/models/code_state_county.model.js';
+import projectServiceArea from 'bc/models/project_service_area.model.js';
 
 const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, config.POSTGRESQL_PASSWORD, {
   dialect: config.DB_DIALECT,
@@ -118,6 +119,8 @@ db.stream = stream(sequelize, Sequelize);
 db.businessAssociateContact = businessAssociateContact(sequelize, Sequelize);
 db.businessAdress = businessAdress(sequelize, Sequelize);
 db.businessAssociates = businessAssociates(sequelize, Sequelize);
+
+db.projectServiceArea = projectServiceArea(sequelize, Sequelize);
 
 // db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
 // db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});

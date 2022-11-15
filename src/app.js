@@ -29,6 +29,8 @@ import projectRouter from 'bc/routes/project.route.js';
 import v2Localities from 'bc/routes/v2locality.route.js';
 import db from 'bc/config/db.js';
 import seed from 'bc/config/seed.js'
+import projectServiceArea from 'bc/routes/projectservicearea.route.js';
+
 db.sequelize.sync();
 
 seed();
@@ -77,5 +79,6 @@ app.use('/organizations', organizationRouter);
 app.use('/configuration', configurationRouter);
 app.use('/projects', projectRouter);
 app.use('/v2/locality', v2Localities);
+app.use('/projectservicearea', projectServiceArea)
 
 export default server;
