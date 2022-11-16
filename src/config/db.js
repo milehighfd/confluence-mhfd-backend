@@ -121,6 +121,12 @@ db.businessAdress = businessAdress(sequelize, Sequelize);
 db.businessAssociates = businessAssociates(sequelize, Sequelize);
 
 db.projectServiceArea = projectServiceArea(sequelize, Sequelize);
+db.projectServiceArea.belongsTo(
+  db.project,
+  { foreignKey: 'project_id'}
+);
+// db.projectServiceArea.belongsTo(
+// )
 
 // db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
 // db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
