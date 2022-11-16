@@ -10,8 +10,8 @@ export default  (sequelize, DataType) => {
     gdb_geomattr_data: {
       type: DataType.INTEGER
     },
-    cservice_area_local_government_id: {
-      type: DataType.VARBINARY
+    service_area_local_government_id: {
+      type: DataType.INTEGER
     },
     code_local_government_id: {
       type: DataType.INTEGER
@@ -20,13 +20,13 @@ export default  (sequelize, DataType) => {
       type: DataType.INTEGER,
     },
     area_in_service_area_sqmi: {
-      type: DataType.INTEGER
+      type: DataType.DOUBLE
     },
     area_in_service_area_acres: {
-      type: DataType.INTEGER
+      type: DataType.DOUBLE
     },
     percent_in_service_area: {
-      type: DataType.INTEGER
+      type: DataType.DOUBLE
     },
     primary_contact: {
       type: DataType.INTEGER
