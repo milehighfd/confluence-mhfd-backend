@@ -8,7 +8,7 @@ export default  (sequelize, DataType) => {
       type: DataType.GEOMETRY
     },
     gdb_geomattr_data: {
-      type: DataType.VARBINARY
+      type: DataType.GEOMETRY
     },
     service_area_local_government_id: {
       type: DataType.INTEGER
