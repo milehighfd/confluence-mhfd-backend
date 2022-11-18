@@ -47,7 +47,7 @@ import businessAssociates from 'bc/models/business_associates.model.js';
 import codeLocalGoverment from 'bc/models/code_local_government.model.js';
 import codeStateCounty from 'bc/models/code_state_county.model.js';
 import projectServiceArea from 'bc/models/project_service_area.model.js';
-import serviceAreaLocalGovernment from 'bc/models/service_area_local_government.model.js';
+// import serviceAreaLocalGovernment from 'bc/models/service_area_local_government.model.js';
 
 const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, config.POSTGRESQL_PASSWORD, {
   dialect: config.DB_DIALECT,
@@ -122,7 +122,7 @@ db.businessAdress = businessAdress(sequelize, Sequelize);
 db.businessAssociates = businessAssociates(sequelize, Sequelize);
 
 db.projectServiceArea = projectServiceArea(sequelize, Sequelize);
-db.serviceAreaLocalGovernment = serviceAreaLocalGovernment(sequelize, Sequelize);
+// db.serviceAreaLocalGovernment = serviceAreaLocalGovernment(sequelize, Sequelize);
 db.projectServiceArea.belongsTo(
   db.project,
   { foreignKey: 'project_id'}

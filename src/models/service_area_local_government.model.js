@@ -1,4 +1,7 @@
 export default  (sequelize, DataType) => {
+
+  // use in case the table SERVICE_AREA_LOCAL_GOVERNMENT is required
+  
   const serviceAreaLocalGovernment = sequelize.define('SERVICE_AREA_LOCAL_GOVERNMENT', {
     objectid: {
       type: DataType.INTEGER,
