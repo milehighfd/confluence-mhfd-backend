@@ -17,7 +17,6 @@ router.get('/all-localities', async (req, res) => {
   const [saData] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox, code_service_area_id,
   service_area_name FROM CODE_SERVICE_AREA_4326`);
   const sa = saData.map(result => {
-    console.log(result);
     return { 
       name: result.service_area_name + 'Service Area',
       id: result.code_service_area_id,
@@ -31,7 +30,6 @@ router.get('/all-localities', async (req, res) => {
   })*/
   const [lgData] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox, code_local_government_id,
   local_government_name FROM CODE_LOCAL_GOVERNMENT_4326`);
-  console.log('######### ', lgData);
   const lg = lgData.map(result => {
     return {
       name: result.local_government_name,
