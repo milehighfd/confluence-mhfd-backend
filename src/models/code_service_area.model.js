@@ -19,7 +19,7 @@ export default  (sequelize, DataType) => {
     }
   }, {
     freezeTableName: true,
-    tableName: 'CODE_SERVICE_AREA',
+    tableName: 'CODE_SERVICE_AREA_4326',
     createdAt: false,
     updatedAt: false
   });

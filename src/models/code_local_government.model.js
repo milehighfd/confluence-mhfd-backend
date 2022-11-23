@@ -3,7 +3,7 @@ export default  (sequelize, DataType) => {
     objectid: {
       type: DataType.INTEGER,
     },
-    code_local_government: {
+    code_local_government_id: {
       type: DataType.INTEGER,
       primaryKey: true
     },
@@ -13,6 +13,11 @@ export default  (sequelize, DataType) => {
     local_government_type: {
       type: DataType.STRING
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'CODE_LOCAL_GOVERNMENT_4326',
+    createdAt: false,
+    updatedAt: false
   });
   return LocalGovernment;
 }

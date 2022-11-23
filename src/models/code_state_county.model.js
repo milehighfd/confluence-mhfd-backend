@@ -19,6 +19,11 @@ export default  (sequelize, DataType) => {
     county_name: {
       type: DataType.STRING
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'CODE_STATE_COUNTY_4326',
+    createdAt: false,
+    updatedAt: false
   });
   return StateCounty;
 }
