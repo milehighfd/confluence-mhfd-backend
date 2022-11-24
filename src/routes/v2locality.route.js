@@ -1,4 +1,5 @@
 import express from 'express';
+import { parse } from 'wkt';
 // import { ROLES } from 'bc/lib/enumConstants.js';
 import db from 'bc/config/db.js';
 // mimport auth2 from 'bc/auth0/auth2.js';
@@ -8,48 +9,59 @@ const ServiceArea = db.codeServiceArea;
 const LocalGovernment = db.codeLocalGoverment;
 const StateCounty = db.codeStateCounty;
 
-
+const polygonParser = (coordinates) => {
+  return parse(coordinates);
+}
 router.get('/all-localities', async (req, res) => {
   /*const sa = await ServiceArea.findAll({
     include: { all: true, nested: true },
     attributes: ['code_service_area_id', 'service_area_name']
   }) */
-  const [saData] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox, code_service_area_id,
+  const [saData] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox,
+  Shape.STAsText() as coordinates,
+  code_service_area_id,
   service_area_name FROM CODE_SERVICE_AREA_4326`);
   const sa = saData.map(result => {
     return { 
       name: result.service_area_name + 'Service Area',
       id: result.code_service_area_id,
       table: 'CODE_SERVICE_AREA',
-      bbox: result.bbox
+      bbox: polygonParser(result.bbox),
+      coordinates: polygonParser(result.coordinates)
     }
   });
   /*const lg = await LocalGovernment.findAll({
     include: { all: true, nested: true },
     attributes: ['code_local_government_id', 'local_government_name']
   })*/
-  const [lgData] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox, code_local_government_id,
+  const [lgData] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox,
+  Shape.STAsText() as coordinates,
+  code_local_government_id,
   local_government_name FROM CODE_LOCAL_GOVERNMENT_4326`);
   const lg = lgData.map(result => {
     return {
       name: result.local_government_name,
       id: result.code_local_government_id,
       table: 'CODE_LOCAL_GOVERNMENT',
-      bbox: result.bbox
+      bbox: polygonParser(result.bbox),
+      coordinates: polygonParser(result.coordinates)
     }
   });
   /*const sc = await StateCounty.findAll({
     include: { all: true, nested: true },
     attributes: ['state_county_id', 'county_name']
   })*/
-  const [scData] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox, state_county_id,
+  const [scData] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox,
+  Shape.STAsText() as coordinates,
+  state_county_id,
   county_name FROM CODE_STATE_COUNTY_4326`);
   const sc = scData.map(result => {
     return {
       name: result.county_name + ' County',
       id: result.state_county_id,
       table: 'CODE_STATE_COUNTY',
-      bbox: result.bbox
+      bbox: polygonParser(result.bbox),
+      coordinates: polygonParser(result.coordinates)
     }
   });
   const answer = [...sa, ...lg, ...sc].sort((a, b) => {
