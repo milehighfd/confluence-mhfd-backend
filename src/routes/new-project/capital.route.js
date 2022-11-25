@@ -4,6 +4,7 @@ import needle from 'needle';
 import attachmentService from 'bc/services/attachment.service.js';
 import projectComponentService from 'bc/services/projectComponent.service.js';
 import indepdendentService from 'bc/services/independent.service.js';
+import axios from 'axios';
 import {
   CARTO_URL,
   CREATE_PROJECT_TABLE,
@@ -11,6 +12,7 @@ import {
 } from 'bc/config/config.js';
 import db from 'bc/config/db.js';
 import auth from 'bc/auth/auth.js';
+import FormData from 'form-data';
 import logger from 'bc/config/logger.js';
 import { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue } from 'bc/routes/new-project/helper.js';
 
@@ -22,7 +24,14 @@ const multer = Multer({
     fileSize: 50 * 1024 * 1024
   }
 });
-
+const generateRangom = (low, up) => {
+  const u = Math.max(low, up);
+  const l = Math.min(low, up);
+  const diff = u - l;
+  const r = Math.floor(Math.random() * (diff + 1)); //'+1' because Math.random() returns 0..0.99, it does not include 'diff' value, so we do +1, so 'diff + 1' won't be included, but just 'diff' value will be.
+  
+  return l + r; //add the random number that was selected within distance between low and up to the lower limit.  
+}
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const { isWorkPlan, projectname, description, servicearea, county, geom,
@@ -95,6 +104,48 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
+        const createRandomGeomOnARCGIS = (coordinates, projectname) => {
+          console.log('hello create random geom');
+          const formData = new FormData();
+          const newGEOM = [{"geometry":{"paths":[ [] ],"spatialReference" : {"wkid" : 4326}},"attributes":{"Date":null,"Name": projectname}}];
+          newGEOM[0].geometry.paths[0] = coordinates;
+          formData.append('f', 'json');
+          formData.append('adds', JSON.stringify(newGEOM));
+          // THINK HOW TO DO IT EVERYTIME BEFORE REQUEST
+          console.log('form data \n\n', formData);
+          const TOKEN = 'aG1t6m3_I642blhwjaaCSdboUrbStlt3ooz3Y9k3hHxcuWmZxVtXDYpr8q7AC7-tFTdLx6zbR5btblThGvsSsKceF0kUJDTtDuYwvYH1yIzlVakHiRVXoBXXPsBpptA6A4SUbG-XQN8Vda7QSJJDmw..';
+          formData.append('token', TOKEN);
+          return formData;
+          // datasets.postDataMultipart('https://gis.mhfd.org/server/rest/services/Confluence/mhfd_projects_created_dev/FeatureServer/0/applyedits', formData).then(res => {
+          //   console.log('return create of geom', res);
+          // });
+        };
+        const getAuthenticationFormData = () => {
+          const formData = new FormData();
+          formData.append('username', 'ricardo_confluence');
+          formData.append('password', 'M!l3H!gh$m$');
+          formData.append('client', 'ip');
+          // THIS IP IS MOMENTARILY TO TEST TODO: add to env
+          formData.append('ip', '181.188.178.182');
+          formData.append('expiration', '60');
+          formData.append('f', 'pjson');
+          formData.append('referer', '');
+          return formData;
+        }
+        const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
+        const fd = getAuthenticationFormData();
+        console.log('formData', fd);
+        axios.post(URL_TOKEN, fd)
+        .then((res) => {
+          console.log("XXX JSON XXX", res);
+        })
+        .catch((err) => {
+          console.log("XXX JSON XXX", err);
+        });
+        // const bodyFD = createRandomGeomOnARCGIS(JSON.parse(geom).coordinates,cleanStringValue(projectname));
+        // const createOnArcGis = await needle('post', 'https://gis.mhfd.org/server/rest/services/Confluence/mhfd_projects_created_dev/FeatureServer/0/applyedits', bodyFD);
+        // console.log(' \n\n\n\n\n\n createonArcgis \n\n\n\n\n', createOnArcGis);
+        // console.log('GEOM \n\n', JSON.parse(geom));
         // change sponsor by jurisdiction
         // we can have a lot jurisdiction separated by comma. in a for
         // poner if para los dos roles https://trello.com/c/xfBIveVT/1745-create-project-todos-types-agregar-el-checkbox-deseleccionado-por-defecto-y-label-solo-para-usuarios-mhfd-senior-managers-y-mhfd
