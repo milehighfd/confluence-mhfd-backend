@@ -32,6 +32,53 @@ const generateRangom = (low, up) => {
   
   return l + r; //add the random number that was selected within distance between low and up to the lower limit.  
 }
+
+router.get('/token-url', async (req, res) => {
+  const getAuthenticationFormData = () => {
+    const formData = new FormData();
+    console.log('my fd ', formData);
+    formData.append('username', 'ricardo_confluence');
+    formData.append('password', 'M!l3H!gh$m$');
+    formData.append('client', 'ip');
+    // THIS IP IS MOMENTARILY TO TEST TODO: add to env
+    formData.append('ip', '181.188.178.182');
+    formData.append('expiration', '60');
+    formData.append('f', 'pjson');
+    formData.append('referer', '');
+    return formData;
+  }
+  /*const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
+  const fd = getAuthenticationFormData();
+  console.log('formData', fd);
+  axios({
+    method: "post",
+    url: URL_TOKEN,
+    data: fd,
+    headers: {  },
+  })
+    .then(function (response) {
+      //handle success
+      console.log(response);
+      res.send(response);
+    })
+    .catch(function (response) {
+      //handle error
+      console.log(response);
+      res.send(response);
+    });*/
+    const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
+    const fd = getAuthenticationFormData();
+    console.log('formData', fd);
+    axios.post(URL_TOKEN, fd, { headers: fd.getHeaders() })
+    .then((re) => {
+      console.log("XXX JSON XXX", re);
+      res.send(re.data)
+    })
+    .catch((err) => {
+      console.log("XXX JSON XXX", err);
+      res.send(err);
+    });
+})
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const { isWorkPlan, projectname, description, servicearea, county, geom,
