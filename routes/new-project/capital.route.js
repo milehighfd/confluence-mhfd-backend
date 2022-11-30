@@ -51,9 +51,9 @@ const getAuthenticationFormData = () => {
   const formData = new FormData();
   formData.append('username', 'ricardo_confluence');
   formData.append('password', 'M!l3H!gh$m$');
-  formData.append('client', 'referer');
+  formData.append('client', 'ip');
   // THIS IP IS MOMENTARILY TO TEST TODO: add to env
-  formData.append('ip', '181.188.178.182');
+  formData.append('ip', '10.0.1.97');
   formData.append('expiration', '60');
   formData.append('f', 'pjson');
   formData.append('referer', 'localhost');
