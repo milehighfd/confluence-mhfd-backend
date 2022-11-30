@@ -15,7 +15,7 @@
     "debug": "~2.6.9",
     "dotenv": "^10.0.0",
     "express": "~4.16.1",
-    "express-fileupload": "^1.1.6",
+    "express-fileupload": "^1.1.10",
     "form-data": "^4.0.0",
     "giflossy": "^3.0.41",
     "googleapis": "^39.2.0",
