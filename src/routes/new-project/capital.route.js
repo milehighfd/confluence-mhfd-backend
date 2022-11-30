@@ -33,49 +33,88 @@ const generateRangom = (low, up) => {
   return l + r; //add the random number that was selected within distance between low and up to the lower limit.  
 }
 const createRandomGeomOnARCGIS = (coordinates, projectname, token) => {
-  const formData = new FormData();
-  // const newGEOM = [{"geometry":{"paths":[ [] ],"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0, "projectName": projectname}}];
-  // newGEOM[0].geometry.paths[0] = coordinates;
-  formData.append('f', 'json');
-  formData.append('token', token);
-  formData.append('adds', '[{"geometry":{"paths":[[[-11806858.969765771,4881317.227901084],[-11572350.166986963,4872144.784506868],[-11767417.463170638,4742507.584535271],[-11576630.640570931,4746482.310006099]]],"spatialReference":{"wkid":102100,"latestWkid":3857}},"attributes":{"update_flag":0,"Component_Count":null,"projectId":null,"onbaseId":null,"projectName":"HELO BOOOOOOOO","projectType":null,"projectSubtype":null,"description":null,"status":null,"startYear":null,"completeYear":null,"sponsor":null,"coSponsor1":null,"coSponsor2":null,"coSponsor3":null,"frequency":null,"maintenanceEligibility":null,"ownership":null,"acquisitionAnticipatedDate":null,"acquisitionProgress":null,"additionalCostDescription":null,"overheadCostDescription":null,"consultant":null,"contractor":null,"LGManager":null,"mhfdManager":null,"serviceArea":null,"county":null,"jurisdiction":null,"streamName":null,"taskSedimentRemoval":null,"taskTreeThinning":null,"taskBankStabilization":null,"taskDrainageStructure":null,"taskRegionalDetention":null,"goalFloodRisk":null,"goalWaterQuality":null,"goalStabilization":null,"goalCapRecreation":null,"goalCapVegetation":null,"goalStudyOvertopping":null,"goalStudyConveyance":null,"goalStudyPeakFlow":null,"goalStudyDevelopment":null,"workPlanYr1":null,"workPlanYr2":null,"workPlanYr3":null,"workPlanYr4":null,"workPlanYr5":null,"attachments":null,"coverImage":null,"Component_Cost":null,"CreationDate":null,"Creator":null,"EditDate":null,"Editor":null,"MP_WR_ID":null,"dataSource":null,"currentWorkPlan":null,"mhfdDollarsRequested":null,"mhfdDollarsAllocated":null,"estimatedCost":null,"finalCost":null,"additionalCost":null,"overheadCost":null,"costDewatering":null,"costMobilization":null,"costTraffic":null,"costUtility":null,"costStormwater":null,"costEngineering":null,"costConstruction":null,"costLegal":null,"costContingency":null,"specialDistrict":null,"studyReason":null,"studySubreason":null}}]');
-  // THINK HOW TO DO IT EVERYTIME BEFORE REQUEST
+  // const formData = new FormData();
+  const newGEOM = [{"geometry":{"paths":[ [] ],"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0, "projectName": projectname}}];
+  newGEOM[0].geometry.paths[0] = coordinates;
+  // formData.append('f', 'json');
+  // formData.append('token', token);
+  // formData.append('adds', '[{"geometry":{"paths":[[[-11806858.969765771,4881317.227901084],[-11572350.166986963,4872144.784506868],[-11767417.463170638,4742507.584535271],[-11576630.640570931,4746482.310006099]]],"spatialReference":{"wkid":102100,"latestWkid":3857}},"attributes":{"update_flag":0,"Component_Count":null,"projectId":null,"onbaseId":null,"projectName":"HELO BOOOOOOOO","projectType":null,"projectSubtype":null,"description":null,"status":null,"startYear":null,"completeYear":null,"sponsor":null,"coSponsor1":null,"coSponsor2":null,"coSponsor3":null,"frequency":null,"maintenanceEligibility":null,"ownership":null,"acquisitionAnticipatedDate":null,"acquisitionProgress":null,"additionalCostDescription":null,"overheadCostDescription":null,"consultant":null,"contractor":null,"LGManager":null,"mhfdManager":null,"serviceArea":null,"county":null,"jurisdiction":null,"streamName":null,"taskSedimentRemoval":null,"taskTreeThinning":null,"taskBankStabilization":null,"taskDrainageStructure":null,"taskRegionalDetention":null,"goalFloodRisk":null,"goalWaterQuality":null,"goalStabilization":null,"goalCapRecreation":null,"goalCapVegetation":null,"goalStudyOvertopping":null,"goalStudyConveyance":null,"goalStudyPeakFlow":null,"goalStudyDevelopment":null,"workPlanYr1":null,"workPlanYr2":null,"workPlanYr3":null,"workPlanYr4":null,"workPlanYr5":null,"attachments":null,"coverImage":null,"Component_Cost":null,"CreationDate":null,"Creator":null,"EditDate":null,"Editor":null,"MP_WR_ID":null,"dataSource":null,"currentWorkPlan":null,"mhfdDollarsRequested":null,"mhfdDollarsAllocated":null,"estimatedCost":null,"finalCost":null,"additionalCost":null,"overheadCost":null,"costDewatering":null,"costMobilization":null,"costTraffic":null,"costUtility":null,"costStormwater":null,"costEngineering":null,"costConstruction":null,"costLegal":null,"costContingency":null,"specialDistrict":null,"studyReason":null,"studySubreason":null}}]');
+  // // THINK HOW TO DO IT EVERYTIME BEFORE REQUEST
   
+  const formData = {
+    'f': 'json',
+    'token': token,
+    'adds': '[{"geometry":{"paths":[[[-11806858.969765771,4881317.227901084],[-11572350.166986963,4872144.784506868],[-11767417.463170638,4742507.584535271],[-11576630.640570931,4746482.310006099]]],"spatialReference":{"wkid":102100,"latestWkid":3857}},"attributes":{"update_flag":0,"Component_Count":null,"projectId":null,"onbaseId":null,"projectName":"TEST NEEDLE BOOOOOO222O","projectType":null,"projectSubtype":null,"description":null,"status":null,"startYear":null,"completeYear":null,"sponsor":null,"coSponsor1":null,"coSponsor2":null,"coSponsor3":null,"frequency":null,"maintenanceEligibility":null,"ownership":null,"acquisitionAnticipatedDate":null,"acquisitionProgress":null,"additionalCostDescription":null,"overheadCostDescription":null,"consultant":null,"contractor":null,"LGManager":null,"mhfdManager":null,"serviceArea":null,"county":null,"jurisdiction":null,"streamName":null,"taskSedimentRemoval":null,"taskTreeThinning":null,"taskBankStabilization":null,"taskDrainageStructure":null,"taskRegionalDetention":null,"goalFloodRisk":null,"goalWaterQuality":null,"goalStabilization":null,"goalCapRecreation":null,"goalCapVegetation":null,"goalStudyOvertopping":null,"goalStudyConveyance":null,"goalStudyPeakFlow":null,"goalStudyDevelopment":null,"workPlanYr1":null,"workPlanYr2":null,"workPlanYr3":null,"workPlanYr4":null,"workPlanYr5":null,"attachments":null,"coverImage":null,"Component_Cost":null,"CreationDate":null,"Creator":null,"EditDate":null,"Editor":null,"MP_WR_ID":null,"dataSource":null,"currentWorkPlan":null,"mhfdDollarsRequested":null,"mhfdDollarsAllocated":null,"estimatedCost":null,"finalCost":null,"additionalCost":null,"overheadCost":null,"costDewatering":null,"costMobilization":null,"costTraffic":null,"costUtility":null,"costStormwater":null,"costEngineering":null,"costConstruction":null,"costLegal":null,"costContingency":null,"specialDistrict":null,"studyReason":null,"studySubreason":null}}]'
+  }
   return formData;
   // datasets.postDataMultipart('https://gis.mhfd.org/server/rest/services/Confluence/mhfd_projects_created_dev/FeatureServer/0/applyedits', formData).then(res => {
   //   console.log('return create of geom', res);
   // });
 };
 const getAuthenticationFormData = () => {
-  const formData = new FormData();
-  formData.append('username', 'ricardo_confluence');
-  formData.append('password', 'M!l3H!gh$m$');
-  formData.append('client', 'referer');
-  // THIS IP IS MOMENTARILY TO TEST TODO: add to env
-  formData.append('ip', '181.188.178.182');
-  formData.append('expiration', '60');
-  formData.append('f', 'pjson');
-  formData.append('referer', 'localhost');
+  // const formData = new FormData();
+  // formData.append('username', 'ricardo_confluence');
+  // formData.append('password', 'M!l3H!gh$m$');
+  // formData.append('client', 'referer');
+  // // THIS IP IS MOMENTARILY TO TEST TODO: add to env
+  // formData.append('ip', '181.188.178.182');
+  // formData.append('expiration', '60');
+  // formData.append('f', 'pjson');
+  // formData.append('referer', 'localhost');
+  const formData = {
+    'username': 'ricardo_confluence',
+    'password': 'M!l3H!gh$m$',
+    'client': 'referer',
+    'ip': '181.188.178.182',
+    'expiration': '60',
+    'f': 'pjson',
+    'referer': 'localhost'
+  };
   return formData;
 }
 
 router.get('/token-url', async (req, res) => {
     const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
     const fd = getAuthenticationFormData();
-    const token_data = await axios.post(URL_TOKEN, fd, { headers: fd.getHeaders() })
-    const TOKEN = token_data.data.token;
+    // const token_data = await axios.post(URL_TOKEN, fd, { headers: fd.getHeaders() })
+    const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
+
+    const TOKEN = JSON.parse(token_data.body).token;
     
     const bodyFD = createRandomGeomOnARCGIS('non', 'cleanStringValue(projectname)', TOKEN);
-    const createOnArcGis = await axios.post('https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits', bodyFD, bodyFD.getHeaders());
+    const createOnArcGis = await needle('post','https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits', bodyFD, { multipart: true });
+    console.log('createona', createOnArcGis.statusCode, '\n\n\n\n ************* \n\n', createOnArcGis.body);
     const response = {
       token: TOKEN,
-      createStatus: createOnArcGis.status,
-      data: createOnArcGis.data,
-      geom: '[{"geometry":{"paths":[[[-11806858.969765771,4881317.227901084],[-11572350.166986963,4872144.784506868],[-11767417.463170638,4742507.584535271],[-11576630.640570931,4746482.310006099]]],"spatialReference":{"wkid":102100,"latestWkid":3857}},"attributes":{"update_flag":0,"Component_Count":null,"projectId":null,"onbaseId":null,"projectName":"HELO BOOOOOOOO","projectType":null,"projectSubtype":null,"description":null,"status":null,"startYear":null,"completeYear":null,"sponsor":null,"coSponsor1":null,"coSponsor2":null,"coSponsor3":null,"frequency":null,"maintenanceEligibility":null,"ownership":null,"acquisitionAnticipatedDate":null,"acquisitionProgress":null,"additionalCostDescription":null,"overheadCostDescription":null,"consultant":null,"contractor":null,"LGManager":null,"mhfdManager":null,"serviceArea":null,"county":null,"jurisdiction":null,"streamName":null,"taskSedimentRemoval":null,"taskTreeThinning":null,"taskBankStabilization":null,"taskDrainageStructure":null,"taskRegionalDetention":null,"goalFloodRisk":null,"goalWaterQuality":null,"goalStabilization":null,"goalCapRecreation":null,"goalCapVegetation":null,"goalStudyOvertopping":null,"goalStudyConveyance":null,"goalStudyPeakFlow":null,"goalStudyDevelopment":null,"workPlanYr1":null,"workPlanYr2":null,"workPlanYr3":null,"workPlanYr4":null,"workPlanYr5":null,"attachments":null,"coverImage":null,"Component_Cost":null,"CreationDate":null,"Creator":null,"EditDate":null,"Editor":null,"MP_WR_ID":null,"dataSource":null,"currentWorkPlan":null,"mhfdDollarsRequested":null,"mhfdDollarsAllocated":null,"estimatedCost":null,"finalCost":null,"additionalCost":null,"overheadCost":null,"costDewatering":null,"costMobilization":null,"costTraffic":null,"costUtility":null,"costStormwater":null,"costEngineering":null,"costConstruction":null,"costLegal":null,"costContingency":null,"specialDistrict":null,"studyReason":null,"studySubreason":null}}]'
+      createStatus: createOnArcGis.statusCode,
+      data: createOnArcGis.body,
+      geom: '[{"geometry":{"paths":[[[-11806858.969765771,4881317.227901084],[-11572350.166986963,4872144.784506868],[-11767417.463170638,4742507.584535271],[-11576630.640570931,4746482.310006099]]],"spatialReference":{"wkid":102100,"latestWkid":3857}},"attributes":{"update_flag":0,"Component_Count":null,"projectId":null,"onbaseId":null,"projectName":"TEST NEEDLE BOOOOOO222O","projectType":null,"projectSubtype":null,"description":null,"status":null,"startYear":null,"completeYear":null,"sponsor":null,"coSponsor1":null,"coSponsor2":null,"coSponsor3":null,"frequency":null,"maintenanceEligibility":null,"ownership":null,"acquisitionAnticipatedDate":null,"acquisitionProgress":null,"additionalCostDescription":null,"overheadCostDescription":null,"consultant":null,"contractor":null,"LGManager":null,"mhfdManager":null,"serviceArea":null,"county":null,"jurisdiction":null,"streamName":null,"taskSedimentRemoval":null,"taskTreeThinning":null,"taskBankStabilization":null,"taskDrainageStructure":null,"taskRegionalDetention":null,"goalFloodRisk":null,"goalWaterQuality":null,"goalStabilization":null,"goalCapRecreation":null,"goalCapVegetation":null,"goalStudyOvertopping":null,"goalStudyConveyance":null,"goalStudyPeakFlow":null,"goalStudyDevelopment":null,"workPlanYr1":null,"workPlanYr2":null,"workPlanYr3":null,"workPlanYr4":null,"workPlanYr5":null,"attachments":null,"coverImage":null,"Component_Cost":null,"CreationDate":null,"Creator":null,"EditDate":null,"Editor":null,"MP_WR_ID":null,"dataSource":null,"currentWorkPlan":null,"mhfdDollarsRequested":null,"mhfdDollarsAllocated":null,"estimatedCost":null,"finalCost":null,"additionalCost":null,"overheadCost":null,"costDewatering":null,"costMobilization":null,"costTraffic":null,"costUtility":null,"costStormwater":null,"costEngineering":null,"costConstruction":null,"costLegal":null,"costContingency":null,"specialDistrict":null,"studyReason":null,"studySubreason":null}}]'
     };
-    return res.status(createOnArcGis.status).send(response);
+    return res.status(205).send(response);
 
-})
+});
+const insertIntoArcGis = async (geom) => {
+  try {
+    const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
+    const fd = getAuthenticationFormData();
+    const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
+    const TOKEN = JSON.parse(token_data.body).token;
+    const bodyFD = createRandomGeomOnARCGIS(JSON.parse(geom).coordinates, 'cleanStringValue(projectname)', TOKEN);
+    const createOnArcGis = await needle('post','https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits', bodyFD, { multipart: true });
+    console.log('createona', createOnArcGis.statusCode, '\n\n\n\n ************* \n\n', createOnArcGis.body);
+    if (createOnArcGis.statusCode == 200) {
+      return { successArcGis: createOnArcGis.body.addResults[0].success };
+    } else {
+      console.log('geojjj', geom);
+      return { successArcGis: false };
+    }
+  } catch(e) {
+    return {
+      successArcGis: false,
+      error: e
+    }
+  }  
+}
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const { isWorkPlan, projectname, description, servicearea, county, geom,
@@ -148,17 +187,8 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
-  
-        const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
-        const fd = getAuthenticationFormData();
-        const token_data = await axios.post(URL_TOKEN, fd, { headers: fd.getHeaders() })
-        const TOKEN = token_data.data.token;
-        console.log('token Data ', token_data.data.token);
-        const bodyFD = createRandomGeomOnARCGIS(JSON.parse(geom).coordinates, cleanStringValue(projectname), TOKEN);
-        console.log('body header', bodyFD.getHeaders(), `req.get('Referrer')`, req.get('Referrer'));
-        const createOnArcGis = await axios.post('https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits', bodyFD, bodyFD.getHeaders());
-        console.log(' \n\n\n\n\n\n createonArcgis \n\n\n\n\n', createOnArcGis.data, createOnArcGis.status, '\n\n\n\n ************* \n\n\n\n\n');
-        // console.log('GEOM \n\n', JSON.parse(geom));
+        const dataArcGis = await insertIntoArcGis(geom);
+        result.push(dataArcGis);
         // change sponsor by jurisdiction
         // we can have a lot jurisdiction separated by comma. in a ford
         // poner if para los dos roles https://trello.com/c/xfBIveVT/1745-create-project-todos-types-agregar-el-checkbox-deseleccionado-por-defecto-y-label-solo-para-usuarios-mhfd-senior-managers-y-mhfd
