@@ -24,43 +24,33 @@ const multer = Multer({
     fileSize: 50 * 1024 * 1024
   }
 });
-const generateRangom = (low, up) => {
-  const u = Math.max(low, up);
-  const l = Math.min(low, up);
-  const diff = u - l;
-  const r = Math.floor(Math.random() * (diff + 1)); //'+1' because Math.random() returns 0..0.99, it does not include 'diff' value, so we do +1, so 'diff + 1' won't be included, but just 'diff' value will be.
-  
-  return l + r; //add the random number that was selected within distance between low and up to the lower limit.  
-}
-const createRandomGeomOnARCGIS = (coordinates, projectname, token) => {
-  // const formData = new FormData();
-  const newGEOM = [{"geometry":{"paths":[ [] ],"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0, "projectName": projectname}}];
-  newGEOM[0].geometry.paths[0] = coordinates;
-  // formData.append('f', 'json');
-  // formData.append('token', token);
-  // formData.append('adds', '[{"geometry":{"paths":[[[-11806858.969765771,4881317.227901084],[-11572350.166986963,4872144.784506868],[-11767417.463170638,4742507.584535271],[-11576630.640570931,4746482.310006099]]],"spatialReference":{"wkid":102100,"latestWkid":3857}},"attributes":{"update_flag":0,"Component_Count":null,"projectId":null,"onbaseId":null,"projectName":"HELO BOOOOOOOO","projectType":null,"projectSubtype":null,"description":null,"status":null,"startYear":null,"completeYear":null,"sponsor":null,"coSponsor1":null,"coSponsor2":null,"coSponsor3":null,"frequency":null,"maintenanceEligibility":null,"ownership":null,"acquisitionAnticipatedDate":null,"acquisitionProgress":null,"additionalCostDescription":null,"overheadCostDescription":null,"consultant":null,"contractor":null,"LGManager":null,"mhfdManager":null,"serviceArea":null,"county":null,"jurisdiction":null,"streamName":null,"taskSedimentRemoval":null,"taskTreeThinning":null,"taskBankStabilization":null,"taskDrainageStructure":null,"taskRegionalDetention":null,"goalFloodRisk":null,"goalWaterQuality":null,"goalStabilization":null,"goalCapRecreation":null,"goalCapVegetation":null,"goalStudyOvertopping":null,"goalStudyConveyance":null,"goalStudyPeakFlow":null,"goalStudyDevelopment":null,"workPlanYr1":null,"workPlanYr2":null,"workPlanYr3":null,"workPlanYr4":null,"workPlanYr5":null,"attachments":null,"coverImage":null,"Component_Cost":null,"CreationDate":null,"Creator":null,"EditDate":null,"Editor":null,"MP_WR_ID":null,"dataSource":null,"currentWorkPlan":null,"mhfdDollarsRequested":null,"mhfdDollarsAllocated":null,"estimatedCost":null,"finalCost":null,"additionalCost":null,"overheadCost":null,"costDewatering":null,"costMobilization":null,"costTraffic":null,"costUtility":null,"costStormwater":null,"costEngineering":null,"costConstruction":null,"costLegal":null,"costContingency":null,"specialDistrict":null,"studyReason":null,"studySubreason":null}}]');
-  // // THINK HOW TO DO IT EVERYTIME BEFORE REQUEST
-  
+const createRandomGeomOnARCGIS = (coordinates, projectname, token, projectid) => {  
+  const newGEOM = [{"geometry":{"paths":[
+    [
+      [ -104.766275794, 39.555478266 ],
+      [ -104.766294493, 39.555484961 ],
+      [ -104.766341927, 39.555501637 ],
+      [ -104.766509842, 39.555560256 ]
+    ],
+    [
+      [ -104.766419325, 39.557464199 ],
+      [ -104.766439601, 39.557450942 ],
+      [ -104.766459083, 39.557437839 ],
+      [ -104.766472061, 39.55742879 ],
+      [ -104.766504109, 39.557405823 ],
+      [ -104.766601978, 39.557334949 ]
+    ]
+  ]
+  ,"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0,"projectName":projectname}}];
+  newGEOM[0].geometry.paths = coordinates;
   const formData = {
-    'f': 'json',
+    'f': 'pjson',
     'token': token,
-    'adds': '[{"geometry":{"paths":[[[-11806858.969765771,4881317.227901084],[-11572350.166986963,4872144.784506868],[-11767417.463170638,4742507.584535271],[-11576630.640570931,4746482.310006099]]],"spatialReference":{"wkid":102100,"latestWkid":3857}},"attributes":{"update_flag":0,"Component_Count":null,"projectId":null,"onbaseId":null,"projectName":"TEST NEEDLE BOOOOOO222O","projectType":null,"projectSubtype":null,"description":null,"status":null,"startYear":null,"completeYear":null,"sponsor":null,"coSponsor1":null,"coSponsor2":null,"coSponsor3":null,"frequency":null,"maintenanceEligibility":null,"ownership":null,"acquisitionAnticipatedDate":null,"acquisitionProgress":null,"additionalCostDescription":null,"overheadCostDescription":null,"consultant":null,"contractor":null,"LGManager":null,"mhfdManager":null,"serviceArea":null,"county":null,"jurisdiction":null,"streamName":null,"taskSedimentRemoval":null,"taskTreeThinning":null,"taskBankStabilization":null,"taskDrainageStructure":null,"taskRegionalDetention":null,"goalFloodRisk":null,"goalWaterQuality":null,"goalStabilization":null,"goalCapRecreation":null,"goalCapVegetation":null,"goalStudyOvertopping":null,"goalStudyConveyance":null,"goalStudyPeakFlow":null,"goalStudyDevelopment":null,"workPlanYr1":null,"workPlanYr2":null,"workPlanYr3":null,"workPlanYr4":null,"workPlanYr5":null,"attachments":null,"coverImage":null,"Component_Cost":null,"CreationDate":null,"Creator":null,"EditDate":null,"Editor":null,"MP_WR_ID":null,"dataSource":null,"currentWorkPlan":null,"mhfdDollarsRequested":null,"mhfdDollarsAllocated":null,"estimatedCost":null,"finalCost":null,"additionalCost":null,"overheadCost":null,"costDewatering":null,"costMobilization":null,"costTraffic":null,"costUtility":null,"costStormwater":null,"costEngineering":null,"costConstruction":null,"costLegal":null,"costContingency":null,"specialDistrict":null,"studyReason":null,"studySubreason":null}}]'
-  }
+    'adds': JSON.stringify(newGEOM)
+  };
   return formData;
-  // datasets.postDataMultipart('https://gis.mhfd.org/server/rest/services/Confluence/mhfd_projects_created_dev/FeatureServer/0/applyedits', formData).then(res => {
-  //   console.log('return create of geom', res);
-  // });
 };
 const getAuthenticationFormData = () => {
-  // const formData = new FormData();
-  // formData.append('username', 'ricardo_confluence');
-  // formData.append('password', 'M!l3H!gh$m$');
-  // formData.append('client', 'referer');
-  // // THIS IP IS MOMENTARILY TO TEST TODO: add to env
-  // formData.append('ip', '181.188.178.182');
-  // formData.append('expiration', '60');
-  // formData.append('f', 'pjson');
-  // formData.append('referer', 'localhost');
   const formData = {
     'username': 'ricardo_confluence',
     'password': 'M!l3H!gh$m$',
@@ -93,28 +83,37 @@ router.get('/token-url', async (req, res) => {
     return res.status(205).send(response);
 
 });
-const insertIntoArcGis = async (geom) => {
+
+router.get('/sync', async (req, res) => {
+
+});
+
+const insertIntoArcGis = async (geom, projectid, projectname) => {
   try {
     const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
     const fd = getAuthenticationFormData();
     const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
     const TOKEN = JSON.parse(token_data.body).token;
-    const bodyFD = createRandomGeomOnARCGIS(JSON.parse(geom).coordinates, 'cleanStringValue(projectname)', TOKEN);
+    const bodyFD = createRandomGeomOnARCGIS(JSON.parse(geom).coordinates, cleanStringValue(projectname), TOKEN, projectid);
     const createOnArcGis = await needle('post','https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits', bodyFD, { multipart: true });
-    console.log('createona', createOnArcGis.statusCode, '\n\n\n\n ************* \n\n', createOnArcGis.body);
+    console.log('create on arc gis', createOnArcGis.statusCode, createOnArcGis.body);
     if (createOnArcGis.statusCode == 200) {
+      if (createOnArcGis.body.error) {
+        return { successArcGis: false, error: createOnArcGis.body.error };  
+      }
       return { successArcGis: createOnArcGis.body.addResults[0].success };
     } else {
-      console.log('geojjj', geom);
       return { successArcGis: false };
     }
   } catch(e) {
+    console.log('error at insert into arcgis', e);
     return {
       successArcGis: false,
       error: e
     }
   }  
 }
+
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const { isWorkPlan, projectname, description, servicearea, county, geom,
@@ -187,7 +186,8 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
-        const dataArcGis = await insertIntoArcGis(geom);
+        console.log('about to projectid', projectId);
+        const dataArcGis = await insertIntoArcGis(geom, projectId, cleanStringValue(projectname));
         result.push(dataArcGis);
         // change sponsor by jurisdiction
         // we can have a lot jurisdiction separated by comma. in a ford
