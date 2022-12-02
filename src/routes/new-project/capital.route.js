@@ -74,10 +74,9 @@ const getTokenArcGis = async () => {
   const TOKEN = JSON.parse(token_data.body).token;
   return TOKEN;
 }
-const getGeomsToUpdate = async () => {
+const getGeomsToUpdate = async (TOKEN) => {
   try {
     const LIST_ARCGIS = `https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/query?where=update_flag%3D1&objectIds=&time=&geometry=&geometryType=esriGeometryPolyline&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=projectname%2C+update_flag%2C+projectid%2C+OBJECTID&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&gdbVersion=&historicMoment=&returnDistinctValues=false&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&multipatchOption=xyFootprint&resultOffset=&resultRecordCount=&returnTrueCurves=false&returnExceededLimitFeatures=false&quantizationParameters=&returnCentroid=false&sqlFormat=none&resultType=&featureEncoding=esriDefault&datumTransformation=&f=geojson`;
-    const TOKEN = await getTokenArcGis();
     var header = {
       headers: {
           'Authorization': `Bearer ${TOKEN}`
@@ -104,9 +103,64 @@ const getGeomsToUpdate = async () => {
     }
   }
 }
+const deleteFromCarto = async (projectid, geojson) => {
+  try {
+    const deletequery = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
+    const query = {
+      q: deletequery
+    };
+    const data = await needle('post', CARTO_URL, query, { json: true });
+    if (data.statusCode === 200) {
+      return {
+        success: true
+      }
+    }
+  } catch (error) {
+    console.erro('error at delete query', error);
+    return {
+      success: false,
+      error: error
+    }
+  }
+}
+const updateFlagArcGis = async (objectid, value, TOKEN) => {
+  try {
+    const URL_UPDATE_ATTRIB = `https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits`;
+    const formData = {
+      'f': 'json',
+      'token': TOKEN,
+      'updates': JSON.stringify([{"attributes":{"OBJECTID":objectid,"update_flag":value, "projectName":"editedname"}}])
+    };
+    const updateFlagAG = await needle('post', URL_UPDATE_ATTRIB, formData, { multipart: true });
+    if (updateFlagAG.statusCode === 200) {
+      return {
+        success: true,
+        updated: updateFlagAG.body
+      }
+    } else {
+
+    }
+  } catch(error) {
+    console.error('error at update flag arcgis', error);
+    return {
+      success: false,
+      error: error
+    }
+  }
+}
+
 router.get('/sync', async (req, res) => {
-  const geoms = await getGeomsToUpdate();
-  return res.send(geoms);
+  const TOKEN = await getTokenArcGis();
+  // const geoms = await getGeomsToUpdate(TOKEN); // here I have the geoms in geojson
+  // necesitaria 
+  // 1 save the geom to carto
+  // update the update_flag in aRCGIS
+  // const deleteFC = await deleteFromCarto('1000558','non');
+  const upflag = await updateFlagArcGis(4484, 0, TOKEN);
+  return res.send({
+    // geoms,
+    upflag
+  });
 });
 
 const insertIntoArcGis = async (geom, projectid, projectname) => {
