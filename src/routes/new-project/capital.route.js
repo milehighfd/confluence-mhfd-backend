@@ -25,23 +25,7 @@ const multer = Multer({
   }
 });
 const createRandomGeomOnARCGIS = (coordinates, projectname, token, projectid) => {  
-  const newGEOM = [{"geometry":{"paths":[
-    [
-      [ -104.766275794, 39.555478266 ],
-      [ -104.766294493, 39.555484961 ],
-      [ -104.766341927, 39.555501637 ],
-      [ -104.766509842, 39.555560256 ]
-    ],
-    [
-      [ -104.766419325, 39.557464199 ],
-      [ -104.766439601, 39.557450942 ],
-      [ -104.766459083, 39.557437839 ],
-      [ -104.766472061, 39.55742879 ],
-      [ -104.766504109, 39.557405823 ],
-      [ -104.766601978, 39.557334949 ]
-    ]
-  ]
-  ,"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0,"projectName":projectname}}];
+  const newGEOM = [{"geometry":{"paths":[ ] ,"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0,"projectName":projectname, "projectId": projectid}}];
   newGEOM[0].geometry.paths = coordinates;
   const formData = {
     'f': 'pjson',
@@ -83,9 +67,46 @@ router.get('/token-url', async (req, res) => {
     return res.status(205).send(response);
 
 });
-
+const getTokenArcGis = async () => {
+  const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
+  const fd = getAuthenticationFormData();
+  const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
+  const TOKEN = JSON.parse(token_data.body).token;
+  return TOKEN;
+}
+const getGeomsToUpdate = async () => {
+  try {
+    const LIST_ARCGIS = `https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/query?where=update_flag%3D1&objectIds=&time=&geometry=&geometryType=esriGeometryPolyline&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=projectname%2C+update_flag%2C+projectid%2C+OBJECTID&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&gdbVersion=&historicMoment=&returnDistinctValues=false&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&multipatchOption=xyFootprint&resultOffset=&resultRecordCount=&returnTrueCurves=false&returnExceededLimitFeatures=false&quantizationParameters=&returnCentroid=false&sqlFormat=none&resultType=&featureEncoding=esriDefault&datumTransformation=&f=geojson`;
+    const TOKEN = await getTokenArcGis();
+    var header = {
+      headers: {
+          'Authorization': `Bearer ${TOKEN}`
+      },
+      accept: 'application/json',
+      content_type: 'application/json'
+    };
+    const allGeoms = await needle('get', LIST_ARCGIS, header);
+    if (allGeoms.statusCode === 200) {
+      return {
+        success: true,
+        geoms: JSON.parse(allGeoms.body).features
+      }
+    } else {
+      return {
+        success: false
+      }
+    }
+  } catch(error) {
+    console.log('error at geom update', error);
+    return {
+      success: false,
+      error: error
+    }
+  }
+}
 router.get('/sync', async (req, res) => {
-
+  const geoms = await getGeomsToUpdate();
+  return res.send(geoms);
 });
 
 const insertIntoArcGis = async (geom, projectid, projectname) => {
