@@ -103,7 +103,34 @@ const getGeomsToUpdate = async (TOKEN) => {
     }
   }
 }
-const deleteFromCarto = async (projectid, geojson) => {
+
+const insertGeojsonToCarto = async (geojson, projectId, projectname) => {
+  try {
+    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectid, projectname) VALUES(ST_GeomFromGeoJSON('${geojson}'), ${projectId}, '${projectname}')`;
+    const query = {
+      q: insertQuery
+    };
+    const data = await needle('post', CARTO_URL, query, { json: true });
+    if (data.statusCode === 200) {
+      return {
+        success: true
+      }
+    } else {
+      console.log('FAILED AT INSERT GEOJSON TO CARTO', data.statusCode, data.body);
+      return {
+        success: false
+      }
+    }
+  } catch (error) {
+    console.error('Error at insert into carto geojson', error);
+    return {
+      sucess: false,
+      error: error
+    }
+  }
+}
+
+const deleteFromCarto = async (projectid) => {
   try {
     const deletequery = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
     const query = {
@@ -114,9 +141,13 @@ const deleteFromCarto = async (projectid, geojson) => {
       return {
         success: true
       }
+    } else {
+      return {
+        success: false
+      }
     }
   } catch (error) {
-    console.erro('error at delete query', error);
+    console.error('error at delete query', error);
     return {
       success: false,
       error: error
@@ -129,16 +160,18 @@ const updateFlagArcGis = async (objectid, value, TOKEN) => {
     const formData = {
       'f': 'json',
       'token': TOKEN,
-      'updates': JSON.stringify([{"attributes":{"OBJECTID":objectid,"update_flag":value, "projectName":"editedname"}}])
+      'updates': JSON.stringify([{"attributes":{"OBJECTID":objectid,"update_flag":value}}])
     };
     const updateFlagAG = await needle('post', URL_UPDATE_ATTRIB, formData, { multipart: true });
-    if (updateFlagAG.statusCode === 200) {
+    if (updateFlagAG.statusCode === 200 && updateFlagAG.body.updateResults) {
       return {
         success: true,
-        updated: updateFlagAG.body
+        updated: updateFlagAG.body.updateResults.success
       }
     } else {
-
+      return {
+        success: false,
+      }
     }
   } catch(error) {
     console.error('error at update flag arcgis', error);
@@ -151,16 +184,55 @@ const updateFlagArcGis = async (objectid, value, TOKEN) => {
 
 router.get('/sync', async (req, res) => {
   const TOKEN = await getTokenArcGis();
-  // const geoms = await getGeomsToUpdate(TOKEN); // here I have the geoms in geojson
-  // necesitaria 
-  // 1 save the geom to carto
-  // update the update_flag in aRCGIS
-  // const deleteFC = await deleteFromCarto('1000558','non');
-  const upflag = await updateFlagArcGis(4484, 0, TOKEN);
-  return res.send({
-    // geoms,
-    upflag
-  });
+  const geoms = await getGeomsToUpdate(TOKEN); // here I have the geoms in geojson
+  let isCorrectSync = false;
+  const syncGeoms = [];
+  // TODO: save the geom to carto
+  console.log('SYNC ******* \n\n Get Geometries from ArcGis', geoms.success, geoms.geoms.length);
+  if ( geoms.success) {
+    const TOTAL_GEOMS = geoms.geoms.length;
+    for(let i = 0; i < geoms.geoms.length; ++i) {
+      if (i > 2) break;
+      let currentGeojsonToUpdate = geoms.geoms[i];
+      const currentProjectId = currentGeojsonToUpdate.properties.projectId;
+      const currentObjectId = currentGeojsonToUpdate.properties.OBJECTID;
+      const currentProjectName = currentGeojsonToUpdate.properties.projectName;
+      const deleteFC = await deleteFromCarto(currentProjectId); // its working, is deleting indeed
+      console.log('Delete from Carto ', deleteFC);
+      if (deleteFC.success) {
+        const inserted = await insertGeojsonToCarto(JSON.stringify(currentGeojsonToUpdate.geometry), currentProjectId, currentProjectName);
+        console.log('SYNC ******* \n\n Inserted into Carto', inserted);
+        if (inserted.success) {
+          const upflag = await updateFlagArcGis(currentObjectId, 0, TOKEN);
+          console.log('SYNC ******* \n\n Updated in ArcGIS');
+          if (upflag.success) {
+            console.log('Complete ', i,'/',TOTAL_GEOMS);
+            isCorrectSync = true;
+            syncGeoms.push({
+              projectid: currentProjectId,
+              projectname: currentProjectName,
+              sync: isCorrectSync
+            });
+          }
+        } else {
+          console.error('failed at insert into Carto');
+          syncGeoms.push({
+            projectid: currentProjectId,
+            projectname: currentProjectName,
+            sync: false
+          });
+        }
+      } else {
+        console.error('failed in delete Geom from Carto');
+        syncGeoms.push({
+          projectid: currentProjectId,
+          projectname: currentProjectName,
+          sync: false
+        });
+      }  
+    };
+  }
+  return res.send(syncGeoms);
 });
 
 const insertIntoArcGis = async (geom, projectid, projectname) => {
