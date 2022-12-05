@@ -139,7 +139,8 @@ const deleteFromCarto = async (projectid) => {
     const data = await needle('post', CARTO_URL, query, { json: true });
     if (data.statusCode === 200) {
       return {
-        success: true
+        success: true,
+        body: data.body
       }
     } else {
       return {
@@ -192,7 +193,7 @@ router.get('/sync', async (req, res) => {
   if ( geoms.success) {
     const TOTAL_GEOMS = geoms.geoms.length;
     for(let i = 0; i < geoms.geoms.length; ++i) {
-      if (i > 2) break;
+      // if (i > 2) break;
       let currentGeojsonToUpdate = geoms.geoms[i];
       const currentProjectId = currentGeojsonToUpdate.properties.projectId;
       const currentObjectId = currentGeojsonToUpdate.properties.OBJECTID;
@@ -212,6 +213,13 @@ router.get('/sync', async (req, res) => {
               projectid: currentProjectId,
               projectname: currentProjectName,
               sync: isCorrectSync
+            });
+          } else {
+            syncGeoms.push({
+              projectid: currentProjectId,
+              projectname: currentProjectName,
+              sync: false,
+              error: upflag.error ? upflag.error : 'failed at update flag'
             });
           }
         } else {
