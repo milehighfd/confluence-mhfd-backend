@@ -24,61 +24,251 @@ const multer = Multer({
     fileSize: 50 * 1024 * 1024
   }
 });
-const generateRangom = (low, up) => {
-  const u = Math.max(low, up);
-  const l = Math.min(low, up);
-  const diff = u - l;
-  const r = Math.floor(Math.random() * (diff + 1)); //'+1' because Math.random() returns 0..0.99, it does not include 'diff' value, so we do +1, so 'diff + 1' won't be included, but just 'diff' value will be.
-  
-  return l + r; //add the random number that was selected within distance between low and up to the lower limit.  
+const createRandomGeomOnARCGIS = (coordinates, projectname, token, projectid) => {  
+  const newGEOM = [{"geometry":{"paths":[ ] ,"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0,"projectName":projectname, "projectId": projectid}}];
+  newGEOM[0].geometry.paths = coordinates;
+  const formData = {
+    'f': 'pjson',
+    'token': token,
+    'adds': JSON.stringify(newGEOM)
+  };
+  return formData;
+};
+const getAuthenticationFormData = () => {
+  const formData = {
+    'username': 'ricardo_confluence',
+    'password': 'M!l3H!gh$m$',
+    'client': 'referer',
+    'ip': '181.188.178.182',
+    'expiration': '60',
+    'f': 'pjson',
+    'referer': 'localhost'
+  };
+  return formData;
 }
 
 router.get('/token-url', async (req, res) => {
-  const getAuthenticationFormData = () => {
-    const formData = new FormData();
-    console.log('my fd ', formData);
-    formData.append('username', 'ricardo_confluence');
-    formData.append('password', 'M!l3H!gh$m$');
-    formData.append('client', 'ip');
-    // THIS IP IS MOMENTARILY TO TEST TODO: add to env
-    formData.append('ip', '181.188.178.182');
-    formData.append('expiration', '60');
-    formData.append('f', 'pjson');
-    formData.append('referer', '');
-    return formData;
-  }
-  /*const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
-  const fd = getAuthenticationFormData();
-  console.log('formData', fd);
-  axios({
-    method: "post",
-    url: URL_TOKEN,
-    data: fd,
-    headers: {  },
-  })
-    .then(function (response) {
-      //handle success
-      console.log(response);
-      res.send(response);
-    })
-    .catch(function (response) {
-      //handle error
-      console.log(response);
-      res.send(response);
-    });*/
     const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
     const fd = getAuthenticationFormData();
-    console.log('formData', fd);
-    axios.post(URL_TOKEN, fd, { headers: fd.getHeaders() })
-    .then((re) => {
-      console.log("XXX JSON XXX", re);
-      res.send(re.data)
-    })
-    .catch((err) => {
-      console.log("XXX JSON XXX", err);
-      res.send(err);
-    });
-})
+    // const token_data = await axios.post(URL_TOKEN, fd, { headers: fd.getHeaders() })
+    const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
+
+    const TOKEN = JSON.parse(token_data.body).token;
+    
+    const bodyFD = createRandomGeomOnARCGIS('non', 'cleanStringValue(projectname)', TOKEN);
+    const createOnArcGis = await needle('post','https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits', bodyFD, { multipart: true });
+    console.log('createona', createOnArcGis.statusCode, '\n\n\n\n ************* \n\n', createOnArcGis.body);
+    const response = {
+      token: TOKEN,
+      createStatus: createOnArcGis.statusCode,
+      data: createOnArcGis.body,
+      geom: '[{"geometry":{"paths":[[[-11806858.969765771,4881317.227901084],[-11572350.166986963,4872144.784506868],[-11767417.463170638,4742507.584535271],[-11576630.640570931,4746482.310006099]]],"spatialReference":{"wkid":102100,"latestWkid":3857}},"attributes":{"update_flag":0,"Component_Count":null,"projectId":null,"onbaseId":null,"projectName":"TEST NEEDLE BOOOOOO222O","projectType":null,"projectSubtype":null,"description":null,"status":null,"startYear":null,"completeYear":null,"sponsor":null,"coSponsor1":null,"coSponsor2":null,"coSponsor3":null,"frequency":null,"maintenanceEligibility":null,"ownership":null,"acquisitionAnticipatedDate":null,"acquisitionProgress":null,"additionalCostDescription":null,"overheadCostDescription":null,"consultant":null,"contractor":null,"LGManager":null,"mhfdManager":null,"serviceArea":null,"county":null,"jurisdiction":null,"streamName":null,"taskSedimentRemoval":null,"taskTreeThinning":null,"taskBankStabilization":null,"taskDrainageStructure":null,"taskRegionalDetention":null,"goalFloodRisk":null,"goalWaterQuality":null,"goalStabilization":null,"goalCapRecreation":null,"goalCapVegetation":null,"goalStudyOvertopping":null,"goalStudyConveyance":null,"goalStudyPeakFlow":null,"goalStudyDevelopment":null,"workPlanYr1":null,"workPlanYr2":null,"workPlanYr3":null,"workPlanYr4":null,"workPlanYr5":null,"attachments":null,"coverImage":null,"Component_Cost":null,"CreationDate":null,"Creator":null,"EditDate":null,"Editor":null,"MP_WR_ID":null,"dataSource":null,"currentWorkPlan":null,"mhfdDollarsRequested":null,"mhfdDollarsAllocated":null,"estimatedCost":null,"finalCost":null,"additionalCost":null,"overheadCost":null,"costDewatering":null,"costMobilization":null,"costTraffic":null,"costUtility":null,"costStormwater":null,"costEngineering":null,"costConstruction":null,"costLegal":null,"costContingency":null,"specialDistrict":null,"studyReason":null,"studySubreason":null}}]'
+    };
+    return res.status(205).send(response);
+
+});
+const getTokenArcGis = async () => {
+  const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
+  const fd = getAuthenticationFormData();
+  const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
+  const TOKEN = JSON.parse(token_data.body).token;
+  return TOKEN;
+}
+const getGeomsToUpdate = async (TOKEN) => {
+  try {
+    const LIST_ARCGIS = `https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/query?where=update_flag%3D1&objectIds=&time=&geometry=&geometryType=esriGeometryPolyline&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=projectname%2C+update_flag%2C+projectid%2C+OBJECTID&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&gdbVersion=&historicMoment=&returnDistinctValues=false&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&multipatchOption=xyFootprint&resultOffset=&resultRecordCount=&returnTrueCurves=false&returnExceededLimitFeatures=false&quantizationParameters=&returnCentroid=false&sqlFormat=none&resultType=&featureEncoding=esriDefault&datumTransformation=&f=geojson`;
+    var header = {
+      headers: {
+          'Authorization': `Bearer ${TOKEN}`
+      },
+      accept: 'application/json',
+      content_type: 'application/json'
+    };
+    const allGeoms = await needle('get', LIST_ARCGIS, header);
+    if (allGeoms.statusCode === 200) {
+      return {
+        success: true,
+        geoms: JSON.parse(allGeoms.body).features
+      }
+    } else {
+      return {
+        success: false
+      }
+    }
+  } catch(error) {
+    console.log('error at geom update', error);
+    return {
+      success: false,
+      error: error
+    }
+  }
+}
+
+const insertGeojsonToCarto = async (geojson, projectId, projectname) => {
+  try {
+    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectid, projectname) VALUES(ST_GeomFromGeoJSON('${geojson}'), ${projectId}, '${projectname}')`;
+    const query = {
+      q: insertQuery
+    };
+    const data = await needle('post', CARTO_URL, query, { json: true });
+    if (data.statusCode === 200) {
+      return {
+        success: true
+      }
+    } else {
+      console.log('FAILED AT INSERT GEOJSON TO CARTO', data.statusCode, data.body);
+      return {
+        success: false
+      }
+    }
+  } catch (error) {
+    console.error('Error at insert into carto geojson', error);
+    return {
+      sucess: false,
+      error: error
+    }
+  }
+}
+
+const deleteFromCarto = async (projectid) => {
+  try {
+    const deletequery = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
+    const query = {
+      q: deletequery
+    };
+    const data = await needle('post', CARTO_URL, query, { json: true });
+    if (data.statusCode === 200) {
+      return {
+        success: true,
+        body: data.body
+      }
+    } else {
+      return {
+        success: false
+      }
+    }
+  } catch (error) {
+    console.error('error at delete query', error);
+    return {
+      success: false,
+      error: error
+    }
+  }
+}
+const updateFlagArcGis = async (objectid, value, TOKEN) => {
+  try {
+    const URL_UPDATE_ATTRIB = `https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits`;
+    const formData = {
+      'f': 'json',
+      'token': TOKEN,
+      'updates': JSON.stringify([{"attributes":{"OBJECTID":objectid,"update_flag":value}}])
+    };
+    const updateFlagAG = await needle('post', URL_UPDATE_ATTRIB, formData, { multipart: true });
+    if (updateFlagAG.statusCode === 200 && updateFlagAG.body.updateResults) {
+      return {
+        success: true,
+        updated: updateFlagAG.body.updateResults.success
+      }
+    } else {
+      return {
+        success: false,
+      }
+    }
+  } catch(error) {
+    console.error('error at update flag arcgis', error);
+    return {
+      success: false,
+      error: error
+    }
+  }
+}
+
+router.get('/sync', async (req, res) => {
+  const TOKEN = await getTokenArcGis();
+  const geoms = await getGeomsToUpdate(TOKEN); // here I have the geoms in geojson
+  let isCorrectSync = false;
+  const syncGeoms = [];
+  // TODO: save the geom to carto
+  console.log('SYNC ******* \n\n Get Geometries from ArcGis', geoms.success, geoms.geoms.length);
+  if ( geoms.success) {
+    const TOTAL_GEOMS = geoms.geoms.length;
+    for(let i = 0; i < geoms.geoms.length; ++i) {
+      // if (i > 2) break;
+      let currentGeojsonToUpdate = geoms.geoms[i];
+      const currentProjectId = currentGeojsonToUpdate.properties.projectId;
+      const currentObjectId = currentGeojsonToUpdate.properties.OBJECTID;
+      const currentProjectName = currentGeojsonToUpdate.properties.projectName;
+      const deleteFC = await deleteFromCarto(currentProjectId); // its working, is deleting indeed
+      console.log('Delete from Carto ', deleteFC);
+      if (deleteFC.success) {
+        const inserted = await insertGeojsonToCarto(JSON.stringify(currentGeojsonToUpdate.geometry), currentProjectId, currentProjectName);
+        console.log('SYNC ******* \n\n Inserted into Carto', inserted);
+        if (inserted.success) {
+          const upflag = await updateFlagArcGis(currentObjectId, 0, TOKEN);
+          console.log('SYNC ******* \n\n Updated in ArcGIS');
+          if (upflag.success) {
+            console.log('Complete ', i,'/',TOTAL_GEOMS);
+            isCorrectSync = true;
+            syncGeoms.push({
+              projectid: currentProjectId,
+              projectname: currentProjectName,
+              sync: isCorrectSync
+            });
+          } else {
+            syncGeoms.push({
+              projectid: currentProjectId,
+              projectname: currentProjectName,
+              sync: false,
+              error: upflag.error ? upflag.error : 'failed at update flag'
+            });
+          }
+        } else {
+          console.error('failed at insert into Carto');
+          syncGeoms.push({
+            projectid: currentProjectId,
+            projectname: currentProjectName,
+            sync: false
+          });
+        }
+      } else {
+        console.error('failed in delete Geom from Carto');
+        syncGeoms.push({
+          projectid: currentProjectId,
+          projectname: currentProjectName,
+          sync: false
+        });
+      }  
+    };
+  }
+  return res.send(syncGeoms);
+});
+
+const insertIntoArcGis = async (geom, projectid, projectname) => {
+  try {
+    const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
+    const fd = getAuthenticationFormData();
+    const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
+    const TOKEN = JSON.parse(token_data.body).token;
+    const bodyFD = createRandomGeomOnARCGIS(JSON.parse(geom).coordinates, cleanStringValue(projectname), TOKEN, projectid);
+    const createOnArcGis = await needle('post','https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits', bodyFD, { multipart: true });
+    console.log('create on arc gis', createOnArcGis.statusCode, createOnArcGis.body);
+    if (createOnArcGis.statusCode == 200) {
+      if (createOnArcGis.body.error) {
+        return { successArcGis: false, error: createOnArcGis.body.error };  
+      }
+      return { successArcGis: createOnArcGis.body.addResults[0].success };
+    } else {
+      return { successArcGis: false };
+    }
+  } catch(e) {
+    console.log('error at insert into arcgis', e);
+    return {
+      successArcGis: false,
+      error: e
+    }
+  }  
+}
+
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const { isWorkPlan, projectname, description, servicearea, county, geom,
@@ -151,50 +341,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
-        const createRandomGeomOnARCGIS = (coordinates, projectname) => {
-          console.log('hello create random geom');
-          const formData = new FormData();
-          const newGEOM = [{"geometry":{"paths":[ [] ],"spatialReference" : {"wkid" : 4326}},"attributes":{"Date":null,"Name": projectname}}];
-          newGEOM[0].geometry.paths[0] = coordinates;
-          formData.append('f', 'json');
-          formData.append('adds', JSON.stringify(newGEOM));
-          // THINK HOW TO DO IT EVERYTIME BEFORE REQUEST
-          console.log('form data \n\n', formData);
-          const TOKEN = 'aG1t6m3_I642blhwjaaCSdboUrbStlt3ooz3Y9k3hHxcuWmZxVtXDYpr8q7AC7-tFTdLx6zbR5btblThGvsSsKceF0kUJDTtDuYwvYH1yIzlVakHiRVXoBXXPsBpptA6A4SUbG-XQN8Vda7QSJJDmw..';
-          formData.append('token', TOKEN);
-          return formData;
-          // datasets.postDataMultipart('https://gis.mhfd.org/server/rest/services/Confluence/mhfd_projects_created_dev/FeatureServer/0/applyedits', formData).then(res => {
-          //   console.log('return create of geom', res);
-          // });
-        };
-        const getAuthenticationFormData = () => {
-          const formData = new FormData();
-          formData.append('username', 'ricardo_confluence');
-          formData.append('password', 'M!l3H!gh$m$');
-          formData.append('client', 'ip');
-          // THIS IP IS MOMENTARILY TO TEST TODO: add to env
-          formData.append('ip', '181.188.178.182');
-          formData.append('expiration', '60');
-          formData.append('f', 'pjson');
-          formData.append('referer', '');
-          return formData;
-        }
-        const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
-        const fd = getAuthenticationFormData();
-        console.log('formData', fd);
-        axios.post(URL_TOKEN, fd)
-        .then((res) => {
-          console.log("XXX JSON XXX", res);
-        })
-        .catch((err) => {
-          console.log("XXX JSON XXX", err);
-        });
-        // const bodyFD = createRandomGeomOnARCGIS(JSON.parse(geom).coordinates,cleanStringValue(projectname));
-        // const createOnArcGis = await needle('post', 'https://gis.mhfd.org/server/rest/services/Confluence/mhfd_projects_created_dev/FeatureServer/0/applyedits', bodyFD);
-        // console.log(' \n\n\n\n\n\n createonArcgis \n\n\n\n\n', createOnArcGis);
-        // console.log('GEOM \n\n', JSON.parse(geom));
+        console.log('about to projectid', projectId);
+        const dataArcGis = await insertIntoArcGis(geom, projectId, cleanStringValue(projectname));
+        result.push(dataArcGis);
         // change sponsor by jurisdiction
-        // we can have a lot jurisdiction separated by comma. in a for
+        // we can have a lot jurisdiction separated by comma. in a ford
         // poner if para los dos roles https://trello.com/c/xfBIveVT/1745-create-project-todos-types-agregar-el-checkbox-deseleccionado-por-defecto-y-label-solo-para-usuarios-mhfd-senior-managers-y-mhfd
         await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR, isWorkPlan);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
