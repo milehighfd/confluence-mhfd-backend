@@ -7,7 +7,7 @@ const getAll = (projectid) => {
   try {
     const list = ProjectComponent.findAll({
       where: {
-        projectid: projectid
+        project_id: projectid
       }
     });
     return list;
@@ -20,7 +20,7 @@ const getAll = (projectid) => {
 const deleteByProjectId= async (projectid) => {
   const project = ProjectComponent.destroy({
     where: {
-      projectid: projectid 
+      project_id: projectid 
     }});
   if (project) {
     logger.info('ProjectComponent destroyed ');

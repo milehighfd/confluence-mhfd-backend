@@ -1,20 +1,24 @@
 
 export default (sequelize, DataType) => {
-  const ProjectComponent = sequelize.define('project-component', {
-    _id: {
-      type: DataType.UUID,
-      defaultValue: DataType.UUIDV4,
+  const ProjectComponent = sequelize.define('project_component', {
+    project_component_id: {
+      type: DataType.INTEGER,
       primaryKey: true
     },
-    projectid: {
+    project_id: {
       type: DataType.INTEGER
     },
-    objectid: {
+    component_id: {
       type: DataType.INTEGER
     },
-    table: {
+    source_table_name: {
       type: DataType.STRING
     }  
+  }, {
+    freezeTableName: true,
+    tableName: 'project_component',
+    createdAt: false,
+    updatedAt: false
   });
 
   return ProjectComponent;

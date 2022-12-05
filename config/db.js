@@ -45,7 +45,6 @@ db.codeCostType = require('../models/code_cost_type.model')(sequelize, Sequelize
 db.projectCost = require('../models/project_cost.model')(sequelize, Sequelize);
 db.projectStatusActionItemTracking = require('../models/project_status_action_item_tracking.model')(sequelize, Sequelize);
 db.codeProjectType = require('../models/code_project_type.model')(sequelize, Sequelize);
-db.projectComponent = require('../models/project_component.model')(sequelize, Sequelize);
 db.projectStatus = require('../models/project_status.model')(sequelize, Sequelize);
 db.codePhaseType = require('../models/code_phase_type.model')(sequelize, Sequelize);
 db.stateCounty = require('../models/state_county.model')(sequelize, Sequelize);

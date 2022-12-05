@@ -1035,6 +1035,7 @@ router.get('/get-components-by-projectid/:projectid', [auth], async (req, res) =
     return res.send(components);
   } catch (error) {
     res.status(500).send(error);
+    console.log(error);
   }
 });
 

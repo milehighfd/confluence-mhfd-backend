@@ -17,24 +17,16 @@ const listProjects = async (req, res) => {
 };
 
 router.get('/', async (req, res) => {
-  await db.sequelize.transaction({ type: db.Sequelize.Transaction.TYPES.SERIALIZABLE }, async (transaction) => {
-    db.sequelize.query('SET IDENTITY_INSERT [project] ON;', { transaction });
-    let x = new Projects({
-      project_name: 'test',
-      code_project_type_id: 5,
-      // code_project_subtype_id: 3,
-      start_date: '2022-10-24 21:54:00.000',
-      created_date: '2022-10-24 21:54:00.000',
-      modified_date: '2022-10-24 21:54:00.000',
-      last_modified_by: 'jose',
-      created_by: 'jose'
-    }, {
-      transaction
-    });
-    await x.save();
-    res.send(x);
- });
-
+  const insertQuery = `INSERT INTO project (project_name, description, code_project_type_id, start_date, current_project_status_id, created_date, modified_date, last_modified_by, created_by)
+  OUTPUT inserted . *
+  VALUES('test-name', 'test', 5, '2007-05-09 23:59:59', 5, '2007-05-09 23:59:59', '2007-05-09 23:59:59', 'angel', 'angel')`;
+  logger.info('my query ' + insertQuery);
+  const update = await db.sequelize.query(
+    insertQuery,
+    {
+      type: db.sequelize.QueryTypes.INSERT,
+    })
+  res.send(update);
 });
 router.post('/', listProjects);
 
