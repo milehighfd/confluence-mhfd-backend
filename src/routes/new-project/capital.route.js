@@ -104,82 +104,114 @@ const getGeomsToUpdate = async (TOKEN) => {
   }
 }
 
+const sleep = m => new Promise(r => setTimeout(r, m))
+
 const insertGeojsonToCarto = async (geojson, projectId, projectname) => {
-  try {
-    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectid, projectname) VALUES(ST_GeomFromGeoJSON('${geojson}'), ${projectId}, '${projectname}')`;
-    const query = {
-      q: insertQuery
-    };
-    const data = await needle('post', CARTO_URL, query, { json: true });
-    if (data.statusCode === 200) {
-      return {
-        success: true
+  let deleteAttemp = 0;
+  let tries = 3;
+  while(true) {
+    try {
+      const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectid, projectname) VALUES(ST_GeomFromGeoJSON('${geojson}'), ${projectId}, '${projectname}')`;
+      const query = {
+        q: insertQuery
+      };
+      const data = await needle('post', CARTO_URL, query, { json: true });
+      if (data.statusCode === 200) {
+        return {
+          success: true
+        }
+      } else {
+        console.log('FAILED AT INSERT GEOJSON TO CARTO', data.statusCode, data.body);
+        if (++deleteAttemp >= tries) {
+          return {
+            success: false,
+            error: data.body
+          }
+        }
       }
-    } else {
-      console.log('FAILED AT INSERT GEOJSON TO CARTO', data.statusCode, data.body);
-      return {
-        success: false
+    } catch (error) {
+      console.error('Error at insert into carto geojson', error);
+      if (++deleteAttemp >= tries) {
+        return {
+          success: false,
+          error: error
+        }
       }
     }
-  } catch (error) {
-    console.error('Error at insert into carto geojson', error);
-    return {
-      sucess: false,
-      error: error
-    }
+    await sleep(1000);
   }
 }
 
 const deleteFromCarto = async (projectid) => {
-  try {
-    const deletequery = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
-    const query = {
-      q: deletequery
-    };
-    const data = await needle('post', CARTO_URL, query, { json: true });
-    if (data.statusCode === 200) {
-      return {
-        success: true,
-        body: data.body
+  let deleteAttemp = 0;
+  let tries = 3;
+  while (true) {
+    try {
+      const deletequery = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
+      const query = {
+        q: deletequery
+      };
+      const data = await needle('post', CARTO_URL, query, { json: true });
+      if (data.statusCode === 200) {
+        return {
+          success: true,
+          body: data.body
+        }
+      } else {
+        if (++deleteAttemp >= tries) {
+          return {
+            success: false,
+            error: 'Tried 3 attemps'
+          }
+        }
       }
-    } else {
-      return {
-        success: false
+    } catch (error) {
+      if (++deleteAttemp >= tries) {
+        return {
+          success: false,
+          error: error
+        }
       }
     }
-  } catch (error) {
-    console.error('error at delete query', error);
-    return {
-      success: false,
-      error: error
-    }
+    await sleep(1000);
   }
 }
 const updateFlagArcGis = async (objectid, value, TOKEN) => {
-  try {
-    const URL_UPDATE_ATTRIB = `https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits`;
-    const formData = {
-      'f': 'json',
-      'token': TOKEN,
-      'updates': JSON.stringify([{"attributes":{"OBJECTID":objectid,"update_flag":value}}])
-    };
-    const updateFlagAG = await needle('post', URL_UPDATE_ATTRIB, formData, { multipart: true });
-    if (updateFlagAG.statusCode === 200 && updateFlagAG.body.updateResults) {
-      return {
-        success: true,
-        updated: updateFlagAG.body.updateResults.success
+  let deleteAttemp = 0;
+  let tries = 3;
+  while(true) {
+    try {
+      const URL_UPDATE_ATTRIB = `https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits`;
+      const formData = {
+        'f': 'json',
+        'token': TOKEN,
+        'updates': JSON.stringify([{"attributes":{"OBJECTID":objectid,"update_flag":value}}])
+      };
+      const updateFlagAG = await needle('post', URL_UPDATE_ATTRIB, formData, { multipart: true });
+      if (updateFlagAG.statusCode === 200 && updateFlagAG.body.updateResults) {
+        return {
+          success: true,
+          updated: updateFlagAG.body.updateResults.success
+        }
+      } else {
+        console.log('Failed at update Flag ArcGis', deleteAttemp, updateFlagAG.body);
+        if (++deleteAttemp >= tries) {
+          return {
+            success: false,
+            error: updateFlagAG.body.error
+          }
+        }
       }
-    } else {
-      return {
-        success: false,
+    } catch(error) {
+      console.error('error at update flag arcgis', error);
+      if (++deleteAttemp >= tries) {
+        return {
+          success: false,
+          error: error
+        }
       }
     }
-  } catch(error) {
-    console.error('error at update flag arcgis', error);
-    return {
-      success: false,
-      error: error
-    }
+    await sleep(1000);
   }
 }
 
@@ -190,57 +222,62 @@ router.get('/sync', async (req, res) => {
   const syncGeoms = [];
   // TODO: save the geom to carto
   console.log('SYNC ******* \n\n Get Geometries from ArcGis', geoms.success, geoms.geoms.length);
-  if ( geoms.success) {
-    const TOTAL_GEOMS = geoms.geoms.length;
-    for(let i = 0; i < geoms.geoms.length; ++i) {
-      // if (i > 2) break;
-      let currentGeojsonToUpdate = geoms.geoms[i];
-      const currentProjectId = currentGeojsonToUpdate.properties.projectId;
-      const currentObjectId = currentGeojsonToUpdate.properties.OBJECTID;
-      const currentProjectName = currentGeojsonToUpdate.properties.projectName;
-      const deleteFC = await deleteFromCarto(currentProjectId); // its working, is deleting indeed
-      console.log('Delete from Carto ', deleteFC);
-      if (deleteFC.success) {
-        const inserted = await insertGeojsonToCarto(JSON.stringify(currentGeojsonToUpdate.geometry), currentProjectId, currentProjectName);
-        console.log('SYNC ******* \n\n Inserted into Carto', inserted);
-        if (inserted.success) {
-          const upflag = await updateFlagArcGis(currentObjectId, 0, TOKEN);
-          console.log('SYNC ******* \n\n Updated in ArcGIS');
-          if (upflag.success) {
-            console.log('Complete ', i,'/',TOTAL_GEOMS);
-            isCorrectSync = true;
-            syncGeoms.push({
-              projectid: currentProjectId,
-              projectname: currentProjectName,
-              sync: isCorrectSync
-            });
+  try {
+    if ( geoms.success) {
+      const TOTAL_GEOMS = geoms.geoms.length;
+      for(let i = 0; i < geoms.geoms.length; ++i) {
+        // if (i > 2) break;
+        let currentGeojsonToUpdate = geoms.geoms[i];
+        const currentProjectId = currentGeojsonToUpdate.properties.projectId;
+        const currentObjectId = currentGeojsonToUpdate.properties.OBJECTID;
+        const currentProjectName = currentGeojsonToUpdate.properties.projectName;
+        const deleteFC = await deleteFromCarto(currentProjectId); // its working, is deleting indeed
+        console.log('Delete from Carto ', deleteFC);
+        if (deleteFC.success) {
+          const inserted = await insertGeojsonToCarto(JSON.stringify(currentGeojsonToUpdate.geometry), currentProjectId, currentProjectName);
+          console.log('SYNC ******* \n\n Inserted into Carto', inserted);
+          if (inserted.success) {
+            const upflag = await updateFlagArcGis(currentObjectId, 0, TOKEN);
+            console.log('SYNC ******* \n\n Updated in ArcGIS');
+            if (upflag.success) {
+              console.log('Complete ', i,'/',TOTAL_GEOMS);
+              isCorrectSync = true;
+              syncGeoms.push({
+                projectid: currentProjectId,
+                projectname: currentProjectName,
+                sync: isCorrectSync
+              });
+            } else {
+              syncGeoms.push({
+                projectid: currentProjectId,
+                projectname: currentProjectName,
+                sync: false,
+                error: upflag.error ? upflag.error : 'failed at update flag'
+              });
+            }
           } else {
+            console.error('failed at insert into Carto');
             syncGeoms.push({
               projectid: currentProjectId,
               projectname: currentProjectName,
-              sync: false,
-              error: upflag.error ? upflag.error : 'failed at update flag'
+              sync: false
             });
           }
         } else {
-          console.error('failed at insert into Carto');
+          console.error('failed in delete Geom from Carto');
           syncGeoms.push({
             projectid: currentProjectId,
             projectname: currentProjectName,
             sync: false
           });
-        }
-      } else {
-        console.error('failed in delete Geom from Carto');
-        syncGeoms.push({
-          projectid: currentProjectId,
-          projectname: currentProjectName,
-          sync: false
-        });
-      }  
-    };
+        }  
+      };
+    }
+    return res.send(syncGeoms);
+
+  } catch(error) {
+    return res.send('Failed At Syncronization');
   }
-  return res.send(syncGeoms);
 });
 
 const insertIntoArcGis = async (geom, projectid, projectname) => {
