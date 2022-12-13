@@ -1118,65 +1118,66 @@ router.post('/get-coordinates', async (req, res) => {
 })
 
 router.post('/component-counter', async (req, res) => {
-   try {
-      const column = req.body.column;
-      const value = req.body.value;
-      let answer = [];
-      if (column === PROPSPROBLEMTABLES.problems[5] || column === PROPSPROBLEMTABLES.problem_boundary[5]) {
-         //console.log(column, value);
-         if (value === null || value === 0) {
-            return res.status(200).send({
-               'componentes': counter
-            });
-         } else {
-            const query = {
-               q: `select ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${getCountersProblems(PROBLEM_TABLE, column)} from ${PROBLEM_TABLE} 
-                where ${PROPSPROBLEMTABLES.problems[5]} = ${value} `
-            };
-            const data = await needle('post', CARTO_URL, query, { json: true });
-            let answer = [];
-            if (data.statusCode === 200) {
-               const result = data.body.rows;
-               const counter = result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil +
-                  result[0].count_cia + result[0].count_sia + result[0].count_rl + result[0].count_ra +
-                  result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la +
-                  result[0].count_la + result[0].count_la1 + result[0].count_cila;
-               return res.status(200).send({
-                  'componentes': counter
-               });
-            } else {
-               return res.status(data.statusCode).send({ 'error': 'error' });
-            }
-         }
+  try {
+     const column = req.body.column;
+     const value = req.body.value;
+     let counter = 0;
+     let answer = [];
+     if (column === PROPSPROBLEMTABLES.problems[5] || column === PROPSPROBLEMTABLES.problem_boundary[5]) {
+        //console.log(column, value);
+        if (value === null || value === 0) {
+           return res.status(200).send({
+              'componentes': counter
+           });
+        } else {
+           const query = {
+              q: `select ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${getCountersProblems(PROBLEM_TABLE, column)} from ${PROBLEM_TABLE} 
+               where ${PROPSPROBLEMTABLES.problems[5]} = ${value} `
+           };
+           const data = await needle('post', CARTO_URL, query, { json: true });
+           let answer = [];
+           if (data.statusCode === 200) {
+              const result = data.body.rows;
+              counter = result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil +
+                 result[0].count_cia + result[0].count_sia + result[0].count_rl + result[0].count_ra +
+                 result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la +
+                 result[0].count_la + result[0].count_la1 + result[0].count_cila;
+              return res.status(200).send({
+                 'componentes': counter
+              });
+           } else {
+              return res.status(data.statusCode).send({ 'error': 'error' });
+           }
+        }
 
-      } else {
-         let counter = 0;
-         if (value !== null && value !== 0) {
-            for (const table1 of PROJECT_TABLES) {
-               const query = {
-                  q: `select projectid, projectname, ${getCounters(table1, column)} from ${table1} where ${column} = ${value} `
-               };
-               try {
-                  const data = await needle('post', CARTO_URL, query, { json: true });
-                  if (data.statusCode === 200) {
-                     const result = data.body.rows;
-                     counter += result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil +
-                        result[0].count_cia + result[0].count_sia + result[0].count_rl + result[0].count_ra +
-                        result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la +
-                        result[0].count_la + result[0].count_la1 + result[0].count_cila;
-                  }
-               } catch (error) { }
-            }
-         }
-         return res.status(200).send({
-            'componentes': counter
-         });
-      }
+     } else {
+        counter = 0;
+        if (value !== null && value !== 0) {
+           for (const table1 of PROJECT_TABLES) {
+              const query = {
+                 q: `select projectid, projectname, ${getCounters(table1, column)} from ${table1} where ${column} = ${value} `
+              };
+              try {
+                 const data = await needle('post', CARTO_URL, query, { json: true });
+                 if (data.statusCode === 200) {
+                    const result = data.body.rows;
+                    counter += result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil +
+                       result[0].count_cia + result[0].count_sia + result[0].count_rl + result[0].count_ra +
+                       result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la +
+                       result[0].count_la + result[0].count_la1 + result[0].count_cila;
+                 }
+              } catch (error) { }
+           }
+        }
+        return res.status(200).send({
+           'componentes': counter
+        });
+     }
 
-   } catch (error) {
-      logger.error(error);
-      res.status(500).send({ error: error }).send({ error: 'Connection error' });
-   }
+  } catch (error) {
+     logger.error(error);
+     res.status(500).send({ error: error });
+  }
 })
 
 router.post('/group-by', async (req, res) => {
