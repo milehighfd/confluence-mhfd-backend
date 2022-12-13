@@ -1119,6 +1119,7 @@ router.post('/component-counter', async (req, res) => {
    try {
       const column = req.body.column;
       const value = req.body.value;
+      let counter = 0;
       let answer = [];
       if (column === PROPSPROBLEMTABLES.problems[5] || column === PROPSPROBLEMTABLES.problem_boundary[5]) {
          //console.log(column, value);
@@ -1135,7 +1136,7 @@ router.post('/component-counter', async (req, res) => {
             let answer = [];
             if (data.statusCode === 200) {
                const result = data.body.rows;
-               const counter = result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil +
+               counter = result[0].count_gcs + result[0].count_pa + result[0].count_sip + result[0].count_sil +
                   result[0].count_cia + result[0].count_sia + result[0].count_rl + result[0].count_ra +
                   result[0].count_sd + result[0].count_df + result[0].count_mt + result[0].count_la +
                   result[0].count_la + result[0].count_la1 + result[0].count_cila;
@@ -1148,7 +1149,7 @@ router.post('/component-counter', async (req, res) => {
          }
 
       } else {
-         let counter = 0;
+         counter = 0;
          if (value !== null && value !== 0) {
             for (const table1 of PROJECT_TABLES) {
                const query = {
@@ -1173,7 +1174,7 @@ router.post('/component-counter', async (req, res) => {
 
    } catch (error) {
       logger.error(error);
-      res.status(500).send({ error: error }).send({ error: 'Connection error' });
+      res.status(500).send({ error: error });
    }
 })
 
