@@ -3,6 +3,9 @@ import Multer from 'multer';
 import needle from 'needle';
 import attachmentService from 'bc/services/attachment.service.js';
 import projectComponentService from 'bc/services/projectComponent.service.js';
+import projectService from 'bc/services/project.service.js';
+import projectStatusService from 'bc/services/projectStatus.service.js';
+
 import indepdendentService from 'bc/services/independent.service.js';
 import axios from 'axios';
 import {
@@ -15,15 +18,16 @@ import auth from 'bc/auth/auth.js';
 import FormData from 'form-data';
 import logger from 'bc/config/logger.js';
 import { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue } from 'bc/routes/new-project/helper.js';
+import moment from 'moment';
 
 const router = express.Router();
-const IndependentComponent = db.independentComponent;
 const multer = Multer({
   storage: Multer.MemoryStorage,
   limits: {
     fileSize: 50 * 1024 * 1024
   }
 });
+
 const createRandomGeomOnARCGIS = (coordinates, projectname, token, projectid) => {  
   const newGEOM = [{"geometry":{"paths":[ ] ,"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0,"projectName":projectname, "projectId": projectid}}];
   newGEOM[0].geometry.paths = coordinates;
@@ -311,11 +315,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const { isWorkPlan, projectname, description, servicearea, county, geom,
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
     independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost, year, sendToWR, componentcost, componentcount } = req.body;
-  const status = 'Draft';
-  const projecttype = 'Capital';
+  const creator = 'sys';
+  const defaultProjectId = '5';
   let notRequiredFields = ``;
   let notRequiredValues = ``;
-  if (overheadcostdescription) {
+  /* if (overheadcostdescription) {
     if (notRequiredFields) {
       notRequiredFields += ', ';
       notRequiredValues += ', ';
@@ -347,66 +351,56 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     notRequiredFields += COSPONSOR1;
     notRequiredValues += `'${cosponsor}'`;
   }
+  const overHeadNumbers = overheadcost.split(','); 
+  */
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
     notRequiredValues = `, ${notRequiredValues}`;
   }
-  let result = [];
-  const overHeadNumbers = overheadcost.split(',');
-  let splittedJurisdiction = jurisdiction.split(',');
-  if (isWorkPlan) {
-    splittedJurisdiction = [locality];
-  }
-  for (const j of splittedJurisdiction) {
-    // ,costdewatering, costmobilization, costtraffic, costutility, coststormwater, costengineering, costconstruction, costlegal, costcontingency, component_cost, component_count
 
-    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost ${notRequiredFields} ,projectid, estimatedcost, component_cost, component_count, costdewatering, costmobilization, costtraffic, costutility, coststormwater, costengineering,costlegal, costconstruction, costcontingency)
+  let splittedJurisdiction = jurisdiction.split(',');
+/*   if (isWorkPlan) {
+    splittedJurisdiction = [locality];
+  } */
+  let result = [];
+  for (const j of splittedJurisdiction) {
+
+/*    TODO: reference to older way to save
+
+      const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost ${notRequiredFields} ,projectid, estimatedcost, component_cost, component_count, costdewatering, costmobilization, costtraffic, costutility, coststormwater, costengineering,costlegal, costconstruction, costcontingency)
+      OUTPUT inserted . *
       VALUES(ST_GeomFromGeoJSON('${geom}'), '${j}', '${cleanStringValue(projectname)}', '${cleanStringValue(description)}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}' 
       ${notRequiredValues} ,${-1}, ${estimatedcost}, ${componentcost}, ${componentcount}, ${(overHeadNumbers[0] / 100) * componentcost}, ${(overHeadNumbers[1] / 100) * componentcost}, ${(overHeadNumbers[2] / 100) * componentcost}, ${(overHeadNumbers[3] / 100) * componentcost}, ${(overHeadNumbers[4] / 100) * componentcost}, ${(overHeadNumbers[5] / 100) * componentcost}, ${(overHeadNumbers[6] / 100) * componentcost}, ${(overHeadNumbers[7] / 100) * componentcost}, ${(overHeadNumbers[8] / 100) * componentcost})`;
-    console.log('\n\ninsert query here:', insertQuery, '\n\n');
-    const query = {
-      q: insertQuery
-    };
+ */
     try {
-      const data = await needle('post', CARTO_URL, query, { json: true });
-      //console.log('STATUS', data.statusCode);
-      if (data.statusCode === 200) {
-        result.push(data.body);
-        logger.info(JSON.stringify(result));
-        let projectId = await getNewProjectId();
-        const updateId = await setProjectID(res, projectId);
-        if (!updateId) {
-          return;
+      const data = await projectService.saveProject(CREATE_PROJECT_TABLE, j, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, notRequiredFields, notRequiredValues, creator)
+      result.push(data)
+      const { project_id } = data;
+      await projectStatusService.saveProjectStatusFromCero(5, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
+      //await addProjectToBoard(user, servicearea, county, j, projecttype, project_id, year, sendToWR, isWorkPlan);
+      // TODO: habilitar luego attachment await attachmentService.uploadFiles(user, req.files, projectId, cover);
+      for (const independent of JSON.parse(independetComponent)) {
+        try {
+          await projectComponentService.saveProjectComponent(0, '', independent.name, independent.status, project_id);
+          logger.info('create independent component');
+        } catch (error) {
+          logger.error('cannot create independent component ' + error);
         }
-        console.log('about to projectid', projectId);
+      }
+
+      for (const component of JSON.parse(components)) {
+        try {
+          await projectComponentService.saveProjectComponent(component.objectid, component.table,'','',project_id);
+          logger.info('create component');
+        } catch (error) {
+          logger.error('cannot create component ' + error);
+        }
+      }
+      /*   TODO: habilitar luego (Jorge)
         const dataArcGis = await insertIntoArcGis(geom, projectId, cleanStringValue(projectname));
         result.push(dataArcGis);
-        // change sponsor by jurisdiction
-        // we can have a lot jurisdiction separated by comma. in a ford
-        // poner if para los dos roles https://trello.com/c/xfBIveVT/1745-create-project-todos-types-agregar-el-checkbox-deseleccionado-por-defecto-y-label-solo-para-usuarios-mhfd-senior-managers-y-mhfd
-        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR, isWorkPlan);
-        await attachmentService.uploadFiles(user, req.files, projectId, cover);
-        for (const independent of JSON.parse(independetComponent)) {
-          const element = { name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId };
-          try {
-            IndependentComponent.create(element);
-            logger.info('create independent component');
-          } catch (error) {
-            logger.error('cannot create independent component ' + error);
-          }
-        }
-        for (const component of JSON.parse(components)) {
-          const dataComponent = {
-            table: component.table,
-            projectid: projectId,
-            objectid: component.objectid
-          };
-          projectComponentService.saveProjectComponent(dataComponent);
-        }
-      } else {
-        logger.error('bad status ' + data.statusCode + '  -- ' + insertQuery + JSON.stringify(data.body, null, 2));
-        return res.status(data.statusCode).send(data.body);
-      }
+      */
+
     } catch (error) {
       logger.error(error, 'at', insertQuery);
     }
@@ -414,7 +408,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   res.send(result);
 });
 
-router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
+/* router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const { projectname, description, servicearea, county, geom,
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
@@ -495,6 +489,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     logger.error(error, 'at edit capital');
   };
   res.send(result);
-});
+}); */
 
 export default router;

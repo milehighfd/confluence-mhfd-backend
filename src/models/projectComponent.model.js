@@ -13,7 +13,13 @@ export default (sequelize, DataType) => {
     },
     source_table_name: {
       type: DataType.STRING
-    }  
+    },
+    component_name: {
+      type: DataType.STRING
+    },
+    component_status: {
+      type: DataType.STRING
+    }
   }, {
     freezeTableName: true,
     tableName: 'project_component',
