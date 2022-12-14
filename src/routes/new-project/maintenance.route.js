@@ -11,6 +11,12 @@ import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
 import { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue } from 'bc/routes/new-project/helper.js';
 
+
+import projectComponentService from 'bc/services/projectComponent.service.js';
+import projectService from 'bc/services/project.service.js';
+import projectStatusService from 'bc/services/projectStatus.service.js';
+import moment from 'moment';
+
 const router = express.Router();
 const multer = Multer({
   storage: Multer.MemoryStorage,
@@ -19,38 +25,46 @@ const multer = Multer({
   }
 });
 
+
 router.post('/', [auth, multer.array('files')], async (req, res) => {
-  const user = req.user;
+  //const user = req.user;
   // console.log('the user ', user);
   const {isWorkPlan, projectname, description, servicearea, county, geom, projectsubtype, frequency, maintenanceeligibility, ownership, locality, jurisdiction, sponsor, cosponsor, cover, year, sendToWR} = req.body;
   const status = 'Draft';
-  const projecttype = 'Maintenance';
+  const defaultProjectId = '8';
+  const creator = 'sys'
   let notRequiredFields = ``;
   let notRequiredValues = ``;
-  if (frequency) {
+/*   
+ask mahesh
+if (frequency) {
     if (notRequiredFields) {
       notRequiredFields += ', ';
       notRequiredValues += ', ';
     }
     notRequiredFields += 'frequency';
     notRequiredValues += `'${frequency}'`;
-  }
+  } */
   if (maintenanceeligibility) {
     if (notRequiredFields) {
       notRequiredFields += ', ';
       notRequiredValues += ', ';
     }
-    notRequiredFields += 'maintenanceeligibility';
-    notRequiredValues += `'${maintenanceeligibility}'`;
+    notRequiredFields += 'code_maintenance_eligibility_type_id';
+    notRequiredValues += `'2'`;
   }
-  if (ownership) {
+/*   
+ask mahesh
+if (ownership) {
     if (notRequiredFields) {
       notRequiredFields += ', ';
       notRequiredValues += ', ';
     }
     notRequiredFields += 'ownership';
     notRequiredValues += `'${ownership}'`;
-  }
+  } 
+  ask mahesh
+
   if (cosponsor) {
     if (notRequiredFields) {
       notRequiredFields += ', ';
@@ -59,6 +73,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     notRequiredFields += COSPONSOR1;
     notRequiredValues += `'${cosponsor}'`;
   }
+  ask mahesh
+
+planned_start_date}', '${actual_start_date}', '${planned_end_date}', '${actual_end_date}', '${duration}', '${created_date}', '${modified_date}', '${last_modified_by}', '${created_by}')`
+ 
+  */
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
     notRequiredValues = `, ${notRequiredValues}`;
@@ -67,36 +86,22 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   if (isWorkPlan) {
     splittedJurisdiction = [locality];
   }
+  let result = [];
   for (const j of splittedJurisdiction) {
-    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor ${notRequiredFields} ,projectid)
-    VALUES(ST_GeomFromGeoJSON('${geom}'), '${j}', '${cleanStringValue(projectname)}', '${cleanStringValue(description)}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
-    const query = {
-      q: insertQuery
-    };
-    let result = [];
     try {
-      const data = await needle('post', CARTO_URL, query, { json: true });
-      if (data.statusCode === 200) {
-        result.push(data.body);
-        logger.info(JSON.stringify(result));
-        let projectId = await getNewProjectId();
-        const updateId = await setProjectID(res, projectId);
-        if (!updateId) {
-          return;
-        }
-        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR, isWorkPlan);
-        await attachmentService.uploadFiles(user, req.files, projectId, cover);
-      } else {
-        logger.error('\n\n\nbad status ' + data.statusCode + '  -- '+ insertQuery +  JSON.stringify(data.body, null, 2));
-        return res.status(data.statusCode).send(data.body);
-      }
+      const data = await projectService.saveProject(CREATE_PROJECT_TABLE, j, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, notRequiredFields, notRequiredValues, creator)
+      result.push(data)
+      const { project_id } = data;
+      await projectStatusService.saveProjectStatusFromCero(defaultProjectId, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
+      // await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR, isWorkPlan);
+      //await attachmentService.uploadFiles(user, req.files, projectId, cover);
     } catch (error) {
-      logger.error(error, 'at', insertQuery);
+      logger.error(error);
     };
   }
   res.send(result);
 });
-
+/* 
 router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   console.log('the user ', user);
@@ -157,6 +162,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     logger.error(error, 'at', updateQuery);
   };
   res.send(result);
-});
+}); */
 
 export default router;

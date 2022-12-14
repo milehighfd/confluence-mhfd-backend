@@ -312,6 +312,7 @@ const insertIntoArcGis = async (geom, projectid, projectname) => {
 
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
+  console.log(user);
   const { isWorkPlan, projectname, description, servicearea, county, geom,
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
     independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost, year, sendToWR, componentcost, componentcount } = req.body;
