@@ -64,10 +64,23 @@ router.get('/all-localities', async (req, res) => {
       coordinates: polygonParser(result.coordinates)
     }
   });
+  const [mhfdData] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox,
+  Shape.STAsText() as coordinates,
+  OBJECTID,
+  'Mile High Flood District' as name FROM MHFD_BOUNDARY`);
+  const mhfd = mhfdData.map(result => {
+    return {
+      name: result.name,
+      id: result.OBJECTID,
+      table: 'MHFD_BOUNDARY',
+      bbox: polygonParser(result.bbox),
+      coordinates: polygonParser(result.coordinates)
+    }
+  });
   const answer = [...sa, ...lg, ...sc].sort((a, b) => {
     return a.name.localeCompare(b.name);
   });
-  res.send(answer);
+  res.send([...mhfd, ...answer]);
 });
 
 router.get('/', async (req, res) => {
