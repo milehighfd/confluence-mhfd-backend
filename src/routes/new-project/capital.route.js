@@ -357,10 +357,8 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
           logger.error('cannot create component ' + error);
         }
       }
-      /*   TODO: habilitar luego (Jorge)
-        const dataArcGis = await insertIntoArcGis(geom, projectId, cleanStringValue(projectname));
-        result.push(dataArcGis);
-      */
+      const dataArcGis = await insertIntoArcGis(geom, project_id, cleanStringValue(projectname));
+      result.push(dataArcGis);
 
     } catch (error) {
       logger.error(error, 'at', insertQuery);
