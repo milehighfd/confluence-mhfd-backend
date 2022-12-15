@@ -5,13 +5,15 @@ import attachmentService from 'bc/services/attachment.service.js';
 import projectComponentService from 'bc/services/projectComponent.service.js';
 import projectService from 'bc/services/project.service.js';
 import projectStatusService from 'bc/services/projectStatus.service.js';
+import cartoService from 'bc/services/carto.service.js';
 
 import indepdendentService from 'bc/services/independent.service.js';
 import axios from 'axios';
 import {
   CARTO_URL,
   CREATE_PROJECT_TABLE,
-  COSPONSOR1
+  COSPONSOR1,
+  CREATE_PROJECT_TABLE_V2
 } from 'bc/config/config.js';
 import db from 'bc/config/db.js';
 import auth from 'bc/auth/auth.js';
@@ -312,7 +314,6 @@ const insertIntoArcGis = async (geom, projectid, projectname) => {
 
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  console.log(user);
   const { isWorkPlan, projectname, description, servicearea, county, geom,
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
     independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost, year, sendToWR, componentcost, componentcount } = req.body;
@@ -320,40 +321,6 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const defaultProjectId = '5';
   let notRequiredFields = ``;
   let notRequiredValues = ``;
-  /* if (overheadcostdescription) {
-    if (notRequiredFields) {
-      notRequiredFields += ', ';
-      notRequiredValues += ', ';
-    }
-    notRequiredFields += 'overheadcostdescription';
-    notRequiredValues += `'${cleanStringValue(overheadcostdescription)}'`;
-  }
-  if (additionalcost) {
-    if (notRequiredFields) {
-      notRequiredFields += ', ';
-      notRequiredValues += ', ';
-    }
-    notRequiredFields += 'additionalcost';
-    notRequiredValues += `'${additionalcost}'`;
-  }
-  if (additionalcostdescription) {
-    if (notRequiredFields) {
-      notRequiredFields += ', ';
-      notRequiredValues += ', ';
-    }
-    notRequiredFields += 'additionalcostdescription';
-    notRequiredValues += `'${cleanStringValue(additionalcostdescription)}'`;
-  }
-  if (cosponsor) {
-    if (notRequiredFields) {
-      notRequiredFields += ', ';
-      notRequiredValues += ', ';
-    }
-    notRequiredFields += COSPONSOR1;
-    notRequiredValues += `'${cosponsor}'`;
-  }
-  const overHeadNumbers = overheadcost.split(','); 
-  */
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
     notRequiredValues = `, ${notRequiredValues}`;
@@ -365,18 +332,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   } */
   let result = [];
   for (const j of splittedJurisdiction) {
-
-/*    TODO: reference to older way to save
-
-      const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor, overheadcost ${notRequiredFields} ,projectid, estimatedcost, component_cost, component_count, costdewatering, costmobilization, costtraffic, costutility, coststormwater, costengineering,costlegal, costconstruction, costcontingency)
-      OUTPUT inserted . *
-      VALUES(ST_GeomFromGeoJSON('${geom}'), '${j}', '${cleanStringValue(projectname)}', '${cleanStringValue(description)}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}', '${overheadcost}' 
-      ${notRequiredValues} ,${-1}, ${estimatedcost}, ${componentcost}, ${componentcount}, ${(overHeadNumbers[0] / 100) * componentcost}, ${(overHeadNumbers[1] / 100) * componentcost}, ${(overHeadNumbers[2] / 100) * componentcost}, ${(overHeadNumbers[3] / 100) * componentcost}, ${(overHeadNumbers[4] / 100) * componentcost}, ${(overHeadNumbers[5] / 100) * componentcost}, ${(overHeadNumbers[6] / 100) * componentcost}, ${(overHeadNumbers[7] / 100) * componentcost}, ${(overHeadNumbers[8] / 100) * componentcost})`;
- */
     try {
-      const data = await projectService.saveProject(CREATE_PROJECT_TABLE, j, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, notRequiredFields, notRequiredValues, creator)
+      const data = await projectService.saveProject(CREATE_PROJECT_TABLE_V2, j, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, notRequiredFields, notRequiredValues, creator)
       result.push(data)
       const { project_id } = data;
+      await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
       await projectStatusService.saveProjectStatusFromCero(5, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       //await addProjectToBoard(user, servicearea, county, j, projecttype, project_id, year, sendToWR, isWorkPlan);
       // TODO: habilitar luego attachment await attachmentService.uploadFiles(user, req.files, projectId, cover);
