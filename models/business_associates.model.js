@@ -43,11 +43,12 @@ module.exports = (sequelize, DataType) => {
     email_address: {
       type: DataType.STRING,
       allowNull: false
-    },*/
-    primary_business_associate_id: {
-      type: DataType.INTEGER,
-      allowNull: false
+      
     },
+    primary_business_associate_id: {
+        type: DataType.INTEGER,
+        allowNull: false
+      },*/
     ba_tyler_id: {
       type: DataType.STRING,
     }

@@ -4,7 +4,7 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       primaryKey: true
     },
-    partner_type_id: {
+    code_partner_type_id: {
       type: DataType.INTEGER,
       allowNull: false,
     },
@@ -12,7 +12,11 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       allowNull: false,
     },
-    bussines_associate_id: {
+    business_associates_id: {
+      type: DataType.INTEGER,
+      allowNull: false
+    },
+    business_associate_contacts_id: {
       type: DataType.INTEGER,
       allowNull: false
     },
@@ -20,6 +24,11 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'project_partner',
+    createdAt: false,
+    updatedAt: false
   });
   return ProjectPartner;
 }

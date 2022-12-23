@@ -8,6 +8,11 @@ export default  (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false,
     },
+  }, {
+    freezeTableName: true,
+    tableName: 'code_project_partner_type',
+    createdAt: false,
+    updatedAt: false
   });
   return CodeProjectPartnerType;
 }

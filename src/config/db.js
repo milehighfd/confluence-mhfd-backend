@@ -147,6 +147,29 @@ db.groupnotes.hasMany(db.newnotes, { foreignKey: {name: 'group_id', allowNull: t
 // db.groupnotes.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.user.hasMany(db.groupnotes, {foreignKey: 'user_id'});
 
+/*
+db.businessAssociates.hasMany(
+  db.projectPartner,
+  {
+    foreignKey: 'business_associates_id'
+  }
+);
+*/
+
+db.projectPartner.belongsTo(
+  db.project,
+  {
+    foreignKey: 'project_id'
+  }
+);
+db.projectPartner.belongsTo( 
+  db.businessAssociates,
+  {
+    foreignKey: 'business_associates_id',
+    targetKey: 'business_associates_id'
+  }
+);
+ 
 db.project.hasOne(
   db.projectStatus,
   { foreignKey: 'project_id' }

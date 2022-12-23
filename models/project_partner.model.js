@@ -27,6 +27,11 @@ module.exports = (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'project_partner',
+    createdAt: false,
+    updatedAt: false
   });
   return ProjectPartner;
 }
