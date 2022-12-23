@@ -7,7 +7,7 @@ const BusinessAssociates = db.businessAssociates;
 const router = express.Router();
 
 const listProjects = async (req, res) => {
-  const { offset = 0, limit = 20 } = req.query;
+  const { offset = 0, limit = 120000 } = req.query;
   let projects = await Projects.findAll({
     limit,
     offset,
