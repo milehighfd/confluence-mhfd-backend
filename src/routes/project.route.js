@@ -6,6 +6,8 @@ const ProjectPartner = db.projectPartner;
 const BusinessAssociates = db.businessAssociates;
 const ProjectCounty = db.projectCounty;
 const CodeStateCounty = db.codeStateCounty;
+const ProjectServiceArea = db.projectServiceArea;
+const CodeServiceArea = db.codeServiceArea;
 const router = express.Router();
 
 const listProjects = async (req, res) => {
@@ -53,7 +55,7 @@ const getProjectDetail = async (req, res) => {
   project = project.dataValues;
  //  project = project.map(result => result.dataValues)
   // console.log(project);
-  // county
+  // Get County
   let projectCounty = await ProjectCounty.findOne({
     where: {
       project_id: project.project_id
@@ -61,7 +63,6 @@ const getProjectDetail = async (req, res) => {
   });
   if (projectCounty) {
     projectCounty = projectCounty.dataValues;
-    console.log(projectCounty.state_county_id);
     let codeStateCounty = await CodeStateCounty.findOne({
       where: {
         state_county_id: projectCounty.state_county_id
@@ -69,8 +70,25 @@ const getProjectDetail = async (req, res) => {
     });
 
     codeStateCounty = codeStateCounty.dataValues;
-    logger.info(`Adding ${JSON.stringify(codeStateCounty)} to project object`);
+    logger.info(`Adding Code State County: ${JSON.stringify(codeStateCounty)} to project object`);
     project = {...project, codeStateCounty: codeStateCounty};
+  }
+  // Get Service Area
+  let projectServiceArea = await ProjectServiceArea.findOne({
+    where: {
+      project_id: project.project_id
+    }
+  });
+  if (projectServiceArea) {
+    projectServiceArea = projectServiceArea.dataValues;
+    let codeServiceArea = await CodeServiceArea.findOne({
+      where: {
+        code_service_area_id: projectServiceArea.code_service_area_id
+      }
+    });
+    codeServiceArea = codeServiceArea.dataValues;
+    logger.info(`Adding code service area: ${JSON.stringify(codeServiceArea)} to project object`);
+    project = { ...project, codeServiceArea: codeServiceArea };
   }
   res.send(project);
 }

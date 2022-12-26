@@ -7,7 +7,7 @@ export default  (sequelize, DataType) => {
     project_id: {
       type: DataType.INTEGER
     },
-    service_area_local_government_id: {
+    code_service_area_id: {
       type: DataType.INTEGER
     },
     created_date: {
