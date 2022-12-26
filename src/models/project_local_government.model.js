@@ -4,7 +4,7 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       primaryKey: true
     },
-    local_government_id: {
+    code_local_government_id: {
       type: DataType.INTEGER,
       allowNull: false
     },
@@ -12,6 +12,11 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       allowNull: false
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'project_local_government',
+    createdAt: false,
+    updatedAt: false
   }
     );
   return ProjectLocalGovernment;

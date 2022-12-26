@@ -3,11 +3,12 @@ import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 const Projects = db.project;
 const ProjectPartner = db.projectPartner;
-const BusinessAssociates = db.businessAssociates;
 const ProjectCounty = db.projectCounty;
 const CodeStateCounty = db.codeStateCounty;
 const ProjectServiceArea = db.projectServiceArea;
 const CodeServiceArea = db.codeServiceArea;
+const ProjectLocalGovernment = db.projectLocalGovernment;
+const CodeLocalGoverment = db.codeLocalGoverment;
 const router = express.Router();
 
 const listProjects = async (req, res) => {
@@ -89,6 +90,23 @@ const getProjectDetail = async (req, res) => {
     codeServiceArea = codeServiceArea.dataValues;
     logger.info(`Adding code service area: ${JSON.stringify(codeServiceArea)} to project object`);
     project = { ...project, codeServiceArea: codeServiceArea };
+  }
+  // GET project local goverment (jurisdiction?)
+  let projectLocalGovernment = await ProjectLocalGovernment.findOne({
+    where: {
+      project_id: project.project_id
+    }
+  });
+  if (projectLocalGovernment) {
+    projectLocalGovernment = projectLocalGovernment.dataValues;
+    let codeLocalGoverment = await CodeLocalGoverment.findOne({
+      where: {
+        code_local_government_id: projectLocalGovernment.code_local_government_id
+      }
+    });
+    codeLocalGoverment = codeLocalGoverment.dataValues;
+    logger.info(`Adding code local government: ${JSON.stringify(codeLocalGoverment)} to project object`);
+    project = { ... project, codeLocalGoverment: codeLocalGoverment };
   }
   res.send(project);
 }
