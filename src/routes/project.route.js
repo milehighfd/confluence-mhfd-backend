@@ -143,6 +143,32 @@ const getProjectDetail = async (req, res) => {
     logger.info(`Adding managers to project: ${JSON.stringify(staffs, null, 2)}`);
     project = {...project, managers: staffs };
   }
+  // vendor calculation
+  const CONSULTANT = 3,
+    CIVIL_CONTRACTOR = 8,
+    LANDSCAPE_CONTRACTOR = 9;
+  const consultants = await ProjectPartner.findAll({
+    where: {
+      project_id: project.project_id,
+      code_partner_type_id: CONSULTANT,
+    },
+    include: { all: true, nested: true }
+  }).map(result => result.dataValues).map(res => { 
+    return {...res, business_associate: res.business_associate.dataValues }
+  });
+  logger.info(`Adding consultants to project: ${consultants}`);
+  project = { ...project, consultants };
+  const contractors = await ProjectPartner.findAll({
+    where: {
+      project_id: project.project_id,
+      code_partner_type_id: [CIVIL_CONTRACTOR, LANDSCAPE_CONTRACTOR],
+    },
+    include: { all: true, nested: true }
+  }).map(result => result.dataValues).map(res => { 
+    return {...res, business_associate: res.business_associate.dataValues }
+  });
+  logger.info(`Adding contractors to project: ${contractors}`);
+  project = { ...project, contractors };
   res.send(project);
 }
 

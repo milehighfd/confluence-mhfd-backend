@@ -166,12 +166,14 @@ db.codeMaintenanceElegibilityType.belongsTo(
     foreignKey: 'code_maintenance_eligibility_type_id'
   }
 );
+/*
 db.projectPartner.belongsTo(
   db.project,
   {
     foreignKey: 'project_id'
   }
 );
+*/
 db.projectPartner.belongsTo( 
   db.businessAssociates,
   {
