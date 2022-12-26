@@ -12,6 +12,11 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       allowNull: false
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'project_county',
+    createdAt: false,
+    updatedAt: false
   });
   return ProjectCounty;
 }

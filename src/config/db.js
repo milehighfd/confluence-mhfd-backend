@@ -156,6 +156,12 @@ db.businessAssociates.hasMany(
 );
 */
 
+db.codeMaintenanceElegibilityType.belongsTo(
+  db.project,
+  {
+    foreignKey: 'code_maintenance_eligibility_type_id'
+  }
+);
 db.projectPartner.belongsTo(
   db.project,
   {
