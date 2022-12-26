@@ -10,7 +10,7 @@ export default (sequelize, DataType) => {
     cost: {
       type: DataType.FLOAT,
     },
-    code_cost_type: {
+    code_cost_type_id: {
       type: DataType.INTEGER
     },
     cost_description: { 
@@ -29,6 +29,11 @@ export default (sequelize, DataType) => {
     last_modified: {
       type: DataType.DATE
     }  
+  }, {
+    freezeTableName: true,
+    tableName: 'project_cost',
+    createdAt: false,
+    updatedAt: false
   });
   return ProjectCost;
 }

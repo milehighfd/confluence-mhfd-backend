@@ -9,6 +9,7 @@ const ProjectServiceArea = db.projectServiceArea;
 const CodeServiceArea = db.codeServiceArea;
 const ProjectLocalGovernment = db.projectLocalGovernment;
 const CodeLocalGoverment = db.codeLocalGoverment;
+const ProjectCost = db.projectCost;
 const router = express.Router();
 
 const listProjects = async (req, res) => {
@@ -108,6 +109,16 @@ const getProjectDetail = async (req, res) => {
     logger.info(`Adding code local government: ${JSON.stringify(codeLocalGoverment)} to project object`);
     project = { ... project, codeLocalGoverment: codeLocalGoverment };
   }
+  // GET Project cost
+  let projectCost = await ProjectCost.findAll({
+    where: {
+      project_id: project.project_id
+    }
+  });
+  projectCost = projectCost.map(result => result.dataValues);
+  logger.info(`projects costs: ${JSON.stringify(projectCost, null, 2)}`);
+  const sumCost = projectCost.reduce((pc, current) => pc + current.cost, 0);
+  project = { ... project, sumCost: sumCost };
   res.send(project);
 }
 
