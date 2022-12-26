@@ -10,6 +10,8 @@ const CodeServiceArea = db.codeServiceArea;
 const ProjectLocalGovernment = db.projectLocalGovernment;
 const CodeLocalGoverment = db.codeLocalGoverment;
 const ProjectCost = db.projectCost;
+const ProjectStaff = db.projectStaff;
+const MHFDStaff = db.mhfdStaff;
 const router = express.Router();
 
 const listProjects = async (req, res) => {
@@ -119,6 +121,28 @@ const getProjectDetail = async (req, res) => {
   logger.info(`projects costs: ${JSON.stringify(projectCost, null, 2)}`);
   const sumCost = projectCost.reduce((pc, current) => pc + current.cost, 0);
   project = { ... project, sumCost: sumCost };
+  // GET mananger
+  // Maybe need to get the data from code_project_staff_role_type table in the future 
+  const STAFF_LEAD = 1,
+  WATERSHED_MANAGER = 2,
+  CONSTRUCTION_MANAGER = 3;
+  const projectStaff = await ProjectStaff.findAll({
+    where: {
+      project_id: project.project_id,
+      code_project_staff_role_type_id: [STAFF_LEAD, WATERSHED_MANAGER, CONSTRUCTION_MANAGER]
+    }
+  }).map(result => result.dataValues);
+  const managers = projectStaff.map(result => result.mhfd_staff_id);
+  logger.info(`manager list ${managers}`)
+  const staffs = await MHFDStaff.findAll({
+    where: {
+      mhfd_staff_id: managers
+    }
+  }).map(result => result.dataValues);
+  if (staffs) {
+    logger.info(`Adding managers to project: ${JSON.stringify(staffs, null, 2)}`);
+    project = {...project, managers: staffs };
+  }
   res.send(project);
 }
 
