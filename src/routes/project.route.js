@@ -111,16 +111,20 @@ const getProjectDetail = async (req, res) => {
     logger.info(`Adding code local government: ${JSON.stringify(codeLocalGoverment)} to project object`);
     project = { ... project, codeLocalGoverment: codeLocalGoverment };
   }
-  // GET Project cost
+  // GET Project cost, estimated and component
   let projectCost = await ProjectCost.findAll({
     where: {
       project_id: project.project_id
     }
   });
   projectCost = projectCost.map(result => result.dataValues);
+  const ESTIMATED_COST = 1,
+    COMPONENT_COST = 14;
+  const estimatedCost = projectCost.filter(result => result.code_cost_type_id === ESTIMATED_COST);
+  const componentCost = projectCost.filter(result => result.code_cost_type_id === COMPONENT_COST);
   logger.info(`projects costs: ${JSON.stringify(projectCost, null, 2)}`);
   const sumCost = projectCost.reduce((pc, current) => pc + current.cost, 0);
-  project = { ... project, sumCost: sumCost };
+  project = { ... project, sumCost: sumCost, estimatedCost: estimatedCost, componentCost: componentCost };
   // GET mananger
   // Maybe need to get the data from code_project_staff_role_type table in the future 
   const STAFF_LEAD = 1,
