@@ -83,6 +83,50 @@ router.get('/all-localities', async (req, res) => {
   res.send([...mhfd, ...answer]);
 });
 
+router.get('/get-list', async (req, res) => {
+  const answer = {};
+  if (req.query.jurisdiction) {
+    const [lgData] = await db.sequelize.query(`SELECT
+    code_local_government_id,
+    local_government_name FROM CODE_LOCAL_GOVERNMENT_4326`);
+    const lg = lgData.map(result => {
+      return {
+        local_government_name: result.local_government_name,
+        code_local_government_id: result.code_local_government_id,
+        table: 'CODE_LOCAL_GOVERNMENT',
+      }
+    });
+    answer.jurisdiction = lg;
+  }
+  if (req.query.servicearea) {
+    const [saData] = await db.sequelize.query(`SELECT
+    code_service_area_id,
+    service_area_name FROM CODE_SERVICE_AREA_4326`);
+    const sa = saData.map(result => {
+      return { 
+        service_area_name: result.service_area_name + 'Service Area',
+        code_service_area_id: result.code_service_area_id,
+        table: 'CODE_SERVICE_AREA',
+      }
+    });
+    answer.servicearea = sa;
+  }
+  if (req.query.county) {
+    const [scData] = await db.sequelize.query(`SELECT
+      state_county_id,
+      county_name FROM CODE_STATE_COUNTY_4326`);
+    const sc = scData.map(result => {
+      return {
+        county_name: result.county_name + ' County',
+        state_county_id: result.state_county_id,
+        table: 'CODE_STATE_COUNTY',
+      }
+    });
+    answer.county = sc;
+  }
+  res.send(answer);
+});
+
 router.get('/', async (req, res) => {
   /*const sa = await ServiceArea.findAll({
     include: { all: true, nested: true }
