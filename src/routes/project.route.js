@@ -169,6 +169,18 @@ const getProjectDetail = async (req, res) => {
   });
   logger.info(`Adding contractors to project: ${contractors}`);
   project = { ...project, contractors };
+  // ADDING SPONSOR:
+  const SPONSOR_TYPE = 11; // maybe this can change in the future
+  const project_partners = await ProjectPartner.findAll({
+    where: {
+      project_id: project.project_id,
+      code_partner_type_id: SPONSOR_TYPE,
+    },
+    include: { all: true, nested: true }
+  }).map(result => result.dataValues).map(res => { 
+    return {...res, business_associate: res.business_associate.dataValues }
+  });
+  project = { ... project, sponsor: project_partners};
   res.send(project);
 }
 
