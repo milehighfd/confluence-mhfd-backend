@@ -12,6 +12,7 @@ const CodeLocalGoverment = db.codeLocalGoverment;
 const ProjectCost = db.projectCost;
 const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
+const ProjectDetail = db.projectDetail;
 const router = express.Router();
 
 const listProjects = async (req, res) => {
@@ -185,6 +186,13 @@ const getProjectDetail = async (req, res) => {
     return {...res, business_associate: res.business_associate.dataValues }
   });
   project = { ... project, sponsor: project_partners};
+  // frequency, for maintenance projects
+  const project_detail = await ProjectDetail.findAll({
+    where: {
+      project_id: project.project_id,
+    }
+  });
+  project = { ...project, projectDetail: project_detail };
   res.send(project);
 }
 
