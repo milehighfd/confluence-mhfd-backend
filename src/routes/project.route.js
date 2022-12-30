@@ -75,6 +75,7 @@ async function getProblemByProjectId(projectid, sortby, sorttype) {
     return data;
   } catch (e) {
     console.error('Error with QUERY ', e);
+    return [];
   }
 }
 
