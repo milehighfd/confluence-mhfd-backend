@@ -20,7 +20,7 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       allowNull: false
     },
-    code_study_subreason_id: {
+    code_study_sub_reason_id: {
       type: DataType.INTEGER,
       allowNull: true
     },
