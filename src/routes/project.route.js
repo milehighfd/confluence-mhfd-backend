@@ -1,4 +1,5 @@
 import express from 'express';
+import https from 'https';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 const Projects = db.project;
@@ -14,6 +15,68 @@ const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
 const router = express.Router();
+import {
+  CARTO_URL,
+  PROBLEM_TABLE,
+  PROPSPROBLEMTABLES,
+} from 'bc/config/config.js';
+
+async function getProblemByProjectId(projectid, sortby, sorttype) {
+  let data = [];
+  const LINE_SQL = `select ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[7]}  as ${PROPSPROBLEMTABLES.problems[7]} from ${PROBLEM_TABLE}  
+ where ${PROPSPROBLEMTABLES.problem_boundary[5]} in (SELECT problemid FROM grade_control_structure 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM pipe_appurtenances 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM special_item_point 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM special_item_linear 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM special_item_area 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM channel_improvements_linear 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM channel_improvements_area 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM removal_line 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM removal_area 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM storm_drain 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM detention_facilities 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM maintenance_trails 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM land_acquisition 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM landscaping_area 
+   where projectid=${projectid} and projectid>0) 
+   order by ${sortby} ${sorttype}`;
+
+  const LINE_URL = encodeURI(`${CARTO_URL}&q=${LINE_SQL}`);
+  //console.log(LINE_URL);
+  try {
+    const newProm1 = new Promise((resolve, reject) => {
+      https.get(LINE_URL, response => {
+         if (response.statusCode === 200) {
+            let str = '';
+            response.on('data', function (chunk) {
+               str += chunk;
+            });
+            response.on('end', async function () {
+               resolve(JSON.parse(str).rows);
+            })
+         }
+      });
+   });
+    data = await newProm1;
+    console.log('the data is ', data);
+    return data;
+  } catch (e) {
+    console.error('Error with QUERY ', e);
+  }
+}
 
 const listProjects = async (req, res) => {
   const { offset = 0, limit = 120000 } = req.query;
@@ -193,6 +256,10 @@ const getProjectDetail = async (req, res) => {
     }
   });
   project = { ...project, projectDetail: project_detail };
+  // get problems 
+  const problems = await getProblemByProjectId(project.project_id, PROPSPROBLEMTABLES.problems[6], 'asc');
+  logger.info(`Adding problems ${JSON.stringify(problems)}`)
+  project = { ...project, problems: problems };
   res.send(project);
 }
 
