@@ -195,11 +195,11 @@ const removeAttachment = async (id) => {
 }
 
 
-const compress_images = require("compress-images");
+// const compress_images = require("compress-images");
 const { file } = require('googleapis/build/src/apis/file');
 const INPUT_path_to_your_images = __dirname + '/tmp/*.{jpg,JPG,jpeg,JPEG,png,svg,gif}';
 const OUTPUT_path = __dirname + "/compressed/";
-
+/*
 const compress = () => {
   return new Promise((resolve, rejected) => {
     compress_images(INPUT_path_to_your_images, OUTPUT_path, { compress_force: false, statistic: true, autoupdate: true }, false,
@@ -212,7 +212,8 @@ const compress = () => {
         console.log(error);
         console.log(completed);
         console.log(statistic);
-        console.log("-------------"); */
+        console.log("-------------"); 
+        // end comment here
         if (error) {
           rejected(false);
         } else {
@@ -223,7 +224,7 @@ const compress = () => {
 
   });
 }
-
+*/
 const isImage = (type) => {
   if (type === 'image/png' || type === 'image/jpg' || type === 'image/jpeg' || type === 'image/gif') {
     return true;
