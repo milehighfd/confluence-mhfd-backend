@@ -27,6 +27,7 @@ import organizationRouter from 'bc/routes/organization.route.js';
 import configurationRouter from 'bc/routes/configuration.route.js';
 import projectRouter from 'bc/routes/project.route.js';
 import v2Localities from 'bc/routes/v2locality.route.js';
+import pmToolsRouter from 'bc/routes/pmtools.route.js';
 import db from 'bc/config/db.js';
 import seed from 'bc/config/seed.js'
 import projectServiceArea from 'bc/routes/projectservicearea.route.js';
@@ -58,6 +59,7 @@ app.use(function(req, res, next) {
 
 app.use(express.static('public'))
 app.use('/', indexRouter);
+app.use('/pm-tools', pmToolsRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 app.use('/admin', adminRouter);
