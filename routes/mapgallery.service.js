@@ -105,7 +105,7 @@ const getMidByProjectIdV2 = async (projectid, projecttype) => {
     return null;
   }
 }
-const getProjectData = async (projectid) => {
+const getProjectData = async (projectid, projecttype) => {
   let table = CREATE_PROJECT_TABLE;
   let fields = [
     "projectid",

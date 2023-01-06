@@ -518,7 +518,6 @@ var getProjectDetail = /*#__PURE__*/function () {
     return _ref2.apply(this, arguments);
   };
 }();
-
 router.post('/', listProjects);
 router.get('/:project_id', getProjectDetail);
 var _default = router;

@@ -8,7 +8,8 @@ const db = require('../config/db');
 const {
     getCoordsByProjectId,
     getMidByProjectIdV2,
-    getMinimumDateByProjectId
+    getMinimumDateByProjectId,
+    getProjectData
 } = require('./mapgallery.service');
 const { sendBoardNotification } = require('../services/user.service');
 
@@ -149,6 +150,21 @@ router.put('/project/:id', async (req, res) => {
     boardProject.originPosition5 = originPosition5;
     await boardProject.save();
     res.send(boardProject);
+});
+
+router.post('/projectdata', async (req, res) => {
+  let body = req.body;
+  let {project_id, projecttype} = body;
+  if (!project_id) {
+    return res.sendStatus(404);
+  }
+  let project = null;
+  try {
+      project = await getProjectData(project_id, projecttype);
+  } catch(e) {
+      console.log('Error in project Promises ', e);
+  }
+  res.send(project);
 });
 
 router.post('/', async (req, res) => {
