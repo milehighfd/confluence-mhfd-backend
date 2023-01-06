@@ -7,7 +7,7 @@ const logger = require('../config/logger');
 const db = require('../config/db');
 const {
     getCoordsByProjectId,
-    getMidByProjectId,
+    getMidByProjectIdV2,
     getMinimumDateByProjectId
 } = require('./mapgallery.service');
 const { sendBoardNotification } = require('../services/user.service');
@@ -176,7 +176,7 @@ router.post('/', async (req, res) => {
         let projectsPromises = boardProjects.filter(bp => !!bp.project_id).map(async (bp) => {
             let project = null;
             try {
-                project = await getMidByProjectId(bp.project_id, projecttype);
+                project = await getMidByProjectIdV2(bp.project_id, projecttype);
             } catch(e) {
                 console.log('Error in project Promises ', e);
             }
