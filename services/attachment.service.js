@@ -244,6 +244,7 @@ const uploadFiles = async (user, files, projectid, cover) => {
   // }
 
   for (const file of files) {
+    if (file.mimetype === 'application/pdf' || file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.mimetype === 'image/x-citrix-jpeg' || file.mimetype === 'image/x-png' || file.mimetype === 'video/mp4' ){
     let name = file.originalname;
     if (projectid) {
       name = `${projectid}/${name}`
@@ -369,6 +370,8 @@ const uploadFiles = async (user, files, projectid, cover) => {
     //   // if no error, file has been deleted successfully
     //   console.log('File deleted! ', compressedrRoute);
     // }); 
+  } 
+  else  throw error;
   }
 }
 
