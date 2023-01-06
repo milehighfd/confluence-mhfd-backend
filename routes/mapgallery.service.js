@@ -68,7 +68,7 @@ const getMidByProjectIdV2 = async (projectid, projecttype) => {
     // "description",
     // "acquisitionprogress",
     // "acquisitionanticipateddate",
-    // "projecttype",
+    "projecttype",
     "projectsubtype",
     // "additionalcost",
     // "additionalcostdescription",
