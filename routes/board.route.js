@@ -154,13 +154,13 @@ router.put('/project/:id', async (req, res) => {
 
 router.post('/projectdata', async (req, res) => {
   let body = req.body;
-  let {project_id, projecttype} = body;
-  if (!project_id) {
+  let {projectid, projecttype} = body;
+  if (!projectid) {
     return res.sendStatus(404);
   }
   let project = null;
   try {
-      project = await getProjectData(project_id, projecttype);
+      project = await getProjectData(projectid, projecttype);
   } catch(e) {
       console.log('Error in project Promises ', e);
   }
