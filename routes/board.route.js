@@ -7,8 +7,9 @@ const logger = require('../config/logger');
 const db = require('../config/db');
 const {
     getCoordsByProjectId,
-    getMidByProjectId,
-    getMinimumDateByProjectId
+    getMidByProjectIdV2,
+    getMinimumDateByProjectId,
+    getProjectData
 } = require('./mapgallery.service');
 const { sendBoardNotification } = require('../services/user.service');
 
@@ -151,6 +152,21 @@ router.put('/project/:id', async (req, res) => {
     res.send(boardProject);
 });
 
+router.post('/projectdata', async (req, res) => {
+  let body = req.body;
+  let {projectid, projecttype} = body;
+  if (!projectid) {
+    return res.sendStatus(404);
+  }
+  let project = null;
+  try {
+      project = await getProjectData(projectid, projecttype);
+  } catch(e) {
+      console.log('Error in project Promises ', e);
+  }
+  res.send(project);
+});
+
 router.post('/', async (req, res) => {
     let body = req.body;
     let { type, year, locality, projecttype } = body;
@@ -176,7 +192,7 @@ router.post('/', async (req, res) => {
         let projectsPromises = boardProjects.filter(bp => !!bp.project_id).map(async (bp) => {
             let project = null;
             try {
-                project = await getMidByProjectId(bp.project_id, projecttype);
+                project = await getMidByProjectIdV2(bp.project_id, projecttype);
             } catch(e) {
                 console.log('Error in project Promises ', e);
             }
