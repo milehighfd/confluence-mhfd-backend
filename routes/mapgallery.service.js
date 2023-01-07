@@ -55,106 +55,6 @@ const getMidByProjectId = async (projectid, projecttype) => {
   }
 }
 
-const getMidByProjectIdV2 = async (projectid, projecttype) => {
-  let table = CREATE_PROJECT_TABLE;
-  let fields = [
-    "projectid",
-    // "cartodb_id",
-    // "county",
-    // "jurisdiction",
-    // "servicearea",
-    "projectname",
-    "status",
-    // "description",
-    // "acquisitionprogress",
-    // "acquisitionanticipateddate",
-    "projecttype",
-    "projectsubtype",
-    // "additionalcost",
-    // "additionalcostdescription",
-    // `${COSPONSOR1} as ${COSPONSOR}`,
-    // "frequency",
-    // "maintenanceeligibility",
-    // "overheadcost",
-    // "overheadcostdescription",
-    // "ownership",
-    // "sponsor",
-    // 'estimatedcost',
-    // 'studyreason',
-    // 'studysubreason'
-  ];
-  // if (['Acquisition',
-  // 'Special',
-  // 'Maintenance',
-  // 'Capital'].includes(projecttype)) {
-  //   fields.push('ST_AsGeoJSON(the_geom) as the_geom')
-  // }
-  let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
-  // console.log('SQL in get mid by project id ', SQL);
-  let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
-  const data = await needle('get', URL, { json: true });
-  if (data.statusCode === 200 && data.body.rows.length > 0) {
-    let obj = data.body.rows[0];
-    // if (projecttype === 'Study') {
-    //   const streams = await projectStreamService.getAll(projectid);
-    //   obj.streams = streams.map(r => r.mhfd_code);
-    // }
-    return obj;
-  } else {
-    console.log('getMidByProjectId error', data.statusCode, data.body);
-    return null;
-  }
-}
-const getProjectData = async (projectid, projecttype) => {
-  let table = CREATE_PROJECT_TABLE;
-  let fields = [
-    "projectid",
-    "cartodb_id",
-    "county",
-    "jurisdiction",
-    "servicearea",
-    "projectname",
-    "status",
-    "description",
-    "acquisitionprogress",
-    "acquisitionanticipateddate",
-    "projecttype",
-    "projectsubtype",
-    "additionalcost",
-    "additionalcostdescription",
-    `${COSPONSOR1} as ${COSPONSOR}`,
-    "frequency",
-    "maintenanceeligibility",
-    "overheadcost",
-    "overheadcostdescription",
-    "ownership",
-    "sponsor",
-    'estimatedcost',
-    'studyreason',
-    'studysubreason'
-  ];
-  if (['Acquisition',
-  'Special',
-  'Maintenance',
-  'Capital'].includes(projecttype)) {
-    fields.push('ST_AsGeoJSON(the_geom) as the_geom')
-  }
-  let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
-  // console.log('SQL in get mid by project id ', SQL);
-  let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
-  const data = await needle('get', URL, { json: true });
-  if (data.statusCode === 200 && data.body.rows.length > 0) {
-    let obj = data.body.rows[0];
-    if (projecttype === 'Study') {
-      const streams = await projectStreamService.getAll(projectid);
-      obj.streams = streams.map(r => r.mhfd_code);
-    }
-    return obj;
-  } else {
-    console.log('getMidByProjectId error', data.statusCode, data.body);
-    return null;
-  }
-}
 const getMinimumDateByProjectId = async (projectid) => {
   let table = CREATE_PROJECT_TABLE;
   let SQL = `SELECT county, servicearea FROM ${table} where projectid=${projectid}`;
@@ -470,7 +370,5 @@ module.exports = {
   getCoordinatesOfComponents,
   getMinimumDateByProjectId,
   getMidByProjectId,
-  getMidByProjectIdV2,
-  getProjectData,
   getCoordsByProjectId
 }
