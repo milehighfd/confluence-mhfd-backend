@@ -32,9 +32,6 @@ import db from 'bc/config/db.js';
 import seed from 'bc/config/seed.js'
 import projectServiceArea from 'bc/routes/projectservicearea.route.js';
 // import serviceAreaLocalGovernment from 'bc/routes/servicearealocalgovernment.route.js';
-
-db.sequelize.sync();
-
 seed();
 
 console.log(`ENVIRONMENT ${process.env.NODE_ENV}`);
