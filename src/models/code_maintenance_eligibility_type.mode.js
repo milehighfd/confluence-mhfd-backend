@@ -8,6 +8,11 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     },
+  }, {
+    freezeTableName: true,
+    tableName: 'code_maintenance_eligibility_type',
+    createdAt: false,
+    updatedAt: false
   });
   return CodeMaintenanceEligibilityType;
 }

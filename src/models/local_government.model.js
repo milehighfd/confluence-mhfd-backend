@@ -8,6 +8,11 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'local_government',
+    createdAt: false,
+    updatedAt: false
   });
   return LocalGovernment;
 }

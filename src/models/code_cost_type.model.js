@@ -19,6 +19,11 @@ export default (sequelize, DataType) => {
     created: {
       type: DataType.DATE
     },
+  }, {
+    freezeTableName: true,
+    tableName: 'code_cost_type',
+    createdAt: false,
+    updatedAt: false
   });
   return CodeCostType;
 }

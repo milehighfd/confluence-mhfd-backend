@@ -40,6 +40,11 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       allowNull: false
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'project_attachment',
+    createdAt: false,
+    updatedAt: false
   }
     );
   return ProjectAttachment;

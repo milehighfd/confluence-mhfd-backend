@@ -16,6 +16,11 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'state_county',
+    createdAt: false,
+    updatedAt: false
   });
   return StateCounty;
 }

@@ -24,6 +24,11 @@ export default (sequelize, DataType) => {
       type: DataType.FLOAT,
       allowNull: false
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'stream',
+    createdAt: false,
+    updatedAt: false
   }
     );
   return Stream;

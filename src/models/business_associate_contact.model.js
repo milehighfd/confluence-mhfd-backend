@@ -20,6 +20,11 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'business_associate_contact',
+    createdAt: false,
+    updatedAt: false
   }
     );
   return BusinessAssociateContact;

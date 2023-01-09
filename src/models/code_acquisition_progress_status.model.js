@@ -8,6 +8,11 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     },
+  }, {
+    freezeTableName: true,
+    tableName: 'code_acquisition_progress_status',
+    createdAt: false,
+    updatedAt: false
   });
   return CodeAcquisitionProgressStatus;
 }

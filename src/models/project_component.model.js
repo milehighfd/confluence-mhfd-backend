@@ -10,6 +10,11 @@ export default (sequelize, DataType) => {
     component_id: {
       type: DataType.INTEGER
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'project_component',
+    createdAt: false,
+    updatedAt: false
   });
   return ProjectComponent;
 }

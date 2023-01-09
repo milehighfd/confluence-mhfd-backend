@@ -11,6 +11,11 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       allowNull: true
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'project_status_action_item_tracking',
+    createdAt: false,
+    updatedAt: false
   });
   return ProjectStatusActionItemTracking;
 }
