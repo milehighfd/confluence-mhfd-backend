@@ -13,7 +13,8 @@ import {
   CARTO_URL,
   CREATE_PROJECT_TABLE,
   COSPONSOR1,
-  CREATE_PROJECT_TABLE_V2
+  CREATE_PROJECT_TABLE_V2,
+  ARCGIS_SERVICE
 } from 'bc/config/config.js';
 import db from 'bc/config/db.js';
 import auth from 'bc/auth/auth.js';
@@ -53,26 +54,6 @@ const getAuthenticationFormData = () => {
   return formData;
 }
 
-router.get('/token-url', async (req, res) => {
-    const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
-    const fd = getAuthenticationFormData();
-    // const token_data = await axios.post(URL_TOKEN, fd, { headers: fd.getHeaders() })
-    const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
-
-    const TOKEN = JSON.parse(token_data.body).token;
-    
-    const bodyFD = createRandomGeomOnARCGIS('non', 'cleanStringValue(projectname)', TOKEN);
-    const createOnArcGis = await needle('post','https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits', bodyFD, { multipart: true });
-    console.log('createona', createOnArcGis.statusCode, '\n\n\n\n ************* \n\n', createOnArcGis.body);
-    const response = {
-      token: TOKEN,
-      createStatus: createOnArcGis.statusCode,
-      data: createOnArcGis.body,
-      geom: '[{"geometry":{"paths":[[[-11806858.969765771,4881317.227901084],[-11572350.166986963,4872144.784506868],[-11767417.463170638,4742507.584535271],[-11576630.640570931,4746482.310006099]]],"spatialReference":{"wkid":102100,"latestWkid":3857}},"attributes":{"update_flag":0,"Component_Count":null,"projectId":null,"onbaseId":null,"projectName":"TEST NEEDLE BOOOOOO222O","projectType":null,"projectSubtype":null,"description":null,"status":null,"startYear":null,"completeYear":null,"sponsor":null,"coSponsor1":null,"coSponsor2":null,"coSponsor3":null,"frequency":null,"maintenanceEligibility":null,"ownership":null,"acquisitionAnticipatedDate":null,"acquisitionProgress":null,"additionalCostDescription":null,"overheadCostDescription":null,"consultant":null,"contractor":null,"LGManager":null,"mhfdManager":null,"serviceArea":null,"county":null,"jurisdiction":null,"streamName":null,"taskSedimentRemoval":null,"taskTreeThinning":null,"taskBankStabilization":null,"taskDrainageStructure":null,"taskRegionalDetention":null,"goalFloodRisk":null,"goalWaterQuality":null,"goalStabilization":null,"goalCapRecreation":null,"goalCapVegetation":null,"goalStudyOvertopping":null,"goalStudyConveyance":null,"goalStudyPeakFlow":null,"goalStudyDevelopment":null,"workPlanYr1":null,"workPlanYr2":null,"workPlanYr3":null,"workPlanYr4":null,"workPlanYr5":null,"attachments":null,"coverImage":null,"Component_Cost":null,"CreationDate":null,"Creator":null,"EditDate":null,"Editor":null,"MP_WR_ID":null,"dataSource":null,"currentWorkPlan":null,"mhfdDollarsRequested":null,"mhfdDollarsAllocated":null,"estimatedCost":null,"finalCost":null,"additionalCost":null,"overheadCost":null,"costDewatering":null,"costMobilization":null,"costTraffic":null,"costUtility":null,"costStormwater":null,"costEngineering":null,"costConstruction":null,"costLegal":null,"costContingency":null,"specialDistrict":null,"studyReason":null,"studySubreason":null}}]'
-    };
-    return res.status(205).send(response);
-
-});
 const getTokenArcGis = async () => {
   const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
   const fd = getAuthenticationFormData();
@@ -82,7 +63,7 @@ const getTokenArcGis = async () => {
 }
 const getGeomsToUpdate = async (TOKEN) => {
   try {
-    const LIST_ARCGIS = `https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/query?where=update_flag%3D1&objectIds=&time=&geometry=&geometryType=esriGeometryPolyline&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=projectname%2C+update_flag%2C+projectid%2C+OBJECTID&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&gdbVersion=&historicMoment=&returnDistinctValues=false&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&multipatchOption=xyFootprint&resultOffset=&resultRecordCount=&returnTrueCurves=false&returnExceededLimitFeatures=false&quantizationParameters=&returnCentroid=false&sqlFormat=none&resultType=&featureEncoding=esriDefault&datumTransformation=&f=geojson`;
+    const LIST_ARCGIS = `${ARCGIS_SERVICE}/query?where=update_flag%3D1&objectIds=&time=&geometry=&geometryType=esriGeometryPolyline&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=projectname%2C+update_flag%2C+projectid%2C+OBJECTID&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&gdbVersion=&historicMoment=&returnDistinctValues=false&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&multipatchOption=xyFootprint&resultOffset=&resultRecordCount=&returnTrueCurves=false&returnExceededLimitFeatures=false&quantizationParameters=&returnCentroid=false&sqlFormat=none&resultType=&featureEncoding=esriDefault&datumTransformation=&f=geojson`;
     var header = {
       headers: {
           'Authorization': `Bearer ${TOKEN}`
@@ -187,7 +168,7 @@ const updateFlagArcGis = async (objectid, value, TOKEN) => {
   let tries = 3;
   while(true) {
     try {
-      const URL_UPDATE_ATTRIB = `https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits`;
+      const URL_UPDATE_ATTRIB = `${ARCGIS_SERVICE}/applyEdits`;
       const formData = {
         'f': 'json',
         'token': TOKEN,
@@ -293,7 +274,7 @@ const insertIntoArcGis = async (geom, projectid, projectname) => {
     const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
     const TOKEN = JSON.parse(token_data.body).token;
     const bodyFD = createRandomGeomOnARCGIS(JSON.parse(geom).coordinates, cleanStringValue(projectname), TOKEN, projectid);
-    const createOnArcGis = await needle('post','https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0/applyEdits', bodyFD, { multipart: true });
+    const createOnArcGis = await needle('post','${ARCGIS_SERVICE}/applyEdits', bodyFD, { multipart: true });
     console.log('create on arc gis', createOnArcGis.statusCode, createOnArcGis.body);
     if (createOnArcGis.statusCode == 200) {
       if (createOnArcGis.body.error) {
