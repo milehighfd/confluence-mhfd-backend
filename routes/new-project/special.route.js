@@ -65,7 +65,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
           return;
         }
         let toBoard = j;
-        if (isWorkPlan) {
+        if (eval(isWorkPlan)) {
           toBoard = locality;
         }
         await addProjectToBoard(user, servicearea, county, toBoard, projecttype, projectId, year, sendToWR, isWorkPlan);
