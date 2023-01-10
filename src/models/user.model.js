@@ -13,6 +13,10 @@ export default (sequelize, DataType) => {
       defaultValue: DataType.UUIDV4,
       primaryKey: true
     },
+    user_id: {
+      type: DataType.UUID,
+      allowNull: false
+    },
     activated: {
       type: DataType.BOOLEAN
     },
@@ -73,9 +77,25 @@ export default (sequelize, DataType) => {
     status: {
       type: DataType.ENUM,
       values: ['approved', 'pending', 'deleted']
+    },
+    createdAt: {
+      type: DataType.DATE,
+      allowNull: false
+    },
+    updatedAt: {
+      type: DataType.DATE,
+      allowNull: false
+    },
+    is_sso: {
+      type: DataType.BOOLEAN,
+      allowNull: false
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'users'
+    // createdAt: false,
+    // updatedAt: false
   });
-
   User.prototype.generateAuthToken = async function () {
     const user = this;
     
