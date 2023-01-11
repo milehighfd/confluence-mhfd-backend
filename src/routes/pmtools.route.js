@@ -36,11 +36,12 @@ const getGroup = async (req, res) => {
       }).map((data) => data.dataValues);
       const groups = codeStatusType.map((data) => {
         return { name: data.status_name, id: data.code_status_type_id };
-      });
+      });return;
       data.table = 'code_status_type';
       data.groups = groups;
     } catch(error) {
       res.status(500).send({table: '', groups: []});
+      return;
     }
   }
   if (groupname === 'jurisdiction') {
@@ -57,6 +58,26 @@ const getGroup = async (req, res) => {
       data.groups = groups;
     } catch(error) {
       res.status(500).send({table: '', groups: []});
+      return;
+    }
+  }
+  if (groupname === 'county') {
+    console.log('here');
+    try{
+      const codeStateCounty = await CodeStateCounty.findAll({
+        order: [
+          ['county_name', 'ASC']
+        ]
+      }).map((data) => data.dataValues);
+      const groups = codeStateCounty.map((data) => {
+        return { name: data.county_name, id: data.state_county_id };
+      });
+      data.table = 'CODE_STATE_COUNTY_4326';
+      data.groups = groups;
+    } catch(error) {
+      logger.error(error);
+      res.status(500).send({table: '', groups: []});
+      return;
     }
   }
   res.send(data);
