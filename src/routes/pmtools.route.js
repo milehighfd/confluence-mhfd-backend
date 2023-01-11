@@ -73,6 +73,10 @@ const listProjects = async (req, res) => {
   console.log(mhfdStaff);
   // Get Service Area
   let projectServiceArea = await ProjectServiceArea.findAll({
+    // include: [{
+    //   model: CodeServiceArea,
+    //   attributes: { exclude: ['Shape']}
+    // }] ,
     where: {
       project_id: ids
     }
@@ -81,7 +85,8 @@ const listProjects = async (req, res) => {
   let codeServiceAreas = await CodeServiceArea.findAll({
     where: {
       code_service_area_id: codeServiceAreaIds
-    }
+    },
+    attributes: {exclude: ['Shape']}
   }).map(data => data.dataValues);
   projectServiceArea = projectServiceArea.map((data) => {
     const codeServiceArea = codeServiceAreas.filter((d) => d.code_service_area_id === data.code_service_area_id)[0];
