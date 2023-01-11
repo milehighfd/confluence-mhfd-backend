@@ -14,6 +14,8 @@ const ProjectCost = db.projectCost;
 const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
+const CodeStatusType = db.codeStatusType;
+
 const router = express.Router();
 import {
   CARTO_URL,
@@ -21,6 +23,28 @@ import {
   PROPSPROBLEMTABLES,
 } from 'bc/config/config.js';
 
+
+const getGroup = async (req, res) => {
+  const groupname = req.params['groupname'];
+  const data = {};
+  if (groupname === 'status') {
+    try{
+      const codeStatusType = await CodeStatusType.findAll({
+        order: [
+          ['status_name', 'ASC']
+        ]
+      }).map((data) => data.dataValues);
+      const groups = codeStatusType.map((data) => {
+        return { name: data.status_name, id: data.code_status_type_id };
+      });
+      data.table = 'code_status_type';
+      data.groups = groups;
+    } catch(error) {
+      res.status(500).send({table: '', groups: []});
+    }
+  }
+  res.send(data);
+}
 
 const listProjects = async (req, res) => {
   const { offset = 0, limit = 120000, code_project_type_id } = req.query;
@@ -108,5 +132,6 @@ const listProjects = async (req, res) => {
 };
 
 router.get('/list', listProjects);
+router.get('/groups/:groupname', getGroup);
 
 export default router;
