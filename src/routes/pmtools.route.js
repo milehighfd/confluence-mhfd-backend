@@ -15,6 +15,8 @@ const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
 const CodeStatusType = db.codeStatusType;
+const BusinessAssociante = db.businessAssociates;
+
 
 const router = express.Router();
 import {
@@ -90,6 +92,32 @@ const getGroup = async (req, res) => {
         return { name: data.service_area_name, id: data.code_service_area_id };
       });
       data.table = 'CODE_SERVICE_AREA_4326';
+      data.groups = groups;
+    } catch(error) {
+      logger.error(error);
+      res.status(500).send({table: '', groups: []});
+      return;
+    }
+  }
+  if (groupname === 'consultant') {
+    try{
+      const CONSULTANT_ID = 3;
+      const projectPartner = await ProjectPartner.findAll({
+        where: {
+          code_partner_type_id: CONSULTANT_ID
+        }
+      }).map((data) => data.dataValues);
+      const ids = projectPartner.map((data) => data.business_associates_id);
+      const businessAssociates = await BusinessAssociante.findAll({
+        where: {
+          business_associates_id: ids
+        },
+        order: [['business_name', 'ASC']]
+      });
+      const groups = businessAssociates.map((data) => {
+        return { name: data.business_name, id: data.business_associates_id };
+      });
+      data.table = 'business_associates';
       data.groups = groups;
     } catch(error) {
       logger.error(error);
