@@ -60,9 +60,9 @@ const getMidByProjectIdV2 = async (projectid, projecttype) => {
   let fields = [
     "projectid",
     // "cartodb_id",
-    // "county",
-    // "jurisdiction",
-    // "servicearea",
+    "county",
+    "jurisdiction",
+    "servicearea",
     "projectname",
     "status",
     // "description",
