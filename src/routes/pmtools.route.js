@@ -36,7 +36,7 @@ const getGroup = async (req, res) => {
       }).map((data) => data.dataValues);
       const groups = codeStatusType.map((data) => {
         return { name: data.status_name, id: data.code_status_type_id };
-      });return;
+      });
       data.table = 'code_status_type';
       data.groups = groups;
     } catch(error) {
@@ -62,7 +62,6 @@ const getGroup = async (req, res) => {
     }
   }
   if (groupname === 'county') {
-    console.log('here');
     try{
       const codeStateCounty = await CodeStateCounty.findAll({
         order: [
@@ -73,6 +72,24 @@ const getGroup = async (req, res) => {
         return { name: data.county_name, id: data.state_county_id };
       });
       data.table = 'CODE_STATE_COUNTY_4326';
+      data.groups = groups;
+    } catch(error) {
+      logger.error(error);
+      res.status(500).send({table: '', groups: []});
+      return;
+    }
+  }
+  if (groupname === 'service_area') {
+    try{
+      const codeServiceArea = await CodeServiceArea.findAll({
+        order: [
+          ['service_area_name', 'ASC']
+        ]
+      }).map((data) => data.dataValues);
+      const groups = codeServiceArea.map((data) => {
+        return { name: data.service_area_name, id: data.code_service_area_id };
+      });
+      data.table = 'CODE_SERVICE_AREA_4326';
       data.groups = groups;
     } catch(error) {
       logger.error(error);
