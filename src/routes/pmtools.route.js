@@ -43,6 +43,22 @@ const getGroup = async (req, res) => {
       res.status(500).send({table: '', groups: []});
     }
   }
+  if (groupname === 'jurisdiction') {
+    try{
+      const codeLocalGoverment = await CodeLocalGoverment.findAll({
+        order: [
+          ['local_government_name', 'ASC']
+        ]
+      }).map((data) => data.dataValues);
+      const groups = codeLocalGoverment.map((data) => {
+        return { name: data.local_government_name, id: data.code_local_government_id };
+      });
+      data.table = 'CODE_LOCAL_GOVERNMENT_4326';
+      data.groups = groups;
+    } catch(error) {
+      res.status(500).send({table: '', groups: []});
+    }
+  }
   res.send(data);
 }
 
