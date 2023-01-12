@@ -125,6 +125,32 @@ const getGroup = async (req, res) => {
       return;
     }
   }
+  if (groupname === 'contractor') {
+    try{
+      const CIVIL_CONTRACTOR_ID = 8, LANDSCAPE_CONTRACTOR_ID = 9;
+      const projectPartner = await ProjectPartner.findAll({
+        where: {
+          code_partner_type_id: [CIVIL_CONTRACTOR_ID, LANDSCAPE_CONTRACTOR_ID]
+        }
+      }).map((data) => data.dataValues);
+      const ids = projectPartner.map((data) => data.business_associates_id);
+      const businessAssociates = await BusinessAssociante.findAll({
+        where: {
+          business_associates_id: ids
+        },
+        order: [['business_name', 'ASC']]
+      });
+      const groups = businessAssociates.map((data) => {
+        return { name: data.business_name, id: data.business_associates_id };
+      });
+      data.table = 'business_associates';
+      data.groups = groups;
+    } catch(error) {
+      logger.error(error);
+      res.status(500).send({table: '', groups: []});
+      return;
+    }
+  }
   res.send(data);
 }
 
