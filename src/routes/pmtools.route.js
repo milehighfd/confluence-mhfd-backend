@@ -155,8 +155,7 @@ const getGroup = async (req, res) => {
 }
 
 const listProjects = async (req, res) => {
-  console.log('bro?');
-  const { offset = 0, limit = 120000, code_project_type_id } = req.query;
+  const { offset = 0, limit = 120000, code_project_type_id, group } = req.query;
   const where = {};
   if (code_project_type_id) {
     where.code_project_type_id = code_project_type_id;
@@ -166,9 +165,7 @@ const listProjects = async (req, res) => {
     offset,
     include: { all: true, nested: true },
     where: where,
-    group: ['code_status_type.status_name']
   }).map(result => result.dataValues);
-  console.log('my projects', projects);
   const SPONSOR_TYPE = 11; // maybe this can change in the future
   const ids = projects.map((p) => p.project_id);
   const project_partners = await ProjectPartner.findAll({
@@ -239,6 +236,18 @@ const listProjects = async (req, res) => {
   });
   console.log('data is ', codeServiceAreas);
   logger.info('projects being called');
+  if (group === 'status') {
+    const groupProjects = {};
+    projects.forEach(project => {
+      const status = project.project_status?.code_phase_type?.code_status_type?.code_status_type_id || -1;
+      if (!groupProjects[status]) {
+        groupProjects[status] = [];
+      }
+      groupProjects[status].push(project);
+    });
+    res.send(groupProjects);
+    return;
+  }
   res.send(projects);
 };
 
