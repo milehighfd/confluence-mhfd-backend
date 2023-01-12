@@ -95,7 +95,8 @@ const sendConfirmAccount = async (user) => {
   logger.info(adminEmailToSend);
   const adminOptions = {
     from: MHFD_EMAIL,
-    to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'ricardo@vizonomy.com' :'confluence.support@mhfd.org'),
+    to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'cesar@vizonomy.com' :'cesar@vizonomy.com'),
+    //to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'ricardo@vizonomy.com' :'confluence.support@mhfd.org'),
     subject: (process.env.NODE_ENV === 'dev' ? 'DEV - MHFD Confluence - New User Registered!':(process.env.NODE_ENV === 'test' ? 'TEST - MHFD Confluence - New User Registered!': 'MHFD Confluence - New User Registered!')),
     html: adminEmailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
