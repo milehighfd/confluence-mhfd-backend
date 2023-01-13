@@ -326,6 +326,18 @@ const listProjects = async (req, res) => {
     res.send(groupProjects);
     return;
   }
+  if (group === 'servicearea') {
+    const groupProjects = {};
+    projects.forEach(project => {
+      const serviceArea = project.serviceArea?.codeServiceArea?.code_service_area_id || -1;
+      if (!groupProjects[serviceArea]) {
+        groupProjects[serviceArea] = [];
+      }
+      groupProjects[serviceArea].push(project);
+    });
+    res.send(groupProjects);
+    return;
+  }
   res.send(projects);
 };
 
