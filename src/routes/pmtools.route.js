@@ -314,6 +314,18 @@ const listProjects = async (req, res) => {
     res.send(groupProjects);
     return;
   }
+  if (group === 'county') {
+    const groupProjects = {};
+    projects.forEach(project => {
+      const county = project.county?.codeStateCounty?.state_county_id || -1;
+      if (!groupProjects[county]) {
+        groupProjects[county] = [];
+      }
+      groupProjects[county].push(project);
+    });
+    res.send(groupProjects);
+    return;
+  }
   res.send(projects);
 };
 
