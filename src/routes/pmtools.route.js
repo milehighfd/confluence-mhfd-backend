@@ -234,6 +234,33 @@ const listProjects = async (req, res) => {
       serviceArea: codeServiceArea
     }
   });
+  // GET project local goverment (jurisdiction?)
+  let projectLocalGovernment = await ProjectLocalGovernment.findAll({
+    where: {
+      project_id: ids
+    }
+  }).map(data => data.dataValues);
+  const codeLovalGovermentIds = projectLocalGovernment.map((psa) => psa.code_local_government_id);
+  let codeLocalGoverments = await CodeLocalGoverment.findAll({
+    where: {
+      code_local_government_id: codeLovalGovermentIds
+    },
+    attributes: {exclude: ['Shape']}
+  }).map(data => data.dataValues);
+  projectLocalGovernment = projectLocalGovernment.map((data) => {
+    const codeLocalGoverment = codeLocalGoverments.filter((d) => d.code_local_government_id === data.code_local_government_id)[0];
+    return {
+      ...data,
+      codeLocalGoverment: codeLocalGoverment
+    }
+  });
+  projects = projects.map((data) => {
+    const codeLocalGoverment = projectLocalGovernment.filter((d) => d.project_id === data.project_id)[0];
+    return {
+      ...data,
+      localGoverment: codeLocalGoverment
+    }
+  });
   console.log('data is ', codeServiceAreas);
   logger.info('projects being called');
   if (group === 'status') {
@@ -244,6 +271,18 @@ const listProjects = async (req, res) => {
         groupProjects[status] = [];
       }
       groupProjects[status].push(project);
+    });
+    res.send(groupProjects);
+    return;
+  }
+  if (group === 'jurisdiction') {
+    const groupProjects = {};
+    projects.forEach(project => {
+      const jurisdiction = project.localGoverment?.codeLocalGoverment?.code_local_government_id || -1;
+      if (!groupProjects[jurisdiction]) {
+        groupProjects[jurisdiction] = [];
+      }
+      groupProjects[jurisdiction].push(project);
     });
     res.send(groupProjects);
     return;
