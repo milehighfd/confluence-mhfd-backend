@@ -261,6 +261,33 @@ const listProjects = async (req, res) => {
       localGoverment: codeLocalGoverment
     }
   });
+  // GET COUNTY 
+  let projectCounty = await ProjectCounty.findAll({
+    where: {
+      project_id: ids
+    }
+  }).map(data => data.dataValues);
+  const codeCounties = projectCounty.map((psa) => psa.state_county_id);
+  let codeStateCounties = await CodeStateCounty.findAll({
+    where: {
+      state_county_id: codeCounties
+    },
+    attributes: {exclude: ['Shape']}
+  }).map(data => data.dataValues);
+  projectCounty = projectCounty.map((data) => {
+    const codeStateCounty = codeStateCounties.filter((d) => d.state_county_id === data.state_county_id)[0];
+    return {
+      ...data,
+      codeStateCounty: codeStateCounty
+    }
+  });
+  projects = projects.map((data) => {
+    const codeStateCounty = projectCounty.filter((d) => d.project_id === data.project_id)[0];
+    return {
+      ...data,
+      county: codeStateCounty
+    }
+  });
   console.log('data is ', codeServiceAreas);
   logger.info('projects being called');
   if (group === 'status') {
