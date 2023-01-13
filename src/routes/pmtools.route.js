@@ -81,7 +81,7 @@ const getGroup = async (req, res) => {
       return;
     }
   }
-  if (groupname === 'service_area') {
+  if (groupname === 'servicearea') {
     try{
       const codeServiceArea = await CodeServiceArea.findAll({
         order: [
