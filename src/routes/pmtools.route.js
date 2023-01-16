@@ -319,6 +319,37 @@ const listProjects = async (req, res) => {
       consultants: staffs
     }
   });
+  // GET civil contractor
+  logger.info('CIVIL contractor');
+  const CIVIL_CONTRACTOR_ID = 8;
+  let civilContractors = await ProjectPartner.findAll({
+    where: {
+      project_id: ids,
+      code_partner_type_id: CIVIL_CONTRACTOR_ID
+    }
+  }).map(result => result.dataValues);
+  const civilContractorsIds = civilContractors.map((data) => data.business_associates_id).filter((data) => data !== null);
+  let contractorLIst = await BusinessAssociante.findAll({
+    where: {
+      business_associates_id: civilContractorsIds
+    }
+  }).map((data) => data.dataValues);
+  civilContractors = civilContractors.map((staff) => {
+    const consultant = contractorLIst.filter((cons) => {
+      return cons.business_associates_id === staff.business_associates_id
+    });
+    return {
+      ...staff,
+      consultant
+    }
+  });
+  projects = projects.map((project) => {
+    const staffs = civilContractors.filter(consult => consult.project_id === project.project_id);
+    return {
+      ...project,
+      civilContractor: staffs
+    }
+  });
   logger.info('projects being called');
   if (group === 'status') {
     const groupProjects = {};
