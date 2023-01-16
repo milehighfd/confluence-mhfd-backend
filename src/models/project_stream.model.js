@@ -16,7 +16,7 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       allowNull: false
     },
-    length_in_miles: {
+    length_in_mile: {
       type: DataType.FLOAT,
       allowNull: false
     },
