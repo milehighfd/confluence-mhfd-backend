@@ -368,6 +368,26 @@ const listProjects = async (req, res) => {
     res.send(groupProjects);
     return;
   }
+  if (group === 'consultant') { 
+    const groupProjects = {};
+    projects.forEach(project => {
+      const consultants = project.consultants || [];
+      consultants.forEach((consultant) => {
+        console.log(consultant.consultant, consultant.consultant.business_associates_id);
+        const array = consultant.consultant || [];
+        array.forEach((business) => {
+          const business_associates_id = business.business_associates_id || -1;
+          if (!groupProjects[business_associates_id]) {
+            groupProjects[business_associates_id] = [];
+          }
+          groupProjects[business_associates_id].push(project);
+
+        })
+      });
+    });
+    res.send(groupProjects);
+    return;
+  }
   res.send(projects);
 };
 
