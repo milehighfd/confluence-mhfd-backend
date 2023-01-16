@@ -2,6 +2,7 @@ import express from 'express';
 import https from 'https';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
+import Sequelize from 'sequelize';
 const Projects = db.project;
 const ProjectPartner = db.projectPartner;
 const ProjectCounty = db.projectCounty;
@@ -16,7 +17,8 @@ const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
 const CodeStatusType = db.codeStatusType;
 const BusinessAssociante = db.businessAssociates;
-
+const Streams = db.stream;
+const Op = Sequelize.Op;
 
 const router = express.Router();
 import {
@@ -149,6 +151,25 @@ const getGroup = async (req, res) => {
       logger.error(error);
       res.status(500).send({table: '', groups: []});
       return;
+    }
+  }
+  if (groupname === 'streams') {
+    try {
+      const streams = await Streams.findAll({
+        order: [
+          ['stream_name', 'ASC']
+        ],
+        where: {
+          stream_name: {[Op.ne]: null}
+        }
+      });
+      const groups = streams.map((data) => {
+        return { name: data.stream_name, id: data.stream_id}
+      });
+      data.table = 'streams';
+      data.groups = groups;
+    } catch (error) {
+      console.log('ERRRO AT streams', error);
     }
   }
   res.send(data);
