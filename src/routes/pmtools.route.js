@@ -403,8 +403,9 @@ const listProjects = async (req, res) => {
     }
   });
   logger.info('projects being called');
-  const CIP_CODE = 5;
-  if (+code_project_type_id === CIP_CODE) {
+  const CIP_CODE = 5, RESTORATION_CODE = 7;
+  if (+code_project_type_id === CIP_CODE 
+   || +code_project_type_id === RESTORATION_CODE) {
     const projectCost = await ProjectCost.findAll({
       where: {
         project_id: ids
