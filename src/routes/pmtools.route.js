@@ -335,12 +335,12 @@ const listProjects = async (req, res) => {
     }
   }).map((data) => data.dataValues);
   civilContractors = civilContractors.map((staff) => {
-    const consultant = contractorLIst.filter((cons) => {
+    const business = contractorLIst.filter((cons) => {
       return cons.business_associates_id === staff.business_associates_id
     });
     return {
       ...staff,
-      consultant
+      business
     }
   });
   projects = projects.map((project) => {
@@ -348,6 +348,37 @@ const listProjects = async (req, res) => {
     return {
       ...project,
       civilContractor: staffs
+    }
+  });
+  //GET landscape contractor
+  logger.info('LANDSCAPE contractor');
+  const LANDSCAPE_CONTRACTOR_ID = 9;
+  let landscapeContractor = await ProjectPartner.findAll({
+    where: {
+      project_id: ids,
+      code_partner_type_id: LANDSCAPE_CONTRACTOR_ID
+    }
+  }).map(result => result.dataValues);
+  const landscapeContractorIds = landscapeContractor.map((data) => data.business_associates_id).filter((data) => data !== null);
+  let landscapeContractorList = await BusinessAssociante.findAll({
+    where: {
+      business_associates_id: landscapeContractorIds
+    }
+  }).map((data) => data.dataValues);
+  landscapeContractor = landscapeContractor.map((staff) => {
+    const business = landscapeContractorList.filter((cons) => {
+      return cons.business_associates_id === staff.business_associates_id
+    });
+    return {
+      ...staff,
+      business
+    }
+  });
+  projects = projects.map((project) => {
+    const staffs = landscapeContractor.filter(consult => consult.project_id === project.project_id);
+    return {
+      ...project,
+      landscapeContractor: staffs
     }
   });
   logger.info('projects being called');
