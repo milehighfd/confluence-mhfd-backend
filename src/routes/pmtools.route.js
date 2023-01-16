@@ -179,7 +179,7 @@ const listProjects = async (req, res) => {
   const { offset = 0, limit = 120000, code_project_type_id, group } = req.query;
   const where = {};
   if (code_project_type_id) {
-    where.code_project_type_id = code_project_type_id;
+    where.code_project_type_id = +code_project_type_id;
   }
   let projects = await Projects.findAll({
     limit,
@@ -403,6 +403,23 @@ const listProjects = async (req, res) => {
     }
   });
   logger.info('projects being called');
+  const CIP_CODE = 5;
+  if (+code_project_type_id === CIP_CODE) {
+    const projectCost = await ProjectCost.findAll({
+      where: {
+        project_id: ids
+      }
+    }).map(result => result.dataValues);
+    const ESTIMATED_COST = 1;
+    const estimatedCosts = projectCost.filter(result => result.code_cost_type_id === ESTIMATED_COST);
+    projects = projects.map(project => {
+      const estimatedCost = estimatedCosts.filter(ec => ec.project_id === project.project_id)[0];
+      return {
+        ...project,
+        estimatedCost
+      };
+    });
+  }
   if (group === 'status') {
     const groupProjects = {};
     projects.forEach(project => {
