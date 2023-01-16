@@ -194,7 +194,7 @@ const listProjects = async (req, res) => {
       code_project_staff_role_type_id: MHFD_LEAD
     }
   }).map(result => result.dataValues);
-  console.log('the project staff is ', projectStaff);
+  // console.log('the project staff is ', projectStaff);
   const mhfdIds = projectStaff.map((data) => data.mhfd_staff_id).filter((data) => data !== null);
   const mhfdStaff = await MHFDStaff.findAll({
     where: {
@@ -288,7 +288,37 @@ const listProjects = async (req, res) => {
       county: codeStateCounty
     }
   });
-  console.log('data is ', codeServiceAreas);
+  //GET Consultant
+  logger.info('CONSULTANT');
+  const CONSULTANT_ID = 3;
+  let consultants = await ProjectPartner.findAll({
+    where: {
+      project_id: ids,
+      code_partner_type_id: CONSULTANT_ID
+    }
+  }).map(result => result.dataValues);
+  const consultantIds = consultants.map((data) => data.business_associates_id).filter((data) => data !== null);
+  let consultantList = await BusinessAssociante.findAll({
+    where: {
+      business_associates_id: consultantIds
+    }
+  }).map((data) => data.dataValues);
+  consultants = consultants.map((staff) => {
+    const consultant = consultantList.filter((cons) => {
+      return cons.business_associates_id === staff.business_associates_id
+    });
+    return {
+      ...staff,
+      consultant
+    }
+  });
+  projects = projects.map((project) => {
+    const staffs = consultants.filter(consult => consult.project_id === project.project_id);
+    return {
+      ...project,
+      consultants: staffs
+    }
+  });
   logger.info('projects being called');
   if (group === 'status') {
     const groupProjects = {};
