@@ -450,6 +450,35 @@ const listProjects = async (req, res) => {
     res.send(groupProjects);
     return;
   }
+  if (group === 'contractor') {
+    const groupProjects = {};
+    projects.forEach(project => {
+      const civilContractors = project.civilContractor || [];
+      civilContractors.forEach((civilContractor) => {
+        const array = civilContractor.business || [];
+        array.forEach((business) => {
+          const business_associates_id = business.business_associates_id || -1;
+          if (!groupProjects[business_associates_id]) {
+            groupProjects[business_associates_id] = [];
+          }
+          groupProjects[business_associates_id].push(project);
+        })
+      });
+      const landscapeContractor = project.landscapeContractor || [];
+      landscapeContractor.forEach((landscape) => {
+        const array = landscape.business || [];
+        array.forEach((business) => {
+          const business_associates_id = business.business_associates_id || -1;
+          if (!groupProjects[business_associates_id]) {
+            groupProjects[business_associates_id] = [];
+          }
+          groupProjects[business_associates_id].push(project);
+        })
+      });
+    });
+    res.send(groupProjects);
+    return;
+  }
   res.send(projects);
 };
 
