@@ -546,6 +546,19 @@ const listProjects = async (req, res) => {
     res.send(groupProjects);
     return;
   }
+  if (group === 'streams') {
+    const groupProjects = {};
+    projects.forEach(project => {
+      const stream = project?.streams?.stream[0]?.stream_name || -1;
+      console.log('exist stream??', stream, JSON.stringify(project));
+      if (!groupProjects[stream]) {
+        groupProjects[stream] = [];
+      }
+      groupProjects[stream].push(project);
+    });
+    res.send(groupProjects);
+    return;
+  }
   res.send(projects);
 };
 
