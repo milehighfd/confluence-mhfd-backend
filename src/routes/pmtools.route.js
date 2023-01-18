@@ -175,7 +175,18 @@ const getGroup = async (req, res) => {
   }
   res.send(data);
 }
+const safeGet = (obj, prop, defaultValue) => {
+  try {
+    return obj[prop]
+  } catch(e) {
+    return defaultValue
+  }
+}
 
+const sortInside = (projects, sortvalue) => {
+  projects.sort((a,b) => a?.project_status?.code_phase_type?.code_project_type?.project_type_name - b?.project_status?.code_phase_type?.code_project_type?.project_type_name );
+  return projects;
+}
 const listProjects = async (req, res) => {
   const { offset = 0, limit = 120000, code_project_type_id, group } = req.query;
   const where = {};
@@ -484,6 +495,7 @@ const listProjects = async (req, res) => {
   }
   if (group === 'status') {
     const groupProjects = {};
+    projects = sortInside(projects, 'project_type');
     projects.forEach(project => {
       const status = project.project_status?.code_phase_type?.code_status_type?.code_status_type_id || -1;
       if (!groupProjects[status]) {
@@ -581,6 +593,7 @@ const listProjects = async (req, res) => {
   }
   if (group === 'streams') {
     const groupProjects = {};
+    projects = sortInside(projects, 'project_type');
     projects.forEach(project => {
       const stream = project?.streams?.stream[0]?.stream_id || -1;
       if (!groupProjects[stream]) {
