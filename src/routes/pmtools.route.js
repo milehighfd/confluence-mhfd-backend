@@ -184,7 +184,7 @@ const safeGet = (obj, prop, defaultValue) => {
 }
 
 const sortInside = (projects, sortvalue) => {
-  projects.sort((a,b) => a?.project_status?.code_phase_type?.code_project_type?.project_type_name?.localeCompare(b?.project_status?.code_phase_type?.code_project_type?.project_type_name.localeCompare() ));
+  projects.sort((a,b) => a?.project_status?.code_phase_type?.code_project_type?.project_type_name?.localeCompare(b?.project_status?.code_phase_type?.code_project_type?.project_type_name ));
   return projects;
 }
 const listProjects = async (req, res) => {
