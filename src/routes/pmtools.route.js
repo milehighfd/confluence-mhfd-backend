@@ -184,7 +184,7 @@ const safeGet = (obj, prop, defaultValue) => {
 }
 
 const sortInside = (projects, sortvalue) => {
-  projects.sort((a,b) => a?.project_status?.code_phase_type?.code_project_type?.project_type_name - b?.project_status?.code_phase_type?.code_project_type?.project_type_name );
+  projects.sort((a,b) => a?.project_status?.code_phase_type?.code_project_type?.project_type_name?.localeCompare() - b?.project_status?.code_phase_type?.code_project_type?.project_type_name.localeCompare() );
   return projects;
 }
 const listProjects = async (req, res) => {
@@ -440,7 +440,6 @@ const listProjects = async (req, res) => {
       streams: streams
     };
   });
-
   logger.info('projects being called');
   const CIP_CODE = 5, RESTORATION_CODE = 7, DEVELOPER_CODE = 6;
   if (+code_project_type_id === CIP_CODE 
