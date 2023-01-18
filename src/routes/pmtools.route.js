@@ -431,7 +431,7 @@ const listProjects = async (req, res) => {
   });
 
   logger.info('projects being called');
-  const CIP_CODE = 5, RESTORATION_CODE = 7;
+  const CIP_CODE = 5, RESTORATION_CODE = 7, DEVELOPER_CODE = 6;
   if (+code_project_type_id === CIP_CODE 
    || +code_project_type_id === RESTORATION_CODE) {
     const projectCost = await ProjectCost.findAll({
@@ -447,6 +447,39 @@ const listProjects = async (req, res) => {
         ...project,
         estimatedCost
       };
+    });
+  }
+  if (+code_project_type_id === DEVELOPER_CODE) {
+    //GET Developer
+    logger.info('Developer');
+    const DEVELOPER_ID = 1;
+    let developers = await ProjectPartner.findAll({
+      where: {
+        project_id: ids,
+        code_partner_type_id: DEVELOPER_ID
+      }
+    }).map(result => result.dataValues);
+    const developerIds = developers.map((data) => data.business_associates_id).filter((data) => data !== null);
+    let developerLIst = await BusinessAssociante.findAll({
+      where: {
+        business_associates_id: developerIds
+      }
+    }).map((data) => data.dataValues);
+    developers = developers.map((staff) => {
+      const developer = developerLIst.filter((cons) => {
+        return cons.business_associates_id === staff.business_associates_id
+      });
+      return {
+        ...staff,
+        developer
+      }
+    });
+    projects = projects.map((project) => {
+      const staffs = developers.filter(consult => consult.project_id === project.project_id);
+      return {
+        ...project,
+        developers: staffs
+      }
     });
   }
   if (group === 'status') {
