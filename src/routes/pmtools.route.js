@@ -502,6 +502,17 @@ const listProjects = async (req, res) => {
   if (filterby === 'jurisdiction') {
     projects = projects.filter(project => project.localGoverment.codeLocalGoverment.code_local_government_id === +filtervalue);
   }
+  if (filterby === 'consultant') {
+    projects = projects.filter(project => {
+      const consultants = project.consultants || [];
+      let possible = 0;
+      consultants.forEach((consultant) => {
+        const business = consultant?.consultant || [];
+        possible |= business.some(bus => bus.business_associates_id === +filtervalue);
+      });
+      return possible;
+    });
+  }
   if (group === 'status') {
     const groupProjects = {};
     projects = sortInside(projects, 'project_type');
