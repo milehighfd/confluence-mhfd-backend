@@ -188,7 +188,7 @@ const sortInside = (projects, sortvalue) => {
   return projects;
 }
 const listProjects = async (req, res) => {
-  const { offset = 0, limit = 120000, code_project_type_id, group } = req.query;
+  const { offset = 0, limit = 120000, code_project_type_id, group, filterby, filtervalue } = req.query;
   const where = {};
   if (code_project_type_id) {
     where.code_project_type_id = +code_project_type_id;
@@ -414,6 +414,7 @@ const listProjects = async (req, res) => {
       landscapeContractor: staffs
     }
   });
+  // STREAMS
   let projectStreams = await ProjectStreams.findAll({
     where: {
       project_id: ids
@@ -440,6 +441,7 @@ const listProjects = async (req, res) => {
       streams: streams
     };
   });
+  
   logger.info('projects being called');
   const CIP_CODE = 5, RESTORATION_CODE = 7, DEVELOPER_CODE = 6;
   if (+code_project_type_id === CIP_CODE 
@@ -491,6 +493,9 @@ const listProjects = async (req, res) => {
         developers: staffs
       }
     });
+  }
+  if (filterby === 'servicearea') {
+    projects = projects.filter(project => project.serviceArea.codeServiceArea.code_service_area_id === +filtervalue);
   }
   if (group === 'status') {
     const groupProjects = {};
