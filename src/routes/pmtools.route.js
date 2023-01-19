@@ -499,6 +499,9 @@ const listProjects = async (req, res) => {
   if (filterby === 'county') {
     projects = projects.filter(project => project.county.codeStateCounty.state_county_id === +filtervalue);
   }
+  if (filterby === 'jurisdiction') {
+    projects = projects.filter(project => project.localGoverment.codeLocalGoverment.code_local_government_id === +filtervalue);
+  }
   if (group === 'status') {
     const groupProjects = {};
     projects = sortInside(projects, 'project_type');
