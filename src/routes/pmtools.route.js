@@ -358,7 +358,7 @@ const sortInside = (projects, sortvalue, order) => {
   return projects;
 }
 const listProjects = async (req, res) => {
-  const { offset = 0, limit = 120000, code_project_type_id, group, sortby, order } = req.query;
+  const { offset = 0, limit = 120000, code_project_type_id, group, sortby, order, filterby, filtervalue } = req.query;
   const where = {};
   if (code_project_type_id) {
     where.code_project_type_id = +code_project_type_id;
@@ -584,6 +584,7 @@ const listProjects = async (req, res) => {
       landscapeContractor: staffs
     }
   });
+  // STREAMS
   let projectStreams = await ProjectStreams.findAll({
     where: {
       project_id: ids
@@ -668,6 +669,26 @@ const listProjects = async (req, res) => {
     projects = sortInside(projects, sortby, order);
   }
       
+  if (filterby === 'servicearea') {
+    projects = projects.filter(project => project.serviceArea.codeServiceArea.code_service_area_id === +filtervalue);
+  }
+  if (filterby === 'county') {
+    projects = projects.filter(project => project.county.codeStateCounty.state_county_id === +filtervalue);
+  }
+  if (filterby === 'jurisdiction') {
+    projects = projects.filter(project => project.localGoverment.codeLocalGoverment.code_local_government_id === +filtervalue);
+  }
+  if (filterby === 'consultant') {
+    projects = projects.filter(project => {
+      const consultants = project.consultants || [];
+      let possible = 0;
+      consultants.forEach((consultant) => {
+        const business = consultant?.consultant || [];
+        possible |= business.some(bus => bus.business_associates_id === +filtervalue);
+      });
+      return possible;
+    });
+  }
   if (group === 'status') {
     const groupProjects = {};
     
