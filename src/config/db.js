@@ -134,22 +134,22 @@ db.projectServiceArea.belongsTo(
 // db.projectServiceArea.belongsTo(
 // )
 
-// db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
-// db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
-// db.user.hasMany(db.color, {foreignKey: 'user_id'});
-// db.color.belongsTo(db.user, {foreignKey: 'user_id'});
+db.user.hasMany(db.favorites, {foreignKey: 'user_id'});
+db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
+db.user.hasMany(db.color, {foreignKey: 'user_id'});
+db.color.belongsTo(db.user, {foreignKey: 'user_id'});
 db.newnotes.belongsTo(db.color, {foreignKey: {name: 'color_id', allowNull: true}});
 db.color.hasMany(db.newnotes, {foreignKey: {name: 'color_id', allowNull: true}});
-// db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
-// db.favorites.belongsTo(db.user, {foreignKey: 'user_id'});
+db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
+db.favorites.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
 // db.attachment.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.user.hasMany(db.newnotes, {foreignKey: 'user_id'});
-// db.newnotes.belongsTo(db.user, {foreignKey: 'user_id'});
+db.newnotes.belongsTo(db.user, {foreignKey: 'user_id'});
 db.newnotes.belongsTo(db.groupnotes, {foreignKey: {name: 'group_id', allowNull: true}});
 db.groupnotes.hasMany(db.newnotes, { foreignKey: {name: 'group_id', allowNull: true }});
-// db.groupnotes.belongsTo(db.user, {foreignKey: 'user_id'});
-// db.user.hasMany(db.groupnotes, {foreignKey: 'user_id'});
+db.groupnotes.belongsTo(db.user, {foreignKey: 'user_id'});
+db.user.hasMany(db.groupnotes, {foreignKey: 'user_id'});
 
 /*
 db.businessAssociates.hasMany(
