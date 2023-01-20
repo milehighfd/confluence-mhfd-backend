@@ -689,6 +689,23 @@ const listProjects = async (req, res) => {
       return possible;
     });
   }
+  if (filterby === 'contractor') {
+    projects = projects.filter(project => {
+      const consultants = project.civilContractor || [];
+      const landscapeContractors = project.landscapeContractor || [];
+      console.log(consultants.length, landscapeContractors.length);
+      let possible = 0;
+      consultants.forEach((consultant) => {
+        const business = consultant?.business || [];
+        possible |= business.some(bus => bus.business_associates_id === +filtervalue);
+      });
+      landscapeContractors.forEach((consultant) => {
+        const business = consultant?.business || [];
+        possible |= business.some(bus => bus.business_associates_id === +filtervalue);
+      });
+      return possible;
+    });
+  }
   if (group === 'status') {
     const groupProjects = {};
     
