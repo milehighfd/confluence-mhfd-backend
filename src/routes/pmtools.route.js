@@ -183,12 +183,182 @@ const safeGet = (obj, prop, defaultValue) => {
   }
 }
 
-const sortInside = (projects, sortvalue) => {
-  projects.sort((a,b) => a?.project_status?.code_phase_type?.code_project_type?.project_type_name?.localeCompare(b?.project_status?.code_phase_type?.code_project_type?.project_type_name ));
+const sortInside = (projects, sortvalue, order) => {
+  // on_base     onbase_project_number
+  // project_sponsor   .sponsor
+  // project_type   .project_status?.code_phase_type?.code_project_type?.project_type_name
+  // status     .project_status?.code_phase_type?.code_status_type?.status_name
+  // phase      .project_status?.code_phase_type?.phase_name
+  // service_area     .serviceArea?.codeServiceArea?.service_area_name
+  // stream           .streams?.stream?.stream_name
+  // consultant       .consultants[0]?.consultant[0]?.business_name
+  // civil_contractor .civilContractor[0]?.business[0]?.business_name
+  // landscape_contractor .landscapeContractor[0]?.business[0]?.business_name
+  // county           .county?.codeStateCounty?.county_name
+  // total_funding
+  // developer 
+  // construction_start_date 
+  // lg_lead            
+  // estimated_cost   .estimatedCost?.cost
+  // MHFD_lead   ??
+
+  switch (sortvalue) {
+      case 'on_base': 
+        console.log('\n\n\nabout to sort ON BASE \n\n***********\n\n\n');
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return a.onbase_project_number - b.onbase_project_number
+          } else {
+            return b.onbase_project_number - a.onbase_project_number
+          }
+        });
+        break;
+      case 'project_sponsor':
+        console.log('\n\n\nabout to sort sponsor \n\n***********\n\n\n'); 
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return a?.sponsor?.localeCompare(b?.sponsor )
+          } else {
+            return b?.sponsor?.localeCompare(a?.sponsor )
+          }
+        });
+        break;
+      case 'project_type': 
+      console.log('\n\n\nabout to sort project_type \n\n***********\n\n\n');
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return a?.project_status?.code_phase_type?.code_project_type?.project_type_name?.localeCompare(b?.project_status?.code_phase_type?.code_project_type?.project_type_name )
+          } else {
+            return b?.project_status?.code_phase_type?.code_project_type?.project_type_name?.localeCompare(a?.project_status?.code_phase_type?.code_project_type?.project_type_name )
+          }
+        });
+        break;
+      case 'status': 
+      console.log('\n\n\nabout to sort status \n\n***********\n\n\n');
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return a?.project_status?.code_phase_type?.code_status_type?.status_name?.localeCompare(b?.project_status?.code_phase_type?.code_status_type?.status_name);
+          } else {
+            return b?.project_status?.code_phase_type?.code_status_type?.status_name?.localeCompare(a?.project_status?.code_phase_type?.code_status_type?.status_name);
+          }
+        });
+        break;
+      case 'phase': 
+      console.log('\n\n\nabout to sort phase \n\n***********\n\n\n');
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return a?.project_status?.code_phase_type?.phase_name?.localeCompare(b?.project_status?.code_phase_type?.phase_name);
+          } else {
+            return b?.project_status?.code_phase_type?.phase_name?.localeCompare(a?.project_status?.code_phase_type?.phase_name);
+          }
+        });
+        break;
+      case 'service_area': 
+      console.log('\n\n\nabout to sort service area \n\n***********\n\n\n');
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return a?.serviceArea?.codeServiceArea?.service_area_name?.localeCompare(b?.serviceArea?.codeServiceArea?.service_area_name); 
+          } else {
+            return b?.serviceArea?.codeServiceArea?.service_area_name?.localeCompare(a?.serviceArea?.codeServiceArea?.service_area_name); 
+          }
+        });
+        break;
+      case 'stream': 
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return a?.streams?.stream?.stream_name?.localeCompare(b.streams?.stream?.stream_name);
+          } else {
+            return b?.streams?.stream?.stream_name?.localeCompare(a.streams?.stream?.stream_name);
+          }
+        });
+        break;
+      case 'consultant': 
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return a?.consultants[0]?.consultant[0]?.business_name?.localeCompare(b?.consultants[0]?.consultant[0]?.business_name);
+          } else {
+            return b?.consultants[0]?.consultant[0]?.business_name?.localeCompare(a?.consultants[0]?.consultant[0]?.business_name);
+          }
+        });
+        break;
+      case 'civil_contractor': 
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return a?.civilContractor[0]?.business[0]?.business_name.localeCompare(b?.civilContractor[0]?.business[0]?.business_name);
+          } else {
+            return b?.civilContractor[0]?.business[0]?.business_name.localeCompare(a?.civilContractor[0]?.business[0]?.business_name); 
+          }
+        });
+        break;
+      case 'landscape_contractor': 
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return a.landscapeContractor[0]?.business[0]?.business_name.localeCompare(b?.landscapeContractor[0]?.business[0]?.business_name);
+          } else {
+            return b.landscapeContractor[0]?.business[0]?.business_name.localeCompare(a?.landscapeContractor[0]?.business[0]?.business_name);
+          }
+        });
+        break;
+      case 'county': 
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return a.county?.codeStateCounty?.county_name.localeCompare(b?.county?.codeStateCounty?.county_name);
+          } else {
+            return b.county?.codeStateCounty?.county_name.localeCompare(a?.county?.codeStateCounty?.county_name);
+          }
+        });
+        break;
+
+      case 'total_funding': 
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return 
+          } else {
+            return 
+          }
+        });
+        break;
+      case 'developer': 
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return 
+          } else {
+            return 
+          }
+        });
+        break;
+      case 'construction_start_date': 
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return 
+          } else {
+            return 
+          }
+        });
+        break;
+      case 'lg_lead': 
+        break;
+      case 'estimated_cost': 
+        projects.sort((a,b) => {
+          if (order === 'ascend') {
+            return a?.estimatedCost?.cost - b?.estimatedCost?.cost
+          } else {
+            return b?.estimatedCost?.cost - a?.estimatedCost?.cost
+          }
+        });
+        break;
+      case 'MHFD_lead': 
+        break;
+  
+      default:
+        break;
+  }
+    
+  
   return projects;
 }
 const listProjects = async (req, res) => {
-  const { offset = 0, limit = 120000, code_project_type_id, group, filterby, filtervalue } = req.query;
+  const { offset = 0, limit = 120000, code_project_type_id, group, sortby, order, filterby, filtervalue } = req.query;
   const where = {};
   if (code_project_type_id) {
     where.code_project_type_id = +code_project_type_id;
@@ -487,12 +657,18 @@ const listProjects = async (req, res) => {
     });
     projects = projects.map((project) => {
       const staffs = developers.filter(consult => consult.project_id === project.project_id);
+      const construction_start_date = project?.project_status?.code_phase_type?.code_phase_type_id === 125 ? project?.project_status?.planned_start_date : project?.project_status?.actual_start_date
       return {
         ...project,
-        developers: staffs
+        developers: staffs,
+        construction_start_date: construction_start_date
       }
     });
   }
+  if ( sortby ) {
+    projects = sortInside(projects, sortby, order);
+  }
+      
   if (filterby === 'servicearea') {
     projects = projects.filter(project => project.serviceArea.codeServiceArea.code_service_area_id === +filtervalue);
   }
@@ -513,9 +689,26 @@ const listProjects = async (req, res) => {
       return possible;
     });
   }
+  if (filterby === 'contractor') {
+    projects = projects.filter(project => {
+      const consultants = project.civilContractor || [];
+      const landscapeContractors = project.landscapeContractor || [];
+      console.log(consultants.length, landscapeContractors.length);
+      let possible = 0;
+      consultants.forEach((consultant) => {
+        const business = consultant?.business || [];
+        possible |= business.some(bus => bus.business_associates_id === +filtervalue);
+      });
+      landscapeContractors.forEach((consultant) => {
+        const business = consultant?.business || [];
+        possible |= business.some(bus => bus.business_associates_id === +filtervalue);
+      });
+      return possible;
+    });
+  }
   if (group === 'status') {
     const groupProjects = {};
-    projects = sortInside(projects, 'project_type');
+    
     projects.forEach(project => {
       const status = project.project_status?.code_phase_type?.code_status_type?.code_status_type_id || -1;
       if (!groupProjects[status]) {
