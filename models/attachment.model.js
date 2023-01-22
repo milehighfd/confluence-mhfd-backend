@@ -1,39 +1,46 @@
 export default (sequelize, DataType) => {
-  const Attachment = sequelize.define('attachment', {
-    _id: {
-      type: DataType.UUID,
-      defaultValue: DataType.UUIDV4,
+  const Attachment = sequelize.define('project_attachment', {
+    project_attachment_id: {
+      type: DataType.INTEGER,
       primaryKey: true
     },
-    value: {
+    attachment_url: {
       type: DataType.STRING(512)
     },
-    filename: {
+    file_name: {
       type: DataType.STRING(512)
     },
-    mimetype: {
+    is_cover: {
+      type: DataType.INTEGER
+    },
+    attachment_reference_key: {
+      type: DataType.STRING(512)
+    },
+    attachment_reference_key_type: {
+      type: DataType.STRING(512)
+    },
+    created_by: {
       type: DataType.STRING
     },
-    user_id: {
-      type: DataType.UUID,
-      allowNull: false
+    last_modified_by: {
+      type: DataType.STRING
     },
-    register_date: {
+    created_date: {
       type: DataType.DATE
     },
-    filesize: {
-      type: DataType.FLOAT
+    last_modified_date: {
+      type: DataType.DATE,
+    },
+    mime_type: {
+      type: DataType.STRING
     },
     project_id: {
       type: DataType.STRING,
       allowNull: true
-    },
-    type: {
-      type: DataType.STRING
-    },
-    isCover: {
-      type: DataType.BOOLEAN
     }
+  }, {
+    tableName: 'project_attachment',
+    timestamps: false
   });
   return Attachment;
 }

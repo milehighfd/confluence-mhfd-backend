@@ -158,7 +158,7 @@ router.get('/create', auth, async (req, res) => {
   const user = req.user;
   try {
     const favorite = {
-      user_id: user._id,
+      user_id: user.user_id,
       table: table,
       id: id
     };

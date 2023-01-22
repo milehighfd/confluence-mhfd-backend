@@ -5,11 +5,12 @@ import sequelize from 'sequelize';
 import logger from 'bc/config/logger.js';
 import { BASE_SERVER_URL } from 'bc/config/config.js';
 import db from 'bc/config/db.js';
+import moment from 'moment';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const { Op } = sequelize;
-const Attachment = db.attachment;
+const Attachment = db.projectAttachment;
 
 function getPublicUrl(filename) {
   return `${BASE_SERVER_URL}/${'images'}/${filename}`;
@@ -48,18 +49,17 @@ const listAttachments = async (page, limit, sortByField, sortType, projectid) =>
   const attachments = await Attachment.findAll(json);
   return attachments.map((resp) => {
     return {
-      '_id': resp._id,
-      'filename': {
-        'filename': resp.filename,
-        'mimetype': resp.mimetype,
-        'value': resp.value
+      'project_attachment_id': resp.project_attachment_id,
+      'file_name': {
+        'file_name': resp.file_name,
+        'mime_type': resp.mime_type,
+        'attachment_url': resp.attachment_url
       },
-      'mimetype': resp.mimetype,
-      'user_id': resp.user_id,
-      'value': resp.value,
+      'mime_type': resp.mime_type,
+      'created_by': resp.created_by,
+      'attachment_url': resp.attachment_url,
       'register_date': resp.register_date,
-      'filesize': resp.filesize,
-      'createdAt': resp.createdAt
+      'created_date': resp.created_date
     }
   });
 }
@@ -69,11 +69,11 @@ const findCoverImage = async (name) => {
   try {
     const attach = await Attachment.findOne({
       where: {
-        filename: { [Op.like]: '%' + name + '%' }
+        file_name: { [Op.like]: '%' + name + '%' }
       }
     });
     if (attach) {
-      urlImage = await attach.value;
+      urlImage = await attach.attachment_url;
     } else {
       urlImage = null;
     }
@@ -85,18 +85,30 @@ const findCoverImage = async (name) => {
   return await urlImage;
 }
 
+
+const FilterUrl = async (obj) => {
+  try {
+    const arrayOfUrls = obj.map((element)=> element.attachment_url)
+    return await arrayOfUrls;
+  } catch (error) {
+    logger.error(error);
+    return
+  }
+}
+
+
 const findByName = async (name) => {
   let urlImage = [];
   try {
     const attach = await Attachment.findAll({
       where: {
-        filename: { [Op.like]: '%' + name + '%' }
+        file_name: { [Op.like]: '%' + name + '%' }
       }
     });
 
     if (attach.length > 0) {
       for (const url of attach) {
-        urlImage.push(url.value);
+        urlImage.push(url.attachment_url);
       }
     }
   } catch (err) {
@@ -112,13 +124,13 @@ const findByFilename = async (name) => {
   try {
     const attach = await Attachment.findAll({
       where: {
-        filename: { [Op.like]: '%' + name + '%' }
+        file_name: { [Op.like]: '%' + name + '%' }
       }
     });
 
     if (attach.length > 0) {
       for (const url of attach) {
-        urlImage.push(url.filename);
+        urlImage.push(url.file_name);
       }
     }
   } catch (err) {
@@ -138,9 +150,9 @@ const removeAttachment = async (id) => {
   // TODO: review delete image from folder
   let name;
   if (attach.project_id) {
-    name = `${attach.project_id}/${attach.filename}`;
+    name = `${attach.project_id}/${attach.file_name}`;
   } else {
-    name = attach.filename;
+    name = attach.file_name;
   }
   let fileName = getDestFile(name);
   try {
@@ -151,7 +163,7 @@ const removeAttachment = async (id) => {
   }
   await Attachment.destroy({
     where: {
-      _id: attach._id
+      project_attachment_id: attach.project_attachment_id
     }
   });
 
@@ -166,54 +178,58 @@ const isImage = (type) => {
 }
 
 const uploadFiles = async (user, files, projectid, cover) => {
-  for (const file of files) {
-    let name = file.originalname;
-    if (projectid) {
-      name = `${projectid}/${name}`
-    }
-    let attach = {};
-    attach.value = getPublicUrl(name);
-    attach.user_id = user._id;
-    attach.filename = file.originalname;
-    attach.mimetype = file.mimetype;
-    attach.register_date = new Date();
-    attach.filesize = file.size;
-    attach.isCover = cover ? file.originalname === cover : false
-    if (projectid) {
-      attach.project_id = projectid
-    }
-    Attachment.create(attach);
-    console.log(file.mimetype);
-    const complete = getDestFile(name);
-    logger.info(complete);
-    const prom = new Promise((resolve, reject) => {
-      fs.writeFile(complete, file.buffer, (error) => {
-        if (error) {
-          logger.error('error ' + JSON.stringify(error));
-          reject({error: error});
-        }
-        resolve('OK');
+  try {
+    const formatTime = moment().format('YYYY-MM-DD HH:mm:ss');
+    for (const file of files) {
+      let name = file.originalname;
+      const none = 'NONE';
+      if (projectid) {
+        name = `${projectid}/${name}`
+      }
+      const insertQuery = `INSERT INTO project_attachment (attachment_url, file_name, attachment_reference_key, attachment_reference_key_type, created_by, created_date, last_modified_by, mime_type, project_id, last_modified_date, is_cover)
+      OUTPUT inserted . *
+      VALUES('${getPublicUrl(name)}', '${file.originalname}', '${none}', '${none}', '${user.email}', '${formatTime}', '${user.email}', '${file.mimetype}', '${projectid ? projectid : null}', '${formatTime}', '${cover ? file.originalname === cover : false}')`;
+      console.log(insertQuery)
+      const data = await db.sequelize.query(
+        insertQuery,
+        {
+          type: db.sequelize.QueryTypes.INSERT,
+        });
+  
+      const complete = getDestFile(name);
+      logger.info(`Saved ${JSON.stringify(data[0][0])}`);
+      
+      const prom = new Promise((resolve, reject) => {
+        fs.writeFile(complete, file.buffer, (error) => {
+          if (error) {
+            logger.error('error ' + JSON.stringify(error));
+            reject({error: error});
+          }
+          resolve('OK');
+        });
       });
-    });
-    try {
-      await prom;
-    } catch (error) {
-      throw error;
+      try {
+        await prom;
+      } catch (error) {
+        throw error;
+      }
     }
+  } catch (error) {
+    console.log(error)
   }
 }
 
 const toggle = async (id) => {
   const attach = await Attachment.findByPk(id);
   attach.update({
-    isCover: !attach.isCover
+    is_cover: !attach.is_cover
   });
   return attach;
 }
 const toggleValue = async (id, newIsCover) => {
   const attach = await Attachment.findByPk(id);
   attach.update({
-    isCover: newIsCover
+    is_cover: newIsCover
   });
   return attach;
 }
@@ -227,5 +243,6 @@ export default {
   findCoverImage,
   findByFilename,
   toggle,
-  toggleValue
+  toggleValue,
+  FilterUrl
 };

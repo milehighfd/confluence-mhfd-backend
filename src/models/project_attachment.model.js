@@ -8,6 +8,9 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     },
+    file_name: {
+      type: DataType.STRING
+    },
     attachment_reference_key: {
       type: DataType.STRING,
       allowNull: false
@@ -25,7 +28,7 @@ export default (sequelize, DataType) => {
       allowNull: false,
     },
     last_modified_by: {
-      type: DataType.DATE,
+      type: DataType.STRING,
       allowNull: false
     },
     last_modified_date: {
@@ -39,6 +42,9 @@ export default (sequelize, DataType) => {
     project_id: {
       type: DataType.INTEGER,
       allowNull: false
+    },   
+    is_cover: {
+      type: DataType.INTEGER
     }
   }, {
     freezeTableName: true,

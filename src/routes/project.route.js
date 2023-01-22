@@ -2,6 +2,8 @@ import express from 'express';
 import https from 'https';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
+import attachmentService from 'bc/services/attachment.service.js';
+
 const Projects = db.project;
 const ProjectPartner = db.projectPartner;
 const ProjectCounty = db.projectCounty;
@@ -14,6 +16,10 @@ const ProjectCost = db.projectCost;
 const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
+
+const Attachment = db.projectAttachment;
+
+
 const router = express.Router();
 import {
   CARTO_URL,
@@ -80,11 +86,12 @@ async function getProblemByProjectId(projectid, sortby, sorttype) {
 }
 
 const listProjects = async (req, res) => {
-  const { offset = 0, limit = 120000 } = req.query;
+  const { offset = 0, limit = 10 } = req.query;
   let projects = await Projects.findAll({
     limit,
     offset,
-    include: { all: true, nested: true }
+    include: { all: true, nested: true },
+    order: [['created_date', 'DESC']]
   }).map(result => result.dataValues);
   const SPONSOR_TYPE = 11; // maybe this can change in the future
   const ids = projects.map((p) => p.project_id);
@@ -257,6 +264,20 @@ const getProjectDetail = async (req, res) => {
     }
   });
   project = { ...project, projectDetail: project_detail };
+
+  // attachments, for projects
+  const attachments = await Attachment.findAll({
+    where: {
+      project_id: project.project_id,
+    }
+  });
+  let attachmentFinal 
+  if (attachments.length > 0) {
+    attachmentFinal = await attachmentService.FilterUrl(attachments);
+    console.log(attachmentFinal)
+  }
+  project = { ...project, attachments: attachmentFinal ? attachmentFinal : [] };
+  
   // get problems 
   const problems = await getProblemByProjectId(project.project_id, PROPSPROBLEMTABLES.problems[6], 'asc');
   logger.info(`Adding problems ${JSON.stringify(problems)}`)

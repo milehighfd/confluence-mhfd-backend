@@ -298,7 +298,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const { isWorkPlan, projectname, description, servicearea, county, geom,
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
     independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost, year, sendToWR, componentcost, componentcount } = req.body;
-  const creator = 'sys';
+  const creator = user.name;
   const defaultProjectId = '5';
   let notRequiredFields = ``;
   let notRequiredValues = ``;
@@ -320,7 +320,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
       await projectStatusService.saveProjectStatusFromCero(5, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       //await addProjectToBoard(user, servicearea, county, j, projecttype, project_id, year, sendToWR, isWorkPlan);
-      // TODO: habilitar luego attachment await attachmentService.uploadFiles(user, req.files, projectId, cover);
+      await attachmentService.uploadFiles(user, req.files, project_id, cover);
       for (const independent of JSON.parse(independetComponent)) {
         try {
           await projectComponentService.saveProjectComponent(0, '', independent.name, independent.status, project_id);
@@ -342,7 +342,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       result.push(dataArcGis);
 
     } catch (error) {
-      logger.error(error, 'at', insertQuery);
+      logger.error(error);
     }
   }
   res.send(result);

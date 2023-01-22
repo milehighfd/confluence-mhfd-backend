@@ -8,7 +8,7 @@ import { BASE_SERVER_URL } from 'bc/config/config.js';
 
 const { sequelize } = db;
 const router = express.Router();
-const Attachment = db.attachment;
+const Attachment = db.projectAttachment;
 
 const multer = Multer({
    storage: Multer.MemoryStorage,
@@ -61,7 +61,7 @@ router.get('/by-project/:projectid', async (req, res) => {
 
 router.get('/get-files', async (req, res) => {
    try {
-      const { page = 1, limit = 10, sort = 'register_date',
+      const { page = 1, limit = 10, sort = 'created_date',
           sorttype = 'desc', projectid } = req.query;
       //console.log('sort', sortby);
       const files = await attachmentService.listAttachments(page, limit, sort, sorttype, projectid);
