@@ -35,7 +35,7 @@ function getFilters(params, ids) {
          }
       }
    } else {
-      // console.log('PROJECTS');
+      console.log('PROJECTS');
       tipoid = 'projectid';
       if (params.name) {
          if (filters.length > 0) {
@@ -43,9 +43,9 @@ function getFilters(params, ids) {
          } else {
             filters = ` projectname ilike '%${params.name}%' `;
          }
-         // console.log("ID", filters);
+         
       }
-
+      console.log("ID", filters);
       if (params.problemtype) {
 
       }
@@ -158,37 +158,41 @@ router.get('/create', auth, async (req, res) => {
   const user = req.user;
   try {
     const favorite = {
-      user_id: user.user_id,
-      table: table,
-      id: id
+      user_character_id: user.user_id,
+      project_table_name: table,
+      project_id: id,
+      creator: user.name
     };
     logger.info('create favorite ', favorite);
     const savedFavorite = await favoritesService.saveFavorite(favorite);
     res.send(savedFavorite);
 
   } catch(error) {
-    res.status(500).send('error found ', error);
+      console.log(error)
+      res.sendStatus(500);
   }
 });
+
 router.delete('/', auth, async (req, res) => {
   const {table, id} = req.body;
   const user = req.user;
   try {
-    const favorite = {
-      user_id: user._id,
-      table: table,
-      id: id
+   const favorite = {
+      user_character_id: user.user_id,
+      project_table_name: table,
+      project_id: id
     };
     const selectedFavorite = await favoritesService.getOne(favorite);
     selectedFavorite.destroy();
     logger.info('DELETED  ', user.email, table, id);
     res.send('deleted');
-
   } catch(error) {
      logger.error('error found on delete ', error);
     res.status(500).send('error found ' + error);
   }
 });
+
+
 router.post('/favorite-list', auth, async (req, res) => {
    const user = req.user;
    const favorite = await favoritesService.getFavorites(user._id);

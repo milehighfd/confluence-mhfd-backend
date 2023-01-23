@@ -1,9 +1,10 @@
 import sequelize from "sequelize";
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
+import moment from 'moment';
 
 const { Op } = sequelize;
-const Favorites = db.favorites;
+const Favorites = db.ProjectFavorite;
 const User = db.user;
 
 const getAll = async () => {
@@ -23,7 +24,7 @@ const getFavorites = async (user_id) => {
   let result = [];
   result = await Favorites.findAll({
     where: {
-      user_id: user_id
+      user_character_id: user_id
     }
   });
   return result;
@@ -32,11 +33,11 @@ const getFavorites = async (user_id) => {
 const getOne = async (data) => {
   const favorite = await Favorites.findOne({
     where: {
-      table: {
-        [Op.like]: '%' + data.table + '%'
+      project_table_name: {
+        [Op.like]: '%' + data.project_table_name + '%'
       },
-      id: data.id,
-      user_id: data.user_id
+      project_id: data.project_id,
+      user_character_id: data.user_character_id
     }
   });
   return favorite;
@@ -45,13 +46,24 @@ const getOne = async (data) => {
 const saveFavorite = async (favorite) => {
   const fav = await Favorites.findOne({
     where: {
-      id: favorite.id,
-      user_id: favorite.user_id
+      project_id: favorite.project_id,
+      user_character_id: favorite.user_character_id
     }
   });
   if (!fav) {
-    await Favorites.create(favorite);
+    const formatTime = moment().format('YYYY-MM-DD HH:mm:ss');
+    //await Favorites.create(favorite);
+    const insertQuery = `INSERT INTO project_favorite (user_character_id, user_id, project_id, project_table_name, created_date, modified_date, last_modified_by, created_by)
+    OUTPUT inserted . *
+    VALUES('${favorite.user_character_id}', '${favorite.user_character_id}', '${favorite.project_id}', '${favorite.project_table_name}', '${formatTime}', '${formatTime}', '${favorite.creator}','${favorite.creator}')`;
+    const data = await db.sequelize.query(
+      insertQuery,
+      {
+        type: db.sequelize.QueryTypes.INSERT,
+      });
     logger.info('favorite save');
+    return data[0][0];
+
   } else {
     logger.info('no update');
   }
