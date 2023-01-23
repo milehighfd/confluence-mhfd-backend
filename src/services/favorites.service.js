@@ -46,6 +46,9 @@ const getOne = async (data) => {
 const saveFavorite = async (favorite) => {
   const fav = await Favorites.findOne({
     where: {
+      project_table_name: {
+        [Op.like]: '%' + favorite.project_table_name + '%'
+      },
       project_id: favorite.project_id,
       user_character_id: favorite.user_character_id
     }
