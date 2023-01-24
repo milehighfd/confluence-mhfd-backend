@@ -3,6 +3,7 @@ import https from 'https';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import Sequelize from 'sequelize';
+import favoritesService from 'bc/services/favorites.service.js';
 const Projects = db.project;
 const ProjectPartner = db.projectPartner;
 const ProjectCounty = db.projectCounty;
@@ -358,11 +359,31 @@ const sortInside = (projects, sortvalue, order) => {
   return projects;
 }
 const listProjects = async (req, res) => {
-  const { offset = 0, limit = 120000, code_project_type_id, group, sortby, order, filterby, filtervalue } = req.query;
+  const {
+    offset = 0,
+    limit = 120000,
+    code_project_type_id,
+    group,
+    sortby,
+    order,
+    filterby,
+    filtervalue,
+    favorites,
+    _id 
+  } = req.query;
   const where = {};
   if (code_project_type_id) {
     where.code_project_type_id = +code_project_type_id;
   }
+  
+  if(favorites == 'true'){
+    logger.info('Favorites requests', _id);
+    let list = await favoritesService.getFavorites(_id);
+    list = list.map(result => result.dataValues?.project_id);
+    where.project_id = list;
+    console.log('list of favorites', list);
+  }
+
   let projects = await Projects.findAll({
     limit,
     offset,
@@ -611,6 +632,8 @@ const listProjects = async (req, res) => {
       streams: streams
     };
   });
+  
+
   logger.info('projects being called');
   const CIP_CODE = 5, RESTORATION_CODE = 7, DEVELOPER_CODE = 6;
   if (+code_project_type_id === CIP_CODE 
