@@ -23,7 +23,11 @@ export default (sequelize, DataType) => {
     drainage_area_in_sq_miles: {
       type: DataType.FLOAT,
       allowNull: false
-    }
+    },
+    mhfd_stream_object_id_DNU: {
+      type: DataType.INTEGER,
+      allowNull: false
+    },
   }, {
     freezeTableName: true,
     tableName: 'project_stream',

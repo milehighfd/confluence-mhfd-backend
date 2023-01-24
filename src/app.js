@@ -31,6 +31,7 @@ import pmToolsRouter from 'bc/routes/pmtools.route.js';
 import db from 'bc/config/db.js';
 import seed from 'bc/config/seed.js'
 import projectServiceArea from 'bc/routes/projectservicearea.route.js';
+import streamsRouter from 'bc/routes/streams.route.js';
 // import serviceAreaLocalGovernment from 'bc/routes/servicearealocalgovernment.route.js';
 seed();
 
@@ -80,6 +81,7 @@ app.use('/configuration', configurationRouter);
 app.use('/projects', projectRouter);
 app.use('/v2/locality', v2Localities);
 app.use('/projectservicearea', projectServiceArea);
+app.use('/streams', streamsRouter);
 // app.use('/servicearealocalgovernment', serviceAreaLocalGovernment);
 
 export default server;
