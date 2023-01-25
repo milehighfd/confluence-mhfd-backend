@@ -6,6 +6,14 @@ dotenv.config({
 });
 console.log('POSTGRESQL_PASSWORD');
 console.log(process.env.POSTGRESQL_PASSWORD);
+console.log('POSTGRESQL_HOST');
+console.log(process.env.POSTGRESQL_HOST);
+console.log('POSTGRESQL_USER');
+console.log(process.env.POSTGRESQL_USER);
+console.log('POSTGRESQL_DB');
+console.log(process.env.POSTGRESQL_DB);
+console.log('DB_PORT');
+console.log(process.env.DB_PORT);
 
 import server from '../app.js';
 
