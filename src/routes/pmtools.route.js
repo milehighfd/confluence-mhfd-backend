@@ -632,8 +632,6 @@ const listProjects = async (req, res) => {
       streams: streams
     };
   });
-  
-
   logger.info('projects being called');
   const CIP_CODE = 5, RESTORATION_CODE = 7, DEVELOPER_CODE = 6;
   if (+code_project_type_id === CIP_CODE 
@@ -693,13 +691,13 @@ const listProjects = async (req, res) => {
   }
       
   if (filterby === 'servicearea') {
-    projects = projects.filter(project => project.serviceArea.codeServiceArea.code_service_area_id === +filtervalue);
+    projects = projects.filter(project => project?.serviceArea?.codeServiceArea?.code_service_area_id === +filtervalue);
   }
   if (filterby === 'county') {
-    projects = projects.filter(project => project.county.codeStateCounty.state_county_id === +filtervalue);
+    projects = projects.filter(project => project?.county?.codeStateCounty?.state_county_id === +filtervalue);
   }
   if (filterby === 'jurisdiction') {
-    projects = projects.filter(project => project.localGoverment.codeLocalGoverment.code_local_government_id === +filtervalue);
+    projects = projects.filter(project => project?.localGoverment?.codeLocalGoverment?.code_local_government_id === +filtervalue);
   }
   if (filterby === 'consultant') {
     projects = projects.filter(project => {
@@ -707,7 +705,7 @@ const listProjects = async (req, res) => {
       let possible = 0;
       consultants.forEach((consultant) => {
         const business = consultant?.consultant || [];
-        possible |= business.some(bus => bus.business_associates_id === +filtervalue);
+        possible |= business.some(bus => bus?.business_associates_id === +filtervalue);
       });
       return possible;
     });
