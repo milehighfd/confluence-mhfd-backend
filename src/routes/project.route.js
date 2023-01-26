@@ -25,7 +25,9 @@ import {
   CARTO_URL,
   PROBLEM_TABLE,
   PROPSPROBLEMTABLES,
+  MAIN_PROJECT_TABLE
 } from 'bc/config/config.js';
+import needle from 'needle';
 
 async function getProblemByProjectId(projectid, sortby, sorttype) {
   let data = [];
@@ -284,7 +286,30 @@ const getProjectDetail = async (req, res) => {
   project = { ...project, problems: problems };
   res.send(project);
 }
+const getBboxProject = async (req, res) => {
+  const project_id = req.params['project_id'];
+  try {
+    const BBOX_SQL = `
+      SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom from ${MAIN_PROJECT_TABLE}
+      WHERE projectid = ${project_id}
+    `;
+    const query = { q: BBOX_SQL };
+    const data = await needle('post', CARTO_URL, query, {json: true});
+    if (data.statusCode === 200) {
+      const geojson = data.body.rows[0]?.the_geom;
+      const bbox = JSON.parse(geojson);
+      res.status(200).send(bbox?.coordinates[0]);
+    } else { 
+      console.error('Error at bbox', data.body);
+      res.status(500).send(data.body);
+    }
+  } catch (error) {
+    console.log('This error ', error);
+    res.status(500).send(error);
+  }
+}
 
+router.get('/bbox/:project_id', getBboxProject);
 router.post('/', listProjects);
 router.get('/:project_id', getProjectDetail);
 export default router;
