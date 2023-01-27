@@ -171,7 +171,7 @@ const listProjects = async (req, res) => {
   }).map((data) => data.dataValues).map((data) => ({...data, CODE_SERVICE_AREA: data.CODE_SERVICE_AREA.dataValues.service_area_name}));
   projects = projects.map((project) => {
     const pservicearea = projectServiceArea.filter((psa) => psa.project_id === project.project_id);
-    return { ...project, service_area_name: pservicearea[0].CODE_SERVICE_AREA };
+    return { ...project, service_area_name: pservicearea[0]?.CODE_SERVICE_AREA };
   });
   projects = await projectsByFilters(projects, body);
   logger.info('projects being called');
