@@ -110,6 +110,10 @@ const projectsByFilters = (projects, filters) => {
   if ((filters.status?.trim()?.length || 0) > 0) {
     newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.status_name) );
   }
+  if ((filters.projecttype?.trim()?.length || 0) > 0) {
+    //TO DO: the filter works with project type name, it has a  
+    newprojects = newprojects.filter((proj) => proj?.project_status?.code_phase_type?.code_project_type?.project_type_name.includes(filters.projecttype) );
+  }
   return newprojects;
 }
 
