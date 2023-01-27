@@ -112,7 +112,22 @@ const projectsByFilters = async (projects, filters) => {
   }
   if ((filters.projecttype?.trim()?.length || 0) > 0) {
     //TO DO: the filter works with project type name, it has a  
-    newprojects = newprojects.filter((proj) => proj?.project_status?.code_phase_type?.code_project_type?.project_type_name.includes(filters.projecttype) );
+    // let projecttypeFiltered = [];
+    let filterProjectType =  filters.projecttype.split(',')
+    // filterProjectType.forEach(type => {
+    //    projecttypeFiltered = [...projecttypeFiltered, newprojects.filter((proj) => proj?.project_status?.code_phase_type?.code_project_type?.project_type_name.includes(type))];
+    // });
+    // newprojects = projecttypeFiltered
+    newprojects = newprojects.filter((proj) => {
+      let flag = false;
+      for (let index = 0; index < filterProjectType.length; index++) {
+        const type = filterProjectType[index];
+        if(proj?.project_status?.code_phase_type?.code_project_type?.project_type_name.includes(type)){
+          flag =true;
+        }
+      }
+      return flag
+    });
   }
   if ((filters.servicearea?.trim()?.length || 0) > 0) {
     newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) );
