@@ -133,8 +133,11 @@ db.projectServiceArea.belongsTo(
   db.project,
   { foreignKey: 'project_id'}
 );
-// db.projectServiceArea.belongsTo(
-// )
+db.projectServiceArea.belongsTo(
+  db.codeServiceArea,
+  { foreignKey: 'code_service_area_id'}
+);
+
 
 db.user.hasMany(db.ProjectFavorite, {foreignKey: 'user_id'});
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});

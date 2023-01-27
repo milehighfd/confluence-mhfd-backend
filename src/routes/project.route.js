@@ -105,7 +105,7 @@ const getProjectsIdsByBounds = async (bounds) => {
   }
 };
 
-const projectsByFilters = (projects, filters) => {
+const projectsByFilters = async (projects, filters) => {
   let newprojects = [...projects];
   if ((filters.status?.trim()?.length || 0) > 0) {
     newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.status_name) );
@@ -113,6 +113,9 @@ const projectsByFilters = (projects, filters) => {
   if ((filters.projecttype?.trim()?.length || 0) > 0) {
     //TO DO: the filter works with project type name, it has a  
     newprojects = newprojects.filter((proj) => proj?.project_status?.code_phase_type?.code_project_type?.project_type_name.includes(filters.projecttype) );
+  }
+  if ((filters.servicearea?.trim()?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) );
   }
   return newprojects;
 }
@@ -157,7 +160,20 @@ const listProjects = async (req, res) => {
     return  {...project, sponsor: sponsor };
   });
   // xconsole.log(project_partners);
-  projects = projectsByFilters(projects, body);
+  let projectServiceArea = await ProjectServiceArea.findAll({
+    include: {
+      model: CodeServiceArea,
+      attributes: ['service_area_name']
+    },
+    where: {
+      project_id: ids
+    }
+  }).map((data) => data.dataValues).map((data) => ({...data, CODE_SERVICE_AREA: data.CODE_SERVICE_AREA.dataValues.service_area_name}));
+  projects = projects.map((project) => {
+    const pservicearea = projectServiceArea.filter((psa) => psa.project_id === project.project_id);
+    return { ...project, service_area_name: pservicearea[0].CODE_SERVICE_AREA };
+  });
+  projects = await projectsByFilters(projects, body);
   logger.info('projects being called');
   res.send(projects);
 };
