@@ -105,6 +105,14 @@ const getProjectsIdsByBounds = async (bounds) => {
   }
 };
 
+const projectsByFilters = (projects, filters) => {
+  let newprojects = [...projects];
+  if ((filters.status?.trim()?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.status_name) );
+  }
+  return newprojects;
+}
+
 const listProjects = async (req, res) => {
   const { offset = 0, limit = 10000 } = req.query;
   const { body } = req;
@@ -122,8 +130,10 @@ const listProjects = async (req, res) => {
     include: { all: true, nested: true },
     order: [['created_date', 'DESC']]
   }).map(result => result.dataValues);
+
   const SPONSOR_TYPE = 11; // maybe this can change in the future
   const ids = projects.map((p) => p.project_id);
+
   const project_partners = await ProjectPartner.findAll({
     where: {
       project_id: ids,
@@ -133,6 +143,7 @@ const listProjects = async (req, res) => {
   }).map(result => result.dataValues).map(res => { 
     return {...res, business_associate: res.business_associate.dataValues }
   });
+
   projects = projects.map((project) => {
     const partners = project_partners.filter((partner) => partner.project_id === project.project_id);
     let sponsor = null;
@@ -142,6 +153,7 @@ const listProjects = async (req, res) => {
     return  {...project, sponsor: sponsor };
   });
   // xconsole.log(project_partners);
+  projects = projectsByFilters(projects, body);
   logger.info('projects being called');
   res.send(projects);
 };
