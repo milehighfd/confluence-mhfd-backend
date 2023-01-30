@@ -107,6 +107,12 @@ db.codeStatusType = codeStatusType(sequelize, Sequelize);
 db.codeAcquisitionProgressStatus = codeAcquisitionProgressStatus(sequelize, Sequelize);
 db.codeMaintenanceElegibilityType = codeMaintenanceElegibilityType(sequelize, Sequelize);
 db.projectCounty = projectCounty(sequelize, Sequelize);
+db.codeStateCounty = codeStateCounty(sequelize, Sequelize);
+// db.project.hasOne(
+//   db.projectCounty,
+//   { foreignKey: 'project_id' }
+// );
+
 db.projectPartner = projectPartner(sequelize, Sequelize);
 db.codeProjectPartnerType = codeProjectPartnerType(sequelize, Sequelize);
 db.codeStudyReason = codeStudyReason(sequelize, Sequelize);
@@ -114,7 +120,7 @@ db.codeStudySubreason = codeStudySubreason(sequelize, Sequelize);
 
 db.codeServiceArea = codeServiceArea(sequelize, Sequelize);
 db.codeLocalGoverment = codeLocalGoverment(sequelize, Sequelize);
-db.codeStateCounty = codeStateCounty(sequelize, Sequelize);
+
 
 db.localGovernment = localGovernment(sequelize, Sequelize);
 db.project_stream = project_stream(sequelize, Sequelize);
@@ -171,14 +177,13 @@ db.codeMaintenanceElegibilityType.belongsTo(
     foreignKey: 'code_maintenance_eligibility_type_id'
   }
 );
-/*
-db.projectPartner.belongsTo(
-  db.project,
-  {
-    foreignKey: 'project_id'
-  }
-);
-*/
+// db.projectPartner.belongsTo(
+//   db.project,
+//   {
+//     foreignKey: 'project_id'
+//   }
+// );
+db.project.hasMany(db.projectPartner, {foreignKey: 'project_id'});
 db.projectPartner.belongsTo( 
   db.businessAssociates,
   {

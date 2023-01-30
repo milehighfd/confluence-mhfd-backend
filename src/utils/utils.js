@@ -18,3 +18,4 @@ export const isAdminAccount = (req, res, next) => {
     return res.status(403).send({error: `You're not allowed to do that`});
   }
 };
+
