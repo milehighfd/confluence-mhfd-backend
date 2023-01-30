@@ -321,6 +321,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       await projectStatusService.saveProjectStatusFromCero(5, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       //await addProjectToBoard(user, servicearea, county, j, projecttype, project_id, year, sendToWR, isWorkPlan);
       await attachmentService.uploadFiles(user, req.files, project_id, cover);
+      let toBoard = j;
+      if (eval(isWorkPlan)) {
+        toBoard = locality;
+      }
+      await addProjectToBoard(user, servicearea, county, toBoard, projecttype, projectId, year, sendToWR, isWorkPlan);
       for (const independent of JSON.parse(independetComponent)) {
         try {
           await projectComponentService.saveProjectComponent(0, '', independent.name, independent.status, project_id);

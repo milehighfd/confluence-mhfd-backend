@@ -64,16 +64,19 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     notRequiredValues = `, ${notRequiredValues}`;
   }
   let splittedJurisdiction = jurisdiction.split(',');
-  if (isWorkPlan) {
-    splittedJurisdiction = [locality];
-  }
+  // if (isWorkPlan) {
+  //  splittedJurisdiction = [locality];
+  // }
+  let result = [];
   for (const j of splittedJurisdiction) {
-    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor ${notRequiredFields} ,projectid)
-    VALUES(ST_GeomFromGeoJSON('${geom}'), '${j}', '${cleanStringValue(projectname)}', '${cleanStringValue(description)}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
+    const hasGeom = (geom && geom !== 'undefined' && geom !== 'null');
+    const the_geomString = hasGeom ? 'the_geom,' : '';
+    const geomQuery = hasGeom ? `ST_GeomFromGeoJSON('${geom}'),` : '';
+    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (${the_geomString} jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor ${notRequiredFields} ,projectid)
+    VALUES(${geomQuery} '${j}', '${cleanStringValue(projectname)}', '${cleanStringValue(description)}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${projectsubtype}', '${sponsor}' ${notRequiredValues} ,${-1})`;
     const query = {
       q: insertQuery
     };
-    let result = [];
     try {
       const data = await needle('post', CARTO_URL, query, { json: true });
       if (data.statusCode === 200) {
@@ -84,7 +87,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
-        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR, isWorkPlan);
+        let toBoard = j;
+        if (evail(isWorkPlan)) {
+          toBoard = locality;
+        }
+        await addProjectToBoard(user, servicearea, county, toBoard, projecttype, projectId, year, sendToWR, isWorkPlan);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
       } else {
         logger.error('\n\n\nbad status ' + data.statusCode + '  -- '+ insertQuery +  JSON.stringify(data.body, null, 2));
@@ -131,7 +138,9 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
   }
-  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}',
+  const hasGeom = (geom && geom !== 'undefined' && geom !== 'null');
+  const geomQuery = hasGeom ? `the_geom = ST_GeomFromGeoJSON('${geom}'),` : '';
+  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET ${geomQuery} jurisdiction = '${jurisdiction}',
    projectname = '${cleanStringValue(projectname)}', description = '${cleanStringValue(description)}', servicearea = '${servicearea}',
     county = '${county}', projecttype = '${projecttype}',
      projectsubtype = '${projectsubtype}',  

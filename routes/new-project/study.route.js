@@ -50,14 +50,21 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   }
   let result = [];
   let splittedJurisdiction = jurisdiction.split(',');
-  if (isWorkPlan) {
-    splittedJurisdiction = [locality];
-  }
+  //if (isWorkPlan) {
+  //  splittedJurisdiction = [locality];
+  // }
   for (const j of splittedJurisdiction) {
-    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor, studyreason, studysubreason ${notRequiredFields} ,projectid)
+    let finalQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor, studyreason, studysubreason ${notRequiredFields} ,projectid)
     (SELECT ST_Collect(the_geom) as the_geom, '${j}' as jurisdiction, '${cleanStringValue(projectname)}' as projectname , '${cleanStringValue(description)}' as description, '${servicearea}' as servicearea,
     '${county}' as county, '${status}' as status, '${projecttype}' as projecttype, '${projectsubtype}' as projectsubtype,
     '${sponsor}' as sponsor, '${studyreason}' as studyreason, '${studysubreason}' as studysubreason ${notRequiredValues} ,${-1} as projectid FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds}))`;
+    if (!idsArray.length) {
+      finalQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (jurisdiction, projectname, description, servicearea, county, status, projecttype, projectsubtype, sponsor, studyreason, studysubreason ${notRequiredFields} ,projectid)
+    VALUES ('${j}', '${cleanStringValue(projectname)}', '${cleanStringValue(description)}', '${servicearea}',
+    '${county}', '${status}', '${projecttype}', '${projectsubtype}',
+    '${sponsor}', '${studyreason}', '${studysubreason}' ${notRequiredValues} ,${-1})`;
+    }
+    const insertQuery = finalQuery;
     const query = {
       q: insertQuery
     };
@@ -73,7 +80,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
-        await addProjectToBoard(user, servicearea, county, j, projecttype, projectId, year, sendToWR, isWorkPlan);
+        let toBoard = j;
+        if (eval(isWorkPlan)) {
+          toBoard = locality;
+        }
+        await addProjectToBoard(user, servicearea, county, toBoard, projecttype, projectId, year, sendToWR, isWorkPlan);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
         for (const stream of JSON.parse(streams)) {
           projectStreamService.saveProjectStream({
@@ -91,7 +102,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         }
     } catch (error) {
       logger.error(error, 'at', insertQuery);
-      return res.status(500).send(eroor);
+      return res.status(500).send(error);
     };
   }
   res.send(result);
@@ -122,8 +133,13 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   if (notRequiredFields) {
     notRequiredFields = `, ${notRequiredFields}`;
   }
+  let geomUpdate = '';
+  if (idsArray.length) {
+    geomUpdate = `the_geom = (SELECT ST_Collect(the_geom) FROM mhfd_stream_reaches WHERE unique_mhfd_code IN(${parsedIds})),`;
+  }
   const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET
-  the_geom = (SELECT ST_Collect(the_geom) FROM mhfd_stream_reaches WHERE unique_mhfd_code IN(${parsedIds})), jurisdiction = '${jurisdiction}',
+    ${geomUpdate}
+   jurisdiction = '${jurisdiction}',
    projectname = '${cleanStringValue(projectname)}', description = '${cleanStringValue(description)}',
     servicearea = '${servicearea}', county = '${county}',
      projecttype = '${projecttype}', 

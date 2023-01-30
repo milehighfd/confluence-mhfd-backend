@@ -21,7 +21,7 @@ const multer = Multer({
 
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const { projectname, description, servicearea, county, geom, locality,
+  const { isWorkPlan, projectname, description, servicearea, county, geom, locality,
     jurisdiction, sponsor, cosponsor, cover, year, sendToWR } = req.body;
   const status = 'Draft';
   const projecttype = 'Special';
@@ -41,9 +41,9 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   }
   let result = [];
   let splittedJurisdiction = jurisdiction.split(',');
-  if (isWorkPlan) {
-    splittedJurisdiction = [locality];
-  }
+  //if (isWorkPlan) {
+   // splittedJurisdiction = [locality];
+  //}
   for (const j of splittedJurisdiction) {
     const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, jurisdiction, projectname, description, servicearea, county, status, projecttype, sponsor ${notRequiredFields} ,projectid) 
     VALUES(ST_GeomFromGeoJSON('${geom}'), '${j}', '${cleanStringValue(projectname)}', '${cleanStringValue(description)}', '${servicearea}', '${county}', '${status}', '${projecttype}', '${sponsor}' ${notRequiredValues} , -1)`;
@@ -64,14 +64,18 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         if (!updateId) {
           return;
         }
-        await addProjectToBoard(user, servicearea, county, jurisdiction, projecttype, projectId, year, sendToWR);
+        let toBoard = j;
+        if (eval(isWorkPlan)) {
+          toBoard = locality;
+        }
+        await addProjectToBoard(user, servicearea, county, toBoard, projecttype, projectId, year, sendToWR, isWorkPlan);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
       } else {
-        logger.error('bad status ' + data.statusCode + '  -- ' + sql + JSON.stringify(data.body, null, 2));
+        logger.error('bad status ' + data.statusCode + '  -- ' + insertQuery + JSON.stringify(data.body, null, 2));
         return res.status(data.statusCode).send(data.body);
       }
     } catch (error) {
-      logger.error(error, 'at', sql);
+      logger.error(error, 'at', insertQuery);
       return res.status(500).send(error);
     };
   }
