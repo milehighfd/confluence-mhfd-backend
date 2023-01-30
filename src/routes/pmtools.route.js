@@ -28,6 +28,13 @@ import {
   PROBLEM_TABLE,
   PROPSPROBLEMTABLES,
 } from 'bc/config/config.js';
+import {
+  getCountiesByProjectIds,
+  getCivilContractorsByProjectids,
+  getConsultantsByProjectids,
+  getLocalGovernmentByProjectids,
+  getEstimatedCostsByProjectids
+} from '../../src/utils/functionsProjects.js';
 
 
 const getGroup = async (req, res) => {
@@ -478,6 +485,7 @@ const listProjects = async (req, res) => {
       codeLocalGoverment: codeLocalGoverment
     }
   });
+  projectLocalGovernment = await getLocalGovernmentByProjectids(ids);
   projects = projects.map((data) => {
     const codeLocalGoverment = projectLocalGovernment.filter((d) => d.project_id === data.project_id)[0];
     return {
@@ -486,25 +494,7 @@ const listProjects = async (req, res) => {
     }
   });
   // GET COUNTY 
-  let projectCounty = await ProjectCounty.findAll({
-    where: {
-      project_id: ids
-    }
-  }).map(data => data.dataValues);
-  const codeCounties = projectCounty.map((psa) => psa.state_county_id);
-  let codeStateCounties = await CodeStateCounty.findAll({
-    where: {
-      state_county_id: codeCounties
-    },
-    attributes: {exclude: ['Shape']}
-  }).map(data => data.dataValues);
-  projectCounty = projectCounty.map((data) => {
-    const codeStateCounty = codeStateCounties.filter((d) => d.state_county_id === data.state_county_id)[0];
-    return {
-      ...data,
-      codeStateCounty: codeStateCounty
-    }
-  });
+  const projectCounty = await getCountiesByProjectIds(ids);
   projects = projects.map((data) => {
     const codeStateCounty = projectCounty.filter((d) => d.project_id === data.project_id)[0];
     return {
@@ -514,28 +504,7 @@ const listProjects = async (req, res) => {
   });
   //GET Consultant
   logger.info('CONSULTANT');
-  const CONSULTANT_ID = 3;
-  let consultants = await ProjectPartner.findAll({
-    where: {
-      project_id: ids,
-      code_partner_type_id: CONSULTANT_ID
-    }
-  }).map(result => result.dataValues);
-  const consultantIds = consultants.map((data) => data.business_associates_id).filter((data) => data !== null);
-  let consultantList = await BusinessAssociante.findAll({
-    where: {
-      business_associates_id: consultantIds
-    }
-  }).map((data) => data.dataValues);
-  consultants = consultants.map((staff) => {
-    const consultant = consultantList.filter((cons) => {
-      return cons.business_associates_id === staff.business_associates_id
-    });
-    return {
-      ...staff,
-      consultant
-    }
-  });
+ const consultants = await getConsultantsByProjectids(ids);
   projects = projects.map((project) => {
     const staffs = consultants.filter(consult => consult.project_id === project.project_id);
     return {
@@ -545,28 +514,7 @@ const listProjects = async (req, res) => {
   });
   // GET civil contractor
   logger.info('CIVIL contractor');
-  const CIVIL_CONTRACTOR_ID = 8;
-  let civilContractors = await ProjectPartner.findAll({
-    where: {
-      project_id: ids,
-      code_partner_type_id: CIVIL_CONTRACTOR_ID
-    }
-  }).map(result => result.dataValues);
-  const civilContractorsIds = civilContractors.map((data) => data.business_associates_id).filter((data) => data !== null);
-  let contractorLIst = await BusinessAssociante.findAll({
-    where: {
-      business_associates_id: civilContractorsIds
-    }
-  }).map((data) => data.dataValues);
-  civilContractors = civilContractors.map((staff) => {
-    const business = contractorLIst.filter((cons) => {
-      return cons.business_associates_id === staff.business_associates_id
-    });
-    return {
-      ...staff,
-      business
-    }
-  });
+ const civilContractors = await getCivilContractorsByProjectids(ids);
   projects = projects.map((project) => {
     const staffs = civilContractors.filter(consult => consult.project_id === project.project_id);
     return {
@@ -636,13 +584,7 @@ const listProjects = async (req, res) => {
   const CIP_CODE = 5, RESTORATION_CODE = 7, DEVELOPER_CODE = 6;
   if (+code_project_type_id === CIP_CODE 
    || +code_project_type_id === RESTORATION_CODE) {
-    const projectCost = await ProjectCost.findAll({
-      where: {
-        project_id: ids
-      }
-    }).map(result => result.dataValues);
-    const ESTIMATED_COST = 1;
-    const estimatedCosts = projectCost.filter(result => result.code_cost_type_id === ESTIMATED_COST);
+    const estimatedCosts = await getEstimatedCostsByProjectids(ids);
     projects = projects.map(project => {
       const estimatedCost = estimatedCosts.filter(ec => ec.project_id === project.project_id)[0];
       return {
