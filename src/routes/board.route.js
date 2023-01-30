@@ -6,8 +6,9 @@ import logger from 'bc/config/logger.js';
 import db from 'bc/config/db.js';
 import {
     getCoordsByProjectId,
-    getMidByProjectId,
-    getMinimumDateByProjectId
+    getMidByProjectIdV2,
+    getMinimumDateByProjectId,
+    getProjectData
 } from 'bc/services/mapgallery.service.js';
 import { sendBoardNotification } from 'bc/services/user.service.js';
 
@@ -24,6 +25,16 @@ router.get('/coordinates/:pid', async (req, res) => {
 });
 
 router.get('/fix', async (req, res) => {
+   /* let boards = await Board.update(
+        {
+            "status": "Under Review",
+            "substatus": "",
+        },{
+        where: {
+            year: ['2018', '2019', '2020', '2021'],
+            type: 'WORK_REQUEST'
+        }
+    });*/
     let boards = await Board.findAll(
         {
         where: {
@@ -141,6 +152,21 @@ router.put('/project/:id', async (req, res) => {
     res.send(boardProject);
 });
 
+router.post('/projectdata', async (req, res) => {
+  let body = req.body;
+  let {projectid, projecttype} = body;
+  if (!projectid) {
+    return res.sendStatus(404);
+  }
+  let project = null;
+  try {
+      project = await getProjectData(projectid, projecttype);
+  } catch(e) {
+      console.log('Error in project Promises ', e);
+  }
+  res.send(project);
+});
+
 router.post('/', async (req, res) => {
     let body = req.body;
     let { type, year, locality, projecttype } = body;
@@ -166,7 +192,7 @@ router.post('/', async (req, res) => {
         let projectsPromises = boardProjects.filter(bp => !!bp.project_id).map(async (bp) => {
             let project = null;
             try {
-                project = await getMidByProjectId(bp.project_id, projecttype);
+                project = await getMidByProjectIdV2(bp.project_id, projecttype);
             } catch(e) {
                 console.log('Error in project Promises ', e);
             }
@@ -487,6 +513,7 @@ router.get('/:boardId/boards/:type', async (req, res) => {
     for (var i = 0 ; i < boardLocalities.length ; i++) {
         let bl = boardLocalities[i];
         let locality = bl.fromLocality;
+        logger.info(`BOARDS INFO locality: ${locality} type: ${type} year: ${board.year} status: Approved`);
         let boardFrom = await Board.findOne({
             where: {
                 locality,
@@ -495,6 +522,7 @@ router.get('/:boardId/boards/:type', async (req, res) => {
                 status: 'Approved'
             }
         })
+        logger.info (`BOARD FROM: ${boardFrom}`);
         bids.push({
             locality,
             status: boardFrom ? boardFrom.status : 'Under Review',
@@ -615,6 +643,24 @@ router.delete('/project/:projectid/:namespaceId', [auth], async (req, res) => {
     } else {
         res.send({ status: 'ok' })
     }
+    // const sql = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
+    // const query = {
+    //     q: sql
+    // };
+    // try {
+    //     const data = await needle('post', CARTO_URL, query, { json: true });
+    //     //console.log('STATUS', data.statusCode);
+    //     if (data.statusCode === 200) {
+    //       result = data.body;
+    //       res.send(result);
+    //     } else {
+    //       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+    //       return res.status(data.statusCode).send(data.body);
+    //     }
+    //  } catch (error) {
+    //     logger.error(error);
+    //     res.status(500).send(error);
+    //  };
 });
 
 router.get('/bbox/:projectid', async (req, res) => {
@@ -626,6 +672,7 @@ router.get('/bbox/:projectid', async (req, res) => {
     logger.info(sql);
     try {
         const data = await needle('post', CARTO_URL, query, { json: true });
+        //console.log('STATUS', data.statusCode);
         if (data.statusCode === 200) {
           result = data.body;
           res.send(result.rows[0]);
@@ -667,6 +714,7 @@ router.post('/projects-bbox', async (req, res) => {
     logger.info(sql);
     try {
         const data = await needle('post', CARTO_URL, query, { json: true });
+        //console.log('STATUS', data.statusCode);
         if (data.statusCode === 200) {
           result = data.body;
           res.send(result.rows[0]);

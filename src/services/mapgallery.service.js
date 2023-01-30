@@ -12,7 +12,7 @@ import {
   COSPONSOR
 } from 'bc/config/config.js';
 
-export const getCoordsByProjectId = async (projectid, isDev) => {
+const getCoordsByProjectId = async (projectid, isDev) => {
   let table = MAIN_PROJECT_TABLE;
   if (isDev) {
     table = CREATE_PROJECT_TABLE;
@@ -32,14 +32,14 @@ export const getCoordsByProjectId = async (projectid, isDev) => {
   }
 }
 
-export const getMidByProjectId = async (projectid, projecttype) => {
+const getMidByProjectId = async (projectid, projecttype) => {
   let table = CREATE_PROJECT_TABLE;
   let fields = ["projectid", "cartodb_id", "county", "jurisdiction", "servicearea", "projectname", "status", "description", "acquisitionprogress", "acquisitionanticipateddate", "projecttype", "projectsubtype", "additionalcost", "additionalcostdescription", `${COSPONSOR1} as ${COSPONSOR}`, "frequency", "maintenanceeligibility", "overheadcost", "overheadcostdescription", "ownership", "sponsor", 'estimatedcost', 'studyreason', 'studysubreason'];
   if (['Acquisition', 'Special', 'Maintenance', 'Capital'].includes(projecttype)) {
     fields.push('ST_AsGeoJSON(the_geom) as the_geom')
   }
   let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
-  console.log('SQL in get mid by project id ', SQL);
+  // console.log('SQL in get mid by project id ', SQL);
   let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   const data = await needle('get', URL, { json: true });
   if (data.statusCode === 200 && data.body.rows.length > 0) {
@@ -55,7 +55,107 @@ export const getMidByProjectId = async (projectid, projecttype) => {
   }
 }
 
-export const getMinimumDateByProjectId = async (projectid) => {
+const getMidByProjectIdV2 = async (projectid, projecttype) => {
+  let table = CREATE_PROJECT_TABLE;
+  let fields = [
+    "projectid",
+    // "cartodb_id",
+    "county",
+    "jurisdiction",
+    "servicearea",
+    "projectname",
+    "status",
+    // "description",
+    // "acquisitionprogress",
+    // "acquisitionanticipateddate",
+    "projecttype",
+    "projectsubtype",
+    // "additionalcost",
+    // "additionalcostdescription",
+    // `${COSPONSOR1} as ${COSPONSOR}`,
+    // "frequency",
+    // "maintenanceeligibility",
+    // "overheadcost",
+    // "overheadcostdescription",
+    // "ownership",
+    // "sponsor",
+    // 'estimatedcost',
+    // 'studyreason',
+    // 'studysubreason'
+  ];
+  // if (['Acquisition',
+  // 'Special',
+  // 'Maintenance',
+  // 'Capital'].includes(projecttype)) {
+  //   fields.push('ST_AsGeoJSON(the_geom) as the_geom')
+  // }
+  let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
+  // console.log('SQL in get mid by project id ', SQL);
+  let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
+  const data = await needle('get', URL, { json: true });
+  if (data.statusCode === 200 && data.body.rows.length > 0) {
+    let obj = data.body.rows[0];
+    // if (projecttype === 'Study') {
+    //   const streams = await projectStreamService.getAll(projectid);
+    //   obj.streams = streams.map(r => r.mhfd_code);
+    // }
+    return obj;
+  } else {
+    console.log('getMidByProjectId error', data.statusCode, data.body);
+    return null;
+  }
+}
+const getProjectData = async (projectid, projecttype) => {
+  let table = CREATE_PROJECT_TABLE;
+  let fields = [
+    "projectid",
+    "cartodb_id",
+    "county",
+    "jurisdiction",
+    "servicearea",
+    "projectname",
+    "status",
+    "description",
+    "acquisitionprogress",
+    "acquisitionanticipateddate",
+    "projecttype",
+    "projectsubtype",
+    "additionalcost",
+    "additionalcostdescription",
+    `${COSPONSOR1} as ${COSPONSOR}`,
+    "frequency",
+    "maintenanceeligibility",
+    "overheadcost",
+    "overheadcostdescription",
+    "ownership",
+    "sponsor",
+    'estimatedcost',
+    'studyreason',
+    'studysubreason'
+  ];
+  if (['Acquisition',
+  'Special',
+  'Maintenance',
+  'Capital'].includes(projecttype)) {
+    fields.push('ST_AsGeoJSON(the_geom) as the_geom')
+  }
+  let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
+  // console.log('SQL in get mid by project id ', SQL);
+  let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
+  const data = await needle('get', URL, { json: true });
+  if (data.statusCode === 200 && data.body.rows.length > 0) {
+    let obj = data.body.rows[0];
+    if (projecttype === 'Study') {
+      const streams = await projectStreamService.getAll(projectid);
+      obj.streams = streams.map(r => r.mhfd_code);
+    }
+    return obj;
+  } else {
+    console.log('getMidByProjectId error', data.statusCode, data.body);
+    return null;
+  }
+}
+const getMinimumDateByProjectId = async (projectid) => {
   let table = CREATE_PROJECT_TABLE;
   let SQL = `SELECT county, servicearea FROM ${table} where projectid=${projectid}`;
   let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
@@ -69,7 +169,7 @@ export const getMinimumDateByProjectId = async (projectid) => {
 }
 
 // in the future change isDev for is board project , don't delete the variable please @pachon
-export const getDataByProjectIds = async (projectid, isDev) => {
+const getDataByProjectIds = async (projectid, type, isDev) => {
   let table = MAIN_PROJECT_TABLE;
   if (isDev) {
     table = CREATE_PROJECT_TABLE;
@@ -189,7 +289,7 @@ export const getDataByProjectIds = async (projectid, isDev) => {
   }
 }
 
-export async function getProblemByProjectId(projectid, sortby, sorttype) {
+async function getProblemByProjectId(projectid, sortby, sorttype) {
   let data = [];
   const LINE_SQL = `select ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[7]}  as ${PROPSPROBLEMTABLES.problems[7]} from ${PROBLEM_TABLE}  
  where ${PROPSPROBLEMTABLES.problem_boundary[5]} in (SELECT problemid FROM grade_control_structure 
@@ -298,11 +398,10 @@ async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
         }
     });
   });
-  let data = await newProm1;
+  data = await newProm1;
   return data;
 }
-
-export async function getCoordinatesOfComponents(id, field) {
+async function getCoordinatesOfComponents(id, field) {
   const fixedField = 'problemid' ? 'problem_id' : 'project_id';
   const COMPONENTS_SQL = `SELECT type, 'grade_control_structure' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM grade_control_structure 
      where ${field}=${id}  union ` +
@@ -363,4 +462,15 @@ export async function getCoordinatesOfComponents(id, field) {
   });
   const finalResult = await newProm1;
   return finalResult;
+}
+
+module.exports = {
+  getDataByProjectIds,
+  getProblemByProjectId,
+  getCoordinatesOfComponents,
+  getMinimumDateByProjectId,
+  getMidByProjectId,
+  getMidByProjectIdV2,
+  getProjectData,
+  getCoordsByProjectId
 }
