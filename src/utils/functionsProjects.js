@@ -13,7 +13,8 @@ const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
 const BusinessAssociante = db.businessAssociates;
-
+const ProjectStreams = db.project_stream;
+const Streams = db.stream;
 const Attachment = db.projectAttachment;
 
 export const getCountiesByProjectIds = async (ids) => {
@@ -123,4 +124,27 @@ export const getEstimatedCostsByProjectids = async (ids) => {
   const ESTIMATED_COST = 1;
   const estimatedCosts = projectCost.filter(result => result.code_cost_type_id === ESTIMATED_COST);
   return estimatedCosts;
+}
+
+export const getStreamsDataByProjectIds = async (ids) => {
+  let projectStreams = await ProjectStreams.findAll({
+    where: {
+      project_id: ids
+    }
+  }).map((data) => data.dataValues);
+  const projectStreamsIds = projectStreams.map((data) => data.stream_id).filter((data) => data !== null);
+  const streamsList = await Streams.findAll({
+    where: {
+      stream_id: projectStreamsIds
+    },
+    attributes: {exclude: ['Shape']}
+  }).map((data) => data.dataValues);
+  projectStreams = projectStreams.map((data) => {
+    const streamvalue = streamsList.filter((d => d.stream_id === data.stream_id));
+    return {
+      ...data, 
+      stream: streamvalue
+    };
+  });
+  return projectStreams;
 }

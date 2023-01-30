@@ -8,7 +8,8 @@ import {
   getConsultantsByProjectids,
   getCivilContractorsByProjectids,
   getLocalGovernmentByProjectids,
-  getEstimatedCostsByProjectids
+  getEstimatedCostsByProjectids,
+  getStreamsDataByProjectIds
 } from '../../src/utils/functionsProjects.js';
 
 const Projects = db.project;
@@ -205,6 +206,7 @@ const listProjects = async (req, res) => {
   const civilContractors = await getCivilContractorsByProjectids(ids);
   const projectLocalGovernment = await getLocalGovernmentByProjectids(ids);
   const estimatedCosts = await getEstimatedCostsByProjectids(ids);
+  const projectStreams = await getStreamsDataByProjectIds(ids);
 
   projects = projects.map((project) => {
     const pservicearea = projectServiceArea.filter((psa) => psa.project_id === project.project_id);
@@ -213,6 +215,7 @@ const listProjects = async (req, res) => {
     const contractorsStaff = civilContractors.filter(consult => consult.project_id === project.project_id);
     const codeLocalGoverment = projectLocalGovernment.filter((d) => d.project_id === project.project_id)[0];
     const estimatedCost = estimatedCosts.filter(ec => ec.project_id === project.project_id)[0];
+    const streams = projectStreams.filter((d) => d.project_id === project.project_id)[0];
     return {
       ...project,
       service_area_name: pservicearea[0]?.CODE_SERVICE_AREA,
@@ -220,7 +223,8 @@ const listProjects = async (req, res) => {
       consultants: staffs,
       contractors: contractorsStaff,
       localGoverment: codeLocalGoverment,
-      estimatedCost
+      estimatedCost,
+      streams
     };
   });
 

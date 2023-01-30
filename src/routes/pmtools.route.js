@@ -19,7 +19,6 @@ const ProjectDetail = db.projectDetail;
 const CodeStatusType = db.codeStatusType;
 const BusinessAssociante = db.businessAssociates;
 const Streams = db.stream;
-const ProjectStreams = db.project_stream;
 const Op = Sequelize.Op;
 
 const router = express.Router();
@@ -33,7 +32,8 @@ import {
   getCivilContractorsByProjectids,
   getConsultantsByProjectids,
   getLocalGovernmentByProjectids,
-  getEstimatedCostsByProjectids
+  getEstimatedCostsByProjectids,
+  getStreamsDataByProjectIds
 } from '../../src/utils/functionsProjects.js';
 
 
@@ -554,25 +554,7 @@ const listProjects = async (req, res) => {
     }
   });
   // STREAMS
-  let projectStreams = await ProjectStreams.findAll({
-    where: {
-      project_id: ids
-    }
-  }).map((data) => data.dataValues);
-  const projectStreamsIds = projectStreams.map((data) => data.stream_id).filter((data) => data !== null);
-  const streamsList = await Streams.findAll({
-    where: {
-      stream_id: projectStreamsIds
-    },
-    attributes: {exclude: ['Shape']}
-  }).map((data) => data.dataValues);
-  projectStreams = projectStreams.map((data) => {
-    const streamvalue = streamsList.filter((d => d.stream_id === data.stream_id));
-    return {
-      ...data, 
-      stream: streamvalue
-    };
-  });
+  const projectStreams = await getStreamsDataByProjectIds(ids);
   projects = projects.map((project) => { 
     const streams = projectStreams.filter((d) => d.project_id === project.project_id)[0];
     return {
