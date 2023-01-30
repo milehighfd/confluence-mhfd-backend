@@ -181,6 +181,7 @@ router.post('/', async (req, res) => {
             type, year, locality, projecttype
         }
     });
+    console.log('hereeeeee', board)
     if (board) {
         logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
         let boardProjects = await BoardProject.findAll({
@@ -224,14 +225,15 @@ router.post('/', async (req, res) => {
             projects
         });
     } else {
-        let newBoard = new Board({
-            type, year, locality, projecttype, status: 'Under Review'
-        });
-        await newBoard.save();
-        res.send({
-            board: newBoard,
-            projects: []
-        });
+        console.log( 'is entering here')
+        // let newBoard = new Board({
+        //     type, year, locality, projecttype, status: 'Under Review'
+        // });
+        // await newBoard.save();
+        // res.send({
+        //     board: newBoard,
+        //     projects: []
+        // });
     }
 });
 
