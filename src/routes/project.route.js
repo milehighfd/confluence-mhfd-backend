@@ -3,6 +3,7 @@ import https from 'https';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import attachmentService from 'bc/services/attachment.service.js';
+import { getCountiesByProjectIds } from '../../src/utils/functionsProjects.js';
 
 const Projects = db.project;
 const ProjectPartner = db.projectPartner;
@@ -107,9 +108,11 @@ const getProjectsIdsByBounds = async (bounds) => {
 
 const projectsByFilters = async (projects, filters) => {
   let newprojects = [...projects];
+  // STATUS
   if ((filters.status?.trim()?.length || 0) > 0) {
     newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.status_name) );
   }
+  // PROJECT TYPE
   if ((filters.projecttype?.trim()?.length || 0) > 0) {
     //TO DO: the filter works with project type name, it has a  
     // let projecttypeFiltered = [];
@@ -129,14 +132,18 @@ const projectsByFilters = async (projects, filters) => {
       return flag
     });
   }
+  // SERVICE AREA
   if ((filters.servicearea?.trim()?.length || 0) > 0) {
     newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) );
   }
+  //COUNTY
   if((filters.county?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.county.includes(proj?.county_name));
+    newprojects = newprojects.filter((proj) => filters.county.includes(proj?.county?.codeStateCounty?.county_name));
   }
+  
   return newprojects;
 }
+
 
 const listProjects = async (req, res) => {
   const { offset = 0, limit = 10000 } = req.query;
@@ -187,18 +194,14 @@ const listProjects = async (req, res) => {
       project_id: ids
     }
   }).map((data) => data.dataValues).map((data) => ({...data, CODE_SERVICE_AREA: data.CODE_SERVICE_AREA.dataValues.service_area_name}));
-  let codeStateCounty = await CodeStateCounty.findAll({
-    attributes: ['state_county_id', 'county_name']
-  });
-  
-
+  const projectCounties = await getCountiesByProjectIds(ids);
   projects = projects.map((project) => {
     const pservicearea = projectServiceArea.filter((psa) => psa.project_id === project.project_id);
-    const pcounty = codeStateCounty.filter((pc) => pc.state_county_id === project?.project_county?.state_county_id);
+    const pcounty = projectCounties.filter((d) => d.project_id === project.project_id)[0];
     return {
       ...project,
       service_area_name: pservicearea[0]?.CODE_SERVICE_AREA,
-      county_name:  pcounty[0]?.county_name
+      county:  pcounty
     };
   });
 
