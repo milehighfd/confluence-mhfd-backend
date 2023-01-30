@@ -129,9 +129,9 @@ const projectsByFilters = async (projects, filters) => {
       return flag
     });
   }
-  // if ((filters.servicearea?.trim()?.length || 0) > 0) {
-  //   newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) );
-  // }
+  if ((filters.servicearea?.trim()?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) );
+  }
   return newprojects;
 }
 
