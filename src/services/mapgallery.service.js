@@ -12,7 +12,7 @@ import {
   COSPONSOR
 } from 'bc/config/config.js';
 
-const getCoordsByProjectId = async (projectid, isDev) => {
+export const getCoordsByProjectId = async (projectid, isDev) => {
   let table = MAIN_PROJECT_TABLE;
   if (isDev) {
     table = CREATE_PROJECT_TABLE;
@@ -32,7 +32,7 @@ const getCoordsByProjectId = async (projectid, isDev) => {
   }
 }
 
-const getMidByProjectId = async (projectid, projecttype) => {
+export const getMidByProjectId = async (projectid, projecttype) => {
   let table = CREATE_PROJECT_TABLE;
   let fields = ["projectid", "cartodb_id", "county", "jurisdiction", "servicearea", "projectname", "status", "description", "acquisitionprogress", "acquisitionanticipateddate", "projecttype", "projectsubtype", "additionalcost", "additionalcostdescription", `${COSPONSOR1} as ${COSPONSOR}`, "frequency", "maintenanceeligibility", "overheadcost", "overheadcostdescription", "ownership", "sponsor", 'estimatedcost', 'studyreason', 'studysubreason'];
   if (['Acquisition', 'Special', 'Maintenance', 'Capital'].includes(projecttype)) {
@@ -55,7 +55,7 @@ const getMidByProjectId = async (projectid, projecttype) => {
   }
 }
 
-const getMidByProjectIdV2 = async (projectid, projecttype) => {
+export const getMidByProjectIdV2 = async (projectid, projecttype) => {
   let table = CREATE_PROJECT_TABLE;
   let fields = [
     "projectid",
@@ -105,7 +105,7 @@ const getMidByProjectIdV2 = async (projectid, projecttype) => {
     return null;
   }
 }
-const getProjectData = async (projectid, projecttype) => {
+export const getProjectData = async (projectid, projecttype) => {
   let table = CREATE_PROJECT_TABLE;
   let fields = [
     "projectid",
@@ -155,7 +155,7 @@ const getProjectData = async (projectid, projecttype) => {
     return null;
   }
 }
-const getMinimumDateByProjectId = async (projectid) => {
+export const getMinimumDateByProjectId = async (projectid) => {
   let table = CREATE_PROJECT_TABLE;
   let SQL = `SELECT county, servicearea FROM ${table} where projectid=${projectid}`;
   let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
@@ -169,7 +169,7 @@ const getMinimumDateByProjectId = async (projectid) => {
 }
 
 // in the future change isDev for is board project , don't delete the variable please @pachon
-const getDataByProjectIds = async (projectid, type, isDev) => {
+export const getDataByProjectIds = async (projectid, type, isDev) => {
   let table = MAIN_PROJECT_TABLE;
   if (isDev) {
     table = CREATE_PROJECT_TABLE;
@@ -289,7 +289,7 @@ const getDataByProjectIds = async (projectid, type, isDev) => {
   }
 }
 
-async function getProblemByProjectId(projectid, sortby, sorttype) {
+export async function getProblemByProjectId(projectid, sortby, sorttype) {
   let data = [];
   const LINE_SQL = `select ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[7]}  as ${PROPSPROBLEMTABLES.problems[7]} from ${PROBLEM_TABLE}  
  where ${PROPSPROBLEMTABLES.problem_boundary[5]} in (SELECT problemid FROM grade_control_structure 
@@ -345,7 +345,7 @@ async function getProblemByProjectId(projectid, sortby, sorttype) {
   }
 }
 
-async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
+export async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
   const SQL = `
   select ST_ASGEOJSON(ST_EXTENT(the_geom)) as envelope
     from (
@@ -401,7 +401,7 @@ async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
   data = await newProm1;
   return data;
 }
-async function getCoordinatesOfComponents(id, field) {
+export async function getCoordinatesOfComponents(id, field) {
   const fixedField = 'problemid' ? 'problem_id' : 'project_id';
   const COMPONENTS_SQL = `SELECT type, 'grade_control_structure' as table, projectid, problemid, ST_AsGeoJSON(ST_Envelope(the_geom)) FROM grade_control_structure 
      where ${field}=${id}  union ` +
@@ -462,15 +462,4 @@ async function getCoordinatesOfComponents(id, field) {
   });
   const finalResult = await newProm1;
   return finalResult;
-}
-
-module.exports = {
-  getDataByProjectIds,
-  getProblemByProjectId,
-  getCoordinatesOfComponents,
-  getMinimumDateByProjectId,
-  getMidByProjectId,
-  getMidByProjectIdV2,
-  getProjectData,
-  getCoordsByProjectId
 }
