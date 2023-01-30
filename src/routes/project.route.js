@@ -184,10 +184,22 @@ const listProjects = async (req, res) => {
       project_id: ids
     }
   }).map((data) => data.dataValues).map((data) => ({...data, CODE_SERVICE_AREA: data.CODE_SERVICE_AREA.dataValues.service_area_name}));
+  let codeStateCounty = await CodeStateCounty.findAll({
+    attributes: ['state_county_id', 'county_name']
+  });
+  
+
   projects = projects.map((project) => {
     const pservicearea = projectServiceArea.filter((psa) => psa.project_id === project.project_id);
-    return { ...project, service_area_name: pservicearea[0]?.CODE_SERVICE_AREA };
+    const pcounty = codeStateCounty.filter((pc) => pc.state_county_id === project?.project_county?.state_county_id);
+    return {
+      ...project,
+      service_area_name: pservicearea[0]?.CODE_SERVICE_AREA,
+      county_name:  pcounty[0]?.county_name
+    };
   });
+
+  
   projects = await projectsByFilters(projects, body);
   logger.info('projects being called');
   res.send(projects);
