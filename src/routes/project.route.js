@@ -132,6 +132,9 @@ const projectsByFilters = async (projects, filters) => {
   if ((filters.servicearea?.trim()?.length || 0) > 0) {
     newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) );
   }
+  if((filters.county?.trim()?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => filters.county.includes(proj?.county_name));
+  }
   return newprojects;
 }
 
