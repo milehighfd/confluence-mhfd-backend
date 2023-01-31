@@ -95,7 +95,6 @@ async function getProblemByProjectId(projectid, sortby, sorttype) {
   }
 }
 const getProjectsIdsByBounds = async (bounds) => {
-  console.log('ACCESS HERE BOUNDS');
   const coords = bounds.split(',');
   const where_intersect = `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom)`;
   const query = `SELECT projectid FROM ${MAIN_PROJECT_TABLE} WHERE ${where_intersect}`;
@@ -110,6 +109,7 @@ const getProjectsIdsByBounds = async (bounds) => {
     }
   } catch (error) {
     console.log('ERROR AT CARTO', error);
+    return [];
   }
 };
 
@@ -157,13 +157,15 @@ const listProjects = async (req, res) => {
   const { body } = req;
   const bounds = body?.bounds;
   let project_ids_bybounds = [];
+  const where = {};
   if (bounds) {
     project_ids_bybounds = await getProjectsIdsByBounds(bounds);
+    if(project_ids_bybounds.length) {
+      where.project_id = project_ids_bybounds;
+    }
   }
   let projects = await Projects.findAll({
-    where: {
-      project_id: project_ids_bybounds
-    },
+    where: where,
     limit,
     offset,
     include: { all: true, nested: true },
