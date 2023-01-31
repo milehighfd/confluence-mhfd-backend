@@ -147,6 +147,11 @@ const projectsByFilters = async (projects, filters) => {
   if((filters.county?.trim()?.length || 0) > 0) {
     newprojects = newprojects.filter((proj) => filters.county.includes(proj?.county?.codeStateCounty?.county_name));
   }
+
+  //STREAMS 
+  if ((filters.streamname?.trim()?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => filters.streamname.includes(proj?.streams?.stream[0]?.stream_name));
+  }
   
   return newprojects;
 }
