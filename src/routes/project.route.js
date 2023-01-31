@@ -158,7 +158,29 @@ const projectsByFilters = async (projects, filters) => {
     newprojects = newprojects.filter((proj) => proj?.localGoverment?.codeLocalGoverment?.local_government_name.includes(filters.jurisdiction));
   }
 
-
+//CONSULTANT
+  if((filters.consultant?.trim()?.length || 0) > 0) {
+    let consultantFilter = filters.consultant.toUpperCase();
+    console.log('consultanttttt',consultantFilter) 
+    newprojects = newprojects.filter((proj) => consultantFilter.includes(proj?.consultants[0]?.consultant[0]?.business_name));
+  }
+    //CONTRACTOR
+    if((filters.contractor?.trim()?.length || 0) > 0) {
+      let contractorFilter = filters.contractor.toUpperCase();
+      // console.log('contractortttt',contractorFilter)
+      // newprojects = newprojects.filter((proj) => contractorFilter.includes(proj?.contractors[0]?.business[0]?.business_name));
+      let filterContractor =  contractorFilter.split(',')
+      newprojects = newprojects.filter((proj) => {
+        let flag = false;
+        for (let index = 0; index < filterContractor.length; index++) {
+          const contractor = filterContractor[index];
+          if(proj?.contractors[0]?.business[0]?.business_name.includes(contractor)){
+            flag =true;
+          }
+        }
+        return flag
+      });
+    }
   return newprojects;
 }
 
