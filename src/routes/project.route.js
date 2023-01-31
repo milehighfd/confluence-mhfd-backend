@@ -153,6 +153,12 @@ const projectsByFilters = async (projects, filters) => {
     newprojects = newprojects.filter((proj) => filters.streamname.includes(proj?.streams?.stream[0]?.stream_name));
   }
   
+  // jurisdiction is weird 
+  if ((filters.jurisdiction?.trim()?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => proj?.localGoverment?.codeLocalGoverment?.local_government_name.includes(filters.jurisdiction));
+  }
+
+
   return newprojects;
 }
 
