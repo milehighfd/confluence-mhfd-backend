@@ -19,7 +19,7 @@ export default (sequelize, DataType) => {
       type: DataType.UUID
     },
     user_id: {
-      type: DataType.UUID,
+      type: DataType.INTEGER,
       allowNull: false
     },
     position: {

@@ -13,7 +13,7 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER
     },
     user_id: {
-      type: DataType.UUID
+      type: DataType.INTEGER
     }
   });
 

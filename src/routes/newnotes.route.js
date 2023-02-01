@@ -10,9 +10,9 @@ router.get('/note', [auth], async (req, res) => {
     const { color_id, hasNull } = req.query;
     let notes = null;
     if (!color_id && hasNull === undefined) {
-      notes = await NoteService.getAllNotes(user._id);
+      notes = await NoteService.getAllNotes(user.user_id);
     } else {
-      notes = await NoteService.getNotesByColor(user._id, (color_id || '').split(','), hasNull);
+      notes = await NoteService.getNotesByColor(user.user_id, (color_id || '').split(','), hasNull);
     }
     return res.send(notes);
   } catch (error) {
@@ -23,7 +23,7 @@ router.get('/note', [auth], async (req, res) => {
 router.get('/group', [auth], async (req, res) => {
   const user = req.user;
   try {
-    const groups = await NoteService.getGroups(user._id);
+    const groups = await NoteService.getGroups(user.user_id);
     return res.send(groups);
   } catch (error) {
     res.status(500).send(error);
@@ -33,7 +33,7 @@ router.get('/group', [auth], async (req, res) => {
 router.get('/color-list', [auth], async (req, res) => {
   const user = req.user;
   try {
-    const colors = await NoteService.getColors(user._id);
+    const colors = await NoteService.getColors(user.user_id);
     return res.send(colors);
   } catch (error) {
     res.status(500).send(error);
@@ -42,8 +42,12 @@ router.get('/color-list', [auth], async (req, res) => {
 
 router.get('/get-available-colors', [auth], async (req, res) => {
   const user = req.user;
+  console.log("user")
+  console.log(user)
+  console.log("user")
+  console.log(user.user_id)
   try {
-    const colors = await NoteService.getColorsByNote(user._id);
+    const colors = await NoteService.getColorsByNote(user.user_id);    
     return res.send(colors);
   } catch(error) {
     res.status(500).send(error);
@@ -54,7 +58,7 @@ router.post('/group', [auth], async (req, res) => {
   const { name } = req.body;
   const user = req.user;
   try {
-    const group = await NoteService.saveGroup(name, user._id);
+    const group = await NoteService.saveGroup(name, user.user_id);
     return res.send(group);
   } catch (error) {
     console.log(error);
@@ -63,9 +67,10 @@ router.post('/group', [auth], async (req, res) => {
 });
 
 router.post('/note', [auth], async (req, res) => {
-  const user = req.user;
-  const note = {content, latitude, longitude, color_id} = req.body;
-  note['user_id'] = user._id;
+  const user = req.user;  
+  const {content, latitude, longitude, color_id} = req.body; 
+  const note = {content, latitude, longitude, color_id};
+  note['user_id'] = user.user_id;
   try {
     const savedNote = await NoteService.saveNote(note);
     res.status(200).send(savedNote);
@@ -78,7 +83,7 @@ router.post('/color', [auth], async (req, res) => {
   const user = req.user;
   const { label, color, opacity } = req.body;
   try {
-    const savedColor = await NoteService.saveColor(label, color, opacity, user._id);
+    const savedColor = await NoteService.saveColor(label, color, opacity, user.user_id);
     res.status(200).send(savedColor);
   } catch(error) {
     res.status(500).send(error);
@@ -148,7 +153,7 @@ router.put('/note/:id', [auth], async (req, res) => {
     note['position'] = position;
   }
   note['group_id'] = group_id;
-  note['user_id'] = user._id;
+  note['user_id'] = user.user_id;
   try {
     const savedNote = await NoteService.updateNote(id, note);
     if (savedNote) {

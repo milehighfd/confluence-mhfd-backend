@@ -13,7 +13,7 @@ const getAllNotes = async(userId) => {
   try {
     const notes = NewNotes.findAll({
       where: {
-        user_id: userId
+        user_id: +userId
       }, include: {
         model: ColorNotes,
         as: 'color'
@@ -29,12 +29,12 @@ const getAllNotes = async(userId) => {
 const getNotesByColor = async (userId, colorIds, hasNull) => {
   try{
     let where = {
-      user_id: userId,
+      user_id: +userId,
       color_id: colorIds
     };
     if (hasNull) {
       where = {
-        user_id: userId,
+        user_id: +userId,
         [Op.or]: [
           {
             color_id: {
@@ -64,7 +64,7 @@ const getColorsByNote = async (userId) => {
     const colors = await NewNotes.findAll({
       attributes: ['color_id'],
       where: {
-        user_id: userId
+        user_id: +userId
       }
     });
     return colors;
@@ -78,7 +78,7 @@ const getGroups = async (id) => {
   console.log(id);
   const groups = await GroupNotes.findAll({ 
     where: {
-      user_id: id 
+      user_id: +id 
     }
   });
   return groups;
@@ -87,7 +87,7 @@ const getGroups = async (id) => {
 const getColors = async (userId) => {
   const colors = await ColorNotes.findAll({
     where: {
-      user_id: userId
+      user_id: +userId
     },
     order: [
       ['createdAt', 'DESC']
@@ -189,7 +189,7 @@ const updateColor = async (id, label, color, opacity) => {
 const getAllNotesByUser = async (userId) => {
   const notes = await NewNotes.findAll({
     where: {
-      user_id: userId
+      user_id: +userId
     }
   });
   return notes;
@@ -214,7 +214,7 @@ const deleteNote = async (id) => {
 const getNextBucket = async (userId) => {
   const noteWithMaxPosition = await NewNotes.findAll({
     where: {
-      user_id: userId
+      user_id: +userId
     },
     order: [[
       'position', 'ASC'
@@ -223,7 +223,7 @@ const getNextBucket = async (userId) => {
   });
   const groupWithMaxPosition = await GroupNotes.findAll({
     where: {
-      user_id: userId
+      user_id: +userId
     },
     order: [[
       'position', 'ASC'

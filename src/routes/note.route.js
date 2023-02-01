@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', [auth], async (req, res) => {
   const user = req.user;
   try {
-    const notes = await NoteService.getAllNotesByUser(user._id);
+    const notes = await NoteService.getAllNotesByUser(user.user_id);
     return res.send(notes);
   } catch (error) {
     res.status(500).send(error);
@@ -18,7 +18,7 @@ router.get('/', [auth], async (req, res) => {
 router.post('/', [auth], async (req, res) => {
   const user = req.user;
   const note = {content, latitude, longitude, color} = req.body;
-  note['user_id'] = user._id;
+  note['user_id'] = user.user_id;
   try {
     const savedNote = await NoteService.saveNote(note);
     res.status(200).send(savedNote);
@@ -58,7 +58,7 @@ router.put('/:id', [auth], async (req, res) => {
   if (color) {
     note['color'] = color;
   }
-  note['user_id'] = user._id;
+  note['user_id'] = user.user_id;
   try {
     const savedNote = await NoteService.updateNote(id, note);
     if (savedNote) {
