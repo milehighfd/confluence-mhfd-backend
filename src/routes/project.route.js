@@ -183,7 +183,154 @@ const projectsByFilters = async (projects, filters) => {
     }
   return newprojects;
 }
+const projectsByFiltersForIds = async (projects, filters) => {
+  let newprojects = [...projects];
+  // STATUS
+  if ((filters.status?.trim()?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.status_name))
+  }
+  // PROJECT TYPE
+  if ((filters.projecttype?.trim()?.length || 0) > 0) {
+    //TO DO: the filter works with project type name, it has a  
+    let filterProjectType =  filters.projecttype.split(',')
+    newprojects = newprojects.filter((proj) => {
+      let flag = false;
+      for (let index = 0; index < filterProjectType.length; index++) {
+        const type = filterProjectType[index];
+        if(proj?.project_status?.code_phase_type?.code_project_type?.project_type_name.includes(type)){
+          flag =true;
+        }
+      }
+      return flag
+    })
+  }
+  // SERVICE AREA
+  if ((filters.servicearea?.trim()?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) )
+  }
+  //COUNTY
+  if((filters.county?.trim()?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => filters.county.includes(proj?.county?.codeStateCounty?.county_name))
+  }
 
+  //STREAMS 
+  if ((filters.streamname?.trim()?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => filters.streamname.includes(proj?.streams?.stream[0]?.stream_name))
+  }
+  
+  // jurisdiction is weird 
+  if ((filters.jurisdiction?.trim()?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => proj?.localGoverment?.codeLocalGoverment?.local_government_name.includes(filters.jurisdiction))
+  }
+
+//CONSULTANT
+  if((filters.consultant?.trim()?.length || 0) > 0) {
+    let consultantFilter = filters.consultant.toUpperCase();
+    newprojects = newprojects.filter((proj) => consultantFilter.includes(proj?.consultants[0]?.consultant[0]?.business_name))
+  }
+    //CONTRACTOR
+    if((filters.contractor?.trim()?.length || 0) > 0) {
+      let contractorFilter = filters.contractor.toUpperCase();
+      let filterContractor =  contractorFilter.split(',')
+      newprojects = newprojects.filter((proj) => {
+        let flag = false;
+        for (let index = 0; index < filterContractor.length; index++) {
+          const contractor = filterContractor[index];
+          if(proj?.contractors[0]?.business[0]?.business_name.includes(contractor)){
+            flag =true;
+          }
+        }
+        return flag
+      })
+    }
+    newprojects = newprojects.map((element) => 
+       element.project_id
+    );
+  return newprojects;
+}
+const listProjectsForId = async (req, res) => {
+  const { offset = 0, limit = 10000 } = req.query;
+  const { body } = req;
+  const bounds = body?.bounds;
+  let project_ids_bybounds = [];
+  const where = {};
+  if (bounds) {
+    project_ids_bybounds = await getProjectsIdsByBounds(bounds);
+    if(project_ids_bybounds.length) {
+      where.project_id = project_ids_bybounds;
+    }
+  }
+  let projects = await Projects.findAll({
+    where: where,
+    limit,
+    offset,
+    include: { all: true, nested: true },
+    order: [['created_date', 'DESC']]
+  }).map(result => result.dataValues);
+
+  const SPONSOR_TYPE = 11; // maybe this can change in the future
+  const ids = projects.map((p) => p.project_id);
+
+  const project_partners = await ProjectPartner.findAll({
+    where: {
+      project_id: ids,
+      code_partner_type_id: SPONSOR_TYPE,
+    },
+    include: { all: true, nested: true }
+  }).map(result => result.dataValues).map(res => { 
+    return {...res, business_associate: res.business_associate.dataValues }
+  });
+
+  projects = projects.map((project) => {
+    const partners = project_partners.filter((partner) => partner.project_id === project.project_id);
+    let sponsor = null;
+    if (partners.length) {
+      sponsor = partners[0].business_associate.business_associate_name;
+    } 
+    return  {...project, sponsor: sponsor };
+  });
+  // xconsole.log(project_partners);
+  let projectServiceArea = await ProjectServiceArea.findAll({
+    include: {
+      model: CodeServiceArea,
+      attributes: ['service_area_name']
+    },
+    where: {
+      project_id: ids
+    }
+  }).map((data) => data.dataValues).map((data) => ({...data, CODE_SERVICE_AREA: data.CODE_SERVICE_AREA.dataValues.service_area_name}));
+  const projectCounties = await getCountiesByProjectIds(ids);
+  const consultants = await getConsultantsByProjectids(ids);
+  const civilContractors = await getCivilContractorsByProjectids(ids);
+  const projectLocalGovernment = await getLocalGovernmentByProjectids(ids);
+  const estimatedCosts = await getEstimatedCostsByProjectids(ids);
+  const projectStreams = await getStreamsDataByProjectIds(ids);
+
+  projects = projects.map((project) => {
+    const pservicearea = projectServiceArea.filter((psa) => psa.project_id === project.project_id);
+    const pcounty = projectCounties.filter((d) => d.project_id === project.project_id)[0];
+    const staffs = consultants.filter(consult => consult.project_id === project.project_id);
+    const contractorsStaff = civilContractors.filter(consult => consult.project_id === project.project_id);
+    const codeLocalGoverment = projectLocalGovernment.filter((d) => d.project_id === project.project_id)[0];
+    const estimatedCost = estimatedCosts.filter(ec => ec.project_id === project.project_id)[0];
+    const streams = projectStreams.filter((d) => d.project_id === project.project_id)[0];
+    return {
+      ...project,
+      service_area_name: pservicearea[0]?.CODE_SERVICE_AREA,
+      county:  pcounty,
+      consultants: staffs,
+      contractors: contractorsStaff,
+      localGoverment: codeLocalGoverment,
+      estimatedCost,
+      streams
+    };
+  });
+
+  
+  projects = await projectsByFiltersForIds(projects, body);
+  logger.info('projects being called');
+  res.send(projects);
+};
 
 const listProjects = async (req, res) => {
   const { offset = 0, limit = 10000 } = req.query;
@@ -460,5 +607,6 @@ const getBboxProject = async (req, res) => {
 
 router.get('/bbox/:project_id', getBboxProject);
 router.post('/', listProjects);
+router.post('/ids', listProjectsForId);
 router.get('/:project_id', getProjectDetail);
 export default router;
