@@ -8,10 +8,10 @@ router.get('/', function(req, res, next) {
   res.send({ title: 'Express', env: process.env });
 });
 
-router.get('/env', (_, res) => {
-  console.log('my env ', process.env.NODE_ENV);
-  res.send({ env: process.env, version: 'Aug 233' });
-})
+router.get('/echo', (_, res) => {
+  res.send({ echo: 'success', version: 'Feb 1' });
+});
+
 const server_style = function(req, res, next) {
   var accessToken = req.params.accessToken;
   var styleUser = req.params.styleUser;
