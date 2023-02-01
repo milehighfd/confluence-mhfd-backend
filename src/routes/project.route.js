@@ -9,8 +9,10 @@ import {
   getCivilContractorsByProjectids,
   getLocalGovernmentByProjectids,
   getEstimatedCostsByProjectids,
-  getStreamsDataByProjectIds
-} from '../../src/utils/functionsProjects.js';
+  getStreamsDataByProjectIds,
+  projectsByFilters,
+  projectsByFiltersForIds
+} from 'bc/utils/functionsProjects.js';
 
 const Projects = db.project;
 const ProjectPartner = db.projectPartner;
@@ -113,141 +115,6 @@ const getProjectsIdsByBounds = async (bounds) => {
   }
 };
 
-const projectsByFilters = async (projects, filters) => {
-  let newprojects = [...projects];
-  // STATUS
-  if ((filters.status?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.status_name) );
-  }
-  // PROJECT TYPE
-  if ((filters.projecttype?.trim()?.length || 0) > 0) {
-    //TO DO: the filter works with project type name, it has a  
-    // let projecttypeFiltered = [];
-    let filterProjectType =  filters.projecttype.split(',')
-    // filterProjectType.forEach(type => {
-    //    projecttypeFiltered = [...projecttypeFiltered, newprojects.filter((proj) => proj?.project_status?.code_phase_type?.code_project_type?.project_type_name.includes(type))];
-    // });
-    // newprojects = projecttypeFiltered
-    newprojects = newprojects.filter((proj) => {
-      let flag = false;
-      for (let index = 0; index < filterProjectType.length; index++) {
-        const type = filterProjectType[index];
-        if(proj?.project_status?.code_phase_type?.code_project_type?.project_type_name.includes(type)){
-          flag =true;
-        }
-      }
-      return flag
-    });
-  }
-  // SERVICE AREA
-  if ((filters.servicearea?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) );
-  }
-  //COUNTY
-  if((filters.county?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.county.includes(proj?.county?.codeStateCounty?.county_name));
-  }
-
-  //STREAMS 
-  if ((filters.streamname?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.streamname.includes(proj?.streams?.stream[0]?.stream_name));
-  }
-  
-  // jurisdiction is weird 
-  if ((filters.jurisdiction?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => proj?.localGoverment?.codeLocalGoverment?.local_government_name.includes(filters.jurisdiction));
-  }
-
-//CONSULTANT
-  if((filters.consultant?.trim()?.length || 0) > 0) {
-    let consultantFilter = filters.consultant.toUpperCase();
-    console.log('consultanttttt',consultantFilter) 
-    newprojects = newprojects.filter((proj) => consultantFilter.includes(proj?.consultants[0]?.consultant[0]?.business_name));
-  }
-    //CONTRACTOR
-    if((filters.contractor?.trim()?.length || 0) > 0) {
-      let contractorFilter = filters.contractor.toUpperCase();
-      // console.log('contractortttt',contractorFilter)
-      // newprojects = newprojects.filter((proj) => contractorFilter.includes(proj?.contractors[0]?.business[0]?.business_name));
-      let filterContractor =  contractorFilter.split(',')
-      newprojects = newprojects.filter((proj) => {
-        let flag = false;
-        for (let index = 0; index < filterContractor.length; index++) {
-          const contractor = filterContractor[index];
-          if(proj?.contractors[0]?.business[0]?.business_name.includes(contractor)){
-            flag =true;
-          }
-        }
-        return flag
-      });
-    }
-  return newprojects;
-}
-const projectsByFiltersForIds = async (projects, filters) => {
-  let newprojects = [...projects];
-  // STATUS
-  if ((filters.status?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.status_name))
-  }
-  // PROJECT TYPE
-  if ((filters.projecttype?.trim()?.length || 0) > 0) {
-    //TO DO: the filter works with project type name, it has a  
-    let filterProjectType =  filters.projecttype.split(',')
-    newprojects = newprojects.filter((proj) => {
-      let flag = false;
-      for (let index = 0; index < filterProjectType.length; index++) {
-        const type = filterProjectType[index];
-        if(proj?.project_status?.code_phase_type?.code_project_type?.project_type_name.includes(type)){
-          flag =true;
-        }
-      }
-      return flag
-    })
-  }
-  // SERVICE AREA
-  if ((filters.servicearea?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) )
-  }
-  //COUNTY
-  if((filters.county?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.county.includes(proj?.county?.codeStateCounty?.county_name))
-  }
-
-  //STREAMS 
-  if ((filters.streamname?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.streamname.includes(proj?.streams?.stream[0]?.stream_name))
-  }
-  
-  // jurisdiction is weird 
-  if ((filters.jurisdiction?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => proj?.localGoverment?.codeLocalGoverment?.local_government_name.includes(filters.jurisdiction))
-  }
-
-//CONSULTANT
-  if((filters.consultant?.trim()?.length || 0) > 0) {
-    let consultantFilter = filters.consultant.toUpperCase();
-    newprojects = newprojects.filter((proj) => consultantFilter.includes(proj?.consultants[0]?.consultant[0]?.business_name))
-  }
-    //CONTRACTOR
-    if((filters.contractor?.trim()?.length || 0) > 0) {
-      let contractorFilter = filters.contractor.toUpperCase();
-      let filterContractor =  contractorFilter.split(',')
-      newprojects = newprojects.filter((proj) => {
-        let flag = false;
-        for (let index = 0; index < filterContractor.length; index++) {
-          const contractor = filterContractor[index];
-          if(proj?.contractors[0]?.business[0]?.business_name.includes(contractor)){
-            flag =true;
-          }
-        }
-        return flag
-      })
-    }
-    newprojects = newprojects.map((element) => 
-       element.project_id
-    );
-  return newprojects;
-}
 const listProjectsForId = async (req, res) => {
   const { offset = 0, limit = 10000 } = req.query;
   const { body } = req;
@@ -305,7 +172,6 @@ const listProjectsForId = async (req, res) => {
   const projectLocalGovernment = await getLocalGovernmentByProjectids(ids);
   const estimatedCosts = await getEstimatedCostsByProjectids(ids);
   const projectStreams = await getStreamsDataByProjectIds(ids);
-
   projects = projects.map((project) => {
     const pservicearea = projectServiceArea.filter((psa) => psa.project_id === project.project_id);
     const pcounty = projectCounties.filter((d) => d.project_id === project.project_id)[0];
@@ -325,8 +191,6 @@ const listProjectsForId = async (req, res) => {
       streams
     };
   });
-
-  
   projects = await projectsByFiltersForIds(projects, body);
   logger.info('projects being called');
   res.send(projects);

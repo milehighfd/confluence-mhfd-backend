@@ -33,8 +33,9 @@ import {
   getConsultantsByProjectids,
   getLocalGovernmentByProjectids,
   getEstimatedCostsByProjectids,
-  getStreamsDataByProjectIds
-} from '../../src/utils/functionsProjects.js';
+  getStreamsDataByProjectIds,
+  projectsByFilters
+} from 'bc/utils/functionsProjects.js';
 
 
 const getGroup = async (req, res) => {
@@ -378,6 +379,7 @@ const listProjects = async (req, res) => {
     favorites,
     _id 
   } = req.query;
+  const { body } = req;
   const where = {};
   if (code_project_type_id) {
     where.code_project_type_id = +code_project_type_id;
@@ -610,6 +612,7 @@ const listProjects = async (req, res) => {
       }
     });
   }
+  projects = await projectsByFilters(projects, body);
   if ( sortby ) {
     projects = sortInside(projects, sortby, order);
   }
@@ -762,10 +765,11 @@ const listProjects = async (req, res) => {
     res.send(groupProjects);
     return;
   }
+
   res.send(projects);
 };
 
-router.get('/list', listProjects);
+router.post('/list', listProjects);
 router.get('/groups/:groupname', getGroup);
 
 export default router;
