@@ -4,6 +4,7 @@ import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import Sequelize from 'sequelize';
 import favoritesService from 'bc/services/favorites.service.js';
+import groupService from 'bc/services/group.service.js';
 const Projects = db.project;
 const ProjectPartner = db.projectPartner;
 const ProjectCounty = db.projectCounty;
@@ -43,14 +44,7 @@ const getGroup = async (req, res) => {
   const data = {};
   if (groupname === 'status') {
     try{
-      const codeStatusType = await CodeStatusType.findAll({
-        order: [
-          ['status_name', 'ASC']
-        ]
-      }).map((data) => data.dataValues);
-      const groups = codeStatusType.map((data) => {
-        return { name: data.status_name, id: data.code_status_type_id };
-      });
+      const groups = await groupService.getStatus();
       data.table = 'code_status_type';
       data.groups = groups;
     } catch(error) {
@@ -60,14 +54,7 @@ const getGroup = async (req, res) => {
   }
   if (groupname === 'jurisdiction') {
     try{
-      const codeLocalGoverment = await CodeLocalGoverment.findAll({
-        order: [
-          ['local_government_name', 'ASC']
-        ]
-      }).map((data) => data.dataValues);
-      const groups = codeLocalGoverment.map((data) => {
-        return { name: data.local_government_name, id: data.code_local_government_id };
-      });
+      const groups = await groupService.getJurisdiction();
       data.table = 'CODE_LOCAL_GOVERNMENT_4326';
       data.groups = groups;
     } catch(error) {
@@ -77,14 +64,7 @@ const getGroup = async (req, res) => {
   }
   if (groupname === 'county') {
     try{
-      const codeStateCounty = await CodeStateCounty.findAll({
-        order: [
-          ['county_name', 'ASC']
-        ]
-      }).map((data) => data.dataValues);
-      const groups = codeStateCounty.map((data) => {
-        return { name: data.county_name, id: data.state_county_id };
-      });
+      const groups = await groupService.getCounty();
       data.table = 'CODE_STATE_COUNTY_4326';
       data.groups = groups;
     } catch(error) {
@@ -95,14 +75,7 @@ const getGroup = async (req, res) => {
   }
   if (groupname === 'servicearea') {
     try{
-      const codeServiceArea = await CodeServiceArea.findAll({
-        order: [
-          ['service_area_name', 'ASC']
-        ]
-      }).map((data) => data.dataValues);
-      const groups = codeServiceArea.map((data) => {
-        return { name: data.service_area_name, id: data.code_service_area_id };
-      });
+      const groups = await groupService.getServiceArea();
       data.table = 'CODE_SERVICE_AREA_4326';
       data.groups = groups;
     } catch(error) {
@@ -113,22 +86,7 @@ const getGroup = async (req, res) => {
   }
   if (groupname === 'consultant') {
     try{
-      const CONSULTANT_ID = 3;
-      const projectPartner = await ProjectPartner.findAll({
-        where: {
-          code_partner_type_id: CONSULTANT_ID
-        }
-      }).map((data) => data.dataValues);
-      const ids = projectPartner.map((data) => data.business_associates_id);
-      const businessAssociates = await BusinessAssociante.findAll({
-        where: {
-          business_associates_id: ids
-        },
-        order: [['business_name', 'ASC']]
-      });
-      const groups = businessAssociates.map((data) => {
-        return { name: data.business_name, id: data.business_associates_id };
-      });
+      const groups = await groupService.getConsultant();
       data.table = 'business_associates';
       data.groups = groups;
     } catch(error) {
@@ -139,22 +97,7 @@ const getGroup = async (req, res) => {
   }
   if (groupname === 'contractor') {
     try{
-      const CIVIL_CONTRACTOR_ID = 8, LANDSCAPE_CONTRACTOR_ID = 9;
-      const projectPartner = await ProjectPartner.findAll({
-        where: {
-          code_partner_type_id: [CIVIL_CONTRACTOR_ID, LANDSCAPE_CONTRACTOR_ID]
-        }
-      }).map((data) => data.dataValues);
-      const ids = projectPartner.map((data) => data.business_associates_id);
-      const businessAssociates = await BusinessAssociante.findAll({
-        where: {
-          business_associates_id: ids
-        },
-        order: [['business_name', 'ASC']]
-      });
-      const groups = businessAssociates.map((data) => {
-        return { name: data.business_name, id: data.business_associates_id };
-      });
+      const groups = await groupService.getContractor();
       data.table = 'business_associates';
       data.groups = groups;
     } catch(error) {
@@ -165,17 +108,7 @@ const getGroup = async (req, res) => {
   }
   if (groupname === 'streams') {
     try {
-      const streams = await Streams.findAll({
-        order: [
-          ['stream_name', 'ASC']
-        ],
-        where: {
-          stream_name: {[Op.ne]: null}
-        }
-      });
-      const groups = streams.map((data) => {
-        return { name: data.stream_name, id: data.stream_id}
-      });
+      const groups = await groupService.getStreams();
       data.table = 'streams';
       data.groups = groups;
     } catch (error) {
@@ -375,6 +308,7 @@ const listProjects = async (req, res) => {
     filterby,
     filtervalue,
     favorites,
+    myprojects,
     _id 
   } = req.query;
   const { body } = req;
@@ -610,6 +544,15 @@ const listProjects = async (req, res) => {
       }
     });
   }
+  if (myprojects) {
+    const staffs = await ProjectStaff.findAll({
+      where: {
+        project_id: ids
+      }
+    }).map(result => result.dataValues);
+    // console.log('the project staff is ', projectStaff);
+    const mhfdIds = staffs.map((data) => data.mhfd_staff_id).filter((data) => data !== null);
+  }
   projects = await projectsByFilters(projects, body);
   if ( sortby ) {
     projects = sortInside(projects, sortby, order);
@@ -763,7 +706,6 @@ const listProjects = async (req, res) => {
     res.send(groupProjects);
     return;
   }
-
   res.send(projects);
 };
 
