@@ -223,7 +223,6 @@ const sortInside = (projects, sortvalue, order) => {
         });
         break;
       case 'project_sponsor':
-        console.log('\n\n\nabout to sort sponsor \n\n***********\n\n\n'); 
         projects.sort((a,b) => {
           if (order === 'ascend') {
             return a?.sponsor?.localeCompare(b?.sponsor )
@@ -233,7 +232,6 @@ const sortInside = (projects, sortvalue, order) => {
         });
         break;
       case 'project_type': 
-      console.log('\n\n\nabout to sort project_type \n\n***********\n\n\n');
         projects.sort((a,b) => {
           if (order === 'ascend') {
             return a?.project_status?.code_phase_type?.code_project_type?.project_type_name?.localeCompare(b?.project_status?.code_phase_type?.code_project_type?.project_type_name )

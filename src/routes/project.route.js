@@ -11,7 +11,8 @@ import {
   getEstimatedCostsByProjectids,
   getStreamsDataByProjectIds,
   projectsByFilters,
-  projectsByFiltersForIds
+  projectsByFiltersForIds,
+  sortProjects
 } from 'bc/utils/functionsProjects.js';
 
 const Projects = db.project;
@@ -276,6 +277,11 @@ const listProjects = async (req, res) => {
 
   
   projects = await projectsByFilters(projects, body);
+  if (body?.sortby?.trim()?.length || 0) {
+    console.log('About to srot projects');
+    projects = await sortProjects(projects, body);
+  }
+  
   logger.info('projects being called');
   res.send(projects);
 };

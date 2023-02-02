@@ -285,3 +285,39 @@ export const projectsByFiltersForIds = async (projects, filters) => {
     );
   return newprojects;
 }
+
+export const sortProjects = async (projects, filters) => {
+  const { sortby, sorttype } = filters;
+  switch(sortby) {
+    case 'estimatedcost':
+      projects.sort((a,b) => {
+        if (sorttype === 'asc') {
+          return a?.estimatedCost?.cost - b?.estimatedCost?.cost
+        } else {
+          return b?.estimatedCost?.cost - a?.estimatedCost?.cost
+        }
+      });
+      break;
+    case 'projecttype': 
+      projects.sort((a,b) => {
+        if (sorttype === 'asc') {
+          return a?.project_status?.code_phase_type?.code_project_type?.project_type_name?.localeCompare(b?.project_status?.code_phase_type?.code_project_type?.project_type_name )
+        } else {
+          return b?.project_status?.code_phase_type?.code_project_type?.project_type_name?.localeCompare(a?.project_status?.code_phase_type?.code_project_type?.project_type_name )
+        }
+      });
+      break;
+    case 'projectname':
+      projects.sort((a,b) => {
+        if (sorttype === 'asc') {
+          return a?.project_name?.localeCompare(b?.project_name);
+        } else {
+          return b?.project_name?.localeCompare(a?.project_name);
+        }
+      });
+      break;
+    default: 
+      break;
+  }
+  return projects;
+}
