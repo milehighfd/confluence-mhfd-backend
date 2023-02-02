@@ -7,15 +7,11 @@ import sequelize from 'sequelize';
 const { Op } = sequelize;
 
 export default (sequelize, DataType) => {
-  const User = sequelize.define('user', {
-    _id: {
-      type: DataType.UUID,
-      defaultValue: DataType.UUIDV4,
-      primaryKey: true
-    },
+  const User = sequelize.define('user', {    
     user_id: {
-      type: DataType.UUID,
-      allowNull: false
+      primaryKey: true,
+      type: DataType.INTEGER,
+      allowNull: false      
     },
     activated: {
       type: DataType.BOOLEAN
@@ -100,7 +96,7 @@ export default (sequelize, DataType) => {
     const user = this;
     
     const token = jwt.sign({
-      _id: user._id
+      user_id: user.user_id
     }, config.JWT_KEY, {
       expiresIn: config.JWT_EXPIRANCY
     });

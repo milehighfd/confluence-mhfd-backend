@@ -60,7 +60,7 @@ router.get('/count-login', auth, async (req, res) => {
   try {
     const user = req.user;
     console.log(user);
-    const counter = await logActivityService.timesLogin(user._id);
+    const counter = await logActivityService.timesLogin(user.user_id);
     console.log(counter);
     res.send({times: counter + 1});
   } catch (error) {

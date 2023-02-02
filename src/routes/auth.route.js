@@ -61,7 +61,7 @@ router.post('/login', async (req, res) => {
     const token = await user.generateAuthToken();
 
     let logActivity = {};
-    logActivity.user_id = user._id;
+    logActivity.user_id = user.user_id;
     logActivity.activityType = ACTIVITY_TYPE.USER_LOGIN;
 
     logActivityService.saveLogActivity(logActivity);

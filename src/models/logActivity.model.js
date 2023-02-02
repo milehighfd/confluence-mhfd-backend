@@ -10,7 +10,7 @@ export default (sequelize, DataType) => {
       type: DataType.DATE
     },
     user_id: {
-      type: DataType.UUID,
+      type: DataType.INTEGER,
       allowNull: false
     },
     activityType: {
