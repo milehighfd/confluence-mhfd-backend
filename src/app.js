@@ -28,6 +28,7 @@ import configurationRouter from 'bc/routes/configuration.route.js';
 import projectRouter from 'bc/routes/project.route.js';
 import v2Localities from 'bc/routes/v2locality.route.js';
 import pmToolsRouter from 'bc/routes/pmtools.route.js';
+import cardFilterRouter from 'bc/routes/cardfilters.route.js';
 import db from 'bc/config/db.js';
 import seed from 'bc/config/seed.js'
 import projectServiceArea from 'bc/routes/projectservicearea.route.js';
@@ -35,6 +36,7 @@ import streamsRouter from 'bc/routes/streams.route.js';
 // import serviceAreaLocalGovernment from 'bc/routes/servicearealocalgovernment.route.js';
 seed();
 
+// db.sequelize.sync();
 console.log(`ENVIRONMENT ${process.env.NODE_ENV}`);
 const app = express();
 const server = http.createServer(app);
@@ -82,6 +84,7 @@ app.use('/projects', projectRouter);
 app.use('/v2/locality', v2Localities);
 app.use('/projectservicearea', projectServiceArea);
 app.use('/streams', streamsRouter);
+app.use('/card-filters', cardFilterRouter);
 // app.use('/servicearealocalgovernment', serviceAreaLocalGovernment);
 
 export default server;
