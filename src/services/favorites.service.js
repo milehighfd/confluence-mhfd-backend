@@ -24,7 +24,7 @@ const getFavorites = async (user_id) => {
   let result = [];
   result = await Favorites.findAll({
     where: {
-      user_character_id: user_id
+      user_id: user_id
     }
   });
   return result;
@@ -37,7 +37,7 @@ const getOne = async (data) => {
         [Op.like]: '%' + data.project_table_name + '%'
       },
       project_id: data.project_id,
-      user_character_id: data.user_character_id
+      user_id: data.user_id
     }
   });
   return favorite;
@@ -50,15 +50,15 @@ const saveFavorite = async (favorite) => {
         [Op.like]: '%' + favorite.project_table_name + '%'
       },
       project_id: favorite.project_id,
-      user_character_id: favorite.user_character_id
+      user_id: favorite.user_id
     }
   });
   if (!fav) {
     const formatTime = moment().format('YYYY-MM-DD HH:mm:ss');
     //await Favorites.create(favorite);
-    const insertQuery = `INSERT INTO project_favorite (user_character_id, user_id, project_id, project_table_name, created_date, modified_date, last_modified_by, created_by)
+    const insertQuery = `INSERT INTO project_favorite (user_id, project_id, project_table_name, created_date, modified_date, last_modified_by, created_by)
     OUTPUT inserted . *
-    VALUES('${favorite.user_character_id}', '${favorite.user_character_id}', '${favorite.project_id}', '${favorite.project_table_name}', '${formatTime}', '${formatTime}', '${favorite.creator}','${favorite.creator}')`;
+    VALUES( '${favorite.user_id}', '${favorite.project_id}', '${favorite.project_table_name}', '${formatTime}', '${formatTime}', '${favorite.creator}','${favorite.creator}')`;
     const data = await db.sequelize.query(
       insertQuery,
       {

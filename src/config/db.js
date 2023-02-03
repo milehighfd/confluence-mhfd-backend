@@ -153,7 +153,7 @@ db.color.belongsTo(db.user, {foreignKey: 'user_id'});
 db.newnotes.belongsTo(db.color, {foreignKey: {name: 'color_id', allowNull: true}});
 db.color.hasMany(db.newnotes, {foreignKey: {name: 'color_id', allowNull: true}});
 db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
-db.ProjectFavorite.belongsTo(db.user, {foreignKey: 'user_character_id'});
+db.ProjectFavorite.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
 // db.attachment.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.user.hasMany(db.newnotes, {foreignKey: 'user_id'});

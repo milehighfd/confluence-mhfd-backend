@@ -146,7 +146,7 @@ router.get('/', auth, async (req, res) => {
   const user = req.user;
   try {  
     console.log(user);
-    const favorite = await favoritesService.getFavorites(user._id);
+    const favorite = await favoritesService.getFavorites(user.user_id);
     return res.send(favorite);
   } catch(error) {
     res.send(500);
@@ -158,7 +158,7 @@ router.get('/create', auth, async (req, res) => {
   const user = req.user;
   try {
     const favorite = {
-      user_character_id: user.user_id,
+      user_id: user.user_id,
       project_table_name: table,
       project_id: id,
       creator: user.name
@@ -178,7 +178,7 @@ router.delete('/', auth, async (req, res) => {
   const user = req.user;
   try {
    const favorite = {
-      user_character_id: user.user_id,
+      user_id: user.user_id,
       project_table_name: table,
       project_id: id
     };
