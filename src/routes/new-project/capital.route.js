@@ -274,15 +274,15 @@ const insertIntoArcGis = async (geom, projectid, projectname) => {
     const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
     const TOKEN = JSON.parse(token_data.body).token;
     const bodyFD = createRandomGeomOnARCGIS(JSON.parse(geom).coordinates, cleanStringValue(projectname), TOKEN, projectid);
-    const createOnArcGis = await needle('post','${ARCGIS_SERVICE}/applyEdits', bodyFD, { multipart: true });
-    console.log('create on arc gis', createOnArcGis.statusCode, createOnArcGis.body);
+    const createOnArcGis = await needle('post',`${ARCGIS_SERVICE}/applyEdits`, bodyFD, { multipart: true });
+    console.log('create on arc gis at ', ARCGIS_SERVICE, createOnArcGis.statusCode, createOnArcGis.body);
     if (createOnArcGis.statusCode == 200) {
       if (createOnArcGis.body.error) {
         return { successArcGis: false, error: createOnArcGis.body.error };  
       }
       return { successArcGis: createOnArcGis.body.addResults[0].success };
     } else {
-      return { successArcGis: false };
+      return { successArcGis: false, error:createOnArcGis.body};
     }
   } catch(e) {
     console.log('error at insert into arcgis', e);

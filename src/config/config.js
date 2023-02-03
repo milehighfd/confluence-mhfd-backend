@@ -26,7 +26,8 @@ export const DB_PORT = process.env.DB_PORT || 5432;
 export const BASE_SERVER_URL = process.env.BASE_SERVER_URL || 'http://localhost:3003';
 // NODE_ENV has three posible values dev, test y prod
 export const MAIN_PROJECT_TABLE = 'mhfd_projects';
-export const ARCGIS_SERVICE = `https://gis.mhfd.org/server/rest/services/Confluence${(process.env.NODE_ENV ? process.env.NODE_ENV : 'dev')}/MHFDProjects/FeatureServer/0`;
+// ${(process.env.NODE_ENV ? process.env.NODE_ENV : 'dev')}    // TODO this shoud be added to the end of Confluence suposably
+export const ARCGIS_SERVICE = `https://gis.mhfd.org/server/rest/services/Confluence/MHFDProjects/FeatureServer/0`;
 export const CREATE_PROJECT_TABLE = process.env.CREATE_PROJECT_TABLE + '_' + (process.env.NODE_ENV ? process.env.NODE_ENV : 'dev');
 export const CREATE_PROJECT_TABLE_V2 = 'project'
 export const PROBLEM_TABLE = 'problem_boundary';
