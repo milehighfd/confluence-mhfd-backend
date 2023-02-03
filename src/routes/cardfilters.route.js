@@ -130,7 +130,7 @@ const getFilters = async (req, res) => {
   }
   if (body.projecttype && body.projecttype.length) { // maybe we will have problems with the names
     const ids = projects.filter((project) => {
-      return body.projecttype(
+      return body.projecttype.includes(
         project?.project_status?.code_phase_type?.code_project_type?.code_project_type_id
       );
     }).map((project) => project.project_id);
@@ -231,6 +231,6 @@ const getFilters = async (req, res) => {
   res.send({'all': 'too well', data});
 }
 
-router.get('/', getFilters);
+router.post('/', getFilters);
 
 export default router;
