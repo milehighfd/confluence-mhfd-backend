@@ -61,7 +61,8 @@ const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, co
   dialectOptions: {
     instancName: 'XXX',
     options:{
-      encrypt: false
+      encrypt: false,
+      validateBulkLoadParameters: false
     }
   },
   pool: {

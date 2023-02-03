@@ -2,8 +2,9 @@
   "name": "bc",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "start": "node ./bin/www",
+    "start": "node ./src/bin/www",
     "transpile": "babel ./src --out-dir dist",
     "clean": "rimraf dist",
     "dev": "npm-run-all build server",
@@ -57,7 +58,6 @@
       "@babel/preset-env"
     ]
   },
-  "type": "module",
   "exports": {
     "./config/*.js": "./src/config/*.js",
     "./models/*.js": "./src/models/*.js",
