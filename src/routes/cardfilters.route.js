@@ -192,8 +192,41 @@ const getFilters = async (req, res) => {
       return pre;
     }, 0);
   });
-  
-  res.send({'all': 'too well', projects: projects, data});
+  data.jurisdiction.forEach((d) => {
+    d.count = projects.reduce((pre, current) => {
+      if (current?.localGoverment?.codeLocalGoverment?.code_local_government_id === d.id) {
+        return pre + 1;
+      }
+      return pre;
+    }, 0);
+  });
+  data.county.forEach((d) => {
+    d.count = projects.reduce((pre, current) => {
+      if (current?.county?.codeStateCounty?.state_county_id === d.id) {
+        return pre + 1;
+      }
+      return pre;
+    }, 0);
+  });
+  data.serviceArea.forEach((d) => {
+    d.count = projects.reduce((pre, current) => {
+      // console.log('sa sa ', current?.serviceArea, d.id);
+      console.log(current?.serviceArea?.code_service_area_id);
+      if (current?.serviceArea?.code_service_area_id === +d.id) {
+        return pre + 1;
+      } 
+      return pre;
+    }, 0);
+  });
+  data.projecttype.forEach((d) => {
+    d.count = projects.reduce((pre, current) => {
+      if (current?.project_status?.code_phase_type?.code_project_type?.code_project_type_id === d.id) {
+        return pre + 1;
+      } 
+      return pre;
+    }, 0);
+  });
+  res.send({'all': 'too well', data});
 }
 
 router.get('/', getFilters);

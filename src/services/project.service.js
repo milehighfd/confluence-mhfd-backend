@@ -117,7 +117,7 @@ const getProjects = async (include, bounds, offset = 1, limit = 12000) => {
     return {
       ...project,
       service_area_name: pservicearea[0]?.CODE_SERVICE_AREA,
-      serviceArea: pservicearea,
+      serviceArea: pservicearea[0],
       county:  pcounty,
       consultants: staffs,
       contractors: contractorsStaff,
