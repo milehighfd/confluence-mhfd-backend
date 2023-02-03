@@ -674,9 +674,8 @@ router.get('/bbox/:projectid', async (req, res) => {
     logger.info(sql);
     try {
         const data = await needle('post', CARTO_URL, query, { json: true });
-        //console.log('STATUS', data.statusCode);
         if (data.statusCode === 200) {
-          result = data.body;
+          const result = data.body;
           res.send(result.rows[0]);
         } else {
           logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
