@@ -437,7 +437,7 @@ const getProjectDetail = async (req, res) => {
   project = { ...project, projectDetail: project_detail };
 
   // attachments, for projects
-  const attachments = await Attachment.findAll({
+/*   const attachments = await Attachment.findAll({
     where: {
       project_id: project.project_id,
     }
@@ -447,7 +447,8 @@ const getProjectDetail = async (req, res) => {
     attachmentFinal = await attachmentService.FilterUrl(attachments);
     console.log(attachmentFinal)
   }
-  project = { ...project, attachments: attachmentFinal ? attachmentFinal : [] };
+  project = { ...project, attachments: attachmentFinal ? attachmentFinal : [] }; */
+  project = { ...project, attachments: [] };
   // get streams
   const streams = await getStreamsDataByProjectIds(project.project_id);
   project = { ...project, streams: streams || [] };
