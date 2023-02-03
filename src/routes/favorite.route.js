@@ -195,7 +195,7 @@ router.delete('/', auth, async (req, res) => {
 
 router.post('/favorite-list', auth, async (req, res) => {
    const user = req.user;
-   const favorite = await favoritesService.getFavorites(user._id);
+   const favorite = await favoritesService.getFavorites(user.user_id);
    console.log(favorite);
    const ids = favorite
       .filter(fav => {
