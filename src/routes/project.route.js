@@ -371,11 +371,12 @@ const getProjectDetail = async (req, res) => {
   // Maybe need to get the data from code_project_staff_role_type table in the future 
   const STAFF_LEAD = 1,
   WATERSHED_MANAGER = 2,
-  CONSTRUCTION_MANAGER = 3;
+  CONSTRUCTION_MANAGER = 3,
+  LG_LEAD = 10;
   const projectStaff = await ProjectStaff.findAll({
     where: {
       project_id: project.project_id,
-      code_project_staff_role_type_id: [STAFF_LEAD, WATERSHED_MANAGER, CONSTRUCTION_MANAGER]
+      code_project_staff_role_type_id: [STAFF_LEAD, WATERSHED_MANAGER, CONSTRUCTION_MANAGER,LG_LEAD]
     }
   }).map(result => result.dataValues);
   const managers = projectStaff.map(result => result.mhfd_staff_id);
@@ -447,7 +448,9 @@ const getProjectDetail = async (req, res) => {
     console.log(attachmentFinal)
   }
   project = { ...project, attachments: attachmentFinal ? attachmentFinal : [] };
-  
+  // get streams
+  const streams = await getStreamsDataByProjectIds(project.project_id);
+  project = { ...project, streams: streams || [] };
   // get problems 
   const problems = await getProblemByProjectId(project.project_id, PROPSPROBLEMTABLES.problems[6], 'asc');
   logger.info(`Adding problems ${JSON.stringify(problems)}`)

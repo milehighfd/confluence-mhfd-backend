@@ -21,19 +21,20 @@ const getData = async (req, res, next) => {
 const getData2 = async (req, res, next) => {
   const { type } = req.params;
   const [localities] = await db.sequelize.query(`SELECT name, type FROM Localities ORDER BY name ASC;`);
+  console.log(localities, "aca:");
   res.locals.data = [];
   if (type === 'WORK_REQUEST') {
     if (req.user) {
       if(req.user.designation === ROLES.MFHD_STAFF || req.user.designation === ROLES.MFHD_ADMIN) {
-        res.locals.data = localities.filter(l => l.type === 'JURISDICTION');
+        res.locals.data = localities.filter(l => l.type === 'LOCAL_GOVERNMENT');
       } else if (req.user.designation === ROLES.GOVERNMENT_STAFF) {
         res.locals.data = localities.filter(l => l.name === req.user.organization);
       }
     } else {
-      res.locals.data = localities.filter(l => l.type === 'JURISDICTION');
+      res.locals.data = localities.filter(l => l.type === 'LOCAL_GOVERNMENT');
     }
   } else if (type === 'WORK_PLAN') {
-    res.locals.data = localities.filter(l => l.type !== 'JURISDICTION');
+    res.locals.data = localities.filter(l => l.type !== 'LOCAL_GOVERNMENT');
   }
   next();
 }
