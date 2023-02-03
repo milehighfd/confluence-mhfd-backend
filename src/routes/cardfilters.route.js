@@ -11,26 +11,26 @@ import {
 
 const router = express.Router();
 
-const getBboxProject = async (req, res) => {
-  const project_id = req.params['project_id'];
+const getIdsInBbox = async (bounds) => {
+  const coords = bounds.split(',');
+  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
   try {
     const BBOX_SQL = `
-      SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom from ${MAIN_PROJECT_TABLE}
-      WHERE projectid = ${project_id}
+      SELECT projectid from ${MAIN_PROJECT_TABLE}
+      WHERE ${filters}
     `;
     const query = { q: BBOX_SQL };
     const data = await needle('post', CARTO_URL, query, {json: true});
     if (data.statusCode === 200) {
-      const geojson = data.body.rows[0]?.the_geom;
-      const bbox = JSON.parse(geojson);
-      res.status(200).send(bbox?.coordinates[0]);
+      return data.body.rows.map((d) => d.projectid);
     } else { 
       console.error('Error at bbox', data.body);
-      res.status(500).send(data.body);
+      return [];
     }
   } catch (error) {
     console.log('This error ', error);
-    res.status(500).send(error);
+    return [];
   }
 }
 
@@ -47,8 +47,11 @@ const getFilters = async (req, res) => {
   data.contractor = await groupService.getContractor();
   data.streams = await groupService.getStreams();
   data.projecttype = await groupService.getProjectType();
-  const projects = await projectService.getProjects(null, null, 1);
-  console.log(projects);
+  let projects = await projectService.getProjects(null, null, 1);
+  if (bounds) {
+    const ids = await getIdsInBbox(bounds);
+    projects = projects.filter((p) => ids.includes(p.project_id));
+  }
   const toMatch = [];
   if (body.completedyear && body.completedyear.length) { // don't touch
 
@@ -183,7 +186,6 @@ const getFilters = async (req, res) => {
       finalProjects.push(key);
     }
   }
-  console.log('FINALLLLL', finalProjects);
   data.status.forEach((d) => {
     d.count = projects.reduce((pre, current) => {
       if (current?.project_status?.code_phase_type?.code_status_type?.code_status_type_id === d.id) {
@@ -211,7 +213,6 @@ const getFilters = async (req, res) => {
   data.serviceArea.forEach((d) => {
     d.count = projects.reduce((pre, current) => {
       // console.log('sa sa ', current?.serviceArea, d.id);
-      console.log(current?.serviceArea?.code_service_area_id);
       if (current?.serviceArea?.code_service_area_id === +d.id) {
         return pre + 1;
       } 
@@ -226,6 +227,7 @@ const getFilters = async (req, res) => {
       return pre;
     }, 0);
   });
+  
   res.send({'all': 'too well', data});
 }
 

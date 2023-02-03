@@ -1,12 +1,11 @@
 
 export default (sequelize, DataType) => {
-  const NewNotes = sequelize.define('newnote', {
-    _id: {
-      type: DataType.UUID,
-      defaultValue: DataType.UUIDV4,
+  const NewNotes = sequelize.define('newnotes', {
+    newnotes_id: {
+      type: DataType.INTEGER,
       primaryKey: true
     },
-    content: {
+    note_text: {
       type: DataType.TEXT
     },
     latitude: {
@@ -25,9 +24,14 @@ export default (sequelize, DataType) => {
     position: {
       type: DataType.INTEGER
     },
-    group_id: {
-      type: DataType.UUID
+    groupnotes_id: {
+      type: DataType.INTEGER
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'newnotes',
+    createdAt: false,
+    updatedAt: false
   });
 
   return NewNotes;

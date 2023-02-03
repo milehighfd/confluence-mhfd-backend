@@ -1,9 +1,13 @@
 
 export default (sequelize, DataType) => {
-  const ColorNotes = sequelize.define('color', {
-    _id: {
+  const ColorNotes = sequelize.define('colors', {
+    _id_DNU: {
       type: DataType.UUID,
-      defaultValue: DataType.UUIDV4,
+      defaultValue: DataType.UUIDV4,      
+    },
+    color_id: {
+      type: DataType.INTEGER,
+      allowNull: false,
       primaryKey: true
     },
     label: {
@@ -19,6 +23,11 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       allowNull: false
     },
+  }, {
+    freezeTableName: true,
+    tableName: 'colors',
+    createdAt: false,
+    updatedAt: false
   });
 
   return ColorNotes;

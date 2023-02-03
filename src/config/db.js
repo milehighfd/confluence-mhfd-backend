@@ -158,8 +158,8 @@ db.ProjectFavorite.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.attachment.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.user.hasMany(db.newnotes, {foreignKey: 'user_id'});
 db.newnotes.belongsTo(db.user, {foreignKey: 'user_id'});
-db.newnotes.belongsTo(db.groupnotes, {foreignKey: {name: 'group_id', allowNull: true}});
-db.groupnotes.hasMany(db.newnotes, { foreignKey: {name: 'group_id', allowNull: true }});
+db.newnotes.belongsTo(db.groupnotes, {foreignKey: {name: 'groupnotes_id', allowNull: true}});
+db.groupnotes.hasMany(db.newnotes, { foreignKey: {name: 'groupnotes_id', allowNull: true }});
 db.groupnotes.belongsTo(db.user, {foreignKey: 'user_id'});
 db.user.hasMany(db.groupnotes, {foreignKey: 'user_id'});
 

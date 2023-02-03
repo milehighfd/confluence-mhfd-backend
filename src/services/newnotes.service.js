@@ -90,12 +90,12 @@ const getColors = async (userId) => {
       user_id: +userId
     },
     order: [
-      ['createdAt', 'DESC']
+      ['created_date', 'DESC']
     ]
   });
   colors.sort((a, b) => {
     if (a.label === 'Map Note' && a.label === b.label && a.color === DEFAULT_COLOR && b.color === DEFAULT_COLOR) {
-      return a.createdAt - b.createdAt;
+      return a.created_date - b.created_date;
     }
     if (a.label === 'Map Note' && a.color === DEFAULT_COLOR) {
       return -1;
@@ -115,7 +115,7 @@ const deleteGroups = async (id) => {
       _id: id 
     }});
   if (group) {
-    NewNotes.destroy({ where: { group_id: id } });
+    NewNotes.destroy({ where: { groupnotes_id: id } });
     group.destroy();
     return true;
   } else {
