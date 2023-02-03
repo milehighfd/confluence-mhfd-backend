@@ -99,7 +99,9 @@ export const sendConfirmAccount = async (user) => {
   logger.info(adminEmailToSend);
   const adminOptions = {
     from: MHFD_EMAIL,
-    to: 'confluence.support@mhfd.org',
+    // commented in order to avoid sending mails to mhfd domain during test time
+    // to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'ricardo@vizonomy.com' :'confluence.support@mhfd.org'),
+    to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'cesar@vizonomy.com' :'cesar@vizonomy.com'),
     subject: 'MHFD Confluence - New User Registered!',
     html: adminEmailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
