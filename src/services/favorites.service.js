@@ -56,9 +56,10 @@ const saveFavorite = async (favorite) => {
   if (!fav) {
     const formatTime = moment().format('YYYY-MM-DD HH:mm:ss');
     //await Favorites.create(favorite);
-    const insertQuery = `INSERT INTO project_favorite (user_id, project_id, project_table_name, created_date, modified_date, last_modified_by, created_by)
+    //remove user_character_id when updated db
+    const insertQuery = `INSERT INTO project_favorite (user_id, project_id, project_table_name, created_date, modified_date, last_modified_by, created_by, user_character_id)
     OUTPUT inserted . *
-    VALUES( '${favorite.user_id}', '${favorite.project_id}', '${favorite.project_table_name}', '${formatTime}', '${formatTime}', '${favorite.creator}','${favorite.creator}')`;
+    VALUES( '${favorite.user_id}', '${favorite.project_id}', '${favorite.project_table_name}', '${formatTime}', '${formatTime}', '${favorite.creator}','${favorite.creator}','${favorite.user_character_id}')`;
     const data = await db.sequelize.query(
       insertQuery,
       {

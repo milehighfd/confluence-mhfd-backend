@@ -161,6 +161,7 @@ router.get('/create', auth, async (req, res) => {
       user_id: user.user_id,
       project_table_name: table,
       project_id: id,
+      user_character_id: "Default Value",
       creator: user.name
     };
     logger.info('create favorite ', favorite);

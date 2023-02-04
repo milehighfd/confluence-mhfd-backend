@@ -1,11 +1,13 @@
 export default (sequelize, DataType) => {
     const ProjectFavorite = sequelize.define('project_favorite', {
+
       project_favorite_id: {
         type: DataType.INTEGER,
         primaryKey: true
       },
       user_character_id: {
         type: DataType.STRING,
+        defaultValue: 'defaultValue',
       },
       user_id: {
         type: DataType.INTEGER,

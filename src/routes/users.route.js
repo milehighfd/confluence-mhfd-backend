@@ -10,6 +10,9 @@ import logger from 'bc/config/logger.js';
 import db from 'bc/config/db.js';
 import { CARTO_URL, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
 import { PROJECT_TYPES_AND_NAME } from 'bc/lib/enumConstants.js';
+import sequelize from 'sequelize';
+
+const Op = sequelize.Op;
 
 const router = express.Router();
 const User = db.user;
@@ -60,66 +63,42 @@ router.post('/signup', validator(UserService.requiredFields('signup')), async (r
   }
 });
 
-router.put('/update', auth, async (req, res) => {
-  try {
-    let user = await User.findByPk(req.user._id, { raw: true });
-
+router.put('/me', auth, async (req, res) => {
+  try {    
+    let user = await User.findByPk(req.user.user_id, { raw: true });
+   
     if (!user) {
       return res.status(404).send({ error: 'User not found' });
     }
-
+    let checkEmail = await User.count({
+      where: {
+        email: req.body.email,
+        user_id:{
+          [Op.not]:user.user_id
+         }
+      }
+    })
     if (user.email !== req.body.email) {
-      if (User.count({
-        where: {
-          email: user.email,
-          _id: { $not: user._id }
-        }
-      })) {
+      if (checkEmail) 
+      {
+        console.log(user.user_id)
         return res.status(422).send({ error: 'the email has already been registered' });
       }
-      if (EMAIL_VALIDATOR.test(user.email)) {
+      if (!EMAIL_VALIDATOR.test(user.email)) {
         return res.status(400).send({ error: 'the email must be valid' });
       }
-    }
+    }    
+    
     for (const key in req.body) {
-      switch (key) {
-        case 'firstName':
-          user[key] = req.body[key];
-          break;
-        case 'lastName':
-          user[key] = req.body[key];
-          break;
-        case 'city':
-          user[key] = req.body[key];
-          break;
-        case 'phone':
-          user[key] = req.body[key];
-          break;
-        case 'county':
-          user[key] = req.body[key];
-          break;
-        case 'organization':
-          user[key] = req.body[key];
-          break;
-        case 'title':
-          user[key] = req.body[key];
-          break;
-        case 'county':
-          user[key] = req.body[key];
-          break;
-        case 'serviceArea':
-          user[key] = req.body[key];
-          break;
-        case 'zoomarea':
-          user[key] = req.body[key];
-          break;
-      }
+      user[key]=req.body[key];      
     }
     user.name = user.firstName + ' ' + user.lastName;
     user.password = req.user.password;
+    delete user.user_id;
+    
     await User.update(user, {
       where: {
-        _id: req.user._id
+        user_id: req.user.user_id
       }
     });
     return res.status(200).send(user);
@@ -139,7 +118,7 @@ router.get('/me', auth, async (req, res) => {
     latitude: 39.768682416183
   };
   //console.log('USER ME', user);
-  result1['_id'] = user._id;
+  result1['user_id'] = user.user_id;
   result1['firstName'] = user.firstName;
   result1['lastName'] = user.lastName;
   result1['name'] = user.name;
