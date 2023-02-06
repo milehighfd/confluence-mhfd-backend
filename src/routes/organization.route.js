@@ -5,8 +5,8 @@ const router = express.Router();
 const Locality = db.locality;
 
 router.get('/', async (req, res) => {
-  const localities = await Locality.findAll();
-  return res.send(localities);
+  // const localities = await Locality.findAll();
+  return res.send([]);
 });
 
 export default router;
