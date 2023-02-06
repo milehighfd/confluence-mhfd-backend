@@ -25,7 +25,7 @@ router.put('/change-user-state/:id/:status', [auth, isAdminAccount], async (req,
 
     await User.update(user, {
       where: {
-        _id: id
+        user_id: id
       }
     });
 
@@ -66,7 +66,7 @@ router.put('/edit-user/:id', [auth, isAdminAccount], async (req, res, next) => {
 
     await User.update(user, {
       where: {
-        _id: id
+        user_id: id
       }
     });
     return res.status(200).send(user);

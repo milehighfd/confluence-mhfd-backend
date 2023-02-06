@@ -193,6 +193,17 @@ router.delete('/', auth, async (req, res) => {
   }
 });
 
+router.get('/count', auth, async (req, res) => {
+   const user = req.user;
+   try {  
+      console.log(user.user_id);
+      const favorite = await favoritesService.countFavorites(user.user_id);     
+      res.send({count : favorite});
+    } catch(error) {
+      res.status(500).send('error found ' + error);
+    }
+ });
+
 
 router.post('/favorite-list', auth, async (req, res) => {
    const user = req.user;

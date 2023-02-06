@@ -74,9 +74,25 @@ const saveFavorite = async (favorite) => {
   return favorite;
 }
 
+const countFavorites = async (user_id) => {
+  let checkEmail = await Favorites.count({
+    where: {     
+      user_id:user_id       
+    }
+  })
+  let result = await Favorites.count({
+    where: {
+      user_id: user_id
+    }
+  });
+  console.log(checkEmail)
+  return result;
+}
+
 export default {
   saveFavorite,
   getFavorites,
   getOne,
-  getAll
+  getAll,
+  countFavorites
 }
