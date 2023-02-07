@@ -27,7 +27,7 @@ const getStatus = async () => {
     ]
   }).map((data) => data.dataValues);
   const groups = codeStatusType.map((data) => {
-    return { name: data.status_name, id: data.code_status_type_id };
+    return { value: data.status_name, id: data.code_status_type_id };
   });
   return groups;
 }
@@ -39,7 +39,7 @@ const getJurisdiction = async () => {
     ]
   }).map((data) => data.dataValues);
   const groups = codeLocalGoverment.map((data) => {
-    return { name: data.local_government_name, id: data.code_local_government_id };
+    return { value: data.local_government_name, id: data.code_local_government_id };
   });
   return groups;
 }
@@ -51,7 +51,7 @@ const getCounty = async () => {
     ]
   }).map((data) => data.dataValues);
   const groups = codeStateCounty.map((data) => {
-    return { name: data.county_name, id: data.state_county_id };
+    return { value: data.county_name, id: data.state_county_id };
   });
   return groups;
 }
@@ -63,7 +63,7 @@ const getServiceArea = async () => {
     ]
   }).map((data) => data.dataValues);
   const groups = codeServiceArea.map((data) => {
-    return { name: data.service_area_name, id: data.code_service_area_id };
+    return { value: data.service_area_name, id: data.code_service_area_id };
   });
   return groups;
 }
@@ -83,7 +83,7 @@ const getConsultant = async () => {
     order: [['business_name', 'ASC']]
   });
   const groups = businessAssociates.map((data) => {
-    return { name: data.business_name, id: data.business_associates_id };
+    return { value: data.business_name, id: data.business_associates_id };
   });
   return groups;
 }
@@ -103,7 +103,7 @@ const getContractor = async () => {
     order: [['business_name', 'ASC']]
   });
   const groups = businessAssociates.map((data) => {
-    return { name: data.business_name, id: data.business_associates_id };
+    return { value: data.business_name, id: data.business_associates_id };
   });
   return groups;
 }
@@ -118,7 +118,7 @@ const getStreams = async () => {
     }
   });
   const groups = streams.map((data) => {
-    return { name: data.stream_name, id: data.stream_id}
+    return { value: data.stream_name, id: data.stream_id}
   });
   return groups;
 }
@@ -130,7 +130,7 @@ const getProjectType = async () => {
     ]
   });
   const groups = types.map((data) => {
-    return { name: data.project_type_name, id: data.code_project_type_id };
+    return { value: data.project_type_name, id: data.code_project_type_id };
   });
   return groups;
 }

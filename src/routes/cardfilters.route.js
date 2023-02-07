@@ -42,11 +42,21 @@ const getFilters = async (req, res) => {
   data.status = await groupService.getStatus();
   data.jurisdiction = await groupService.getJurisdiction();
   data.county = await groupService.getCounty();
-  data.serviceArea = await groupService.getServiceArea();
+  data.servicearea = await groupService.getServiceArea();
   data.consultant = await groupService.getConsultant();
   data.contractor = await groupService.getContractor();
-  data.streams = await groupService.getStreams();
+  data.streamname = await groupService.getStreams();
   data.projecttype = await groupService.getProjectType();
+  data.creator = [];
+  data.mhfdmanager = [];
+  data.startyear = [];
+  data.completedyear = [];
+  data.mhfddollarallocated = [];
+  data.workplanyear = [];
+  data.problemtype = [];
+  data.lgmanager = [];
+  data.estimatedCost = [];
+  
   let projects = await projectService.getProjects(null, null, 1);
   if (bounds) {
     const ids = await getIdsInBbox(bounds);
@@ -162,13 +172,13 @@ const getFilters = async (req, res) => {
     data.stream = data.stream.filter((con) => body.stream.includes(con.id));
     toMatch.push(ids);
   }
-  if (body.serviceArea && body.serviceArea.length) { //
+  if (body.servicearea && body.servicearea.length) { //
     const ids = projects.filter((project) => {
-      return body.serviceArea.includes(project?.serviceArea?.code_service_area_id);
+      return body.servicearea.includes(project?.servicearea?.code_service_area_id);
     }).map((project) => {
       return project.project_id
     });
-    data.serviceArea = data.serviceArea.filter((con) => body.serviceArea.includes(con.id));
+    data.servicearea = data.servicearea.filter((con) => body.servicearea.includes(con.id));
     toMatch.push(ids);
   }
   const toCount = {};
@@ -187,7 +197,7 @@ const getFilters = async (req, res) => {
     }
   }
   data.status.forEach((d) => {
-    d.count = projects.reduce((pre, current) => {
+    d.counter = projects.reduce((pre, current) => {
       if (current?.project_status?.code_phase_type?.code_status_type?.code_status_type_id === d.id) {
         return pre + 1;
       }
@@ -195,7 +205,7 @@ const getFilters = async (req, res) => {
     }, 0);
   });
   data.jurisdiction.forEach((d) => {
-    d.count = projects.reduce((pre, current) => {
+    d.counter = projects.reduce((pre, current) => {
       if (current?.localGoverment?.codeLocalGoverment?.code_local_government_id === d.id) {
         return pre + 1;
       }
@@ -203,15 +213,15 @@ const getFilters = async (req, res) => {
     }, 0);
   });
   data.county.forEach((d) => {
-    d.count = projects.reduce((pre, current) => {
+    d.counter = projects.reduce((pre, current) => {
       if (current?.county?.codeStateCounty?.state_county_id === d.id) {
         return pre + 1;
       }
       return pre;
     }, 0);
   });
-  data.serviceArea.forEach((d) => {
-    d.count = projects.reduce((pre, current) => {
+  data.servicearea.forEach((d) => {
+    d.counter = projects.reduce((pre, current) => {
       // console.log('sa sa ', current?.serviceArea, d.id);
       if (current?.serviceArea?.code_service_area_id === +d.id) {
         return pre + 1;
@@ -220,7 +230,7 @@ const getFilters = async (req, res) => {
     }, 0);
   });
   data.projecttype.forEach((d) => {
-    d.count = projects.reduce((pre, current) => {
+    d.counter = projects.reduce((pre, current) => {
       if (current?.project_status?.code_phase_type?.code_project_type?.code_project_type_id === d.id) {
         return pre + 1;
       } 
