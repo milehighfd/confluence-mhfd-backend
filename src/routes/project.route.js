@@ -192,7 +192,7 @@ const listProjectsForId = async (req, res) => {
       streams
     };
   });
-  projects = await projectsByFiltersForIds(projects, body);
+  // projects = await projectsByFiltersForIds(projects, body);
   logger.info('projects being called');
   res.send(projects);
 };
@@ -276,7 +276,7 @@ const listProjects = async (req, res) => {
   });
 
   
-  projects = await projectsByFilters(projects, body);
+  // projects = await projectsByFilters(projects, body);
   if (body?.sortby?.trim()?.length || 0) {
     projects = await sortProjects(projects, body);
   }

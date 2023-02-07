@@ -152,31 +152,28 @@ export const getStreamsDataByProjectIds = async (ids) => {
 export const projectsByFilters = async (projects, filters) => {
   let newprojects = [...projects];
   // STATUS
-  if ((filters.status?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.status_name) );
+  if ((filters.status?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.code_status_type_id) );
   }
   // PROJECT TYPE
-  if ((filters.projecttype?.trim()?.length || 0) > 0) {
+  if ((filters.projecttype?.length || 0) > 0) {
     //TO DO: the filter works with project type name, it has a  
     // let projecttypeFiltered = [];
-    let filterProjectType =  filters.projecttype.split(',')
+    let filterProjectType =  filters.projecttype;
     // filterProjectType.forEach(type => {
     //    projecttypeFiltered = [...projecttypeFiltered, newprojects.filter((proj) => proj?.project_status?.code_phase_type?.code_project_type?.project_type_name.includes(type))];
     // });
     // newprojects = projecttypeFiltered
     newprojects = newprojects.filter((proj) => {
       let flag = false;
-      for (let index = 0; index < filterProjectType.length; index++) {
-        const type = filterProjectType[index];
-        if(proj?.project_status?.code_phase_type?.code_project_type?.project_type_name.includes(type)){
-          flag =true;
-        }
+      if(filterProjectType.includes(proj?.project_status?.code_phase_type?.code_project_type?.code_project_type_id)){
+        flag =true;
       }
       return flag
     });
   }
   // SERVICE AREA
-  if ((filters.servicearea?.trim()?.length || 0) > 0) {
+  if ((filters.servicearea?.length || 0) > 0) {
     newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) );
   }
   //COUNTY
