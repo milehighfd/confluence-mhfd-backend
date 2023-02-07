@@ -3,6 +3,7 @@ import needle from 'needle';
 import logger from 'bc/config/logger.js';
 import favoritesService from 'bc/services/favorites.service.js';
 import attachmentService from 'bc/services/attachment.service.js';
+import projectService from 'bc/services/project.service.js';
 import { CARTO_URL, PROPSPROBLEMTABLES, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
 import auth from 'bc/auth/auth.js';
 
@@ -341,4 +342,19 @@ router.post('/favorite-list', auth, async (req, res) => {
 
 });
 
+const getProjectCards = async (req, res) => {
+   const user = req.user;
+   console.log('my user is ', user.user_id);
+   try {
+      const projects = await projectService.getProjects({
+         user_id: user.user_id
+      }, null);
+      res.send(projects);
+   } catch (error) {
+      res.status(500).send({error: error});
+   }
+   
+}
+
+router.get('/project-cards', auth, getProjectCards);
 export default router;
