@@ -64,8 +64,7 @@ const getProjects = async (include, bounds, offset = 1, limit = 12000) => {
         where.project_id = project_ids_bybounds;
       }
     }
-    if (include.user_id) {
-      console.log('fuck');
+    if (include && include.user_id) {
       const projectsFavorite = await ProjectFavorite.findAll({
         where: {
           user_id: include.user_id,
@@ -73,7 +72,6 @@ const getProjects = async (include, bounds, offset = 1, limit = 12000) => {
         }
       }).map(result => result.dataValues);
       const pids = projectsFavorite.map((p) => p.project_id);
-      console.log('end fuck ', pids);
       if (where.project_id) {
         where.project_id = [...where.project_id, ...pids];
       } else {
