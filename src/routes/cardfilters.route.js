@@ -39,14 +39,26 @@ const getFilters = async (req, res) => {
   const { body, query } = req;
   const { bounds } = query;
   const data = {};
-  data.status = await groupService.getStatus();
-  data.jurisdiction = await groupService.getJurisdiction();
-  data.county = await groupService.getCounty();
-  data.servicearea = await groupService.getServiceArea();
-  data.consultant = await groupService.getConsultant();
-  data.contractor = await groupService.getContractor();
-  data.streamname = await groupService.getStreams();
-  data.projecttype = await groupService.getProjectType();
+  let dataPromises = [
+    groupService.getStatus(),
+    groupService.getJurisdiction(),
+    groupService.getCounty(),
+    groupService.getServiceArea(),
+    groupService.getConsultant(),
+    groupService.getContractor(),
+    groupService.getStreams(),
+    groupService.getProjectType()
+  ];
+  let resolvedPromises = await Promise.all(dataPromises);
+  
+  data.status = resolvedPromises[0];
+  data.jurisdiction = resolvedPromises[1];
+  data.county = resolvedPromises[2];
+  data.servicearea = resolvedPromises[3];
+  data.consultant = resolvedPromises[4];
+  data.contractor = resolvedPromises[5];
+  data.streamname = resolvedPromises[6];
+  data.projecttype = resolvedPromises[7];
   data.creator = [];
   data.mhfdmanager = [];
   data.startyear = [];
