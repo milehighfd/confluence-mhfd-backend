@@ -5,8 +5,12 @@ const router = express.Router();
 const Consultants = db.consultants;
 
 router.get('/', async (req, res) => {
-  const consultants = await Consultants.findAll();
-  return res.send(consultants);
+  try {
+    const consultants = await Consultants.findAll();
+    return res.send(consultants);
+  } catch(error) {
+    res.status(500).send(error);
+  }
 });
 
 router.post('/', async (req, res) => {
