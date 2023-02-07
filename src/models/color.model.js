@@ -1,10 +1,6 @@
 
 export default (sequelize, DataType) => {
-  const ColorNotes = sequelize.define('colors', {
-    _id_DNU: {
-      type: DataType.UUID,
-      defaultValue: DataType.UUIDV4,      
-    },
+  const ColorNotes = sequelize.define('colors', {    
     color_id: {
       type: DataType.INTEGER,
       allowNull: false,
