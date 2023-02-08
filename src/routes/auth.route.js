@@ -11,34 +11,38 @@ import LogActivity from 'bc/models/logActivity.model.js';
 import { ACTIVITY_TYPE } from 'bc/lib/enumConstants.js';
 
 router.get('/guest', async (req, res) => {
-  const user = await User.findOne({
-    where: {
-      email: config.GUEST_USER
-    }
-  });
-  const token = await user.generateGuestAuthToken();
-  let result = {};
-  result['_id'] = user._id;
-  result['firstName'] = user.firstName;
-  result['lastName'] = user.lastName;
-  result['name'] = user.name;
-  result['email'] = user.email;
-  result['organization'] = user.organization;
-  result['city'] = user.city;
-  result['county'] = user.county;
-  result['serviceArea'] = user.serviceArea;
-  result['phone'] = user.phone;
-  result['zipCode'] = user.zipCode;
-  result['title'] = user.title;
-  result['activated'] = user.activated;
-  result['designation'] = user.designation;
-  result['photo'] = user.photo;
-  result['zoomarea'] = user.zoomarea ? user.zoomarea : '';
-  result['status'] = user.status;
-  res.send({
-    result,
-    token
-  });
+  try {
+    const user = await User.findOne({
+      where: {
+        email: config.GUEST_USER
+      }
+    });
+    const token = await user.generateGuestAuthToken();
+    let result = {};
+    result['_id'] = user._id;
+    result['firstName'] = user.firstName;
+    result['lastName'] = user.lastName;
+    result['name'] = user.name;
+    result['email'] = user.email;
+    result['organization'] = user.organization;
+    result['city'] = user.city;
+    result['county'] = user.county;
+    result['serviceArea'] = user.serviceArea;
+    result['phone'] = user.phone;
+    result['zipCode'] = user.zipCode;
+    result['title'] = user.title;
+    result['activated'] = user.activated;
+    result['designation'] = user.designation;
+    result['photo'] = user.photo;
+    result['zoomarea'] = user.zoomarea ? user.zoomarea : '';
+    result['status'] = user.status;
+    res.send({
+      result,
+      token
+    });
+  } catch (error){
+    res.status(500).send('Cannot log as guest')
+  }
 })
 
 router.post('/login', async (req, res) => {
