@@ -18,151 +18,179 @@ const Streams = db.stream;
 const Attachment = db.projectAttachment;
 
 export const getServiceAreaByProjectIds = async (ids) => {
-  let projectServiceArea = await ProjectServiceArea.findAll({
-    include: {
-      model: CodeServiceArea,
-      attributes: ['service_area_name']
-    },
-    where: {
-      project_id: ids
-    }
-  }).map((data) => data.dataValues).map((data) => ({
-    ...data,
-    CODE_SERVICE_AREA: data.CODE_SERVICE_AREA.dataValues.service_area_name
-  }));
-  return projectServiceArea;
+  try {
+    let projectServiceArea = await ProjectServiceArea.findAll({
+      include: {
+        model: CodeServiceArea,
+        attributes: ['service_area_name']
+      },
+      where: {
+        project_id: ids
+      }
+    }).map((data) => data.dataValues).map((data) => ({
+      ...data,
+      CODE_SERVICE_AREA: data.CODE_SERVICE_AREA.dataValues.service_area_name
+    }));
+    return projectServiceArea;
+  } catch (error) {
+    throw error;
+  }
 }
 
 export const getCountiesByProjectIds = async (ids) => {
-  let projectCounty = await ProjectCounty.findAll({
-    where: {
-      project_id: ids
-    }
-  }).map(data => data.dataValues);
-  const codeCounties = projectCounty.map((psa) => psa.state_county_id);
-  let codeStateCounties = await CodeStateCounty.findAll({
-    where: {
-      state_county_id: codeCounties
-    },
-    attributes: {exclude: ['Shape']}
-  }).map(data => data.dataValues);
-  projectCounty = projectCounty.map((data) => {
-    const codeStateCounty = codeStateCounties.filter((d) => d.state_county_id === data.state_county_id)[0];
-    return {
-      ...data,
-      codeStateCounty: codeStateCounty
-    }
-  });
-  return projectCounty;
+  try {
+    let projectCounty = await ProjectCounty.findAll({
+      where: {
+        project_id: ids
+      }
+    }).map(data => data.dataValues);
+    const codeCounties = projectCounty.map((psa) => psa.state_county_id);
+    let codeStateCounties = await CodeStateCounty.findAll({
+      where: {
+        state_county_id: codeCounties
+      },
+      attributes: {exclude: ['Shape']}
+    }).map(data => data.dataValues);
+    projectCounty = projectCounty.map((data) => {
+      const codeStateCounty = codeStateCounties.filter((d) => d.state_county_id === data.state_county_id)[0];
+      return {
+        ...data,
+        codeStateCounty: codeStateCounty
+      }
+    });
+    return projectCounty;
+  } catch (error) {
+    throw error;
+  }
 }
 
 export const getConsultantsByProjectids = async (ids) => {
-  const CONSULTANT_ID = 3;
-  let consultants = await ProjectPartner.findAll({
-    where: {
-      project_id: ids,
-      code_partner_type_id: CONSULTANT_ID
-    }
-  }).map(result => result.dataValues);
-  const consultantIds = consultants.map((data) => data.business_associates_id).filter((data) => data !== null);
-  let consultantList = await BusinessAssociante.findAll({
-    where: {
-      business_associates_id: consultantIds
-    }
-  }).map((data) => data.dataValues);
-  consultants = consultants.map((staff) => {
-    const consultant = consultantList.filter((cons) => {
-      return cons.business_associates_id === staff.business_associates_id
+  try {
+    const CONSULTANT_ID = 3;
+    let consultants = await ProjectPartner.findAll({
+      where: {
+        project_id: ids,
+        code_partner_type_id: CONSULTANT_ID
+      }
+    }).map(result => result.dataValues);
+    const consultantIds = consultants.map((data) => data.business_associates_id).filter((data) => data !== null);
+    let consultantList = await BusinessAssociante.findAll({
+      where: {
+        business_associates_id: consultantIds
+      }
+    }).map((data) => data.dataValues);
+    consultants = consultants.map((staff) => {
+      const consultant = consultantList.filter((cons) => {
+        return cons.business_associates_id === staff.business_associates_id
+      });
+      return {
+        ...staff,
+        consultant
+      }
     });
-    return {
-      ...staff,
-      consultant
-    }
-  });
-  return consultants;
+    return consultants;
+  } catch (error) {
+    throw error;
+  }
 }
 
 export const getCivilContractorsByProjectids = async (ids) => {
-  const CIVIL_CONTRACTOR_ID = 8;
-  let civilContractors = await ProjectPartner.findAll({
-    where: {
-      project_id: ids,
-      code_partner_type_id: CIVIL_CONTRACTOR_ID
-    }
-  }).map(result => result.dataValues);
-  const civilContractorsIds = civilContractors.map((data) => data.business_associates_id).filter((data) => data !== null);
-  let contractorLIst = await BusinessAssociante.findAll({
-    where: {
-      business_associates_id: civilContractorsIds
-    }
-  }).map((data) => data.dataValues);
-  civilContractors = civilContractors.map((staff) => {
-    const business = contractorLIst.filter((cons) => {
-      return cons.business_associates_id === staff.business_associates_id
+  try {
+    const CIVIL_CONTRACTOR_ID = 8;
+    let civilContractors = await ProjectPartner.findAll({
+      where: {
+        project_id: ids,
+        code_partner_type_id: CIVIL_CONTRACTOR_ID
+      }
+    }).map(result => result.dataValues);
+    const civilContractorsIds = civilContractors.map((data) => data.business_associates_id).filter((data) => data !== null);
+    let contractorLIst = await BusinessAssociante.findAll({
+      where: {
+        business_associates_id: civilContractorsIds
+      }
+    }).map((data) => data.dataValues);
+    civilContractors = civilContractors.map((staff) => {
+      const business = contractorLIst.filter((cons) => {
+        return cons.business_associates_id === staff.business_associates_id
+      });
+      return {
+        ...staff,
+        business
+      }
     });
-    return {
-      ...staff,
-      business
-    }
-  });
-  return civilContractors;
+    return civilContractors;
+  } catch (error) {
+    throw error;
+  }
 }
 
 export const getLocalGovernmentByProjectids = async (ids) => {
-  let projectLocalGovernment = await ProjectLocalGovernment.findAll({
-    where: {
-      project_id: ids
-    }
-  }).map(data => data.dataValues);
-  const codeLovalGovermentIds = projectLocalGovernment.map((psa) => psa.code_local_government_id);
-  let codeLocalGoverments = await CodeLocalGoverment.findAll({
-    where: {
-      code_local_government_id: codeLovalGovermentIds
-    },
-    attributes: {exclude: ['Shape']}
-  }).map(data => data.dataValues);
-  projectLocalGovernment = projectLocalGovernment.map((data) => {
-    const codeLocalGoverment = codeLocalGoverments.filter((d) => d.code_local_government_id === data.code_local_government_id)[0];
-    return {
-      ...data,
-      codeLocalGoverment: codeLocalGoverment
-    }
-  });
-  return projectLocalGovernment;
+  try {
+    let projectLocalGovernment = await ProjectLocalGovernment.findAll({
+      where: {
+        project_id: ids
+      }
+    }).map(data => data.dataValues);
+    const codeLovalGovermentIds = projectLocalGovernment.map((psa) => psa.code_local_government_id);
+    let codeLocalGoverments = await CodeLocalGoverment.findAll({
+      where: {
+        code_local_government_id: codeLovalGovermentIds
+      },
+      attributes: {exclude: ['Shape']}
+    }).map(data => data.dataValues);
+    projectLocalGovernment = projectLocalGovernment.map((data) => {
+      const codeLocalGoverment = codeLocalGoverments.filter((d) => d.code_local_government_id === data.code_local_government_id)[0];
+      return {
+        ...data,
+        codeLocalGoverment: codeLocalGoverment
+      }
+    });
+    return projectLocalGovernment;
+  } catch (error) {
+    throw error;
+  }
 }
 
 export const getEstimatedCostsByProjectids = async (ids) => {
-  const projectCost = await ProjectCost.findAll({
-    where: {
-      project_id: ids
-    }
-  }).map(result => result.dataValues);
-  const ESTIMATED_COST = 1;
-  const estimatedCosts = projectCost.filter(result => result.code_cost_type_id === ESTIMATED_COST);
-  return estimatedCosts;
+  try {
+    const projectCost = await ProjectCost.findAll({
+      where: {
+        project_id: ids
+      }
+    }).map(result => result.dataValues);
+    const ESTIMATED_COST = 1;
+    const estimatedCosts = projectCost.filter(result => result.code_cost_type_id === ESTIMATED_COST);
+    return estimatedCosts;
+  } catch (error) {
+    throw error;
+  }
 }
 
 export const getStreamsDataByProjectIds = async (ids) => {
-  let projectStreams = await ProjectStreams.findAll({
-    where: {
-      project_id: ids
-    }
-  }).map((data) => data.dataValues);
-  const projectStreamsIds = projectStreams.map((data) => data.stream_id).filter((data) => data !== null);
-  const streamsList = await Streams.findAll({
-    where: {
-      stream_id: projectStreamsIds
-    },
-    attributes: {exclude: ['Shape']}
-  }).map((data) => data.dataValues);
-  projectStreams = projectStreams.map((data) => {
-    const streamvalue = streamsList.filter((d => d.stream_id === data.stream_id));
-    return {
-      ...data, 
-      stream: streamvalue
-    };
-  });
-  return projectStreams;
+  try {
+    let projectStreams = await ProjectStreams.findAll({
+      where: {
+        project_id: ids
+      }
+    }).map((data) => data.dataValues);
+    const projectStreamsIds = projectStreams.map((data) => data.stream_id).filter((data) => data !== null);
+    const streamsList = await Streams.findAll({
+      where: {
+        stream_id: projectStreamsIds
+      },
+      attributes: {exclude: ['Shape']}
+    }).map((data) => data.dataValues);
+    projectStreams = projectStreams.map((data) => {
+      const streamvalue = streamsList.filter((d => d.stream_id === data.stream_id));
+      return {
+        ...data, 
+        stream: streamvalue
+      };
+    });
+    return projectStreams;
+  } catch (errror) {
+    throw error;
+  }
 }
 
 export const projectsByFilters = async (projects, filters) => {
