@@ -24,9 +24,22 @@ router.get('/all-localities', async (req, res) => {
     if (nogeom) {
       geom = '';
     }
-    const [saData] = await db.sequelize.query(`SELECT ${geom}
-    code_service_area_id,
-    service_area_name FROM CODE_SERVICE_AREA_4326`);
+    const proms = [
+      db.sequelize.query(`SELECT ${geom}
+        code_service_area_id,
+        service_area_name FROM CODE_SERVICE_AREA_4326`),
+      db.sequelize.query(`SELECT  ${geom}
+        code_local_government_id,
+        local_government_name FROM CODE_LOCAL_GOVERNMENT_4326`),
+      db.sequelize.query(`SELECT  ${geom}
+        state_county_id,
+        county_name FROM CODE_STATE_COUNTY_4326`),
+      db.sequelize.query(`SELECT  ${geom}
+        OBJECTID,
+        'Mile High Flood District' as name FROM MHFD_BOUNDARY`)
+    ];
+    const solved = await Promise.all(proms);
+    const [saData] = solved[0];
     const sa = saData.map(result => {
       const obj = {
         name: result.service_area_name + 'Service Area',
@@ -43,9 +56,7 @@ router.get('/all-localities', async (req, res) => {
       include: { all: true, nested: true },
       attributes: ['code_local_government_id', 'local_government_name']
     })*/
-    const [lgData] = await db.sequelize.query(`SELECT  ${geom}
-    code_local_government_id,
-    local_government_name FROM CODE_LOCAL_GOVERNMENT_4326`);
+    const [lgData] = solved[1];
     const lg = lgData.map(result => {
       const obj = {
         name: result.local_government_name,
@@ -62,9 +73,7 @@ router.get('/all-localities', async (req, res) => {
       include: { all: true, nested: true },
       attributes: ['state_county_id', 'county_name']
     })*/
-    const [scData] = await db.sequelize.query(`SELECT  ${geom}
-    state_county_id,
-    county_name FROM CODE_STATE_COUNTY_4326`);
+    const [scData] = solved[2];
     const sc = scData.map(result => {
       const obj = {
         name: result.county_name + ' County',
@@ -77,9 +86,7 @@ router.get('/all-localities', async (req, res) => {
       }
       return obj;
     });
-    const [mhfdData] = await db.sequelize.query(`SELECT  ${geom}
-    OBJECTID,
-    'Mile High Flood District' as name FROM MHFD_BOUNDARY`);
+    const [mhfdData] = solved[3];
     const mhfd = mhfdData.map(result => {
       const obj = {
         name: result.name,
