@@ -18,8 +18,13 @@ router.get('/all-localities', async (req, res) => {
     attributes: ['code_service_area_id', 'service_area_name']
   }) */
   try {
-    const [saData] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox,
-    Shape.STAsText() as coordinates,
+    const { nogeom } = req.query;
+    let geom = `Shape.STEnvelope( ).STAsText() as bbox,
+    Shape.STAsText() as coordinates,`;
+    if (nogeom) {
+      geom = '';
+    }
+    const [saData] = await db.sequelize.query(`SELECT ${geom}
     code_service_area_id,
     service_area_name FROM CODE_SERVICE_AREA_4326`);
     const sa = saData.map(result => {
@@ -35,8 +40,7 @@ router.get('/all-localities', async (req, res) => {
       include: { all: true, nested: true },
       attributes: ['code_local_government_id', 'local_government_name']
     })*/
-    const [lgData] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox,
-    Shape.STAsText() as coordinates,
+    const [lgData] = await db.sequelize.query(`SELECT  ${geom}
     code_local_government_id,
     local_government_name FROM CODE_LOCAL_GOVERNMENT_4326`);
     const lg = lgData.map(result => {
@@ -52,8 +56,7 @@ router.get('/all-localities', async (req, res) => {
       include: { all: true, nested: true },
       attributes: ['state_county_id', 'county_name']
     })*/
-    const [scData] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox,
-    Shape.STAsText() as coordinates,
+    const [scData] = await db.sequelize.query(`SELECT  ${geom}
     state_county_id,
     county_name FROM CODE_STATE_COUNTY_4326`);
     const sc = scData.map(result => {
@@ -65,8 +68,7 @@ router.get('/all-localities', async (req, res) => {
         coordinates: polygonParser(result.coordinates)
       }
     });
-    const [mhfdData] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox,
-    Shape.STAsText() as coordinates,
+    const [mhfdData] = await db.sequelize.query(`SELECT  ${geom}
     OBJECTID,
     'Mile High Flood District' as name FROM MHFD_BOUNDARY`);
     const mhfd = mhfdData.map(result => {
