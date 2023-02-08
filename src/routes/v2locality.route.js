@@ -42,7 +42,7 @@ router.get('/all-localities', async (req, res) => {
     const [saData] = solved[0];
     const sa = saData.map(result => {
       const obj = {
-        name: result.service_area_name + 'Service Area',
+        name: result.service_area_name + ' Service Area',
         id: result.code_service_area_id,
         table: 'CODE_SERVICE_AREA'
       };
