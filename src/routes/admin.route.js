@@ -47,9 +47,9 @@ router.put('/edit-user/:id', [auth, isAdminAccount], async (req, res, next) => {
     if (!user) {
       return res.status(404).send({ error: 'User not found' });
     }
-    if (user.email !== req.body.email) {
+    if (user.email !== req.body.values.email) {
       const count = await User.count({
-        where: { email: req.body.email }
+        where: { email: req.body.values.email }
       });
       if (count !== 0) {
         return res.status(422).send({ error: 'the email has already been registered' });
@@ -60,16 +60,16 @@ router.put('/edit-user/:id', [auth, isAdminAccount], async (req, res, next) => {
     }
     
     for (const field of UPDATEABLE_FIELDS) {
-      user[field] = req.body[field];
+      user[field] = req.body.values[field];
     }
     user.name = user.firstName + ' ' + user.lastName;
-
+    delete user.user_id;
     await User.update(user, {
       where: {
         user_id: id
       }
     });
-    return res.status(200).send(user);
+    return res.status(200).send({message:'SUCCESS'});
   } catch (error) {
     logger.error(error);
     return res.status(500).send({ error: error });
