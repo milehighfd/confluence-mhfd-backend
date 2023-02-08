@@ -7,6 +7,7 @@ import {
   PROJECT_TABLE
 } from 'bc/config/config.js';
 import {
+  getServiceAreaByProjectIds,
   getCountiesByProjectIds,
   getConsultantsByProjectids,
   getCivilContractorsByProjectids,
@@ -110,21 +111,23 @@ const getProjects = async (include, bounds, offset = 1, limit = 12000) => {
       return  {...project, sponsor: sponsor };
     });
     // xconsole.log(project_partners);
-    let projectServiceArea = await ProjectServiceArea.findAll({
-      include: {
-        model: CodeServiceArea,
-        attributes: ['service_area_name']
-      },
-      where: {
-        project_id: ids
-      }
-    }).map((data) => data.dataValues).map((data) => ({...data, CODE_SERVICE_AREA: data.CODE_SERVICE_AREA.dataValues.service_area_name}));
-    const projectCounties = await getCountiesByProjectIds(ids);
-    const consultants = await getConsultantsByProjectids(ids);
-    const civilContractors = await getCivilContractorsByProjectids(ids);
-    const projectLocalGovernment = await getLocalGovernmentByProjectids(ids);
-    const estimatedCosts = await getEstimatedCostsByProjectids(ids);
-    const projectStreams = await getStreamsDataByProjectIds(ids);
+    const promises = [
+      getServiceAreaByProjectIds(ids),
+      getCountiesByProjectIds(ids),
+      getConsultantsByProjectids(ids),
+      getCivilContractorsByProjectids(ids),
+      getLocalGovernmentByProjectids(ids),
+      getEstimatedCostsByProjectids(ids),
+      getStreamsDataByProjectIds(ids)
+    ];
+    const resolvedPromises = await Promise.all(promises);
+    const projectServiceArea = resolvedPromises[0];
+    const projectCounties = resolvedPromises[1];
+    const consultants = resolvedPromises[2];
+    const civilContractors = resolvedPromises[3];
+    const projectLocalGovernment = resolvedPromises[4];
+    const estimatedCosts = resolvedPromises[5];
+    const projectStreams = resolvedPromises[6];
   
     projects = projects.map((project) => {
       const pservicearea = projectServiceArea.filter((psa) => psa.project_id === project.project_id);
