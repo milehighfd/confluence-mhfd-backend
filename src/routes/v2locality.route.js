@@ -110,7 +110,7 @@ router.get('/get-list', async (req, res) => {
       service_area_name FROM CODE_SERVICE_AREA_4326`);
       const sa = saData.map(result => {
         return { 
-          service_area_name: result.service_area_name + 'Service Area',
+          service_area_name: result.service_area_name + ' Service Area',
           code_service_area_id: result.code_service_area_id,
           table: 'CODE_SERVICE_AREA',
         }

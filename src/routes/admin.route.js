@@ -76,15 +76,25 @@ router.put('/edit-user/:id', [auth, isAdminAccount], async (req, res, next) => {
   }
 });
 
-router.delete('/delete-user/:id', [auth, isAdminAccount], async (req, res, next) => {
+router.put('/delete-user/:id', [auth, isAdminAccount], async (req, res, next) => {
+  const id = req.params.id;
   try {
-    await userService.deleteUser(req.params.id);
-    return res.status(200).send({message: 'User deleted successfully'});
+    const user = await User.findByPk(id, { raw: true });   
+    user.status = 'deleted';
+    user.activated = 0;
+    user.name = user.firstName + ' ' + user.lastName;
+    delete user.user_id;
+    await User.update(user, {
+      where: {
+        user_id: id
+      }
+    });
+    return res.status(200).send({message:'SUCCESS'});
   } catch (error) {
     logger.error(error);
     return res.status(500).send({ error: error });
   }
-})
+});
 
 router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
   //const isPending = req.query.pending || false;
