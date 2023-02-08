@@ -1,5 +1,6 @@
 import express from 'express';
 import db from 'bc/config/db.js';
+import moment from 'moment';
 const User = db.user;
 const router = express.Router();
 import auth from 'bc/auth/auth.js';
@@ -9,17 +10,36 @@ import config from 'bc/config/config.js';
 import logActivityService from 'bc/services/logActivity.service.js';
 import LogActivity from 'bc/models/logActivity.model.js';
 import { ACTIVITY_TYPE } from 'bc/lib/enumConstants.js';
+import logger from 'bc/config/logger.js';
 
 router.get('/guest', async (req, res) => {
   try {
-    const user = await User.findOne({
+    let user = await User.findOne({
       where: {
         email: config.GUEST_USER
       }
     });
+    if (!user) {
+      const formatTime = moment().format('YYYY-MM-DD HH:mm:ss');
+      const insertQuery = `INSERT INTO users (firstName, lastName, name, email, organization, city, county,
+        serviceArea, phone, designation, zipCode, title, activated, status, photo, is_sso, updatedAt, createdAt)
+    OUTPUT inserted . *
+    VALUES( 'guest', 'guest', 'guest', '${config.GUEST_USER}', 'Mile High Flood District', NULL,NULL,
+    NULL, NULL, 'Guest', NULL, NULL, 1, 'approved', NULL, 0, '${formatTime}', '${formatTime}')`;
+    await db.sequelize.query(
+      insertQuery,
+      {
+        type: db.sequelize.QueryTypes.INSERT,
+      });
+      user = await User.findOne({
+        where: {
+          email: config.GUEST_USER
+        }
+      });
+    }
     const token = await user.generateGuestAuthToken();
     let result = {};
-    result['_id'] = user._id;
+    result['user_id'] = user.user_id;
     result['firstName'] = user.firstName;
     result['lastName'] = user.lastName;
     result['name'] = user.name;
@@ -41,6 +61,7 @@ router.get('/guest', async (req, res) => {
       token
     });
   } catch (error){
+    logger.error(error);
     res.status(500).send('Cannot log as guest')
   }
 })
