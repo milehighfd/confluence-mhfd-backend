@@ -28,13 +28,16 @@ router.get('/all-localities', async (req, res) => {
     code_service_area_id,
     service_area_name FROM CODE_SERVICE_AREA_4326`);
     const sa = saData.map(result => {
-      return { 
+      const obj = {
         name: result.service_area_name + 'Service Area',
         id: result.code_service_area_id,
-        table: 'CODE_SERVICE_AREA',
-        bbox: polygonParser(result.bbox),
-        coordinates: polygonParser(result.coordinates)
+        table: 'CODE_SERVICE_AREA'
+      };
+      if (!nogeom) {
+        obj.bbox = polygonParser(result.bbox);
+        obj.coordinates = polygonParser(result.coordinates); 
       }
+      return obj;
     });
     /*const lg = await LocalGovernment.findAll({
       include: { all: true, nested: true },
@@ -44,13 +47,16 @@ router.get('/all-localities', async (req, res) => {
     code_local_government_id,
     local_government_name FROM CODE_LOCAL_GOVERNMENT_4326`);
     const lg = lgData.map(result => {
-      return {
+      const obj = {
         name: result.local_government_name,
         id: result.code_local_government_id,
         table: 'CODE_LOCAL_GOVERNMENT',
-        bbox: polygonParser(result.bbox),
-        coordinates: polygonParser(result.coordinates)
+      };
+      if (!nogeom) {
+        obj.bbox = polygonParser(result.bbox);
+        obj.coordinates = polygonParser(result.coordinates); 
       }
+      return obj;
     });
     /*const sc = await StateCounty.findAll({
       include: { all: true, nested: true },
@@ -60,25 +66,31 @@ router.get('/all-localities', async (req, res) => {
     state_county_id,
     county_name FROM CODE_STATE_COUNTY_4326`);
     const sc = scData.map(result => {
-      return {
+      const obj = {
         name: result.county_name + ' County',
         id: result.state_county_id,
         table: 'CODE_STATE_COUNTY',
-        bbox: polygonParser(result.bbox),
-        coordinates: polygonParser(result.coordinates)
+      };
+      if (!nogeom) {
+        obj.bbox = polygonParser(result.bbox);
+        obj.coordinates = polygonParser(result.coordinates); 
       }
+      return obj;
     });
     const [mhfdData] = await db.sequelize.query(`SELECT  ${geom}
     OBJECTID,
     'Mile High Flood District' as name FROM MHFD_BOUNDARY`);
     const mhfd = mhfdData.map(result => {
-      return {
+      const obj = {
         name: result.name,
         id: result.OBJECTID,
         table: 'MHFD_BOUNDARY',
-        bbox: polygonParser(result.bbox),
-        coordinates: polygonParser(result.coordinates)
+      };
+      if (!nogeom) {
+        obj.bbox = polygonParser(result.bbox);
+        obj.coordinates = polygonParser(result.coordinates); 
       }
+      return obj;
     });
     const answer = [...sa, ...lg, ...sc].sort((a, b) => {
       return a.name.localeCompare(b.name);
