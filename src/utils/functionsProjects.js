@@ -17,6 +17,22 @@ const ProjectStreams = db.project_stream;
 const Streams = db.stream;
 const Attachment = db.projectAttachment;
 
+export const getServiceAreaByProjectIds = async (ids) => {
+  let projectServiceArea = await ProjectServiceArea.findAll({
+    include: {
+      model: CodeServiceArea,
+      attributes: ['service_area_name']
+    },
+    where: {
+      project_id: ids
+    }
+  }).map((data) => data.dataValues).map((data) => ({
+    ...data,
+    CODE_SERVICE_AREA: data.CODE_SERVICE_AREA.dataValues.service_area_name
+  }));
+  return projectServiceArea;
+}
+
 export const getCountiesByProjectIds = async (ids) => {
   let projectCounty = await ProjectCounty.findAll({
     where: {
