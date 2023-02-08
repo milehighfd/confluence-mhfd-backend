@@ -96,6 +96,25 @@ router.put('/delete-user/:id', [auth, isAdminAccount], async (req, res, next) =>
   }
 });
 
+router.put('/modify-user-status/:id', [auth, isAdminAccount], async (req, res, next) => {
+  const id = req.params.id;
+  try {
+    const user = await User.findByPk(id, { raw: true });   
+    user.status = 'approved';    
+    user.name = user.firstName + ' ' + user.lastName;
+    delete user.user_id;
+    await User.update(user, {
+      where: {
+        user_id: id
+      }
+    });
+    return res.status(200).send({message:'SUCCESS'});
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).send({ error: error });
+  }
+});
+
 router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
   //const isPending = req.query.pending || false;
   const organization = req.query.organization;
