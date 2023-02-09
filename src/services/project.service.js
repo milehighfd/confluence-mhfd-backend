@@ -214,14 +214,11 @@ const getProjectsComplete = async (include, bounds, offset = 1, limit = 12000) =
         {
           model: ProjectStreams,
           include: {
-            mode: Streams,
+            model: Streams,
             attributes: [
               'stream_id',
               'stream_name'
-            ],
-            where: {
-              stream_id: {[Op.ne]: null}
-            }
+            ]
           }
         }
       ],
