@@ -96,11 +96,27 @@ router.put('/delete-user/:id', [auth, isAdminAccount], async (req, res, next) =>
   }
 });
 
+router.delete('/delete-entry/:id', [auth, isAdminAccount], async (req, res, next) => {
+  const id = req.params.id;  
+  try {    
+    await User.destroy({
+      where: {
+        user_id: +id
+      }
+    });
+    return res.status(200).send({message:'SUCCESS'});
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).send({ error: error });
+  }
+});
+
 router.put('/modify-user-status/:id', [auth, isAdminAccount], async (req, res, next) => {
   const id = req.params.id;
   try {
     const user = await User.findByPk(id, { raw: true });   
     user.status = 'approved';    
+    user.activated = 1;
     user.name = user.firstName + ' ' + user.lastName;
     delete user.user_id;
     await User.update(user, {
