@@ -15,12 +15,18 @@ import {
   getEstimatedCostsByProjectids,
   getStreamsDataByProjectIds
 } from 'bc/utils/functionsProjects.js';
+import sequelize from 'sequelize';
 
 const Project = db.project;
 const ProjectPartner = db.projectPartner;
 const ProjectServiceArea = db.projectServiceArea;
 const CodeServiceArea = db.codeServiceArea;
 const ProjectFavorite = db.ProjectFavorite;
+const ProjectCounty = db.projectCounty;
+const CodeStateCounty = db.codeStateCounty;
+const ProjectStreams = db.project_stream;
+const Streams = db.stream;
+const Op = sequelize.Op;
 
 const getAll = (Projectsid) => {
   try {
@@ -113,12 +119,12 @@ const getProjects = async (include, bounds, offset = 1, limit = 12000) => {
     // xconsole.log(project_partners);
     const promises = [
       getServiceAreaByProjectIds(ids),
-      // getCountiesByProjectIds(ids),
+      getCountiesByProjectIds(ids),
       // getConsultantsByProjectids(ids),
       // getCivilContractorsByProjectids(ids),
       // getLocalGovernmentByProjectids(ids),
       // getEstimatedCostsByProjectids(ids),
-      // getStreamsDataByProjectIds(ids)
+      getStreamsDataByProjectIds(ids)
     ];
     const resolvedPromises = await Promise.all(promises);
     const projectServiceArea = resolvedPromises[0];
@@ -194,6 +200,29 @@ const getProjectsComplete = async (include, bounds, offset = 1, limit = 12000) =
               'code_service_area_id'
             ]
           } 
+        },
+        {
+          model: ProjectCounty,
+          include: {
+            model: CodeStateCounty,
+            attributes: [
+              'county_name',
+              'state_county_id'
+            ]
+          }
+        },
+        {
+          model: ProjectStreams,
+          include: {
+            mode: Streams,
+            attributes: [
+              'stream_id',
+              'stream_name'
+            ],
+            where: {
+              stream_id: {[Op.ne]: null}
+            }
+          }
         }
       ],
       order: [['created_date', 'DESC']]
