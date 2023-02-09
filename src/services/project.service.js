@@ -60,7 +60,7 @@ const getProjects = async (include, bounds, offset = 1, limit = 12000) => {
   const where = {};
   try {
     if (bounds) {
-      project_ids_bybounds = await getProjectsIdsByBounds(bounds);
+      const project_ids_bybounds = await getProjectsIdsByBounds(bounds);
       if(project_ids_bybounds.length) {
         where.project_id = project_ids_bybounds;
       }
@@ -74,13 +74,11 @@ const getProjects = async (include, bounds, offset = 1, limit = 12000) => {
       }).map(result => result.dataValues);
       const pids = projectsFavorite.map((p) => p.project_id);
       if (where.project_id) {
-        where.project_id = [...where.project_id, ...pids];
+        where.project_id = where.project_id.filter((data) => pids.includes(data));
       } else {
         where.project_id = pids;
       }
-      console.log('end fuck ', where.project_id);
     }
-    console.log('my where is ', where);
     let projects = await Project.findAll({
       where: where,
       limit,
