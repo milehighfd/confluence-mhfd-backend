@@ -206,6 +206,19 @@ db.project_stream.belongsTo(
   db.stream,
   { foreignKey: 'stream_id'}
 )
+// project localgovernment
+
+db.project.hasMany(db.projectLocalGovernment, {foreignKey: 'project_id'});
+db.projectLocalGovernment.belongsTo(
+  db.codeLocalGoverment,
+  { foreignKey: 'code_local_government_id' }
+)
+// project estimated cost 
+db.project.hasMany(db.projectCost, {foreignKey: 'project_id'});
+// db.projectCost.belongsTo(
+//   db.codeCostType,
+//   { foreignKey: 'code_cost_type_id' }
+// );
 
 db.project.hasOne(
   db.projectStatus,

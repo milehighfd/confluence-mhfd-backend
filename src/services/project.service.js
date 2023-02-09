@@ -25,7 +25,14 @@ const ProjectFavorite = db.ProjectFavorite;
 const ProjectCounty = db.projectCounty;
 const CodeStateCounty = db.codeStateCounty;
 const ProjectStreams = db.project_stream;
+const ProjectLocalGovernment = db.projectLocalGovernment;
+const CodeLocalGoverment = db.codeLocalGoverment;
 const Streams = db.stream;
+const ProjectCost = db.projectCost;
+const ProjectStatus = db.projectStatus;
+const CodePhaseType = db.codePhaseType;
+const CodeStatusType = db.codeStatusType;
+const BusinessAssociate = db.businessAssociates;
 const Op = sequelize.Op;
 
 const getAll = (Projectsid) => {
@@ -122,8 +129,8 @@ const getProjects = async (include, bounds, offset = 1, limit = 12000) => {
       getCountiesByProjectIds(ids),
       // getConsultantsByProjectids(ids),
       // getCivilContractorsByProjectids(ids),
-      // getLocalGovernmentByProjectids(ids),
-      // getEstimatedCostsByProjectids(ids),
+      getLocalGovernmentByProjectids(ids),
+      getEstimatedCostsByProjectids(ids),
       getStreamsDataByProjectIds(ids)
     ];
     const resolvedPromises = await Promise.all(promises);
@@ -161,7 +168,7 @@ const getProjects = async (include, bounds, offset = 1, limit = 12000) => {
     throw error;
   }
 }
-const getProjectsComplete = async (include, bounds, offset = 1, limit = 12000) => {
+const getProjectsComplete = async (include, bounds, offset = 1, limit = 120000) => {
   console.log(include, bounds, offset, limit);
   const where = {};
   try {
@@ -199,7 +206,10 @@ const getProjectsComplete = async (include, bounds, offset = 1, limit = 12000) =
               'service_area_name',
               'code_service_area_id'
             ]
-          } 
+          },
+          attributes: [
+            'project_service_area_id'
+          ] 
         },
         {
           model: ProjectCounty,
@@ -209,7 +219,10 @@ const getProjectsComplete = async (include, bounds, offset = 1, limit = 12000) =
               'county_name',
               'state_county_id'
             ]
-          }
+          },
+          attributes: [
+            'project_county_id'
+          ]
         },
         {
           model: ProjectStreams,
@@ -219,6 +232,68 @@ const getProjectsComplete = async (include, bounds, offset = 1, limit = 12000) =
               'stream_id',
               'stream_name'
             ]
+          },
+          attributes: [
+            'stream_id',
+            'length_in_mile'
+          ]
+        },
+        {
+          model: ProjectLocalGovernment,
+          include: {
+            model: CodeLocalGoverment,
+            attributes: [
+              'local_government_name',
+              'code_local_government_id'
+            ]
+          },
+          attributes: [
+            'project_local_government_id'
+          ]
+        },
+        {
+          model: ProjectCost,
+          attributes: [
+            'code_cost_type_id',
+            'cost'
+          ],
+          where: {
+            code_cost_type_id: 1
+          }
+        },
+        {
+          model: ProjectStatus,
+          attributes: [
+            'code_phase_type_id'
+          ],
+          include: {
+            model: CodePhaseType,
+            attributes: [
+              'phase_name',
+            ],
+            include: {
+              model: CodeStatusType,
+              attributes: [
+                'code_status_type_id',
+                'status_name'
+              ]
+            }
+          }
+        }, 
+        {
+          model: ProjectPartner,
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          include: {
+            model: BusinessAssociate,
+            attributes: [
+              'business_name'
+            ]
+          },
+          where: {
+            code_partner_type_id: [3, 8, 11]
           }
         }
       ],
