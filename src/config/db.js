@@ -136,14 +136,8 @@ db.businessAssociates = businessAssociates(sequelize, Sequelize);
 
 db.projectServiceArea = projectServiceArea(sequelize, Sequelize);
 // db.serviceAreaLocalGovernment = serviceAreaLocalGovernment(sequelize, Sequelize);
-db.projectServiceArea.belongsTo(
-  db.project,
-  { foreignKey: 'project_id'}
-);
-db.projectServiceArea.belongsTo(
-  db.codeServiceArea,
-  { foreignKey: 'code_service_area_id'}
-);
+// db.project.hasMany(db.projectServiceArea);
+
 
 
 db.user.hasMany(db.ProjectFavorite, {foreignKey: 'user_id'});
@@ -191,6 +185,11 @@ db.projectPartner.belongsTo(
     foreignKey: 'business_associates_id',
     targetKey: 'business_associates_id'
   }
+);
+db.project.hasMany(db.projectServiceArea, {foreignKey: 'project_id'});
+db.projectServiceArea.belongsTo(
+  db.codeServiceArea,
+  { foreignKey: 'code_service_area_id'}
 );
  
 db.project.hasOne(
