@@ -3,16 +3,8 @@ import https from 'https';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import projectService from 'bc/services/project.service.js';
-import attachmentService from 'bc/services/attachment.service.js';
 import {
-  getCountiesByProjectIds,
-  getConsultantsByProjectids,
-  getCivilContractorsByProjectids,
-  getLocalGovernmentByProjectids,
-  getEstimatedCostsByProjectids,
   getStreamsDataByProjectIds,
-  projectsByFilters,
-  projectsByFiltersForIds,
   sortProjects
 } from 'bc/utils/functionsProjects.js';
 
@@ -98,24 +90,7 @@ async function getProblemByProjectId(projectid, sortby, sorttype) {
     return [];
   }
 }
-const getProjectsIdsByBounds = async (bounds) => {
-  const coords = bounds.split(',');
-  const where_intersect = `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom)`;
-  const query = `SELECT projectid FROM ${MAIN_PROJECT_TABLE} WHERE ${where_intersect}`;
-  const queryCarto = { q: query };
-  try {
-    const data = await needle('post', CARTO_URL, queryCarto, { json:true });
 
-    if ( data.statusCode === 200) {
-      return data.body.rows.map((elem) => elem.projectid);
-    } else {
-      logger.error('bad status', data.statusCode, data.body);
-    }
-  } catch (error) {
-    console.log('ERROR AT CARTO', error);
-    return [];
-  }
-};
 
 const listProjectsForId = async (req, res) => {
   const { offset = 1, limit = 10000 } = req.query;
