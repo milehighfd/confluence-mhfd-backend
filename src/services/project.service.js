@@ -102,67 +102,66 @@ const getProjects = async (include, bounds, offset = 1, limit = 12000) => {
       order: [['created_date', 'DESC']]
     }).map(result => result.dataValues);
   
-    // const SPONSOR_TYPE = 11; // maybe this can change in the future
+    const SPONSOR_TYPE = 11; // maybe this can change in the future
     const ids = projects.map((p) => p.project_id);
   
-    // const project_partners = await ProjectPartner.findAll({
-    //   where: {
-    //     project_id: ids,
-    //     code_partner_type_id: SPONSOR_TYPE,
-    //   },
-    //   include: { all: true, nested: true }
-    // }).map(result => result.dataValues).map(res => { 
-    //   return {...res, business_associate: res.business_associate.dataValues }
-    // });
+    const project_partners = await ProjectPartner.findAll({
+      where: {
+        project_id: ids,
+        code_partner_type_id: SPONSOR_TYPE,
+      },
+      include: { all: true, nested: true }
+    }).map(result => result.dataValues).map(res => { 
+      return {...res, business_associate: res.business_associate.dataValues }
+    });
   
-    // projects = projects.map((project) => {
-    //   const partners = project_partners.filter((partner) => partner.project_id === project.project_id);
-    //   let sponsor = null;
-    //   if (partners.length) {
-    //     sponsor = partners[0].business_associate.business_associate_name;
-    //   } 
-    //   return  {...project, sponsor: sponsor };
-    // });
+    projects = projects.map((project) => {
+      const partners = project_partners.filter((partner) => partner.project_id === project.project_id);
+      let sponsor = null;
+      if (partners.length) {
+        sponsor = partners[0].business_associate.business_associate_name;
+      } 
+      return  {...project, sponsor: sponsor };
+    });
     // xconsole.log(project_partners);
     const promises = [
       getServiceAreaByProjectIds(ids),
       getCountiesByProjectIds(ids),
-      // getConsultantsByProjectids(ids),
-      // getCivilContractorsByProjectids(ids),
+      getConsultantsByProjectids(ids),
+      getCivilContractorsByProjectids(ids),
       getLocalGovernmentByProjectids(ids),
       getEstimatedCostsByProjectids(ids),
       getStreamsDataByProjectIds(ids)
     ];
     const resolvedPromises = await Promise.all(promises);
     const projectServiceArea = resolvedPromises[0];
-    // const projectCounties = resolvedPromises[1];
-    // const consultants = resolvedPromises[2];
-    // const civilContractors = resolvedPromises[3];
-    // const projectLocalGovernment = resolvedPromises[4];
-    // const estimatedCosts = resolvedPromises[5];
-    // const projectStreams = resolvedPromises[6];
+    const projectCounties = resolvedPromises[1];
+    const consultants = resolvedPromises[2];
+    const civilContractors = resolvedPromises[3];
+    const projectLocalGovernment = resolvedPromises[4];
+    const estimatedCosts = resolvedPromises[5];
+    const projectStreams = resolvedPromises[6];
   
     projects = projects.map((project) => {
       const pservicearea = projectServiceArea.filter((psa) => psa.project_id === project.project_id);
-      // const pcounty = projectCounties.filter((d) => d.project_id === project.project_id)[0];
-      // const staffs = consultants.filter(consult => consult.project_id === project.project_id);
-      // const contractorsStaff = civilContractors.filter(consult => consult.project_id === project.project_id);
-      // const codeLocalGoverment = projectLocalGovernment.filter((d) => d.project_id === project.project_id)[0];
-      // const estimatedCost = estimatedCosts.filter(ec => ec.project_id === project.project_id)[0];
-      // const streams = projectStreams.filter((d) => d.project_id === project.project_id)[0];
+      const pcounty = projectCounties.filter((d) => d.project_id === project.project_id)[0];
+      const staffs = consultants.filter(consult => consult.project_id === project.project_id);
+      const contractorsStaff = civilContractors.filter(consult => consult.project_id === project.project_id);
+      const codeLocalGoverment = projectLocalGovernment.filter((d) => d.project_id === project.project_id)[0];
+      const estimatedCost = estimatedCosts.filter(ec => ec.project_id === project.project_id)[0];
+      const streams = projectStreams.filter((d) => d.project_id === project.project_id)[0];
       return {
         ...project,
         service_area_name: pservicearea[0]?.CODE_SERVICE_AREA,
         serviceArea: pservicearea[0],
-        // county:  pcounty,
-        // consultants: staffs,
-        // contractors: contractorsStaff,
-        // localGoverment: codeLocalGoverment,
-        // estimatedCost,
-        // streams
+        county:  pcounty,
+        consultants: staffs,
+        contractors: contractorsStaff,
+        localGoverment: codeLocalGoverment,
+        estimatedCost,
+        streams
       };
     });
-    console.log('projects', projects);
     return projects;
   } catch (error) {
     throw error;
