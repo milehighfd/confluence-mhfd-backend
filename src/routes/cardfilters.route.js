@@ -252,7 +252,16 @@ const getFilters = async (req, res) => {
   
   res.send({'all': 'too well', data});
 }
-
+const getProjectsComplete = async (req, res) => {
+  const projects = await projectService.getProjectsComplete();
+  res.send({projects: projects});
+}
+const getProjectsPromise = async (req, res) => {
+  const projects = await projectService.getProjects();
+  res.send({projects: projects});
+}
+router.get('/projectspromise', getProjectsPromise);
+router.get('/projects', getProjectsComplete);
 router.post('/', getFilters);
 
 export default router;

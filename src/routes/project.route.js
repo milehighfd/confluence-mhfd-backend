@@ -2,6 +2,7 @@ import express from 'express';
 import https from 'https';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
+import projectService from 'bc/services/project.service.js';
 import attachmentService from 'bc/services/attachment.service.js';
 import {
   getCountiesByProjectIds,
@@ -198,83 +199,11 @@ const listProjectsForId = async (req, res) => {
 };
 
 const listProjects = async (req, res) => {
-  const { offset = 0, limit = 10000 } = req.query;
+  const { offset = 1, limit = 10000 } = req.query;
   const { body } = req;
   const bounds = body?.bounds;
-  let project_ids_bybounds = [];
-  const where = {};
-  if (bounds) {
-    project_ids_bybounds = await getProjectsIdsByBounds(bounds);
-    if(project_ids_bybounds.length) {
-      where.project_id = project_ids_bybounds;
-    }
-  }
-  let projects = await Projects.findAll({
-    where: where,
-    limit,
-    offset,
-    include: { all: true, nested: true },
-    order: [['created_date', 'DESC']]
-  }).map(result => result.dataValues);
-
-  const SPONSOR_TYPE = 11; // maybe this can change in the future
-  const ids = projects.map((p) => p.project_id);
-
-  const project_partners = await ProjectPartner.findAll({
-    where: {
-      project_id: ids,
-      code_partner_type_id: SPONSOR_TYPE,
-    },
-    include: { all: true, nested: true }
-  }).map(result => result.dataValues).map(res => { 
-    return {...res, business_associate: res.business_associate.dataValues }
-  });
-
-  projects = projects.map((project) => {
-    const partners = project_partners.filter((partner) => partner.project_id === project.project_id);
-    let sponsor = null;
-    if (partners.length) {
-      sponsor = partners[0].business_associate.business_associate_name;
-    } 
-    return  {...project, sponsor: sponsor };
-  });
-  // xconsole.log(project_partners);
-  let projectServiceArea = await ProjectServiceArea.findAll({
-    include: {
-      model: CodeServiceArea,
-      attributes: ['service_area_name']
-    },
-    where: {
-      project_id: ids
-    }
-  }).map((data) => data.dataValues).map((data) => ({...data, CODE_SERVICE_AREA: data.CODE_SERVICE_AREA.dataValues.service_area_name}));
-  const projectCounties = await getCountiesByProjectIds(ids);
-  const consultants = await getConsultantsByProjectids(ids);
-  const civilContractors = await getCivilContractorsByProjectids(ids);
-  const projectLocalGovernment = await getLocalGovernmentByProjectids(ids);
-  const estimatedCosts = await getEstimatedCostsByProjectids(ids);
-  const projectStreams = await getStreamsDataByProjectIds(ids);
-
-  projects = projects.map((project) => {
-    const pservicearea = projectServiceArea.filter((psa) => psa.project_id === project.project_id);
-    const pcounty = projectCounties.filter((d) => d.project_id === project.project_id)[0];
-    const staffs = consultants.filter(consult => consult.project_id === project.project_id);
-    const contractorsStaff = civilContractors.filter(consult => consult.project_id === project.project_id);
-    const codeLocalGoverment = projectLocalGovernment.filter((d) => d.project_id === project.project_id)[0];
-    const estimatedCost = estimatedCosts.filter(ec => ec.project_id === project.project_id)[0];
-    const streams = projectStreams.filter((d) => d.project_id === project.project_id)[0];
-    return {
-      ...project,
-      service_area_name: pservicearea[0]?.CODE_SERVICE_AREA,
-      county:  pcounty,
-      consultants: staffs,
-      contractors: contractorsStaff,
-      localGoverment: codeLocalGoverment,
-      estimatedCost,
-      streams
-    };
-  });
-
+  let projects = await projectService.getProjects(null, bounds, offset, limit);
+  logger.info(projects.length);
   
   // projects = await projectsByFilters(projects, body);
   if (body?.sortby?.trim()?.length || 0) {
