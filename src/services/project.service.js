@@ -128,7 +128,6 @@ const getProjects = async (include, bounds, offset = 1, limit = 12000) => {
     const projectLocalGovernment = resolvedPromises[4];
     const estimatedCosts = resolvedPromises[5];
     const projectStreams = resolvedPromises[6];
-  
     projects = projects.map((project) => {
       const pservicearea = projectServiceArea.filter((psa) => psa.project_id === project.project_id);
       const pcounty = projectCounties.filter((d) => d.project_id === project.project_id)[0];

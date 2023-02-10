@@ -70,6 +70,7 @@ const getFilters = async (req, res) => {
   data.estimatedCost = [];
   
   let projects = await projectService.getProjects(null, null, 1);
+  console.log('xxxprojectsxxxx ', projects.map(p => p.estimatedCost));
   if (bounds) {
     const ids = await getIdsInBbox(bounds);
     projects = projects.filter((p) => ids.includes(p.project_id));
@@ -119,15 +120,13 @@ const getFilters = async (req, res) => {
   if (body.creator && body.creator.length) { // pause for now, guess is the user?
 
   }
-  if (body.estimatedcost && body.estimatedcost.length) {
+  if (body.totalcost && body.totalcost.length) {
     const ids = projects.filter((project) => {
-      return body.estimatedcost.any((ec) => {
-        return project.estimatedCost.cost >= ec[0] && project.estimatedCost.cost <= ec[1];
-      });
+      return project?.estimatedCost?.cost >= body.totalcost[0] && project?.estimatedCost?.cost <= body.totalcost[1];
     }).map((project) => {
       return project.project_id
     });
-    data.estimatedcost = data.estimatedcost.filter((con) => body.estimatedcost.includes(con.id));
+    data.estimatedCost = data.estimatedCost?.filter((con) => body.estimatedcost.includes(con.id));
     toMatch.push(ids);
   }
   if (body.jurisdiction && body.jurisdiction.length) { //
@@ -172,17 +171,17 @@ const getFilters = async (req, res) => {
   //   data.status = data.status.filter((con) => body.status.includes(con.id));
   //   toMatch.push(ids);
   // }
-  if (body.stream && body.stream.length) { //
+  if (body.streamname && body.streamname.length) { //
     const ids = projects.filter((project) => {
       const has = false;
       project.streams?.stream?.forEach((stream) => {
-        has |= body.stream.includes(stream.stream_id);
+        has |= body.streamname.includes(stream.stream_id);
       });
       return has;
     }).map((project) => {
       return project.project_id
     });
-    data.stream = data.stream.filter((con) => body.stream.includes(con.id));
+    data.streamname = data.streamname.filter((con) => body.streamname.includes(con.id));
     toMatch.push(ids);
   }
   if (body.servicearea && body.servicearea.length) { //
