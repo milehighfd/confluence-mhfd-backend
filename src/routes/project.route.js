@@ -95,6 +95,7 @@ async function getProblemByProjectId(projectid, sortby, sorttype) {
 const listProjectsForId = async (req, res) => {
   const { offset = 1, limit = 10000 } = req.query;
   const { body } = req;
+  // TODO: Do something with this Jorge , check 
   const bounds = body?.bounds;
   let projects = await projectService.getProjects(null, bounds, offset, limit);
   // projects = await projectsByFiltersForIds(projects, body);
