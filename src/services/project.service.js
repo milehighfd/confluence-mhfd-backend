@@ -69,7 +69,7 @@ const getProjectsIdsByBounds = async (bounds) => {
   }
 };
 
-const getProjects = async (include, bounds, offset = 1, limit = 12000) => {
+const  getProjectsDeprecated  = async (include, bounds, offset = 1, limit = 12000) => {
   console.log(include, bounds, offset, limit);
   const where = {};
   try {
@@ -165,12 +165,12 @@ const getProjects = async (include, bounds, offset = 1, limit = 12000) => {
     throw error;
   }
 }
-const getProjectsComplete = async (include, bounds, offset = 1, limit = 120000) => {
+const getProjects = async (include, bounds, offset = 1, limit = 120000) => {
   console.log(include, bounds, offset, limit);
   const where = {};
   try {
     if (bounds) {
-      project_ids_bybounds = await getProjectsIdsByBounds(bounds);
+      const project_ids_bybounds = await getProjectsIdsByBounds(bounds);
       if(project_ids_bybounds.length) {
         where.project_id = project_ids_bybounds;
       }
@@ -424,5 +424,5 @@ export default {
   deleteByProjectId,
   saveProject,
   getProjects,
-  getProjectsComplete
+  getProjectsDeprecated
 };
