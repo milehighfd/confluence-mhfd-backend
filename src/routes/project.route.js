@@ -5,7 +5,9 @@ import logger from 'bc/config/logger.js';
 import projectService from 'bc/services/project.service.js';
 import {
   getStreamsDataByProjectIds,
-  sortProjects
+  sortProjects,
+  projectsByFilters,
+  projectsByFiltersForIds
 } from 'bc/utils/functionsProjects.js';
 
 const Projects = db.project;
@@ -110,7 +112,7 @@ const listProjects = async (req, res) => {
   let projects = await projectService.getProjects(null, bounds, offset, limit);
   logger.info(projects.length);
   
-  // projects = await projectsByFilters(projects, body);
+  projects = await projectsByFilters(projects, body);
   if (body?.sortby?.trim()?.length || 0) {
     projects = await sortProjects(projects, body);
   }

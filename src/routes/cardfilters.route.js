@@ -70,7 +70,6 @@ const getFilters = async (req, res) => {
   data.estimatedCost = [];
   
   let projects = await projectService.getProjects(null, null, 1);
-  console.log('xxxprojectsxxxx ', projects.map(p => p.estimatedCost));
   if (bounds) {
     const ids = await getIdsInBbox(bounds);
     projects = projects.filter((p) => ids.includes(p.project_id));
@@ -184,9 +183,9 @@ const getFilters = async (req, res) => {
     data.streamname = data.streamname.filter((con) => body.streamname.includes(con.id));
     toMatch.push(ids);
   }
-  if (body.servicearea && body.servicearea.length) { //
+  if (body.servicearea && body.servicearea.length) {
     const ids = projects.filter((project) => {
-      return body.servicearea.includes(project?.servicearea?.code_service_area_id);
+      return project?.project_service_areas.some( elem => body.servicearea.includes(elem?.CODE_SERVICE_AREA?.code_service_area_id) )
     }).map((project) => {
       return project.project_id
     });
@@ -226,7 +225,7 @@ const getFilters = async (req, res) => {
   });
   data.county.forEach((d) => {
     d.counter = projects.reduce((pre, current) => {
-      if (current?.county?.codeStateCounty?.state_county_id === d.id) {
+      if (current?.project_counties?.some( pc => pc?.CODE_STATE_COUNTY?.state_county_id === +d.id)) {
         return pre + 1;
       }
       return pre;
@@ -234,8 +233,7 @@ const getFilters = async (req, res) => {
   });
   data.servicearea.forEach((d) => {
     d.counter = projects.reduce((pre, current) => {
-      // console.log('sa sa ', current?.serviceArea, d.id);
-      if (current?.serviceArea?.code_service_area_id === +d.id) {
+      if (current?.project_service_areas?.some(psa => psa?.CODE_SERVICE_AREA?.code_service_area_id === +d.id)) {
         return pre + 1;
       } 
       return pre;

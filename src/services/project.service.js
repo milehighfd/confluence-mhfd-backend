@@ -33,6 +33,7 @@ const ProjectCost = db.projectCost;
 const ProjectStatus = db.projectStatus;
 const CodePhaseType = db.codePhaseType;
 const CodeStatusType = db.codeStatusType;
+const CodeProjectType = db.codeProjectType;
 const BusinessAssociate = db.businessAssociates;
 const Op = sequelize.Op;
 
@@ -268,13 +269,19 @@ const getProjects = async (include, bounds, offset = 1, limit = 120000) => {
             attributes: [
               'phase_name',
             ],
-            include: {
+            include: [{
               model: CodeStatusType,
               attributes: [
                 'code_status_type_id',
                 'status_name'
               ]
-            }
+            }, {
+              model: CodeProjectType,
+              attributes: [
+                'code_project_type_id',
+                'project_type_name'
+              ]
+            }]
           }
         }, 
         {
