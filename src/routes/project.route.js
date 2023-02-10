@@ -97,10 +97,8 @@ async function getProblemByProjectId(projectid, sortby, sorttype) {
 const listProjectsForId = async (req, res) => {
   const { offset = 1, limit = 10000 } = req.query;
   const { body } = req;
-  // TODO: Do something with this Jorge , check 
-  const bounds = body?.bounds;
-  let projects = await projectService.getProjects(null, bounds, offset, limit);
-  // projects = await projectsByFiltersForIds(projects, body);
+  let projects = await projectService.getProjects(null, null, offset, limit);
+  projects = await projectsByFiltersForIds(projects, body);
   logger.info('projects being called');
   res.send(projects);
 };
@@ -120,7 +118,7 @@ const listProjects = async (req, res) => {
     projects = projects.filter((proj) => proj?.project_name?.toUpperCase().includes(body?.name?.toUpperCase()))
   }
   
-  logger.info('projects being called');
+  logger.info('projects being called', projects.length);
   res.send(projects);
 };
 

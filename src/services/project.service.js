@@ -255,9 +255,9 @@ const getProjects = async (include, bounds, offset = 1, limit = 120000) => {
             'code_cost_type_id',
             'cost'
           ],
-          where: {
-            code_cost_type_id: 1
-          }
+          // where: {
+          //   code_cost_type_id: 1
+          // }
         },
         {
           model: ProjectStatus,
@@ -296,9 +296,9 @@ const getProjects = async (include, bounds, offset = 1, limit = 120000) => {
               'business_name'
             ]
           },
-          where: {
-            code_partner_type_id: [3, 8, 11]
-          }
+          // where: {
+          //   code_partner_type_id: [3, 8, 11]
+          // }
         }
       ],
       order: [['created_date', 'DESC']]

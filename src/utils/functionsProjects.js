@@ -197,9 +197,9 @@ export const getStreamsDataByProjectIds = async (ids) => {
 export const projectsByFilters = async (projects, filters) => {
   let newprojects = [...projects];
   // STATUS
-  if ((filters.status?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.code_status_type_id) );
-  }
+  // if ((filters.status?.length || 0) > 0) {
+  //   newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.code_status_type_id) );
+  // }
 //   // PROJECT TYPE
 //   if ((filters.projecttype?.length || 0) > 0) {
 //     //TO DO: the filter works with project type name, it has a  
@@ -265,63 +265,63 @@ export const projectsByFilters = async (projects, filters) => {
 export const projectsByFiltersForIds = async (projects, filters) => {
   let newprojects = [...projects];
   // STATUS
-  if ((filters.status?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.status_name))
-  }
-  // PROJECT TYPE
-  if ((filters.projecttype?.trim()?.length || 0) > 0) {
-    //TO DO: the filter works with project type name, it has a  
-    let filterProjectType =  filters.projecttype.split(',')
-    newprojects = newprojects.filter((proj) => {
-      let flag = false;
-      for (let index = 0; index < filterProjectType.length; index++) {
-        const type = filterProjectType[index];
-        if(proj?.project_status?.code_phase_type?.code_project_type?.project_type_name.includes(type)){
-          flag =true;
-        }
-      }
-      return flag
-    })
-  }
-  // SERVICE AREA
-  if ((filters.servicearea?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) )
-  }
-  //COUNTY
-  if((filters.county?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.county.includes(proj?.county?.codeStateCounty?.county_name))
-  }
+  // if ((filters.status?.length || 0) > 0) {
+  //   newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.code_status_type_id) );
+  // }
+//   // PROJECT TYPE
+//   if ((filters.projecttype?.trim()?.length || 0) > 0) {
+//     //TO DO: the filter works with project type name, it has a  
+//     let filterProjectType =  filters.projecttype.split(',')
+//     newprojects = newprojects.filter((proj) => {
+//       let flag = false;
+//       for (let index = 0; index < filterProjectType.length; index++) {
+//         const type = filterProjectType[index];
+//         if(proj?.project_status?.code_phase_type?.code_project_type?.project_type_name.includes(type)){
+//           flag =true;
+//         }
+//       }
+//       return flag
+//     })
+//   }
+//   // SERVICE AREA
+//   if ((filters.servicearea?.trim()?.length || 0) > 0) {
+//     newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) )
+//   }
+//   //COUNTY
+//   if((filters.county?.trim()?.length || 0) > 0) {
+//     newprojects = newprojects.filter((proj) => filters.county.includes(proj?.county?.codeStateCounty?.county_name))
+//   }
 
-  //STREAMS 
-  if ((filters.streamname?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.streamname.includes(proj?.streams?.stream[0]?.stream_name))
-  }
+//   //STREAMS 
+//   if ((filters.streamname?.trim()?.length || 0) > 0) {
+//     newprojects = newprojects.filter((proj) => filters.streamname.includes(proj?.streams?.stream[0]?.stream_name))
+//   }
   
-  // jurisdiction is weird 
-  if ((filters.jurisdiction?.trim()?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => proj?.localGoverment?.codeLocalGoverment?.local_government_name.includes(filters.jurisdiction))
-  }
+//   // jurisdiction is weird 
+//   if ((filters.jurisdiction?.trim()?.length || 0) > 0) {
+//     newprojects = newprojects.filter((proj) => proj?.localGoverment?.codeLocalGoverment?.local_government_name.includes(filters.jurisdiction))
+//   }
 
-//CONSULTANT
-  if((filters.consultant?.trim()?.length || 0) > 0) {
-    let consultantFilter = filters.consultant.toUpperCase();
-    newprojects = newprojects.filter((proj) => consultantFilter.includes(proj?.consultants[0]?.consultant[0]?.business_name))
-  }
-    //CONTRACTOR
-    if((filters.contractor?.trim()?.length || 0) > 0) {
-      let contractorFilter = filters.contractor.toUpperCase();
-      let filterContractor =  contractorFilter.split(',')
-      newprojects = newprojects.filter((proj) => {
-        let flag = false;
-        for (let index = 0; index < filterContractor.length; index++) {
-          const contractor = filterContractor[index];
-          if(proj?.contractors[0]?.business[0]?.business_name.includes(contractor)){
-            flag =true;
-          }
-        }
-        return flag
-      })
-    }
+// //CONSULTANT
+//   if((filters.consultant?.trim()?.length || 0) > 0) {
+//     let consultantFilter = filters.consultant.toUpperCase();
+//     newprojects = newprojects.filter((proj) => consultantFilter.includes(proj?.consultants[0]?.consultant[0]?.business_name))
+//   }
+//     //CONTRACTOR
+//     if((filters.contractor?.trim()?.length || 0) > 0) {
+//       let contractorFilter = filters.contractor.toUpperCase();
+//       let filterContractor =  contractorFilter.split(',')
+//       newprojects = newprojects.filter((proj) => {
+//         let flag = false;
+//         for (let index = 0; index < filterContractor.length; index++) {
+//           const contractor = filterContractor[index];
+//           if(proj?.contractors[0]?.business[0]?.business_name.includes(contractor)){
+//             flag =true;
+//           }
+//         }
+//         return flag
+//       })
+//     }
     newprojects = newprojects.map((element) => 
        element.project_id
     );

@@ -160,16 +160,15 @@ const getFilters = async (req, res) => {
   if (body.startyear && body.startyear.length) { // don't touch
 
   }
-  // UNCOMMENT ONCE WE ARE SENDING IDS
-  // if (body.status && body.status.length) { // 
-  //   const ids = projects.filter((project) => {
-  //     return body.status.includes(project?.project_status?.code_phase_type?.code_status_type?.code_status_type_id);
-  //   }).map((project) => {
-  //     return project.project_id
-  //   });
-  //   data.status = data.status.filter((con) => body.status.includes(con.id));
-  //   toMatch.push(ids);
-  // }
+  if (body.status && body.status.length) { // 
+    const ids = projects.filter((project) => {
+      return body.status.includes(project?.project_status?.code_phase_type?.code_status_type?.code_status_type_id);
+    }).map((project) => {
+      return project.project_id
+    });
+    data.status = data.status.filter((con) => body.status.includes(con.id));
+    toMatch.push(ids);
+  }
   if (body.streamname && body.streamname.length) { //
     const ids = projects.filter((project) => {
       const has = false;
@@ -251,7 +250,8 @@ const getFilters = async (req, res) => {
   res.send({'all': 'too well', data});
 }
 const getProjectsComplete = async (req, res) => {
-  const projects = await projectService.getProjects();
+  const projects = await projectService.getProjects(null, null);
+  console.log('projects count', projects.length);
   res.send({projects: projects});
 }
 const getProjectsPromise = async (req, res) => {
