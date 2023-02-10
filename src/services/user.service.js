@@ -167,7 +167,7 @@ export const sendBoardNotification = async (email, type, locality, year, fullNam
 }
 
 function getDestFile(filename) {
-  let root = path.join(__dirname, `../public/images`);
+  let root = path.join(__dirname, `../../public/images`);
   return path.join(root, `/${filename}`); 
 }
 

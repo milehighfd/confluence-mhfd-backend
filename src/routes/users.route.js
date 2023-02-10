@@ -280,6 +280,7 @@ router.get('/me', auth, async (req, res) => {
 });
 
 router.post('/upload-photo', [auth, multer.array('file')], async (req, res) => {
+  console.log(req.files)  
   try {
     if (!req.files) {
       logger.error('You must send user photo');
@@ -287,124 +288,7 @@ router.post('/upload-photo', [auth, multer.array('file')], async (req, res) => {
     }
     let user = req.user;
     await UserService.uploadPhoto(user, req.files);
-    let result1 = {};
-    let polygon = [];
-    let coordinates = {
-      longitude: -104.9063129121965,
-      latitude: 39.768682416183
-    };
-    //console.log('USER ME', user);
-    result1['_id'] = user._id;
-    result1['firstName'] = user.firstName;
-    result1['lastName'] = user.lastName;
-    result1['name'] = user.name;
-    result1['email'] = user.email;
-    result1['organization'] = user.organization;
-    result1['city'] = user.city;
-    result1['county'] = user.county;
-    result1['serviceArea'] = user.serviceArea;
-    result1['phone'] = user.phone;
-    result1['zipCode'] = user.zipCode;
-    result1['title'] = user.title;
-    result1['activated'] = user.activated;
-    result1['designation'] = user.designation;
-    result1['photo'] = user.photo;
-    result1['zoomarea'] = user.zoomarea ? user.zoomarea : '';
-    result1['status'] = user.status;
-
-    let organization_query = '';
-    if (req.user.zoomarea) {
-      organization_query = user.zoomarea;
-    } else {
-      organization_query = ORGANIZATION_DEFAULT;
-    }
-
-    const newProm = new Promise((resolve, reject) => {
-      const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM mhfd_zoom_to_areas WHERE aoi = '${organization_query}' `;
-      const URL = `${CARTO_URL}&q=${sql}`;
-      let result = [];
-      //console.log('URL', URL);
-      https.get(URL, response => {
-        console.log('status ' + response.statusCode);
-        if (response.statusCode === 200) {
-          let str = '';
-          response.on('data', function (chunk) {
-            str += chunk;
-          });
-          response.on('end', function () {
-            result = JSON.parse(str).rows;
-            if (result.length > 0) {
-              const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
-              let latitude_array = [];
-              let longitude_array = [];
-              //console.log('COORDENADAS', all_coordinates);
-              for (const key in all_coordinates[0]) {
-                const row = JSON.stringify(all_coordinates[0][key]).replace("[", "").replace("]", "").split(',')
-                let coordinate_num = [];
-                coordinate_num.push(parseFloat(row[0]));
-                coordinate_num.push(parseFloat(row[1]));
-                longitude_array.push(parseFloat(row[0]));
-                latitude_array.push(parseFloat(row[1]));
-                polygon.push(coordinate_num);
-              }
-              const latitude_min = Math.min.apply(Math, latitude_array);
-              const latitude_max = Math.max.apply(Math, latitude_array);
-              const longitude_min = Math.min.apply(Math, longitude_array);
-              const longitude_max = Math.max.apply(Math, longitude_array);
-              coordinates = {
-                longitude: (longitude_max + longitude_min) / 2,
-                latitude: (latitude_max + latitude_min) / 2
-              };
-
-            } else {
-              coordinates = {
-                longitude: -104.9063129121965,
-                latitude: 39.768682416183
-              };
-              //console.log('NO HAY DATOS');
-              polygon = [
-                [
-                  -105.32366831,
-                  39.40578787
-                ],
-                [
-                  -105.32366831,
-                  40.13157697
-                ],
-                [
-                  -104.48895751,
-                  40.13157697
-                ],
-                [
-                  -104.48895751,
-                  39.40578787
-                ],
-                [
-                  -105.32366831,
-                  39.40578787
-                ]
-              ];
-
-            }
-
-            resolve({
-              polygon: polygon,
-              coordinates: coordinates
-            });
-
-          });
-        }
-      }).on('error', err => {
-        logger.error(`failed call to  with error  ${err}`)
-
-      });
-    });
-
-    const respuesta = await newProm;
-    //console.log('COORDIANTES', respuesta);
-    result1['coordinates'] = respuesta.coordinates;
-    result1['polygon'] = respuesta.polygon;
-    res.status(200).send(result1);
+    res.status(200).send({message:'Success'});
   } catch (error) {
     logger.error(error);
     res.status(500).send(error);
