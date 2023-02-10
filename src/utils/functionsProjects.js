@@ -27,7 +27,8 @@ export const getServiceAreaByProjectIds = async (ids) => {
       where: {
         project_id: ids
       }
-    }).map((data) => data.dataValues).map((data) => ({
+    }).map((data) => data.dataValues);
+    projectServiceArea = projectServiceArea.map((data) => ({
       ...data,
       CODE_SERVICE_AREA: data.CODE_SERVICE_AREA.dataValues.service_area_name
     }));

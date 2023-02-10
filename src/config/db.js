@@ -136,14 +136,8 @@ db.businessAssociates = businessAssociates(sequelize, Sequelize);
 
 db.projectServiceArea = projectServiceArea(sequelize, Sequelize);
 // db.serviceAreaLocalGovernment = serviceAreaLocalGovernment(sequelize, Sequelize);
-db.projectServiceArea.belongsTo(
-  db.project,
-  { foreignKey: 'project_id'}
-);
-db.projectServiceArea.belongsTo(
-  db.codeServiceArea,
-  { foreignKey: 'code_service_area_id'}
-);
+// db.project.hasMany(db.projectServiceArea);
+
 
 
 db.user.hasMany(db.ProjectFavorite, {foreignKey: 'user_id'});
@@ -184,6 +178,7 @@ db.codeMaintenanceElegibilityType.belongsTo(
 //     foreignKey: 'project_id'
 //   }
 // );
+// project partner 
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id'});
 db.projectPartner.belongsTo( 
   db.businessAssociates,
@@ -192,7 +187,39 @@ db.projectPartner.belongsTo(
     targetKey: 'business_associates_id'
   }
 );
- 
+// project service area
+db.project.hasMany(db.projectServiceArea, {foreignKey: 'project_id'});
+db.projectServiceArea.belongsTo(
+  db.codeServiceArea,
+  { foreignKey: 'code_service_area_id'}
+);
+ //project county 
+ db.project.hasMany(db.projectCounty, {foreignKey: 'project_id'});
+ db.projectCounty.belongsTo(
+  db.codeStateCounty,
+  { foreignKey: 'state_county_id'}
+ );
+// project stream
+
+db.project.hasMany(db.project_stream, {foreignKey: 'project_id'});
+db.project_stream.belongsTo(
+  db.stream,
+  { foreignKey: 'stream_id'}
+)
+// project localgovernment
+
+db.project.hasMany(db.projectLocalGovernment, {foreignKey: 'project_id'});
+db.projectLocalGovernment.belongsTo(
+  db.codeLocalGoverment,
+  { foreignKey: 'code_local_government_id' }
+)
+// project estimated cost 
+db.project.hasMany(db.projectCost, {foreignKey: 'project_id'});
+// db.projectCost.belongsTo(
+//   db.codeCostType,
+//   { foreignKey: 'code_cost_type_id' }
+// );
+
 db.project.hasOne(
   db.projectStatus,
   { foreignKey: 'project_id' }
