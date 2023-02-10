@@ -1,5 +1,6 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
+import needle from 'needle';
 
 import {
   CARTO_URL,
