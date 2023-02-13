@@ -229,11 +229,16 @@ export const projectsByFilters = async (projects, filters) => {
     newprojects = newprojects.filter((proj) => proj?.project_partners.some( p => p?.code_partner_type_id == CONSULTANT_CODE && filters.consultant.includes(+p?.business_associate?.business_associates_id)))
   };
 // //CONTRACTOR
-if((filters.contractor?.length || 0) > 0) { 
-  const CIVIL_CONTRACTOR_ID = 8;
-  newprojects = newprojects.filter((proj) => proj?.project_partners.some( p => p?.code_partner_type_id == CIVIL_CONTRACTOR_ID && filters.contractor.includes(+p?.business_associate?.business_associates_id)))
-};
+  if((filters.contractor?.length || 0) > 0) { 
+    const CIVIL_CONTRACTOR_ID = 8;
+    newprojects = newprojects.filter((proj) => proj?.project_partners.some( p => p?.code_partner_type_id == CIVIL_CONTRACTOR_ID && filters.contractor.includes(+p?.business_associate?.business_associates_id)))
+  };
 
+//  ESTIMATED COST 
+  if ((filters.totalcost?.length || 0) > 0) {
+    const ESTIMATED_ID = 1;
+    newprojects = newprojects.filter((proj) => proj?.project_costs?.some( p => p?.code_cost_type_id == ESTIMATED_ID && p?.cost >= filters.totalcost[0] && p?.cost <= filters.totalcost[1]));
+  }
   return newprojects;
 }
 
