@@ -22,7 +22,7 @@ const ProjectCost = db.projectCost;
 const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
-
+const CodeCostType = db.codeCostType;
 const Attachment = db.projectAttachment;
 
 
@@ -123,7 +123,6 @@ const listProjects = async (req, res) => {
 };
 
 const getProjectDetail = async (req, res) => {
-  console.log(req.params);
   const project_id = req.params['project_id'];
   let project = await Projects.findByPk(project_id, {
     include: { all: true, nested: true}
@@ -315,8 +314,27 @@ const getBboxProject = async (req, res) => {
   }
 }
 
+const listOfCosts = async (req, res) => {
+  const project_id = req.params['project_id'];
+  const Mobilization = 6, Traffic = 7, Utility = 8, Stormwater = 9, Engineering = 10, Legal = 12, Construction = 11, Contingency = 13;
+    // GET Project cost, estimated and component
+    let projectCost = await ProjectCost.findAll({
+      where: {
+        project_id: project_id,
+        code_cost_type_id: [Mobilization, Traffic, Utility, Stormwater, Engineering, Legal, Construction, Contingency],
+      },
+      include: { all: true, nested: true }
+    });
+
+  logger.info('projects being called');
+  res.send(projectCost);
+};
+
+
 router.get('/bbox/:project_id', getBboxProject);
 router.post('/', listProjects);
 router.post('/ids', listProjectsForId);
 router.get('/:project_id', getProjectDetail);
+router.get('/projectCost/:project_id', listOfCosts);
+
 export default router;

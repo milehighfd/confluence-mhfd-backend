@@ -215,10 +215,10 @@ db.projectLocalGovernment.belongsTo(
 )
 // project estimated cost 
 db.project.hasMany(db.projectCost, {foreignKey: 'project_id'});
-// db.projectCost.belongsTo(
-//   db.codeCostType,
-//   { foreignKey: 'code_cost_type_id' }
-// );
+db.projectCost.belongsTo(
+  db.codeCostType,
+   { foreignKey: 'code_cost_type_id' }
+);
 
 db.project.hasOne(
   db.projectStatus,
