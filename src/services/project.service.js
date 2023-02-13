@@ -195,6 +195,22 @@ const getProjects = async (include, bounds, offset = 1, limit = 120000) => {
       where: where,
       limit,
       offset,
+      separate: true,
+      attributes: [
+        "project_id",
+        "project_name",
+        "description",
+        "onbase_project_number",
+        "created_date",
+        [
+          sequelize.literal(`(
+            SELECT COUNT([project_component].[project_id])
+            FROM [project_component]
+            WHERE [project_component].[project_id] = [project].[project_id]
+          )`),
+          'totalComponents',
+        ],
+      ], 
       include: [
         {
           model: ProjectServiceArea,
