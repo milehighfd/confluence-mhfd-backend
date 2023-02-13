@@ -37,6 +37,7 @@ import {
   getStreamsDataByProjectIds,
   projectsByFilters
 } from 'bc/utils/functionsProjects.js';
+import projectService from '../services/project.service';
 
 
 const getGroup = async (req, res) => {
@@ -325,31 +326,7 @@ const listProjects = async (req, res) => {
     console.log('list of favorites', list);
   }
 
-  let projects = await Projects.findAll({
-    limit,
-    offset,
-    include: { all: true, nested: true },
-    where: where,
-  }).map(result => result.dataValues);
-  const SPONSOR_TYPE = 11; // maybe this can change in the future
-  const ids = projects.map((p) => p.project_id);
-  const project_partners = await ProjectPartner.findAll({
-    where: {
-      project_id: ids,
-      code_partner_type_id: SPONSOR_TYPE,
-    },
-    include: { all: true, nested: true }
-  }).map(result => result.dataValues).map(res => { 
-    return {...res, business_associate: res.business_associate.dataValues }
-  });
-  projects = projects.map((project) => {
-    const partners = project_partners.filter((partner) => partner.project_id === project.project_id);
-    let sponsor = null;
-    if (partners.length) {
-      sponsor = partners[0].business_associate.business_associate_name;
-    } 
-    return  {...project, sponsor: sponsor };
-  });
+  let projects = projectService.getProjects(null, null);
   // xconsole.log(project_partners);
   // GET MHFD LEAD
   const MHFD_LEAD = 1;
@@ -369,146 +346,8 @@ const listProjects = async (req, res) => {
   // TODO END THE PARSE WHEN WE HAVE EXAMPLES
   console.log(mhfdStaff);
   // Get Service Area
-  let projectServiceArea = await ProjectServiceArea.findAll({
-    // include: [{
-    //   model: CodeServiceArea,
-    //   attributes: { exclude: ['Shape']}
-    // }] ,
-    where: {
-      project_id: ids
-    }
-  }).map((data) => data.dataValues);
-  const codeServiceAreaIds = projectServiceArea.map((psa) => psa.code_service_area_id);
-  let codeServiceAreas = await CodeServiceArea.findAll({
-    where: {
-      code_service_area_id: codeServiceAreaIds
-    },
-    attributes: {exclude: ['Shape']}
-  }).map(data => data.dataValues);
-  projectServiceArea = projectServiceArea.map((data) => {
-    const codeServiceArea = codeServiceAreas.filter((d) => d.code_service_area_id === data.code_service_area_id)[0];
-    return {
-      ...data,
-      codeServiceArea: codeServiceArea
-    }
-  });
-  projects = projects.map((data) => {
-    const codeServiceArea = projectServiceArea.filter((d) => d.project_id === data.project_id)[0];
-    return {
-      ...data,
-      serviceArea: codeServiceArea
-    }
-  });
-  // GET project local goverment (jurisdiction?)
-  let projectLocalGovernment = await ProjectLocalGovernment.findAll({
-    where: {
-      project_id: ids
-    }
-  }).map(data => data.dataValues);
-  const codeLovalGovermentIds = projectLocalGovernment.map((psa) => psa.code_local_government_id);
-  let codeLocalGoverments = await CodeLocalGoverment.findAll({
-    where: {
-      code_local_government_id: codeLovalGovermentIds
-    },
-    attributes: {exclude: ['Shape']}
-  }).map(data => data.dataValues);
-  projectLocalGovernment = projectLocalGovernment.map((data) => {
-    const codeLocalGoverment = codeLocalGoverments.filter((d) => d.code_local_government_id === data.code_local_government_id)[0];
-    return {
-      ...data,
-      codeLocalGoverment: codeLocalGoverment
-    }
-  });
-  projectLocalGovernment = await getLocalGovernmentByProjectids(ids);
-  projects = projects.map((data) => {
-    const codeLocalGoverment = projectLocalGovernment.filter((d) => d.project_id === data.project_id)[0];
-    return {
-      ...data,
-      localGoverment: codeLocalGoverment
-    }
-  });
-  // GET COUNTY 
-  const projectCounty = await getCountiesByProjectIds(ids);
-  projects = projects.map((data) => {
-    const codeStateCounty = projectCounty.filter((d) => d.project_id === data.project_id)[0];
-    return {
-      ...data,
-      county: codeStateCounty
-    }
-  });
-  //GET Consultant
-  logger.info('CONSULTANT');
- const consultants = await getConsultantsByProjectids(ids);
-  projects = projects.map((project) => {
-    const staffs = consultants.filter(consult => consult.project_id === project.project_id);
-    return {
-      ...project,
-      consultants: staffs
-    }
-  });
-  // GET civil contractor
-  logger.info('CIVIL contractor');
- const civilContractors = await getCivilContractorsByProjectids(ids);
-  projects = projects.map((project) => {
-    const staffs = civilContractors.filter(consult => consult.project_id === project.project_id);
-    return {
-      ...project,
-      civilContractor: staffs
-    }
-  });
-  //GET landscape contractor
-  logger.info('LANDSCAPE contractor');
-  const LANDSCAPE_CONTRACTOR_ID = 9;
-  let landscapeContractor = await ProjectPartner.findAll({
-    where: {
-      project_id: ids,
-      code_partner_type_id: LANDSCAPE_CONTRACTOR_ID
-    }
-  }).map(result => result.dataValues);
-  const landscapeContractorIds = landscapeContractor.map((data) => data.business_associates_id).filter((data) => data !== null);
-  let landscapeContractorList = await BusinessAssociante.findAll({
-    where: {
-      business_associates_id: landscapeContractorIds
-    }
-  }).map((data) => data.dataValues);
-  landscapeContractor = landscapeContractor.map((staff) => {
-    const business = landscapeContractorList.filter((cons) => {
-      return cons.business_associates_id === staff.business_associates_id
-    });
-    return {
-      ...staff,
-      business
-    }
-  });
-  projects = projects.map((project) => {
-    const staffs = landscapeContractor.filter(consult => consult.project_id === project.project_id);
-    return {
-      ...project,
-      landscapeContractor: staffs
-    }
-  });
-  // STREAMS
-  const projectStreams = await getStreamsDataByProjectIds(ids);
-  projects = projects.map((project) => { 
-    const streams = projectStreams.filter((d) => d.project_id === project.project_id)[0];
-    return {
-      ...project,
-      streams: streams
-    };
-  });
+  
   logger.info('projects being called');
-  const CIP_CODE = 5, RESTORATION_CODE = 7, DEVELOPER_CODE = 6;
-  if (+code_project_type_id === CIP_CODE 
-   || +code_project_type_id === RESTORATION_CODE) {
-    const estimatedCosts = await getEstimatedCostsByProjectids(ids);
-    projects = projects.map(project => {
-      const estimatedCost = estimatedCosts.filter(ec => ec.project_id === project.project_id)[0];
-      return {
-        ...project,
-        estimatedCost
-      };
-    });
-  }
   if (+code_project_type_id === DEVELOPER_CODE) {
     //GET Developer
     logger.info('Developer');

@@ -166,7 +166,7 @@ const  getProjectsDeprecated  = async (include, bounds, offset = 1, limit = 1200
     throw error;
   }
 }
-const getProjects = async (include, bounds, offset = 1, limit = 120000) => {
+const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
   console.log(include, bounds, offset, limit);
   const where = {};
   try {
