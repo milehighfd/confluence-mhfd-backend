@@ -18,6 +18,9 @@ export default  (sequelize, DataType) => {
     },
     code_project_staff_role_type_id: {
       type: DataType.INTEGER
+    },
+    is_active: {
+      type: DataType.INTEGER
     }
   }, {
     freezeTableName: true,
