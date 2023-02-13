@@ -37,7 +37,7 @@ import {
   getStreamsDataByProjectIds,
   projectsByFilters
 } from 'bc/utils/functionsProjects.js';
-import projectService from '../services/project.service';
+import projectService from 'bc/services/project.service.js';
 
 
 const getGroup = async (req, res) => {
