@@ -327,6 +327,7 @@ const listProjects = async (req, res) => {
   }
 
   let projects = projectService.getProjects(null, null);
+  const ids = projects.map((p) => p.project_id);
   // xconsole.log(project_partners);
   // GET MHFD LEAD
   const MHFD_LEAD = 1;
