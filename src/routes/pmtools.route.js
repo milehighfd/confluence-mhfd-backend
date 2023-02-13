@@ -347,7 +347,7 @@ const listProjects = async (req, res) => {
   // TODO END THE PARSE WHEN WE HAVE EXAMPLES
   console.log(mhfdStaff);
   // Get Service Area
-  
+  const DEVELOPER_CODE = 6;
   logger.info('projects being called');
   if (+code_project_type_id === DEVELOPER_CODE) {
     //GET Developer
