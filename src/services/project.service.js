@@ -309,7 +309,8 @@ const getProjects = async (include, bounds, offset = 1, limit = 120000) => {
           include: {
             model: BusinessAssociate,
             attributes: [
-              'business_name'
+              'business_name',
+              'business_associates_id'
             ]
           },
           // where: {
