@@ -227,26 +227,13 @@ export const projectsByFilters = async (projects, filters) => {
   if((filters.consultant?.length || 0) > 0) { 
     const CONSULTANT_CODE = 3;
     newprojects = newprojects.filter((proj) => proj?.project_partners.some( p => p?.code_partner_type_id == CONSULTANT_CODE && filters.consultant.includes(+p?.business_associate?.business_associates_id)))
-    console.log('after new proejcts', newprojects);
   };
-    
-    //CONTRACTOR
-  // if((filters.contractor?.trim()?.length || 0) > 0) {
-  //   let contractorFilter = filters.contractor.toUpperCase();
-  //   // console.log('contractortttt',contractorFilter)
-  //   // newprojects = newprojects.filter((proj) => contractorFilter.includes(proj?.contractors[0]?.business[0]?.business_name));
-  //   let filterContractor =  contractorFilter.split(',')
-  //   newprojects = newprojects.filter((proj) => {
-  //     let flag = false;
-  //     for (let index = 0; index < filterContractor.length; index++) {
-  //       const contractor = filterContractor[index];
-  //       if(proj?.contractors[0]?.business[0]?.business_name.includes(contractor)){
-  //         flag =true;
-  //       }
-  //     }
-  //     return flag
-  //   });
-  // }
+// //CONTRACTOR
+if((filters.contractor?.length || 0) > 0) { 
+  const CIVIL_CONTRACTOR_ID = 8;
+  newprojects = newprojects.filter((proj) => proj?.project_partners.some( p => p?.code_partner_type_id == CIVIL_CONTRACTOR_ID && filters.contractor.includes(+p?.business_associate?.business_associates_id)))
+};
+
   return newprojects;
 }
 
