@@ -326,7 +326,7 @@ const listProjects = async (req, res) => {
     console.log('list of favorites', list);
   }
 
-  let projects = projectService.getProjects(null, null);
+  let projects = await projectService.getProjects(null, null);
   const ids = projects.map((p) => p.project_id);
   // xconsole.log(project_partners);
   // GET MHFD LEAD
