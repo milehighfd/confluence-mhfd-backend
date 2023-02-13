@@ -205,13 +205,15 @@ export const projectsByFilters = async (projects, filters) => {
     newprojects = newprojects.filter((proj) => filters.projecttype.includes(proj?.project_status?.code_phase_type?.code_project_type?.code_project_type_id));
   }
 //   // SERVICE AREA
-//   if ((filters.servicearea?.length || 0) > 0) {
-//     newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) );
-//   }
+  if ((filters.servicearea?.length || 0) > 0) {
+    console.log('service check', filters.servicearea);
+    newprojects = newprojects.filter((proj) => proj?.project_service_areas.some((p) => filters.servicearea.includes(p?.CODE_SERVICE_AREA?.code_service_area_id)) );
+  }
 //   //COUNTY
-//   if((filters.county?.trim()?.length || 0) > 0) {
-//     newprojects = newprojects.filter((proj) => filters.county.includes(proj?.county?.codeStateCounty?.county_name));
-//   }
+  if((filters.county?.length || 0) > 0) {
+    console.log('filter county check', filters.county);
+    newprojects = newprojects.filter((proj) => proj?.project_counties.some((p) => filters.county.includes(p?.CODE_STATE_COUNTY?.state_county_id)) );
+  }
 
 //   //STREAMS 
 //   if ((filters.streamname?.trim()?.length || 0) > 0) {
