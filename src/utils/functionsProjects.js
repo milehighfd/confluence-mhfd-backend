@@ -239,8 +239,8 @@ if((filters.contractor?.length || 0) > 0) {
 
 export const projectsByFiltersForIds = async (projects, filters) => {
   let newprojects = [...projects];
-  newprojects = projectsByFilters(newprojects, filters);
-  newprojects = newprojects.map((element) => 
+  newprojects = await projectsByFilters(newprojects, filters);
+  newprojects = newprojects?.map((element) => 
       element.project_id
   );
   return newprojects;
