@@ -9,6 +9,7 @@ import {
   projectsByFilters,
   projectsByFiltersForIds
 } from 'bc/utils/functionsProjects.js';
+import auth from 'bc/auth/auth.js';
 
 const Projects = db.project;
 const ProjectPartner = db.projectPartner;
@@ -34,6 +35,7 @@ import {
   MAIN_PROJECT_TABLE
 } from 'bc/config/config.js';
 import needle from 'needle';
+import moment from 'moment';
 
 async function getProblemByProjectId(projectid, sortby, sorttype) {
   let data = [];
@@ -316,7 +318,7 @@ const getBboxProject = async (req, res) => {
 
 const listOfCosts = async (req, res) => {
   const project_id = req.params['project_id'];
-  const Mobilization = 6, Traffic = 7, Utility = 8, Stormwater = 9, Engineering = 10, Legal = 12, Construction = 11, Contingency = 13;
+  const Mobilization = 6, Traffic = 7, Utility = 8, Stormwater = 9, Engineering = 10, Construction = 11, Legal = 12, Contingency = 13;
     // GET Project cost, estimated and component
     let projectCost = await ProjectCost.findAll({
       where: {
@@ -330,11 +332,37 @@ const listOfCosts = async (req, res) => {
   res.send(projectCost);
 };
 
+const createCosts = async (req, res) => {
+  const user = req.user;
+  try {
+    const project_id = req.params['project_id'];
+    const { body } = req;
+    const costTypes = Object.keys(body).map((element)=> element >= 6 && element <= 13 ? Number(element) : null).filter(e => !!e)
+    for (const costType of costTypes) {
+      try {
+        const insertQuery = `INSERT INTO project_cost (project_id, cost, code_cost_type_id, created_by, modified_by, created, last_modified)
+        OUTPUT inserted . *
+        VALUES('${project_id}', '${body[costType]}', '${costType}', '${user.name}', '${user.name}', '${moment().format('YYYY-MM-DD HH:mm:ss')}', '${moment().format('YYYY-MM-DD HH:mm:ss')}')`;
+        await db.sequelize.transaction(async (t)=>{
+          db.sequelize.query(insertQuery, { transaction: t })
+        });
+      } catch (error) {
+        logger.info('error on createCosts', error);
+      }
+    }
+    res.status(200).send('OK');
+  } catch (error) {
+    logger.info('error on createCosts', error);
+    res.status(500).send(error);
+  }
+  
+};
+
 
 router.get('/bbox/:project_id', getBboxProject);
 router.post('/', listProjects);
 router.post('/ids', listProjectsForId);
 router.get('/:project_id', getProjectDetail);
 router.get('/projectCost/:project_id', listOfCosts);
-
+router.post('/projectCost/:project_id', [auth], createCosts);
 export default router;
