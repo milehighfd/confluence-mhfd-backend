@@ -205,102 +205,49 @@ export const projectsByFilters = async (projects, filters) => {
     newprojects = newprojects.filter((proj) => filters.projecttype.includes(proj?.project_status?.code_phase_type?.code_project_type?.code_project_type_id));
   }
 //   // SERVICE AREA
-//   if ((filters.servicearea?.length || 0) > 0) {
-//     newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) );
-//   }
+  if ((filters.servicearea?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => proj?.project_service_areas.some((p) => filters.servicearea.includes(p?.CODE_SERVICE_AREA?.code_service_area_id)) );
+  }
 //   //COUNTY
-//   if((filters.county?.trim()?.length || 0) > 0) {
-//     newprojects = newprojects.filter((proj) => filters.county.includes(proj?.county?.codeStateCounty?.county_name));
-//   }
+  if((filters.county?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => proj?.project_counties.some((p) => filters.county.includes(p?.CODE_STATE_COUNTY?.state_county_id)) );
+  }
 
 //   //STREAMS 
-//   if ((filters.streamname?.trim()?.length || 0) > 0) {
-//     newprojects = newprojects.filter((proj) => filters.streamname.includes(proj?.streams?.stream[0]?.stream_name));
-//   }
+  if ((filters.streamname?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => proj?.project_streams.some(p => filters.streamname.includes(p?.stream_id)));
+  }
   
-//   // jurisdiction is weird 
-//   if ((filters.jurisdiction?.trim()?.length || 0) > 0) {
-//     newprojects = newprojects.filter((proj) => proj?.localGoverment?.codeLocalGoverment?.local_government_name.includes(filters.jurisdiction));
-//   }
+//   // jurisdiction
+  if ((filters.jurisdiction?.length || 0) > 0) {
+    newprojects = newprojects.filter((proj) => proj?.project_local_governments.some( p => filters.jurisdiction.includes(p?.CODE_LOCAL_GOVERNMENT?.code_local_government_id)));
+  }
 
 // //CONSULTANT
-//   if((filters.consultant?.trim()?.length || 0) > 0) {
-//     let consultantFilter = filters.consultant.toUpperCase();
-//     console.log('consultanttttt',consultantFilter) 
-//     newprojects = newprojects.filter((proj) => consultantFilter.includes(proj?.consultants[0]?.consultant[0]?.business_name));
-//   }
-//     //CONTRACTOR
-//   if((filters.contractor?.trim()?.length || 0) > 0) {
-//     let contractorFilter = filters.contractor.toUpperCase();
-//     // console.log('contractortttt',contractorFilter)
-//     // newprojects = newprojects.filter((proj) => contractorFilter.includes(proj?.contractors[0]?.business[0]?.business_name));
-//     let filterContractor =  contractorFilter.split(',')
-//     newprojects = newprojects.filter((proj) => {
-//       let flag = false;
-//       for (let index = 0; index < filterContractor.length; index++) {
-//         const contractor = filterContractor[index];
-//         if(proj?.contractors[0]?.business[0]?.business_name.includes(contractor)){
-//           flag =true;
-//         }
-//       }
-//       return flag
-//     });
-//   }
+  if((filters.consultant?.length || 0) > 0) { 
+    const CONSULTANT_CODE = 3;
+    newprojects = newprojects.filter((proj) => proj?.project_partners.some( p => p?.code_partner_type_id == CONSULTANT_CODE && filters.consultant.includes(+p?.business_associate?.business_associates_id)))
+  };
+// //CONTRACTOR
+  if((filters.contractor?.length || 0) > 0) { 
+    const CIVIL_CONTRACTOR_ID = 8;
+    newprojects = newprojects.filter((proj) => proj?.project_partners.some( p => p?.code_partner_type_id == CIVIL_CONTRACTOR_ID && filters.contractor.includes(+p?.business_associate?.business_associates_id)))
+  };
+
+//  ESTIMATED COST 
+  if ((filters.totalcost?.length || 0) > 0) {
+    const ESTIMATED_ID = 1;
+    newprojects = newprojects.filter((proj) => proj?.project_costs?.some( p => p?.code_cost_type_id == ESTIMATED_ID && p?.cost >= filters.totalcost[0] && p?.cost <= filters.totalcost[1]));
+  }
   return newprojects;
 }
 
 export const projectsByFiltersForIds = async (projects, filters) => {
   let newprojects = [...projects];
-  // STATUS
-  if ((filters.status?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.code_status_type_id) );
-  }
-//   // PROJECT TYPE
-  if ((filters.projecttype?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.projecttype.includes(proj?.project_status?.code_phase_type?.code_project_type?.code_project_type_id));
-  }
-//   // SERVICE AREA
-//   if ((filters.servicearea?.trim()?.length || 0) > 0) {
-//     newprojects = newprojects.filter((proj) => filters.servicearea.includes(proj?.service_area_name) )
-//   }
-//   //COUNTY
-//   if((filters.county?.trim()?.length || 0) > 0) {
-//     newprojects = newprojects.filter((proj) => filters.county.includes(proj?.county?.codeStateCounty?.county_name))
-//   }
-
-//   //STREAMS 
-//   if ((filters.streamname?.trim()?.length || 0) > 0) {
-//     newprojects = newprojects.filter((proj) => filters.streamname.includes(proj?.streams?.stream[0]?.stream_name))
-//   }
-  
-//   // jurisdiction is weird 
-//   if ((filters.jurisdiction?.trim()?.length || 0) > 0) {
-//     newprojects = newprojects.filter((proj) => proj?.localGoverment?.codeLocalGoverment?.local_government_name.includes(filters.jurisdiction))
-//   }
-
-// //CONSULTANT
-//   if((filters.consultant?.trim()?.length || 0) > 0) {
-//     let consultantFilter = filters.consultant.toUpperCase();
-//     newprojects = newprojects.filter((proj) => consultantFilter.includes(proj?.consultants[0]?.consultant[0]?.business_name))
-//   }
-//     //CONTRACTOR
-//     if((filters.contractor?.trim()?.length || 0) > 0) {
-//       let contractorFilter = filters.contractor.toUpperCase();
-//       let filterContractor =  contractorFilter.split(',')
-//       newprojects = newprojects.filter((proj) => {
-//         let flag = false;
-//         for (let index = 0; index < filterContractor.length; index++) {
-//           const contractor = filterContractor[index];
-//           if(proj?.contractors[0]?.business[0]?.business_name.includes(contractor)){
-//             flag =true;
-//           }
-//         }
-//         return flag
-//       })
-//     }
-    newprojects = newprojects.map((element) => 
-       element.project_id
-    );
+  newprojects = await projectsByFilters(newprojects, filters);
+  newprojects = newprojects?.map((element) => 
+      element.project_id
+  );
   return newprojects;
 }
 

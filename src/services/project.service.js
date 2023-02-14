@@ -166,7 +166,7 @@ const  getProjectsDeprecated  = async (include, bounds, offset = 1, limit = 1200
     throw error;
   }
 }
-const getProjects = async (include, bounds, offset = 1, limit = 120000) => {
+const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
   console.log(include, bounds, offset, limit);
   const where = {};
   try {
@@ -175,6 +175,9 @@ const getProjects = async (include, bounds, offset = 1, limit = 120000) => {
       if(project_ids_bybounds.length) {
         where.project_id = project_ids_bybounds;
       }
+    }
+    if (include?.code_project_type_id) {
+      where.code_project_type_id = +include.code_project_type_id;
     }
     if (include && include.user_id) {
       const projectsFavorite = await ProjectFavorite.findAll({
@@ -195,6 +198,23 @@ const getProjects = async (include, bounds, offset = 1, limit = 120000) => {
       where: where,
       limit,
       offset,
+      separate: true,
+      attributes: [
+        "project_id",
+        "project_name",
+        "description",
+        "onbase_project_number",
+        "created_date",
+        'code_project_type_id',
+        [
+          sequelize.literal(`(
+            SELECT COUNT([project_component].[project_id])
+            FROM [project_component]
+            WHERE [project_component].[project_id] = [project].[project_id]
+          )`),
+          'totalComponents',
+        ],
+      ], 
       include: [
         {
           model: ProjectServiceArea,
@@ -293,7 +313,8 @@ const getProjects = async (include, bounds, offset = 1, limit = 120000) => {
           include: {
             model: BusinessAssociate,
             attributes: [
-              'business_name'
+              'business_name',
+              'business_associates_id'
             ]
           },
           // where: {

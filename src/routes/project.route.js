@@ -23,6 +23,7 @@ const ProjectCost = db.projectCost;
 const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
+const ProjectComponent = db.projectComponent;
 const CodeCostType = db.codeCostType;
 const Attachment = db.projectAttachment;
 
@@ -69,7 +70,7 @@ async function getProblemByProjectId(projectid, sortby, sorttype) {
      `SELECT problemid FROM landscaping_area 
    where projectid=${projectid} and projectid>0) 
    order by ${sortby} ${sorttype}`;
-
+  logger.info(`CARTO REQUEST: ${LINE_SQL}'`);
   const LINE_URL = encodeURI(`${CARTO_URL}&q=${LINE_SQL}`);
   //console.log(LINE_URL);
   try {
@@ -125,6 +126,7 @@ const listProjects = async (req, res) => {
 };
 
 const getProjectDetail = async (req, res) => {
+
   const project_id = req.params['project_id'];
   let project = await Projects.findByPk(project_id, {
     include: { all: true, nested: true}
@@ -142,6 +144,7 @@ const getProjectDetail = async (req, res) => {
       project_id: project.project_id
     }
   });
+  
   if (projectCounty) {
     projectCounty = projectCounty.dataValues;
     let codeStateCounty = await CodeStateCounty.findOne({
@@ -153,6 +156,14 @@ const getProjectDetail = async (req, res) => {
     codeStateCounty = codeStateCounty.dataValues;
     logger.info(`Adding Code State County: ${JSON.stringify(codeStateCounty)} to project object`);
     project = {...project, codeStateCounty: codeStateCounty};
+  }
+  let projectComponent = await ProjectComponent.count({
+    where: {
+      project_id: project.project_id
+    }
+  });
+  if (projectComponent) {    
+    project = { ...project, totalComponents: projectComponent };
   }
   // Get Service Area
   let projectServiceArea = await ProjectServiceArea.findOne({
@@ -211,7 +222,8 @@ const getProjectDetail = async (req, res) => {
   const projectStaff = await ProjectStaff.findAll({
     where: {
       project_id: project.project_id,
-      code_project_staff_role_type_id: [STAFF_LEAD, WATERSHED_MANAGER, CONSTRUCTION_MANAGER,LG_LEAD]
+      code_project_staff_role_type_id: [STAFF_LEAD, WATERSHED_MANAGER, CONSTRUCTION_MANAGER,LG_LEAD],
+      is_active: 1
     }
   }).map(result => result.dataValues);
   const managers = projectStaff.map(result => result.mhfd_staff_id);
