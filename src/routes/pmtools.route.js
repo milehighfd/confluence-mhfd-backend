@@ -482,11 +482,20 @@ const listProjects = async (req, res) => {
   if (group === 'county') {
     const groupProjects = {};
     projects.forEach(project => {
-      const county = project.county?.codeStateCounty?.state_county_id || -1;
-      if (!groupProjects[county]) {
-        groupProjects[county] = [];
+      let enter = false;
+      project.project_counties.forEach(pl => {
+        const county = pl?.CODE_STATE_COUNTY?.state_county_id || -1;
+        if (!groupProjects[county]) {
+          groupProjects[county] = [];
+        }
+        groupProjects[county].push(project);  
+      });
+      if (!enter) {
+        if (!groupProjects[-1]) {
+          groupProjects[-1] = [];
+        }
+        groupProjects[-1].push(project);
       }
-      groupProjects[county].push(project);
     });
     res.send(groupProjects);
     return;
