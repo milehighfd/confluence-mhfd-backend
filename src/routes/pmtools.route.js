@@ -447,7 +447,6 @@ const listProjects = async (req, res) => {
   }
   if (group === 'status') {
     const groupProjects = {};
-    
     projects.forEach(project => {
       const status = project.project_status?.code_phase_type?.code_status_type?.code_status_type_id || -1;
       if (!groupProjects[status]) {
@@ -461,7 +460,6 @@ const listProjects = async (req, res) => {
   if (group === 'jurisdiction') {
     const groupProjects = {};
     projects.forEach(project => {
-      let enter = false;
       project.project_local_governments.forEach(pl => {
         const jurisdiction = pl?.CODE_LOCAL_GOVERNMENT?.code_local_government_id || -1;
         if (!groupProjects[jurisdiction]) {
@@ -469,7 +467,7 @@ const listProjects = async (req, res) => {
         }
         groupProjects[jurisdiction].push(project);  
       });
-      if (!enter) {
+      if (!project.project_local_governments.length) {
         if (!groupProjects[-1]) {
           groupProjects[-1] = [];
         }
@@ -482,7 +480,6 @@ const listProjects = async (req, res) => {
   if (group === 'county') {
     const groupProjects = {};
     projects.forEach(project => {
-      let enter = false;
       project.project_counties.forEach(pl => {
         const county = pl?.CODE_STATE_COUNTY?.state_county_id || -1;
         if (!groupProjects[county]) {
@@ -490,7 +487,7 @@ const listProjects = async (req, res) => {
         }
         groupProjects[county].push(project);  
       });
-      if (!enter) {
+      if (!project.project_counties.length) {
         if (!groupProjects[-1]) {
           groupProjects[-1] = [];
         }
@@ -503,7 +500,6 @@ const listProjects = async (req, res) => {
   if (group === 'servicearea') {
     const groupProjects = {};
     projects.forEach(project => {
-      let enter = false;
       project.project_service_areas.forEach(pl => {
         const sa = pl?.CODE_SERVICE_AREA?.code_service_area_id || -1;
         if (!groupProjects[sa]) {
@@ -511,7 +507,7 @@ const listProjects = async (req, res) => {
         }
         groupProjects[sa].push(project);  
       });
-      if (!enter) {
+      if (!project.project_service_areas.length) {
         if (!groupProjects[-1]) {
           groupProjects[-1] = [];
         }
@@ -530,19 +526,24 @@ const listProjects = async (req, res) => {
   if (group === 'consultant') { 
     const groupProjects = {};
     projects.forEach(project => {
-      const consultants = project.consultants || [];
-      consultants.forEach((consultant) => {
-        console.log(consultant.consultant, consultant.consultant.business_associates_id);
-        const array = consultant.consultant || [];
-        array.forEach((business) => {
-          const business_associates_id = business.business_associates_id || -1;
+      let enter = false;
+      const CONSULTANT_ID = 3;
+      project.project_partners.forEach((pp) => {
+        if (pp.code_partner_type_id === CONSULTANT_ID) {
+          enter = true;
+          const business_associates_id = pp.business_associate.business_associates_id || -1;
           if (!groupProjects[business_associates_id]) {
             groupProjects[business_associates_id] = [];
           }
           groupProjects[business_associates_id].push(project);
-
-        })
+        }
       });
+      if (!enter) {
+        if (!groupProjects[-1]) {
+          groupProjects[-1] = [];
+        }
+        groupProjects[-1].push(project);
+      }
     });
     res.send(groupProjects);
     return;
