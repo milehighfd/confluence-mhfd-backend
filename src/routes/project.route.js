@@ -22,6 +22,7 @@ const ProjectCost = db.projectCost;
 const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
+const ProjectComponent = db.projectComponent;
 const CodeCostType = db.codeCostType;
 const Attachment = db.projectAttachment;
 
@@ -141,6 +142,7 @@ const getProjectDetail = async (req, res) => {
       project_id: project.project_id
     }
   });
+  
   if (projectCounty) {
     projectCounty = projectCounty.dataValues;
     let codeStateCounty = await CodeStateCounty.findOne({
@@ -152,6 +154,14 @@ const getProjectDetail = async (req, res) => {
     codeStateCounty = codeStateCounty.dataValues;
     logger.info(`Adding Code State County: ${JSON.stringify(codeStateCounty)} to project object`);
     project = {...project, codeStateCounty: codeStateCounty};
+  }
+  let projectComponent = await ProjectComponent.count({
+    where: {
+      project_id: project.project_id
+    }
+  });
+  if (projectComponent) {    
+    project = { ...project, totalComponents: projectComponent };
   }
   // Get Service Area
   let projectServiceArea = await ProjectServiceArea.findOne({
