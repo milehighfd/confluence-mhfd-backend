@@ -461,11 +461,20 @@ const listProjects = async (req, res) => {
   if (group === 'jurisdiction') {
     const groupProjects = {};
     projects.forEach(project => {
-      const jurisdiction = project.localGoverment?.codeLocalGoverment?.code_local_government_id || -1;
-      if (!groupProjects[jurisdiction]) {
-        groupProjects[jurisdiction] = [];
+      let enter = false;
+      project.project_local_governments.forEach(pl => {
+        const jurisdiction = pl?.CODE_LOCAL_GOVERNMENT?.code_local_government_id || -1;
+        if (!groupProjects[jurisdiction]) {
+          groupProjects[jurisdiction] = [];
+        }
+        groupProjects[jurisdiction].push(project);  
+      });
+      if (!enter) {
+        if (!groupProjects[-1]) {
+          groupProjects[-1] = [];
+        }
+        groupProjects[-1].push(project);
       }
-      groupProjects[jurisdiction].push(project);
     });
     res.send(groupProjects);
     return;
