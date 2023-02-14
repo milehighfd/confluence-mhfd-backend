@@ -503,6 +503,21 @@ const listProjects = async (req, res) => {
   if (group === 'servicearea') {
     const groupProjects = {};
     projects.forEach(project => {
+      let enter = false;
+      project.project_service_areas.forEach(pl => {
+        const sa = pl?.CODE_SERVICE_AREA?.code_service_area_id || -1;
+        if (!groupProjects[sa]) {
+          groupProjects[sa] = [];
+        }
+        groupProjects[sa].push(project);  
+      });
+      if (!enter) {
+        if (!groupProjects[-1]) {
+          groupProjects[-1] = [];
+        }
+        groupProjects[-1].push(project);
+      }
+
       const serviceArea = project.serviceArea?.codeServiceArea?.code_service_area_id || -1;
       if (!groupProjects[serviceArea]) {
         groupProjects[serviceArea] = [];
