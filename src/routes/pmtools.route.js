@@ -551,28 +551,25 @@ const listProjects = async (req, res) => {
   if (group === 'contractor') {
     const groupProjects = {};
     projects.forEach(project => {
-      const civilContractors = project.civilContractor || [];
-      civilContractors.forEach((civilContractor) => {
-        const array = civilContractor.business || [];
-        array.forEach((business) => {
-          const business_associates_id = business.business_associates_id || -1;
+      let enter = false;
+      const LANDSCAPE_CONTRACTOR_ID = 9, CIVIL_CONTRACTOR_ID = 8;
+      project.project_partners.forEach((pp) => {
+        if (pp.code_partner_type_id === CIVIL_CONTRACTOR_ID ||
+          pp.code_partner_type_id === LANDSCAPE_CONTRACTOR_ID) {
+          enter = true;
+          const business_associates_id = pp.business_associate.business_associates_id || -1;
           if (!groupProjects[business_associates_id]) {
             groupProjects[business_associates_id] = [];
           }
           groupProjects[business_associates_id].push(project);
-        })
+        }
       });
-      const landscapeContractor = project.landscapeContractor || [];
-      landscapeContractor.forEach((landscape) => {
-        const array = landscape.business || [];
-        array.forEach((business) => {
-          const business_associates_id = business.business_associates_id || -1;
-          if (!groupProjects[business_associates_id]) {
-            groupProjects[business_associates_id] = [];
-          }
-          groupProjects[business_associates_id].push(project);
-        })
-      });
+      if (!enter) {
+        if (!groupProjects[-1]) {
+          groupProjects[-1] = [];
+        }
+        groupProjects[-1].push(project);
+      }
     });
     res.send(groupProjects);
     return;
