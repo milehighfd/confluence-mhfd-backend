@@ -576,14 +576,22 @@ const listProjects = async (req, res) => {
   }
   if (group === 'streams') {
     const groupProjects = {};
-    projects = sortInside(projects, 'project_type');
     projects.forEach(project => {
-      const stream = project?.streams?.stream[0]?.stream_id || -1;
-      if (!groupProjects[stream]) {
-        groupProjects[stream] = [];
+      project.project_streams.forEach((ps) => {
+        const stream = ps.stream_id || -1;
+        if (!groupProjects[stream]) {
+          groupProjects[stream] = [];
+        }
+        groupProjects[stream].push(project);  
+      });
+      if (!project.project_streams.length) {
+        if (!groupProjects[-1]) {
+          groupProjects[-1] = [];
+        }
+        groupProjects[-1].push(project);
       }
-      groupProjects[stream].push(project);
     });
+    console.log(groupProjects[-1].length);
     res.send(groupProjects);
     return;
   }
