@@ -116,6 +116,16 @@ const getGroup = async (req, res) => {
       console.log('ERRRO AT streams', error);
     }
   }
+  if (groupname === 'projecttype') {
+    try {
+      const groups = await groupService.getProjectType();
+      console.log('groypname', groups);
+      data.table = 'projecttype';
+      data.groups = groups;
+    } catch (error) {
+      console.log('ERRRO AT streams', error);
+    }
+  }
   res.send(data);
 }
 const safeGet = (obj, prop, defaultValue) => {
