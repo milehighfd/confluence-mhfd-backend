@@ -481,7 +481,6 @@ router.get('/bbox-components', async (req, res) => {
       centroid: projectCenter
     }
   }
-
   centroids = [selfCentroid, ...centroids]
   const polygon = [[[minLat, minLng], [minLat, maxLng], [maxLat, maxLng], [maxLat, minLng], [minLat, minLng]]];
   res.send({
