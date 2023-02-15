@@ -117,9 +117,9 @@ const listProjects = async (req, res) => {
   if (body?.sortby?.trim()?.length || 0) {
     projects = await sortProjects(projects, body);
   }
-  if (body?.name?.trim()?.length || 0) {
-    projects = projects.filter((proj) => proj?.project_name?.toUpperCase().includes(body?.name?.toUpperCase()))
-  }
+  // if (body?.name?.trim()?.length || 0) {
+  //   projects = projects.filter((proj) => proj?.project_name?.toUpperCase().includes(body?.name?.toUpperCase()))
+  // }
   
   logger.info('projects being called', projects.length);
   res.send(projects);

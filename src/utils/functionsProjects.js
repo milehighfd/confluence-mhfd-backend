@@ -196,6 +196,11 @@ export const getStreamsDataByProjectIds = async (ids) => {
 
 export const projectsByFilters = async (projects, filters) => {
   let newprojects = [...projects];
+  // KEYWORD
+  if ((filters.name?.length || 0) > 0) {
+    let filterName =filters.name.toLowerCase()
+    newprojects = newprojects.filter((proj) => proj?.project_name.toLowerCase().includes(filterName));
+  }
   // STATUS
   if ((filters.status?.length || 0) > 0) {
     newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.code_status_type_id) );
