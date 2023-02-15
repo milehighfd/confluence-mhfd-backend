@@ -171,29 +171,33 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
   console.log(include, bounds, offset, limit);
   const where = {};
   try {
-    if (bounds) {
-      const project_ids_bybounds = await getProjectsIdsByBounds(bounds);
-      if(project_ids_bybounds.length) {
-        where.project_id = project_ids_bybounds;
-      }
-    }
-    if (include?.code_project_type_id) {
-      where.code_project_type_id = +include.code_project_type_id;
-    }
-    if (include && include.user_id) {
-      const projectsFavorite = await ProjectFavorite.findAll({
-        where: {
-          user_id: include.user_id,
+    /*
+      if (bounds) {
+        const project_ids_bybounds = await getProjectsIdsByBounds(bounds);
+        if(project_ids_bybounds.length) {
+          where.project_id = project_ids_bybounds;
         }
-      }).map(result => result.dataValues);
-      const pids = projectsFavorite.map((p) => p.project_id);
-      if (where.project_id) {
-        where.project_id = [...where.project_id, ...pids];
-      } else {
-        where.project_id = pids;
       }
-    }
-    if (!bounds && !include?.code_project_type_id && !include?.user_id && cache) {
+      if (include?.code_project_type_id) {
+        where.code_project_type_id = +include.code_project_type_id;
+      }
+      
+      if (include && include.user_id) {
+        const projectsFavorite = await ProjectFavorite.findAll({
+          where: {
+            user_id: include.user_id,
+          }
+        }).map(result => result.dataValues);
+        const pids = projectsFavorite.map((p) => p.project_id);
+        if (where.project_id) {
+          where.project_id = [...where.project_id, ...pids];
+        } else {
+          where.project_id = pids;
+        }
+      }
+    */
+    //if (!bounds && !include?.code_project_type_id && !include?.user_id && cache) {
+    if (cache) {
       return cache;
     }
     console.log('my where is ', where);
