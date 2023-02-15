@@ -166,6 +166,7 @@ const  getProjectsDeprecated  = async (include, bounds, offset = 1, limit = 1200
     throw error;
   }
 }
+let cache = null;
 const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
   console.log(include, bounds, offset, limit);
   const where = {};
@@ -191,6 +192,9 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
       } else {
         where.project_id = pids;
       }
+    }
+    if (!bounds && !include?.code_project_type_id && !include?.user_id && cache) {
+      return cache;
     }
     console.log('my where is ', where);
     let projects = await Project.findAll({
@@ -383,8 +387,10 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
     //     streams
     //   };
     // });
+    cache = projects;
     return projects;
   } catch (error) {
+    logger.error(error);
     throw error;
   }
 }
