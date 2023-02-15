@@ -258,8 +258,16 @@ const getProjectsPromise = async (req, res) => {
   const projects = await projectService.getProjectsDeprecated();
   res.send({projects: projects});
 }
+const getProjectsIdsByBounds = async (req, res) => {
+  const { body } = req;
+  const bounds = body?.bounds;
+  const projects = await projectService.getProjectsIdsByBounds(bounds);
+  res.send({project_ids: projects});
+
+}
 router.get('/projectspromise', getProjectsPromise);
 router.get('/projects', getProjectsComplete);
 router.post('/', getFilters);
+router.post('/getidsbounds', getProjectsIdsByBounds);
 
 export default router;

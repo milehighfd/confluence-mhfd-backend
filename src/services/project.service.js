@@ -461,5 +461,6 @@ export default {
   deleteByProjectId,
   saveProject,
   getProjects,
-  getProjectsDeprecated
+  getProjectsDeprecated,
+  getProjectsIdsByBounds
 };
