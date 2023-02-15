@@ -181,7 +181,7 @@ router.delete('/', auth, async (req, res) => {
   try {
    const favorite = {
       user_id: user.user_id,
-      project_table_name: table,
+      // project_table_name: table,
       project_id: id
     };
     const selectedFavorite = await favoritesService.getOne(favorite);
