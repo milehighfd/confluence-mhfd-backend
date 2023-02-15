@@ -1007,6 +1007,7 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
           0
           END as original_cost,
           coalesce(complete_t.sum, 0) as complete_cost
+          , coalesce(complete_t.count, 0) as component_count
           FROM ${component}, ${table}, ( select sum(estimated_cost_base) as sum from ${component} where ${component}.status = 'Complete' ) complete_t
           where ${component}.${typeidSp}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum`;
       } else {
@@ -1023,6 +1024,7 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
             else
             0
           END as original_cost, coalesce(complete_t.sum, 0) as complete_cost
+          , coalesce(complete_t.count, 0) as component_count
              FROM ${component}, ${table}, ( select sum(estimated_cost) as sum from ${component} where ${component}.status = 'Complete' ) complete_t
              where ${component}.${typeid}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum`;
       }
@@ -1034,7 +1036,7 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
       }
       COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
    }
-  //  console.log('COMPONENTS SQL', COMPONENTS_SQL);
+    console.log('COMPONENTS SQL', COMPONENTS_SQL);
    const componentQuery = { q: `${COMPONENTS_SQL}` };
    const data = await needle('post', CARTO_URL, componentQuery, { json: true });
    if (data.statusCode === 200) {
@@ -1043,7 +1045,9 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
             type: element.type + ' (' + element.count + ')',
             estimated_cost: element.estimated_cost,
             original_cost: element.original_cost,
-            complete_cost: element.complete_cost
+            complete_cost: element.complete_cost,
+            component_count_complete : element.component_count,
+            component_count_total : element.count
          }
       })
       if (sortby === 'percen') {
@@ -1062,7 +1066,9 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
             estimated_cost: element.estimated_cost,
             original_cost: element.original_cost,
             percen: percentageFormatter(sum == 0 ? 0 : element.estimated_cost / sum),
-            complete_cost: element.complete_cost
+            complete_cost: element.complete_cost,
+            component_count_complete : element.component_count_complete,
+            component_count_total: element.component_count_total
          }
       });
    } else {
