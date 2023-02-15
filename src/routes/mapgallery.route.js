@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
          filters = getFilters(req.body);
          // 
          const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, ${PROPSPROBLEMTABLES.problem_boundary[17]},  ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCountersProblems(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[5], PROPSPROBLEMTABLES.problem_boundary[5] )}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEM_TABLE} `;
-         const query = { q: `${PROBLEM_SQL} ${filters}` };
+         const query = { q: `${PROBLEM_SQL} ${filters}` }; 
          let answer = [];
          try {
             const data = await needle('post', CARTO_URL, query, { json: true });
@@ -87,8 +87,7 @@ router.post('/', async (req, res) => {
          res.send(answer);
       } else {
          let filters = '';
-         let send = [];
-
+         let send = [];         
          filters = getFilters(req.body);
          const PROJECT_FIELDS = 'cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, ' +
             'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county, component_cost, component_count ';
@@ -101,7 +100,7 @@ router.post('/', async (req, res) => {
                let query = ''
                if (table === MAIN_PROJECT_TABLE) {
                   query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters(MAIN_PROJECT_TABLE, 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
-                  console.log("THIS QUERY ROUTER",query);
+                  
                }
                let answer = [];
                try {
@@ -1008,8 +1007,11 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
           END as original_cost,
           coalesce(complete_t.sum, 0) as complete_cost
           , coalesce(complete_t2.count, 0) as component_count
-          FROM ${component}, ${table}, ( select sum(estimated_cost_base) as sum from ${component} where ${component}.status = 'Complete' ) complete_t, ( select count(*) as count from ${component} where ${component}.status = 'Complete' and ${component}.${typeidSp}=${id}) complete_t2
-          where ${component}.${typeidSp}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum, complete_t2.count`;
+          , coalesce(complete_t3.count, 0) as component_count_total
+          FROM ${component}, ${table}, ( select sum(estimated_cost_base) as sum from ${component} where ${component}.status = 'Complete' ) complete_t, 
+          ( select count(*) as count from ${component} where ${component}.status = 'Complete' and ${component}.${typeidSp}=${id}) complete_t2,
+          ( select count(*) as count from ${component} where ${component}.${typeidSp}=${id}) complete_t3
+          where ${component}.${typeidSp}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum, complete_t2.count, complete_t3.count`;
       } else {
         COMPONENTS_SQL += union + `SELECT type, count(*)
         , coalesce(sum(original_cost), 0) as estimated_cost, 
@@ -1025,8 +1027,11 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
             0
           END as original_cost, coalesce(complete_t.sum, 0) as complete_cost
           , coalesce(complete_t2.count, 0) as component_count
-             FROM ${component}, ${table}, ( select sum(estimated_cost) as sum from ${component} where ${component}.status = 'Complete' ) complete_t, ( select count(*) as count from ${component} where ${component}.status = 'Complete' and ${component}.${typeid}=${id}) complete_t2
-             where ${component}.${typeid}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum, complete_t2.count`;
+          , coalesce(complete_t3.count, 0) as component_count_total
+             FROM ${component}, ${table}, ( select sum(estimated_cost) as sum from ${component} where ${component}.status = 'Complete' ) complete_t, 
+             ( select count(*) as count from ${component} where ${component}.status = 'Complete' and ${component}.${typeid}=${id}) complete_t2,
+             ( select count(*) as count from ${component} where ${component}.${typeid}=${id}) complete_t3
+             where ${component}.${typeid}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum, complete_t2.count, complete_t3.count`;
       }
       union = ' union ';
    }
@@ -1042,12 +1047,12 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
    if (data.statusCode === 200) {
       let result = data.body.rows.map(element => {
          return {
-            type: element.type + ' (' + element.count + ')',
+            type: element.type + ' (' + element.component_count_total + ')',
             estimated_cost: element.estimated_cost,
             original_cost: element.original_cost,
             complete_cost: element.complete_cost,
             component_count_complete : element.component_count,
-            component_count_total : element.count
+            component_count_total : element.component_count_total
          }
       })
       if (sortby === 'percen') {
