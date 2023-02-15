@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node ./src/bin/www",
+    "start": "node --max-old-space-size=6500 ./src/bin/www",
     "transpile": "babel ./src --out-dir dist",
     "clean": "rimraf dist",
     "dev": "npm-run-all build server",
