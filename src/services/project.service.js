@@ -52,7 +52,7 @@ const getAll = (Projectsid) => {
 }
 
 const getProjectsIdsByBounds = async (bounds) => {
-  const coords = bounds.split(',');
+  const coords = bounds?.split(',');
   const where_intersect = `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom)`;
   const query = `SELECT projectid FROM ${MAIN_PROJECT_TABLE} WHERE ${where_intersect}`;
   const queryCarto = { q: query };

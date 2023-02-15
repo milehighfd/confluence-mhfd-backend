@@ -261,7 +261,10 @@ const getProjectsPromise = async (req, res) => {
 const getProjectsIdsByBounds = async (req, res) => {
   const { body } = req;
   const bounds = body?.bounds;
-  const projects = await projectService.getProjectsIdsByBounds(bounds);
+  let projects = [];
+  if (bounds) {
+    projects = await projectService.getProjectsIdsByBounds(bounds);
+  }  
   res.send({project_ids: projects});
 
 }
