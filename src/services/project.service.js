@@ -183,7 +183,6 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
       const projectsFavorite = await ProjectFavorite.findAll({
         where: {
           user_id: include.user_id,
-          project_table_name: MAIN_PROJECT_TABLE
         }
       }).map(result => result.dataValues);
       const pids = projectsFavorite.map((p) => p.project_id);
