@@ -1007,9 +1007,9 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
           0
           END as original_cost,
           coalesce(complete_t.sum, 0) as complete_cost
-          , coalesce(complete_t.count, 0) as component_count
-          FROM ${component}, ${table}, ( select sum(estimated_cost_base) as sum from ${component} where ${component}.status = 'Complete' ) complete_t
-          where ${component}.${typeidSp}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum`;
+          , coalesce(complete_t2.count, 0) as component_count
+          FROM ${component}, ${table}, ( select sum(estimated_cost_base) as sum from ${component} where ${component}.status = 'Complete' ) complete_t, ( select count(*) as count from ${component} where ${component}.status = 'Complete' and ${component}.${typeidSp}=${id}) complete_t2
+          where ${component}.${typeidSp}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum, complete_t2.count`;
       } else {
         COMPONENTS_SQL += union + `SELECT type, count(*)
         , coalesce(sum(original_cost), 0) as estimated_cost, 
@@ -1024,9 +1024,9 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
             else
             0
           END as original_cost, coalesce(complete_t.sum, 0) as complete_cost
-          , coalesce(complete_t.count, 0) as component_count
-             FROM ${component}, ${table}, ( select sum(estimated_cost) as sum from ${component} where ${component}.status = 'Complete' ) complete_t
-             where ${component}.${typeid}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum`;
+          , coalesce(complete_t2.count, 0) as component_count
+             FROM ${component}, ${table}, ( select sum(estimated_cost) as sum from ${component} where ${component}.status = 'Complete' ) complete_t, ( select count(*) as count from ${component} where ${component}.status = 'Complete' and ${component}.${typeid}=${id}) complete_t2
+             where ${component}.${typeid}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum, complete_t2.count`;
       }
       union = ' union ';
    }
