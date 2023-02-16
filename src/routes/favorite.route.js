@@ -346,11 +346,12 @@ const getProjectCards = async (req, res) => {
    const user = req.user;
    console.log('my user is ', user.user_id);
    try {
-      const projects = await projectService.getProjects({
-         user_id: user.user_id
-      }, null);
-      res.send(projects);
+      const pr = [projectService.getProjects(), favoritesService.getFavorites(user.user_id)]
+      const [projects, favoritesObj] = await Promise.all(pr);
+      const favorites = favoritesObj.map((d) => d.dataValues).map(f => f.project_id);
+      res.send(projects.filter((p) => favorites.includes(p.project_id)));
    } catch (error) {
+      logger.error(error);
       res.status(500).send({error: error});
    }
    
