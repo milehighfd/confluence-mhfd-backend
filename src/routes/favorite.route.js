@@ -176,18 +176,17 @@ router.get('/create', auth, async (req, res) => {
 });
 
 router.delete('/', auth, async (req, res) => {
-  const {table, id} = req.body;
+  const { id } = req.body;
   const user = req.user;
   try {
-   const favorite = {
-      user_id: user.user_id,
-      // project_table_name: table,
-      project_id: id
-    };
     const selectedFavorite = await favoritesService.getOne(favorite);
-    selectedFavorite.destroy();
-    logger.info('DELETED  ', user.email, table, id);
-    res.send('deleted');
+    if (selectedFavorite) {
+       selectedFavorite.destroy();
+    } else {
+      return res.status(404).send({ error: `${id} not found`})
+    }
+    logger.info(`DELETED id=${id} for user ${user.user_id}`);
+    res.send({status: 'deleted', id: id});
   } catch(error) {
      logger.error('error found on delete ', error);
     res.status(500).send('error found ' + error);

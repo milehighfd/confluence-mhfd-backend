@@ -33,9 +33,6 @@ const getFavorites = async (user_id) => {
 const getOne = async (data) => {
   const favorite = await Favorites.findOne({
     where: {
-      project_table_name: {
-        [Op.like]: '%' + data.project_table_name + '%'
-      },
       project_id: data.project_id,
       user_id: data.user_id
     }
