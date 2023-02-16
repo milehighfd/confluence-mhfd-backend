@@ -459,6 +459,7 @@ router.get('/bbox-components', async (req, res) => {
     component: 'self',
     centroid: [(minLat + maxLat) / 2, (minLng + maxLng) / 2]
   };
+  let bboxMain;
   if (table === MAIN_PROJECT_TABLE) {
     const queryProjectLine = {
       q: [table].map(t => 
@@ -480,11 +481,26 @@ router.get('/bbox-components', async (req, res) => {
       component: 'self',
       centroid: projectCenter
     }
+      const BBOX_SQL = `
+        SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom from ${MAIN_PROJECT_TABLE}
+        WHERE projectid = ${id}
+      `;
+      const query = { q: BBOX_SQL };
+      const data = await needle('post', CARTO_URL, query, {json: true});
+      if (data.statusCode === 200) {
+        const geojson = data.body.rows[0]?.the_geom;
+        const bbox = JSON.parse(geojson);
+        if (minLat !== Infinity){
+          bboxMain=[[[minLat, minLng], [minLat, maxLng], [maxLat, maxLng], [maxLat, minLng], [minLat, minLng]]];
+        }else{
+          bboxMain=[bbox?.coordinates[0]]
+        }
+      }
   }
   centroids = [selfCentroid, ...centroids]
-  const polygon = [[[minLat, minLng], [minLat, maxLng], [maxLat, maxLng], [maxLat, minLng], [minLat, minLng]]];
+  // const polygon = [[[minLat, minLng], [minLat, maxLng], [maxLat, maxLng], [maxLat, minLng], [minLat, minLng]]];
   res.send({
-    bbox: polygon,
+    bbox: bboxMain,
     centroids
   });
 });
