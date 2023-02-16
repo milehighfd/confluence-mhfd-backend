@@ -1,120 +1,114 @@
-import express from 'express';
-import needle from 'needle';
-import logger from 'bc/config/logger.js';
-import favoritesService from 'bc/services/favorites.service.js';
-import attachmentService from 'bc/services/attachment.service.js';
-import projectService from 'bc/services/project.service.js';
-import { CARTO_URL, PROPSPROBLEMTABLES, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
-import auth from 'bc/auth/auth.js';
+import express from "express";
+import needle from "needle";
+import logger from "bc/config/logger.js";
+import favoritesService from "bc/services/favorites.service.js";
+import attachmentService from "bc/services/attachment.service.js";
+import projectService from "bc/services/project.service.js";
+import {
+  CARTO_URL,
+  PROPSPROBLEMTABLES,
+  MAIN_PROJECT_TABLE,
+} from "bc/config/config.js";
+import auth from "bc/auth/auth.js";
 
 const router = express.Router();
 const PROJECT_TABLES = [MAIN_PROJECT_TABLE];
-const PROBLEMS_TABLE = 'problem_boundary';
+const PROBLEMS_TABLE = "problem_boundary";
 
 function getFilters(params, ids) {
-   let filters = '';
-   let tipoid = '';
-   let hasProjectType = false;
+  let filters = "";
+  let tipoid = "";
+  let hasProjectType = false;
 
-   if (params.isproblem) {
-      tipoid = 'problem_id';
-      if (params.name) {
-         if (filters.length > 0) {
-            filters = filters = ` and problemname ilike '%${params.name}%'`;
-         }
-         else {
-            filters = ` problemname ilike '%${params.name}%' `;
-         }
-      }
-
-      if (params.problemtype) {
-         const query = createQueryForIn(params.problemtype.split(','));
-         if (filters.length > 0) {
-            filters = filters + ` and problemtype in (${query}) `;
-         } else {
-            filters = ` problemtype in (${query}) `;
-         }
-      }
-   } else {
-      console.log('PROJECTS');
-      tipoid = 'projectid';
-      if (params.name) {
-         if (filters.length > 0) {
-            filters = ` and projectname ilike '%${params.name}%' `;
-         } else {
-            filters = ` projectname ilike '%${params.name}%' `;
-         }
-         
-      }
-      console.log("ID", filters);
-      if (params.problemtype) {
-
-      }
-   }
-
-   // components
-
-
-
-
-   // ALL FILTERS
-   // PROBLEMS 
-   if (params.priority) {
-      const query = createQueryForIn(params.priority.split(','));
+  if (params.isproblem) {
+    tipoid = "problem_id";
+    if (params.name) {
       if (filters.length > 0) {
-         filters = filters + ` and problempriority in (${query})`;
+        filters = filters = ` and problemname ilike '%${params.name}%'`;
       } else {
-         filters = ` problempriority in (${query})`;
+        filters = ` problemname ilike '%${params.name}%' `;
       }
-   }
+    }
 
- 
-
-   // PROJECTS
-   if (params.projecttype) {
-      const query = createQueryForIn(params.projecttype.split(','));
+    if (params.problemtype) {
+      const query = createQueryForIn(params.problemtype.split(","));
       if (filters.length > 0) {
-         filters = filters + ` and projecttype in (${query})`;
+        filters = filters + ` and problemtype in (${query}) `;
       } else {
-         filters = `projecttype in (${query})`;
+        filters = ` problemtype in (${query}) `;
       }
-      hasProjectType = true;
-   }
-
-   if (filters.length > 0) {
-      filters += ` and`
-   }
-   filters += ` ${tipoid} in ('${ids.join("','")}')`
-
-   if (filters.length > 0) {
-      filters = ' where ' + filters;
-   }
-
-   if (params.sortby) {
-      let sorttype = '';
-      let sortby = params.sortby;
-      if (params.sortby === 'estimatedcost') {
-         sortby = ` (coalesce(${params.sortby}::real, 0)) `;
-      }
-
-      if (params.sortby === 'projectname') {
-         sortby = ` coalesce(projectname, '')`;
-      }
-
-      if (!params.sorttype) {
-         sorttype = 'desc';
+    }
+  } else {
+    console.log("PROJECTS");
+    tipoid = "projectid";
+    if (params.name) {
+      if (filters.length > 0) {
+        filters = ` and projectname ilike '%${params.name}%' `;
       } else {
-         sorttype = params.sorttype;
+        filters = ` projectname ilike '%${params.name}%' `;
       }
-      filters += ` order by ${sortby} ${sorttype}`;
-   }
-   if (params.limit && params.page) {
-      filters = ` limit= ${limit} offset=${params.page * params.limit}`
-   }
-   return filters;
+    }
+    console.log("ID", filters);
+    if (params.problemtype) {
+    }
+  }
+
+  // components
+
+  // ALL FILTERS
+  // PROBLEMS
+  if (params.priority) {
+    const query = createQueryForIn(params.priority.split(","));
+    if (filters.length > 0) {
+      filters = filters + ` and problempriority in (${query})`;
+    } else {
+      filters = ` problempriority in (${query})`;
+    }
+  }
+
+  // PROJECTS
+  if (params.projecttype) {
+    const query = createQueryForIn(params.projecttype.split(","));
+    if (filters.length > 0) {
+      filters = filters + ` and projecttype in (${query})`;
+    } else {
+      filters = `projecttype in (${query})`;
+    }
+    hasProjectType = true;
+  }
+
+  if (filters.length > 0) {
+    filters += ` and`;
+  }
+  filters += ` ${tipoid} in ('${ids.join("','")}')`;
+
+  if (filters.length > 0) {
+    filters = " where " + filters;
+  }
+
+  if (params.sortby) {
+    let sorttype = "";
+    let sortby = params.sortby;
+    if (params.sortby === "estimatedcost") {
+      sortby = ` (coalesce(${params.sortby}::real, 0)) `;
+    }
+
+    if (params.sortby === "projectname") {
+      sortby = ` coalesce(projectname, '')`;
+    }
+
+    if (!params.sorttype) {
+      sorttype = "desc";
+    } else {
+      sorttype = params.sorttype;
+    }
+    filters += ` order by ${sortby} ${sorttype}`;
+  }
+  if (params.limit && params.page) {
+    filters = ` limit= ${limit} offset=${params.page * params.limit}`;
+  }
+  return filters;
 }
-
-
 
 function getCounters(table, column) {
   return ` (select count(*) from grade_control_structure where ${column} = cast(${table}.${column} as integer) ) as count_gcs, 
@@ -133,29 +127,29 @@ function getCounters(table, column) {
      (select count(*) from landscaping_area where ${column} = cast(${table}.${column} as integer) ) as count_la1 `;
 }
 
-router.get('/list', async (req, res) => {
+router.get("/list", async (req, res) => {
   try {
-     const list = await favoritesService.getAll();
-     console.log('my list ', list);
-     return res.send(list);
+    const list = await favoritesService.getAll();
+    console.log("my list ", list);
+    return res.send(list);
   } catch (error) {
-     res.status(500).send({error: error});
+    res.status(500).send({ error: error });
   }
 });
 
-router.get('/', auth, async (req, res) => {
+router.get("/", auth, async (req, res) => {
   const user = req.user;
-  try {  
+  try {
     console.log(user);
     const favorite = await favoritesService.getFavorites(user.user_id);
     return res.send(favorite);
-  } catch(error) {
+  } catch (error) {
     res.send(500);
   }
 });
 
-router.get('/create', auth, async (req, res) => {
-  const {table, id} = req.query;
+router.get("/create", auth, async (req, res) => {
+  const { table, id } = req.query;
   const user = req.user;
   try {
     const favorite = {
@@ -163,198 +157,264 @@ router.get('/create', auth, async (req, res) => {
       project_table_name: table,
       project_id: id,
       user_character_id: "Default Value",
-      creator: user.name
+      creator: user.name,
     };
-    logger.info('create favorite ', favorite);
+    logger.info("create favorite ", favorite);
     const savedFavorite = await favoritesService.saveFavorite(favorite);
     res.send(savedFavorite);
-
-  } catch(error) {
-      console.log(error)
-      res.sendStatus(500);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
   }
 });
 
-router.delete('/', auth, async (req, res) => {
+router.delete("/", auth, async (req, res) => {
   const { id } = req.body;
   const user = req.user;
   try {
+    const favorite = {
+      user_id: user.user_id,
+      project_id: id,
+    };
     const selectedFavorite = await favoritesService.getOne(favorite);
     if (selectedFavorite) {
-       selectedFavorite.destroy();
+      selectedFavorite.destroy();
     } else {
-      return res.status(404).send({ error: `${id} not found`})
+      return res.status(404).send({ error: `${id} not found` });
     }
     logger.info(`DELETED id=${id} for user ${user.user_id}`);
-    res.send({status: 'deleted', id: id});
-  } catch(error) {
-     logger.error('error found on delete ', error);
-    res.status(500).send('error found ' + error);
+    res.send({ status: "deleted", id: id });
+  } catch (error) {
+    logger.error("error found on delete ", error);
+    res.status(500).send("error found " + error);
   }
 });
 
-router.get('/count', auth, async (req, res) => {
-   const user = req.user;
-   try {  
-      console.log(user.user_id);
-      const favorite = await favoritesService.countFavorites(user.user_id);     
-      res.send({count : favorite});
-    } catch(error) {
-      res.status(500).send('error found ' + error);
-    }
- });
-
-
-router.post('/favorite-list', auth, async (req, res) => {
-   const user = req.user;
-   const favorite = await favoritesService.getFavorites(user.user_id);
-   console.log(favorite);
-   const ids = favorite
-      .filter(fav => {
-         if (req.body.isproblem) {
-            return fav.table === PROBLEMS_TABLE;
-         } else {
-            return fav.table === PROJECT_TABLES[0];
-         }
-      })
-      .map(fav => `${fav.id}`);
-   if (ids.length === 0) {
-      return res.send([]);
-   }
+router.get("/count", auth, async (req, res) => {
+  const user = req.user;
   try {
-     if (req.body.isproblem) {
-      let filters = '';
+    console.log(user.user_id);
+    const favorite = await favoritesService.countFavorites(user.user_id);
+    res.send({ count: favorite });
+  } catch (error) {
+    res.status(500).send("error found " + error);
+  }
+});
+
+router.post("/favorite-list", auth, async (req, res) => {
+  const user = req.user;
+  const favorite = await favoritesService.getFavorites(user.user_id);
+  console.log(favorite);
+  const ids = favorite
+    .filter((fav) => {
+      if (req.body.isproblem) {
+        return fav.table === PROBLEMS_TABLE;
+      } else {
+        return fav.table === PROJECT_TABLES[0];
+      }
+    })
+    .map((fav) => `${fav.id}`);
+  if (ids.length === 0) {
+    return res.send([]);
+  }
+  try {
+    if (req.body.isproblem) {
+      let filters = "";
       filters = getFilters(req.body, ids);
-        const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCounters(PROBLEMS_TABLE, PROPSPROBLEMTABLES.problem_boundary[5])}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEMS_TABLE} `;
-        const query = { q: `${PROBLEM_SQL}  ${filters} ` };
-        let answer = [];
-        try {
-           const data = await needle('post', CARTO_URL, query, { json: true });
-           //console.log('status', data.statusCode);
-           if (data.statusCode === 200) {
-              /* let coordinates = [];
+      const PROBLEM_SQL = `SELECT cartodb_id, ${
+        PROPSPROBLEMTABLES.problem_boundary[5]
+      } as ${PROPSPROBLEMTABLES.problems[5]}, ${
+        PROPSPROBLEMTABLES.problem_boundary[6]
+      } as ${PROPSPROBLEMTABLES.problems[6]}, ${
+        PROPSPROBLEMTABLES.problem_boundary[0]
+      } as ${PROPSPROBLEMTABLES.problems[0]}, ${
+        PROPSPROBLEMTABLES.problem_boundary[2]
+      } as ${PROPSPROBLEMTABLES.problems[2]}, ${
+        PROPSPROBLEMTABLES.problem_boundary[7]
+      } as ${PROPSPROBLEMTABLES.problems[7]}, ${
+        PROPSPROBLEMTABLES.problem_boundary[1]
+      } as ${PROPSPROBLEMTABLES.problems[1]}, ${
+        PROPSPROBLEMTABLES.problem_boundary[8]
+      } as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCounters(
+        PROBLEMS_TABLE,
+        PROPSPROBLEMTABLES.problem_boundary[5]
+      )}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEMS_TABLE} `;
+      const query = { q: `${PROBLEM_SQL}  ${filters} ` };
+      let answer = [];
+      try {
+        const data = await needle("post", CARTO_URL, query, { json: true });
+        //console.log('status', data.statusCode);
+        if (data.statusCode === 200) {
+          /* let coordinates = [];
               if (JSON.parse(element.the_geom).coordinates) {
                 coordinates = JSON.parse(element.the_geom).coordinates;
               } */
-              answer = data.body.rows.map(element => {
-                 return {
-                    cartodb_id: element.cartodb_id,
-                    type: 'problems',
-                    problemid: element.problem_id,
-                    problemname: element.problemname,
-                    solutioncost: element.solutioncost,
-                    jurisdiction: element.jurisdiction,
-                    problempriority: element.problempriority,
-                    solutionstatus: element.solutionstatus,
-                    problemtype: element.problemtype,
-                    county: element.county,
-                    totalComponents: element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
-                       element.count_cia + element.count_sia + element.count_rl + element.count_ra +
-                       element.count_sd + element.count_df + element.count_mt + element.count_la +
-                       element.count_la + element.count_la1 + element.count_cila,
-                    coordinates: JSON.parse(element.the_geom).coordinates ? JSON.parse(element.the_geom).coordinates : []
-                 }
-              })
-              console.log('answer', answer);
-           } else {
-              console.log('bad status', data.statusCode, data.body);
-              logger.error('bad status', data.statusCode, data.body);
-           }
-        } catch (error) {
-           console.log('Error', error);
-        }
-         return res.send(answer);
-     } else {
-        let filters = '';
-        let send = [];
-        
-        filters = getFilters(req.body, ids);
-        const PROJECT_FIELDS = 'cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, ' +
-           'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county ';
-
-        if (req.body.problemtype) {
-           const result = await queriesByProblemTypeInProject(PROJECT_FIELDS, filters, req.body.problemtype);
-           return res.status(200).send(result);
+          answer = data.body.rows.map((element) => {
+            return {
+              cartodb_id: element.cartodb_id,
+              type: "problems",
+              problemid: element.problem_id,
+              problemname: element.problemname,
+              solutioncost: element.solutioncost,
+              jurisdiction: element.jurisdiction,
+              problempriority: element.problempriority,
+              solutionstatus: element.solutionstatus,
+              problemtype: element.problemtype,
+              county: element.county,
+              totalComponents:
+                element.count_gcs +
+                element.count_pa +
+                element.count_sip +
+                element.count_sil +
+                element.count_cia +
+                element.count_sia +
+                element.count_rl +
+                element.count_ra +
+                element.count_sd +
+                element.count_df +
+                element.count_mt +
+                element.count_la +
+                element.count_la +
+                element.count_la1 +
+                element.count_cila,
+              coordinates: JSON.parse(element.the_geom).coordinates
+                ? JSON.parse(element.the_geom).coordinates
+                : [],
+            };
+          });
+          console.log("answer", answer);
         } else {
-           for (const table of PROJECT_TABLES) {
-              let query = ''
-              if (table === MAIN_PROJECT_TABLE) {
-                 query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters(MAIN_PROJECT_TABLE, 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
-              }
-              let answer = [];
-              try {
-                console.log(CARTO_URL, query);
-                 const data = await needle('post', CARTO_URL, query, { json: true });
-                 //console.log('STATUS', data.statusCode);
-                 if (data.statusCode === 200) {
-                    const result = data.body.rows;
-                    for (const element of result) {
-                       let valor = '';
-                       if (element.attachments) {
-                          valor = await attachmentService.findCoverImage(element.attachments);
-                       }
-                       let coordinates = [];
-                       if (element.the_geom && JSON.parse(element.the_geom).coordinates) {
-                          coordinates = JSON.parse(element.the_geom).coordinates;
-                       }
-                       answer.push({
-                          type: element.type,
-                          cartodb_id: element.cartodb_id,
-                          objectid: element.objectid,
-                          projectid: element.projectid,
-                          projecttype: element.projecttype,
-                          projectsubtype: element.projectsubtype,
-                          coverimage: element.coverimage,
-                          sponsor: element.sponsor,
-                          finalcost: element.finalcost,
-                          estimatedcost: element.estimatedcost,
-                          status: element.status,
-                          attachments: element.attachments,
-                          projectname: element.projectname,
-                          jurisdiction: element.jurisdiction,
-                          streamname: element.streamname,
-                          county: element.county,
-                          attachments: valor,
-                          totalComponents: element.count_gcs + element.count_pa + element.count_sip + element.count_sil +
-                             element.count_cia + element.count_sia + element.count_rl + element.count_ra +
-                             element.count_sd + element.count_df + element.count_mt + element.count_la +
-                             element.count_la + element.count_la1 + element.count_cila,
-                          coordinates: coordinates
-                       });
-                    }
-                    send = send.concat(answer);
-                 } else {
-                     console.log('bad status ', data.statusCode, data.body);
-                    logger.error('bad status ', data.statusCode, data.body);
-                 }
-              } catch (error) {
-                 logger.error(error);
-              };
-           }
+          console.log("bad status", data.statusCode, data.body);
+          logger.error("bad status", data.statusCode, data.body);
         }
-        return res.send(send);
-     }
-  } catch (error) {
-     logger.error(error);
-     res.status(500).send({ error: error }).send({ error: 'Error with C connection' });
-  }
+      } catch (error) {
+        console.log("Error", error);
+      }
+      return res.send(answer);
+    } else {
+      let filters = "";
+      let send = [];
 
+      filters = getFilters(req.body, ids);
+      const PROJECT_FIELDS =
+        "cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, " +
+        "estimatedCost, status, attachments, projectname, jurisdiction, streamname, county ";
+
+      if (req.body.problemtype) {
+        const result = await queriesByProblemTypeInProject(
+          PROJECT_FIELDS,
+          filters,
+          req.body.problemtype
+        );
+        return res.status(200).send(result);
+      } else {
+        for (const table of PROJECT_TABLES) {
+          let query = "";
+          if (table === MAIN_PROJECT_TABLE) {
+            query = {
+              q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters(
+                MAIN_PROJECT_TABLE,
+                "projectid"
+              )}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} `,
+            };
+          }
+          let answer = [];
+          try {
+            console.log(CARTO_URL, query);
+            const data = await needle("post", CARTO_URL, query, { json: true });
+            //console.log('STATUS', data.statusCode);
+            if (data.statusCode === 200) {
+              const result = data.body.rows;
+              for (const element of result) {
+                let valor = "";
+                if (element.attachments) {
+                  valor = await attachmentService.findCoverImage(
+                    element.attachments
+                  );
+                }
+                let coordinates = [];
+                if (
+                  element.the_geom &&
+                  JSON.parse(element.the_geom).coordinates
+                ) {
+                  coordinates = JSON.parse(element.the_geom).coordinates;
+                }
+                answer.push({
+                  type: element.type,
+                  cartodb_id: element.cartodb_id,
+                  objectid: element.objectid,
+                  projectid: element.projectid,
+                  projecttype: element.projecttype,
+                  projectsubtype: element.projectsubtype,
+                  coverimage: element.coverimage,
+                  sponsor: element.sponsor,
+                  finalcost: element.finalcost,
+                  estimatedcost: element.estimatedcost,
+                  status: element.status,
+                  attachments: element.attachments,
+                  projectname: element.projectname,
+                  jurisdiction: element.jurisdiction,
+                  streamname: element.streamname,
+                  county: element.county,
+                  attachments: valor,
+                  totalComponents:
+                    element.count_gcs +
+                    element.count_pa +
+                    element.count_sip +
+                    element.count_sil +
+                    element.count_cia +
+                    element.count_sia +
+                    element.count_rl +
+                    element.count_ra +
+                    element.count_sd +
+                    element.count_df +
+                    element.count_mt +
+                    element.count_la +
+                    element.count_la +
+                    element.count_la1 +
+                    element.count_cila,
+                  coordinates: coordinates,
+                });
+              }
+              send = send.concat(answer);
+            } else {
+              console.log("bad status ", data.statusCode, data.body);
+              logger.error("bad status ", data.statusCode, data.body);
+            }
+          } catch (error) {
+            logger.error(error);
+          }
+        }
+      }
+      return res.send(send);
+    }
+  } catch (error) {
+    logger.error(error);
+    res
+      .status(500)
+      .send({ error: error })
+      .send({ error: "Error with C connection" });
+  }
 });
 
 const getProjectCards = async (req, res) => {
-   const user = req.user;
-   console.log('my user is ', user.user_id);
-   try {
-      const pr = [projectService.getProjects(), favoritesService.getFavorites(user.user_id)]
-      const [projects, favoritesObj] = await Promise.all(pr);
-      const favorites = favoritesObj.map((d) => d.dataValues).map(f => f.project_id);
-      res.send(projects.filter((p) => favorites.includes(p.project_id)));
-   } catch (error) {
-      logger.error(error);
-      res.status(500).send({error: error});
-   }
-   
-}
+  const user = req.user;
+  console.log("my user is ", user.user_id);
+  try {
+    const pr = [
+      projectService.getProjects(),
+      favoritesService.getFavorites(user.user_id),
+    ];
+    const [projects, favoritesObj] = await Promise.all(pr);
+    const favorites = favoritesObj
+      .map((d) => d.dataValues)
+      .map((f) => f.project_id);
+    res.send(projects.filter((p) => favorites.includes(p.project_id)));
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send({ error: error });
+  }
+};
 
-router.get('/project-cards', auth, getProjectCards);
+router.get("/project-cards", auth, getProjectCards);
 export default router;
