@@ -224,6 +224,13 @@ db.projectCost.belongsTo(
 db.project.hasMany(db.projectComponent, {foreignKey: 'project_id'});
 db.projectComponent.belongsTo(db.project, {foreignKey: 'project_id'});
 
+//project project-detail
+db.project.hasMany(db.projectDetail, { foreignKey: 'project_id' });
+
+// project project-staff
+db.project.hasMany(db.projectStaff, { foreignKey: 'project_id' });
+db.projectStaff.belongsTo(db.mhfdStaff, { foreignKey: 'mhfd_staff_id' });
+
 db.project.hasOne(
   db.projectStatus,
   { foreignKey: 'project_id' }
