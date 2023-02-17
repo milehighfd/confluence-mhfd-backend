@@ -1,11 +1,14 @@
+import https from 'https';
+import needle from 'needle';
+
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
-import needle from 'needle';
 
 import {
   CARTO_URL,
   MAIN_PROJECT_TABLE,
-  PROJECT_TABLE
+  PROPSPROBLEMTABLES,
+  PROBLEM_TABLE
 } from 'bc/config/config.js';
 import {
   getServiceAreaByProjectIds,
@@ -27,6 +30,7 @@ const ProjectCounty = db.projectCounty;
 const CodeStateCounty = db.codeStateCounty;
 const ProjectStreams = db.project_stream;
 const ProjectLocalGovernment = db.projectLocalGovernment;
+const ProjectComponent = db.projectComponent;
 const CodeLocalGoverment = db.codeLocalGoverment;
 const Streams = db.stream;
 const ProjectCost = db.projectCost;
@@ -35,7 +39,68 @@ const CodePhaseType = db.codePhaseType;
 const CodeStatusType = db.codeStatusType;
 const CodeProjectType = db.codeProjectType;
 const BusinessAssociate = db.businessAssociates;
+const ProjectStaff = db.projectStaff;
+const MHFDStaff = db.mhfdStaff;
+const ProjectDetail = db.projectDetail;
 const Op = sequelize.Op;
+
+async function getProblemByProjectId(projectid, sortby, sorttype) {
+  let data = [];
+  const LINE_SQL = `select ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[7]}  as ${PROPSPROBLEMTABLES.problems[7]} from ${PROBLEM_TABLE}  
+ where ${PROPSPROBLEMTABLES.problem_boundary[5]} in (SELECT problemid FROM grade_control_structure 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM pipe_appurtenances 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM special_item_point 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM special_item_linear 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM special_item_area 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM channel_improvements_linear 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM channel_improvements_area 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM removal_line 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM removal_area 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM storm_drain 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM detention_facilities 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM maintenance_trails 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM land_acquisition 
+   where projectid=${projectid} and projectid>0  union ` +
+     `SELECT problemid FROM landscaping_area 
+   where projectid=${projectid} and projectid>0) 
+   order by ${sortby} ${sorttype}`;
+  logger.info(`CARTO REQUEST: ${LINE_SQL}'`);
+  const LINE_URL = encodeURI(`${CARTO_URL}&q=${LINE_SQL}`);
+  //console.log(LINE_URL);
+  try {
+    const newProm1 = new Promise((resolve, reject) => {
+      https.get(LINE_URL, response => {
+         if (response.statusCode === 200) {
+            let str = '';
+            response.on('data', function (chunk) {
+               str += chunk;
+            });
+            response.on('end', async function () {
+               resolve(JSON.parse(str).rows);
+            })
+         }
+      });
+   });
+    data = await newProm1;
+    console.log('the data is ', data);
+    return data;
+  } catch (e) {
+    console.error('Error with QUERY ', e);
+    return [];
+  }
+}
 
 const getAll = (Projectsid) => {
   try {
@@ -166,6 +231,199 @@ const  getProjectsDeprecated  = async (include, bounds, offset = 1, limit = 1200
     throw error;
   }
 }
+
+const getDetails = async (project_id) => {
+  try {
+    const [projectPromise, problems] = await Promise.all([
+      Project.findByPk(project_id, {
+        attributes: [
+          "project_id",
+          "project_name",
+          "description",
+          "onbase_project_number",
+          "created_date",
+          'code_project_type_id',
+        ], 
+        include: [
+          {
+            model: ProjectServiceArea,
+            include: {
+              model: CodeServiceArea,
+              attributes: [
+                'service_area_name',
+                'code_service_area_id'
+              ]
+            },
+            attributes: [
+              'project_service_area_id'
+            ] 
+          },
+          {
+            model: ProjectCounty,
+            include: {
+              model: CodeStateCounty,
+              attributes: [
+                'county_name',
+                'state_county_id'
+              ]
+            },
+            attributes: [
+              'project_county_id'
+            ]
+          },
+          {
+            model: ProjectStreams,
+            include: {
+              model: Streams,
+              attributes: [
+                'stream_id',
+                'stream_name'
+              ]
+            },
+            attributes: [
+              'stream_id',
+              'length_in_mile'
+            ]
+          },
+          {
+            model: ProjectLocalGovernment,
+            include: {
+              model: CodeLocalGoverment,
+              attributes: [
+                'local_government_name',
+                'code_local_government_id'
+              ]
+            },
+            attributes: [
+              'project_local_government_id'
+            ]
+          },
+          {
+            model: ProjectCost,
+            attributes: [
+              'code_cost_type_id',
+              'cost'
+            ],
+            // where: {
+            //   code_cost_type_id: 1
+            // }
+          },
+          {
+            model: ProjectStatus,
+            attributes: [
+              'code_phase_type_id'
+            ],
+            include: {
+              model: CodePhaseType,
+              attributes: [
+                'phase_name',
+              ],
+              include: [{
+                model: CodeStatusType,
+                attributes: [
+                  'code_status_type_id',
+                  'status_name'
+                ]
+              }, {
+                model: CodeProjectType,
+                attributes: [
+                  'code_project_type_id',
+                  'project_type_name'
+                ]
+              }]
+            }
+          }, 
+          {
+            model: ProjectPartner,
+            attributes: [
+              'project_partner_id',
+              'code_partner_type_id'
+            ],
+            include: {
+              model: BusinessAssociate,
+              attributes: [
+                'business_name',
+                'business_associates_id'
+              ]
+            },
+            // where: {
+            //   code_partner_type_id: [3, 8, 11]
+            // }
+          },
+          {
+            model: ProjectComponent,
+            attributes: [
+              'component_id',
+              'source_table_name',
+              'project_component_id'
+            ],
+            // where: {
+            //   code_cost_type_id: 1
+            // }
+          },
+          {
+            model: ProjectComponent,
+            attributes: [
+              'component_id',
+              'source_table_name',
+              'project_component_id'
+            ],
+            // where: {
+            //   code_cost_type_id: 1
+            // }
+          },
+          {
+            model: ProjectStaff,
+            attributes: [
+              'code_project_staff_role_type_id',
+              'is_active',
+              
+            ],
+            include: {
+              model: MHFDStaff,
+              attributes: [
+                'user_id',
+                'mhfd_staff_id',
+                'full_name'
+              ]
+            }
+            // where: {
+            //   code_cost_type_id: 1
+            // }
+          },
+          {
+            model: ProjectDetail,
+            attributes: [
+              'maintenance_frequency',
+              'is_public_ownership',
+              'code_maintenance_eligibility_type_id'
+            ],
+            // where: {
+            //   code_cost_type_id: 1
+            // }
+          }
+        ],
+        order: [['created_date', 'DESC']]
+      }),
+      getProblemByProjectId(project_id, PROPSPROBLEMTABLES.problems[6], 'asc')
+    ]);
+    if (!projectPromise) {
+      return {
+        error: 404,
+        message: 'Project Not Found'
+      };
+    }
+    let project = projectPromise.dataValues;
+    logger.info(`Adding problems ${JSON.stringify(problems)}`)
+    project = { ...project, problems: problems };
+    return project;
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+}
+
+
 let cache = null;
 const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
   console.log(include, bounds, offset, limit);
@@ -464,5 +722,6 @@ export default {
   saveProject,
   getProjects,
   getProjectsDeprecated,
-  getProjectsIdsByBounds
+  getProjectsIdsByBounds,
+  getDetails
 };
