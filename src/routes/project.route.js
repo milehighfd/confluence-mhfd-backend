@@ -7,7 +7,8 @@ import {
   getStreamsDataByProjectIds,
   sortProjects,
   projectsByFilters,
-  projectsByFiltersForIds
+  projectsByFiltersForIds,
+  getIdsInBbox
 } from 'bc/utils/functionsProjects.js';
 import auth from 'bc/auth/auth.js';
 
@@ -114,9 +115,14 @@ const listProjects = async (req, res) => {
   logger.info(projects.length);
   
   projects = await projectsByFilters(projects, body);
+  if (bounds) {
+    const ids = await getIdsInBbox(bounds);
+    projects = projects.filter((p) => ids.includes(p.project_id));
+  }
   if (body?.sortby?.trim()?.length || 0) {
     projects = await sortProjects(projects, body);
   }
+  
   // if (body?.name?.trim()?.length || 0) {
   //   projects = projects.filter((proj) => proj?.project_name?.toUpperCase().includes(body?.name?.toUpperCase()))
   // }

@@ -1,4 +1,9 @@
 import db from 'bc/config/db.js';
+import needle from 'needle';
+import {
+  CARTO_URL,
+  MAIN_PROJECT_TABLE
+} from 'bc/config/config.js';
 
 const Projects = db.project;
 const ProjectPartner = db.projectPartner;
@@ -290,4 +295,27 @@ export const sortProjects = async (projects, filters) => {
       break;
   }
   return projects;
+}
+
+export const getIdsInBbox = async (bounds) => {
+  const coords = bounds.split(',');
+  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+  try {
+    const BBOX_SQL = `
+      SELECT projectid from ${MAIN_PROJECT_TABLE}
+      WHERE ${filters}
+    `;
+    const query = { q: BBOX_SQL };
+    const data = await needle('post', CARTO_URL, query, {json: true});
+    if (data.statusCode === 200) {
+      return data.body.rows.map((d) => d.projectid);
+    } else { 
+      console.error('Error at bbox', data.body);
+      return [];
+    }
+  } catch (error) {
+    console.log('This error ', error);
+    return [];
+  }
 }

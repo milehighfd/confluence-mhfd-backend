@@ -1,38 +1,10 @@
 import express from 'express';
-import needle from 'needle';
 import groupService from 'bc/services/group.service.js';
 import projectService from 'bc/services/project.service.js';
-import db from 'bc/config/db.js';
-import {
-  CARTO_URL,
-  MAIN_PROJECT_TABLE
-} from 'bc/config/config.js';
+import { getIdsInBbox } from 'bc/utils/functionsProjects.js';
 
 
 const router = express.Router();
-
-const getIdsInBbox = async (bounds) => {
-  const coords = bounds.split(',');
-  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-  filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-  try {
-    const BBOX_SQL = `
-      SELECT projectid from ${MAIN_PROJECT_TABLE}
-      WHERE ${filters}
-    `;
-    const query = { q: BBOX_SQL };
-    const data = await needle('post', CARTO_URL, query, {json: true});
-    if (data.statusCode === 200) {
-      return data.body.rows.map((d) => d.projectid);
-    } else { 
-      console.error('Error at bbox', data.body);
-      return [];
-    }
-  } catch (error) {
-    console.log('This error ', error);
-    return [];
-  }
-}
 
 
 const getFilters = async (req, res) => {
