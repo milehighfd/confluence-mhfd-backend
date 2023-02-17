@@ -339,7 +339,8 @@ async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
       union SELECT the_geom FROM land_acquisition where ${field}=${id}  
       union SELECT the_geom FROM landscaping_area where ${field}=${id}  
   ) joinall
-` ;   
+` ;  
+console.log('SQL for all', SQL)
   const SQL_URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   const newProm1 = new Promise((resolve, reject) => {
     https.get(SQL_URL, response => {
@@ -355,6 +356,7 @@ async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
     });
   });
   const dataInFunction = await newProm1;
+  console.log('entraaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', dataInFunction);
   return dataInFunction;
 }
 
@@ -580,9 +582,12 @@ router.get('/bbox-components', async (req, res) => {
         // const bbox = JSON.parse(geojson);
 
         if (minLat !== Infinity){
-          bboxMain=[[[minLat, minLng], [minLat, maxLng], [maxLat, maxLng], [maxLat, minLng], [minLat, minLng]]];
+          bboxMain=coordinatesForBBOX
+          // bboxMain=[[[minLat, minLng], [minLat, maxLng], [maxLat, maxLng], [maxLat, minLng], [minLat, minLng]]];
+          console.log('enter here 1',bboxMain );
         }else{
           bboxMain=coordinatesForBBOX
+          console.log('enter here 2',bboxMain );
         }
 
   }
