@@ -612,7 +612,9 @@ router.put('/:boardId', [auth], async (req, res) => {
         let bodyResponse = { status: 'updated' };
         if (status === 'Approved' && board.status !== status) {
             logger.info(`Approving board ${boardId}`);
-            sendMails(board, req.user.name)
+            if (board.type !== 'WORK_PLAN') {
+                sendMails(board, req.user.name)
+            }             
             let r = await moveCardsToNextLevel(board);
             bodyResponse = {
                 ...bodyResponse,
