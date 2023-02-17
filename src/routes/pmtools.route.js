@@ -5,36 +5,13 @@ import logger from 'bc/config/logger.js';
 import Sequelize from 'sequelize';
 import favoritesService from 'bc/services/favorites.service.js';
 import groupService from 'bc/services/group.service.js';
-const Projects = db.project;
 const ProjectPartner = db.projectPartner;
-const ProjectCounty = db.projectCounty;
-const CodeStateCounty = db.codeStateCounty;
-const ProjectServiceArea = db.projectServiceArea;
-const CodeServiceArea = db.codeServiceArea;
-const ProjectLocalGovernment = db.projectLocalGovernment;
-const CodeLocalGoverment = db.codeLocalGoverment;
-const ProjectCost = db.projectCost;
 const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
-const ProjectDetail = db.projectDetail;
-const CodeStatusType = db.codeStatusType;
 const BusinessAssociante = db.businessAssociates;
-const Streams = db.stream;
-const Op = Sequelize.Op;
 
 const router = express.Router();
 import {
-  CARTO_URL,
-  PROBLEM_TABLE,
-  PROPSPROBLEMTABLES,
-} from 'bc/config/config.js';
-import {
-  getCountiesByProjectIds,
-  getCivilContractorsByProjectids,
-  getConsultantsByProjectids,
-  getLocalGovernmentByProjectids,
-  getEstimatedCostsByProjectids,
-  getStreamsDataByProjectIds,
   projectsByFilters
 } from 'bc/utils/functionsProjects.js';
 import projectService from 'bc/services/project.service.js';
