@@ -72,12 +72,11 @@ export async function getCountByArrayColumnsProblem(table, column, columns, boun
 
     for (const value of columns) {
       const query = {
-        q: `select ${column} as column, count(*) as count from ${table} 
-             where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
+        q: `select ${column} as column, count(*) as count from ${table} where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
       };
       let counter = 0;
       const data = await needle('post', CARTO_URL, query, { json: true });
-
+      console.log('query at array column', query);
       //console.log('STATUS', data.statusCode);
       if (data.statusCode === 200) {
         //const result1 = data.body.rows;
@@ -112,9 +111,9 @@ export async function getCountByColumnProblem(table, column, bounds, body) {
     filters = getNewFilter(filters, body);
 
       const query = {
-        q: `select ${column} as value, count(*) as counter from ${table} 
-             where ${filters} group by ${column} order by ${column} `
+        q: `select ${column} as value, count(*) as counter from ${table} where ${filters} group by ${column} order by ${column} `
       };
+      console.log('query at array count by', query);
       const data = await needle('post', CARTO_URL, query, { json: true });
       if (data.statusCode === 200) {
         if (data.body.rows.length > 0) {
@@ -148,6 +147,7 @@ export async function getCountSolutionStatusProblem(range, bounds, body) {
       }
 
       const query = { q: `select count(*) as count from ${PROBLEM_TABLE} where ${filters} and ${PROPSPROBLEMTABLES.problem_boundary[1]} between ${value} and ${endValue} ` };
+      console.log('query at array solution status ', query);
       const data = await needle('post', CARTO_URL, query, { json: true });
       let counter = 0;
       if (data.statusCode === 200) {
@@ -172,7 +172,7 @@ export async function getCountSolutionStatusProblem(range, bounds, body) {
   return result;
 }
 
-export async function getSubtotalsByComponentProblem(table, column, bounds, body) {
+export async function getSubtotalsByComponentProblem(table, columnA, columnB, bounds, body) {
   let result = [];
   try {
     const coords = bounds.split(',');
@@ -189,7 +189,8 @@ export async function getSubtotalsByComponentProblem(table, column, bounds, body
 
       filters = getNewFilter(filters, body, true);
 
-      const query = { q: `select count(*) from ${table}, ${PROBLEM_TABLE} where ${PROBLEM_TABLE}.${column}= ${table}.${column} and ${filters} ` };
+      const query = { q: `select count(*) from ${table}, ${PROBLEM_TABLE} where ${PROBLEM_TABLE}.${columnA}= ${table}.${columnB} and ${filters} ` };
+      console.log('Query at xxx', query.q);
       const data = await needle('post', CARTO_URL, query, { json: true });
       let counter = 0;
       if (data.statusCode === 200) {
@@ -209,8 +210,8 @@ export async function getSubtotalsByComponentProblem(table, column, bounds, body
     }
 
   } catch (error) {
-    logger.error(error);
     logger.error(`getSubtotalsByComponent Connection error`);
+    logger.error(error);
   }
 
   return result;
@@ -241,6 +242,7 @@ export async function getValuesByRangeProblem(table, column, range, bounds, body
         const minMaxQuery = {
             q: `SELECT max(${column}) as max, min(${column}) as min FROM ${table} where ${filters}`
         }
+        console.log('query ar min max', minMaxQuery);
         const minMaxData = await needle('post', CARTO_URL, minMaxQuery, { json: true });
         const minMaxResult = minMaxData.body.rows || [];
         minRange = Math.min.apply(Math, minMaxResult.map(function (element) { return element.min }));
@@ -261,6 +263,7 @@ export async function getValuesByRangeProblem(table, column, range, bounds, body
         }
         let counter = 0;
         const query = { q: `select count(*) from ${table} where (${column} between ${values.min} and ${values.max}) and ${filters} ` };
+        console.log('query ar min max range', query.q);
         const data = await needle('post', CARTO_URL, query, { json: true });
         if (data.statusCode === 200) {
           const rows = data.body.rows;
@@ -314,35 +317,35 @@ export async function problemParamFilterRoute(req, res) {
      const bounds = req.query.bounds;
      const body = req.body;
      let requests = [];
-     let problemTypesConst = [ 'Flood Hazard', 'Stream Function', 'Watershed Change'];
-     requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], ['High', 'Medium', 'Low'], bounds, body));
-     requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body));
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[3], bounds, body));
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[14], bounds, body));
-     requests.push(getSubtotalsByComponentProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[5], bounds, body));
      const rangeSolution = [
-        {
-           min: 0,
-           max: 1000000
-        },
-        {
-           min: 1000001,
-           max: 3000000
-        },
-        {
-           min: 3000001,
-           max: 5000000
-        },
-        {
-           min: 5000001,
-           max: 50000000
-        }
-     ]
-     requests.push(getValuesByRangeProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[0], rangeSolution, bounds, body));
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[2], bounds, body));
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[9], bounds, body));
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'county', bounds, body));
-     requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[8], problemTypesConst, bounds, body));
+      {
+         min: 0,
+         max: 1000000
+      },
+      {
+         min: 1000001,
+         max: 3000000
+      },
+      {
+         min: 3000001,
+         max: 5000000
+      },
+      {
+         min: 5000001,
+         max: 50000000
+      }
+   ]
+     let problemTypesConst = [ 'Flood Hazard', 'Stream Function', 'Watershed Change'];
+     requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], ['High', 'Medium', 'Low'], bounds, body)); //0
+     requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body)); //1
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[3], bounds, body)); //2
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[14], bounds, body)); //3
+     requests.push(getSubtotalsByComponentProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[5], PROPSPROBLEMTABLES.problems[5], bounds, body)); //4
+     requests.push(getValuesByRangeProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[0], rangeSolution, bounds, body)); //5
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[2], bounds, body)); //6
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[9], bounds, body)); //7
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'county', bounds, body)); // 8
+     requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[8], problemTypesConst, bounds, body)); //9
 
      const promises = await Promise.all(requests);
      const result = {
@@ -359,7 +362,7 @@ export async function problemParamFilterRoute(req, res) {
      };
      res.status(200).send(result);
   } catch (error) {
-     logger.error(error);
-     logger.error(`getSubtotalsByComponent Connection error`);
+     logger.error("error at problem route", error);
+     logger.error(`get Error at  Connection error`);
   }
 }
