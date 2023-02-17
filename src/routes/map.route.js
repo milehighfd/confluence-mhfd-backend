@@ -300,6 +300,64 @@ router.get('/get-aoi-from-center', async (req, res) => {
   }
   
 });
+
+async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
+  const SQL = `
+  select ST_ASGEOJSON(ST_EXTENT(the_geom)) as envelope
+    from (
+    SELECT the_geom FROM ${table} where  projectid=${id}
+  union 
+    select the_geom from ${PROBLEM_TABLE}  
+      where ${PROPSPROBLEMTABLES.problem_boundary[5]} in (SELECT problemid FROM grade_control_structure 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM pipe_appurtenances 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM special_item_point 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM special_item_linear 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM special_item_area 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM channel_improvements_linear 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM channel_improvements_area 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM removal_line 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM removal_area 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM storm_drain 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM detention_facilities 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM maintenance_trails 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM land_acquisition 
+        where projectid=${id} and projectid>0  union SELECT problemid FROM landscaping_area 
+        where projectid=${id} and projectid>0) 
+  union  
+    SELECT the_geom FROM grade_control_structure where ${field}=${id}  
+      union SELECT the_geom FROM pipe_appurtenances where ${field}=${id}  
+      union SELECT the_geom FROM special_item_point where ${field}=${id}  
+      union SELECT the_geom FROM special_item_linear where ${field}=${id}  
+      union SELECT the_geom FROM special_item_area where ${field}=${id}  
+      union SELECT the_geom FROM channel_improvements_linear where ${field}=${id}  
+      union SELECT the_geom FROM channel_improvements_area where ${field}=${id}  
+      union SELECT the_geom FROM removal_line where ${field}=${id}  
+      union SELECT the_geom FROM removal_area where ${field}=${id}  
+      union SELECT the_geom FROM storm_drain where ${field}=${id}  
+      union SELECT the_geom FROM detention_facilities where ${field}=${id}  
+      union SELECT the_geom FROM maintenance_trails where ${field}=${id}  
+      union SELECT the_geom FROM land_acquisition where ${field}=${id}  
+      union SELECT the_geom FROM landscaping_area where ${field}=${id}  
+  ) joinall
+` ;   
+  const SQL_URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
+  const newProm1 = new Promise((resolve, reject) => {
+    https.get(SQL_URL, response => {
+        if (response.statusCode === 200) {
+          let str = '';
+          response.on('data', function (chunk) {
+              str += chunk;
+          });
+          response.on('end', async function () {
+              resolve(JSON.parse(str).rows);
+          })
+        }
+    });
+  });
+  const dataInFunction = await newProm1;
+  return dataInFunction;
+}
+
 router.get('/bbox-components', async (req, res) => {
   logger.info('BBOX components executing');
   const id = req.query.id;
@@ -481,21 +539,52 @@ router.get('/bbox-components', async (req, res) => {
       component: 'self',
       centroid: projectCenter
     }
-      const BBOX_SQL = `
-        SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom from ${MAIN_PROJECT_TABLE}
-        WHERE projectid = ${id}
-      `;
-      const query = { q: BBOX_SQL };
-      const data = await needle('post', CARTO_URL, query, {json: true});
-      if (data.statusCode === 200) {
-        const geojson = data.body.rows[0]?.the_geom;
-        const bbox = JSON.parse(geojson);
+
+  let SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom2, ST_AsGeoJSON(the_geom) as the_geom3 FROM ${table} where  projectid=${id} `;
+  let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
+  const dataForBBOX = await needle('get', URL, { json: true });
+  console.log("\n\n\n\nSQL\n\n\n\n", SQL);
+  let coordinatesForBBOX = [];
+  if (dataForBBOX.statusCode === 200 && dataForBBOX.body.rows.length > 0) {
+    const result = dataForBBOX.body.rows[0];
+    
+    let convexhull = [];
+    if (result.projectid !== null && result.projectid !== undefined && result.projectid) {
+      convexhull = await getEnvelopeProblemsComponentsAndProject(result.projectid, table, 'projectid');
+      if(convexhull[0]){
+        convexhull = JSON.parse(convexhull[0].envelope).coordinates;
+      }
+    }
+    // let createdCoordinates = {};
+    // if (isDev) {
+    //   createdCoordinates = result.the_geom3;
+    // }
+    result.the_geom = result.the_geom2;
+    if(convexhull[0].length > 0){
+      coordinatesForBBOX = convexhull;
+       console.log("CONVEX HULL", coordinatesForBBOX);
+    } else if (JSON.parse(result.the_geom).coordinates) {
+      coordinatesForBBOX = JSON.parse(result.the_geom).coordinates;
+      console.log("CONVEX HULL without", coordinatesForBBOX);
+    }
+  }
+
+      // const BBOX_SQL = `
+      //   SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom from ${MAIN_PROJECT_TABLE}
+      //   WHERE projectid = ${id}
+      // `;
+      // const query = { q: BBOX_SQL };
+      // const data = await needle('post', CARTO_URL, query, {json: true});
+
+        // const geojson = data.body.rows[0]?.the_geom;
+        // const bbox = JSON.parse(geojson);
+
         if (minLat !== Infinity){
           bboxMain=[[[minLat, minLng], [minLat, maxLng], [maxLat, maxLng], [maxLat, minLng], [minLat, minLng]]];
         }else{
-          bboxMain=[bbox?.coordinates[0]]
+          bboxMain=coordinatesForBBOX
         }
-      }
+
   }
   centroids = [selfCentroid, ...centroids]
   // const polygon = [[[minLat, minLng], [minLat, maxLng], [maxLat, maxLng], [maxLat, minLng], [minLat, minLng]]];
