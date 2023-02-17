@@ -343,7 +343,7 @@ const sendBoardProjectsToProp = async (boards, prop) => {
     }
 }
 
-const updateProjectStatus = async (boards, status) => {
+const updateProjectStatus = async (boards, status) => {  
     for (var i = 0 ; i < boards.length ; i++) {
         let board = boards[i];
         let boardProjects = await BoardProject.findAll({
@@ -351,23 +351,25 @@ const updateProjectStatus = async (boards, status) => {
                 board_id: board._id
             }
         });
+        let bp = [];
         for (var j = 0 ; j < boardProjects.length ; j++) {
-            let bp = boardProjects[j];
-            try {
-                const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET status = '${status}' WHERE  projectid = ${bp.project_id}`;
-                const query = {
-                    q: updateQuery
-                };
-                const data = await needle('post', CARTO_URL, query, { json: true });
-                if (data.statusCode === 200) {
-                    result = data.body;
-                    logger.info(result);
-                } else {
-                    logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2))    ;
-                }
-            } catch(e) {
-                continue;
+            bp = [...bp, boardProjects[j].project_id];            
+        }        
+        try {           
+            const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET status = '${status}' WHERE  projectid IN (${bp})`;
+            logger.info(updateQuery);
+            const query = {
+                q: updateQuery
+            };
+            const data = await needle('post', CARTO_URL, query, { json: true });
+            if (data.statusCode === 200) {
+                result = data.body;
+                logger.info(result);
+            } else {
+                logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2))    ;
             }
+        } catch(e) {
+            continue;
         }
     }
 }
@@ -460,7 +462,7 @@ const moveCardsToNextLevel = async (board) => {
         }
     });
 
-    if (board.type === 'WORK_REQUEST') {
+    if (board.type === 'WORK_REQUEST') {        
         let boardsToCounty;
         let boardsToServiceArea
         if (+board.year < 2022) {
@@ -490,7 +492,7 @@ const moveCardsToNextLevel = async (board) => {
     } else if (board.type === 'WORK_PLAN') {
         if (board.locality !== 'MHFD District Work Plan') {
             await updateProjectStatus(boards, 'Submitted');
-        } else {
+        } else {            
             await updateProjectStatus(boards, 'Approved');
         }
         return {}
@@ -608,13 +610,13 @@ router.put('/:boardId', [auth], async (req, res) => {
         }
     });
     if (board) {
-        await updateBoards(board, status, comment, substatus);
+        await updateBoards(board, status, comment, substatus);       
         let bodyResponse = { status: 'updated' };
         if (status === 'Approved' && board.status !== status) {
             logger.info(`Approving board ${boardId}`);
             if (board.type !== 'WORK_PLAN') {
                 sendMails(board, req.user.name)
-            }             
+            }      
             let r = await moveCardsToNextLevel(board);
             bodyResponse = {
                 ...bodyResponse,
