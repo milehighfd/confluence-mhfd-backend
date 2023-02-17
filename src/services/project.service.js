@@ -243,6 +243,14 @@ const getDetails = async (project_id) => {
           "onbase_project_number",
           "created_date",
           'code_project_type_id',
+          [
+            sequelize.literal(`(
+              SELECT COUNT([project_component].[project_id])
+              FROM [project_component]
+              WHERE [project_component].[project_id] = [project].[project_id]
+            )`),
+            'totalComponents',
+          ],
         ], 
         include: [
           {
