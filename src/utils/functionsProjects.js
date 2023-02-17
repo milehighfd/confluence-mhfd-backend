@@ -265,11 +265,16 @@ export const sortProjects = async (projects, filters) => {
   const { sortby, sorttype } = filters;
   switch(sortby) {
     case 'estimatedcost':
+      const ESTIMATED_ID = 1;
       projects.sort((a,b) => {
+        let valuea = a.project_costs.filter( pc => pc.code_cost_type_id === ESTIMATED_ID)[0]?.cost;
+        let valueb = b.project_costs.filter( pc => pc.code_cost_type_id === ESTIMATED_ID)[0]?.cost;
+        valuea = valuea ? valuea : 0;
+        valueb = valueb ? valueb : 0;
         if (sorttype === 'asc') {
-          return a?.estimatedCost?.cost - b?.estimatedCost?.cost
+          return valuea - valueb;
         } else {
-          return b?.estimatedCost?.cost - a?.estimatedCost?.cost
+          return valueb - valuea;
         }
       });
       break;
