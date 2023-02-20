@@ -570,25 +570,7 @@ router.get('/bbox-components', async (req, res) => {
       console.log("CONVEX HULL without", coordinatesForBBOX);
     }
   }
-
-      // const BBOX_SQL = `
-      //   SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom from ${MAIN_PROJECT_TABLE}
-      //   WHERE projectid = ${id}
-      // `;
-      // const query = { q: BBOX_SQL };
-      // const data = await needle('post', CARTO_URL, query, {json: true});
-
-        // const geojson = data.body.rows[0]?.the_geom;
-        // const bbox = JSON.parse(geojson);
-
-        if (minLat !== Infinity){
           bboxMain=coordinatesForBBOX
-          // bboxMain=[[[minLat, minLng], [minLat, maxLng], [maxLat, maxLng], [maxLat, minLng], [minLat, minLng]]];
-          console.log('enter here 1',bboxMain );
-        }else{
-          bboxMain=coordinatesForBBOX
-          console.log('enter here 2',bboxMain );
-        }
 
   }
   centroids = [selfCentroid, ...centroids]
