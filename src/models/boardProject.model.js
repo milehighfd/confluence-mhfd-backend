@@ -1,5 +1,9 @@
 export default (sequelize, DataType) => {
   const boardProject = sequelize.define('boardProject', {
+    id: {
+      type: DataType.INTEGER,
+      primaryKey: true
+    },
     board_id: {
       type: DataType.INTEGER
     },

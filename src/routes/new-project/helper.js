@@ -2,6 +2,7 @@ import needle from 'needle';
 import db from 'bc/config/db.js';
 import { CREATE_PROJECT_TABLE, CARTO_URL } from 'bc/config/config.js';
 import logger from 'bc/config/logger.js';
+import boardService from 'bc/services/board.service.js';
 
 const Configuration = db.configuration;
 const Board = db.board;
@@ -83,7 +84,7 @@ export const addProjectToBoard = async (user, servicearea, county, locality, pro
   const dbLoc = _dbLoc;
   let type = 'WORK_REQUEST';
   if (dbLoc) {
-    if (dbLoc.type === 'JURISDICTION') {
+    if (dbLoc.type === 'LOCAL_GOVERNMENT') {
       type = 'WORK_REQUEST';
     } else if (dbLoc.type === 'COUNTY' || dbLoc.type === 'SERVICE_AREA') {
       type = 'WORK_PLAN';
@@ -103,39 +104,34 @@ export const addProjectToBoard = async (user, servicearea, county, locality, pro
     }
   });
   if (!board) {
-    let newBoard = new Board({
-      type, year, locality, projecttype, status: 'Under Review'
-    });
-    await newBoard.save();
-    board = newBoard;
+    const response = await boardService.createNewBoard(type, year, locality, projecttype, 'Under Review')
+    board = response;
   }
   let boardProjectObject = {
     board_id: board._id,
     project_id: project_id,
     origin: locality
   }
-  if (type === 'WORK_PLAN') {
+
+/*   if (type === 'WORK_PLAN') {
     boardProjectObject.originPosition0 = -1;
     boardProjectObject.originPosition1 = -1;
     boardProjectObject.originPosition2 = -1;
     boardProjectObject.originPosition3 = -1;
     boardProjectObject.originPosition4 = -1;
     boardProjectObject.originPosition5 = -1;
-  }
+  } */
   boardProjectObject.position0 = 0;
-  console.log('BOARD PROJECT OBJECT', boardProjectObject);
   let boardProject = new BoardProject(boardProjectObject);
   let boardProjectSaved = boardProject;
   updateBoardProjectAtIndex(board._id, 0);
-  console.log('zxcSEND TO WORK REQUEST \n\n\n\n\n\n\n\n', sendToWR, typeof sendToWR);
   if (sendToWR === 'true' || isWorkPlan) {
-    console.log('\n\n\n\n\n\n zxcsent to Wokrrequest', sendToWR);
-    boardProjectSaved = await boardProject.save();
+    boardProjectSaved = await boardService.saveBoard(boardProject.board_id, boardProject.project_id, boardProject.origin, boardProject.position0);
   }
   if (['admin', 'staff'].includes(user.designation) && !isWorkPlan) {
     await sendBoardsToProp(boardProjectSaved, board, servicearea, 'servicearea');
     await sendBoardsToProp(boardProjectSaved, board, county, 'county');
-  }
+  } 
 };
 
 export const getNewProjectId = async () => {

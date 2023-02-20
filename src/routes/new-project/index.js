@@ -40,10 +40,10 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
   }
   if (components) {
     for (const component of components) {
-      if (!usableComponents[component.table]) {
-        usableComponents[component.table] = [];
+      if (!usableComponents[component.source_table_name]) {
+        usableComponents[component.source_table_name] = [];
       }
-      usableComponents[component.table].push(component.objectid);
+      usableComponents[component.source_table_name].push(component.component_id);
     }
   }
   logger.info('my usable components ' + JSON.stringify(usableComponents, null, 2));
@@ -73,7 +73,6 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
     const query = {
       q: sql
     };
-    console.log(sql);
     let body = {};
     try {
       const data = await needle('post', CARTO_URL, query, { json: true });

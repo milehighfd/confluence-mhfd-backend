@@ -339,7 +339,8 @@ async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
       union SELECT the_geom FROM land_acquisition where ${field}=${id}  
       union SELECT the_geom FROM landscaping_area where ${field}=${id}  
   ) joinall
-` ;   
+` ;  
+console.log('SQL for all', SQL)
   const SQL_URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   const newProm1 = new Promise((resolve, reject) => {
     https.get(SQL_URL, response => {
@@ -355,6 +356,7 @@ async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
     });
   });
   const dataInFunction = await newProm1;
+  console.log('entraaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', dataInFunction);
   return dataInFunction;
 }
 
@@ -568,22 +570,7 @@ router.get('/bbox-components', async (req, res) => {
       console.log("CONVEX HULL without", coordinatesForBBOX);
     }
   }
-
-      // const BBOX_SQL = `
-      //   SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom from ${MAIN_PROJECT_TABLE}
-      //   WHERE projectid = ${id}
-      // `;
-      // const query = { q: BBOX_SQL };
-      // const data = await needle('post', CARTO_URL, query, {json: true});
-
-        // const geojson = data.body.rows[0]?.the_geom;
-        // const bbox = JSON.parse(geojson);
-
-        if (minLat !== Infinity){
-          bboxMain=[[[minLat, minLng], [minLat, maxLng], [maxLat, maxLng], [maxLat, minLng], [minLat, minLng]]];
-        }else{
           bboxMain=coordinatesForBBOX
-        }
 
   }
   centroids = [selfCentroid, ...centroids]
