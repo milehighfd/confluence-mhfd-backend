@@ -11,6 +11,8 @@ import {
     getProjectData
 } from 'bc/services/mapgallery.service.js';
 import { sendBoardNotification } from 'bc/services/user.service.js';
+import boardService from 'bc/services/board.service.js';
+import projectService from 'bc/services/project.service.js';
 
 const router = express.Router();
 const Board = db.board;
@@ -169,9 +171,8 @@ router.post('/projectdata', async (req, res) => {
 
 router.post('/', async (req, res) => {
     let body = req.body;
+    console.log("3333333333", body);
     let { type, year, locality, projecttype } = body;
-    console.log(body);
-    console.log(type, year, locality, projecttype);
     if (!type || !year || !locality || !projecttype) {
         return res.sendStatus(404);
     }
@@ -181,7 +182,6 @@ router.post('/', async (req, res) => {
             type, year, locality, projecttype
         }
     });
-    console.log('hereeeeee', board)
     if (board) {
         logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
         let boardProjects = await BoardProject.findAll({
@@ -193,9 +193,12 @@ router.post('/', async (req, res) => {
         let projectsPromises = boardProjects.filter(bp => !!bp.project_id).map(async (bp) => {
             let project = null;
             try {
-                project = await getMidByProjectIdV2(bp.project_id, projecttype);
-            } catch(e) {
-                console.log('Error in project Promises ', e);
+                project = await projectService.getDetails(bp.project_id);
+                if (project.error) {
+                    console.log('Error in project Promises ', project.error);
+                }
+            } catch (error) {
+            console.log('Error in project Promises ', error);
             }
             let newObject = {
                 id: bp.id,
@@ -213,7 +216,7 @@ router.post('/', async (req, res) => {
                     newObject[`year${i}`] = bp[`year${i}`];
                 }
             }
-            return newObject;
+            return !project.error && newObject;
         })
         let resolvedProjects = await Promise.all(projectsPromises);
         logger.info(`RESOLVERD PROJECTS: ${resolvedProjects}`)
@@ -225,15 +228,12 @@ router.post('/', async (req, res) => {
             projects
         });
     } else {
-        console.log( 'is entering here')
-        // let newBoard = new Board({
-        //     type, year, locality, projecttype, status: 'Under Review'
-        // });
-        // await newBoard.save();
-        // res.send({
-        //     board: newBoard,
-        //     projects: []
-        // });
+    logger.info('CREATING NEW BOARD');
+    const response = await boardService.createNewBoard(type, year, locality, projecttype, 'Under Review')
+    res.send({
+        board: response,
+        projects: []
+    });
     }
 });
 

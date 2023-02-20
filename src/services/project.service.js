@@ -400,12 +400,7 @@ const getDetails = async (project_id) => {
             // }
           },
           {
-            model: ProjectDetail,
-            attributes: [
-              'maintenance_frequency',
-              'is_public_ownership',
-              'code_maintenance_eligibility_type_id'
-            ],
+            model: ProjectDetail
             // where: {
             //   code_cost_type_id: 1
             // }
