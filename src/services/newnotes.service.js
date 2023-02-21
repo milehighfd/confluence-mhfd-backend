@@ -112,7 +112,7 @@ const getColors = async (userId) => {
 const deleteGroups = async (id) => {
   const group = await GroupNotes.findOne({
     where: {
-      _id: id 
+      groupnotes_id: id 
     }});
   if (group) {
     NewNotes.destroy({ where: { groupnotes_id: id } });
@@ -149,17 +149,17 @@ const deleteColor = async (id) => {
   }
 }
 
-const updateGroup = async (id, name, position) => {
-  logger.info('update group ' + JSON.stringify(name));
+const updateGroup = async (id, group_notes_name, position) => {
+  logger.info('update group ' + JSON.stringify(group_notes_name));
   try {
     let toUpdate = await GroupNotes.findOne({
       where: {
-        _id: id
+        groupnotes_id: id
       }
     });
     if (toUpdate) {
-      console.log('update group ', toUpdate, name);
-      toUpdate = await toUpdate.update({name: name, position: position});
+      console.log('update group ', toUpdate, group_notes_name);
+      toUpdate = await toUpdate.update({group_notes_name: group_notes_name, position: position});
     } 
     return toUpdate;
   } catch(error) {
@@ -173,7 +173,7 @@ const updateColor = async (id, label, color, opacity) => {
   try {
     let toUpdate = await ColorNotes.findOne({
       where: {
-        _id: id
+        color_id: id
       }
     });
     if (toUpdate) {
@@ -198,7 +198,7 @@ const getAllNotesByUser = async (userId) => {
 const deleteNote = async (id) => {
   const note = await NewNotes.findOne({
     where: {
-      _id: id 
+      newnotes_id: id 
     }});
     console.log(id, note);
   if (note) {
@@ -252,7 +252,7 @@ const saveNote = async (note) => {
 }
 const saveGroup = async (name, user_id) => {
   console.log(name, user_id);
-  const myGroup = {name: name, user_id: user_id};
+  const myGroup = {group_notes_name: name, user_id: user_id};
   myGroup.position = await getNextBucket(user_id);
   const group = await GroupNotes.create(myGroup);
   return group;
@@ -273,7 +273,7 @@ const updateNote = async (id, note) => {
   try {
     let toUpdate = await NewNotes.findOne({
       where: {
-        _id: id
+        newnotes_id: id
       }
     });
     if (toUpdate) {
