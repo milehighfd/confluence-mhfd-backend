@@ -3,7 +3,8 @@ export default (sequelize, DataType) => {
   const NewNotes = sequelize.define('newnotes', {
     newnotes_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true,
     },
     note_text: {
       type: DataType.TEXT

@@ -4,6 +4,7 @@ export default (sequelize, DataType) => {
     color_id: {
       type: DataType.INTEGER,
       allowNull: false,
+      autoIncrement: true,
       primaryKey: true
     },
     label: {

@@ -55,10 +55,10 @@ router.get('/get-available-colors', [auth], async (req, res) => {
 })
 
 router.post('/group', [auth], async (req, res) => {
-  const { name } = req.body;
+  const { group_notes_name } = req.body;
   const user = req.user;
   try {
-    const group = await NoteService.saveGroup(name, user.user_id);
+    const group = await NoteService.saveGroup(group_notes_name, user.user_id);
     return res.send(group);
   } catch (error) {
     console.log(error);
@@ -68,8 +68,8 @@ router.post('/group', [auth], async (req, res) => {
 
 router.post('/note', [auth], async (req, res) => {
   const user = req.user;  
-  const {content, latitude, longitude, color_id} = req.body; 
-  const note = {content, latitude, longitude, color_id};
+  const {note_text, latitude, longitude, color_id} = req.body; 
+  const note = {note_text, latitude, longitude, color_id};
   note['user_id'] = user.user_id;
   try {
     const savedNote = await NoteService.saveNote(note);
@@ -135,10 +135,10 @@ router.delete('/color/:id', [auth], async (req, res) => {
 router.put('/note/:id', [auth], async (req, res) => {
   const id = req.params.id;
   const user = req.user;
-  const {content, latitude, longitude, color_id, groupnotes_id, position} = req.body;
+  const {note_text, latitude, longitude, color_id, groupnotes_id, position} = req.body;
   const note = {};
-  if (content) {
-    note['content'] = content;
+  if (note_text) {
+    note['note_text'] = note_text;
   }
   if (latitude) {
     note['latitude'] = latitude;
@@ -166,11 +166,11 @@ router.put('/note/:id', [auth], async (req, res) => {
   }
 });
 
-router.put('/group/:id', [auth], async (req, res) => {
+router.put('/group/:id', [auth], async (req, res) => {  
   const id = req.params.id;
-  const { name, position } = req.body;
+  const { group_notes_name, position } = req.body;
   try {
-    const group = await NoteService.updateGroup(id, name, position);
+    const group = await NoteService.updateGroup(id, group_notes_name, position);
     return res.send(group);
   } catch (error) {
     res.status(500).send(error);

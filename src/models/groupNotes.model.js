@@ -4,12 +4,16 @@ export default (sequelize, DataType) => {
     group_notes_name: {
       type: DataType.STRING
     },
+    groupnotes_id: {
+      type: DataType.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
     position: {
       type: DataType.INTEGER
     },
     user_id: {
-      type: DataType.INTEGER,
-      primaryKey: true
+      type: DataType.INTEGER
     }
   }, {
     freezeTableName: true,
