@@ -61,9 +61,9 @@ const listProjects = async (req, res) => {
 const getProjectDetail = async (req, res) => {
 
   const project_id = req.params['project_id'];
-  console.log('project id is ', project_id);
+  const isStudy = req.params['isStudy'];
   try {
-    let project = await projectService.getDetails(project_id);
+    let project = await projectService.getDetails(project_id, isStudy);
     if (project.error) {
       return res.status(project.error).send({ error: project.message });
     }
@@ -72,6 +72,7 @@ const getProjectDetail = async (req, res) => {
     res.status(500).send({ error: error });
   }
 }
+
 const getBboxProject = async (req, res) => {
   const project_id = req.params['project_id'];
   try {

@@ -51,6 +51,12 @@ import businessAssociates from 'bc/models/business_associates.model.js';
 import codeLocalGoverment from 'bc/models/code_local_government.model.js';
 import codeStateCounty from 'bc/models/code_state_county.model.js';
 import projectServiceArea from 'bc/models/project_service_area.model.js';
+import projectStudy from 'bc/models/projectstudy.model';
+import Study from 'bc/models/study.model';
+import CodeStudyType from 'bc/models/code_study_type.model';
+import RelatedStudy from 'bc/models/related_study.model';
+import streamStudy from 'bc/models/stream_study.model';
+
 // import serviceAreaLocalGovernment from 'bc/models/service_area_local_government.model.js';
 
 const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, config.POSTGRESQL_PASSWORD, {
@@ -90,6 +96,12 @@ db.newnotes = newnotes(sequelize, Sequelize);
 db.color = color(sequelize, Sequelize);
 db.groupnotes = groupNotes(sequelize, Sequelize);
 db.projectStream = projectstream(sequelize, Sequelize);
+db.projectstudy = projectStudy(sequelize, Sequelize);
+db.study = Study(sequelize, Sequelize);
+db.codestudytype = CodeStudyType(sequelize, Sequelize);
+db.relatedstudy = RelatedStudy(sequelize, Sequelize);
+db.streamstudy = streamStudy(sequelize, Sequelize);
+
 db.projectComponent = projectComponent(sequelize, Sequelize);
 db.consultants = consultants(sequelize, Sequelize);
 db.componentdependency = componentDependency(sequelize, Sequelize);

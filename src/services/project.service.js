@@ -42,6 +42,14 @@ const BusinessAssociate = db.businessAssociates;
 const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
+const ProjectStudy = db.projectstudy;
+const Study = db.study;
+const codeStudyType = db.codestudytype;
+const relatedStudy = db.relatedstudy;
+const CodeStudySubreason = db.codeStudySubreason;
+const codeStudyReason = db.CodeStudyReason;
+const streamStudy = db.streamstudy;
+
 const Op = sequelize.Op;
 
 async function getProblemByProjectId(projectid, sortby, sorttype) {
@@ -232,7 +240,7 @@ const  getProjectsDeprecated  = async (include, bounds, offset = 1, limit = 1200
   }
 }
 
-const getDetails = async (project_id) => {
+const getDetails = async (project_id, isStudy) => {
   try {
     const [projectPromise, problems] = await Promise.all([
       Project.findByPk(project_id, {
@@ -385,7 +393,6 @@ const getDetails = async (project_id) => {
             attributes: [
               'code_project_staff_role_type_id',
               'is_active',
-              
             ],
             include: {
               model: MHFDStaff,
@@ -404,7 +411,31 @@ const getDetails = async (project_id) => {
             // where: {
             //   code_cost_type_id: 1
             // }
-          }
+          },
+          {
+            model: ProjectStudy,
+            include: {
+              model: Study,
+              include: [{
+                model: codeStudyType
+              },
+              {
+                model: relatedStudy
+              },
+              {
+                model: CodeStudySubreason,
+                include: {
+                  model: codeStudyReason
+                }
+              },
+              {
+                model: streamStudy,
+                include: {
+                  model: Streams
+                }
+              }]
+            }
+          }, 
         ],
         order: [['created_date', 'DESC']]
       }),
