@@ -51,11 +51,11 @@ import businessAssociates from 'bc/models/business_associates.model.js';
 import codeLocalGoverment from 'bc/models/code_local_government.model.js';
 import codeStateCounty from 'bc/models/code_state_county.model.js';
 import projectServiceArea from 'bc/models/project_service_area.model.js';
-import projectStudy from 'bc/models/projectstudy.model';
-import Study from 'bc/models/study.model';
-import CodeStudyType from 'bc/models/code_study_type.model';
-import RelatedStudy from 'bc/models/related_study.model';
-import streamStudy from 'bc/models/stream_study.model';
+import projectStudy from 'bc/models/projectstudy.model.js';
+import study from 'bc/models/study.model.js';
+import codeStudyType from 'bc/models/code_study_type.model.js';
+import relatedStudy from 'bc/models/related_study.model.js';
+import streamStudy from 'bc/models/stream_study.model.js';
 
 // import serviceAreaLocalGovernment from 'bc/models/service_area_local_government.model.js';
 
@@ -97,9 +97,9 @@ db.color = color(sequelize, Sequelize);
 db.groupnotes = groupNotes(sequelize, Sequelize);
 db.projectStream = projectstream(sequelize, Sequelize);
 db.projectstudy = projectStudy(sequelize, Sequelize);
-db.study = Study(sequelize, Sequelize);
-db.codestudytype = CodeStudyType(sequelize, Sequelize);
-db.relatedstudy = RelatedStudy(sequelize, Sequelize);
+db.study = study(sequelize, Sequelize);
+db.codestudytype = codeStudyType(sequelize, Sequelize);
+db.relatedstudy = relatedStudy(sequelize, Sequelize);
 db.streamstudy = streamStudy(sequelize, Sequelize);
 
 db.projectComponent = projectComponent(sequelize, Sequelize);
@@ -156,8 +156,10 @@ db.user.hasMany(db.ProjectFavorite, {foreignKey: 'user_id'});
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
 db.user.hasMany(db.color, {foreignKey: 'user_id'});
 db.color.belongsTo(db.user, {foreignKey: 'user_id'});
-db.newnotes.belongsTo(db.color, {foreignKey: {name: 'color_id', allowNull: true}});
+
 db.color.hasMany(db.newnotes, {foreignKey: {name: 'color_id', allowNull: true}});
+db.newnotes.belongsTo(db.color, {foreignKey: {name: 'color_id', allowNull: true}});
+
 db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
 db.ProjectFavorite.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
@@ -259,6 +261,30 @@ db.codePhaseType.belongsTo(
   db.codeProjectType,
   { foreignKey: 'code_project_type_id' }
 );
+
+db.project.hasMany(db.projectstudy, {foreignKey: 'project_id'});
+db.projectstudy.belongsTo(db.project, { foreignKey: 'project_id' });
+
+db.projectstudy.hasMany(db.study, {foreignKey: 'study_id'});
+db.study.belongsTo(db.projectstudy, { foreignKey: 'study_id' });
+
+db.study.hasMany(db.relatedstudy, {foreignKey: 'study_id'});
+db.relatedstudy.belongsTo(db.study, { foreignKey: 'study_id' });
+
+db.study.hasMany(db.codestudytype, {foreignKey: 'study_type_id'});
+db.codestudytype.belongsTo(db.study, {foreignKey: 'study_type_id'});
+
+db.study.hasMany(db.codeStudySubreason, {foreignKey: 'code_study_sub_reason_id'});
+db.codeStudySubreason.belongsTo(db.study, {foreignKey: 'code_study_sub_reason_id'});
+
+db.codeStudySubreason.hasMany(db.codeStudyReason, {foreignKey: 'code_study_reason_id'});
+db.codeStudyReason.belongsTo(db.codeStudySubreason, {foreignKey: 'code_study_reason_id'});
+
+db.streamstudy.hasMany(db.stream, {foreignKey: 'stream_id'});
+db.stream.belongsTo(db.streamstudy, { foreignKey: 'stream_id' })
+
+db.study.hasMany(db.streamstudy, {foreignKey: 'study_id'});
+db.streamstudy.belongsTo(db.study, { foreignKey: 'study_id' });
 
 db.sequelize.authenticate().then(()=>{
   console.log("Connected to Database");

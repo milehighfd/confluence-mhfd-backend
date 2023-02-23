@@ -44,11 +44,11 @@ const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
 const ProjectStudy = db.projectstudy;
 const Study = db.study;
-const codeStudyType = db.codestudytype;
-const relatedStudy = db.relatedstudy;
+const CodeStudyType = db.codestudytype;
+const RelatedStudy = db.relatedstudy;
 const CodeStudySubreason = db.codeStudySubreason;
-const codeStudyReason = db.CodeStudyReason;
-const streamStudy = db.streamstudy;
+const CodeStudyReason = db.codeStudyReason;
+const StreamStudy = db.streamstudy;
 
 const Op = sequelize.Op;
 
@@ -417,19 +417,19 @@ const getDetails = async (project_id, isStudy) => {
             include: {
               model: Study,
               include: [{
-                model: codeStudyType
+                model: CodeStudyType
               },
               {
-                model: relatedStudy
+                model: RelatedStudy
               },
               {
                 model: CodeStudySubreason,
                 include: {
-                  model: codeStudyReason
+                  model: CodeStudyReason
                 }
               },
               {
-                model: streamStudy,
+                model: StreamStudy,
                 include: {
                   model: Streams
                 }

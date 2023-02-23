@@ -14,7 +14,9 @@ export default (sequelize, DataType) => {
     },
   }, {
     freezeTableName: true,
-    tableName: 'stream_study'
+    tableName: 'stream_study',
+    createdAt: false,
+    updatedAt: false
   });
   return streamStudy;
 }

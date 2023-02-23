@@ -9,7 +9,9 @@ export default (sequelize, DataType) => {
     }
   }, {
     freezeTableName: true,
-    tableName: 'related_study'
+    tableName: 'related_study',
+    createdAt: false,
+    updatedAt: false
   });
   return RelatedStudy;
 }
