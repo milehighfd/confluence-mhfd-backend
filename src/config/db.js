@@ -156,6 +156,8 @@ db.newnotes.belongsTo(db.groupnotes, {foreignKey: {name: 'groupnotes_id', allowN
 db.groupnotes.hasMany(db.newnotes, { foreignKey: {name: 'groupnotes_id', allowNull: true }});
 db.groupnotes.belongsTo(db.user, {foreignKey: 'user_id'});
 db.user.hasMany(db.groupnotes, {foreignKey: 'user_id'});
+db.user.hasMany(db.mhfdStaff, {foreignKey: {name: 'user_id', allowNull: true}, targetKey: 'user_id'});
+db.mhfdStaff.belongsTo(db.user, {foreignKey: {name: 'user_id', allowNull: true}, targetKey: 'user_id'});
 
 /*
 db.businessAssociates.hasMany(
