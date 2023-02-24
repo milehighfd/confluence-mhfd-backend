@@ -1017,10 +1017,13 @@ router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
       obj[id] = [];
     }
     for (const stream of streams) {
-      obj[stream.stream.stream_name].push(stream);
+      const local = await projectStreamService.getOneByStream(stream.local_government_id);
+      const res = {stream, code_local_goverment: local}
+      obj[stream.stream.stream_name].push(res);
     }
     return res.send(obj);
   } catch (error) {
+    console.log(error);
     res.status(500).send(error);
   }
 });

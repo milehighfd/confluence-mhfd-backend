@@ -3,18 +3,34 @@ import logger from 'bc/config/logger.js';
 
 const ProjectStream = db.project_stream;
 const Streams = db.stream;
+const CodeLocalGoverment = db.codeLocalGoverment;
+
 const getAll = (projectid) => {
   try {
     const list = ProjectStream.findAll({
       where: {
         project_id: projectid
       },
-      include: {
+      include: [{
         model: Streams,
         attributes: [
           'stream_id',
           'stream_name'
         ]
+      }
+    ]});
+    return list;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+const getOneByStream = async(pk) => {
+  try {
+    const list = await CodeLocalGoverment.findAll({
+      where: {
+        objectid: pk
       }
     });
     return list;
@@ -52,5 +68,6 @@ const saveProjectStream = async (projectStream) => {
 export default {
   getAll,
   deleteByProjectId,
-  saveProjectStream
+  saveProjectStream,
+  getOneByStream
 };
