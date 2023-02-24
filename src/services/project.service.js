@@ -42,6 +42,14 @@ const BusinessAssociate = db.businessAssociates;
 const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
+const ProjectStudy = db.projectstudy;
+const Study = db.study;
+const CodeStudyType = db.codestudytype;
+const RelatedStudy = db.relatedstudy;
+const CodeStudySubreason = db.codeStudySubreason;
+const CodeStudyReason = db.codeStudyReason;
+const StreamStudy = db.streamstudy;
+
 const User = db.user;
 const Op = sequelize.Op;
 
@@ -411,7 +419,35 @@ const getDetails = async (project_id) => {
             // where: {
             //   code_cost_type_id: 1
             // }
-          }
+          },
+          {
+            model: ProjectStudy,
+            include: {
+              model: Study,
+              include: [{
+                model: CodeStudyType
+              },
+              {
+                model: RelatedStudy
+              },
+              {
+                model: CodeStudySubreason,
+                include: {
+                  model: CodeStudyReason
+                }
+              },
+              {
+                model: StreamStudy,
+                include: {
+                  attributes: [
+                    'stream_id',
+                    'stream_name'
+                  ],
+                  model: Streams
+                }
+              }]
+            }
+          }, 
         ],
         order: [['created_date', 'DESC']]
       }),

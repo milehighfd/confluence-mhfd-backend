@@ -61,7 +61,6 @@ const listProjects = async (req, res) => {
 const getProjectDetail = async (req, res) => {
 
   const project_id = req.params['project_id'];
-  console.log('project id is ', project_id);
   try {
     let project = await projectService.getDetails(project_id);
     if (project.error) {
@@ -72,6 +71,7 @@ const getProjectDetail = async (req, res) => {
     res.status(500).send({ error: error });
   }
 }
+
 const getBboxProject = async (req, res) => {
   const project_id = req.params['project_id'];
   try {
