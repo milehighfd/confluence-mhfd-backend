@@ -1,13 +1,13 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 
-const ProjectStream = db.projectStream;
+const ProjectStream = db.project_stream;
 
 const getAll = (projectid) => {
   try {
     const list = ProjectStream.findAll({
       where: {
-        projectid: projectid
+        project_id: projectid
       }
     });
     return list;
@@ -20,7 +20,7 @@ const getAll = (projectid) => {
 const deleteByProjectId= async (projectid) => {
   const project = ProjectStream.destroy({
     where: {
-      projectid: projectid 
+      project_id: projectid 
     }});
   if (project) {
     logger.info('ProjectStream destroyed ');
