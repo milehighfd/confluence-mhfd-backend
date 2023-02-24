@@ -1010,15 +1010,14 @@ router.post('/showcomponents', auth, async (req, res) => {
 router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
   const projectid = req.params.projectid;
   try {
-    console.log("THE PROJECT ID WITH STREAMS IS ", projectid);
     const streams = await projectStreamService.getAll(projectid);
-    const ids = streams.map(stream => stream.str_name);
+    const ids = streams.map(res => res.stream.stream_name);
     const obj = {};
     for (const id of ids) {
       obj[id] = [];
     }
     for (const stream of streams) {
-      obj[stream.str_name].push(stream);
+      obj[stream.stream.stream_name].push(stream);
     }
     return res.send(obj);
   } catch (error) {

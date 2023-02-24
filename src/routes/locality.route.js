@@ -21,7 +21,6 @@ const getData = async (req, res, next) => {
 const getData2 = async (req, res, next) => {
   const { type } = req.params;
   const [localities] = await db.sequelize.query(`SELECT name, type FROM Localities ORDER BY name ASC;`);
-  console.log(localities, "aca:");
   res.locals.data = [];
   if (type === 'WORK_REQUEST') {
     if (req.user) {

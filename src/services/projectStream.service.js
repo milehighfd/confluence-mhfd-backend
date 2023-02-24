@@ -2,12 +2,19 @@ import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 
 const ProjectStream = db.project_stream;
-
+const Streams = db.stream;
 const getAll = (projectid) => {
   try {
     const list = ProjectStream.findAll({
       where: {
         project_id: projectid
+      },
+      include: {
+        model: Streams,
+        attributes: [
+          'stream_id',
+          'stream_name'
+        ]
       }
     });
     return list;
