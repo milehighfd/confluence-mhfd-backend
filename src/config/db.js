@@ -276,8 +276,8 @@ db.relatedstudy.belongsTo(db.study, { foreignKey: 'study_id' });
 db.codestudytype.hasMany(db.study, {foreignKey: 'study_type_id'});
 db.study.belongsTo(db.codestudytype, {foreignKey: 'study_type_id'});
 
-db.study.hasMany(db.codeStudySubreason, {foreignKey: 'code_study_sub_reason_id'});
-db.codeStudySubreason.belongsTo(db.study, {foreignKey: 'code_study_sub_reason_id'});
+db.codeStudySubreason.hasMany(db.study, {foreignKey: 'code_study_sub_reason_id'});
+db.study.belongsTo(db.codeStudySubreason, {foreignKey: 'code_study_sub_reason_id'});
 
 db.codeStudySubreason.hasMany(db.codeStudyReason, {foreignKey: 'code_study_reason_id'});
 db.codeStudyReason.belongsTo(db.codeStudySubreason, {foreignKey: 'code_study_reason_id'});
