@@ -375,7 +375,7 @@ const updateProjectStatus = async (boards, status) => {
         for (const element of boardProjects) {
             bp.push(element.project_id);                
             if (status === 'Approved') {
-                if (element.position0 == null) {
+                if (element.position0 != null) {
                     secondUpdate.push(element.project_id);
                 }
             }
