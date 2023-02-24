@@ -267,14 +267,14 @@ db.codePhaseType.belongsTo(
 db.project.hasMany(db.projectstudy, {foreignKey: 'project_id'});
 db.projectstudy.belongsTo(db.project, { foreignKey: 'project_id' });
 
-db.projectstudy.hasMany(db.study, {foreignKey: 'study_id'});
-db.study.belongsTo(db.projectstudy, { foreignKey: 'study_id' });
+db.study.hasMany(db.projectstudy, {foreignKey: 'study_id'});
+db.projectstudy.belongsTo(db.study, { foreignKey: 'study_id' });
 
 db.study.hasMany(db.relatedstudy, {foreignKey: 'study_id'});
 db.relatedstudy.belongsTo(db.study, { foreignKey: 'study_id' });
 
-db.study.hasMany(db.codestudytype, {foreignKey: 'study_type_id'});
-db.codestudytype.belongsTo(db.study, {foreignKey: 'study_type_id'});
+db.codestudytype.hasMany(db.study, {foreignKey: 'study_type_id'});
+db.study.belongsTo(db.codestudytype, {foreignKey: 'study_type_id'});
 
 db.study.hasMany(db.codeStudySubreason, {foreignKey: 'code_study_sub_reason_id'});
 db.codeStudySubreason.belongsTo(db.study, {foreignKey: 'code_study_sub_reason_id'});
@@ -282,8 +282,8 @@ db.codeStudySubreason.belongsTo(db.study, {foreignKey: 'code_study_sub_reason_id
 db.codeStudySubreason.hasMany(db.codeStudyReason, {foreignKey: 'code_study_reason_id'});
 db.codeStudyReason.belongsTo(db.codeStudySubreason, {foreignKey: 'code_study_reason_id'});
 
-db.streamstudy.hasMany(db.stream, {foreignKey: 'stream_id'});
-db.stream.belongsTo(db.streamstudy, { foreignKey: 'stream_id' })
+db.stream.hasMany(db.streamstudy, {foreignKey: 'stream_id'});
+db.streamstudy.belongsTo(db.stream, { foreignKey: 'stream_id' })
 
 db.study.hasMany(db.streamstudy, {foreignKey: 'study_id'});
 db.streamstudy.belongsTo(db.study, { foreignKey: 'study_id' });
