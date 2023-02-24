@@ -113,6 +113,10 @@ const getStreams = async () => {
     order: [
       ['stream_name', 'ASC']
     ],
+    attributes: [
+      'stream_name',
+      'stream_id'
+    ],
     where: {
       stream_name: {[Op.ne]: null}
     }

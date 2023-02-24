@@ -90,7 +90,7 @@ const getGroup = async (req, res) => {
       data.table = 'streams';
       data.groups = groups;
     } catch (error) {
-      console.log('ERRRO AT streams', error);
+      console.log('ERRRO AT ', groupname, error);
     }
   }
   if (groupname === 'projecttype') {
@@ -100,7 +100,7 @@ const getGroup = async (req, res) => {
       data.table = 'projecttype';
       data.groups = groups;
     } catch (error) {
-      console.log('ERRRO AT streams', error);
+      console.log('ERRRO AT ', groupname, error);
     }
   }
   res.send(data);

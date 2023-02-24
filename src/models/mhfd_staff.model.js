@@ -18,6 +18,9 @@ export default (sequelize, DataType) => {
     },
     parent_mhfd_staff_id: {
       type: DataType.INTEGER
+    },
+    user_id: {
+      type: DataType.INTEGER
     }
   }, {
     freezeTableName: true,

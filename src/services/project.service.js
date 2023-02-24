@@ -50,6 +50,7 @@ const CodeStudySubreason = db.codeStudySubreason;
 const CodeStudyReason = db.codeStudyReason;
 const StreamStudy = db.streamstudy;
 
+const User = db.user;
 const Op = sequelize.Op;
 
 async function getProblemByProjectId(projectid, sortby, sorttype) {
@@ -393,6 +394,7 @@ const getDetails = async (project_id) => {
             attributes: [
               'code_project_staff_role_type_id',
               'is_active',
+              'project_staff_id'
             ],
             include: {
               model: MHFDStaff,
@@ -400,7 +402,13 @@ const getDetails = async (project_id) => {
                 'user_id',
                 'mhfd_staff_id',
                 'full_name'
-              ]
+              ],
+              include: {
+                model: User,
+                attributes: [
+                  'organization'
+                ]
+              }
             }
             // where: {
             //   code_cost_type_id: 1
