@@ -61,9 +61,8 @@ const listProjects = async (req, res) => {
 const getProjectDetail = async (req, res) => {
 
   const project_id = req.params['project_id'];
-  const isStudy = req.params['isStudy'];
   try {
-    let project = await projectService.getDetails(project_id, isStudy);
+    let project = await projectService.getDetails(project_id);
     if (project.error) {
       return res.status(project.error).send({ error: project.message });
     }

@@ -240,7 +240,7 @@ const  getProjectsDeprecated  = async (include, bounds, offset = 1, limit = 1200
   }
 }
 
-const getDetails = async (project_id, isStudy) => {
+const getDetails = async (project_id) => {
   try {
     const [projectPromise, problems] = await Promise.all([
       Project.findByPk(project_id, {
@@ -431,6 +431,10 @@ const getDetails = async (project_id, isStudy) => {
               {
                 model: StreamStudy,
                 include: {
+                  attributes: [
+                    'stream_id',
+                    'stream_name'
+                  ],
                   model: Streams
                 }
               }]
