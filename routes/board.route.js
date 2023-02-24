@@ -342,35 +342,53 @@ const sendBoardProjectsToProp = async (boards, prop) => {
         }
     }
 }
+const updateProjectStatusCarto =  async (status, bp)  => {
+    try {           
+        const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET status = '${status}' WHERE  projectid IN (${bp})`;
+        logger.info(updateQuery);
+        const query = {
+            q: updateQuery
+        };
+        const data = await needle('post', CARTO_URL, query, { json: true });
+        if (data.statusCode === 200) {
+            result = data.body;
+            logger.info(result);
+            return result;
+        } else {
+            logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+            return null;
+        }
+    } catch(e) {
+        throw e;
+    }
+}
 
 const updateProjectStatus = async (boards, status) => {  
-    for (var i = 0 ; i < boards.length ; i++) {
-        let board = boards[i];
+    for (const board of boards) {
         let boardProjects = await BoardProject.findAll({
             where: {
                 board_id: board._id
             }
         });
-        let bp = [];
-        for (var j = 0 ; j < boardProjects.length ; j++) {
-            bp = [...bp, boardProjects[j].project_id];            
-        }        
-        try {           
-            const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET status = '${status}' WHERE  projectid IN (${bp})`;
-            logger.info(updateQuery);
-            const query = {
-                q: updateQuery
-            };
-            const data = await needle('post', CARTO_URL, query, { json: true });
-            if (data.statusCode === 200) {
-                result = data.body;
-                logger.info(result);
-            } else {
-                logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2))    ;
+        const bp = [];
+        const secondUpdate = [];
+        for (const element of boardProjects) {
+            bp.push(element.project_id);                
+            if (status === 'Approved') {
+                if (element.position0 == null) {
+                    secondUpdate.push(element.project_id);
+                }
             }
-        } catch(e) {
+        }
+        try {
+            await updateProjectStatusCarto(status, bp);
+            if (secondUpdate.length) {
+                updateProjectStatusCarto('Draft', secondUpdate);
+            }
+        } catch (e) {
             continue;
         }
+       
     }
 }
 
