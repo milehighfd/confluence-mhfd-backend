@@ -301,11 +301,13 @@ router.get('/get-aoi-from-center', async (req, res) => {
   
 });
 
-async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
-  const SQL = `
+async function getEnvelopeProblemsComponentsAndProject(id, table, field, activetab) {
+  let SQL = `
   select ST_ASGEOJSON(ST_EXTENT(the_geom)) as envelope
     from (
-    SELECT the_geom FROM ${table} where  projectid=${id}
+    SELECT the_geom FROM ${table} where  projectid=${id}`;
+
+  const SQLPROBLEM = `
   union 
     select the_geom from ${PROBLEM_TABLE}  
       where ${PROPSPROBLEMTABLES.problem_boundary[5]} in (SELECT problemid FROM grade_control_structure 
@@ -322,7 +324,9 @@ async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
         where projectid=${id} and projectid>0  union SELECT problemid FROM maintenance_trails 
         where projectid=${id} and projectid>0  union SELECT problemid FROM land_acquisition 
         where projectid=${id} and projectid>0  union SELECT problemid FROM landscaping_area 
-        where projectid=${id} and projectid>0) 
+        where projectid=${id} and projectid>0) `;
+    
+  const componentsSQL = `
   union  
     SELECT the_geom FROM grade_control_structure where ${field}=${id}  
       union SELECT the_geom FROM pipe_appurtenances where ${field}=${id}  
@@ -340,7 +344,11 @@ async function getEnvelopeProblemsComponentsAndProject(id, table, field) {
       union SELECT the_geom FROM landscaping_area where ${field}=${id}  
   ) joinall
 ` ;  
-console.log('SQL for all', SQL)
+  if (activetab == 1) {
+    SQL = `${SQL} ${componentsSQL}`;
+  } else {
+    SQL = `${SQL} ${SQLPROBLEM} ${componentsSQL}`;
+  }
   const SQL_URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   const newProm1 = new Promise((resolve, reject) => {
     https.get(SQL_URL, response => {
@@ -364,6 +372,7 @@ router.get('/bbox-components', async (req, res) => {
   logger.info('BBOX components executing');
   const id = req.query.id;
   const table = req.query.table;
+  const activetab = req.query.activetab;
   let field = 'projectid';
   const promises = [];
   const extraQueries = [];
@@ -552,7 +561,7 @@ router.get('/bbox-components', async (req, res) => {
     
     let convexhull = [];
     if (result.projectid !== null && result.projectid !== undefined && result.projectid) {
-      convexhull = await getEnvelopeProblemsComponentsAndProject(result.projectid, table, 'projectid');
+      convexhull = await getEnvelopeProblemsComponentsAndProject(result.projectid, table, 'projectid', activetab);
       if(convexhull[0]){
         convexhull = JSON.parse(convexhull[0].envelope).coordinates;
       }
