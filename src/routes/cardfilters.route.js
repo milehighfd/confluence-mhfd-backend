@@ -138,7 +138,7 @@ const getFilters = async (req, res) => {
     }).map((project) => {
       return project.project_id
     });
-    data.status = data.status.filter((con) => body.status.includes(con.id));
+    // data.status = data.status.filter((con) => body.status.includes(con.id));
     toMatch.push(ids);
   }
   if (body.streamname && body.streamname.length) { //
