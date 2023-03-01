@@ -14,7 +14,7 @@ const {
 const db = require('../../config/db');
 const auth = require('../../auth/auth');
 const logger = require('../../config/logger');
-const { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue } = require('./helper');
+const { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue, updateProjectInBoard } = require('./helper');
 
 const router = express.Router();
 const IndependentComponent = db.independentComponent;
@@ -156,7 +156,8 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         if (eval(isWorkPlan)) {
           toBoard = locality;
         }
-        await addProjectToBoard(user, servicearea, county, toBoard, projecttype, projectId, year, sendToWR, isWorkPlan);
+        const projectsubtype = '';
+        await addProjectToBoard(user, servicearea, county, toBoard, projecttype, projectId, year, sendToWR, isWorkPlan, cleanStringValue(projectname), projectsubtype);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
         for (const independent of JSON.parse(independetComponent)) {
           const element = { name: independent.name, cost: independent.cost, status: independent.status, projectid: projectId };
@@ -233,6 +234,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const query = {
     q: updateQuery
   };
+  const projectsubtype = '';
+  updateProjectInBoard(projectid, cleanStringValue(projectname), projecttype, projectsubtype);
   let result = {};
   try {
     const data = await needle('post', CARTO_URL, query, { json: true });

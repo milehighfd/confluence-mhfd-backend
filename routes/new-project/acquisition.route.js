@@ -10,7 +10,7 @@ const {
 const db = require('../../config/db');
 const auth = require('../../auth/auth');
 const logger = require('../../config/logger');
-const { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue } = require('./helper');
+const { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue, updateProjectInBoard } = require('./helper');
 
 const router = express.Router();
 const multer = Multer({
@@ -86,7 +86,8 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         if (eval(isWorkPlan)) {
           toBoard = locality;
         }
-        await addProjectToBoard(user, servicearea, county, toBoard, projecttype, projectId, year, sendToWR, isWorkPlan);
+        const projectsubtype = '';
+        await addProjectToBoard(user, servicearea, county, toBoard, projecttype, projectId, year, sendToWR, isWorkPlan, projectname, projectsubtype);
         await attachmentService.uploadFiles(user, req.files, projectId, cover);
       } else {
         logger.error('bad status ' + data.statusCode + '  -- '+ insertQuery +  JSON.stringify(data.body, null, 2));
@@ -141,6 +142,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const query = {
     q: updateQuery
   };
+  const projectsubtype = '';
+  updateProjectInBoard(projectid, cleanStringValue(projectname), projecttype, projectsubtype);
   let result = {};
   try {
     const data = await needle('post', CARTO_URL, query, { json: true });
