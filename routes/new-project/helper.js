@@ -79,9 +79,12 @@ const updateProjectInBoard = async (project_id, projectname, projecttype, projec
       project_id: project_id
     }
   });
-  console.log('project about to be updated');
-  await projectToUpdate.update({projectname: projectname, projecttype: projecttype, projectsubtype: projectsubtype});
-  console.log('project updated in projectboard');
+  console.log('project about to be updated', project_id, projectname);
+  if (projectToUpdate) {
+    await projectToUpdate.update({projectname: projectname, projecttype: projecttype, projectsubtype: projectsubtype});
+    console.log('project updated in projectboard', projectname);
+  }
+  
 };
 
 const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year, sendToWR, isWorkPlan, projectname, projectsubtype) => {
