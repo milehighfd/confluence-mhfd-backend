@@ -73,7 +73,7 @@ const sendBoardsToProp = async (bp, board, prop, propid) => {
   }
 };
 
-const updateProjectsInBoard = async (project_id, projectname, projecttype, projectsubtype) => {
+const updateProjectInBoard = async (project_id, projectname, projecttype, projectsubtype) => {
   let projectToUpdate = await BoardProject.findOne({
     where: {
       project_id: project_id
@@ -97,11 +97,9 @@ const updateProjectsInBoard = async (project_id, projectname, projecttype, proje
     for(let i = 0 ; i < projectToUpdate.length; ++i) {
       let currentProj = projectToUpdate[i];
       await currentProj.update({projectname: projectname, projecttype: projecttype, projectsubtype: projectsubtype});
-    }
-    
-    console.log('project updated in projectboard', projectname);
+    } 
   }
-  
+  return true;
 };
 
 
@@ -244,6 +242,6 @@ module.exports = {
   getNewProjectId,
   setProjectID,
   copyProject,
-  updateProjectsInBoard,
+  updateProjectInBoard,
   updateProjectsInBoard
 };

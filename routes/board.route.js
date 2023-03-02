@@ -3,7 +3,7 @@ const needle = require('needle');
 const router = express.Router();
 const auth = require('../auth/auth');
 const { CREATE_PROJECT_TABLE, CARTO_URL } = require('../config/config');
-const { updateProjectsInBoard,updateProjectsInBoard } = require('./new-project/helper');
+const { updateProjectsInBoard } = require('./new-project/helper');
 const logger = require('../config/logger');
 const db = require('../config/db');
 const {
@@ -769,7 +769,7 @@ router.get('/sync', async (req,res) => {
         let projectData = result.rows[i];
         if(projectData.projectid){
           console.log('About to update in board', projectData.projectid, projectData.projectname);
-          updateProjectsInBoard(projectData.projectid, projectData.projectname, projectData.projecttype, projectData.projectsubtype);
+          await updateProjectsInBoard(projectData.projectid, projectData.projectname, projectData.projecttype, projectData.projectsubtype);
           // updateProject
           await sleep(30);
         }
