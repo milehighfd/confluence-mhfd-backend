@@ -13,7 +13,7 @@ router.post('/', async (req, res) => {
         code_project_type_id: code_project_type_id
       },      
       include: { model: CodeStatusType},
-      order: ['phase_ordinal_position'],
+      order: ['code_project_type_id','code_status_type_id'],
     });
     return res.send(codePhaseType);
   } catch(error) {
