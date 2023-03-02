@@ -73,7 +73,7 @@ const sendBoardsToProp = async (bp, board, prop, propid) => {
   }
 };
 
-const updateProjectInBoard = async (project_id, projectname, projecttype, projectsubtype) => {
+const updateProjectsInBoard = async (project_id, projectname, projecttype, projectsubtype) => {
   let projectToUpdate = await BoardProject.findOne({
     where: {
       project_id: project_id
@@ -86,6 +86,24 @@ const updateProjectInBoard = async (project_id, projectname, projecttype, projec
   }
   
 };
+
+const updateProjectsInBoard = async (project_id, projectname, projecttype, projectsubtype) => {
+  let projectToUpdate = await BoardProject.findAll({
+    where: {
+      project_id: project_id
+    }
+  });
+  if (projectToUpdate.length) {
+    for(let i = 0 ; i < projectToUpdate.length; ++i) {
+      let currentProj = projectToUpdate[i];
+      await currentProj.update({projectname: projectname, projecttype: projecttype, projectsubtype: projectsubtype});
+    }
+    
+    console.log('project updated in projectboard', projectname);
+  }
+  
+};
+
 
 const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year, sendToWR, isWorkPlan, projectname, projectsubtype) => {
   let dbLoc = await Locality.findOne({
@@ -226,5 +244,6 @@ module.exports = {
   getNewProjectId,
   setProjectID,
   copyProject,
-  updateProjectInBoard
+  updateProjectsInBoard,
+  updateProjectsInBoard
 };

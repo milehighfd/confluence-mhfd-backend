@@ -3,7 +3,7 @@ const needle = require('needle');
 const router = express.Router();
 const auth = require('../auth/auth');
 const { CREATE_PROJECT_TABLE, CARTO_URL } = require('../config/config');
-const { updateProjectInBoard } = require('./new-project/helper');
+const { updateProjectsInBoard,updateProjectsInBoard } = require('./new-project/helper');
 const logger = require('../config/logger');
 const db = require('../config/db');
 const {
@@ -764,14 +764,14 @@ router.get('/sync', async (req,res) => {
     //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
-      // let allPromises = [];
+      let allPromises = [];
       for(let i = 0 ; i < result.rows.length ; ++i){
         let projectData = result.rows[i];
         if(projectData.projectid){
-          console.log('about to call');
-          updateProjectInBoard(projectData.projectid, projectData.projectname, projectData.projecttype, projectData.projectsubtype);
-          await sleep(300);
-          console.log('after call');
+          console.log('About to update in board', projectData.projectid, projectData.projectname);
+          updateProjectsInBoard(projectData.projectid, projectData.projectname, projectData.projecttype, projectData.projectsubtype);
+          // updateProject
+          await sleep(30);
         }
       }
       res.send(result.rows);

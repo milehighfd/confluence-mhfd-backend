@@ -14,7 +14,7 @@ const {
 const db = require('../../config/db');
 const auth = require('../../auth/auth');
 const logger = require('../../config/logger');
-const { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue, updateProjectInBoard } = require('./helper');
+const { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue, updateProjectsInBoard } = require('./helper');
 
 const router = express.Router();
 const IndependentComponent = db.independentComponent;
@@ -235,7 +235,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     q: updateQuery
   };
   const projectsubtype = '';
-  updateProjectInBoard(projectid, cleanStringValue(projectname), projecttype, projectsubtype);
+  updateProjectsInBoard(projectid, cleanStringValue(projectname), projecttype, projectsubtype);
   let result = {};
   try {
     const data = await needle('post', CARTO_URL, query, { json: true });
