@@ -14,6 +14,7 @@ import boardLocality from 'bc/models/boardLocality.model.js';
 import newnotes from 'bc/models/newnotes.model.js';
 import color from 'bc/models/color.model.js';
 import groupNotes from 'bc/models/groupNotes.model.js';
+import codeRuleActionItem from 'bc/models/code_rule_action_item.model.js';
 import projectstream from 'bc/models/projectstream.model.js';
 import projectComponent from 'bc/models/projectComponent.model.js';
 import consultants from 'bc/models/consultants.model.js';
@@ -95,6 +96,7 @@ db.boardLocality = boardLocality(sequelize, Sequelize);
 db.newnotes = newnotes(sequelize, Sequelize);
 db.color = color(sequelize, Sequelize);
 db.groupnotes = groupNotes(sequelize, Sequelize);
+db.codeRuleActionItem = codeRuleActionItem(sequelize,Sequelize);
 db.projectStream = projectstream(sequelize, Sequelize);
 db.projectstudy = projectStudy(sequelize, Sequelize);
 db.study = study(sequelize, Sequelize);
@@ -263,6 +265,8 @@ db.codePhaseType.belongsTo(
   db.codeProjectType,
   { foreignKey: 'code_project_type_id' }
 );
+db.codePhaseType.hasMany(db.codeRuleActionItem, {foreignKey: 'code_phase_type_id'});
+
 
 db.project.hasMany(db.projectstudy, {foreignKey: 'project_id'});
 db.projectstudy.belongsTo(db.project, { foreignKey: 'project_id' });

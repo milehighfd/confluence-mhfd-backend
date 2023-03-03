@@ -5,6 +5,7 @@ import sequelize from 'sequelize';
 const router = express.Router();
 const CodePhaseType = db.codePhaseType;
 const CodeStatusType = db.codeStatusType;
+const codeRuleActionItem = db.codeRuleActionItem;
 const Op = sequelize.Op;
 
 router.post('/', async (req, res) => {
@@ -15,13 +16,16 @@ router.post('/', async (req, res) => {
         code_project_type_id: code_project_type_id,
         code_status_type_id: {
           [Op.gt]: 4
-        }        
-      },      
-      include: { model: CodeStatusType},
-      order: ['code_project_type_id','code_status_type_id','phase_ordinal_position' ],
+        }
+      },
+      include: {
+        all:true
+      },
+      order: ['code_project_type_id', 'code_status_type_id', 'phase_ordinal_position'],
     });
     return res.send(codePhaseType);
   } catch(error) {
+    console.log(error)
     res.status(500).send(error);
   }
 });
