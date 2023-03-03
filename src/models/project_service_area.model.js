@@ -2,7 +2,8 @@ export default  (sequelize, DataType) => {
   const ProjectServiceArea = sequelize.define('project_service_area', {
     project_service_area_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoincrement: true
     },
     project_id: {
       type: DataType.INTEGER

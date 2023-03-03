@@ -2,7 +2,8 @@ export default (sequelize, DataType) => {
   const ProjectLocalGovernment = sequelize.define('project_local_government', {
     project_local_government_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     code_local_government_id: {
       type: DataType.INTEGER,

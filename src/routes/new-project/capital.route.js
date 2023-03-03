@@ -23,6 +23,10 @@ import logger from 'bc/config/logger.js';
 import { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue } from 'bc/routes/new-project/helper.js';
 import moment from 'moment';
 
+const ProjectLocalGovernment = db.projectLocalGovernment;
+const ProjectCounty = db.projectCounty;
+const ProjectServiceArea = db.projectServiceArea;
+
 const router = express.Router();
 const multer = Multer({
   storage: Multer.MemoryStorage,
@@ -310,15 +314,39 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
 
   let splittedJurisdiction = jurisdiction.split(',');
   let result = [];
-  for (const j of splittedJurisdiction) {
     try {
-      const data = await projectService.saveProject(CREATE_PROJECT_TABLE_V2, j, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, notRequiredFields, notRequiredValues, creator)
+      const data = await projectService.saveProject(CREATE_PROJECT_TABLE_V2, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       result.push(data)
       const { project_id } = data;
       await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
       await projectStatusService.saveProjectStatusFromCero(5, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       await attachmentService.uploadFiles(user, req.files, project_id, cover);
-      await addProjectToBoard(user, servicearea, county, j, defaultProjectType, project_id, year, sendToWR, isWorkPlan);
+
+      await addProjectToBoard(user, servicearea, county, '', defaultProjectType, project_id, year, sendToWR, isWorkPlan);
+      
+      for (const j of jurisdiction) {
+        await ProjectLocalGovernment.create({
+          code_local_government_id:j,
+          project_id: project_id
+        });
+      }
+      for (const s of servicearea) {
+        await ProjectServiceArea.create({
+          project_id: project_id,
+          code_service_area_id: s,
+          created_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+          modified_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+          last_modified_by: user.name,
+          created_by: user.email
+        });
+      }
+      for (const c of county) {
+        await ProjectCounty.create({
+          state_county_id: c,
+          project_id: project_id
+        });
+      }
+      
       for (const independent of JSON.parse(independetComponent)) {
         try {
           await projectComponentService.saveProjectComponent(0, '', independent.name, independent.status, project_id);
@@ -342,7 +370,6 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     } catch (error) {
       logger.error(error);
     }
-  }
   res.send(result);
 });
 

@@ -721,7 +721,6 @@ const deleteByProjectId= async (Projectsid) => {
 
 const saveProject = async (
   CREATE_PROJECT_TABLE,
-  location, 
   project_name, 
   description,
   code_project_type_id, 
@@ -729,13 +728,10 @@ const saveProject = async (
   modified_date,
   start_date,
   last_modified_by,
-  notRequiredFields,
-  notRequiredValues,
   created_by
 ) => {
   logger.info('create project ' + JSON.stringify(
     CREATE_PROJECT_TABLE,
-    location, 
     project_name, 
     description,
     code_project_type_id, 
@@ -743,13 +739,11 @@ const saveProject = async (
     modified_date,
     start_date,
     last_modified_by,
-    notRequiredFields,
-    notRequiredValues,
     created_by ));
   try {
-    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (location, project_name, description, code_project_type_id, created_date, modified_date, start_date, last_modified_by ${notRequiredFields} , created_by)
+    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (project_name, description, code_project_type_id, created_date, modified_date, start_date, last_modified_by, created_by)
     OUTPUT inserted . *
-    VALUES('${location}', '${project_name}', '${description}', '${code_project_type_id}', '${created_date}', '${modified_date}', '${start_date}', '${last_modified_by}' ${notRequiredValues},'${created_by}')`;
+    VALUES('${project_name}', '${description}', '${code_project_type_id}', '${created_date}', '${modified_date}', '${start_date}', '${last_modified_by}', '${created_by}')`;
     const data = await db.sequelize.query(
       insertQuery,
       {
