@@ -5,10 +5,10 @@ export default (sequelize, DataType) => {
         type: DataType.INTEGER,
         primaryKey: true
       },
-      user_character_id: {
-        type: DataType.STRING,
-        defaultValue: 'defaultValue',
-      },
+      // user_character_id: {
+      //   type: DataType.STRING,
+      //   defaultValue: 'defaultValue',
+      // },
       user_id: {
         type: DataType.INTEGER,
       },
