@@ -15,6 +15,10 @@ export default  (sequelize, DataType) => {
     code_project_type_id: {
       type: DataType.INTEGER,
       allowNull: false
+    },
+    phase_ordinal_position: {
+      type: DataType.INTEGER,
+      allowNull: false
     }
   }, {
     tableName: 'code_phase_type',
