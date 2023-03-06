@@ -12,10 +12,12 @@ export default  (sequelize, DataType) => {
       type: DataType.INTEGER
     },
     created_date: {
-      type: DataType.DATE
+      type: DataType.DATE,
+      defaultValue: DataType.NOW
     },
     modified_date: {
-      type: DataType.DATE
+      type: DataType.DATE,
+      defaultValue: DataType.NOW
     },
     last_modified_by: {
       type: DataType.STRING,
