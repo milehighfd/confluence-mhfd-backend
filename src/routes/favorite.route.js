@@ -127,6 +127,19 @@ function getCounters(table, column) {
      (select count(*) from landscaping_area where ${column} = cast(${table}.${column} as integer) ) as count_la1 `;
 }
 
+router.get("/", auth, async (req, res) => {
+  const { isProblem } = req.query;
+  const user = req.user;
+  try {
+    console.log(user);
+    const favorite = await favoritesService.getFavorites(user.user_id, isProblem);
+    return res.send(favorite);
+  } catch (error) {
+    res.send(500);
+  }
+});
+
+
 router.get("/create", auth, async (req, res) => {
   const { id, isProblem } = req.query;
   const user = req.user;
