@@ -33,8 +33,12 @@ const getFavorites = async (user_id) => {
   return result;
 }
 
-const getOne = async (data) => {
-  const favorite = await ProjectFavorite.findOne({
+const getOne = async (data, isProblem) => {
+  let Favorite = ProjectFavorite;
+  if (isProblem) {
+    Favorite = ProblemFavorite;
+  }
+  const favorite = await Favorite.findOne({
     where: {
       project_id: data.project_id,
       user_id: data.user_id

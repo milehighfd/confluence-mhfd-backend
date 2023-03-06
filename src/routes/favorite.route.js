@@ -147,13 +147,14 @@ router.get("/create", auth, async (req, res) => {
 
 router.delete("/", auth, async (req, res) => {
   const { id } = req.body;
+  const { isProblem } = req.query;
   const user = req.user;
   try {
     const favorite = {
       user_id: user.user_id,
       project_id: id,
     };
-    const selectedFavorite = await favoritesService.getOne(favorite);
+    const selectedFavorite = await favoritesService.getOne(favorite, isProblem);
     if (selectedFavorite) {
       selectedFavorite.destroy();
     } else {
