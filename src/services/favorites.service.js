@@ -21,6 +21,7 @@ const getAll = async () => {
     return result;
   } catch(error) {
     console.log('my error is ', error);
+    throw error;
   }
 }
 const getFavorites = async (user_id, isProblem) => {
@@ -28,13 +29,18 @@ const getFavorites = async (user_id, isProblem) => {
   if (isProblem) {
     Favorite = ProblemFavorite;
   }
-  let result = [];
-  result = await Favorite.findAll({
-    where: {
-      user_id: user_id
-    }
-  });
-  return result;
+  try {
+    let result = [];
+    result = await Favorite.findAll({
+      where: {
+        user_id: user_id
+      }
+    });
+    return result;
+  } catch (error) {
+    logger.error(`Error in get favorites services: ${error}`);
+    throw error;
+  }
 }
 
 const getOne = async (data, isProblem) => {
@@ -42,13 +48,18 @@ const getOne = async (data, isProblem) => {
   if (isProblem) {
     Favorite = ProblemFavorite;
   }
-  const favorite = await Favorite.findOne({
-    where: {
-      project_id: data.project_id,
-      user_id: data.user_id
-    }
-  });
-  return favorite;
+  try {
+    const favorite = await Favorite.findOne({
+      where: {
+        project_id: data.project_id,
+        user_id: data.user_id
+      }
+    });
+    return favorite;
+  } catch (error) {
+    logger.error(`Error in get one favorite services: ${error}`);
+    throw error;
+  }
 }
 
 const saveFavorite = async (favorite, isProblem) => {
@@ -58,31 +69,36 @@ const saveFavorite = async (favorite, isProblem) => {
     Favorite = ProblemFavorite;
     table = PROBLEM_FAVORITE_TABLE;
   }
-  const fav = await Favorite.findOne({
-    where: {
-      project_id: favorite.project_id,
-      user_id: favorite.user_id
+  try {
+    const fav = await Favorite.findOne({
+      where: {
+        project_id: favorite.project_id,
+        user_id: favorite.user_id
+      }
+    });
+    if (!fav) {
+      const formatTime = moment().format('YYYY-MM-DD HH:mm:ss');
+      //await ProjectFavorite.create(favorite);
+      //remove user_character_id when updated db
+      const insertQuery = `INSERT INTO ${table} (user_id, project_id, created_date, modified_date, last_modified_by, created_by)
+      OUTPUT inserted . *
+      VALUES( '${favorite.user_id}', '${favorite.project_id}', '${formatTime}', '${formatTime}', '${favorite.creator}','${favorite.creator}')`;
+      const data = await db.sequelize.query(
+        insertQuery,
+        {
+          type: db.sequelize.QueryTypes.INSERT,
+        });
+      logger.info('favorite save');
+      return data[0][0];
+  
+    } else {
+      logger.info('no update');
     }
-  });
-  if (!fav) {
-    const formatTime = moment().format('YYYY-MM-DD HH:mm:ss');
-    //await ProjectFavorite.create(favorite);
-    //remove user_character_id when updated db
-    const insertQuery = `INSERT INTO ${table} (user_id, project_id, created_date, modified_date, last_modified_by, created_by)
-    OUTPUT inserted . *
-    VALUES( '${favorite.user_id}', '${favorite.project_id}', '${formatTime}', '${formatTime}', '${favorite.creator}','${favorite.creator}')`;
-    const data = await db.sequelize.query(
-      insertQuery,
-      {
-        type: db.sequelize.QueryTypes.INSERT,
-      });
-    logger.info('favorite save');
-    return data[0][0];
-
-  } else {
-    logger.info('no update');
+    return favorite;
+  } catch (error) {
+    logger.error(`Error in save favorites services: ${error}`);
+    throw error;
   }
-  return favorite;
 }
 
 const countFavorites = async (user_id, isProblem) => {
@@ -90,12 +106,17 @@ const countFavorites = async (user_id, isProblem) => {
   if (isProblem) {
     Favorite = ProblemFavorite;
   }
-  let result = await Favorite.count({
-    where: {
-      user_id: user_id
-    }
-  });
-  return result;
+  try {
+    const result = await Favorite.count({
+      where: {
+        user_id: user_id
+      }
+    });
+    return result;
+  } catch (error) { 
+    logger.error(`Error in count favorites services: ${error}`);
+    throw error;
+  }
 }
 
 export default {
