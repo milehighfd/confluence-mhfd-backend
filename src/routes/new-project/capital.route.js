@@ -334,8 +334,6 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
           project_id: project_id,
           code_service_area_id: s,
           shape_length_ft: 0,
-          created_date: new Date(),
-          modified_date: new Date(),
           last_modified_by: user.name,
           created_by: user.email
         });
