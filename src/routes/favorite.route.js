@@ -180,193 +180,84 @@ router.get("/count", auth, async (req, res) => {
   }
 });
 
-router.post("/favorite-list", auth, async (req, res) => {
+router.get("/problem-cards", auth, async (req, res) => {
   const user = req.user;
-  const favorite = await favoritesService.getFavorites(user.user_id);
+  const favorite = await favoritesService.getFavorites(user.user_id, true);
   console.log(favorite);
   const ids = favorite
-    .filter((fav) => {
-      if (req.body.isproblem) {
-        return fav.table === PROBLEMS_TABLE;
-      } else {
-        return fav.table === PROJECT_TABLES[0];
-      }
-    })
-    .map((fav) => `${fav.id}`);
-  if (ids.length === 0) {
+    .map((fav) => `${fav.project_id}`);
+  if (!ids.length) {
     return res.send([]);
   }
   try {
-    if (req.body.isproblem) {
-      let filters = "";
-      filters = getFilters(req.body, ids);
-      const PROBLEM_SQL = `SELECT cartodb_id, ${
-        PROPSPROBLEMTABLES.problem_boundary[5]
-      } as ${PROPSPROBLEMTABLES.problems[5]}, ${
-        PROPSPROBLEMTABLES.problem_boundary[6]
-      } as ${PROPSPROBLEMTABLES.problems[6]}, ${
-        PROPSPROBLEMTABLES.problem_boundary[0]
-      } as ${PROPSPROBLEMTABLES.problems[0]}, ${
-        PROPSPROBLEMTABLES.problem_boundary[2]
-      } as ${PROPSPROBLEMTABLES.problems[2]}, ${
-        PROPSPROBLEMTABLES.problem_boundary[7]
-      } as ${PROPSPROBLEMTABLES.problems[7]}, ${
-        PROPSPROBLEMTABLES.problem_boundary[1]
-      } as ${PROPSPROBLEMTABLES.problems[1]}, ${
-        PROPSPROBLEMTABLES.problem_boundary[8]
-      } as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCounters(
-        PROBLEMS_TABLE,
-        PROPSPROBLEMTABLES.problem_boundary[5]
-      )}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEMS_TABLE} `;
-      const query = { q: `${PROBLEM_SQL}  ${filters} ` };
-      let answer = [];
-      try {
-        const data = await needle("post", CARTO_URL, query, { json: true });
-        //console.log('status', data.statusCode);
-        if (data.statusCode === 200) {
-          /* let coordinates = [];
-              if (JSON.parse(element.the_geom).coordinates) {
-                coordinates = JSON.parse(element.the_geom).coordinates;
-              } */
-          answer = data.body.rows.map((element) => {
-            return {
-              cartodb_id: element.cartodb_id,
-              type: "problems",
-              problemid: element.problem_id,
-              problemname: element.problemname,
-              solutioncost: element.solutioncost,
-              jurisdiction: element.jurisdiction,
-              problempriority: element.problempriority,
-              solutionstatus: element.solutionstatus,
-              problemtype: element.problemtype,
-              county: element.county,
-              totalComponents:
-                element.count_gcs +
-                element.count_pa +
-                element.count_sip +
-                element.count_sil +
-                element.count_cia +
-                element.count_sia +
-                element.count_rl +
-                element.count_ra +
-                element.count_sd +
-                element.count_df +
-                element.count_mt +
-                element.count_la +
-                element.count_la +
-                element.count_la1 +
-                element.count_cila,
-              coordinates: JSON.parse(element.the_geom).coordinates
-                ? JSON.parse(element.the_geom).coordinates
-                : [],
-            };
-          });
-          console.log("answer", answer);
-        } else {
-          console.log("bad status", data.statusCode, data.body);
-          logger.error("bad status", data.statusCode, data.body);
-        }
-      } catch (error) {
-        console.log("Error", error);
-      }
-      return res.send(answer);
-    } else {
-      let filters = "";
-      let send = [];
-
-      filters = getFilters(req.body, ids);
-      const PROJECT_FIELDS =
-        "cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, " +
-        "estimatedCost, status, attachments, projectname, jurisdiction, streamname, county ";
-
-      if (req.body.problemtype) {
-        const result = await queriesByProblemTypeInProject(
-          PROJECT_FIELDS,
-          filters,
-          req.body.problemtype
-        );
-        return res.status(200).send(result);
+    let filters = "";
+    filters = getFilters(req.body, ids);
+    const PROBLEM_SQL = `SELECT cartodb_id, ${
+      PROPSPROBLEMTABLES.problem_boundary[5]
+    } as ${PROPSPROBLEMTABLES.problems[5]}, ${
+      PROPSPROBLEMTABLES.problem_boundary[6]
+    } as ${PROPSPROBLEMTABLES.problems[6]}, ${
+      PROPSPROBLEMTABLES.problem_boundary[0]
+    } as ${PROPSPROBLEMTABLES.problems[0]}, ${
+      PROPSPROBLEMTABLES.problem_boundary[2]
+    } as ${PROPSPROBLEMTABLES.problems[2]}, ${
+      PROPSPROBLEMTABLES.problem_boundary[7]
+    } as ${PROPSPROBLEMTABLES.problems[7]}, ${
+      PROPSPROBLEMTABLES.problem_boundary[1]
+    } as ${PROPSPROBLEMTABLES.problems[1]}, ${
+      PROPSPROBLEMTABLES.problem_boundary[8]
+    } as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCounters(
+      PROBLEMS_TABLE,
+      PROPSPROBLEMTABLES.problem_boundary[5]
+    )}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEMS_TABLE} `;
+    const query = { q: `${PROBLEM_SQL}  ${filters} ` };
+    let answer = [];
+    try {
+      const data = await needle("post", CARTO_URL, query, { json: true });
+      if (data.statusCode === 200) {
+        answer = data.body.rows.map((element) => {
+          return {
+            cartodb_id: element.cartodb_id,
+            type: "problems",
+            problemid: element.problem_id,
+            problemname: element.problemname,
+            solutioncost: element.solutioncost,
+            jurisdiction: element.jurisdiction,
+            problempriority: element.problempriority,
+            solutionstatus: element.solutionstatus,
+            problemtype: element.problemtype,
+            county: element.county,
+            totalComponents:
+              element.count_gcs +
+              element.count_pa +
+              element.count_sip +
+              element.count_sil +
+              element.count_cia +
+              element.count_sia +
+              element.count_rl +
+              element.count_ra +
+              element.count_sd +
+              element.count_df +
+              element.count_mt +
+              element.count_la +
+              element.count_la +
+              element.count_la1 +
+              element.count_cila,
+            coordinates: JSON.parse(element.the_geom).coordinates
+              ? JSON.parse(element.the_geom).coordinates
+              : [],
+          };
+        });
+        console.log("answer", answer);
       } else {
-        for (const table of PROJECT_TABLES) {
-          let query = "";
-          if (table === MAIN_PROJECT_TABLE) {
-            query = {
-              q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters(
-                MAIN_PROJECT_TABLE,
-                "projectid"
-              )}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} `,
-            };
-          }
-          let answer = [];
-          try {
-            console.log(CARTO_URL, query);
-            const data = await needle("post", CARTO_URL, query, { json: true });
-            //console.log('STATUS', data.statusCode);
-            if (data.statusCode === 200) {
-              const result = data.body.rows;
-              for (const element of result) {
-                let valor = "";
-                if (element.attachments) {
-                  valor = await attachmentService.findCoverImage(
-                    element.attachments
-                  );
-                }
-                let coordinates = [];
-                if (
-                  element.the_geom &&
-                  JSON.parse(element.the_geom).coordinates
-                ) {
-                  coordinates = JSON.parse(element.the_geom).coordinates;
-                }
-                answer.push({
-                  type: element.type,
-                  cartodb_id: element.cartodb_id,
-                  objectid: element.objectid,
-                  projectid: element.projectid,
-                  projecttype: element.projecttype,
-                  projectsubtype: element.projectsubtype,
-                  coverimage: element.coverimage,
-                  sponsor: element.sponsor,
-                  finalcost: element.finalcost,
-                  estimatedcost: element.estimatedcost,
-                  status: element.status,
-                  attachments: element.attachments,
-                  projectname: element.projectname,
-                  jurisdiction: element.jurisdiction,
-                  streamname: element.streamname,
-                  county: element.county,
-                  attachments: valor,
-                  totalComponents:
-                    element.count_gcs +
-                    element.count_pa +
-                    element.count_sip +
-                    element.count_sil +
-                    element.count_cia +
-                    element.count_sia +
-                    element.count_rl +
-                    element.count_ra +
-                    element.count_sd +
-                    element.count_df +
-                    element.count_mt +
-                    element.count_la +
-                    element.count_la +
-                    element.count_la1 +
-                    element.count_cila,
-                  coordinates: coordinates,
-                });
-              }
-              send = send.concat(answer);
-            } else {
-              console.log("bad status ", data.statusCode, data.body);
-              logger.error("bad status ", data.statusCode, data.body);
-            }
-          } catch (error) {
-            logger.error(error);
-          }
-        }
+        console.log("bad status", data.statusCode, data.body);
+        logger.error("bad status", data.statusCode, data.body);
       }
-      return res.send(send);
+    } catch (error) {
+      console.log("Error", error);
     }
+    return res.send(answer);
+    
   } catch (error) {
     logger.error(error);
     res

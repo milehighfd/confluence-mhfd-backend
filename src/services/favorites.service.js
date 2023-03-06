@@ -23,9 +23,13 @@ const getAll = async () => {
     console.log('my error is ', error);
   }
 }
-const getFavorites = async (user_id) => {
+const getFavorites = async (user_id, isProblem) => {
+  let Favorite = ProjectFavorite;
+  if (isProblem) {
+    Favorite = ProblemFavorite;
+  }
   let result = [];
-  result = await ProjectFavorite.findAll({
+  result = await Favorite.findAll({
     where: {
       user_id: user_id
     }
@@ -81,7 +85,7 @@ const saveFavorite = async (favorite, isProblem) => {
   return favorite;
 }
 
-const countFavorites = async (user_id) => {
+const countFavorites = async (user_id, isProblem) => {
   let Favorite = ProjectFavorite;
   if (isProblem) {
     Favorite = ProblemFavorite;
