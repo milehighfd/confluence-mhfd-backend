@@ -5,6 +5,7 @@ import attachment from 'bc/models/attachment.model.js';
 import logActivity from 'bc/models/logActivity.model.js';
 import favorites from 'bc/models/favorites.model.js';
 import ProjectFavorite from 'bc/models/project_favorites.model.js';
+import ProblemFavorite from 'bc/models/problem_favorites.model.js';
 
 import board from 'bc/models/board.model.js';
 // import locality from 'bc/models/locality.model.js';
@@ -88,6 +89,7 @@ db.user = user(sequelize, Sequelize);
 db.attachment = attachment(sequelize, Sequelize);
 db.logActivity = logActivity(sequelize, Sequelize);
 db.ProjectFavorite = ProjectFavorite(sequelize, Sequelize);
+db.problemFavorite = ProblemFavorite(sequelize, Sequelize);
 db.board = board(sequelize, Sequelize);
 // db.locality = locality(sequelize, Sequelize);
 db.boardProject = boardProject(sequelize, Sequelize);
@@ -155,6 +157,7 @@ db.projectServiceArea = projectServiceArea(sequelize, Sequelize);
 
 
 db.user.hasMany(db.ProjectFavorite, {foreignKey: 'user_id'});
+db.user.hasMany(db.problemFavorite, { foreignKey: 'user_id' });
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
 db.user.hasMany(db.color, {foreignKey: 'user_id'});
 db.color.belongsTo(db.user, {foreignKey: 'user_id'});
@@ -164,6 +167,7 @@ db.newnotes.belongsTo(db.color, {foreignKey: {name: 'color_id', allowNull: true}
 
 db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
 db.ProjectFavorite.belongsTo(db.user, {foreignKey: 'user_id'});
+db.problemFavorite.belongsTo(db.user, { foreignKey: 'user_id' });
 // db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
 // db.attachment.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.user.hasMany(db.newnotes, {foreignKey: 'user_id'});

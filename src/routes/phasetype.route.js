@@ -4,7 +4,6 @@ import sequelize from 'sequelize';
 
 const router = express.Router();
 const CodePhaseType = db.codePhaseType;
-const CodeStatusType = db.codeStatusType;
 const codeRuleActionItem = db.codeRuleActionItem;
 const Op = sequelize.Op;
 
@@ -24,6 +23,21 @@ router.post('/', async (req, res) => {
       order: ['code_project_type_id', 'code_status_type_id', 'phase_ordinal_position'],
     });
     return res.send(codePhaseType);
+  } catch(error) {
+    console.log(error)
+    res.status(500).send(error);
+  }
+});
+
+router.post('/phases', async (req, res) => {
+  const code_project_type_id = req.body.code_phase_type_id;
+  try {
+    const codeRuleActionItem1 = await codeRuleActionItem.findAll({
+      where: {
+        code_phase_type_id: code_project_type_id
+      }
+    });
+    return res.send(codeRuleActionItem1);
   } catch(error) {
     console.log(error)
     res.status(500).send(error);

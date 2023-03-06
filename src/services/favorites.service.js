@@ -4,12 +4,15 @@ import logger from 'bc/config/logger.js';
 import moment from 'moment';
 
 const { Op } = sequelize;
-const Favorites = db.ProjectFavorite;
+const ProjectFavorite = db.ProjectFavorite;
+const ProblemFavorite = db.problemFavorite;
+const PROJECT_FAVORITE_TABLE = 'project_favorite';
+const PROBLEM_FAVORITE_TABLE = 'problem_favorite';
 const User = db.user;
 
 const getAll = async () => {
   try {
-    const result = await Favorites.findAll({
+    const result = await ProjectFavorite.findAll({
       include: [{
         model: User,
         require: true
@@ -18,66 +21,102 @@ const getAll = async () => {
     return result;
   } catch(error) {
     console.log('my error is ', error);
+    throw error;
   }
 }
-const getFavorites = async (user_id) => {
-  let result = [];
-  result = await Favorites.findAll({
-    where: {
-      user_id: user_id
-    }
-  });
-  return result;
-}
-
-const getOne = async (data) => {
-  const favorite = await Favorites.findOne({
-    where: {
-      project_id: data.project_id,
-      user_id: data.user_id
-    }
-  });
-  return favorite;
-}
-
-const saveFavorite = async (favorite) => {
-  const fav = await Favorites.findOne({
-    where: {
-      project_table_name: {
-        [Op.like]: '%' + favorite.project_table_name + '%'
-      },
-      project_id: favorite.project_id,
-      user_id: favorite.user_id
-    }
-  });
-  if (!fav) {
-    const formatTime = moment().format('YYYY-MM-DD HH:mm:ss');
-    //await Favorites.create(favorite);
-    //remove user_character_id when updated db
-    const insertQuery = `INSERT INTO project_favorite (user_id, project_id, project_table_name, created_date, modified_date, last_modified_by, created_by)
-    OUTPUT inserted . *
-    VALUES( '${favorite.user_id}', '${favorite.project_id}', '${favorite.project_table_name}', '${formatTime}', '${formatTime}', '${favorite.creator}','${favorite.creator}')`;
-    const data = await db.sequelize.query(
-      insertQuery,
-      {
-        type: db.sequelize.QueryTypes.INSERT,
-      });
-    logger.info('favorite save');
-    return data[0][0];
-
-  } else {
-    logger.info('no update');
+const getFavorites = async (user_id, isProblem) => {
+  let Favorite = ProjectFavorite;
+  if (isProblem) {
+    Favorite = ProblemFavorite;
   }
-  return favorite;
+  try {
+    let result = [];
+    result = await Favorite.findAll({
+      where: {
+        user_id: user_id
+      }
+    });
+    return result;
+  } catch (error) {
+    logger.error(`Error in get favorites services: ${error}`);
+    throw error;
+  }
 }
 
-const countFavorites = async (user_id) => {
-  let result = await Favorites.count({
-    where: {
-      user_id: user_id
+const getOne = async (data, isProblem) => {
+  let Favorite = ProjectFavorite;
+  if (isProblem) {
+    Favorite = ProblemFavorite;
+  }
+  try {
+    const favorite = await Favorite.findOne({
+      where: {
+        project_id: data.project_id,
+        user_id: data.user_id
+      }
+    });
+    return favorite;
+  } catch (error) {
+    logger.error(`Error in get one favorite services: ${error}`);
+    throw error;
+  }
+}
+
+const saveFavorite = async (favorite, isProblem) => {
+  let Favorite = ProjectFavorite;
+  let table = PROJECT_FAVORITE_TABLE;
+  if (isProblem) {
+    Favorite = ProblemFavorite;
+    table = PROBLEM_FAVORITE_TABLE;
+  }
+  try {
+    const fav = await Favorite.findOne({
+      where: {
+        project_id: favorite.project_id,
+        user_id: favorite.user_id
+      }
+    });
+    if (!fav) {
+      const formatTime = moment().format('YYYY-MM-DD HH:mm:ss');
+      //await ProjectFavorite.create(favorite);
+      //remove user_character_id when updated db
+      const insertQuery = `INSERT INTO ${table} (user_id, project_id, created_date, modified_date, last_modified_by, created_by, project_table_name)
+      OUTPUT inserted . *
+      VALUES( '${favorite.user_id}', '${favorite.project_id}', '${formatTime}', '${formatTime}', '${favorite.creator}','${favorite.creator}', 'useless_column')`;
+      const data = await db.sequelize.query(
+        insertQuery,
+        {
+          type: db.sequelize.QueryTypes.INSERT,
+        });
+      logger.info('favorite save');
+      return data[0][0];
+  
+    } else {
+      logger.info('no update');
     }
-  });
-  return result;
+    return favorite;
+  } catch (error) {
+    logger.error(`Error in save favorites services: ${error}`);
+    throw error;
+  }
+}
+
+const countFavorites = async (user_id, isProblem) => {
+  let Favorite = ProjectFavorite;
+  if (isProblem) {
+    Favorite = ProblemFavorite;
+  }
+  try {
+    const result = await Favorite.count({
+      where: {
+        user_id: user_id
+      }
+    });
+    return result;
+  } catch (error) { 
+    logger.error(`Error in count favorites services: ${error}`);
+    throw error;
+  }
 }
 
 export default {
