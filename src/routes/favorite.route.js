@@ -127,39 +127,17 @@ function getCounters(table, column) {
      (select count(*) from landscaping_area where ${column} = cast(${table}.${column} as integer) ) as count_la1 `;
 }
 
-router.get("/list", async (req, res) => {
-  try {
-    const list = await favoritesService.getAll();
-    console.log("my list ", list);
-    return res.send(list);
-  } catch (error) {
-    res.status(500).send({ error: error });
-  }
-});
-
-router.get("/", auth, async (req, res) => {
-  const user = req.user;
-  try {
-    console.log(user);
-    const favorite = await favoritesService.getFavorites(user.user_id);
-    return res.send(favorite);
-  } catch (error) {
-    res.send(500);
-  }
-});
-
 router.get("/create", auth, async (req, res) => {
-  const { table, id } = req.query;
+  const { id, isProblem } = req.query;
   const user = req.user;
   try {
     const favorite = {
       user_id: user.user_id,
-      project_table_name: table,
       project_id: id,
       creator: user.name,
     };
     logger.info("create favorite ", favorite);
-    const savedFavorite = await favoritesService.saveFavorite(favorite);
+    const savedFavorite = await favoritesService.saveFavorite(favorite, isProblem);
     res.send(savedFavorite);
   } catch (error) {
     console.log(error);
