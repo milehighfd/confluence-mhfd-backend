@@ -82,7 +82,11 @@ const saveFavorite = async (favorite, isProblem) => {
 }
 
 const countFavorites = async (user_id) => {
-  let result = await ProjectFavorite.count({
+  let Favorite = ProjectFavorite;
+  if (isProblem) {
+    Favorite = ProblemFavorite;
+  }
+  let result = await Favorite.count({
     where: {
       user_id: user_id
     }
