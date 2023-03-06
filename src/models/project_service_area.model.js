@@ -3,7 +3,7 @@ export default  (sequelize, DataType) => {
     project_service_area_id: {
       type: DataType.INTEGER,
       primaryKey: true,
-      autoincrement: true
+      autoIncrement: true
     },
     project_id: {
       type: DataType.INTEGER
@@ -22,6 +22,9 @@ export default  (sequelize, DataType) => {
     },
     created_by: {
       type: DataType.STRING
+    },
+    shape_length_ft: {
+      type: DataType.FLOAT
     }
   }, {
     freezeTableName: true,

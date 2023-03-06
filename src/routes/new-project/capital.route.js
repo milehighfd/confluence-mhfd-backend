@@ -305,15 +305,10 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const creator = user.name;
   const defaultProjectId = '5';
   const defaultProjectType = 'Capital';
-  let notRequiredFields = ``;
-  let notRequiredValues = ``;
-  if (notRequiredFields) {
-    notRequiredFields = `, ${notRequiredFields}`;
-    notRequiredValues = `, ${notRequiredValues}`;
-  }
-
-  let splittedJurisdiction = jurisdiction.split(',');
   let result = [];
+  const splitedJurisdiction = jurisdiction.split(',');
+  const splitedCounty = county.split(',');
+  const splitedServicearea = servicearea.split(',');
     try {
       const data = await projectService.saveProject(CREATE_PROJECT_TABLE_V2, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       result.push(data)
@@ -324,27 +319,35 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
 
       await addProjectToBoard(user, servicearea, county, '', defaultProjectType, project_id, year, sendToWR, isWorkPlan);
       
-      for (const j of jurisdiction) {
-        await ProjectLocalGovernment.create({
-          code_local_government_id:j,
-          project_id: project_id
-        });
-      }
-      for (const s of servicearea) {
-        await ProjectServiceArea.create({
+      for (const j of splitedJurisdiction) {
+        const res = await ProjectLocalGovernment.create({
+          code_local_government_id: parseInt(j),
           project_id: project_id,
-          code_service_area_id: s,
-          created_date: moment().format('YYYY-MM-DD HH:mm:ss'),
-          modified_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+          shape_length_ft: 0,
           last_modified_by: user.name,
           created_by: user.email
         });
+        console.log(res);
       }
-      for (const c of county) {
-        await ProjectCounty.create({
-          state_county_id: c,
-          project_id: project_id
+      for (const s of splitedServicearea) {
+        const res = await ProjectServiceArea.create({
+          project_id: project_id,
+          code_service_area_id: s,
+          shape_length_ft: 0,
+          created_date: new Date(),
+          modified_date: new Date(),
+          last_modified_by: user.name,
+          created_by: user.email
         });
+        console.log(res);
+      }
+      for (const c of splitedCounty) {
+        const res = await ProjectCounty.create({
+          state_county_id: c,
+          project_id: project_id,
+          shape_length_ft: 0
+        });
+        console.log(res);
       }
       
       for (const independent of JSON.parse(independetComponent)) {

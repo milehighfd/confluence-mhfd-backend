@@ -12,6 +12,24 @@ export default (sequelize, DataType) => {
     project_id: {
       type: DataType.INTEGER,
       allowNull: false
+    },
+    shape_length_ft: {
+      type: DataType.FLOAT,
+      allowNull: false
+    },
+    created_date: {
+      type: DataType.DATE,
+    },
+    modified_date: {
+      type: DataType.DATE,
+    },
+    last_modified_by: {
+      type: DataType.STRING,
+      allowNull: false
+    },
+    created_by: {
+      type: DataType.STRING,
+      allowNull: false
     }
   }, {
     freezeTableName: true,
