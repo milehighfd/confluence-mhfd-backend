@@ -61,6 +61,11 @@ import streamStudy from 'bc/models/stream_study.model.js';
 
 // import serviceAreaLocalGovernment from 'bc/models/service_area_local_government.model.js';
 
+Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
+  date = this._applyTimezone(date, options);
+  return date.format('YYYY-MM-DD HH:mm:ss.SSS');
+};
+
 const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, config.POSTGRESQL_PASSWORD, {
   dialect: config.DB_DIALECT,
   host: config.POSTGRESQL_HOST,
