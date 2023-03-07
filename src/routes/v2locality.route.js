@@ -36,7 +36,7 @@ router.get('/all-localities', async (req, res) => {
         county_name FROM CODE_STATE_COUNTY_4326`),
       db.sequelize.query(`SELECT  ${geom}
         OBJECTID,
-        'Mile High Flood District' as name FROM MHFD_BOUNDARY`)
+        'Mile High Flood District' as name FROM MHFD_BOUNDARY_4326`)
     ];
     const solved = await Promise.all(proms);
     const [saData] = solved[0];
