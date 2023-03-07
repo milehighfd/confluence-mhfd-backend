@@ -3,12 +3,14 @@ import needle from 'needle';
 
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
+import { cleanStringValue } from 'bc/routes/new-project/helper.js';
 
 import {
   CARTO_URL,
   MAIN_PROJECT_TABLE,
   PROPSPROBLEMTABLES,
-  PROBLEM_TABLE
+  PROBLEM_TABLE,
+  ARCGIS_SERVICE
 } from 'bc/config/config.js';
 import {
   getServiceAreaByProjectIds,
@@ -728,34 +730,93 @@ const saveProject = async (
   modified_date,
   start_date,
   last_modified_by,
-  created_by
+  created_by,
+  code_maintenance_eligibility_type_id = null
 ) => {
-  logger.info('create project ' + JSON.stringify(
-    CREATE_PROJECT_TABLE,
-    project_name, 
-    description,
-    code_project_type_id, 
-    created_date,
-    modified_date,
-    start_date,
-    last_modified_by,
-    created_by ));
+  
   try {
-    const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (project_name, description, code_project_type_id, created_date, modified_date, start_date, last_modified_by, created_by)
-    OUTPUT inserted . *
-    VALUES('${project_name}', '${description}', '${code_project_type_id}', '${created_date}', '${modified_date}', '${start_date}', '${last_modified_by}', '${created_by}')`;
-    const data = await db.sequelize.query(
-      insertQuery,
-      {
-        type: db.sequelize.QueryTypes.INSERT,
+    let insert;
+    if (code_maintenance_eligibility_type_id) {
+      insert = Project.create({
+        project_name: project_name,
+        description: description,
+        code_project_type_id: code_project_type_id,
+        created_date: created_date,
+        modified_date: modified_date,
+        start_date: start_date,
+        last_modified_by: last_modified_by,
+        created_by: created_by,
+        code_maintenance_eligibility_type_id: code_maintenance_eligibility_type_id,
       });
-    return data[0][0];
+    } else {
+      insert = Project.create({
+        project_name: project_name,
+        description: description,
+        code_project_type_id: code_project_type_id,
+        created_date: created_date,
+        modified_date: modified_date,
+        start_date: start_date,
+        last_modified_by: last_modified_by,
+        created_by: created_by
+      });
+    }
+    logger.info('create project ');
+    return insert;
   } catch(error) {
     console.log('the error ', error);
     throw error;
   }
 }
 
+const createRandomGeomOnARCGIS = (coordinates, projectname, token, projectid) => {  
+  const newGEOM = [{"geometry":{"paths":[ ] ,"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0,"projectName":projectname, "projectId": projectid}}];
+  newGEOM[0].geometry.paths = coordinates;
+  const formData = {
+    'f': 'pjson',
+    'token': token,
+    'adds': JSON.stringify(newGEOM)
+  };
+  return formData;
+};
+
+const getAuthenticationFormData = () => {
+  const formData = {
+    'username': 'ricardo_confluence',
+    'password': 'M!l3H!gh$m$',
+    'client': 'referer',
+    'ip': '181.188.178.182',
+    'expiration': '60',
+    'f': 'pjson',
+    'referer': 'localhost'
+  };
+  return formData;
+}
+
+const insertIntoArcGis = async (geom, projectid, projectname) => {
+  try {
+    const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
+    const fd = getAuthenticationFormData();
+    const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
+    const TOKEN = JSON.parse(token_data.body).token;
+    const bodyFD = createRandomGeomOnARCGIS(JSON.parse(geom).coordinates, cleanStringValue(projectname), TOKEN, projectid);
+    const createOnArcGis = await needle('post',`${ARCGIS_SERVICE}/applyEdits`, bodyFD, { multipart: true });
+    console.log('create on arc gis at ', ARCGIS_SERVICE, createOnArcGis.statusCode, createOnArcGis.body);
+    if (createOnArcGis.statusCode == 200) {
+      if (createOnArcGis.body.error) {
+        return { successArcGis: false, error: createOnArcGis.body.error };  
+      }
+      return { successArcGis: createOnArcGis.body.addResults[0].success };
+    } else {
+      return { successArcGis: false, error:createOnArcGis.body};
+    }
+  } catch(e) {
+    console.log('error at insert into arcgis', e);
+    return {
+      successArcGis: false,
+      error: e
+    }
+  }  
+}
 export default {
   getAll,
   deleteByProjectId,
@@ -763,5 +824,8 @@ export default {
   getProjects,
   getProjectsDeprecated,
   getProjectsIdsByBounds,
-  getDetails
+  getDetails,
+  insertIntoArcGis,
+  getAuthenticationFormData,
+  createRandomGeomOnARCGIS
 };

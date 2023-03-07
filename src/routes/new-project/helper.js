@@ -42,7 +42,6 @@ export const getBoard = async (type, locality, year, projecttype) => {
 };
 
 export const sendBoardsToProp = async (bp, board, prop, propid) => {
-  console.log(bp, board, prop);
   let propValues = prop.split(',');
   for (let k = 0; k < propValues.length; k++) {
     let propVal = propValues[k];
@@ -106,6 +105,7 @@ export const addProjectToBoard = async (user, servicearea, county, locality, pro
   if (!board) {
     const response = await boardService.createNewBoard(type, year, locality, projecttype, 'Under Review')
     board = response;
+    logger.info('BOARD CREATED');
   }
   let boardProjectObject = {
     board_id: board._id,

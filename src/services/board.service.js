@@ -2,6 +2,8 @@ import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import moment from 'moment';
 
+const BoardProject = db.boardProject;
+
 const saveBoard = async (
   board_id, 
   project_id,
@@ -14,17 +16,15 @@ const saveBoard = async (
     origin, 
     position0 ));
   try {
-    const id = await db.sequelize.query('SELECT MAX(id) FROM "board-projects"');
-    const lastID = Object.values(id[0][0]).length > 0 ? Object.values(id[0][0])[0] : -1
-    const insertQuery = `INSERT INTO "board-projects" (id, board_id, project_id, origin, position0, createdAt, updatedAt)
-    OUTPUT inserted . *
-    VALUES('${lastID + 1}', '${board_id}', '${project_id}', '${origin}', '${position0}', '${moment().format('YYYY-MM-DD HH:mm:ss')}', '${moment().format('YYYY-MM-DD HH:mm:ss')}')`;
-    const data = await db.sequelize.query(
-      insertQuery,
-      {
-        type: db.sequelize.QueryTypes.INSERT,
-      });
-    return data[0][0];
+    const response = await BoardProject.create({
+      board_id: board_id,
+      project_id: project_id,
+      origin: origin,
+      position0: position0,
+      createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().format('YYYY-MM-DD HH:mm:ss')
+    });
+    return response;
   } catch(error) {
     throw error;
   }

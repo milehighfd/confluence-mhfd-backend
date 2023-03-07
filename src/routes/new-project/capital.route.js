@@ -1,27 +1,24 @@
 import express from 'express';
 import Multer from 'multer';
 import needle from 'needle';
-import attachmentService from 'bc/services/attachment.service.js';
 import projectComponentService from 'bc/services/projectComponent.service.js';
 import projectService from 'bc/services/project.service.js';
 import projectStatusService from 'bc/services/projectStatus.service.js';
 import cartoService from 'bc/services/carto.service.js';
 
-import indepdendentService from 'bc/services/independent.service.js';
-import axios from 'axios';
+
 import {
   CARTO_URL,
   CREATE_PROJECT_TABLE,
-  COSPONSOR1,
   CREATE_PROJECT_TABLE_V2,
   ARCGIS_SERVICE
 } from 'bc/config/config.js';
 import db from 'bc/config/db.js';
 import auth from 'bc/auth/auth.js';
-import FormData from 'form-data';
 import logger from 'bc/config/logger.js';
-import { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue } from 'bc/routes/new-project/helper.js';
+import { addProjectToBoard, cleanStringValue } from 'bc/routes/new-project/helper.js';
 import moment from 'moment';
+import projectPartnerService from 'bc/services/projectPartner.service.js';
 
 const ProjectLocalGovernment = db.projectLocalGovernment;
 const ProjectCounty = db.projectCounty;
@@ -35,32 +32,10 @@ const multer = Multer({
   }
 });
 
-const createRandomGeomOnARCGIS = (coordinates, projectname, token, projectid) => {  
-  const newGEOM = [{"geometry":{"paths":[ ] ,"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0,"projectName":projectname, "projectId": projectid}}];
-  newGEOM[0].geometry.paths = coordinates;
-  const formData = {
-    'f': 'pjson',
-    'token': token,
-    'adds': JSON.stringify(newGEOM)
-  };
-  return formData;
-};
-const getAuthenticationFormData = () => {
-  const formData = {
-    'username': 'ricardo_confluence',
-    'password': 'M!l3H!gh$m$',
-    'client': 'referer',
-    'ip': '181.188.178.182',
-    'expiration': '60',
-    'f': 'pjson',
-    'referer': 'localhost'
-  };
-  return formData;
-}
 
 const getTokenArcGis = async () => {
   const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
-  const fd = getAuthenticationFormData();
+  const fd = projectService.getAuthenticationFormData();
   const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
   const TOKEN = JSON.parse(token_data.body).token;
   return TOKEN;
@@ -271,38 +246,12 @@ router.get('/sync', async (req, res) => {
   }
 });
 
-const insertIntoArcGis = async (geom, projectid, projectname) => {
-  try {
-    const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
-    const fd = getAuthenticationFormData();
-    const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
-    const TOKEN = JSON.parse(token_data.body).token;
-    const bodyFD = createRandomGeomOnARCGIS(JSON.parse(geom).coordinates, cleanStringValue(projectname), TOKEN, projectid);
-    const createOnArcGis = await needle('post',`${ARCGIS_SERVICE}/applyEdits`, bodyFD, { multipart: true });
-    console.log('create on arc gis at ', ARCGIS_SERVICE, createOnArcGis.statusCode, createOnArcGis.body);
-    if (createOnArcGis.statusCode == 200) {
-      if (createOnArcGis.body.error) {
-        return { successArcGis: false, error: createOnArcGis.body.error };  
-      }
-      return { successArcGis: createOnArcGis.body.addResults[0].success };
-    } else {
-      return { successArcGis: false, error:createOnArcGis.body};
-    }
-  } catch(e) {
-    console.log('error at insert into arcgis', e);
-    return {
-      successArcGis: false,
-      error: e
-    }
-  }  
-}
-
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const { isWorkPlan, projectname, description, servicearea, county, geom,
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
     independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost, year, sendToWR, componentcost, componentcount } = req.body;
-  const creator = user.name;
+  const creator = user.email;
   const defaultProjectId = '5';
   const defaultProjectType = 'Capital';
   let result = [];
@@ -315,37 +264,38 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       const { project_id } = data;
       await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
       await projectStatusService.saveProjectStatusFromCero(5, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
-      await attachmentService.uploadFiles(user, req.files, project_id, cover);
+      //await attachmentService.uploadFiles(user, req.files, project_id, cover);
 
-      await addProjectToBoard(user, servicearea, county, '', defaultProjectType, project_id, year, sendToWR, isWorkPlan);
-      
+      await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan);
+      await projectPartnerService.saveProjectPartner(sponsor, cosponsor, project_id);
+
       for (const j of splitedJurisdiction) {
-        const res = await ProjectLocalGovernment.create({
+        await ProjectLocalGovernment.create({
           code_local_government_id: parseInt(j),
           project_id: project_id,
           shape_length_ft: 0,
           last_modified_by: user.name,
           created_by: user.email
         });
-        console.log(res);
+        logger.info('created jurisdiction');
       }
       for (const s of splitedServicearea) {
-        const res = await ProjectServiceArea.create({
+        await ProjectServiceArea.create({
           project_id: project_id,
           code_service_area_id: s,
           shape_length_ft: 0,
           last_modified_by: user.name,
           created_by: user.email
         });
-        console.log(res);
+        logger.info('created service area');
       }
       for (const c of splitedCounty) {
-        const res = await ProjectCounty.create({
+        await ProjectCounty.create({
           state_county_id: c,
           project_id: project_id,
           shape_length_ft: 0
         });
-        console.log(res);
+        logger.info('created county');
       }
       
       for (const independent of JSON.parse(independetComponent)) {
@@ -365,9 +315,8 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
           logger.error('cannot create component ' + error);
         }
       }
-      const dataArcGis = await insertIntoArcGis(geom, project_id, cleanStringValue(projectname));
+      const dataArcGis = await projectService.insertIntoArcGis(geom, project_id, cleanStringValue(projectname));
       result.push(dataArcGis);
-
     } catch (error) {
       logger.error(error);
     }

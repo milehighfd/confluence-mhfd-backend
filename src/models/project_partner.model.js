@@ -18,11 +18,9 @@ export default (sequelize, DataType) => {
     },
     business_associate_contacts_id: {
       type: DataType.INTEGER,
-      allowNull: false
     },
     partner_case_number: {
       type: DataType.STRING,
-      allowNull: false
     }
   }, {
     freezeTableName: true,

@@ -2,7 +2,8 @@ export default (sequelize, DataType) => {
   const Project = sequelize.define('project', {
     project_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     project_name: {
       type: DataType.STRING,

@@ -3,7 +3,7 @@ export default (sequelize, DataType) => {
     project_county_id: {
       type: DataType.INTEGER,
       primaryKey: true,
-      autoincrement: true
+      autoIncrement: true
     },
     state_county_id: {
       type: DataType.INTEGER,
