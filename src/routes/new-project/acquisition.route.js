@@ -1,16 +1,12 @@
 import express from 'express';
 import Multer from 'multer';
-import needle from 'needle';
-import attachmentService from 'bc/services/attachment.service.js';
 import {
-  CARTO_URL,
   CREATE_PROJECT_TABLE_V2,
-  CREATE_PROJECT_TABLE,
-  COSPONSOR1
+  CREATE_PROJECT_TABLE
 } from 'bc/config/config.js';
 import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
-import { addProjectToBoard, getNewProjectId, setProjectID, cleanStringValue } from 'bc/routes/new-project/helper.js';
+import { addProjectToBoard, cleanStringValue } from 'bc/routes/new-project/helper.js';
 
 import db from 'bc/config/db.js';
 import cartoService from 'bc/services/carto.service.js';
@@ -82,6 +78,8 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         });
         logger.info('created county');
       }
+      const dataArcGis = await projectService.insertIntoArcGis(geom, project_id, cleanStringValue(projectname));
+      result.push(dataArcGis);
     } catch (error) {
       logger.error(error);
       return res.status(500).send(error);
