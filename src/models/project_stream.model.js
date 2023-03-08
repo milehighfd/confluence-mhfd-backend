@@ -2,7 +2,8 @@ export default (sequelize, DataType) => {
   const ProjectStream = sequelize.define('project_stream', {
     project_stream_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     project_id: {
       type: DataType.INTEGER,

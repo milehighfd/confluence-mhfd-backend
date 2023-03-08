@@ -3,7 +3,8 @@ export default (sequelize, DataType) => {
   const ProjectStudy = sequelize.define('study', {
     study_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     study_name: {
       type: DataType.STRING
@@ -33,10 +34,11 @@ export default (sequelize, DataType) => {
       type: DataType.STRING
     },
     last_updated_date: {
-      type: DataType.DATE
+      type: DataType.DATE,
+      defaultValue: DataType.NOW
     },
     last_update_user: {
-      type: DataType.STRING
+      type: DataType.STRING,
     }
   }, {
     freezeTableName: true,

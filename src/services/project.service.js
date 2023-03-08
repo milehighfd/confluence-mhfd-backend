@@ -254,6 +254,7 @@ const getDetails = async (project_id) => {
           "onbase_project_number",
           "created_date",
           'code_project_type_id',
+          'code_maintenance_eligibility_type_id',
           [
             sequelize.literal(`(
               SELECT COUNT([project_component].[project_id])
@@ -299,10 +300,6 @@ const getDetails = async (project_id) => {
                 'stream_name'
               ]
             },
-            attributes: [
-              'stream_id',
-              'length_in_mile'
-            ]
           },
           {
             model: ProjectLocalGovernment,
@@ -563,11 +560,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
               'stream_id',
               'stream_name'
             ]
-          },
-          attributes: [
-            'stream_id',
-            'length_in_mile'
-          ]
+          }
         },
         {
           model: ProjectLocalGovernment,

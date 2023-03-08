@@ -17,6 +17,10 @@ import acquisitionRouter from 'bc/routes/new-project/acquisition.route.js';
 import specialRouter from 'bc/routes/new-project/special.route.js';
 import copyRouter from 'bc/routes/new-project/copy.route.js';
 
+import db from 'bc/config/db.js';
+const CodeLocalGoverment = db.codeLocalGoverment;
+const Stream = db.stream;
+
 const router = express.Router();
 const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
 'special_item_linear', 'special_item_area', 'channel_improvements_linear',
@@ -401,15 +405,6 @@ router.post('/problem-geom', async (req,res) => {
 });
 router.post('/streams-data', auth, async (req, res) => {
   const geom = req.body.geom;
-  // const sql = `SELECT  
-  //       j.jurisdiction, 
-  //       s.str_name, 
-  //       s.cartodb_id, 
-  //       ST_length(ST_intersection(s.the_geom, j.the_geom)::geography) as length  
-  //         FROM mhfd_stream_reaches s, jurisidictions j 
-  //         where ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), s.the_geom, 0) 
-  //         and ST_DWithin(s.the_geom, j.the_geom, 0) `;
-
   const sql = `
     SELECT 
       j.jurisdiction, 
@@ -443,19 +438,38 @@ router.post('/streams-data', auth, async (req, res) => {
       const body = data.body;
       streamsInfo = body.rows;
       const answer = {};
-      body.rows.forEach(row => {
-        let str_name = row.str_name?row.str_name:'Unnamed Streams';
+      body.rows.forEach(async row => {
+        let str_name = row.str_name ? row.str_name : 'Unnamed Streams';
         
           if (!answer[str_name]) {
             answer[str_name] = [];
           }
+
+          const locality = await CodeLocalGoverment.findOne({
+            where: {
+              local_government_name: row.jurisdiction,
+            }
+          });
+          const whereStatement = {};
+          const ids = row.mhfd_code.split('.')
+          if (row.str_name) whereStatement.stream_name = row.str_name;
+          ids.forEach((element, index) => {
+            if(index === 0) whereStatement.Reach_Code = parseInt(element);
+            else whereStatement[`Trib_Code${index}`] = parseInt(element);
+          });
+          const stream = await Stream.findOne({
+            where: whereStatement,
+            attributes: ['stream_id', 'stream_name']
+          });
           answer[str_name].push({
             jurisdiction: row.jurisdiction,
             length: row.length,
             cartodb_id: row.cartodb_id,
             mhfd_code: row.mhfd_code,
             str_name: str_name,
-            drainage: 0
+            drainage: 0,
+            code_local_goverment: [locality],
+            stream: stream ? [stream] : []
           });
         
       });
@@ -505,10 +519,7 @@ router.post('/streams-data', auth, async (req, res) => {
       }
       Promise.all(promises).then(async (promiseData) => {
         logger.info('my values '+ JSON.stringify(promiseData));
-        promiseData.forEach(bucket => {
-          //Disclaimer: I don't create a more optimal solution because we don't have enough time
-          // will be work fine for most cases 
-          logger.info('bucket ' + JSON.stringify(bucket));
+        promiseData.forEach(async bucket => {
           const str_name = bucket.str_name? bucket.str_name : 'Unnamed Streams';
           for (const array of answer[str_name]) {
             logger.info('array '+ JSON.stringify(array));
@@ -518,8 +529,6 @@ router.post('/streams-data', auth, async (req, res) => {
               }
             }
           }
-          
-          //answer[value.str_name].push(value.drainage);
         });
         res.send(answer);
       });
@@ -1017,8 +1026,8 @@ router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
       obj[id] = [];
     }
     for (const stream of streams) {
-      const local = await projectStreamService.getOneByStream(stream.local_government_id);
-      const res = {stream, code_local_goverment: local}
+      const local = await projectStreamService.getOneByCode(stream.local_government_id);
+      const res = {stream, code_local_goverment: local, length: stream.length_in_mile, drainage: stream.drainage_area_in_sq_miles}
       obj[stream.stream.stream_name].push(res);
     }
     return res.send(obj);

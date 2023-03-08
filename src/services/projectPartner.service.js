@@ -19,11 +19,7 @@ const saveProjectPartner = async (
             business_name: splited.toUpperCase()
           }
         });
-        const mainId = await db.sequelize.query('SELECT MAX(project_partner_id) FROM "project_partner"');
-        const lastID = Object.values(mainId[0][0]).length > 0 ? Object.values(mainId[0][0])[0] : -1
-
         if(extraId) await ProjectPartner.create({
-          project_partner_id: lastID + 1,
           code_partner_type_id: 12,
           project_id: project_id,
           business_associates_id: extraId.business_associates_id,
@@ -37,11 +33,8 @@ const saveProjectPartner = async (
         business_name: sponsor.toUpperCase()
       }
     });
-    const mainId = await db.sequelize.query('SELECT MAX(project_partner_id) FROM "project_partner"');
-    const lastID = Object.values(mainId[0][0]).length > 0 ? Object.values(mainId[0][0])[0] : -1
 
     if(id) await ProjectPartner.create({
-      project_partner_id: lastID + 1,
       code_partner_type_id: 11,
       project_id: project_id,
       business_associates_id: id.business_associates_id,

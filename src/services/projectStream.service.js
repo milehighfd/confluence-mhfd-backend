@@ -41,6 +41,20 @@ const getOneByStream = async(pk) => {
   }
 }
 
+const getOneByCode = async(code) => {
+  try {
+    const list = await CodeLocalGoverment.findAll({
+      where: {
+        code_local_government_id: code
+      }
+    });
+    return list;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 const deleteByProjectId= async (projectid) => {
   const project = ProjectStream.destroy({
     where: {
@@ -70,5 +84,6 @@ export default {
   getAll,
   deleteByProjectId,
   saveProjectStream,
-  getOneByStream
+  getOneByStream,
+  getOneByCode
 };

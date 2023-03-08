@@ -2,7 +2,8 @@ export default (sequelize, DataType) => {
   const ProjectDetail = sequelize.define('project_detail', {
     project_detail_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     maintenance_frequency: {
       type: DataType.INTEGER,
@@ -12,17 +13,9 @@ export default (sequelize, DataType) => {
       type: DataType.BOOLEAN,
       allowNull: false
     },
-    code_maintenance_eligibility_type_id: {
-      type: DataType.INTEGER,
-      allowNull: false
-    },
     project_id: {
       type: DataType.INTEGER,
       allowNull: false
-    },
-    code_study_sub_reason_id: {
-      type: DataType.INTEGER,
-      allowNull: true
     },
     acquisition_anticipated_year: {
       type: DataType.INTEGER,

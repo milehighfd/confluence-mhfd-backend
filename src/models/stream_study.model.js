@@ -2,7 +2,8 @@ export default (sequelize, DataType) => {
   const streamStudy = sequelize.define('stream_study', {
     stream_study_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     stream_id: {
       type: DataType.INTEGER,

@@ -3,7 +3,8 @@ export default (sequelize, DataType) => {
   const ProjectStudy = sequelize.define('project_study', {
     project_study_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     project_id: {
       type: DataType.INTEGER
@@ -12,7 +13,8 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER
     },
     last_updated_date: {
-      type: DataType.DATE
+      type: DataType.DATE,
+      defaultValue: DataType.NOW
     },
     last_update_user: {
       type: DataType.STRING
