@@ -16,6 +16,7 @@ import newnotes from 'bc/models/newnotes.model.js';
 import color from 'bc/models/color.model.js';
 import groupNotes from 'bc/models/groupNotes.model.js';
 import codeRuleActionItem from 'bc/models/code_rule_action_item.model.js';
+import projectActionItem from 'bc/models/project_action_item.model.js'
 import projectstream from 'bc/models/projectstream.model.js';
 import projectComponent from 'bc/models/projectComponent.model.js';
 import consultants from 'bc/models/consultants.model.js';
@@ -122,6 +123,7 @@ db.codeProjectType = codeProjectType(sequelize, Sequelize);
 //db.project_component = project_component(sequelize, Sequelize);
 db.projectStatus = projectStatus(sequelize, Sequelize);
 db.codePhaseType = codePhaseType(sequelize, Sequelize);
+db.projectActionItem = projectActionItem(sequelize, Sequelize);
 db.stateCounty = stateCounty(sequelize, Sequelize);
 db.project = project(sequelize, Sequelize);
 db.projectDetail = projectDetail(sequelize, Sequelize);
@@ -275,6 +277,7 @@ db.codePhaseType.belongsTo(
   { foreignKey: 'code_project_type_id' }
 );
 db.codePhaseType.hasMany(db.codeRuleActionItem, {foreignKey: 'code_phase_type_id'});
+db.codeRuleActionItem.hasMany(db.projectActionItem,{foreignKey: 'code_rule_action_item_id'})
 
 
 db.project.hasMany(db.projectstudy, {foreignKey: 'project_id'});
