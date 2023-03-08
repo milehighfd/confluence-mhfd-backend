@@ -12,7 +12,7 @@ export default (sequelize, DataType) => {
     user_id: {
       type: DataType.INTEGER,
     },
-    project_id: {
+    problem_id: {
       type: DataType.INTEGER,
     },
     project_table_name: {
