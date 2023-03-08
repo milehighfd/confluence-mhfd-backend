@@ -20,38 +20,24 @@ function getFilters(params, ids) {
   let tipoid = "";
   let hasProjectType = false;
 
-  if (params.isproblem) {
-    tipoid = "problem_id";
-    if (params.name) {
-      if (filters.length > 0) {
-        filters = filters = ` and problemname ilike '%${params.name}%'`;
-      } else {
-        filters = ` problemname ilike '%${params.name}%' `;
-      }
-    }
-
-    if (params.problemtype) {
-      const query = createQueryForIn(params.problemtype.split(","));
-      if (filters.length > 0) {
-        filters = filters + ` and problemtype in (${query}) `;
-      } else {
-        filters = ` problemtype in (${query}) `;
-      }
-    }
-  } else {
-    console.log("PROJECTS");
-    tipoid = "projectid";
-    if (params.name) {
-      if (filters.length > 0) {
-        filters = ` and projectname ilike '%${params.name}%' `;
-      } else {
-        filters = ` projectname ilike '%${params.name}%' `;
-      }
-    }
-    console.log("ID", filters);
-    if (params.problemtype) {
+  tipoid = "problem_id";
+  if (params.name) {
+    if (filters.length > 0) {
+      filters = filters = ` and problemname ilike '%${params.name}%'`;
+    } else {
+      filters = ` problemname ilike '%${params.name}%' `;
     }
   }
+
+  if (params.problemtype) {
+    const query = createQueryForIn(params.problemtype.split(","));
+    if (filters.length > 0) {
+      filters = filters + ` and problemtype in (${query}) `;
+    } else {
+      filters = ` problemtype in (${query}) `;
+    }
+  }
+  
 
   // components
 
@@ -80,7 +66,7 @@ function getFilters(params, ids) {
   if (filters.length > 0) {
     filters += ` and`;
   }
-  filters += ` ${tipoid} in ('${ids.join("','")}')`;
+  filters += ` ${tipoid} in (${ids.join(",")})`;
 
   if (filters.length > 0) {
     filters = " where " + filters;
@@ -195,17 +181,19 @@ router.get("/count", auth, async (req, res) => {
 
 router.get("/problem-cards", auth, async (req, res) => {
   const user = req.user;
-  const favorite = await favoritesService.getFavorites(user.user_id, true);
-  console.log(favorite);
+  const favoriteObj = await favoritesService.getFavorites(user.user_id, true);
+  const favorite = favoriteObj.map(d => d.dataValues);
+  
   const ids = favorite
-    .map((fav) => `${fav.project_id}`);
+  .map((fav) => fav.problem_id);
+  console.log('favorites are ', ids);
   if (!ids.length) {
     return res.send([]);
   }
   try {
     let filters = "";
     filters = getFilters(req.body, ids);
-    const PROBLEM_SQL = `SELECT cartodb_id, 
+    const PROBLEM_SQL = `SELECT cartodb_id,
     ${PROPSPROBLEMTABLES.problem_boundary[5]} 
     as ${PROPSPROBLEMTABLES.problems[5]}, 
     ${PROPSPROBLEMTABLES.problem_boundary[6]} 
@@ -224,6 +212,7 @@ router.get("/problem-cards", auth, async (req, res) => {
       PROPSPROBLEMTABLES.problem_boundary[5]
     )}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEMS_TABLE} `;
     const query = { q: `${PROBLEM_SQL}  ${filters} ` };
+    console.log(`${PROBLEM_SQL}  ${filters} `);
     let answer = [];
     try {
       const data = await needle("post", CARTO_URL, query, { json: true });
@@ -232,7 +221,7 @@ router.get("/problem-cards", auth, async (req, res) => {
           return {
             cartodb_id: element.cartodb_id,
             type: "problems",
-            problemid: element.problem_id,
+            problemid: element.problemid,
             problemname: element.problemname,
             solutioncost: element.solutioncost,
             jurisdiction: element.jurisdiction,
