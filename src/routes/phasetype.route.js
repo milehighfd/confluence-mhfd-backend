@@ -5,6 +5,7 @@ import sequelize from 'sequelize';
 const router = express.Router();
 const CodePhaseType = db.codePhaseType;
 const codeRuleActionItem = db.codeRuleActionItem;
+const projectActionItem = db.projectActionItem;
 const Op = sequelize.Op;
 
 router.post('/', async (req, res) => {
@@ -31,11 +32,19 @@ router.post('/', async (req, res) => {
 
 router.post('/phases', async (req, res) => {
   const code_project_type_id = req.body.code_phase_type_id;
+  const project_id = req.body.project_id;
   try {
     const codeRuleActionItem1 = await codeRuleActionItem.findAll({
       where: {
         code_phase_type_id: code_project_type_id
-      }
+      },
+      include: {
+        model: projectActionItem,
+        where: {
+          project_id: project_id,
+        },
+        required: false
+      },
     });
     return res.send(codeRuleActionItem1);
   } catch(error) {
