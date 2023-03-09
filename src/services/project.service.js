@@ -429,12 +429,12 @@ const getDetails = async (project_id) => {
               {
                 model: RelatedStudy
               },
-              {
-                model: CodeStudySubreason,
-                include: {
-                  model: CodeStudyReason
-                }
-              },
+              // {
+              //   model: CodeStudySubreason,
+              //   include: {
+              //     model: CodeStudyReason
+              //   }
+              // },
               {
                 model: StreamStudy,
                 include: {

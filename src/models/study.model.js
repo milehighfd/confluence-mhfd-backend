@@ -21,7 +21,7 @@ export default (sequelize, DataType) => {
     status: {
       type: DataType.STRING
     },
-    code_study_sub_reason_id: {
+    code_study_reason_id: {
       type: DataType.INTEGER
     },
     contract_id: {
