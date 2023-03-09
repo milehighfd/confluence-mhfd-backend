@@ -10,7 +10,7 @@ const getData = async (req, res, next) => {
   res.locals.data = [];
   if (req.user) {
     if([ROLES.MFHD_STAFF, ROLES.GOVERNMENT_ADMIN, ROLES.MFHD_ADMIN].includes(req.user.designation)) {
-      res.locals.data = localities.filter(l => l.type === 'JURISDICTION');
+      res.locals.data = localities.filter(l => l.type === 'LOCAL_GOVERNMENT');
     } else if (req.user.designation === ROLES.GOVERNMENT_STAFF) {
       res.locals.data = localities;
     }

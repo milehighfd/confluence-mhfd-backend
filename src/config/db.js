@@ -39,7 +39,7 @@ import projectCounty from 'bc/models/project_county.model.js';
 import projectPartner from 'bc/models/project_partner.model.js';
 import codeProjectPartnerType from 'bc/models/code_project_partner_type.model.js';
 import codeStudyReason from 'bc/models/code_study_reason.model.js';
-import codeStudySubreason from 'bc/models/code_study_sub_reason.model.js';
+//import codeStudySubreason from 'bc/models/code_study_sub_reason.model.js';
 import codeServiceArea from 'bc/models/code_service_area.model.js';
 import localGovernment from 'bc/models/local_government.model.js';
 import project_stream from 'bc/models/project_stream.model.js';
@@ -139,8 +139,9 @@ db.codeStateCounty = codeStateCounty(sequelize, Sequelize);
 
 db.projectPartner = projectPartner(sequelize, Sequelize);
 db.codeProjectPartnerType = codeProjectPartnerType(sequelize, Sequelize);
-db.codeStudyReason = codeStudyReason(sequelize, Sequelize);
-db.codeStudySubreason = codeStudySubreason(sequelize, Sequelize);
+
+/* db.codeStudyReason = codeStudyReason(sequelize, Sequelize);
+db.codeStudySubreason = codeStudySubreason(sequelize, Sequelize); */
 
 db.codeServiceArea = codeServiceArea(sequelize, Sequelize);
 db.codeLocalGoverment = codeLocalGoverment(sequelize, Sequelize);
@@ -292,11 +293,11 @@ db.relatedstudy.belongsTo(db.study, { foreignKey: 'study_id' });
 db.codestudytype.hasMany(db.study, {foreignKey: 'study_type_id'});
 db.study.belongsTo(db.codestudytype, {foreignKey: 'study_type_id'});
 
-db.codeStudySubreason.hasMany(db.study, {foreignKey: 'code_study_sub_reason_id'});
+/* db.codeStudySubreason.hasMany(db.study, {foreignKey: 'code_study_sub_reason_id'});
 db.study.belongsTo(db.codeStudySubreason, {foreignKey: 'code_study_sub_reason_id'});
 
 db.codeStudySubreason.hasMany(db.codeStudyReason, {foreignKey: 'code_study_reason_id'});
-db.codeStudyReason.belongsTo(db.codeStudySubreason, {foreignKey: 'code_study_reason_id'});
+db.codeStudyReason.belongsTo(db.codeStudySubreason, {foreignKey: 'code_study_reason_id'}); */
 
 db.stream.hasMany(db.streamstudy, {foreignKey: 'stream_id'});
 db.streamstudy.belongsTo(db.stream, { foreignKey: 'stream_id' })

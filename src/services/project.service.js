@@ -48,8 +48,6 @@ const ProjectStudy = db.projectstudy;
 const Study = db.study;
 const CodeStudyType = db.codestudytype;
 const RelatedStudy = db.relatedstudy;
-const CodeStudySubreason = db.codeStudySubreason;
-const CodeStudyReason = db.codeStudyReason;
 const StreamStudy = db.streamstudy;
 
 const User = db.user;
