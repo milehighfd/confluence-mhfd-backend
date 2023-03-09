@@ -34,6 +34,8 @@ import seed from 'bc/config/seed.js'
 import projectServiceArea from 'bc/routes/projectservicearea.route.js';
 import streamsRouter from 'bc/routes/streams.route.js';
 import phasetypeRouter from './routes/phasetype.route.js';
+import projectactionitemRouter from './routes/projectactionitem.route.js'
+
 // import serviceAreaLocalGovernment from 'bc/routes/servicearealocalgovernment.route.js';
 seed();
 
@@ -80,6 +82,7 @@ app.use('/notes', noteRouter);
 app.use('/newnotes', newnoteRouter);
 app.use('/consultants', consultantsRouter);
 app.use('/phasetype', phasetypeRouter);
+app.use('/actionitem', projectactionitemRouter);
 app.use('/organizations', organizationRouter);
 app.use('/configuration', configurationRouter);
 app.use('/projects', projectRouter);

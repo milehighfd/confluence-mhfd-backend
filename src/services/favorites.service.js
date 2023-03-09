@@ -8,6 +8,8 @@ const ProjectFavorite = db.ProjectFavorite;
 const ProblemFavorite = db.problemFavorite;
 const PROJECT_FAVORITE_TABLE = 'project_favorite';
 const PROBLEM_FAVORITE_TABLE = 'problem_favorite';
+const PROJECT_ID = 'project_id';
+const PROBLEM_ID = 'problem_id';
 const User = db.user;
 
 const getAll = async () => {
@@ -24,11 +26,21 @@ const getAll = async () => {
     throw error;
   }
 }
-const getFavorites = async (user_id, isProblem) => {
+
+const getFields = (isProblem) => {
   let Favorite = ProjectFavorite;
+  let table = PROJECT_FAVORITE_TABLE;
+  let idField = PROJECT_ID;
   if (isProblem) {
     Favorite = ProblemFavorite;
+    table = PROBLEM_FAVORITE_TABLE;
+    idField = PROBLEM_ID;
   }
+  return { Favorite, table, idField };
+}
+
+const getFavorites = async (user_id, isProblem) => {
+  const { Favorite } = getFields(isProblem);
   try {
     let result = [];
     result = await Favorite.findAll({
@@ -44,14 +56,11 @@ const getFavorites = async (user_id, isProblem) => {
 }
 
 const getOne = async (data, isProblem) => {
-  let Favorite = ProjectFavorite;
-  if (isProblem) {
-    Favorite = ProblemFavorite;
-  }
+  const { Favorite, idField } = getFields(isProblem);
   try {
     const favorite = await Favorite.findOne({
       where: {
-        project_id: data.project_id,
+        [idField]: data.project_id,
         user_id: data.user_id
       }
     });
@@ -63,16 +72,11 @@ const getOne = async (data, isProblem) => {
 }
 
 const saveFavorite = async (favorite, isProblem) => {
-  let Favorite = ProjectFavorite;
-  let table = PROJECT_FAVORITE_TABLE;
-  if (isProblem) {
-    Favorite = ProblemFavorite;
-    table = PROBLEM_FAVORITE_TABLE;
-  }
+  const { Favorite, table, idField } = getFields(isProblem);
   try {
     const fav = await Favorite.findOne({
       where: {
-        project_id: favorite.project_id,
+        [idField]: favorite.idField,
         user_id: favorite.user_id
       }
     });
@@ -80,9 +84,9 @@ const saveFavorite = async (favorite, isProblem) => {
       const formatTime = moment().format('YYYY-MM-DD HH:mm:ss');
       //await ProjectFavorite.create(favorite);
       //remove user_character_id when updated db
-      const insertQuery = `INSERT INTO ${table} (user_id, project_id, created_date, modified_date, last_modified_by, created_by, project_table_name)
+      const insertQuery = `INSERT INTO ${table} (user_id, ${idField}, created_date, modified_date, last_modified_by, created_by, project_table_name)
       OUTPUT inserted . *
-      VALUES( '${favorite.user_id}', '${favorite.project_id}', '${formatTime}', '${formatTime}', '${favorite.creator}','${favorite.creator}', 'useless_column')`;
+      VALUES( '${favorite.user_id}', '${favorite.idField}', '${formatTime}', '${formatTime}', '${favorite.creator}','${favorite.creator}', 'useless_column')`;
       const data = await db.sequelize.query(
         insertQuery,
         {
@@ -102,10 +106,7 @@ const saveFavorite = async (favorite, isProblem) => {
 }
 
 const countFavorites = async (user_id, isProblem) => {
-  let Favorite = ProjectFavorite;
-  if (isProblem) {
-    Favorite = ProblemFavorite;
-  }
+  const { Favorite } = getFields(isProblem);
   try {
     const result = await Favorite.count({
       where: {
