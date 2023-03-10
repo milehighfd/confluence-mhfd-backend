@@ -20,6 +20,9 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       allowNull: false
     },
+    is_deleted: {
+      type: DataType.INTEGER
+    }
   }, {
     freezeTableName: true,
     tableName: 'colors',

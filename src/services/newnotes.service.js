@@ -88,7 +88,8 @@ const getGroups = async (id) => {
 const getColors = async (userId) => {
   const colors = await ColorNotes.findAll({
     where: {
-      user_id: +userId
+      user_id: +userId,
+      is_deleted: 0
     },
     order: [
       ['created_date', 'DESC']
@@ -128,11 +129,12 @@ const deleteGroups = async (id) => {
 const deleteColor = async (id) => {
   const color = await ColorNotes.findOne({
     where: {
-      _id: id 
+      color_id: id 
     }});
   await NewNotes.update(
     {
-      color_id: null
+      color_id: null,
+      is_deleted: 1
     },
     {
     where: {
@@ -142,7 +144,7 @@ const deleteColor = async (id) => {
 
   if (color) {
     logger.info('color destroyed ');
-    color.destroy();
+    color.update({is_deleted: 1});
     return true;
   } else {
     logger.info('color not found');
