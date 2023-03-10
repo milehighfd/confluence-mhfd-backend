@@ -10,6 +10,10 @@ const Op = sequelize.Op;
 
 router.get('/', async (req, res) => {
   let boardProjects = await ProjectActionItem.findAll({      
+    attributes: ['project_id','project_action_item_id','code_rule_action_item_id'],
+    include: {
+      all:true
+    },
   });
   res.send(boardProjects);
 });
