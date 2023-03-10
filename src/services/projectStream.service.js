@@ -41,10 +41,10 @@ const getOneByStream = async(pk) => {
   }
 }
 
-const deleteByProjectId= async (projectid) => {
+const deleteByProjectId= async (project_id) => {
   const project = ProjectStream.destroy({
     where: {
-      project_id: projectid 
+      project_id: project_id 
     }});
   if (project) {
     logger.info('ProjectStream destroyed ');

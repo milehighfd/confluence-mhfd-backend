@@ -41,8 +41,27 @@ const insertToCarto = async (table, geom, project_id) => {
       logger.error(error, 'at', insertQuery);
    }
 }
-  
+
+const updateCartoStudy = async (table, project_id, parsedIds) => {
+  const geomUpdate = `the_geom = (SELECT ST_Collect(the_geom) FROM mhfd_stream_reaches WHERE unique_mhfd_code IN(${parsedIds}))`;
+  const updateQuery = `UPDATE ${table} SET
+  ${geomUpdate} WHERE projectid = ${project_id}`;
+
+  const query = {
+    q: updateQuery
+  };
+ try {
+  const data = await needle('post', CARTO_URL, query, { json: true });
+    if (data.statusCode !== 200) logger.error(data.body);
+    console.log(data.body);
+    logger.info('updated');
+    return data.body;
+ } catch (error) {
+    logger.error('error',error);
+ }
+}
   export default {
     insertToCarto,
-    insertToCartoStudy
+    insertToCartoStudy,
+    updateCartoStudy
   };

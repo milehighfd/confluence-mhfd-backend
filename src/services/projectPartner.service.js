@@ -46,8 +46,28 @@ const saveProjectPartner = async (
   }
 }
 
-
+const updateProjectPartner = async (
+  sponsor, 
+  cosponsor,
+  project_id
+) => {
+  try {
+    if (cosponsor && sponsor && project_id) {
+      await ProjectPartner.destroy({
+        where: {
+          project_id: project_id
+        }
+      });
+      await saveProjectPartner(sponsor, cosponsor, project_id);
+      logger.info('created  Sponsor and CoSponsor');
+    }
+  } catch(error) {
+    logger.error('error ProjectPartner Sponsor ', error);
+    throw error;
+  }
+}
 
 export default {
   saveProjectPartner,
+  updateProjectPartner
 };

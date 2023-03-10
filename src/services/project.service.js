@@ -757,6 +757,43 @@ const saveProject = async (
   }
 }
 
+const updateProject = async (
+  project_id,
+  project_name, 
+  description,
+  modified_date,
+  last_modified_by,
+  code_maintenance_eligibility_type_id = null
+) => {
+  
+  try {
+    let insert;
+    if (code_maintenance_eligibility_type_id) {
+      insert = Project.update({
+        project_name: project_name,
+        description: description,
+        modified_date: modified_date,
+        last_modified_by: last_modified_by,
+        code_maintenance_eligibility_type_id: code_maintenance_eligibility_type_id,
+      }, { where: { project_id: project_id } }
+      );
+    } else {
+      insert = Project.update({
+        project_name: project_name,
+        description: description,
+        modified_date: modified_date,
+        last_modified_by: last_modified_by,
+      }, { where: { project_id: project_id } });
+    }
+    logger.info('create project ');
+    return insert;
+  } catch(error) {
+    console.log('the error ', error);
+    throw error;
+  }
+}
+
+
 const createRandomGeomOnARCGIS = (coordinates, projectname, token, projectid) => {  
   const newGEOM = [{"geometry":{"paths":[ ] ,"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0,"projectName":projectname, "projectId": projectid}}];
   newGEOM[0].geometry.paths = coordinates;
@@ -816,5 +853,6 @@ export default {
   getDetails,
   insertIntoArcGis,
   getAuthenticationFormData,
-  createRandomGeomOnARCGIS
+  createRandomGeomOnARCGIS,
+  updateProject
 };

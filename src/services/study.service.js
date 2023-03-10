@@ -55,6 +55,60 @@ const saveStudy = async (
   }
 }
 
+const updateStudy = async (
+  study_name, 
+  complete_year,
+  last_update_user,
+  project_id,
+  streams,
+  code_study_reason_id = 1,
+  otherReason = null,
+) => {
+  try {
+    console.log(project_id);
+    const studyID = await Projectstudy.findOne({
+      where:{
+        project_id: project_id
+      }
+    });
+     await Study.update({
+      study_name: study_name,
+      complete_year: complete_year,
+      status: '',
+      code_study_reason_id: code_study_reason_id,
+      last_update_user: last_update_user
+    }, {where: { study_id: studyID.study_id }}); 
+
+    await Projectstudy.update({
+      last_update_user: last_update_user
+    }, {where: { project_study_id: studyID.project_study_id}})
+
+    await Streamstudy.destroy({
+      where: {
+        study_id: studyID.study_id 
+      }
+    });
+
+    for (const stream of streams) {
+      const id = stream.stream.stream_id ? stream.stream.stream_id : stream.stream[0].stream_id;
+      await Streamstudy.create({
+        stream_id: id,
+        study_id: studyID.study_id
+      })
+    }
+    if (otherReason) {
+      await ProjectDetail.update({
+        comments: otherReason
+      },{where:{ project_id: project_id}});
+    } 
+    logger.info('updated Study ');
+  } catch(error) {
+    logger.error('error Study update ', error);
+    throw error;
+  }
+}
+
 export default {
-  saveStudy
+  saveStudy,
+  updateStudy
 };

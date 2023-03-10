@@ -100,78 +100,103 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         });
       }
       await studyService.saveStudy(cleanStringValue(projectname), moment().format('YYYY'), year, creator, project_id, JSON.parse(streams), studyreason, otherReason);
+      logger.info('created study correctly');
     } catch (error) {
       logger.error('ERROR ', error);
       return res.status(500).send(error);
     };
   res.send(result);
 });
-/* 
+
 router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const projectid = req.params.projectid;
-  const {projectname, description, servicearea, county, ids, cosponsor, geom, locality,
-  streams, jurisdiction, sponsor, cover, sendToWR, studyreason, studysubreason } = req.body;
-  const projecttype = 'Study';
-  const projectsubtype = 'Master Plan';
-  let idsArray = JSON.parse(ids);
+  const project_id = req.params.projectid;
+  const {isWorkPlan, projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor, year, studyreason, otherReason, sendToWR} = req.body;
+  const creator = user.email;
+  const splitedJurisdiction = jurisdiction.split(',');
+  const splitedCounty = county.split(',');
+  const splitedServicearea = servicearea.split(',');
   let parsedIds = '';
+  let idsArray = JSON.parse(ids).filter(e => !!e);
   for (const id of idsArray) {
     if (parsedIds) {
       parsedIds += ',';
     }
     parsedIds += "'" + id + "'";
   }
-  let notRequiredFields = ``;
-  if (cosponsor) {
-    if (notRequiredFields) {
-      notRequiredFields += ', ';
-    }
-    notRequiredFields += `${COSPONSOR1} = '${cosponsor}'`;
-  }
-  if (notRequiredFields) {
-    notRequiredFields = `, ${notRequiredFields}`;
-  }
-  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET
-  the_geom = (SELECT ST_Collect(the_geom) FROM mhfd_stream_reaches WHERE unique_mhfd_code IN(${parsedIds})), jurisdiction = '${jurisdiction}',
-   projectname = '${cleanStringValue(projectname)}', description = '${cleanStringValue(description)}',
-    servicearea = '${servicearea}', county = '${county}',
-     projecttype = '${projecttype}', 
-     projectsubtype = '${projectsubtype}',
-      sponsor = '${sponsor}',
-      studyreason= '${studyreason}', studysubreason= '${studysubreason}' ${notRequiredFields} WHERE projectid = ${projectid}
-  `;
-  const query = {
-    q: updateQuery
-  };
-  console.log('my query ' , query)
-  let result = {};
+  let result = [];
   try {
-    const data = await needle('post', CARTO_URL, query, { json: true });
-    if (data.statusCode === 200) {
-      result = data.body;
-      logger.info(JSON.stringify(result));
-      await attachmentService.uploadFiles(user, req.files, projectid, cover);
-      await projectStreamService.deleteByProjectId(projectid);
-      for (const stream of JSON.parse(streams)) {
-        projectStreamService.saveProjectStream({
-          projectid: projectid,
-          mhfd_code: stream.mhfd_code,
-          length: stream.length,
-          drainage: stream.drainage,
-          jurisdiction: stream.jurisdiction,
-          str_name: stream.str_name
-        });
+    const data = await projectService.updateProject(
+      project_id,
+      cleanStringValue(projectname),
+      cleanStringValue(description),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      creator)
+    result.push(data);
+    if (idsArray.length) await cartoService.updateCartoStudy(CREATE_PROJECT_TABLE, project_id, parsedIds);
+    await projectPartnerService.updateProjectPartner(sponsor, cosponsor, project_id);
+
+    if (splitedJurisdiction) await ProjectLocalGovernment.destroy({
+      where: {
+        project_id: project_id
       }
-    } else {
-       logger.error('bad status ' + data.statusCode + '  -- '+ updateQuery +  JSON.stringify(data.body, null, 2));
-       return res.status(data.statusCode).send(data.body);
+    });
+    if (splitedServicearea) await ProjectServiceArea.destroy({
+      where: {
+        project_id: project_id
       }
+    });
+    if (splitedCounty) await ProjectCounty.destroy({
+      where: {
+        project_id: project_id
+      }
+    });
+
+    for (const j of splitedJurisdiction) {
+      await ProjectLocalGovernment.create({
+        code_local_government_id: parseInt(j),
+        project_id: project_id,
+        shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email
+      });
+      logger.info('created jurisdiction');
+    }
+    for (const s of splitedServicearea) {
+      await ProjectServiceArea.create({
+        project_id: project_id,
+        code_service_area_id: s,
+        shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email
+      });
+      logger.info('created service area');
+    }
+    for (const c of splitedCounty) {
+      await ProjectCounty.create({
+        state_county_id: c,
+        project_id: project_id,
+        shape_length_ft: 0
+      });
+      logger.info('created county');
+    }
+    await projectStreamService.deleteByProjectId(project_id);
+    for (const stream of JSON.parse(streams)) {
+      await projectStreamService.saveProjectStream({
+        project_id: project_id,
+        stream_id: stream.stream.stream_id ? stream.stream.stream_id : stream.stream[0].stream_id,
+        length_in_mile: parseFloat(parseFloat(stream.length).toFixed(5)),
+        drainage_area_in_sq_miles: parseFloat(parseFloat(stream.drainage).toFixed(5)),
+        local_government_id: stream.code_local_goverment.length > 0 ? stream.code_local_goverment[0].objectid : 0
+      });
+    }
+    await studyService.updateStudy(cleanStringValue(projectname), year, creator, project_id, JSON.parse(streams), studyreason, otherReason);
+    logger.info('updated study');
   } catch (error) {
-    logger.error(error, 'at', updateQuery);
+    logger.error('error',error);
     return res.status(500).send(error);
   };
-  res.send(result);
-}); */
+  res.send('updated study');
+});
 
 export default router;
