@@ -121,7 +121,7 @@ router.get("/", auth, async (req, res) => {
     const favorite = await favoritesService.getFavorites(user.user_id, isProblem);
     return res.send(favorite);
   } catch (error) {
-    res.send(500);
+    res.status(500).send(error);
   }
 });
 
@@ -181,16 +181,15 @@ router.get("/count", auth, async (req, res) => {
 
 router.get("/problem-cards", auth, async (req, res) => {
   const user = req.user;
-  const favoriteObj = await favoritesService.getFavorites(user.user_id, true);
-  const favorite = favoriteObj.map(d => d.dataValues);
-  
-  const ids = favorite
-  .map((fav) => fav.problem_id);
-  console.log('favorites are ', ids);
-  if (!ids.length) {
-    return res.send([]);
-  }
   try {
+    const favoriteObj = await favoritesService.getFavorites(user.user_id, true);
+    const favorite = favoriteObj.map(d => d.dataValues);
+    const ids = favorite
+    .map((fav) => fav.problem_id);
+    console.log('favorites are ', ids);
+    if (!ids.length) {
+      return res.send([]);
+    }
     let filters = "";
     filters = getFilters(req.body, ids);
     const PROBLEM_SQL = `SELECT cartodb_id,
@@ -214,58 +213,51 @@ router.get("/problem-cards", auth, async (req, res) => {
     const query = { q: `${PROBLEM_SQL}  ${filters} ` };
     console.log(`${PROBLEM_SQL}  ${filters} `);
     let answer = [];
-    try {
-      const data = await needle("post", CARTO_URL, query, { json: true });
-      if (data.statusCode === 200) {
-        answer = data.body.rows.map((element) => {
-          return {
-            cartodb_id: element.cartodb_id,
-            type: "problems",
-            problemid: element.problemid,
-            problemname: element.problemname,
-            solutioncost: element.solutioncost,
-            jurisdiction: element.jurisdiction,
-            problempriority: element.problempriority,
-            solutionstatus: element.solutionstatus,
-            problemtype: element.problemtype,
-            county: element.county,
-            totalComponents:
-              element.count_gcs +
-              element.count_pa +
-              element.count_sip +
-              element.count_sil +
-              element.count_cia +
-              element.count_sia +
-              element.count_rl +
-              element.count_ra +
-              element.count_sd +
-              element.count_df +
-              element.count_mt +
-              element.count_la +
-              element.count_la +
-              element.count_la1 +
-              element.count_cila,
-            coordinates: JSON.parse(element.the_geom).coordinates
-              ? JSON.parse(element.the_geom).coordinates
-              : [],
-          };
-        });
-        console.log("answer", answer);
-      } else {
-        console.log("bad status", data.statusCode, data.body);
-        logger.error("bad status", data.statusCode, data.body);
-      }
-    } catch (error) {
-      console.log("Error", error);
+    const data = await needle("post", CARTO_URL, query, { json: true });
+    if (data.statusCode === 200) {
+      answer = data.body.rows.map((element) => {
+        return {
+          cartodb_id: element.cartodb_id,
+          type: "problems",
+          problemid: element.problemid,
+          problemname: element.problemname,
+          solutioncost: element.solutioncost,
+          jurisdiction: element.jurisdiction,
+          problempriority: element.problempriority,
+          solutionstatus: element.solutionstatus,
+          problemtype: element.problemtype,
+          county: element.county,
+          totalComponents:
+            element.count_gcs +
+            element.count_pa +
+            element.count_sip +
+            element.count_sil +
+            element.count_cia +
+            element.count_sia +
+            element.count_rl +
+            element.count_ra +
+            element.count_sd +
+            element.count_df +
+            element.count_mt +
+            element.count_la +
+            element.count_la +
+            element.count_la1 +
+            element.count_cila,
+          coordinates: JSON.parse(element.the_geom).coordinates
+            ? JSON.parse(element.the_geom).coordinates
+            : [],
+        };
+      });
+      logger.info("answer " + answer);
+      return res.send(answer);
+    } else {
+      console.log("bad status", data.statusCode, data.body);
+      logger.error("bad status", data.statusCode, data.body);
+      return res.status(data.statusCode).send({ error: data.body })
     }
-    return res.send(answer);
-    
   } catch (error) {
     logger.error(error);
-    res
-      .status(500)
-      .send({ error: error })
-      .send({ error: "Error with C connection" });
+    res.status(500).error(error);
   }
 });
 
