@@ -86,49 +86,69 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   res.send(result);
 });
 
-/* router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
+router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
+  const project_id = req.params.projectid;
   const user = req.user;
-  const projectid = req.params.projectid;
-  const { projectname, description, servicearea, county, geom, locality, jurisdiction, sponsor, cosponsor, sendToWR, cover } = req.body;
-  const projecttype = 'Special';
-  let notRequiredFields = '';
-  if (cosponsor) {
-    if (notRequiredFields) {
-      notRequiredFields += ', ';
-      notRequiredValues += ', ';
-    }
-    notRequiredFields += `${COSPONSOR1} = '${cosponsor}'`;
-  }
-  if (notRequiredFields) {
-    notRequiredFields = `, ${notRequiredFields}`;
-  }
-  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE}
-  SET the_geom = ST_GeomFromGeoJSON('${geom}'), jurisdiction = '${jurisdiction}', 
-  projectname = '${cleanStringValue(projectname)}', description = '${cleanStringValue(description)}',
-   servicearea = '${servicearea}', county = '${county}', 
-   projecttype = '${projecttype}', sponsor = '${sponsor}'
-   ${notRequiredFields}
-   WHERE  projectid = ${projectid}`;
-  const query = {
-    q: updateQuery
-  };
-  logger.info('my query ' + JSON.stringify(query));
-  let result = {};
+  const { projectname, description, servicearea, county, geom, locality,
+    jurisdiction, sponsor, cosponsor, cover, year, sendToWR, isWorkPlan } = req.body;
+  let result = [];
+  const creator = user.email;
+  const splitedJurisdiction = jurisdiction.split(',');
+  const splitedCounty = county.split(',');
+  const splitedServicearea = servicearea.split(',');
   try {
-    const data = await needle('post', CARTO_URL, query, { json: true });
-    if (data.statusCode === 200) {
-      result = data.body;
-      logger.info(JSON.stringify(result));
-      await attachmentService.uploadFiles(user, req.files, projectid, cover);
-    } else {
-      logger.error('bad status ' + data.statusCode + '  -- ' + updateQuery + JSON.stringify(data.body, null, 2));
-      return res.status(data.statusCode).send(data.body);
+    const data = await projectService.updateProject(project_id, cleanStringValue(projectname), cleanStringValue(description), moment().format('YYYY-MM-DD HH:mm:ss'), creator);
+    result.push(data)
+    await cartoService.updateToCarto(CREATE_PROJECT_TABLE, geom, project_id);
+    await projectPartnerService.updateProjectPartner(sponsor, cosponsor, project_id);
+    if (splitedJurisdiction) await ProjectLocalGovernment.destroy({
+      where: {
+        project_id: project_id
+      }
+    });
+    if (splitedServicearea) await ProjectServiceArea.destroy({
+      where: {
+        project_id: project_id
+      }
+    });
+    if (splitedCounty) await ProjectCounty.destroy({
+      where: {
+        project_id: project_id
+      }
+    });
+    for (const j of splitedJurisdiction) {
+      await ProjectLocalGovernment.create({
+        code_local_government_id: parseInt(j),
+        project_id: project_id,
+        shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email
+      });
+      logger.info('created jurisdiction');
+    }
+    for (const s of splitedServicearea) {
+      await ProjectServiceArea.create({
+        project_id: project_id,
+        code_service_area_id: s,
+        shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email
+      });
+      logger.info('created service area');
+    }
+    for (const c of splitedCounty) {
+      await ProjectCounty.create({
+        state_county_id: c,
+        project_id: project_id,
+        shape_length_ft: 0
+      });
+      logger.info('created county');
     }
   } catch (error) {
-    logger.error(error, 'at', updateQuery);
+    logger.error(error);
     return res.status(500).send(error);
   };
   res.send(result);
-}); */
+});
 
 export default router;
