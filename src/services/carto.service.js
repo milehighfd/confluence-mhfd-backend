@@ -4,7 +4,7 @@ import {
 import needle from 'needle';
 import logger from 'bc/config/logger.js';
 
-const insertToCarto = async (table, geom, project_id) => {
+  const insertToCarto = async (table, geom, project_id) => {
       const insertQuery = `INSERT INTO ${table} (the_geom, projectid)
       VALUES(ST_GeomFromGeoJSON('${geom}'), '${project_id}')`;
       const query = {
@@ -22,6 +22,27 @@ const insertToCarto = async (table, geom, project_id) => {
         logger.error(error, 'at', insertQuery);
      }
   }
+
+  const updateToCarto = async (table, geom, project_id) => {
+    const hasGeom = (geom && geom !== 'undefined' && geom !== 'null');
+    const geomQuery = hasGeom ? `the_geom = ST_GeomFromGeoJSON('${geom}')` : '';
+    const updateQuery = `UPDATE ${table} SET ${geomQuery} WHERE projectid = ${project_id}`;
+
+    const query = {
+      q: updateQuery
+    };
+   try {
+    const data = await needle('post', CARTO_URL, query, { json: true });
+      if (data.statusCode === 200) {
+        console.log(data.body);
+      }else {
+        logger.error('bad status ' + data.statusCode + '  -- ' + updateQuery + JSON.stringify(data.body, null, 2));
+      }
+      return data.body;
+   } catch (error) {
+      logger.error(error, 'at', updateQuery);
+   }
+}
 
   const insertToCartoStudy = async (table, project_id, parsedIds) => {
     const insertQuery = `INSERT INTO ${table} (the_geom, projectid)
@@ -63,5 +84,6 @@ const updateCartoStudy = async (table, project_id, parsedIds) => {
   export default {
     insertToCarto,
     insertToCartoStudy,
-    updateCartoStudy
+    updateCartoStudy,
+    updateToCarto
   };

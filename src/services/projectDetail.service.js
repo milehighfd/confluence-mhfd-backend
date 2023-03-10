@@ -26,8 +26,28 @@ const saveProjectDetail = async (
   }
 }
 
-
+const updateProjectDetail = async (
+  maintenance_frequency, 
+  is_public_ownership,
+  project_id,
+  acquisition_anticipated_year = null,
+  code_acquisition_progress_status_id = null
+) => {
+  try {
+    const response = await ProjectDetail.update({
+      maintenance_frequency: maintenance_frequency,
+      is_public_ownership: is_public_ownership,
+      acquisition_anticipated_year: acquisition_anticipated_year,
+      code_acquisition_progress_status_id: code_acquisition_progress_status_id
+    },{ where: { project_id: project_id }});
+    logger.info('create ProjectDetail ');
+    return response;
+  } catch(error) {
+    throw error;
+  }
+}
 
 export default {
   saveProjectDetail,
+  updateProjectDetail
 };
