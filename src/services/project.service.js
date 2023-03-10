@@ -49,6 +49,7 @@ const Study = db.study;
 const CodeStudyType = db.codestudytype;
 const RelatedStudy = db.relatedstudy;
 const StreamStudy = db.streamstudy;
+const CodeStudyReason = db.codeStudyReason;
 
 const User = db.user;
 const Op = sequelize.Op;
@@ -427,12 +428,9 @@ const getDetails = async (project_id) => {
               {
                 model: RelatedStudy
               },
-              // {
-              //   model: CodeStudySubreason,
-              //   include: {
-              //     model: CodeStudyReason
-              //   }
-              // },
+              {
+                model: CodeStudyReason
+              },
               {
                 model: StreamStudy,
                 include: {

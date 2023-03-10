@@ -36,7 +36,7 @@ const multer = Multer({
 
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {isWorkPlan, projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor, cover, year, studyreason, studysubreason, sendToWR} = req.body;
+  const {isWorkPlan, projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor, year, studyreason, otherReason, sendToWR} = req.body;
   const defaultProjectId = 1;
   const defaultProjectType = 'Study'
   const creator = user.email;
@@ -96,10 +96,10 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
           stream_id: stream.stream ? stream.stream[0].stream_id : 0,
           length_in_mile: parseFloat(stream.length),
           drainage_area_in_sq_miles: parseFloat(stream.drainage),
-          local_government_id: stream.code_local_goverment ? stream.code_local_goverment[0].code_local_government_id : 0
+          local_government_id: stream.code_local_goverment.length > 0 ? stream.code_local_goverment[0].objectid : 0
         });
       }
-      await studyService.saveStudy(cleanStringValue(projectname), moment().format('YYYY'), year, creator, project_id, JSON.parse(streams));
+      await studyService.saveStudy(cleanStringValue(projectname), moment().format('YYYY'), year, creator, project_id, JSON.parse(streams), studyreason, otherReason);
     } catch (error) {
       logger.error('ERROR ', error);
       return res.status(500).send(error);

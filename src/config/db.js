@@ -8,9 +8,7 @@ import ProjectFavorite from 'bc/models/project_favorites.model.js';
 import ProblemFavorite from 'bc/models/problem_favorites.model.js';
 
 import board from 'bc/models/board.model.js';
-// import locality from 'bc/models/locality.model.js';
 import boardProject from 'bc/models/boardProject.model.js';
-import independentComponent from 'bc/models/independentComponent.model.js';
 import boardLocality from 'bc/models/boardLocality.model.js';
 import newnotes from 'bc/models/newnotes.model.js';
 import color from 'bc/models/color.model.js';
@@ -26,7 +24,6 @@ import codeCostType from 'bc/models/code_cost_type.model.js';
 import projectCost from 'bc/models/project_cost.model.js';
 import projectStatusActionItemTracking from 'bc/models/project_status_action_item_tracking.model.js';
 import codeProjectType from 'bc/models/code_project_type.model.js';
-import project_component from 'bc/models/projectComponent.model.js';
 import projectStatus from 'bc/models/project_status.model.js';
 import codePhaseType from 'bc/models/code_phase_type.model.js';
 import stateCounty from 'bc/models/state_county.model.js';
@@ -39,7 +36,6 @@ import projectCounty from 'bc/models/project_county.model.js';
 import projectPartner from 'bc/models/project_partner.model.js';
 import codeProjectPartnerType from 'bc/models/code_project_partner_type.model.js';
 import codeStudyReason from 'bc/models/code_study_reason.model.js';
-//import codeStudySubreason from 'bc/models/code_study_sub_reason.model.js';
 import codeServiceArea from 'bc/models/code_service_area.model.js';
 import localGovernment from 'bc/models/local_government.model.js';
 import project_stream from 'bc/models/project_stream.model.js';
@@ -59,8 +55,6 @@ import study from 'bc/models/study.model.js';
 import codeStudyType from 'bc/models/code_study_type.model.js';
 import relatedStudy from 'bc/models/related_study.model.js';
 import streamStudy from 'bc/models/stream_study.model.js';
-
-// import serviceAreaLocalGovernment from 'bc/models/service_area_local_government.model.js';
 
 Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
   date = this._applyTimezone(date, options);
@@ -97,9 +91,7 @@ db.logActivity = logActivity(sequelize, Sequelize);
 db.ProjectFavorite = ProjectFavorite(sequelize, Sequelize);
 db.problemFavorite = ProblemFavorite(sequelize, Sequelize);
 db.board = board(sequelize, Sequelize);
-// db.locality = locality(sequelize, Sequelize);
 db.boardProject = boardProject(sequelize, Sequelize);
-//db.independentComponent = independentComponent(sequelize, Sequelize);
 db.boardLocality = boardLocality(sequelize, Sequelize);
 db.newnotes = newnotes(sequelize, Sequelize);
 db.color = color(sequelize, Sequelize);
@@ -120,7 +112,6 @@ db.codeCostType = codeCostType(sequelize, Sequelize);
 db.projectCost = projectCost(sequelize, Sequelize);
 db.projectStatusActionItemTracking = projectStatusActionItemTracking(sequelize, Sequelize);
 db.codeProjectType = codeProjectType(sequelize, Sequelize);
-//db.project_component = project_component(sequelize, Sequelize);
 db.projectStatus = projectStatus(sequelize, Sequelize);
 db.codePhaseType = codePhaseType(sequelize, Sequelize);
 db.projectActionItem = projectActionItem(sequelize, Sequelize);
@@ -140,8 +131,7 @@ db.codeStateCounty = codeStateCounty(sequelize, Sequelize);
 db.projectPartner = projectPartner(sequelize, Sequelize);
 db.codeProjectPartnerType = codeProjectPartnerType(sequelize, Sequelize);
 
-/* db.codeStudyReason = codeStudyReason(sequelize, Sequelize);
-db.codeStudySubreason = codeStudySubreason(sequelize, Sequelize); */
+db.codeStudyReason = codeStudyReason(sequelize, Sequelize);
 
 db.codeServiceArea = codeServiceArea(sequelize, Sequelize);
 db.codeLocalGoverment = codeLocalGoverment(sequelize, Sequelize);
@@ -159,11 +149,6 @@ db.businessAdress = businessAdress(sequelize, Sequelize);
 db.businessAssociates = businessAssociates(sequelize, Sequelize);
 
 db.projectServiceArea = projectServiceArea(sequelize, Sequelize);
-// db.serviceAreaLocalGovernment = serviceAreaLocalGovernment(sequelize, Sequelize);
-// db.project.hasMany(db.projectServiceArea);
-
-
-
 db.user.hasMany(db.ProjectFavorite, {foreignKey: 'user_id'});
 db.user.hasMany(db.problemFavorite, { foreignKey: 'user_id' });
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
@@ -176,8 +161,6 @@ db.newnotes.belongsTo(db.color, {foreignKey: {name: 'color_id', allowNull: true}
 db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
 db.ProjectFavorite.belongsTo(db.user, {foreignKey: 'user_id'});
 db.problemFavorite.belongsTo(db.user, { foreignKey: 'user_id' });
-// db.user.hasMany(db.attachment, {foreignKey: 'user_id'});
-// db.attachment.belongsTo(db.user, {foreignKey: 'user_id'});
 // db.user.hasMany(db.newnotes, {foreignKey: 'user_id'});
 db.newnotes.belongsTo(db.user, {foreignKey: 'user_id'});
 db.newnotes.belongsTo(db.groupnotes, {foreignKey: {name: 'groupnotes_id', allowNull: true}});
@@ -280,28 +263,31 @@ db.codePhaseType.belongsTo(
 db.codePhaseType.hasMany(db.codeRuleActionItem, {foreignKey: 'code_phase_type_id'});
 db.codeRuleActionItem.hasMany(db.projectActionItem,{foreignKey: 'code_rule_action_item_id'})
 
-
+// relation project projectstudy
 db.project.hasMany(db.projectstudy, {foreignKey: 'project_id'});
 db.projectstudy.belongsTo(db.project, { foreignKey: 'project_id' });
 
+// relation study projectstudy
 db.study.hasMany(db.projectstudy, {foreignKey: 'study_id'});
 db.projectstudy.belongsTo(db.study, { foreignKey: 'study_id' });
 
+// relation study relatedstudy
 db.study.hasMany(db.relatedstudy, {foreignKey: 'study_id'});
 db.relatedstudy.belongsTo(db.study, { foreignKey: 'study_id' });
 
+// relation study codestudytype
 db.codestudytype.hasMany(db.study, {foreignKey: 'study_type_id'});
 db.study.belongsTo(db.codestudytype, {foreignKey: 'study_type_id'});
 
-/* db.codeStudySubreason.hasMany(db.study, {foreignKey: 'code_study_sub_reason_id'});
-db.study.belongsTo(db.codeStudySubreason, {foreignKey: 'code_study_sub_reason_id'});
+// relation study codeStudyReason
+db.codeStudyReason.hasMany(db.study, {foreignKey: 'code_study_reason_id'});
+db.study.belongsTo(db.codeStudyReason, {foreignKey: 'code_study_reason_id'});
 
-db.codeStudySubreason.hasMany(db.codeStudyReason, {foreignKey: 'code_study_reason_id'});
-db.codeStudyReason.belongsTo(db.codeStudySubreason, {foreignKey: 'code_study_reason_id'}); */
-
+// relation streamstudy stream
 db.stream.hasMany(db.streamstudy, {foreignKey: 'stream_id'});
 db.streamstudy.belongsTo(db.stream, { foreignKey: 'stream_id' })
 
+// relation study streamstudy
 db.study.hasMany(db.streamstudy, {foreignKey: 'study_id'});
 db.streamstudy.belongsTo(db.study, { foreignKey: 'study_id' });
 

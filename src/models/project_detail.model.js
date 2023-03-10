@@ -24,6 +24,9 @@ export default (sequelize, DataType) => {
     code_acquisition_progress_status_id: {
       type: DataType.INTEGER,
       allowNull: true
+    },
+    comments: {
+      type: DataType.STRING,
     }
   }, {
     freezeTableName: true,
