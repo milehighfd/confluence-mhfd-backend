@@ -1,7 +1,7 @@
 export default (sequelize, DataType) => {
   const ProblemFavorite = sequelize.define('problem_favorite', {
 
-    project_favorite_id: {
+    problem_favorite_id: {
       type: DataType.INTEGER,
       primaryKey: true
     },
