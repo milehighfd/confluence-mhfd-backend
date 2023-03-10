@@ -58,7 +58,9 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       const data = await projectService.saveProject(CREATE_PROJECT_TABLE_V2, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       result.push(data);
       const { project_id } = data;
-      if (idsArray.length) await cartoService.insertToCartoStudy(CREATE_PROJECT_TABLE, project_id, parsedIds);
+      if (idsArray.length) {
+        await cartoService.insertToCartoStudy(CREATE_PROJECT_TABLE, project_id, parsedIds);
+      }
       await projectStatusService.saveProjectStatusFromCero(defaultProjectId, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan);
       await projectPartnerService.saveProjectPartner(sponsor, cosponsor, project_id);

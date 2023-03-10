@@ -78,7 +78,8 @@ const getGroups = async (id) => {
   console.log(id);
   const groups = await GroupNotes.findAll({ 
     where: {
-      user_id: +id 
+      user_id: +id ,
+      is_deleted: 0
     }
   });
   return groups;
@@ -116,7 +117,7 @@ const deleteGroups = async (id) => {
     }});
   if (group) {
     NewNotes.destroy({ where: { groupnotes_id: id } });
-    group.destroy();
+    group.update({is_deleted: 1});
     return true;
   } else {
     logger.info('group not found');
@@ -223,7 +224,8 @@ const getNextBucket = async (userId) => {
   });
   const groupWithMaxPosition = await GroupNotes.findAll({
     where: {
-      user_id: +userId
+      user_id: +userId,
+      is_deleted: 0
     },
     order: [[
       'position', 'ASC'
