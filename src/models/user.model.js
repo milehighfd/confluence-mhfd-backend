@@ -11,7 +11,8 @@ export default (sequelize, DataType) => {
     user_id: {
       primaryKey: true,
       type: DataType.INTEGER,
-      allowNull: false      
+      allowNull: false,
+      autoIncrement: true     
     },
     activated: {
       type: DataType.BOOLEAN

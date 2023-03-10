@@ -44,6 +44,7 @@ router.post('/signup', validator(UserService.requiredFields('signup')), async (r
       if (EMAIL_VALIDATOR.test(user.email)) {
         user['activated'] = true;
         user['status'] = 'pending';
+        user.is_sso = false;
         user.password = await bcrypt.hash(user.password, 8);
         user.name = user.firstName + ' ' + user.lastName;
         const user1 = await User.create(user);
