@@ -297,7 +297,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         });
         logger.info('created county');
       }
-      
+      console.log(independetComponent);
       for (const independent of JSON.parse(independetComponent)) {
         try {
           await projectComponentService.saveProjectComponent(0, '', independent.name, independent.status, project_id);
@@ -307,7 +307,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         }
       }
 
-      for (const component of JSON.parse(components)) {
+      for (const component of JSON.parse(components)) { 
         try {
           await projectComponentService.saveProjectComponent(component.objectid, component.table,'','',project_id);
           logger.info('create component');
@@ -323,87 +323,90 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   res.send(result);
 });
 
-/* router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
+
+router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
+  const project_id = req.params.projectid;
   const user = req.user;
-  const { projectname, description, servicearea, county, geom,
+  const { isWorkPlan, projectname, description, servicearea, county, geom,
     overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost, sendToWR,
-    componentcost, componentcount } = req.body;
-  const projectid = req.params.projectid;
-  const projecttype = 'Capital';
-  let notRequiredFields = ``;
-  if (overheadcostdescription) {
-    if (notRequiredFields) {
-      notRequiredFields += ', ';
-    }
-    notRequiredFields += `overheadcostdescription = '${cleanStringValue(overheadcostdescription)}'`;
-  }
-  if (additionalcost) {
-    if (notRequiredFields) {
-      notRequiredFields += ', ';
-    }
-    notRequiredFields += `additionalcost = '${additionalcost}'`;
-  }
-  if (additionalcostdescription) {
-    if (notRequiredFields) {
-      notRequiredFields += ', ';
-    }
-    notRequiredFields += `additionalcostdescription = '${cleanStringValue(additionalcostdescription)}'`;
-  }
-  if (cosponsor) {
-    if (notRequiredFields) {
-      notRequiredFields += ', ';
-    }
-    notRequiredFields += `${COSPONSOR1} = '${cosponsor}'`;
-  }
-  if (notRequiredFields) {
-    notRequiredFields = `, ${notRequiredFields}`;
-  }
-  const overHeadNumbers = overheadcost.split(',');
-  const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET the_geom = ST_GeomFromGeoJSON('${geom}'),
-   jurisdiction = '${jurisdiction}', projectname = '${cleanStringValue(projectname)}', 
-   description = '${cleanStringValue(description)}', servicearea = '${servicearea}', county = '${county}',
-    projecttype = '${projecttype}', sponsor = '${sponsor}', 
-    overheadcost = '${overheadcost}', estimatedcost = ${estimatedcost} ,  component_cost = ${componentcost}, component_count = ${componentcount}, costdewatering = ${(overHeadNumbers[0] / 100) * componentcost}, costmobilization = ${(overHeadNumbers[1] / 100) * componentcost}, costtraffic = ${(overHeadNumbers[2] / 100) * componentcost}, costutility = ${(overHeadNumbers[3] / 100) * componentcost}, coststormwater = ${(overHeadNumbers[4] / 100) * componentcost}, costengineering = ${(overHeadNumbers[5] / 100) * componentcost} ,costlegal = ${(overHeadNumbers[6] / 100) * componentcost}, costconstruction = ${(overHeadNumbers[7] / 100) * componentcost}, costcontingency = ${(overHeadNumbers[8] / 100) * componentcost}
-     ${notRequiredFields}
-    WHERE  projectid = ${projectid}`;
-  const query = {
-    q: updateQuery
-  };
-  let result = {};
+    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost, year, sendToWR, componentcost, componentcount } = req.body;
+  const creator = user.email;
+  let result = [];
+  const splitedJurisdiction = jurisdiction.split(',');
+  const splitedCounty = county.split(',');
+  const splitedServicearea = servicearea.split(',');
   try {
-    const data = await needle('post', CARTO_URL, query, { json: true });
-    if (data.statusCode === 200) {
-      result = data.body;
-      logger.info(JSON.stringify(result));
-      await attachmentService.uploadFiles(user, req.files, projectid, cover);
-      await projectComponentService.deleteByProjectId(projectid);
-      await indepdendentService.deleteByProjectId(projectid);
-      for (const independent of JSON.parse(independetComponent)) {
-        const element = { name: independent.name, cost: independent.cost, status: independent.status, projectid: projectid };
-        try {
-          IndependentComponent.create(element);
-          logger.info('create independent component' + JSON.stringify(element));
-        } catch (error) {
-          logger.error('cannot create independent component ' + error);
-        }
+    const data = await projectService.updateProject(project_id, cleanStringValue(projectname), cleanStringValue(description), moment().format('YYYY-MM-DD HH:mm:ss'), creator);
+    result.push(data)
+    await cartoService.updateToCarto(CREATE_PROJECT_TABLE, geom, project_id);
+    await projectPartnerService.updateProjectPartner(sponsor, cosponsor, project_id);
+    if (splitedJurisdiction) await ProjectLocalGovernment.destroy({
+      where: {
+        project_id: project_id
       }
-      for (const component of JSON.parse(components)) {
-        const data = {
-          table: component.table,
-          projectid: projectid,
-          objectid: component.objectid
-        };
-        projectComponentService.saveProjectComponent(data);
+    });
+    if (splitedServicearea) await ProjectServiceArea.destroy({
+      where: {
+        project_id: project_id
       }
-    } else {
-      logger.error('bad status ' + data.statusCode + '  -- ' + updateQuery + JSON.stringify(data.body, null, 2));
-      return res.status(data.statusCode).send(data.body);
+    });
+    if (splitedCounty) await ProjectCounty.destroy({
+      where: {
+        project_id: project_id
+      }
+    });
+    for (const j of splitedJurisdiction) {
+      await ProjectLocalGovernment.create({
+        code_local_government_id: parseInt(j),
+        project_id: project_id,
+        shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email
+      });
+      logger.info('created jurisdiction');
+    }
+    for (const s of splitedServicearea) {
+      await ProjectServiceArea.create({
+        project_id: project_id,
+        code_service_area_id: s,
+        shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email
+      });
+      logger.info('created service area');
+    }
+    for (const c of splitedCounty) {
+      await ProjectCounty.create({
+        state_county_id: c,
+        project_id: project_id,
+        shape_length_ft: 0
+      });
+      logger.info('created county');
+    }
+    await projectComponentService.deleteByProjectId(project_id);
+    for (const independent of JSON.parse(independetComponent)) {
+      try {
+        const a = await projectComponentService.saveProjectComponent(0, '', independent.name, independent.component_status, project_id);
+        console.log(a);
+        logger.info('create independent component');
+      } catch (error) {
+        logger.error('cannot create independent component ' + error);
+      }
+    }
+
+    for (const component of JSON.parse(components)) { 
+      try {
+        const b = await projectComponentService.saveProjectComponent(component.objectid, component.table,'','',project_id);
+        console.log(b);
+        logger.info('create component');
+      } catch (error) {
+        logger.error('cannot create component ' + error);
+      }
     }
   } catch (error) {
-    logger.error(error, 'at edit capital');
+    logger.error(error);
   };
   res.send(result);
-}); */
+});
 
 export default router;

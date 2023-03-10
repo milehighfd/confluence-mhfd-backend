@@ -3,11 +3,11 @@ import logger from 'bc/config/logger.js';
 
 const ProjectComponent = db.projectComponent;
 
-const getAll = (projectComponentId) => {
+const getAll = (project_id) => {
   try {
     const list = ProjectComponent.findAll({
       where: {
-        project_id: projectComponentId
+        project_id: project_id
       }
     });
     return list;
@@ -17,10 +17,10 @@ const getAll = (projectComponentId) => {
   }
 }
 
-const deleteByProjectId= async (projectComponentId) => {
+const deleteByProjectId= async (project_id) => {
   const project = ProjectComponent.destroy({
     where: {
-      project_id: projectComponentId 
+      project_id: project_id 
     }});
   if (project) {
     logger.info('ProjectComponent destroyed ');

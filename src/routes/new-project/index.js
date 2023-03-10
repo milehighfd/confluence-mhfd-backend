@@ -1038,10 +1038,10 @@ router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
 });
 
 router.get('/get-components-by-projectid/:projectid', [auth], async (req, res) => {
-  const projectid = req.params.projectid;
+  const project_id = req.params.projectid;
   try {
-    console.log("THE PROJECT ID WITH COMPONENTS IS ", projectid);
-    const components = await projectComponentService.getAll(projectid);
+    console.log("THE PROJECT ID WITH COMPONENTS IS ", project_id);
+    const components = await projectComponentService.getAll(project_id);
     return res.send(components);
   } catch (error) {
     res.status(500).send(error);
@@ -1050,10 +1050,11 @@ router.get('/get-components-by-projectid/:projectid', [auth], async (req, res) =
 });
 
 router.get('/get-independent-components-by-projectid/:projectid', [auth], async (req, res) => {
-  const projectid = req.params.projectid;
+  const project_id = req.params.projectid;
   try {
-    console.log("THE PROJECT ID WITH INDEPENDENT COMPONENTS IS ", projectid);
-    const components = await indepdendentService.getAll(projectid);
+    console.log("THE PROJECT ID WITH INDEPENDENT COMPONENTS IS ", project_id);
+    const components = await projectComponentService.getAll(project_id);
+    console.log(components.filter((el)=> el.component_name && el.component_status));
     return res.send(components);
   } catch (error) {
     res.status(500).send(error);
