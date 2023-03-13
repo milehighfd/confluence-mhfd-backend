@@ -521,7 +521,33 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
           'totalComponents',
         ],
       ], 
+      
       include: [
+        {
+          model: ProjectStaff,
+          attributes: [
+            'code_project_staff_role_type_id',
+            'is_active',
+            'project_staff_id'
+          ],
+          include: {
+            model: MHFDStaff,
+            attributes: [
+              'user_id',
+              'mhfd_staff_id',
+              'full_name'
+            ],
+            include: {
+              model: User,
+              attributes: [
+                'organization'
+              ]
+            }
+          }
+          // where: {
+          //   code_cost_type_id: 1
+          // }
+        },
         {
           model: ProjectServiceArea,
           include: {
@@ -534,7 +560,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
           attributes: [
             'project_service_area_id'
           ] 
-        },
+        },        
         {
           model: ProjectCounty,
           include: {
@@ -607,7 +633,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
               ]
             }]
           }
-        }, 
+        },         
         {
           model: ProjectPartner,
           attributes: [
