@@ -7,7 +7,10 @@ const distanceInYears = 1;
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
   'special_item_linear', 'special_item_area', 'channel_improvements_linear',
   'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
-  'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area', 'stream_improvement_measure'];
+  'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'
+  // TO DO: add stream improvement measure after client modifies table in carto
+  // , 'stream_improvement_measure'
+];
 
 function CapitalLetter(chain) {
   return chain.split('_')
@@ -198,6 +201,7 @@ export async function getCountByYearStudyWithFilter(bounds, body) {
 }
 
 export async function getComponentsValuesByColumnWithCountWithFilter(column, bounds, body, needCount) {
+  console.log('column', column)
   let result = [];
   try {
     const coords = bounds.split(',');
@@ -211,7 +215,9 @@ export async function getComponentsValuesByColumnWithCountWithFilter(column, bou
     }).join(' union ')
 
     const query = { q: ` ${LINE_SQL} ` };
+    console.log('queryyyyyyyyyy', query)
     const data = await needle('post', CARTO_URL, query, { json: true });
+    console.log('dataaaaaaaaaaa: ', data.body)
     let answer = [];
     if (data.statusCode === 200) {
       answer = data.body.rows;
@@ -348,6 +354,7 @@ export async function componentParamFilterRoute(req, res) {
   try {
      const bounds = req.query.bounds;
      const body = req.body;
+     console.log('bodyyyyyyyyyyyyyyy', body)
      let requests = [];
      requests.push(getCounterComponentsWithFilter(bounds, body));
      requests.push(getComponentsValuesByColumnWithFilter('status', bounds, body));
