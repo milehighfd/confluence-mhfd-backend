@@ -19,7 +19,7 @@ router.post('/', async (req, res) => {
     return res.send(list);
   } catch (error) {
     console.log(error);
-    throw error;
+    return res.status(500).send(error);
   }
 });
 
@@ -35,8 +35,8 @@ router.put('/', async (req, res) => {
       { where: { project_id: project_id, code_phase_type_id: code_phase_type_id } }
     )
     return res.send(result);
-  } catch (err) {
-    throw err;
+  } catch (error) {
+    return res.status(500).send(error);
   }
 });
 
