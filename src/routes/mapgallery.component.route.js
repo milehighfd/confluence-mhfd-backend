@@ -46,10 +46,14 @@ const getNewFilter = (filters, body) => {
     filters += `and ${column} between ${minimumValue} and ${maximumValue}`;
   }
   if (body.jurisdiction) {
-    filters += ` and jurisdiction = '${body.jurisdiction}'`;
+    let jurisdictions = body.jurisdiction.split(',');
+    let jurisdictionsIn = jurisdictions.map(s => `'${s}'`)
+    filters += ` and jurisdiction in (${jurisdictionsIn.join(',')})`;
   }
   if (body.mhfdmanager) {
-    filters += ` and mhfdmanager = '${body.mhfdmanager}'`;
+    let mhfdmanagers = body.mhfdmanager.split(',');
+    let mhfdmanagersIn = mhfdmanagers.map(s => `'${s}'`)
+    filters += ` and mhfdmanager in (${mhfdmanagersIn.join(',')})`;
   }
   if (body.county) {
     let counties = body.county.split(',');
@@ -59,7 +63,6 @@ const getNewFilter = (filters, body) => {
       }
       return `'${s}'`;
     })
-    console.log('countiesIn', countiesIn.join(','));
     filters += ` and county in (${countiesIn.join(',')})`
   }
   if (body.servicearea) {
@@ -67,6 +70,7 @@ const getNewFilter = (filters, body) => {
     let serviceareasIn = serviceareas.map(s => `'${s}'`)
     filters += ` and servicearea in (${serviceareasIn.join(',')})`
   }
+  console.log('\n\n ****** \n\n FILTERS \n ******* \n', filters);
   return filters;
 }
 
@@ -324,6 +328,7 @@ export async function countTotalComponent(bounds, body) {
     let COUNTSQL = TABLES_COMPONENTS.map(t => {
       return `SELECT count(*) FROM ${t} where ${filters}`
     }).join(' union ');
+    console.log('COUNTES AL', COUNTSQL);
     const query = { q: ` ${COUNTSQL} ` };
     const lineData = await needle('post', CARTO_URL, query, { json: true });
     if (lineData.statusCode === 200) {
