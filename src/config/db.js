@@ -169,9 +169,13 @@ db.groupnotes.belongsTo(db.user, {foreignKey: 'user_id'});
 db.user.hasMany(db.groupnotes, {foreignKey: 'user_id'});
 db.user.hasMany(db.mhfdStaff, {foreignKey: {name: 'user_id', allowNull: true}, targetKey: 'user_id'});
 db.mhfdStaff.belongsTo(db.user, {foreignKey: {name: 'user_id', allowNull: true}, targetKey: 'user_id'});
-db.user.belongsTo(db.businessAssociateContact,{foreignKey: 'business_associate_contact_id'})
-db.businessAssociateContact.belongsTo(db.businessAdress,{foreignKey: 'business_address_id'})
-db.businessAdress.belongsTo(db.businessAssociates,{foreignKey: 'business_associate_id'})
+
+db.user.belongsTo(db.businessAssociateContact,{foreignKey: 'business_associate_contact_id'});
+db.businessAssociateContact.belongsTo(db.businessAdress,{foreignKey: 'business_address_id'});
+db.businessAdress.belongsTo(db.businessAssociates,{foreignKey: 'business_associate_id'});
+db.businessAssociates.hasMany(db.businessAdress,{foreignKey: 'business_associate_id'});
+db.businessAdress.hasMany(db.businessAssociateContact,{foreignKey: 'business_address_id'});
+
 /*
 db.businessAssociates.hasMany(
   db.projectPartner,
