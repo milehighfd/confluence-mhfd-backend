@@ -1,20 +1,20 @@
 import db from 'bc/config/db.js';
 
 const User = db.user;
-const businessAssociateContact = db.businessAssociateContact;
-const businessAssociates = db.businessAssociates;
-const businessAdress = db.businessAdress;
+const BusinessAssociateContact = db.businessAssociateContact;
+const BusinessAssociates = db.businessAssociates;
+const BusinessAdress = db.businessAdress;
 
 const auth = async (req, res, next) => {
   try {
     const token = req.header('Authorization').replace('Bearer ', '');
     const user = await User.findOne({
       include: {
-        model: businessAssociateContact,
+        model: BusinessAssociateContact,
         include: {
-          model: businessAdress,
+          model: BusinessAdress,
           include: {
-            model: businessAssociates,
+            model: BusinessAssociates,
             required: false
           },
           required: false
