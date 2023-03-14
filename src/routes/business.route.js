@@ -1,6 +1,7 @@
 import express from 'express';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
+import auth from 'bc/auth/auth.js';
 
 const BusinessContact = db.businessAssociateContact;
 const BusinessAdress = db.businessAdress;
@@ -56,7 +57,37 @@ router.get('/business-associates', async (_, res) => {
   }
 });
 
-
+router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
+  const id = req.params['id'];
+  const user = req.user;
+  const { body } = req;
+  try {
+    const businessAdress = {
+      business_associate_id: id,
+      business_address_line_1: body.business_address_line_1,
+      business_address_line_2: body.business_address_line_2,
+      full_address: body.business_address_line_1,
+      state: body.state,
+      city: body.city,
+      zip: body.zip
+    };
+    const newBusinessAddress = await BusinessAdress.create(businessAdress);
+    const businessContact = {
+      business_address_id: newBusinessAddress.business_address_id,
+      contact_name: user.name,
+      contact_email: user.email,
+      contact_phone_number: user.phone || 'No number provided'
+    };
+    const newBusinessContact = await BusinessContact.create(businessContact);
+    res.status(201).send({
+      businessAdress: newBusinessAddress,
+      businessContact: newBusinessContact
+    })
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send(error);
+  }
+});
 router.get('/', async (req, res) => {
   /*const sa = await ServiceArea.findAll({
     include: { all: true, nested: true }
