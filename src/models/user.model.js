@@ -71,6 +71,9 @@ export default (sequelize, DataType) => {
     zoomarea: {
       type: DataType.STRING
     },
+    business_associate_contact_id: {
+      type: DataType.INTEGER,    
+    },
     status: {
       type: DataType.ENUM,
       values: ['approved', 'pending', 'deleted']
