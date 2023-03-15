@@ -627,7 +627,7 @@ router.post('/get-countyservicearea-for-geom', auth, async (req, res) => {
   try {
     const data = await needle('post', CARTO_URL, query, { json: true });
     if (data.statusCode === 200) {
-      const body = data.body;
+      const { body } = data;
       let answer = {
         jurisdiction: await getAllJurisdictionByGeom(JSON.stringify(geom))
       };
@@ -636,8 +636,11 @@ router.post('/get-countyservicearea-for-geom', auth, async (req, res) => {
           if (!answer[row.filter]) {
             answer[row.filter]  = [];
           }
-          answer[row.filter].push(row.aoi);
+          const filteredName = row.aoi.replace(row.filter,'');
+          answer[row.filter].push(filteredName);
+
         }
+        
       });
       res.send(answer);
     } else {
@@ -1068,11 +1071,22 @@ const getJurisdictionByGeom = async (geom) => {
   return data.body.rows[0].jurisdiction;
 }
 
+const cleanType = (type, name) => {
+  if(name.includes(type)){
+    return name.replace(type,'');
+  }
+  return name;
+}
+
 const getAllJurisdictionByGeom = async (geom) => {
   let sql = `SELECT jurisdiction FROM jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
   const query = { q: sql };
   const data = await needle('post', CARTO_URL, query, { json: true });
-  return data.body.rows.map(element => element.jurisdiction);
+  return data.body.rows.map(element => {
+    element.jurisdiction = cleanType('County', element.jurisdiction);
+    element.jurisdiction = cleanType('Service area', element.jurisdiction);
+    return element.jurisdiction
+  });
 }
 
 const getAllJurisdictionByGeomStreams = async (geom) => {
