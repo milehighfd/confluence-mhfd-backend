@@ -50,6 +50,10 @@ export default (sequelize, DataType) => {
     created_by: {
       type: DataType.STRING,
       allowNull: false
+    },
+    comments: {
+      type: DataType.STRING,
+      allowNull: false
     }  
   }, {
     tableName: 'project_status',

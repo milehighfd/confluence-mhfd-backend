@@ -78,7 +78,8 @@ const getGroups = async (id) => {
   console.log(id);
   const groups = await GroupNotes.findAll({ 
     where: {
-      user_id: +id 
+      user_id: +id ,
+      is_deleted: 0
     }
   });
   return groups;
@@ -87,7 +88,8 @@ const getGroups = async (id) => {
 const getColors = async (userId) => {
   const colors = await ColorNotes.findAll({
     where: {
-      user_id: +userId
+      user_id: +userId,
+      is_deleted: 0
     },
     order: [
       ['created_date', 'DESC']
@@ -116,7 +118,7 @@ const deleteGroups = async (id) => {
     }});
   if (group) {
     NewNotes.destroy({ where: { groupnotes_id: id } });
-    group.destroy();
+    group.update({is_deleted: 1});
     return true;
   } else {
     logger.info('group not found');
@@ -127,11 +129,12 @@ const deleteGroups = async (id) => {
 const deleteColor = async (id) => {
   const color = await ColorNotes.findOne({
     where: {
-      _id: id 
+      color_id: id 
     }});
   await NewNotes.update(
     {
-      color_id: null
+      color_id: null,
+      is_deleted: 1
     },
     {
     where: {
@@ -141,7 +144,7 @@ const deleteColor = async (id) => {
 
   if (color) {
     logger.info('color destroyed ');
-    color.destroy();
+    color.update({is_deleted: 1});
     return true;
   } else {
     logger.info('color not found');
@@ -223,7 +226,8 @@ const getNextBucket = async (userId) => {
   });
   const groupWithMaxPosition = await GroupNotes.findAll({
     where: {
-      user_id: +userId
+      user_id: +userId,
+      is_deleted: 0
     },
     order: [[
       'position', 'ASC'

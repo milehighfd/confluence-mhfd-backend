@@ -37,11 +37,14 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     },
-    primary_business_associate_id: {
+    primary_business_associate_contact_id: {
       type: DataType.INTEGER,
       allowNull: false
     },
     */
+    primary_business_associate_contact_id: {
+      type: DataType.INTEGER,
+    },
     ba_tyler_id: {
       type: DataType.STRING,
     }

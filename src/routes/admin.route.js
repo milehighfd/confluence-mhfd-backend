@@ -13,6 +13,10 @@ const router = express.Router();
 const User = db.user;
 const UPDATEABLE_FIELDS = userService.requiredFields('edit');
 
+const BusinessAssociateContact = db.businessAssociateContact;
+const BusinessAssociates = db.businessAssociates;
+const BusinessAdress = db.businessAdress;
+
 router.put('/change-user-state/:id/:status', [auth, isAdminAccount], async (req, res, next) => {
   const id = req.params.id;
   const status = req.params.status;
@@ -188,7 +192,19 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
       where: search_obj,
       offset: limit * (page - 1),
       limit: limit,
-      order: sortField
+      order: sortField,
+      include: {
+        model: BusinessAssociateContact,
+        include: {
+          model: BusinessAdress,
+          include: {
+            model: BusinessAssociates,
+            required: false
+          },
+          required: false
+        },
+        required: false
+      },
     });
     //console.log('user list', userList.length);
     const numberOfPages = Math.ceil(userCount / limit);

@@ -4,8 +4,9 @@ import sequelize from 'sequelize';
 
 const router = express.Router();
 const CodePhaseType = db.codePhaseType;
-const codeRuleActionItem = db.codeRuleActionItem;
-const projectActionItem = db.projectActionItem;
+const CodeRuleActionItem = db.codeRuleActionItem;
+const ProjectActionItem = db.projectActionItem;
+const ProjectStatus = db.projectStatus;
 const Op = sequelize.Op;
 
 router.post('/', async (req, res) => {
@@ -34,12 +35,12 @@ router.post('/phases', async (req, res) => {
   const code_project_type_id = req.body.code_phase_type_id;
   const project_id = req.body.project_id;
   try {
-    const codeRuleActionItem1 = await codeRuleActionItem.findAll({
+    const codeRuleActionItem1 = await CodeRuleActionItem.findAll({
       where: {
         code_phase_type_id: code_project_type_id
       },
       include: {
-        model: projectActionItem,
+        model: ProjectActionItem,       
         where: {
           project_id: project_id,
         },
@@ -52,5 +53,22 @@ router.post('/phases', async (req, res) => {
     res.status(500).send(error);
   }
 });
+router.post('/status', async (req, res) => {
+  const code_phase_type_id = req.body.code_phase_type_id;
+  const project_id = req.body.project_id;
+  try {
+    const list = await ProjectStatus.findAll({      
+      where: {
+        code_phase_type_id: code_phase_type_id,
+        project_id: project_id
+      },
+    });
+    return res.send(list);
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+});
+
 
 export default router;

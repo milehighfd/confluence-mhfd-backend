@@ -7,7 +7,10 @@ const distanceInYears = 1;
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
   'special_item_linear', 'special_item_area', 'channel_improvements_linear',
   'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
-  'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'];
+  'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area'
+  // TO DO: add stream improvement measure after client modifies table in carto UPDATE using copy of table with columns names fixed
+  ,'stream_improvement_measure_copy'
+];
 
 function CapitalLetter(chain) {
   return chain.split('_')
@@ -43,10 +46,14 @@ const getNewFilter = (filters, body) => {
     filters += `and ${column} between ${minimumValue} and ${maximumValue}`;
   }
   if (body.jurisdiction) {
-    filters += ` and jurisdiction = '${body.jurisdiction}'`;
+    let jurisdictions = body.jurisdiction.split(',');
+    let jurisdictionsIn = jurisdictions.map(s => `'${s}'`)
+    filters += ` and jurisdiction in (${jurisdictionsIn.join(',')})`;
   }
   if (body.mhfdmanager) {
-    filters += ` and mhfdmanager = '${body.mhfdmanager}'`;
+    let mhfdmanagers = body.mhfdmanager.split(',');
+    let mhfdmanagersIn = mhfdmanagers.map(s => `'${s}'`)
+    filters += ` and mhfdmanager in (${mhfdmanagersIn.join(',')})`;
   }
   if (body.county) {
     let counties = body.county.split(',');
@@ -56,7 +63,6 @@ const getNewFilter = (filters, body) => {
       }
       return `'${s}'`;
     })
-    console.log('countiesIn', countiesIn.join(','));
     filters += ` and county in (${countiesIn.join(',')})`
   }
   if (body.servicearea) {
@@ -64,6 +70,7 @@ const getNewFilter = (filters, body) => {
     let serviceareasIn = serviceareas.map(s => `'${s}'`)
     filters += ` and servicearea in (${serviceareasIn.join(',')})`
   }
+  console.log('\n\n ****** \n\n FILTERS \n ******* \n', filters);
   return filters;
 }
 
@@ -198,6 +205,7 @@ export async function getCountByYearStudyWithFilter(bounds, body) {
 }
 
 export async function getComponentsValuesByColumnWithCountWithFilter(column, bounds, body, needCount) {
+  console.log('column', column)
   let result = [];
   try {
     const coords = bounds.split(',');
@@ -211,7 +219,9 @@ export async function getComponentsValuesByColumnWithCountWithFilter(column, bou
     }).join(' union ')
 
     const query = { q: ` ${LINE_SQL} ` };
+    console.log('queryyyyyyyyyy', query)
     const data = await needle('post', CARTO_URL, query, { json: true });
+    console.log('dataaaaaaaaaaa: ', data.body)
     let answer = [];
     if (data.statusCode === 200) {
       answer = data.body.rows;
@@ -318,6 +328,7 @@ export async function countTotalComponent(bounds, body) {
     let COUNTSQL = TABLES_COMPONENTS.map(t => {
       return `SELECT count(*) FROM ${t} where ${filters}`
     }).join(' union ');
+    console.log('COUNTES AL', COUNTSQL);
     const query = { q: ` ${COUNTSQL} ` };
     const lineData = await needle('post', CARTO_URL, query, { json: true });
     if (lineData.statusCode === 200) {
@@ -348,6 +359,7 @@ export async function componentParamFilterRoute(req, res) {
   try {
      const bounds = req.query.bounds;
      const body = req.body;
+     console.log('bodyyyyyyyyyyyyyyy', body)
      let requests = [];
      requests.push(getCounterComponentsWithFilter(bounds, body));
      requests.push(getComponentsValuesByColumnWithFilter('status', bounds, body));

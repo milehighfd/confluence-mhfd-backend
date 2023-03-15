@@ -33,8 +33,10 @@ import db from 'bc/config/db.js';
 import seed from 'bc/config/seed.js'
 import projectServiceArea from 'bc/routes/projectservicearea.route.js';
 import streamsRouter from 'bc/routes/streams.route.js';
-import phasetypeRouter from './routes/phasetype.route.js';
-import projectactionitemRouter from './routes/projectactionitem.route.js'
+import phasetypeRouter from 'bc/routes/phasetype.route.js';
+import projectactionitemRouter from 'bc/routes/projectactionitem.route.js'
+import projectStatusRouter from 'bc/routes/projectStatus.route.js';
+import businessRouter from 'bc/routes/business.route.js';
 
 // import serviceAreaLocalGovernment from 'bc/routes/servicearealocalgovernment.route.js';
 seed();
@@ -83,6 +85,7 @@ app.use('/newnotes', newnoteRouter);
 app.use('/consultants', consultantsRouter);
 app.use('/phasetype', phasetypeRouter);
 app.use('/actionitem', projectactionitemRouter);
+app.use('/status', projectStatusRouter);
 app.use('/organizations', organizationRouter);
 app.use('/configuration', configurationRouter);
 app.use('/projects', projectRouter);
@@ -90,6 +93,7 @@ app.use('/v2/locality', v2Localities);
 app.use('/projectservicearea', projectServiceArea);
 app.use('/streams', streamsRouter);
 app.use('/card-filters', cardFilterRouter);
+app.use('/business', businessRouter);
 // app.use('/servicearealocalgovernment', serviceAreaLocalGovernment);
 
 export default server;

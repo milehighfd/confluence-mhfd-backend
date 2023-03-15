@@ -14,6 +14,9 @@ export default (sequelize, DataType) => {
     },
     user_id: {
       type: DataType.INTEGER
+    },
+    is_deleted: {
+      type: DataType.INTEGER
     }
   }, {
     freezeTableName: true,

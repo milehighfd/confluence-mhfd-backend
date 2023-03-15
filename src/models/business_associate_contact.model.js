@@ -2,7 +2,8 @@ export default (sequelize, DataType) => {
   const BusinessAssociateContact = sequelize.define('business_associate_contact', {
     business_associate_contact_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     business_address_id: {
       type: DataType.INTEGER,

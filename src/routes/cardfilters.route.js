@@ -1,7 +1,7 @@
 import express from 'express';
 import groupService from 'bc/services/group.service.js';
 import projectService from 'bc/services/project.service.js';
-import { getIdsInBbox } from 'bc/utils/functionsProjects.js';
+import { getIdsInBbox, projectsByFilters } from 'bc/utils/functionsProjects.js';
 
 
 const router = express.Router();
@@ -42,10 +42,12 @@ const getFilters = async (req, res) => {
   data.estimatedCost = [];
   
   let projects = await projectService.getProjects(null, null, 1);
+  projects = await projectsByFilters(projects, body);
   if (bounds) {
     const ids = await getIdsInBbox(bounds);
     projects = projects.filter((p) => ids.includes(p.project_id));
   }
+  
   const toMatch = [];
   if (body.completedyear && body.completedyear.length) { // don't touch
 
