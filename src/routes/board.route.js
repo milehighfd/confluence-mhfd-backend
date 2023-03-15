@@ -173,8 +173,11 @@ router.post('/', async (req, res) => {
     let body = req.body;
     console.log("3333333333", body);
     let { type, year, locality, projecttype } = body;
+    if (locality === 'Mile High Flood District') {
+        locality = 'MHFD District Work Plan'
+    }
     if (!type || !year || !locality || !projecttype) {
-        return res.sendStatus(404);
+        return res.sendStatus(400);
     }
     logger.info('SEARCHING IN BOARD');
     let board = await Board.findOne({
