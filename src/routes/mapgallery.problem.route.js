@@ -25,7 +25,20 @@ const getNewFilter = (filters, body, withPrefix) => {
     filters += ` and ${column} between ${minimumValue} and ${maximumValue}`
   }
   if (body.solutionstatus) {
-    filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[1]} in (${body.solutionstatus})`
+    const ranges = body.solutionstatus.split(',');
+    const statusfilters = [];
+    for(let index = 0 ; index < ranges.length; ++index) {
+      let endValue = 0;
+      let value = +ranges[index];
+      if (value === 75) {
+        endValue = value + 25;
+      } else {
+        endValue = value + 24;
+      }
+      statusfilters.push(`${prefix}${PROPSPROBLEMTABLES.problem_boundary[1]} between ${value} and ${endValue}`);
+    }
+    filters += ` and (${statusfilters.join(' or ')})`
+    
   }
   if (body.priority) {
     let priorities = body.priority.split(',');
@@ -76,7 +89,7 @@ export async function getCountByArrayColumnsProblem(table, column, columns, boun
       };
       let counter = 0;
       const data = await needle('post', CARTO_URL, query, { json: true });
-      console.log('query at array column', query);
+      console.log('Query at array column problem', query);
       //console.log('STATUS', data.statusCode);
       if (data.statusCode === 200) {
         //const result1 = data.body.rows;
@@ -140,10 +153,10 @@ export async function getCountSolutionStatusProblem(range, bounds, body) {
 
     for (const value of range) {
       let endValue = 0;
-      if (value === 75) {
-        endValue = value + 25;
+      if (+value === 75) {
+        endValue = +value + 25;
       } else {
-        endValue = value + 24;
+        endValue = +value + 24;
       }
 
       const query = { q: `select count(*) as count from ${PROBLEM_TABLE} where ${filters} and ${PROPSPROBLEMTABLES.problem_boundary[1]} between ${value} and ${endValue} ` };
@@ -342,7 +355,7 @@ export async function problemParamFilterRoute(req, res) {
      requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[14], bounds, body)); //3
      requests.push(getSubtotalsByComponentProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[5], PROPSPROBLEMTABLES.problems[5], bounds, body)); //4
      requests.push(getValuesByRangeProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[0], rangeSolution, bounds, body)); //5
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[2], bounds, body)); //6
+     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[2], bounds, body)); //6
      requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[9], bounds, body)); //7
      requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'county', bounds, body)); // 8
      requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[8], problemTypesConst, bounds, body)); //9
