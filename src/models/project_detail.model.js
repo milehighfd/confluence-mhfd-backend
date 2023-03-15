@@ -27,6 +27,23 @@ export default (sequelize, DataType) => {
     },
     comments: {
       type: DataType.STRING,
+    }, 
+    code_study_reason_id: {
+      type: DataType.INTEGER,
+    }, 
+    created_date: {
+      type: DataType.DATE,
+      defaultValue: DataType.NOW
+    }, 
+    modified_date: {
+      type: DataType.DATE,
+      defaultValue: DataType.NOW
+    }, 
+    last_modified_by: {
+      type: DataType.STRING,
+    }, 
+    created_by: {
+      type: DataType.STRING,
     }
   }, {
     freezeTableName: true,

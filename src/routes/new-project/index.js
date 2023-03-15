@@ -494,7 +494,7 @@ router.post('/streams-data', auth, async (req, res) => {
                 logger.info('I reached ', JSON.stringify(response.body.rows));
                 resolve({
                   str_name: stream.str_name,
-                  drainage: response.body.rows
+                  drainage: response.body.rows 
                 });
               } else {
                 logger.info('for query '+ drainageSQL);

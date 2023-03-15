@@ -64,6 +64,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       await projectStatusService.saveProjectStatusFromCero(defaultProjectId, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan);
       await projectPartnerService.saveProjectPartner(sponsor, cosponsor, project_id);
+      
       for (const j of splitedJurisdiction) {
         await ProjectLocalGovernment.create({
           code_local_government_id: parseInt(j),
@@ -96,12 +97,20 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         await projectStreamService.saveProjectStream({
           project_id: project_id,
           stream_id: stream.stream ? stream.stream[0].stream_id : 0,
-          length_in_mile: parseFloat(stream.length),
-          drainage_area_in_sq_miles: parseFloat(stream.drainage),
+          length_in_mile: new Intl.NumberFormat('en-US', {
+            style: 'decimal',
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          }).format(stream.length * 0.000621371),
+          drainage_area_in_sq_miles: new Intl.NumberFormat('en-US', {
+            style: 'decimal',
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          }).format(stream.drainage),
           local_government_id: stream.code_local_goverment.length > 0 ? stream.code_local_goverment[0].objectid : 0
         });
       }
-      await studyService.saveStudy(cleanStringValue(projectname), moment().format('YYYY'), year, creator, project_id, JSON.parse(streams), studyreason, otherReason);
+      await studyService.saveStudy(project_id, studyreason, creator, creator, otherReason);
       logger.info('created study correctly');
     } catch (error) {
       logger.error('ERROR ', error);
@@ -187,12 +196,12 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       await projectStreamService.saveProjectStream({
         project_id: project_id,
         stream_id: stream.stream.stream_id ? stream.stream.stream_id : stream.stream[0].stream_id,
-        length_in_mile: parseFloat(parseFloat(stream.length).toFixed(5)),
-        drainage_area_in_sq_miles: parseFloat(parseFloat(stream.drainage).toFixed(5)),
+        length_in_mile: stream.length,
+        drainage_area_in_sq_miles: stream.drainage,
         local_government_id: stream.code_local_goverment.length > 0 ? stream.code_local_goverment[0].objectid : 0
       });
     }
-    await studyService.updateStudy(cleanStringValue(projectname), year, creator, project_id, JSON.parse(streams), studyreason, otherReason);
+    await studyService.updateStudy(project_id, creator,  otherReason);
     logger.info('updated study');
   } catch (error) {
     logger.error('error',error);

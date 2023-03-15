@@ -90,8 +90,16 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
           projectStreamService.saveProjectStream({
             projectid: projectId,
             mhfd_code: stream.mhfd_code,
-            length: stream.length,
-            drainage: stream.drainage,
+            length: new Intl.NumberFormat('en-US', {
+              style: 'decimal',
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1
+            }).format(stream.length * 0.000621371),
+            drainage: new Intl.NumberFormat('en-US', {
+              style: 'decimal',
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1
+            }).format(stream.drainage),
             jurisdiction: stream.jurisdiction,
             str_name: stream.str_name
           });
@@ -163,8 +171,16 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         projectStreamService.saveProjectStream({
           projectid: projectid,
           mhfd_code: stream.mhfd_code,
-          length: stream.length,
-          drainage: stream.drainage,
+          length: new Intl.NumberFormat('en-US', {
+            style: 'decimal',
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          }).format(stream.length * 0.000621371),
+          drainage: new Intl.NumberFormat('en-US', {
+            style: 'decimal',
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          }).format(stream.drainage),
           jurisdiction: stream.jurisdiction,
           str_name: stream.str_name
         });
@@ -181,3 +197,4 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
 });
 
 module.exports = router;
+
