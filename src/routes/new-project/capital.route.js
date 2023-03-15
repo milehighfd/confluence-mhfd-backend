@@ -1,7 +1,8 @@
 import express from 'express';
 import Multer from 'multer';
 import needle from 'needle';
-import projectComponentService from 'bc/services/projectComponent.service.js';
+//import projectComponentService from 'bc/services/projectComponent.service.js';
+import projectProposedActionService from 'bc/services/projectProposedAction.service.js';
 import projectService from 'bc/services/project.service.js';
 import projectStatusService from 'bc/services/projectStatus.service.js';
 import cartoService from 'bc/services/carto.service.js';
@@ -297,19 +298,26 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         });
         logger.info('created county');
       }
-      console.log(independetComponent);
+      /* console.log(independetComponent);
       for (const independent of JSON.parse(independetComponent)) {
         try {
-          await projectComponentService.saveProjectComponent(0, '', independent.name, independent.status, project_id);
+          await projectProposedActionService.saveProjectAction(0, '', independent.name, independent.status, project_id);
           logger.info('create independent component');
         } catch (error) {
           logger.error('cannot create independent component ' + error);
         }
-      }
+      } */
 
       for (const component of JSON.parse(components)) { 
         try {
-          await projectComponentService.saveProjectComponent(component.objectid, component.table,'','',project_id);
+          const action = {
+            project_id: project_id,
+            object_id: component.objectid,
+            source_table_name: component.table,
+            last_modified_by: creator,
+            created_by: creator
+          };
+          await projectProposedActionService.saveProjectAction(action);
           logger.info('create component');
         } catch (error) {
           logger.error('cannot create component ' + error);
@@ -383,21 +391,27 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       });
       logger.info('created county');
     }
-    await projectComponentService.deleteByProjectId(project_id);
-    for (const independent of JSON.parse(independetComponent)) {
+    await projectProposedActionService.deleteByProjectId(project_id);
+    /* for (const independent of JSON.parse(independetComponent)) {
       try {
-        const a = await projectComponentService.saveProjectComponent(0, '', independent.name, independent.component_status, project_id);
+        const a = await projectProposedActionService.saveProjectAction(0, '', independent.name, independent.component_status, project_id);
         console.log(a);
         logger.info('create independent component');
       } catch (error) {
         logger.error('cannot create independent component ' + error);
       }
-    }
+    } */
 
     for (const component of JSON.parse(components)) { 
       try {
-        const b = await projectComponentService.saveProjectComponent(component.objectid, component.table,'','',project_id);
-        console.log(b);
+        const action = {
+          project_id: project_id,
+          object_id: component.objectid,
+          source_table_name: component.table,
+          last_modified_by: creator,
+          created_by: creator
+        };
+        await projectProposedActionService.saveProjectAction(action);
         logger.info('create component');
       } catch (error) {
         logger.error('cannot create component ' + error);

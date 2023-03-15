@@ -8,15 +8,13 @@ import {
 import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
 import projectStreamService from 'bc/services/projectStream.service.js';
-import projectComponentService from 'bc/services/projectComponent.service.js';
-import indepdendentService from 'bc/services/independent.service.js';
 import capitalRouter from 'bc/routes/new-project/capital.route.js';
 import maintenanceRouter from 'bc/routes/new-project/maintenance.route.js';
 import studyRouter from 'bc/routes/new-project/study.route.js';
 import acquisitionRouter from 'bc/routes/new-project/acquisition.route.js';
 import specialRouter from 'bc/routes/new-project/special.route.js';
 import copyRouter from 'bc/routes/new-project/copy.route.js';
-
+import projectProposedAction from "bc/services/projectProposedAction.service.js";
 import db from 'bc/config/db.js';
 const CodeLocalGoverment = db.codeLocalGoverment;
 const Stream = db.stream;
@@ -47,7 +45,7 @@ router.post('/get-components-by-components-and-geom', auth, async (req, res) => 
       if (!usableComponents[component.source_table_name]) {
         usableComponents[component.source_table_name] = [];
       }
-      usableComponents[component.source_table_name].push(component.component_id);
+      usableComponents[component.source_table_name].push(component.object_id);
     }
   }
   logger.info('my usable components ' + JSON.stringify(usableComponents, null, 2));
@@ -636,11 +634,8 @@ router.post('/get-countyservicearea-for-geom', auth, async (req, res) => {
           if (!answer[row.filter]) {
             answer[row.filter]  = [];
           }
-          const filteredName = row.aoi.replace(row.filter,'');
-          answer[row.filter].push(filteredName);
-
+          answer[row.filter].push(row.aoi);
         }
-        
       });
       res.send(answer);
     } else {
@@ -1044,7 +1039,7 @@ router.get('/get-components-by-projectid/:projectid', [auth], async (req, res) =
   const project_id = req.params.projectid;
   try {
     console.log("THE PROJECT ID WITH COMPONENTS IS ", project_id);
-    const components = await projectComponentService.getAll(project_id);
+    const components = await projectProposedAction.getAll(project_id);
     return res.send(components);
   } catch (error) {
     res.status(500).send(error);
@@ -1055,10 +1050,7 @@ router.get('/get-components-by-projectid/:projectid', [auth], async (req, res) =
 router.get('/get-independent-components-by-projectid/:projectid', [auth], async (req, res) => {
   const project_id = req.params.projectid;
   try {
-    console.log("THE PROJECT ID WITH INDEPENDENT COMPONENTS IS ", project_id);
-    const components = await projectComponentService.getAll(project_id);
-    console.log(components.filter((el)=> el.component_name && el.component_status));
-    return res.send(components);
+    return res.send([]);
   } catch (error) {
     res.status(500).send(error);
   }
@@ -1071,22 +1063,11 @@ const getJurisdictionByGeom = async (geom) => {
   return data.body.rows[0].jurisdiction;
 }
 
-const cleanType = (type, name) => {
-  if(name.includes(type)){
-    return name.replace(type,'');
-  }
-  return name;
-}
-
 const getAllJurisdictionByGeom = async (geom) => {
   let sql = `SELECT jurisdiction FROM jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
   const query = { q: sql };
   const data = await needle('post', CARTO_URL, query, { json: true });
-  return data.body.rows.map(element => {
-    element.jurisdiction = cleanType('County', element.jurisdiction);
-    element.jurisdiction = cleanType('Service area', element.jurisdiction);
-    return element.jurisdiction
-  });
+  return data.body.rows.map(element => element.jurisdiction);
 }
 
 const getAllJurisdictionByGeomStreams = async (geom) => {

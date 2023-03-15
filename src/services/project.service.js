@@ -32,7 +32,7 @@ const ProjectCounty = db.projectCounty;
 const CodeStateCounty = db.codeStateCounty;
 const ProjectStreams = db.project_stream;
 const ProjectLocalGovernment = db.projectLocalGovernment;
-const ProjectComponent = db.projectComponent;
+const ProjectProposedAction = db.projectProposedAction;
 const CodeLocalGoverment = db.codeLocalGoverment;
 const Streams = db.stream;
 const ProjectCost = db.projectCost;
@@ -256,9 +256,9 @@ const getDetails = async (project_id) => {
           'code_maintenance_eligibility_type_id',
           [
             sequelize.literal(`(
-              SELECT COUNT([project_component].[project_id])
-              FROM [project_component]
-              WHERE [project_component].[project_id] = [project].[project_id]
+              SELECT COUNT([project_proposed_action].[project_id])
+              FROM [project_proposed_action]
+              WHERE [project_proposed_action].[project_id] = [project].[project_id]
             )`),
             'totalComponents',
           ],
@@ -366,22 +366,11 @@ const getDetails = async (project_id) => {
             // }
           },
           {
-            model: ProjectComponent,
+            model: ProjectProposedAction,
             attributes: [
-              'component_id',
+              'object_id',
               'source_table_name',
-              'project_component_id'
-            ],
-            // where: {
-            //   code_cost_type_id: 1
-            // }
-          },
-          {
-            model: ProjectComponent,
-            attributes: [
-              'component_id',
-              'source_table_name',
-              'project_component_id'
+              'project_proposed_action_id'
             ],
             // where: {
             //   code_cost_type_id: 1
@@ -514,9 +503,9 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         'code_project_type_id',
         [
           sequelize.literal(`(
-            SELECT COUNT([project_component].[project_id])
-            FROM [project_component]
-            WHERE [project_component].[project_id] = [project].[project_id]
+            SELECT COUNT([project_proposed_action].[project_id])
+            FROM [project_proposed_action]
+            WHERE [project_proposed_action].[project_id] = [project].[project_id]
           )`),
           'totalComponents',
         ],

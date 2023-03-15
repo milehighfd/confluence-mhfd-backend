@@ -16,7 +16,7 @@ import groupNotes from 'bc/models/groupNotes.model.js';
 import codeRuleActionItem from 'bc/models/code_rule_action_item.model.js';
 import projectActionItem from 'bc/models/project_action_item.model.js'
 import projectstream from 'bc/models/projectstream.model.js';
-import projectComponent from 'bc/models/projectComponent.model.js';
+//import projectComponent from 'bc/models/projectComponent.model.js';
 import consultants from 'bc/models/consultants.model.js';
 import componentDependency from 'bc/models/componentDependency.model.js';
 import configuration from 'bc/models/configuration.model.js';
@@ -55,6 +55,7 @@ import study from 'bc/models/study.model.js';
 import codeStudyType from 'bc/models/code_study_type.model.js';
 import relatedStudy from 'bc/models/related_study.model.js';
 import streamStudy from 'bc/models/stream_study.model.js';
+import projectProposedAction from 'bc/models/project_proposed_action.model.js';
 
 Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
   date = this._applyTimezone(date, options);
@@ -103,8 +104,8 @@ db.study = study(sequelize, Sequelize);
 db.codestudytype = codeStudyType(sequelize, Sequelize);
 db.relatedstudy = relatedStudy(sequelize, Sequelize);
 db.streamstudy = streamStudy(sequelize, Sequelize);
-
-db.projectComponent = projectComponent(sequelize, Sequelize);
+db.projectProposedAction = projectProposedAction(sequelize, Sequelize);
+//db.projectComponent = projectComponent(sequelize, Sequelize);
 db.consultants = consultants(sequelize, Sequelize);
 db.componentdependency = componentDependency(sequelize, Sequelize);
 db.configuration = configuration(sequelize, Sequelize);
@@ -240,8 +241,8 @@ db.projectCost.belongsTo(
 );
 
 // project project-component
-db.project.hasMany(db.projectComponent, {foreignKey: 'project_id'});
-db.projectComponent.belongsTo(db.project, {foreignKey: 'project_id'});
+db.project.hasMany(db.projectProposedAction, {foreignKey: 'project_id'});
+db.projectProposedAction.belongsTo(db.project, {foreignKey: 'project_id'});
 
 //project project-detail
 db.project.hasMany(db.projectDetail, { foreignKey: 'project_id' });
