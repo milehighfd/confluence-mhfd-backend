@@ -51,7 +51,7 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     },
-    comments: {
+    comment: {
       type: DataType.STRING,
       allowNull: false
     }  
