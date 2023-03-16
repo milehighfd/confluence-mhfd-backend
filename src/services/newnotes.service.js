@@ -92,19 +92,10 @@ const getColors = async (userId) => {
       is_deleted: 0
     },
     order: [
-      ['created_date', 'DESC']
+      ['label', 'ASC']
     ]
   });
   colors.sort((a, b) => {
-    if (a.label === 'Map Note' && a.label === b.label && a.color === DEFAULT_COLOR && b.color === DEFAULT_COLOR) {
-      return a.created_date - b.created_date;
-    }
-    if (a.label === 'Map Note' && a.color === DEFAULT_COLOR) {
-      return -1;
-    }
-    if (b.label === 'Map Note' && b.color === DEFAULT_COLOR) {
-      return 1;
-    }
     return a.label.localeCompare(b.label);
   });
   return colors;
