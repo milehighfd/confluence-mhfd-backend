@@ -136,7 +136,8 @@ export const FIELDS = Object.freeze({
    CAPITAL_STATUS:'capitalStatus',
    PHONE: 'phone',
    TITLE: 'title',
-   ZOOM_AREA: 'zoomarea'
+   ZOOM_AREA: 'zoomarea',
+   BUSSINESS_ASSOCIATE_CONTACT_ID: 'business_associate_contact_id'
  });
    
 export const EMAIL_VALIDATOR = /[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[a-zA-Z0-9]{2,}/;
