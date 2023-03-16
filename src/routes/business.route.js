@@ -74,9 +74,9 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
     const newBusinessAddress = await BusinessAdress.create(businessAdress);
     const businessContact = {
       business_address_id: newBusinessAddress.business_address_id,
-      contact_name: user.name,
-      contact_email: user.email,
-      contact_phone_number: user.phone || 'No number provided'
+      contact_name: body.name,
+      contact_email: body.email,
+      contact_phone_number: body.phone || 'No number provided'
     };
     const newBusinessContact = await BusinessContact.create(businessContact);
     res.status(201).send({
