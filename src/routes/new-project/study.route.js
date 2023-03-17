@@ -164,16 +164,19 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     });
 
     for (const j of splitedJurisdiction) {
-      await ProjectLocalGovernment.create({
-        code_local_government_id: parseInt(j),
-        project_id: project_id,
-        shape_length_ft: 0,
-        last_modified_by: user.name,
-        created_by: user.email
-      });
+      if (j) {
+        await ProjectLocalGovernment.create({
+          code_local_government_id: parseInt(j),
+          project_id: project_id,
+          shape_length_ft: 0,
+          last_modified_by: user.name,
+          created_by: user.email
+        }); 
+      }
       logger.info('created jurisdiction');
     }
     for (const s of splitedServicearea) {
+     if(s) {
       await ProjectServiceArea.create({
         project_id: project_id,
         code_service_area_id: s,
@@ -181,14 +184,17 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         last_modified_by: user.name,
         created_by: user.email
       });
+     }
       logger.info('created service area');
     }
     for (const c of splitedCounty) {
-      await ProjectCounty.create({
-        state_county_id: c,
-        project_id: project_id,
-        shape_length_ft: 0
-      });
+      if (c) {
+        await ProjectCounty.create({
+          state_county_id: c,
+          project_id: project_id,
+          shape_length_ft: 0
+        });
+      }
       logger.info('created county');
     }
     await projectStreamService.deleteByProjectId(project_id);

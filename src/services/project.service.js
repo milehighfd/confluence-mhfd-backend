@@ -701,24 +701,28 @@ const saveProject = async (
     if (code_maintenance_eligibility_type_id) {
       insert = Project.create({
         project_name: project_name,
+        project_alias: project_name,
         description: description,
         code_project_type_id: code_project_type_id,
         created_date: created_date,
         modified_date: modified_date,
         start_date: start_date,
         last_modified_by: last_modified_by,
+        is_spatial_data_required: 0,
         created_by: created_by,
         code_maintenance_eligibility_type_id: code_maintenance_eligibility_type_id,
       });
     } else {
       insert = Project.create({
         project_name: project_name,
+        project_alias: project_name,
         description: description,
         code_project_type_id: code_project_type_id,
         created_date: created_date,
         modified_date: modified_date,
         start_date: start_date,
         last_modified_by: last_modified_by,
+        is_spatial_data_required: 0,
         created_by: created_by
       });
     }

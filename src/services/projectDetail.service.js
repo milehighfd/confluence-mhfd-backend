@@ -15,13 +15,23 @@ const saveProjectDetail = async (
   code_acquisition_progress_status_id = null
 ) => {
   try {
+    console.log({
+      maintenance_frequency: maintenance_frequency,
+      is_public_ownership: is_public_ownership,
+      project_id: project_id,
+      code_study_reason_id: code_study_reason_id,
+      acquisition_anticipated_year: Number(acquisition_anticipated_year),
+      code_acquisition_progress_status_id: Number(code_acquisition_progress_status_id),
+      last_modified_by: last_modified_by,
+      created_by: created_by
+    });
     const response = await ProjectDetail.create({
       maintenance_frequency: maintenance_frequency,
       is_public_ownership: is_public_ownership,
       project_id: project_id,
       code_study_reason_id: code_study_reason_id,
-      acquisition_anticipated_year: acquisition_anticipated_year,
-      code_acquisition_progress_status_id: code_acquisition_progress_status_id,
+      acquisition_anticipated_year: Number(acquisition_anticipated_year),
+      code_acquisition_progress_status_id: Number(code_acquisition_progress_status_id),
       last_modified_by: last_modified_by,
       created_by: created_by
     });
@@ -45,8 +55,8 @@ const updateProjectDetail = async (
     const response = await ProjectDetail.update({
       maintenance_frequency: maintenance_frequency,
       is_public_ownership: is_public_ownership,
-      acquisition_anticipated_year: acquisition_anticipated_year,
-      code_acquisition_progress_status_id: code_acquisition_progress_status_id,
+      acquisition_anticipated_year: Number(acquisition_anticipated_year),
+      code_acquisition_progress_status_id: Number(code_acquisition_progress_status_id),
       last_modified_by: last_modified_by,
       code_study_reason_id: code_study_reason_id
     },{ where: { project_id: project_id }});

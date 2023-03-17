@@ -48,7 +48,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       await projectStatusService.saveProjectStatusFromCero(defaultProjectId, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan);
       await projectPartnerService.saveProjectPartner(sponsor, cosponsor, project_id);
-      await projectDetailService.saveProjectDetail(0, 0, project_id, 0, acquisitionanticipateddate, acquisitionprogress);
+      await projectDetailService.saveProjectDetail(0, 0, project_id, creator, creator, null, 0, acquisitionanticipateddate, acquisitionprogress);
 
       for (const j of splitedJurisdiction) {
         await ProjectLocalGovernment.create({
@@ -103,7 +103,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     result.push(data)
     await cartoService.updateToCarto(CREATE_PROJECT_TABLE, geom, project_id);
     await projectPartnerService.updateProjectPartner(sponsor, cosponsor, project_id);
-    await projectDetailService.updateProjectDetail(0, 0, project_id, acquisitionanticipateddate, acquisitionprogress);
+    await projectDetailService.updateProjectDetail(0, 0, project_id, creator, null, acquisitionanticipateddate, acquisitionprogress);
     if (splitedJurisdiction) await ProjectLocalGovernment.destroy({
       where: {
         project_id: project_id
@@ -120,16 +120,19 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       }
     });
     for (const j of splitedJurisdiction) {
-      await ProjectLocalGovernment.create({
-        code_local_government_id: parseInt(j),
-        project_id: project_id,
-        shape_length_ft: 0,
-        last_modified_by: user.name,
-        created_by: user.email
-      });
+      if (j) {
+        await ProjectLocalGovernment.create({
+          code_local_government_id: parseInt(j),
+          project_id: project_id,
+          shape_length_ft: 0,
+          last_modified_by: user.name,
+          created_by: user.email
+        }); 
+      }
       logger.info('created jurisdiction');
     }
     for (const s of splitedServicearea) {
+     if(s) {
       await ProjectServiceArea.create({
         project_id: project_id,
         code_service_area_id: s,
@@ -137,14 +140,17 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         last_modified_by: user.name,
         created_by: user.email
       });
+     }
       logger.info('created service area');
     }
     for (const c of splitedCounty) {
-      await ProjectCounty.create({
-        state_county_id: c,
-        project_id: project_id,
-        shape_length_ft: 0
-      });
+      if (c) {
+        await ProjectCounty.create({
+          state_county_id: c,
+          project_id: project_id,
+          shape_length_ft: 0
+        });
+      }
       logger.info('created county');
     }
   } catch (error) {
