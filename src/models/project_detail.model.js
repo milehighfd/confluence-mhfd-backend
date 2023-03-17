@@ -25,7 +25,7 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       allowNull: true
     },
-    comments: {
+    comment: {
       type: DataType.STRING,
     }, 
     code_study_reason_id: {

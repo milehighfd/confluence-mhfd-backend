@@ -22,6 +22,9 @@ export default (sequelize, DataType) => {
     },
     is_deleted: {
       type: DataType.INTEGER
+    },
+    created_date: {
+      type: DataType.DATE
     }
   }, {
     freezeTableName: true,
