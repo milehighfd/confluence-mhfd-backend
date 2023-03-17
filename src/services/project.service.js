@@ -266,8 +266,10 @@ const getDetails = async (project_id) => {
         include: [
           {
             model: ProjectServiceArea,
+            required: false,
             include: {
               model: CodeServiceArea,
+              required: false,
               attributes: [
                 'service_area_name',
                 'code_service_area_id'
@@ -279,8 +281,10 @@ const getDetails = async (project_id) => {
           },
           {
             model: ProjectCounty,
+            required: false,
             include: {
               model: CodeStateCounty,
+              required: false,
               attributes: [
                 'county_name',
                 'state_county_id'
@@ -292,8 +296,10 @@ const getDetails = async (project_id) => {
           },
           {
             model: ProjectStreams,
+            required: false,
             include: {
               model: Streams,
+              required: false,
               attributes: [
                 'stream_id',
                 'stream_name'
@@ -302,8 +308,10 @@ const getDetails = async (project_id) => {
           },
           {
             model: ProjectLocalGovernment,
+            required: false,
             include: {
               model: CodeLocalGoverment,
+              required: false,
               attributes: [
                 'local_government_name',
                 'code_local_government_id'
@@ -315,6 +323,7 @@ const getDetails = async (project_id) => {
           },
           {
             model: ProjectCost,
+            required: false,
             attributes: [
               'code_cost_type_id',
               'cost'
@@ -325,22 +334,26 @@ const getDetails = async (project_id) => {
           },
           {
             model: ProjectStatus,
+            required: false,
             attributes: [
               'code_phase_type_id'
             ],
             include: {
               model: CodePhaseType,
+              required: false,
               attributes: [
                 'phase_name',
               ],
               include: [{
                 model: CodeStatusType,
+                required: false,
                 attributes: [
                   'code_status_type_id',
                   'status_name'
                 ]
               }, {
                 model: CodeProjectType,
+                required: false,
                 attributes: [
                   'code_project_type_id',
                   'project_type_name'
@@ -350,12 +363,14 @@ const getDetails = async (project_id) => {
           }, 
           {
             model: ProjectPartner,
+            required: false,
             attributes: [
               'project_partner_id',
               'code_partner_type_id'
             ],
             include: {
               model: BusinessAssociate,
+              required: false,
               attributes: [
                 'business_name',
                 'business_associates_id'
@@ -367,6 +382,7 @@ const getDetails = async (project_id) => {
           },
           {
             model: ProjectProposedAction,
+            required: false,
             attributes: [
               'object_id',
               'source_table_name',
@@ -378,6 +394,7 @@ const getDetails = async (project_id) => {
           },
           {
             model: ProjectStaff,
+            required: false,
             attributes: [
               'code_project_staff_role_type_id',
               'is_active',
@@ -385,6 +402,7 @@ const getDetails = async (project_id) => {
             ],
             include: {
               model: MHFDStaff,
+              required: false,
               attributes: [
                 'user_id',
                 'mhfd_staff_id',
@@ -392,6 +410,7 @@ const getDetails = async (project_id) => {
               ],
               include: {
                 model: User,
+                required: false,
                 attributes: [
                   'organization'
                 ]
@@ -402,32 +421,40 @@ const getDetails = async (project_id) => {
             // }
           },
           {
-            model: ProjectDetail
+            model: ProjectDetail,
+            required: false,
             // where: {
             //   code_cost_type_id: 1
             // }
           },
           {
             model: ProjectStudy,
+            required: false,
             include: {
               model: Study,
+              required: false,
               include: [{
-                model: CodeStudyType
+                model: CodeStudyType,
+                required: false,
               },
               {
-                model: RelatedStudy
+                model: RelatedStudy,
+                required: false,
               },
               {
-                model: CodeStudyReason
+                model: CodeStudyReason,
+                required: false,
               },
               {
                 model: StreamStudy,
+                required: false,
                 include: {
                   attributes: [
                     'stream_id',
                     'stream_name'
                   ],
-                  model: Streams
+                  model: Streams,
+                  required: false,
                 }
               }]
             }
@@ -459,32 +486,6 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
   console.log(include, bounds, offset, limit);
   const where = {};
   try {
-    /*
-      if (bounds) {
-        const project_ids_bybounds = await getProjectsIdsByBounds(bounds);
-        if(project_ids_bybounds.length) {
-          where.project_id = project_ids_bybounds;
-        }
-      }
-      if (include?.code_project_type_id) {
-        where.code_project_type_id = +include.code_project_type_id;
-      }
-      
-      if (include && include.user_id) {
-        const projectsFavorite = await ProjectFavorite.findAll({
-          where: {
-            user_id: include.user_id,
-          }
-        }).map(result => result.dataValues);
-        const pids = projectsFavorite.map((p) => p.project_id);
-        if (where.project_id) {
-          where.project_id = [...where.project_id, ...pids];
-        } else {
-          where.project_id = pids;
-        }
-      }
-    */
-    //if (!bounds && !include?.code_project_type_id && !include?.user_id && cache) {
     if (cache) {
       return cache;
     }
@@ -514,6 +515,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
       include: [
         {
           model: ProjectStaff,
+          required: false,
           attributes: [
             'code_project_staff_role_type_id',
             'is_active',
@@ -521,6 +523,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
           ],
           include: {
             model: MHFDStaff,
+            required: false,
             attributes: [
               'user_id',
               'mhfd_staff_id',
@@ -528,6 +531,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
             ],
             include: {
               model: User,
+              required: false,
               attributes: [
                 'organization'
               ]
@@ -539,8 +543,10 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         },
         {
           model: ProjectServiceArea,
+          required: false,
           include: {
             model: CodeServiceArea,
+            required: false,
             attributes: [
               'service_area_name',
               'code_service_area_id'
@@ -554,6 +560,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
           model: ProjectCounty,
           include: {
             model: CodeStateCounty,
+            required: false,
             attributes: [
               'county_name',
               'state_county_id'
@@ -565,8 +572,10 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         },
         {
           model: ProjectStreams,
+          required: false,
           include: {
             model: Streams,
+            required: false,
             attributes: [
               'stream_id',
               'stream_name'
@@ -575,8 +584,10 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         },
         {
           model: ProjectLocalGovernment,
+          required: false,
           include: {
             model: CodeLocalGoverment,
+            required: false,
             attributes: [
               'local_government_name',
               'code_local_government_id'
@@ -588,6 +599,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         },
         {
           model: ProjectCost,
+          required: false,
           attributes: [
             'code_cost_type_id',
             'cost'
@@ -598,6 +610,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         },
         {
           model: ProjectStatus,
+          required: false,
           attributes: [
             'code_phase_type_id',
             'planned_start_date',
@@ -605,17 +618,20 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
           ],
           include: {
             model: CodePhaseType,
+            required: false,
             attributes: [
               'phase_name',
             ],
             include: [{
               model: CodeStatusType,
+              required: false,
               attributes: [
                 'code_status_type_id',
                 'status_name'
               ]
             }, {
               model: CodeProjectType,
+              required: false,
               attributes: [
                 'code_project_type_id',
                 'project_type_name'
@@ -625,12 +641,14 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         },         
         {
           model: ProjectPartner,
+          required: false,
           attributes: [
             'project_partner_id',
             'code_partner_type_id'
           ],
           include: {
             model: BusinessAssociate,
+            required: false,
             attributes: [
               'business_name',
               'business_associates_id'
@@ -643,66 +661,6 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
       ],
       order: [['created_date', 'DESC']]
     }).map(result => result.dataValues);
-    // const SPONSOR_TYPE = 11; // maybe this can change in the future
-    // const ids = projects.map((p) => p.project_id);
-  
-    // const project_partners = await ProjectPartner.findAll({
-    //   where: {
-    //     project_id: ids,
-    //     code_partner_type_id: SPONSOR_TYPE,
-    //   },
-    //   include: { all: true, nested: true }
-    // }).map(result => result.dataValues).map(res => { 
-    //   return {...res, business_associate: res.business_associate.dataValues }
-    // });
-  
-    // projects = projects.map((project) => {
-    //   const partners = project_partners.filter((partner) => partner.project_id === project.project_id);
-    //   let sponsor = null;
-    //   if (partners.length) {
-    //     sponsor = partners[0].business_associate.business_associate_name;
-    //   } 
-    //   return  {...project, sponsor: sponsor };
-    // });
-    // xconsole.log(project_partners);
-    // const promises = [
-    //   getServiceAreaByProjectIds(ids),
-    //   getCountiesByProjectIds(ids),
-      // getConsultantsByProjectids(ids),
-    //   getCivilContractorsByProjectids(ids),
-    //   getLocalGovernmentByProjectids(ids),
-    //   getEstimatedCostsByProjectids(ids),
-    //   getStreamsDataByProjectIds(ids)
-    // ];
-    // const resolvedPromises = await Promise.all(promises);
-    // const projectServiceArea = resolvedPromises[0];
-    // const projectCounties = resolvedPromises[1];
-    // const consultants = resolvedPromises[2];
-    // const civilContractors = resolvedPromises[3];
-    // const projectLocalGovernment = resolvedPromises[4];
-    // const estimatedCosts = resolvedPromises[5];
-    // const projectStreams = resolvedPromises[6];
-  
-    // projects = projects.map((project) => {
-    //   const pservicearea = projectServiceArea.filter((psa) => psa.project_id === project.project_id);
-    //   const pcounty = projectCounties.filter((d) => d.project_id === project.project_id)[0];
-    //   const staffs = consultants.filter(consult => consult.project_id === project.project_id);
-    //   const contractorsStaff = civilContractors.filter(consult => consult.project_id === project.project_id);
-    //   const codeLocalGoverment = projectLocalGovernment.filter((d) => d.project_id === project.project_id)[0];
-    //   const estimatedCost = estimatedCosts.filter(ec => ec.project_id === project.project_id)[0];
-    //   const streams = projectStreams.filter((d) => d.project_id === project.project_id)[0];
-    //   return {
-    //     ...project,
-    //     service_area_name: pservicearea[0]?.CODE_SERVICE_AREA,
-    //     serviceArea: pservicearea[0],
-    //     county:  pcounty,
-    //     consultants: staffs,
-    //     contractors: contractorsStaff,
-    //     localGoverment: codeLocalGoverment,
-    //     estimatedCost,
-    //     streams
-    //   };
-    // });
     cache = projects;
     return projects;
   } catch (error) {
