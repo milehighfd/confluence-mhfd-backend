@@ -8,6 +8,9 @@ export default (sequelize, DataType) => {
     project_name: {
       type: DataType.STRING,
     },
+    project_alias : {
+      type: DataType.STRING,
+    },
     description: {
       type: DataType.STRING,
     },
@@ -33,6 +36,12 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
     },
     cover_image_project_attachment_id: {
+      type: DataType.INTEGER,
+    },
+    parent_project_id: {
+      type: DataType.INTEGER,
+    },
+    is_spatial_data_required: {
       type: DataType.INTEGER,
     },
     created_date: {

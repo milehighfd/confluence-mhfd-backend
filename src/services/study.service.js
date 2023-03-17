@@ -19,7 +19,7 @@ const saveStudy = async (
         maintenance_frequency: 0,
         is_public_ownership: 0,
         project_id: project_id,
-        comments: otherReason,
+        comment: otherReason,
         code_study_reason_id: code_study_reason_id,
         last_modified_by: last_modified_by,
         created_by: created_by
@@ -41,7 +41,7 @@ const updateStudy = async (
   try {
     if (otherReason) {
       await ProjectDetail.update({
-        comments: otherReason,
+        comment: otherReason,
         code_study_reason_id: code_study_reason_id,
         last_modified_by: last_modified_by
       },{where:{ project_id: project_id}});
