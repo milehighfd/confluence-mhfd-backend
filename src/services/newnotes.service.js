@@ -21,7 +21,7 @@ const getAllNotes = async(userId) => {
     });
     return notes;
   } catch (error) {
-    console.log('the error ', error);
+    console.log('the error GET ALL NOTES', error);
     throw error;
   }
 }
@@ -54,7 +54,7 @@ const getNotesByColor = async (userId, colorIds, hasNull) => {
     });
     return notes;
   } catch(error) {
-    console.log('the error ', error);
+    console.log('the error  NOTES BY COLOR', error);
     throw error;
   }
 }
@@ -69,7 +69,7 @@ const getColorsByNote = async (userId) => {
     });
     return colors;
   } catch(error) {
-    console.log(`the error ${error}`);
+    console.log(`the error GET COLORS BY NOTE ${error}`);
     throw error;
   }
 }
@@ -157,7 +157,7 @@ const updateGroup = async (id, group_notes_name, position) => {
     } 
     return toUpdate;
   } catch(error) {
-    console.log('the error ', error);
+    console.log('the error UPDATE GROUP', error);
     throw error;
   }
 }
@@ -175,8 +175,8 @@ const updateColor = async (id, label, color, opacity) => {
     } 
     return toUpdate;
   } catch(error) {
-    console.log('the error ', error);
-    throw error;
+    console.log('the error UPDATE COLOR', error);
+    return {error};
   }
 }
 
@@ -241,7 +241,7 @@ const saveNote = async (note) => {
     const newNote = await NewNotes.create(note);
     return newNote;
   } catch(error) {
-    console.log('the error ', error);
+    console.log('the error SAVE NOTE', error);
     throw error;
   }
 }
@@ -258,7 +258,7 @@ const saveColor = async (label, color, opacity, userId) => {
     const newColor = await ColorNotes.create({label: label, color: color, opacity: opacity, user_id: userId});
     return newColor;
   } catch(error) {
-    console.log('the error ', error);
+    console.log('the error SAVE COLOR', error);
     throw error;
   }
 }
@@ -278,8 +278,8 @@ const updateNote = async (id, note) => {
     } 
     return toUpdate;
   } catch(error) {
-    console.log('the error ', error);
-    throw error;
+    console.log('the error for update ', error);
+    return {object: 'Error at' + error};
   }
 }
 

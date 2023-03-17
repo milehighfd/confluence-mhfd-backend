@@ -162,7 +162,7 @@ router.put('/note/:id', [auth], async (req, res) => {
       res.status(404).send('Note not found');
     }
   } catch(error) {
-    res.status(500).send(error);
+    res.status(205).send(error);
   }
 });
 
@@ -182,6 +182,9 @@ router.put('/color/:id', [auth], async (req, res) => {
   const { label, color, opacity } = req.body;
   try {
     const updatedColor = await NoteService.updateColor(id, label, color, opacity);
+    if (updatedColor.error){ 
+      return res.status(200).send(updatedColor);
+    }
     return res.send(updatedColor);
   } catch (error) {
     res.status(500).send(error);

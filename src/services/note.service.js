@@ -12,7 +12,7 @@ export const getAllNotesByUser = (userId) => {
     });
     return notes;
   } catch(error) {
-    console.log('the error ', error);
+    console.log('the error GET NOTES BY USER', error);
     throw error;
   }
 }
@@ -38,7 +38,7 @@ export const saveNote = async (note) => {
     const newNote = await Note.create(note);
     return newNote;
   } catch(error) {
-    console.log('the error ', error);
+    console.log('the error SAVE NOTE', error);
     throw error;
   }
 }
@@ -56,7 +56,7 @@ export const updateNote = async (id, note) => {
     } 
     return updateNote;
   } catch(error) {
-    console.log('the error ', error);
+    console.log('the error at update error', error);
     throw error;
   }
 }
