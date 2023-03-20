@@ -59,7 +59,7 @@ export const sendRecoverPasswordEmail = async (user) => {
   const template = fs.readFileSync(__dirname + '/templates/email_reset-pass-MHFD.html', 'utf8');
   const emailToSend = template.split('{{url}}').join(redirectUrl);
 
-  // const transporter = getTransporter();
+  const transporter = getTransporter();
   const options = {
     from: MHFD_EMAIL,
     to: email,
@@ -67,8 +67,12 @@ export const sendRecoverPasswordEmail = async (user) => {
     html: emailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin'])
   };
-  // const info = await transporter.sendMail(options);
-  // logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
+  try {
+    const info = await transporter.sendMail(options);
+    logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
+  } catch (error) {
+    logger.info(`Error sending email: ${error}`);
+  }
 };
 
 export const sendApprovedAccount = async (user) => {
@@ -100,8 +104,8 @@ export const sendConfirmAccount = async (user) => {
   const adminOptions = {
     from: MHFD_EMAIL,
     // commented in order to avoid sending mails to mhfd domain during test time
-    // to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'ricardo@vizonomy.com' :'confluence.support@mhfd.org'),
-    to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'cesar@vizonomy.com' :'cesar@vizonomy.com'),
+    to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'ricardo@vizonomy.com' :'confluence.support@mhfd.org'),
+    // to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'cesar@vizonomy.com' :'cesar@vizonomy.com'),
     subject: 'MHFD Confluence - New User Registered!',
     html: adminEmailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
@@ -120,11 +124,14 @@ export const sendConfirmAccount = async (user) => {
     html: emailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
   };
-  // const adminInfo = await transporter.sendMail(adminOptions);
-  // logger.info(`Email sent to ADMIN: ${JSON.stringify(adminInfo, null, 2)}`);
-  // const info = await transporter.sendMail(options); 
-
-  // logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
+  try {
+    const adminInfo = await transporter.sendMail(adminOptions);
+    logger.info(`Email sent to ADMIN: ${JSON.stringify(adminInfo, null, 2)}`);
+    const info = await transporter.sendMail(options); 
+    logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
+  } catch (error) {
+    logger.error(`Error in sending email: ${error}`);
+  }
 }
 
 export const sendBoardNotification = async (email, type, locality, year, fullName) => {
