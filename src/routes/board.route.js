@@ -19,6 +19,8 @@ const Board = db.board;
 const User = db.user;
 const BoardProject = db.boardProject;
 const BoardLocality = db.boardLocality;
+const ProjectStatus = db.projectStatus;
+const CodePhaseType = db.codePhaseType;
 
 router.get('/coordinates/:pid', async (req, res) => {
     let { pid } = req.params;
@@ -252,15 +254,13 @@ const getBoard = async (type, locality, year, projecttype) => {
         return board;
     } else {
         logger.info('new board');
-        let newBoard = new Board({
-            type, year, locality, projecttype, status: 'Under Review'
-        });
-        await newBoard.save();
+        const newBoard = await boardService.createNewBoard(type, year, locality, projecttype, 'Under Review')
         return newBoard;
     }
 }
 
 const sendBoardProjectsToProp = async (boards, prop) => {
+    console.log(boards, prop);
     for (var i = 0 ; i < boards.length ; i++) {
         let board = boards[i];
         let boardProjects = await BoardProject.findAll({
@@ -358,19 +358,34 @@ const updateProjectStatus = async (boards, status) => {
         });
         for (var j = 0 ; j < boardProjects.length ; j++) {
             let bp = boardProjects[j];
+            console.log(boardProjects);
             try {
-                const updateQuery = `UPDATE ${CREATE_PROJECT_TABLE} SET status = '${status}' WHERE  projectid = ${bp.project_id}`;
-                const query = {
-                    q: updateQuery
-                };
-                const data = await needle('post', CARTO_URL, query, { json: true });
-                if (data.statusCode === 200) {
-                    result = data.body;
-                    logger.info(result);
-                } else {
-                    logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2))    ;
+                if (bp.position0 === null) {
+                    const currentProjectStatus = await ProjectStatus.findOne({
+                        where: {
+                            project_id: bp.project_id
+                        },
+                        include: {
+                            model: CodePhaseType,
+                            required: true,
+                            attributes:['code_project_type_id', 'code_phase_type_id']
+                        },
+                        raw: true,
+                        nest: true,
+                        });
+                        const nextCodePhase = await CodePhaseType.findOne({
+                            where:{
+                                code_status_type_id: status,
+                                code_project_type_id: currentProjectStatus?.code_phase_type?.code_project_type_id
+                            }
+                        });
+                        await ProjectStatus.update({
+                            code_phase_type_id: nextCodePhase.code_phase_type_id
+                        }, { where: { project_status_id: currentProjectStatus.project_status_id } });
+                        logger.info('Updated', bp.project_id);
                 }
             } catch(e) {
+                logger.error(e);
                 continue;
             }
         }
@@ -378,38 +393,44 @@ const updateProjectStatus = async (boards, status) => {
 }
 
 const sendBoardProjectsToDistrict = async (boards) => {
-    for (var i = 0 ; i < boards.length ; i++) {
-        let board = boards[i];
-        let boardProjects = await BoardProject.findAll({
-            where: {
-                board_id: board._id
+    try {
+        for (var i = 0 ; i < boards.length ; i++) {
+            let board = boards[i];
+            console.log(board, "current board");
+            let boardProjects = await BoardProject.findAll({
+                where: {
+                    board_id: board._id
+                }
+            });
+            for (var j = 0 ; j < boardProjects.length ; j++) {
+                let bp = boardProjects[j];
+                let destinyBoard = await getBoard('WORK_PLAN', 'MHFD District Work Plan', board.year, board.projecttype);
+                console.log(destinyBoard);
+                //TODO: improve to avoid multiple queries to same board
+                await boardService.saveProjectBoard({
+                    board_id: destinyBoard._id,
+                    project_id: bp.project_id,
+                    position0: bp.position0,
+                    position1: bp.position1,
+                    position2: bp.position2,
+                    position3: bp.position3,
+                    position4: bp.position4,
+                    position5: bp.position5,
+                    req1: bp.req1,
+                    req2: bp.req2,
+                    req3: bp.req3,
+                    req4: bp.req4,
+                    req5: bp.req5,
+                    year1: bp.year1,
+                    year2: bp.year2,
+                    origin: board.locality,
+                })
             }
-        });
-        for (var j = 0 ; j < boardProjects.length ; j++) {
-            let bp = boardProjects[j];
-            let destinyBoard = await getBoard('WORK_PLAN', 'MHFD District Work Plan', board.year, board.projecttype);
-            //TODO: improve to avoid multiple queries to same board
-
-            let newBoardProject = new BoardProject({
-                board_id: destinyBoard._id,
-                project_id: bp.project_id,
-                position0: bp.position0,
-                position1: bp.position1,
-                position2: bp.position2,
-                position3: bp.position3,
-                position4: bp.position4,
-                position5: bp.position5,
-                req1: bp.req1,
-                req2: bp.req2,
-                req3: bp.req3,
-                req4: bp.req4,
-                req5: bp.req5,
-                year1: bp.year1,
-                year2: bp.year2,
-                origin: board.locality,
-            })
-            await newBoardProject.save();
         }
+        logger.info('success on sendBoardProjectsToDistrict')
+    } catch (error) {
+        console.log(error);
+        logger.error(error);
     }
 }
 
@@ -433,13 +454,7 @@ const updateBoards = async (board, status, comment, substatus) => {
         logger.info(`Project type ${pjt}`);
         if (!b) {
             logger.info(`Creating new board for ${pjt}`);
-            let newBoard = new Board({
-                ...body,
-                status,
-                comment,
-                substatus
-            });
-            await newBoard.save();
+             await boardService.specialCreationBoard(board.type, board.year, board.locality, pjt, status, comment, substatus)
         } else {
             logger.info('Updating board');
             let newFields = {
@@ -484,23 +499,29 @@ const moveCardsToNextLevel = async (board) => {
             });
         }
         logger.info(`Sending ${boardsToCounty.length} to county`);
-        await sendBoardProjectsToProp(boardsToCounty, 'county');
+        //await sendBoardProjectsToProp(boardsToCounty, 'county');
         logger.info(`Sending ${boardsToServiceArea.length} to service area`);
-        await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea');
+        //await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea');
         logger.info(`Sending ${boards.length} to district`);
         await sendBoardProjectsToDistrict(boards);
         logger.info(`Update ${boards.length} as Requested`);
-        await updateProjectStatus(boards, 'Requested');
+        await updateProjectStatus(boards, 2);
         return {}
     } else if (board.type === 'WORK_PLAN') {
-        if (board.locality !== 'MHFD District Work Plan') {
-            await updateProjectStatus(boards, 'Submitted');
-        } else {
-            await updateProjectStatus(boards, 'Approved');
-        }
+        await updateProjectStatus(boards, 3);
         return {}
     }
 }
+router.get('/test/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        
+        res.send(response);
+    } catch (error) {
+        console.log(error);
+        res.send(500);
+    }
+})
 
 router.get('/:boardId/boards/:type', async (req, res) => {
     const { boardId, type } = req.params;
@@ -617,7 +638,7 @@ router.put('/:boardId', [auth], async (req, res) => {
         let bodyResponse = { status: 'updated' };
         if (status === 'Approved' && board.status !== status) {
             logger.info(`Approving board ${boardId}`);
-            sendMails(board, req.user.name)
+            //sendMails(board, req.user.name)
             let r = await moveCardsToNextLevel(board);
             bodyResponse = {
                 ...bodyResponse,

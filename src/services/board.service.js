@@ -30,6 +30,16 @@ const saveBoard = async (
   }
 }
 
+const saveProjectBoard = async (ProjectBoard) => {
+  try {
+    const response = await BoardProject.create(ProjectBoard);
+    logger.info('saved ProjectBoard');
+    return response;
+  } catch(error) {
+    throw error;
+  }
+}
+
 const createNewBoard = async (
   type, 
   year,
@@ -60,7 +70,35 @@ const createNewBoard = async (
   }
 }
 
+const specialCreationBoard = async (
+  type, 
+  year,
+  locality, 
+  projecttype,
+  status,
+  comment,
+  substatus
+) => {
+  try {
+    const id = await db.sequelize.query('SELECT MAX(_id) FROM boards');
+    const lastID = Object.values(id[0][0]).length > 0 ? Object.values(id[0][0])[0] : -1;
+    const insertQuery = `INSERT INTO boards (_id, locality, year, projecttype, type, status, createdAt, updatedAt, comment, substatus)
+    OUTPUT inserted . *
+    VALUES('${lastID + 1}', '${locality}', '${year}', '${projecttype}', '${type}', '${status}', '${moment().format('YYYY-MM-DD HH:mm:ss')}', '${moment().format('YYYY-MM-DD HH:mm:ss')}', '${comment}', '${substatus}')`;
+    const data = await db.sequelize.query(
+      insertQuery,
+      {
+        type: db.sequelize.QueryTypes.INSERT,
+      });
+    return data[0][0];
+  } catch(error) {
+    throw error;
+  }
+}
+
 export default {
   saveBoard,
-  createNewBoard
+  createNewBoard,
+  saveProjectBoard,
+  specialCreationBoard
 };
