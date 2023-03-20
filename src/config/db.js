@@ -267,6 +267,10 @@ db.codePhaseType.belongsTo(
   db.codeProjectType,
   { foreignKey: 'code_project_type_id' }
 );
+db.project.belongsTo(
+  db.codeProjectType,
+  { foreignKey: 'code_project_type_id' }
+);
 db.codePhaseType.hasMany(db.codeRuleActionItem, {foreignKey: 'code_phase_type_id'});
 db.codeRuleActionItem.hasMany(db.projectActionItem,{foreignKey: 'code_rule_action_item_id'})
 

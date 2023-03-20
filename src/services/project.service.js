@@ -459,6 +459,14 @@ const getDetails = async (project_id) => {
               }]
             }
           }, 
+          {
+            model: CodeProjectType,
+            required: false,
+            attributes: [
+              'code_project_type_id',
+              'project_type_name'
+            ]
+          }
         ],
         order: [['created_date', 'DESC']]
       }),
@@ -657,6 +665,13 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
           // where: {
           //   code_partner_type_id: [3, 8, 11]
           // }
+        },{
+          model: CodeProjectType,
+          required: false,
+          attributes: [
+            'code_project_type_id',
+            'project_type_name'
+          ]
         }
       ],
       order: [['created_date', 'DESC']]
