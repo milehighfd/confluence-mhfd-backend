@@ -19,6 +19,14 @@ export default  (sequelize, DataType) => {
     phase_ordinal_position: {
       type: DataType.INTEGER,
       allowNull: false
+    },
+    duration: {
+      type: DataType.INTEGER,
+      allowNull: true
+    },
+    duration_type: {
+      type: DataType.STRING,
+      allowNull: true
     }
   }, {
     tableName: 'code_phase_type',
