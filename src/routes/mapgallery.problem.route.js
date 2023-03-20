@@ -71,6 +71,9 @@ const getNewFilter = (filters, body, withPrefix) => {
   if (body.mhfdmanager) {
     filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[3]} = '${body.mhfdmanager}'`;
   }
+  if (body.keyword) {
+    filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${body.keyword}%'`;
+  }
   return filters;
 }
 
