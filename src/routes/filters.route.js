@@ -106,7 +106,7 @@ router.get('/search/:type', async (req, res) => {
     } catch (error) {
       console.log(error);
     };
-    data['problems'] = answer;
+    data['problem_boundary'] = answer;
   } else {
     for (const project of PROJECT_TABLES) {
       const query = {q: `SELECT cartodb_id FROM ${project} WHERE projectname ILIKE '%${field}%' OR onbaseid::text ilike '%${field}%'`};
