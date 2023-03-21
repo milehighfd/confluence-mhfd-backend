@@ -53,7 +53,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     const { project_id } = data;
     await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
     await projectStatusService.saveProjectStatusFromCero(defaultProjectId.code_project_type_id, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator);
-    await projectDetailService.saveProjectDetail(frequency, ownership, project_id, creator, creator, maintenanceeligibility);
+    await projectDetailService.saveProjectDetail(frequency, ownership, project_id, creator, creator);
     //await attachmentService.uploadFiles(user, req.files, projectId, cover);
     await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan);
     await projectPartnerService.saveProjectPartner(sponsor, cosponsor, project_id);
@@ -114,7 +114,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       maintenanceeligibility);
     result.push(data);
     await cartoService.updateToCarto(CREATE_PROJECT_TABLE, geom, project_id);
-    await projectDetailService.updateProjectDetail(frequency, ownership, project_id, maintenanceeligibility);
+    await projectDetailService.updateProjectDetail(frequency, ownership, project_id, creator);
     await projectPartnerService.updateProjectPartner(sponsor, cosponsor, project_id);
 
     if (splitedJurisdiction) await ProjectLocalGovernment.destroy({
