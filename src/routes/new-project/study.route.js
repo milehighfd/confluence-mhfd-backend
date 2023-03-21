@@ -9,7 +9,7 @@ import {
 } from 'bc/config/config.js';
 import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
-import { addProjectToBoard, cleanStringValue } from 'bc/routes/new-project/helper.js';
+import { addProjectToBoard, cleanStringValue, updateProjectsInBoard } from 'bc/routes/new-project/helper.js';
 
 import cartoService from 'bc/services/carto.service.js';
 import db from 'bc/config/db.js';
@@ -39,6 +39,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const {isWorkPlan, projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor, year, studyreason, otherReason, sendToWR} = req.body;
   const defaultProjectId = 1;
   const defaultProjectType = 'Study'
+  const projectsubtype = 'Master Plan';
   const creator = user.email;
   const splitedJurisdiction = jurisdiction.split(',');
   const splitedCounty = county.split(',');
@@ -62,7 +63,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         await cartoService.insertToCartoStudy(CREATE_PROJECT_TABLE, project_id, parsedIds);
       }
       await projectStatusService.saveProjectStatusFromCero(defaultProjectId, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
-      await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan);
+      await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan, cleanStringValue(projectname), projectsubtype);
       await projectPartnerService.saveProjectPartner(sponsor, cosponsor, project_id);
       
       for (const j of splitedJurisdiction) {
@@ -145,6 +146,9 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       creator)
     result.push(data);
     if (idsArray.length) await cartoService.updateCartoStudy(CREATE_PROJECT_TABLE, project_id, parsedIds);
+    const projecttype = 'Study';
+    const projectsubtype = 'Master Plan';
+    updateProjectsInBoard(project_id, cleanStringValue(projectname), projecttype, projectsubtype);
     await projectPartnerService.updateProjectPartner(sponsor, cosponsor, project_id);
 
     if (splitedJurisdiction) await ProjectLocalGovernment.destroy({

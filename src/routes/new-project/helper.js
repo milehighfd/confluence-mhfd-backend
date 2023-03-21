@@ -73,8 +73,32 @@ export const sendBoardsToProp = async (bp, board, prop, propid) => {
     await newBoardProject.save();
   }
 };
+export const updateProjectsInBoard = async (project_id, projectname, projecttype, projectsubtype) => {
+  let projectToUpdate = await BoardProject.findAll({
+    where: {
+      project_id: project_id
+    }
+  });
+  if (projectToUpdate.length) {
+    for(let i = 0 ; i < projectToUpdate.length; ++i) {
+      let currentProj = projectToUpdate[i];
+      await currentProj.update({projectname: projectname, projecttype: projecttype, projectsubtype: projectsubtype});
+    } 
+  }
+  return true;
+};
 
-export const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year, sendToWR, isWorkPlan) => {
+export const updateProjectInBoard = async (project_id, projectname, projecttype, projectsubtype) => {
+  let projectToUpdate = await BoardProject.findOne({
+    where: {
+      project_id: project_id
+    }
+  });
+  console.log('project about to be updated');
+  await projectToUpdate.update({projectname: projectname, projecttype: projecttype, projectsubtype: projectsubtype});
+  console.log('project updated in projectboard');
+};
+export const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year, sendToWR, isWorkPlan, projectname, projectsubtype) => {
   const [dbLocs] = await db.sequelize.query(`SELECT name, type FROM Localities WHERE name = '${locality}'`);
   let _dbLoc = null;
   if (dbLocs.length > 0) {
@@ -122,11 +146,15 @@ export const addProjectToBoard = async (user, servicearea, county, locality, pro
     boardProjectObject.originPosition5 = -1;
   } */
   boardProjectObject.position0 = 0;
+  // NEW ADITION
+  boardProjectObject.projectname = projectname;
+  boardProjectObject.projecttype = projecttype;
+  boardProjectObject.projectsubtype = projectsubtype;
   let boardProject = new BoardProject(boardProjectObject);
   let boardProjectSaved = boardProject;
   updateBoardProjectAtIndex(board._id, 0);
   if (sendToWR === 'true' || isWorkPlan) {
-    boardProjectSaved = await boardService.saveBoard(boardProject.board_id, boardProject.project_id, boardProject.origin, boardProject.position0);
+    boardProjectSaved = await boardService.saveBoard(boardProject.board_id, boardProject.project_id, boardProject.origin, boardProject.position0, boardProject.projectname, boardProject.projecttype, boardProject.projectsubtype);
   }
   if (['admin', 'staff'].includes(user.designation) && !isWorkPlan) {
     await sendBoardsToProp(boardProjectSaved, board, servicearea, 'servicearea');

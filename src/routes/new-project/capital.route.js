@@ -17,7 +17,7 @@ import {
 import db from 'bc/config/db.js';
 import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
-import { addProjectToBoard, cleanStringValue } from 'bc/routes/new-project/helper.js';
+import { addProjectToBoard, cleanStringValue, updateProjectsInBoard } from 'bc/routes/new-project/helper.js';
 import moment from 'moment';
 import projectPartnerService from 'bc/services/projectPartner.service.js';
 
@@ -266,8 +266,8 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
       await projectStatusService.saveProjectStatusFromCero(5, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       //await attachmentService.uploadFiles(user, req.files, project_id, cover);
-
-      await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan);
+      const projectsubtype = '';
+      await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan, projectname, projectsubtype);
       await projectPartnerService.saveProjectPartner(sponsor, cosponsor, project_id);
 
       for (const j of splitedJurisdiction) {
@@ -347,6 +347,9 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     const data = await projectService.updateProject(project_id, cleanStringValue(projectname), cleanStringValue(description), moment().format('YYYY-MM-DD HH:mm:ss'), creator);
     result.push(data)
     await cartoService.updateToCarto(CREATE_PROJECT_TABLE, geom, project_id);
+    const projectsubtype = '';
+    const projecttype = 'Capital';
+    updateProjectsInBoard(project_id, cleanStringValue(projectname), projecttype, projectsubtype);
     await projectPartnerService.updateProjectPartner(sponsor, cosponsor, project_id);
     if (splitedJurisdiction) await ProjectLocalGovernment.destroy({
       where: {

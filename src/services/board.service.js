@@ -8,19 +8,29 @@ const saveBoard = async (
   board_id, 
   project_id,
   origin, 
-  position0 
+  position0 ,
+  projectname,
+  projecttype,
+  projectsubtype
 ) => {
   logger.info('create Board ' + JSON.stringify(
     board_id, 
     project_id,
     origin, 
-    position0 ));
+    position0,
+    projectname,
+    projecttype,
+    projectsubtype
+  ));
   try {
     const response = await BoardProject.create({
       board_id: board_id,
       project_id: project_id,
       origin: origin,
       position0: position0,
+      projectname: projectname,
+      projecttype: projecttype,
+      projectsubtype: projectsubtype,
       createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt: moment().format('YYYY-MM-DD HH:mm:ss')
     });

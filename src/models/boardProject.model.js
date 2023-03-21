@@ -71,6 +71,15 @@ export default (sequelize, DataType) => {
     origin: {
       type: DataType.STRING,
       allowNull: false
+    },
+    projectname: {
+      type: DataType.STRING
+    },
+    projecttype: {
+      type: DataType.STRING
+    },
+    projectsubtype: {
+      type: DataType.STRING
     }
   }, {
     freezeTableName: true,

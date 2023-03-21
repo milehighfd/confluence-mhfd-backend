@@ -2,6 +2,7 @@ import express from 'express';
 import needle from 'needle';
 import auth from 'bc/auth/auth.js';
 import { CREATE_PROJECT_TABLE, CARTO_URL } from 'bc/config/config.js';
+import { updateProjectsInBoard }  from 'bc/routes/new-project/helper.js';
 import logger from 'bc/config/logger.js';
 import db from 'bc/config/db.js';
 import {
@@ -751,6 +752,42 @@ router.post('/projects-bbox', async (req, res) => {
         logger.error(error);
         res.status(500).send(error);
      };
+});
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+router.get('/sync', async (req,res) => {
+  const sql = `SELECT projectid, projectname, projecttype, projectsubtype FROM ${CREATE_PROJECT_TABLE}`;
+  const query = {
+    q: sql
+  };
+  logger.info(sql);
+  try {
+    let result;
+    const data = await needle('post', CARTO_URL, query, { json: true });
+    //console.log('STATUS', data.statusCode);
+    if (data.statusCode === 200) {
+      result = data.body;
+      let allPromises = [];
+      for(let i = 0 ; i < result.rows.length ; ++i){
+        let projectData = result.rows[i];
+        if(projectData.projectid){
+          console.log('About to update in board', projectData.projectid, projectData.projectname);
+          await updateProjectsInBoard(projectData.projectid, projectData.projectname, projectData.projecttype, projectData.projectsubtype);
+          // updateProject
+          await sleep(30);
+        }
+      }
+      res.send(result.rows);
+    } else {
+      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
+      return res.status(data.statusCode).send(data.body);
+    }
+  } catch (error) {
+      logger.error('Error at sync projectname, type, subtype', error);
+      res.status(500).send(error);
+  };
+
 });
 
 export default router;
