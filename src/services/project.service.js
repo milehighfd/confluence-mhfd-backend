@@ -254,6 +254,7 @@ const getDetails = async (project_id) => {
           "created_date",
           'code_project_type_id',
           'code_maintenance_eligibility_type_id',
+          'current_project_status_id',
           [
             sequelize.literal(`(
               SELECT COUNT([project_proposed_action].[project_id])
@@ -337,6 +338,8 @@ const getDetails = async (project_id) => {
             required: false,
             attributes: [
               'code_phase_type_id',
+              'planned_start_date',
+              'actual_start_date',
               'project_status_id'
             ],
             include: {
@@ -361,7 +364,7 @@ const getDetails = async (project_id) => {
                 ]
               }]
             }
-          }, 
+          },
           {
             model: ProjectPartner,
             required: false,
@@ -511,7 +514,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         "onbase_project_number",
         "created_date",
         'code_project_type_id',
-        "current_project_status_id",
+        'current_project_status_id',
         [
           sequelize.literal(`(
             SELECT COUNT([project_proposed_action].[project_id])
