@@ -4,7 +4,7 @@ import {
   CARTO_URL,
   MAIN_PROJECT_TABLE
 } from 'bc/config/config.js';
-
+import projectService from 'bc/services/project.service.js';
 const Projects = db.project;
 const ProjectPartner = db.projectPartner;
 const ProjectCounty = db.projectCounty;
@@ -207,12 +207,14 @@ export const projectsByFilters = async (projects, filters) => {
     newprojects = newprojects.filter((proj) => proj?.project_name.toLowerCase().includes(filterName));
   }
   // STATUS
-  if ((filters.status?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.status.includes(proj?.project_status?.code_phase_type?.code_status_type?.code_status_type_id) );
+  if ((filters.status?.length || 0) > 0) {    
+    newprojects = newprojects.filter((proj) => filters.status.includes(projectService.getCurrentProjectStatus(proj)?.code_phase_type?.code_status_type?.code_status_type_id));
+    // newprojects = newprojects.filter((proj) =>proj?.project_statuses.some((p) => filters.status.includes(p?.code_phase_type?.code_status_type?.code_status_type_id)) );
   }
 //   // PROJECT TYPE
   if ((filters.projecttype?.length || 0) > 0) {
-    newprojects = newprojects.filter((proj) => filters.projecttype.includes(proj?.project_status?.code_phase_type?.code_project_type?.code_project_type_id));
+    // newprojects = newprojects.filter((proj) => filters.projecttype.includes(proj?.project_status?.code_phase_type?.code_project_type?.code_project_type_id));
+    newprojects = newprojects.filter((proj) => filters.projecttype.includes(proj?.code_project_type.code_project_type_id));
   }
 //   // SERVICE AREA
   if ((filters.servicearea?.length || 0) > 0) {
