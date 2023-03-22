@@ -1,6 +1,7 @@
 import express from 'express';
 import Multer from 'multer';
 import bcrypt from 'bcryptjs';
+import { parse } from 'wkt';
 import https from 'https';
 import UserService from 'bc/services/user.service.js';
 import auth from 'bc/auth/auth.js';
@@ -138,95 +139,169 @@ router.get('/me', auth, async (req, res) => {
   result1['status'] = user.status;
   result1['business_associate_contact'] = user.business_associate_contact;
   
-
-  if (req.user.zoomarea) {
-    organization_query = req.user.zoomarea;
-  } else {
-    organization_query = ORGANIZATION_DEFAULT;
-  }
+  const LOCALGOV = 'local_government';
+  const COUNTY = 'county';
+  const SERVICEAREA = 'service_area';
+  let type = LOCALGOV;
+  
   try {
-    const newProm = new Promise((resolve, reject) => {
-      const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM mhfd_zoom_to_areas WHERE aoi = '${organization_query}' `;
-      const URL = `${CARTO_URL}&q=${sql}`;
-      let result = [];
-      //console.log('URL', URL);
-      https.get(URL, response => {
-        console.log('status ' + response.statusCode);
-        if (response.statusCode === 200) {
-          let str = '';
-          response.on('data', function (chunk) {
-            str += chunk;
-          });
-          response.on('end', function () {
-            result = JSON.parse(str).rows;
-            if (result.length > 0) {
-              const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
-              let latitude_array = [];
-              let longitude_array = [];
-              console.log('COORDENADAS', all_coordinates);
-              for (const key in all_coordinates[0]) {
-                const row = JSON.stringify(all_coordinates[0][key]).replace("[", "").replace("]", "").split(',')
-                let coordinate_num = [];
-                coordinate_num.push(parseFloat(row[0]));
-                coordinate_num.push(parseFloat(row[1]));
-                longitude_array.push(parseFloat(row[0]));
-                latitude_array.push(parseFloat(row[1]));
-                polygon.push(coordinate_num);
-              }
-              const latitude_min = Math.min.apply(Math, latitude_array);
-              const latitude_max = Math.max.apply(Math, latitude_array);
-              const longitude_min = Math.min.apply(Math, longitude_array);
-              const longitude_max = Math.max.apply(Math, longitude_array);
-              coordinates = {
-                longitude: (longitude_max + longitude_min) / 2,
-                latitude: (latitude_max + latitude_min) / 2
-              };
+    if (req.user.zoomarea) {
+      if (req.user.zoomarea.includes('County')) {
+        type = COUNTY;
+        organization_query = req.user.zoomarea.replace(' County', '');
+      } else if (req.user.zoomarea.includes('Service Area')) {
+        type = SERVICEAREA;
+        organization_query = req.user.zoomarea.replace(' Service Area', '');
+      } else if (req.user.zoomarea == "Mile High Flood District") {
+        type = 'MHFD';
+        organization_query = req.user.zoomarea;
+      } else {
+        organization_query = req.user.zoomarea;
+      }
+    } else {
+      organization_query = ORGANIZATION_DEFAULT;
+    }
+    let geom = `Shape.STEnvelope().STAsText() as bbox, `;
+    let query = '';
+    switch (type) {
+      case SERVICEAREA:
+        query = `SELECT ${geom}
+        code_service_area_id,
+        service_area_name FROM CODE_SERVICE_AREA_4326
+        WHERE service_area_name = '${organization_query}'
+        `;
+        break;
+      case COUNTY: 
+        query = `SELECT  ${geom}
+        state_county_id,
+        county_name FROM CODE_STATE_COUNTY_4326
+        WHERE county_name = '${organization_query}'
+        `;
+        break
+      case LOCALGOV:
+        query = `SELECT  ${geom}
+        code_local_government_id,
+        local_government_name FROM CODE_LOCAL_GOVERNMENT_4326
+        WHERE local_government_name = '${organization_query}'
+        `;
+        break;
+      default:
+        query = `SELECT  ${geom}
+        OBJECTID,
+        'Mile High Flood District' as name FROM MHFD_BOUNDARY_4326`
+        break;
+    }
+ 
+    const proms = [
+      db.sequelize.query(query),
+    ];
+    const solved = await Promise.all(proms);
+    const [geomData] = solved[0];
+    const all_coordinates = geomData.map(result => {
+      return parse(result.bbox)?.coordinates;
+    })[0];
+    let latitude_array = [];
+    let longitude_array = [];
+    for (const key in all_coordinates[0]) {
+      const row = JSON.stringify(all_coordinates[0][key]).replace("[", "").replace("]", "").split(',')
+      let coordinate_num = [];
+      coordinate_num.push(parseFloat(row[0]));
+      coordinate_num.push(parseFloat(row[1]));
+      longitude_array.push(parseFloat(row[0]));
+      latitude_array.push(parseFloat(row[1]));
+      polygon.push(coordinate_num);
+    }
+    const latitude_min = Math.min.apply(Math, latitude_array);
+    const latitude_max = Math.max.apply(Math, latitude_array);
+    const longitude_min = Math.min.apply(Math, longitude_array);
+    const longitude_max = Math.max.apply(Math, longitude_array);
+    coordinates = {
+      longitude: (longitude_max + longitude_min) / 2,
+      latitude: (latitude_max + latitude_min) / 2
+    };
+    console.log('coordinates', coordinates, 'polygon', polygon);
+    // const newProm = new Promise((resolve, reject) => {
+    //   const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM mhfd_zoom_to_areas WHERE aoi = '${organization_query}' `;
+    //   const URL = `${CARTO_URL}&q=${sql}`;
+    //   let result = [];
+    //   //console.log('URL', URL);
+    //   https.get(URL, response => {
+    //     console.log('status ' + response.statusCode);
+    //     if (response.statusCode === 200) {
+    //       let str = '';
+    //       response.on('data', function (chunk) {
+    //         str += chunk;
+    //       });
+    //       response.on('end', function () {
+    //         result = JSON.parse(str).rows;
+    //         if (result.length > 0) {
+    //           const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
+    //           let latitude_array = [];
+    //           let longitude_array = [];
+    //           console.log('COORDENADAS', all_coordinates);
+    //           for (const key in all_coordinates[0]) {
+    //             const row = JSON.stringify(all_coordinates[0][key]).replace("[", "").replace("]", "").split(',')
+    //             let coordinate_num = [];
+    //             coordinate_num.push(parseFloat(row[0]));
+    //             coordinate_num.push(parseFloat(row[1]));
+    //             longitude_array.push(parseFloat(row[0]));
+    //             latitude_array.push(parseFloat(row[1]));
+    //             polygon.push(coordinate_num);
+    //           }
+    //           const latitude_min = Math.min.apply(Math, latitude_array);
+    //           const latitude_max = Math.max.apply(Math, latitude_array);
+    //           const longitude_min = Math.min.apply(Math, longitude_array);
+    //           const longitude_max = Math.max.apply(Math, longitude_array);
+    //           coordinates = {
+    //             longitude: (longitude_max + longitude_min) / 2,
+    //             latitude: (latitude_max + latitude_min) / 2
+    //           };
 
-            } else {
-              coordinates = {
-                longitude: -104.9063129121965,
-                latitude: 39.768682416183
-              };
-              //console.log('NO HAY DATOS');
-              polygon = [
-                [
-                  -105.32366831,
-                  39.40578787
-                ],
-                [
-                  -105.32366831,
-                  40.13157697
-                ],
-                [
-                  -104.48895751,
-                  40.13157697
-                ],
-                [
-                  -104.48895751,
-                  39.40578787
-                ],
-                [
-                  -105.32366831,
-                  39.40578787
-                ]
-              ];
+    //         } else {
+    //           coordinates = {
+    //             longitude: -104.9063129121965,
+    //             latitude: 39.768682416183
+    //           };
+    //           //console.log('NO HAY DATOS');
+    //           polygon = [
+    //             [
+    //               -105.32366831,
+    //               39.40578787
+    //             ],
+    //             [
+    //               -105.32366831,
+    //               40.13157697
+    //             ],
+    //             [
+    //               -104.48895751,
+    //               40.13157697
+    //             ],
+    //             [
+    //               -104.48895751,
+    //               39.40578787
+    //             ],
+    //             [
+    //               -105.32366831,
+    //               39.40578787
+    //             ]
+    //           ];
 
-            }
+    //         }
 
-            resolve({
-              polygon: polygon,
-              coordinates: coordinates
-            });
+    //         resolve({
+    //           polygon: polygon,
+    //           coordinates: coordinates
+    //         });
 
-          });
-        }
-      }).on('error', err => {
-        logger.error(`failed call to  with error  ${err}`)
+    //       });
+    //     }
+    //   }).on('error', err => {
+    //     logger.error(`failed call to  with error  ${err}`)
 
-      });
-    });
+    //   });
+    // });
 
-    const respuesta = await newProm;
+    // const respuesta = await newProm;
 
   } catch (error) {
     logger.error(error);
