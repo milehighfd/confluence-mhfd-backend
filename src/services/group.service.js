@@ -29,7 +29,7 @@ const getStatus = async () => {
   const groups = codeStatusType.map((data) => {
     return { value: data.status_name, id: data.code_status_type_id };
   });
-  groups.push( { value:'No group available', id:-1 } );
+  groups.push( { value:'No Group Available', id:-1 } );
   return groups;
 }
 
