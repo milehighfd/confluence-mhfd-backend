@@ -214,7 +214,8 @@ const getFilters = async (req, res) => {
   });
   data.projecttype.forEach((d) => {
     d.counter = projects.reduce((pre, current) => {
-      if (current?.project_status?.code_phase_type?.code_project_type?.code_project_type_id === d.id) {
+      // if (current?.project_statuses[0]?.code_phase_type?.code_project_type?.code_project_type_id === d.id) {
+      if (current?.code_project_type.code_project_type_id === d.id) {
         return pre + 1;
       } 
       return pre;

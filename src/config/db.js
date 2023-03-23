@@ -251,7 +251,7 @@ db.project.hasMany(db.projectDetail, { foreignKey: 'project_id' });
 db.project.hasMany(db.projectStaff, { foreignKey: 'project_id' });
 db.projectStaff.belongsTo(db.mhfdStaff, { foreignKey: 'mhfd_staff_id' });
 
-db.project.hasOne(
+db.project.hasMany(
   db.projectStatus,
   { foreignKey: 'project_id' }
 );

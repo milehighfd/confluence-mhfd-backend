@@ -425,7 +425,8 @@ const listProjects = async (req, res) => {
   if (group === 'status') {
     const groupProjects = {};
     projects.forEach(project => {
-      const status = project.project_status?.code_phase_type?.code_status_type?.code_status_type_id || -1;
+      
+      const status = projectService.getCurrentProjectStatus(project)?.code_phase_type?.code_status_type?.code_status_type_id || -1;
       if (!groupProjects[status]) {
         groupProjects[status] = [];
       }

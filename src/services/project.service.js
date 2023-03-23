@@ -254,6 +254,7 @@ const getDetails = async (project_id) => {
           "created_date",
           'code_project_type_id',
           'code_maintenance_eligibility_type_id',
+          'current_project_status_id',
           [
             sequelize.literal(`(
               SELECT COUNT([project_proposed_action].[project_id])
@@ -336,7 +337,10 @@ const getDetails = async (project_id) => {
             model: ProjectStatus,
             required: false,
             attributes: [
-              'code_phase_type_id'
+              'code_phase_type_id',
+              'planned_start_date',
+              'actual_start_date',
+              'project_status_id'
             ],
             include: {
               model: CodePhaseType,
@@ -360,7 +364,7 @@ const getDetails = async (project_id) => {
                 ]
               }]
             }
-          }, 
+          },
           {
             model: ProjectPartner,
             required: false,
@@ -510,6 +514,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         "onbase_project_number",
         "created_date",
         'code_project_type_id',
+        'current_project_status_id',
         [
           sequelize.literal(`(
             SELECT COUNT([project_proposed_action].[project_id])
@@ -622,7 +627,8 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
           attributes: [
             'code_phase_type_id',
             'planned_start_date',
-            'actual_start_date'
+            'actual_start_date',
+            'project_status_id'
           ],
           include: {
             model: CodePhaseType,
@@ -835,6 +841,12 @@ const insertIntoArcGis = async (geom, projectid, projectname) => {
     }
   }  
 }
+
+const getCurrentProjectStatus = (project) => {
+  const current = project?.project_statuses?.find(ps => ps.project_status_id === project.current_project_status_id);
+  return current;
+}
+
 export default {
   getAll,
   deleteByProjectId,
@@ -846,5 +858,6 @@ export default {
   insertIntoArcGis,
   getAuthenticationFormData,
   createRandomGeomOnARCGIS,
-  updateProject
+  updateProject,
+  getCurrentProjectStatus
 };
