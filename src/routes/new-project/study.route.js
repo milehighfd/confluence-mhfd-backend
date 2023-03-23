@@ -24,6 +24,8 @@ import moment from 'moment';
 const ProjectLocalGovernment = db.projectLocalGovernment;
 const ProjectCounty = db.projectCounty;
 const ProjectServiceArea = db.projectServiceArea;
+const CodePhaseType = db.codePhaseType;
+const Project = db.project;
 
 
 const router = express.Router();
@@ -56,13 +58,35 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   let result = [];
 
     try {
+      const codePhaseForCapital = await CodePhaseType.findOne({
+        where: {
+          code_phase_type_id: defaultProjectId
+        }
+      });
+      const { duration, duration_type } = codePhaseForCapital;
+      const formatDuration = duration_type[0].toUpperCase();
       const data = await projectService.saveProject(CREATE_PROJECT_TABLE_V2, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       result.push(data);
       const { project_id } = data;
       if (idsArray.length) {
         await cartoService.insertToCartoStudy(CREATE_PROJECT_TABLE, project_id, parsedIds);
       }
-      await projectStatusService.saveProjectStatusFromCero(defaultProjectId, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
+      const response = await projectStatusService.saveProjectStatusFromCero(defaultProjectId, 
+        project_id, 
+        moment().format('YYYY-MM-DD HH:mm:ss'), 
+        moment().format('YYYY-MM-DD HH:mm:ss'), 
+        moment().format('YYYY-MM-DD HH:mm:ss'), 
+        moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss'), 
+        moment().format('YYYY-MM-DD HH:mm:ss'), 
+        Number(duration), 
+        moment().format('YYYY-MM-DD HH:mm:ss'), 
+        moment().format('YYYY-MM-DD HH:mm:ss'), 
+        creator, 
+        creator);
+      const resres = await Project.update({
+        current_project_status_id: response.project_status_id
+      },{ where: { project_id: project_id }});
+      console.log(resres);
       await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan, cleanStringValue(projectname), projectsubtype);
       await projectPartnerService.saveProjectPartner(sponsor, cosponsor, project_id);
       

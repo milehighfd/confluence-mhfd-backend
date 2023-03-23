@@ -14,7 +14,8 @@ import {
 import { sendBoardNotification } from 'bc/services/user.service.js';
 import boardService from 'bc/services/board.service.js';
 import projectService from 'bc/services/project.service.js';
-
+import moment from 'moment';
+import projectStatusService from 'bc/services/projectStatus.service.js';
 const router = express.Router();
 const Board = db.board;
 const User = db.user;
@@ -22,6 +23,7 @@ const BoardProject = db.boardProject;
 const BoardLocality = db.boardLocality;
 const ProjectStatus = db.projectStatus;
 const CodePhaseType = db.codePhaseType;
+const Project = db.project;
 
 router.get('/coordinates/:pid', async (req, res) => {
     let { pid } = req.params;
@@ -349,7 +351,7 @@ const sendBoardProjectsToProp = async (boards, prop) => {
     }
 }
 
-const updateProjectStatus = async (boards, status) => {
+const updateProjectStatus = async (boards, status, creator) => {
     for (var i = 0 ; i < boards.length ; i++) {
         let board = boards[i];
         let boardProjects = await BoardProject.findAll({
@@ -381,8 +383,29 @@ const updateProjectStatus = async (boards, status) => {
                             }
                         });
                         await ProjectStatus.update({
-                            code_phase_type_id: nextCodePhase.code_phase_type_id
+                            actual_end_date: moment().format('YYYY-MM-DD HH:mm:ss')
                         }, { where: { project_status_id: currentProjectStatus.project_status_id } });
+
+                        const { duration, duration_type } = nextCodePhase;
+                        const formatDuration = duration_type[0].toUpperCase();
+                        const responseOfNewStatus = await projectStatusService.saveProjectStatusFromCero(
+                            nextCodePhase.code_phase_type_id, 
+                            bp.project_id,
+                            moment().format('YYYY-MM-DD HH:mm:ss'), 
+                            moment().add(1, 'd').format('YYYY-MM-DD HH:mm:ss'),
+                            moment().format('YYYY-MM-DD HH:mm:ss'), 
+                            moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss'), 
+                            moment().format('YYYY-MM-DD HH:mm:ss'), 
+                            Number(duration), 
+                            moment().format('YYYY-MM-DD HH:mm:ss'), 
+                            moment().format('YYYY-MM-DD HH:mm:ss'), 
+                            creator, 
+                            creator
+                        );
+                        const resres = await Project.update({
+                            current_project_status_id: responseOfNewStatus.project_status_id
+                          },{ where: { project_id: bp.project_id }});
+                        console.log(resres);
                         logger.info('Updated', bp.project_id);
                 }
             } catch(e) {
@@ -471,7 +494,7 @@ const updateBoards = async (board, status, comment, substatus) => {
     }
 }
 
-const moveCardsToNextLevel = async (board) => {
+const moveCardsToNextLevel = async (board, creator) => {
     logger.info('moveCardsToNextLevel');
     let boards = await Board.findAll({
         where: {
@@ -506,10 +529,10 @@ const moveCardsToNextLevel = async (board) => {
         logger.info(`Sending ${boards.length} to district`);
         await sendBoardProjectsToDistrict(boards);
         logger.info(`Update ${boards.length} as Requested`);
-        await updateProjectStatus(boards, 2);
+        await updateProjectStatus(boards, 2, creator);
         return {}
     } else if (board.type === 'WORK_PLAN') {
-        await updateProjectStatus(boards, 3);
+        await updateProjectStatus(boards, 3, creator);
         return {}
     }
 }
@@ -558,7 +581,7 @@ router.get('/:boardId/boards/:type', async (req, res) => {
                         _id : boardFrom._id
                     }
                 })
-                let boardFrom = await Board.findOne({
+                boardFrom = await Board.findOne({
                     where: {
                         locality,
                         type,
@@ -576,7 +599,7 @@ router.get('/:boardId/boards/:type', async (req, res) => {
         logger.info (`BOARD FROM: ${boardFrom}`);
         bids.push({
             locality,
-            status: boardFrom ? boardFrom.status : 'Under Review',
+            status: boardFrom ? boardFrom.status : 'Approved',
             submissionDate: boardFrom ? boardFrom.submissionDate : null,
             substatus: boardFrom ? boardFrom.substatus : ''
         });
@@ -651,6 +674,8 @@ const sendMails = async (board, fullName) => {
 
 router.put('/:boardId', [auth], async (req, res) => {
     const { boardId } = req.params;
+    const user = req.user;
+    const creator = user.email;
     logger.info(`Attempting to update board ${boardId}`);
     const { status, comment, substatus } = req.body;
     let board = await Board.findOne({
@@ -664,7 +689,7 @@ router.put('/:boardId', [auth], async (req, res) => {
         if (status === 'Approved' && board.status !== status) {
             logger.info(`Approving board ${boardId}`);
             //sendMails(board, req.user.name)
-            let r = await moveCardsToNextLevel(board);
+            let r = await moveCardsToNextLevel(board, creator);
             bodyResponse = {
                 ...bodyResponse,
                 ...r

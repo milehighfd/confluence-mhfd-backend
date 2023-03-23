@@ -27,9 +27,25 @@ const updateProjectCost = async (cost, project_id) => {
   }
 }
 
+const updateProjectOverhead = async (cost, project_id, code_cost_type_id) => {
+  try {
+    const response  = await ProjectCost.update({
+      ...cost
+    },{ where: { 
+      project_id: project_id,
+      code_cost_type_id: code_cost_type_id 
+    }});
+    logger.info('cost created');
+    return response;
+  } catch(error) {
+    logger.error('error creation cost');
+    throw error;
+  }
+}
 
 
 export default {
   saveProjectCost,
-  updateProjectCost
+  updateProjectCost,
+  updateProjectOverhead
 };

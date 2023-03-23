@@ -26,6 +26,7 @@ const ProjectLocalGovernment = db.projectLocalGovernment;
 const ProjectCounty = db.projectCounty;
 const ProjectServiceArea = db.projectServiceArea;
 const Project = db.project;
+const CodePhaseType = db.codePhaseType;
 
 const router = express.Router();
 const multer = Multer({
@@ -265,12 +266,29 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const overheadcostIds = [2,6,7,8,9,10,12,11,13];
   const aditionalCostId = 4;
     try {
+      const codePhaseForCapital = await CodePhaseType.findOne({
+        where: {
+          code_phase_type_id: 5
+        }
+      });
+      const { duration, duration_type } = codePhaseForCapital;
+      const formatDuration = duration_type[0].toUpperCase();
       const data = await projectService.saveProject(CREATE_PROJECT_TABLE_V2, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       result.push(data)
       const { project_id } = data;
-      console.log(geom);
       await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
-      const response = await projectStatusService.saveProjectStatusFromCero(5, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator);
+      const response = await projectStatusService.saveProjectStatusFromCero(5, 
+        project_id, 
+        moment().format('YYYY-MM-DD HH:mm:ss'), 
+        moment().format('YYYY-MM-DD HH:mm:ss'), 
+        moment().format('YYYY-MM-DD HH:mm:ss'), 
+        moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss'), 
+        moment().format('YYYY-MM-DD HH:mm:ss'), 
+        Number(duration), 
+        moment().format('YYYY-MM-DD HH:mm:ss'), 
+        moment().format('YYYY-MM-DD HH:mm:ss'), 
+        creator, 
+        creator);
       const resres = await Project.update({
         current_project_status_id: response.project_status_id
       },{ where: { project_id: project_id }});
@@ -377,8 +395,9 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const splitedJurisdiction = jurisdiction.split(',');
   const splitedCounty = county.split(',');
   const splitedServicearea = servicearea.split(',');
-  const splitedOverheadcost = overheadcost.split(',');
-  const overheadcostIds = [2,7,8,9,10,12,11,13];
+  const splitedOverheadcost = overheadcost.split(',').filter((e)=> e >= 0);
+  console.log(splitedOverheadcost, 'splitedOverheadcost');
+  const overheadcostIds = [2,6,7,8,9,10,12,11,13];
   const aditionalCostId = 4;
   try {
     const data = await projectService.updateProject(project_id, cleanStringValue(projectname), cleanStringValue(description), moment().format('YYYY-MM-DD HH:mm:ss'), creator);
@@ -390,24 +409,25 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     await projectPartnerService.updateProjectPartner(sponsor, cosponsor, project_id);
     try {
       //creating aditional cost
-      await costService.updateProjectCost({
+      await costService.updateProjectOverhead({
         cost: Number(additionalcost),
         code_cost_type_id: aditionalCostId,
         cost_description: additionalcostdescription,
         modified_by: creator,
       },
-        project_id
+        project_id,
+        aditionalCostId
       );
       //creating overhead cost
       for (let index = 0; index < 9; index++) {
-        await costService.saveProjectCost({
-          project_id: project_id,
+        await costService.updateProjectOverhead({
           cost: Number(splitedOverheadcost[index]),
           code_cost_type_id: overheadcostIds[index],
           cost_description: index === 0 ? overheadcostdescription : null,
           modified_by: creator,
         },
-        project_id
+        project_id,
+        overheadcostIds[index]
         );
       }
     } catch (error) {
