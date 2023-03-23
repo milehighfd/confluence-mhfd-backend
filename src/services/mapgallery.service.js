@@ -17,8 +17,9 @@ export const getCoordsByProjectId = async (projectid, isDev) => {
   if (isDev) {
     table = CREATE_PROJECT_TABLE;
   }
-  let fields = ['ST_AsGeoJSON(the_geom) as the_geom3'];
+  let fields = ['ST_AsGeoJSON(ST_UNION(the_geom)) as the_geom3'];
   let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
+  console.log('SQL AL CARTO TO GET COORDS', SQL);
   let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   const data = await needle('get', URL, { json: true });
   if (data.statusCode === 200 && data.body.rows.length > 0) {
