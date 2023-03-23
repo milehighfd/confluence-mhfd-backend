@@ -327,7 +327,8 @@ const getDetails = async (project_id) => {
             required: false,
             attributes: [
               'code_cost_type_id',
-              'cost'
+              'cost',
+              'cost_description'
             ],
             // where: {
             //   code_cost_type_id: 1

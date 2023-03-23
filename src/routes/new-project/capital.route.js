@@ -20,10 +20,12 @@ import logger from 'bc/config/logger.js';
 import { addProjectToBoard, cleanStringValue, updateProjectsInBoard } from 'bc/routes/new-project/helper.js';
 import moment from 'moment';
 import projectPartnerService from 'bc/services/projectPartner.service.js';
+import costService from 'bc/services/cost.service.js';
 
 const ProjectLocalGovernment = db.projectLocalGovernment;
 const ProjectCounty = db.projectCounty;
 const ProjectServiceArea = db.projectServiceArea;
+const Project = db.project;
 
 const router = express.Router();
 const multer = Multer({
@@ -259,17 +261,49 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const splitedJurisdiction = jurisdiction.split(',');
   const splitedCounty = county.split(',');
   const splitedServicearea = servicearea.split(',');
+  const splitedOverheadcost = overheadcost.split(',');
+  const overheadcostIds = [2,6,7,8,9,10,12,11,13];
+  const aditionalCostId = 4;
     try {
       const data = await projectService.saveProject(CREATE_PROJECT_TABLE_V2, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       result.push(data)
       const { project_id } = data;
+      console.log(geom);
       await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
-      await projectStatusService.saveProjectStatusFromCero(5, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
+      const response = await projectStatusService.saveProjectStatusFromCero(5, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator);
+      const resres = await Project.update({
+        current_project_status_id: response.project_status_id
+      },{ where: { project_id: project_id }});
+      console.log(resres);
       //await attachmentService.uploadFiles(user, req.files, project_id, cover);
       const projectsubtype = '';
       await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan, projectname, projectsubtype);
       await projectPartnerService.saveProjectPartner(sponsor, cosponsor, project_id);
-
+      try {
+        //creating aditional cost
+        await costService.saveProjectCost({
+          project_id: project_id,
+          cost: Number(additionalcost),
+          code_cost_type_id: aditionalCostId,
+          cost_description: additionalcostdescription,
+          created_by: creator,
+          modified_by: creator,
+        })
+        //creating overhead cost
+        for (let index = 0; index < 9; index++) {
+          await costService.saveProjectCost({
+            project_id: project_id,
+            cost: Number(splitedOverheadcost[index]),
+            code_cost_type_id: overheadcostIds[index],
+            cost_description: index === 0 ? overheadcostdescription : null,
+            created_by: creator,
+            modified_by: creator,
+          })
+        }
+      } catch (error) {
+        logger.error('Error', error)
+        throw error;
+      }
       for (const j of splitedJurisdiction) {
         await ProjectLocalGovernment.create({
           code_local_government_id: parseInt(j),
@@ -343,6 +377,9 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const splitedJurisdiction = jurisdiction.split(',');
   const splitedCounty = county.split(',');
   const splitedServicearea = servicearea.split(',');
+  const splitedOverheadcost = overheadcost.split(',');
+  const overheadcostIds = [2,7,8,9,10,12,11,13];
+  const aditionalCostId = 4;
   try {
     const data = await projectService.updateProject(project_id, cleanStringValue(projectname), cleanStringValue(description), moment().format('YYYY-MM-DD HH:mm:ss'), creator);
     result.push(data)
@@ -351,6 +388,32 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     const projecttype = 'Capital';
     updateProjectsInBoard(project_id, cleanStringValue(projectname), projecttype, projectsubtype);
     await projectPartnerService.updateProjectPartner(sponsor, cosponsor, project_id);
+    try {
+      //creating aditional cost
+      await costService.updateProjectCost({
+        cost: Number(additionalcost),
+        code_cost_type_id: aditionalCostId,
+        cost_description: additionalcostdescription,
+        modified_by: creator,
+      },
+        project_id
+      );
+      //creating overhead cost
+      for (let index = 0; index < 9; index++) {
+        await costService.saveProjectCost({
+          project_id: project_id,
+          cost: Number(splitedOverheadcost[index]),
+          code_cost_type_id: overheadcostIds[index],
+          cost_description: index === 0 ? overheadcostdescription : null,
+          modified_by: creator,
+        },
+        project_id
+        );
+      }
+    } catch (error) {
+      logger.error('Error', error)
+      throw error;
+    }
     if (splitedJurisdiction) await ProjectLocalGovernment.destroy({
       where: {
         project_id: project_id

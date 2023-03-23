@@ -13,6 +13,7 @@ import logger from 'bc/config/logger.js';
      try {
       const data = await needle('post', CARTO_URL, query, { json: true });
         if (data.statusCode === 200) {
+          logger.info(JSON.stringify(data.body), 'carto response ')
           console.log(data.body);
         }else {
           logger.error('bad status ' + data.statusCode + '  -- ' + insertQuery + JSON.stringify(data.body, null, 2));

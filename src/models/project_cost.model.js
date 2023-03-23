@@ -2,7 +2,8 @@ export default (sequelize, DataType) => {
   const ProjectCost = sequelize.define('project_cost', {
     project_cost_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     project_id: {
       type: DataType.INTEGER,
@@ -24,11 +25,19 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
     },
     created: {
-      type: DataType.DATE
+      type: DataType.DATE,
+      defaultValue: DataType.NOW
     },
     last_modified: {
-      type: DataType.DATE
-    }  
+      type: DataType.DATE,
+      defaultValue: DataType.NOW
+    },
+    agreement_number: {
+      type: DataType.STRING
+    },
+    amendment_number: {
+      type: DataType.STRING
+    }
   }, {
     freezeTableName: true,
     tableName: 'project_cost',
