@@ -36,13 +36,15 @@ router.post('/create-group', [auth], async (req, res) => {
         }
       });
       if (hasStatus) {
-        
+        groups.push(hasStatus);
+      } else {
+        groups.push(ProjectStatus.create(newStatus));
       }
-      groups.push(ProjectStatus.create(newStatus));
     }
     const answer = await Promise.all(groups);
     res.send(answer);
   } catch (error) {
+    logger.error(`Error creating the group of statuses: ${error}`);
     res.status(500).send(error);
   }
   // code_phase_type  
