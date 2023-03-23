@@ -545,10 +545,29 @@ router.get('/:boardId/boards/:type', async (req, res) => {
             where: {
                 locality,
                 type,
-                year: board.year,
-                status: 'Approved'
+                year: board.year
             }
         })
+        
+        if(boardFrom && 'status' in boardFrom && boardFrom.status !== 'Approved'){
+            try {
+                const response = await Board.update({
+                    status : "Approved"
+                },{
+                    where : {
+                        _id : boardFrom._id
+                    }
+                })
+                // if(!response){
+                    console.log(response);
+                // }
+            } catch (error) {
+                logger.error('update error:', error);
+                throw error;
+            }
+            
+        }
+
         logger.info (`BOARD FROM: ${boardFrom}`);
         bids.push({
             locality,
