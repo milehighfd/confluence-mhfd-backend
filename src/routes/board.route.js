@@ -551,16 +551,21 @@ router.get('/:boardId/boards/:type', async (req, res) => {
         
         if(boardFrom && 'status' in boardFrom && boardFrom.status !== 'Approved'){
             try {
-                const response = await Board.update({
+                await Board.update({
                     status : "Approved"
                 },{
                     where : {
                         _id : boardFrom._id
                     }
                 })
-                // if(!response){
-                    console.log(response);
-                // }
+                let boardFrom = await Board.findOne({
+                    where: {
+                        locality,
+                        type,
+                        year: board.year,
+                        status: "Approved"
+                    }
+                })
             } catch (error) {
                 logger.error('update error:', error);
                 throw error;
