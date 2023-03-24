@@ -56,6 +56,32 @@ const CodeStudyReason = db.codeStudyReason;
 const User = db.user;
 const Op = sequelize.Op;
 
+async function getCentroidOfProjectId (projectid) {
+  const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid FROM "denver-mile-high-admin".mhfd_projects_test where projectid = ${projectid}`;
+  const LINE_URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
+  let data;
+  try {
+    const newProm1 = new Promise((resolve, reject) => {
+      https.get(LINE_URL, response => {
+         if (response.statusCode === 200) {
+            let str = '';
+            response.on('data', function (chunk) {
+               str += chunk;
+            });
+            response.on('end', async function () {
+               resolve(JSON.parse(str).rows);
+            })
+         }
+      });
+   });
+    data = await newProm1;
+    console.log('the data is ', data);
+    return data;
+  } catch (e) {
+    console.error('Error with QUERY ', e);
+    return [];
+  }
+}
 async function getProblemByProjectId(projectid, sortby, sorttype) {
   let data = [];
   const LINE_SQL = `select ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]}, ${PROPSPROBLEMTABLES.problem_boundary[7]}  as ${PROPSPROBLEMTABLES.problems[7]} from ${PROBLEM_TABLE}  
@@ -246,7 +272,7 @@ const  getProjectsDeprecated  = async (include, bounds, offset = 1, limit = 1200
 
 const getDetails = async (project_id) => {
   try {
-    const [projectPromise, problems] = await Promise.all([
+    const [projectPromise, problems, centroidProj] = await Promise.all([
       Project.findByPk(project_id, {
         attributes: [
           "project_id",
@@ -492,7 +518,8 @@ const getDetails = async (project_id) => {
         ],
         order: [['created_date', 'DESC']]
       }),
-      getProblemByProjectId(project_id, PROPSPROBLEMTABLES.problems[6], 'asc')
+      getProblemByProjectId(project_id, PROPSPROBLEMTABLES.problems[6], 'asc'),
+      getCentroidOfProjectId(project_id)
     ]);
     if (!projectPromise) {
       return {
@@ -502,7 +529,7 @@ const getDetails = async (project_id) => {
     }
     let project = projectPromise.dataValues;
     logger.info(`Adding problems ${JSON.stringify(problems)}`)
-    project = { ...project, problems: problems };
+    project = { ...project, problems: problems, centroid: centroidProj };
     return project;
   } catch (error) {
     logger.error(error);
