@@ -24,6 +24,46 @@ import logger from 'bc/config/logger.js';
      }
   }
 
+  const insertToAcquistion = async (table, geom, project_id) => {
+    const insertQuery = `INSERT INTO ${table} (the_geom, projectid)
+    VALUES(ST_GeomFromGeoJSON('${geom}'), '${project_id}')`;
+    const query = {
+      q: insertQuery
+    };
+   try {
+    const data = await needle('post', CARTO_URL, query, { json: true });
+      if (data.statusCode === 200) {
+        logger.info(JSON.stringify(data.body), 'carto response ')
+        console.log(data.body);
+      }else {
+        logger.error('bad status ' + data.statusCode + '  -- ' + insertQuery + JSON.stringify(data.body, null, 2));
+      }
+      return data.body;
+   } catch (error) {
+      logger.error(error, 'at', insertQuery);
+   }
+  }
+  const updateToCartoAcquistion = async (table, geom, project_id) => {
+    const hasGeom = (geom && geom !== 'undefined' && geom !== 'null');
+    const geomQuery = hasGeom ? `the_geom = ST_GeomFromGeoJSON('${geom}')` : '';
+    const updateQuery = `UPDATE ${table} SET ${geomQuery} WHERE projectid = ${project_id}`;
+
+    const query = {
+      q: updateQuery
+    };
+   try {
+    const data = await needle('post', CARTO_URL, query, { json: true });
+      if (data.statusCode === 200) {
+        console.log(data.body);
+      }else {
+        logger.error('bad status ' + data.statusCode + '  -- ' + updateQuery + JSON.stringify(data.body, null, 2));
+      }
+      return data.body;
+   } catch (error) {
+      logger.error(error, 'at', updateQuery);
+   }
+}
+
   const updateToCarto = async (table, geom, project_id) => {
     const hasGeom = (geom && geom !== 'undefined' && geom !== 'null');
     const geomQuery = hasGeom ? `the_geom = ST_GeomFromGeoJSON('${geom}')` : '';
@@ -86,5 +126,7 @@ const updateCartoStudy = async (table, project_id, parsedIds) => {
     insertToCarto,
     insertToCartoStudy,
     updateCartoStudy,
-    updateToCarto
+    updateToCarto,
+    insertToAcquistion,
+    updateToCartoAcquistion
   };

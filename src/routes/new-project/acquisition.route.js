@@ -54,7 +54,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       const data = await projectService.saveProject(CREATE_PROJECT_TABLE_V2, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       result.push(data)
       const { project_id } = data;
-      await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
+      await cartoService.insertToAcquistion(CREATE_PROJECT_TABLE, geom, project_id);
       //await projectStatusService.saveProjectStatusFromCero(defaultProjectId, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
       const response = await projectStatusService.saveProjectStatusFromCero(defaultProjectId, 
         project_id, 
@@ -129,7 +129,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   try {
     const data = await projectService.updateProject(project_id, cleanStringValue(projectname), cleanStringValue(description), moment().format('YYYY-MM-DD HH:mm:ss'), creator);
     result.push(data)
-    await cartoService.updateToCarto(CREATE_PROJECT_TABLE, geom, project_id);
+    await cartoService.updateToCartoAcquistion(CREATE_PROJECT_TABLE, geom, project_id);
     const projectsubtype = '';
     const projecttype = 'Acquisition';
     updateProjectsInBoard(project_id, cleanStringValue(projectname), projecttype, projectsubtype);
