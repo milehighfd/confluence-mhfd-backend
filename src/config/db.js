@@ -16,7 +16,7 @@ import groupNotes from 'bc/models/groupNotes.model.js';
 import codeRuleActionItem from 'bc/models/code_rule_action_item.model.js';
 import projectActionItem from 'bc/models/project_action_item.model.js'
 import projectstream from 'bc/models/projectstream.model.js';
-//import projectComponent from 'bc/models/projectComponent.model.js';
+import ProjectIndependentAction from 'bc/models/independent_action.model.js';
 import consultants from 'bc/models/consultants.model.js';
 import componentDependency from 'bc/models/componentDependency.model.js';
 import configuration from 'bc/models/configuration.model.js';
