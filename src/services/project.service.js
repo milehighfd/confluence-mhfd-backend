@@ -343,6 +343,8 @@ const getDetails = async (project_id) => {
               'code_phase_type_id',
               'planned_start_date',
               'actual_start_date',
+              'actual_end_date',
+              'planned_end_date',
               'project_status_id'
             ],
             include: {
@@ -644,6 +646,8 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
             'code_phase_type_id',
             'planned_start_date',
             'actual_start_date',
+            'actual_end_date',
+            'planned_end_date',
             'project_status_id'
           ],
           include: {
