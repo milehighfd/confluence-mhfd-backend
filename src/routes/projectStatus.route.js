@@ -10,16 +10,19 @@ const CodePhaseType = db.codePhaseType;
 const Op = sequelize.Op;
 
 router.post('/create-group', [auth], async (req, res) => {
-  const { project_id, code_project_type_id } = req.body;
+  const { project_id, phases } = req.body;
   const { name } = req.user;
   try {
+    /*
     const phases = await CodePhaseType.findAll({
       where: {
         code_project_type_id
       }
     }).map(result => result.dataValues);
+    */
     const groups = [];
     for (const element of phases) {
+      console.log(element);
       const newStatus = {
         project_id,
         code_phase_type_id: element.code_phase_type_id,
@@ -27,6 +30,11 @@ router.post('/create-group', [auth], async (req, res) => {
         phase_change_date: new Date(),
         created_date: new Date(),
         modified_date: new Date(),
+        planned_start_date: element.startDate,
+        planned_end_date: element.endDate,
+        actual_start_date: element.startDate,
+        actual_end_date: element.endDate,
+        duration: element.duration,
         last_modified_by: name
       }
       const hasStatus = await ProjectStatus.findOne({
@@ -42,7 +50,7 @@ router.post('/create-group', [auth], async (req, res) => {
       }
     }
     const answer = await Promise.all(groups);
-    res.send(answer);
+    res.status(201).send(answer);
   } catch (error) {
     logger.error(`Error creating the group of statuses: ${error}`);
     res.status(500).send(error);
