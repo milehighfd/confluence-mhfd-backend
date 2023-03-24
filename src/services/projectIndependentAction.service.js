@@ -3,9 +3,9 @@ import logger from 'bc/config/logger.js';
 
 const ProjectIndependentAction = db.projectIndependentAction;
 
-const getAll = (project_id) => {
+const getAll = async (project_id) => {
   try {
-    const list = ProjectIndependentAction.findAll({
+    const list = await ProjectIndependentAction.findAll({
       where: {
         project_id: project_id
       }
@@ -18,7 +18,7 @@ const getAll = (project_id) => {
 }
 
 const deleteByProjectId= async (project_id) => {
-  const project = ProjectIndependentAction.destroy({
+  const project = await ProjectIndependentAction.destroy({
     where: {
       project_id: project_id 
     }});
@@ -33,7 +33,7 @@ const deleteByProjectId= async (project_id) => {
 
 const saveProjectIndependentAction = async (component) => {
   try {
-    const ProjectIndependentAction = ProjectIndependentAction.create(component);
+    const ProjectIndependentAction = await ProjectIndependentAction.create(component);
     return ProjectIndependentAction;
   } catch(error) {
     console.log('the error ', error);
