@@ -494,14 +494,24 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
 
     for (const independent of JSON.parse(independetComponent)) {
       try {
-        await projectIndependentActionService.saveProjectIndependentAction({
-          action_name: independent.name,
-          project_id: project_id,
-          cost: Number(independent.cost),
-          action_status: independent.status,
-          last_modified_by: creator,
-          created_by: creator
-        });
+        if (independent && name in independent) {
+          await projectIndependentActionService.saveProjectIndependentAction({
+            action_name: independent.name,
+            project_id: project_id,
+            cost: Number(independent.cost),
+            action_status: independent.status,
+            last_modified_by: creator
+          });
+        }else {
+          await projectIndependentActionService.saveProjectIndependentAction({
+            action_name: independent.action_name,
+            project_id: project_id,
+            cost: Number(independent.cost),
+            action_status: independent.action_status,
+            last_modified_by: creator
+          });
+        }
+        
         logger.info('create independent component');
       } catch (error) {
         logger.error('cannot create independent component ' + error);

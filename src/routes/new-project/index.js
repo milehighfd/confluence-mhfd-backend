@@ -15,6 +15,8 @@ import acquisitionRouter from 'bc/routes/new-project/acquisition.route.js';
 import specialRouter from 'bc/routes/new-project/special.route.js';
 import copyRouter from 'bc/routes/new-project/copy.route.js';
 import projectProposedAction from "bc/services/projectProposedAction.service.js";
+import projectIndependentAction from "bc/services/projectIndependentAction.service.js";
+
 import db from 'bc/config/db.js';
 const CodeLocalGoverment = db.codeLocalGoverment;
 const Stream = db.stream;
@@ -1050,7 +1052,9 @@ router.get('/get-components-by-projectid/:projectid', [auth], async (req, res) =
 router.get('/get-independent-components-by-projectid/:projectid', [auth], async (req, res) => {
   const project_id = req.params.projectid;
   try {
-    return res.send([]);
+    const components = await projectIndependentAction.getAll(project_id);
+
+    return res.send(components);
   } catch (error) {
     res.status(500).send(error);
   }
