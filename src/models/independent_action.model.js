@@ -1,6 +1,6 @@
 export default  (sequelize, DataType) => {
   const ProjectIndependentAction = sequelize.define('independent_action', {
-    project_proposed_action_id: {
+    independent_action_id: {
       type: DataType.INTEGER,
       primaryKey: true,
       autoIncrement: true
