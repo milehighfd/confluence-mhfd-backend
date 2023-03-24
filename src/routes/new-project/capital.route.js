@@ -1,7 +1,7 @@
 import express from 'express';
 import Multer from 'multer';
 import needle from 'needle';
-//import projectComponentService from 'bc/services/projectComponent.service.js';
+import projectIndependentActionService from 'bc/services/projectIndependentAction.service.js';
 import projectProposedActionService from 'bc/services/projectProposedAction.service.js';
 import projectService from 'bc/services/project.service.js';
 import projectStatusService from 'bc/services/projectStatus.service.js';
@@ -350,15 +350,21 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         });
         logger.info('created county');
       }
-      /* console.log(independetComponent);
       for (const independent of JSON.parse(independetComponent)) {
         try {
-          await projectProposedActionService.saveProjectAction(0, '', independent.name, independent.status, project_id);
+          await projectIndependentActionService.saveProjectIndependentAction({
+            action_name: independent.name,
+            project_id: project_id,
+            cost: Number(independent.cost),
+            action_status: independent.status,
+            last_modified_by: creator,
+            created_by: creator
+          });
           logger.info('create independent component');
         } catch (error) {
           logger.error('cannot create independent component ' + error);
         }
-      } */
+      } 
 
       for (const component of JSON.parse(components)) { 
         try {
@@ -484,16 +490,24 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       logger.info('created county');
     }
     await projectProposedActionService.deleteByProjectId(project_id);
-    /* for (const independent of JSON.parse(independetComponent)) {
+    await projectIndependentActionService.deleteByProjectId(project_id);
+
+    for (const independent of JSON.parse(independetComponent)) {
       try {
-        const a = await projectProposedActionService.saveProjectAction(0, '', independent.name, independent.component_status, project_id);
-        console.log(a);
+        await projectIndependentActionService.saveProjectIndependentAction({
+          action_name: independent.name,
+          project_id: project_id,
+          cost: Number(independent.cost),
+          action_status: independent.status,
+          last_modified_by: creator,
+          created_by: creator
+        });
         logger.info('create independent component');
       } catch (error) {
         logger.error('cannot create independent component ' + error);
+        throw error;
       }
-    } */
-
+    } 
     for (const component of JSON.parse(components)) { 
       try {
         const action = {
@@ -507,6 +521,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         logger.info('create component');
       } catch (error) {
         logger.error('cannot create component ' + error);
+        throw error;
       }
     }
   } catch (error) {

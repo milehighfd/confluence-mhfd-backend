@@ -105,6 +105,8 @@ db.codestudytype = codeStudyType(sequelize, Sequelize);
 db.relatedstudy = relatedStudy(sequelize, Sequelize);
 db.streamstudy = streamStudy(sequelize, Sequelize);
 db.projectProposedAction = projectProposedAction(sequelize, Sequelize);
+db.projectIndependentAction = ProjectIndependentAction(sequelize, Sequelize);
+
 //db.projectComponent = projectComponent(sequelize, Sequelize);
 db.consultants = consultants(sequelize, Sequelize);
 db.componentdependency = componentDependency(sequelize, Sequelize);
