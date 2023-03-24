@@ -125,7 +125,26 @@ const getStreams = async () => {
   const groups = streams.map((data) => {
     return { value: data.stream_name, id: data.stream_id}
   });
-  return groups;
+
+  // const newGroup = groups.reduce((acc, curr) => {
+  //   const group = acc.find(item => item.value === curr.value);
+  //   if (group) {
+  //     group.id.push(curr.id);
+  //   } else {
+  //     acc.push({value: curr.value, id: [curr.id]});
+  //   }
+  //   return acc;
+  // }, []);
+  const newGroup = groups.reduce((acc, curr) => {
+    const group = acc.find(item => item.value === curr.value);
+    if (group) {
+      group.id += `,${curr.id}`;
+    } else {
+      acc.push({value: curr.value, id: curr.id.toString()});
+    }
+    return acc;
+  }, []);
+  return newGroup;
 }
 
 const getProjectType = async () => {
