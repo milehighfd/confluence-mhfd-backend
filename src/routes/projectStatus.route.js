@@ -3,8 +3,10 @@ import sequelize from 'sequelize';
 import logger from 'bc/config/logger.js';
 import db from 'bc/config/db.js';
 import auth from "bc/auth/auth.js";
+import projectService from 'bc/services/project.service.js';
 
 const router = express.Router();
+const Project = db.project;
 const ProjectStatus = db.projectStatus;
 const CodePhaseType = db.codePhaseType;
 const Op = sequelize.Op;
@@ -21,7 +23,8 @@ router.post('/create-group', [auth], async (req, res) => {
     }).map(result => result.dataValues);
     */
     const groups = [];
-    for (const element of phases) {
+    let currentIndex = -1;
+    for (const [index, element] of phases.entries()) {
       console.log(element);
       const newStatus = {
         project_id,
@@ -37,6 +40,9 @@ router.post('/create-group', [auth], async (req, res) => {
         duration: element.duration,
         last_modified_by: name
       }
+      if (element.current) {
+        currentIndex = index; 
+      }
       const hasStatus = await ProjectStatus.findOne({
         where: {
           project_id,
@@ -50,6 +56,20 @@ router.post('/create-group', [auth], async (req, res) => {
       }
     }
     const answer = await Promise.all(groups);
+    if (currentIndex !== -1) {
+      const update = await Project.findByPk(project_id, { raw: true });
+      logger.info(JSON.stringify(update));
+      if (update) {
+        update.current_project_status_id = answer[currentIndex].project_status_id;
+        await Project.update(update, {
+          where: {
+            project_id: project_id
+          }
+        });
+      }
+      projectService.updateProjectCurrentProjectStatusId(project_id, answer[currentIndex].project_status_id);
+    }
+    await projectService.updateProjectStatus(project_id);
     res.status(201).send(answer);
   } catch (error) {
     logger.error(`Error creating the group of statuses: ${error}`);

@@ -867,6 +867,61 @@ const getCurrentProjectStatus = (project) => {
   return current;
 }
 
+const updateProjectCurrentProjectStatusId = (project_id, current_project_status_id) => {
+  if (cache) {
+    const index = cache.findIndex(project => project.project_id === project_id);
+    if (index !== -1) {
+      cache[index].current_project_status_id = current_project_status_id;
+    }
+  }
+}
+
+const updateProjectStatus = async (project_id) => {
+  const projectStatuses = await ProjectStatus.findAll({
+    where: {
+      project_id: project_id
+    },
+    required: false,
+    attributes: [
+      'code_phase_type_id',
+      'planned_start_date',
+      'actual_start_date',
+      'actual_end_date',
+      'planned_end_date',
+      'project_status_id'
+    ],
+    include: {
+      model: CodePhaseType,
+      required: false,
+      attributes: [
+        'phase_name',
+      ],
+      include: [{
+        model: CodeStatusType,
+        required: false,
+        attributes: [
+          'code_status_type_id',
+          'status_name'
+        ]
+      }, {
+        model: CodeProjectType,
+        required: false,
+        attributes: [
+          'code_project_type_id',
+          'project_type_name'
+        ]
+      }]
+    },
+  }).map(d => d.dataValues);
+
+  if (cache) {
+    const index = cache.findIndex(project => project.project_id === project_id);
+    if (index !== -1) {
+      cache[index].projectStatuses = projectStatuses;
+    }
+  }
+}
+
 export default {
   getAll,
   deleteByProjectId,
@@ -879,5 +934,7 @@ export default {
   getAuthenticationFormData,
   createRandomGeomOnARCGIS,
   updateProject,
+  updateProjectStatus,
+  updateProjectCurrentProjectStatusId,
   getCurrentProjectStatus
 };
