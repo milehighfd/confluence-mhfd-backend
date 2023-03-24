@@ -33,6 +33,8 @@ const CodeStateCounty = db.codeStateCounty;
 const ProjectStreams = db.project_stream;
 const ProjectLocalGovernment = db.projectLocalGovernment;
 const ProjectProposedAction = db.projectProposedAction;
+const ProjectIndependentAction = db.projectIndependentAction;
+
 const CodeLocalGoverment = db.codeLocalGoverment;
 const Streams = db.stream;
 const ProjectCost = db.projectCost;
@@ -392,6 +394,19 @@ const getDetails = async (project_id) => {
               'object_id',
               'source_table_name',
               'project_proposed_action_id'
+            ],
+            // where: {
+            //   code_cost_type_id: 1
+            // }
+          },
+          {
+            model: ProjectIndependentAction,
+            required: false,
+            attributes: [
+              'action_name',
+              'project_id',
+              'cost',
+              'action_status'
             ],
             // where: {
             //   code_cost_type_id: 1

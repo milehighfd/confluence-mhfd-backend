@@ -33,8 +33,8 @@ const deleteByProjectId= async (project_id) => {
 
 const saveProjectIndependentAction = async (component) => {
   try {
-    const ProjectIndependentAction = await ProjectIndependentAction.create(component);
-    return ProjectIndependentAction;
+    const res = await ProjectIndependentAction.create(component);
+    return res;
   } catch(error) {
     console.log('the error ', error);
     throw error;
