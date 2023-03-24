@@ -940,11 +940,12 @@ const updateProjectStatus = async (project_id) => {
       }]
     },
   }).map(d => d.dataValues);
-
+  logger.info(JSON.stringify(projectStatuses));
   if (cache) {
     const index = cache.findIndex(project => project.project_id === project_id);
+    logger.info(`Index is ${index}`)
     if (index !== -1) {
-      cache[index].projectStatuses = projectStatuses;
+      cache[index].project_statuses = projectStatuses;
     }
   }
 }
