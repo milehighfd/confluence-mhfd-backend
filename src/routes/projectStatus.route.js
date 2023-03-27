@@ -11,6 +11,35 @@ const ProjectStatus = db.projectStatus;
 const CodePhaseType = db.codePhaseType;
 const Op = sequelize.Op;
 
+router.put('/update-group', [auth], async (req, res) => {
+  const { phases } = req.body;
+  const { name } = req.user;
+  try {
+    const updates = [];
+    for (const element of phases) {
+      element.modified_date = new Date();
+      element.last_modified_by = name;
+      if (element.current) {
+        Project.update({ current_project_status_id: element.project_status_id }, {
+          where: {
+            project_id: element.project_id
+          }
+        });
+      }
+      updates.push(ProjectStatus.update(element, {
+        where: {
+          project_status_id: element.project_status_id
+        }
+      }));
+    }
+    const answer = await Promise.all(updates);
+    res.send(answer);
+  } catch(error) {
+    logger.error(error);
+    return res.status(500).send(error);
+  }
+});
+
 router.post('/create-group', [auth], async (req, res) => {
   const { project_id, phases } = req.body;
   const { name } = req.user;
