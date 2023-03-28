@@ -79,6 +79,9 @@ const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, co
     min: 0,
     acquire: 60000,
     idle: 10000
+  },
+  retry: {
+    max: 5
   }
 });
 
