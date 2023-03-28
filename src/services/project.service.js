@@ -675,7 +675,9 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
             'actual_start_date',
             'actual_end_date',
             'planned_end_date',
-            'project_status_id'
+            'project_status_id',
+            'is_locked',
+            'is_done'
           ],
           include: {
             model: CodePhaseType,

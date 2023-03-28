@@ -45,7 +45,13 @@ export default (sequelize, DataType) => {
     },
     comment: {
       type: DataType.STRING
-    }  
+    } ,
+    is_locked: {
+      type: DataType.STRING
+    } ,
+    is_done: {
+      type: DataType.STRING
+    } 
   }, {
     tableName: 'project_status',
     timestamps: false,
