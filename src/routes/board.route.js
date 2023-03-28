@@ -363,7 +363,6 @@ const updateProjectStatus = async (boards, status, creator) => {
         });
         for (var j = 0 ; j < boardProjects.length ; j++) {
             let bp = boardProjects[j];
-            console.log(boardProjects);
             try {
                 if (bp.position0 === null) {
                     const currentProjectStatus = await ProjectStatus.findOne({
@@ -441,10 +440,9 @@ const updateProjectStatus = async (boards, status, creator) => {
                         }
                         const currentStatusForType = await CodePhaseType.findAll({
                             where:{
-                                code_status_type_id: currentProjectStatus?.code_phase_type?.code_project_type_id,
-                                code_status_type_id:{
-                                    [Op.notLike]: '%' + 1 + '%',
-                                    [Op.notLike]: '%' + 2 + '%'
+                                code_project_type_id: currentProjectStatus?.code_phase_type?.code_project_type_id,
+                                code_status_type_id: {
+                                    [Op.not]: [1, 2, 3],
                                 }
                             }
                         });
@@ -599,16 +597,6 @@ const moveCardsToNextLevel = async (board, creator) => {
         return {}
     }
 }
-router.get('/test/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        
-        res.send(response);
-    } catch (error) {
-        console.log(error);
-        res.send(500);
-    }
-})
 
 router.get('/:boardId/boards/:type', async (req, res) => {
     const { boardId, type } = req.params;
