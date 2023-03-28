@@ -75,9 +75,9 @@ const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, co
     }
   },
   pool: {
-    max: 5,
+    max: 150,
     min: 0,
-    acquire: 30000,
+    acquire: 60000,
     idle: 10000
   }
 });
