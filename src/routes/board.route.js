@@ -16,6 +16,8 @@ import boardService from 'bc/services/board.service.js';
 import projectService from 'bc/services/project.service.js';
 import moment from 'moment';
 import projectStatusService from 'bc/services/projectStatus.service.js';
+import sequelize from 'sequelize';
+const { Op } = sequelize;
 const router = express.Router();
 const Board = db.board;
 const User = db.user;
@@ -382,7 +384,7 @@ const updateProjectStatus = async (boards, status, creator) => {
                                 code_project_type_id: currentProjectStatus?.code_phase_type?.code_project_type_id
                             }
                         });
-                        await ProjectStatus.update({
+                        await ProjectStatus.update({            
                             actual_end_date: moment().format('YYYY-MM-DD HH:mm:ss')
                         }, { where: { project_status_id: currentProjectStatus.project_status_id } });
 
@@ -407,6 +409,67 @@ const updateProjectStatus = async (boards, status, creator) => {
                           },{ where: { project_id: bp.project_id }});
                         console.log(resres);
                         logger.info('Updated', bp.project_id);
+
+                        if(status === 3 ){
+                            const activeCodePhase = await CodePhaseType.findOne({
+                                where:{
+                                    code_status_type_id: 5,
+                                    code_project_type_id: 2  
+                                }
+                            });    
+
+                        const { duration, duration_type } = activeCodePhase;
+                        const formatDuration = duration_type[0].toUpperCase();
+                        try {
+                            await projectStatusService.saveProjectStatusFromCero(
+                                activeCodePhase.code_phase_type_id, 
+                                bp.project_id,
+                                moment().format('YYYY-MM-DD HH:mm:ss'), 
+                                moment().add(1, 'd').format('YYYY-MM-DD HH:mm:ss'),
+                                moment().format('YYYY-MM-DD HH:mm:ss'), 
+                                moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss'), 
+                                moment().format('YYYY-MM-DD HH:mm:ss'), 
+                                Number(duration), 
+                                moment().format('YYYY-MM-DD HH:mm:ss'), 
+                                moment().format('YYYY-MM-DD HH:mm:ss'), 
+                                creator, 
+                                creator
+                            );
+                            logger.info ('active status created')
+                        } catch (error) {
+                            logger.error(error, 'can not create active')
+                        }
+                        const currentStatusForType = await CodePhaseType.findAll({
+                            where:{
+                                code_status_type_id: currentProjectStatus?.code_phase_type?.code_project_type_id,
+                                code_status_type_id:{
+                                    [Op.notLike]: '%' + 1 + '%',
+                                    [Op.notLike]: '%' + 2 + '%'
+                                }
+                            }
+                        });
+                        for (const statusType of currentStatusForType) {
+                            try {
+                                await projectStatusService.saveProjectStatusFromCero(
+                                    statusType.code_phase_type_id, 
+                                    bp.project_id,
+                                    moment().format('YYYY-MM-DD HH:mm:ss'), 
+                                    moment().format('YYYY-MM-DD HH:mm:ss'), 
+                                    moment().format('YYYY-MM-DD HH:mm:ss'), 
+                                    moment().format('YYYY-MM-DD HH:mm:ss'),  
+                                    moment().format('YYYY-MM-DD HH:mm:ss'), 
+                                    Number(duration), 
+                                    moment().format('YYYY-MM-DD HH:mm:ss'), 
+                                    moment().format('YYYY-MM-DD HH:mm:ss'), 
+                                    creator, 
+                                    creator
+                                );   
+                                logger.info ('status created', statusType.code_phase_type_id)
+                            } catch (error) {
+                                logger.info (error, 'can not create status')
+                            }
+                        }
+                        }
                 }
             } catch(e) {
                 logger.error(e);
