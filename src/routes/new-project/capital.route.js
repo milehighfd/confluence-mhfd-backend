@@ -382,6 +382,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         }
       }
       const dataArcGis = await projectService.insertIntoArcGis(geom, project_id, cleanStringValue(projectname));
+      await projectService.addProjectToCache(project_id);
       result.push(dataArcGis);
     } catch (error) {
       logger.error(error);
@@ -534,6 +535,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         throw error;
       }
     }
+    projectService.updateProject(project_id);
   } catch (error) {
     logger.error(error);
   };

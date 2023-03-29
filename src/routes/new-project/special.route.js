@@ -105,6 +105,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       logger.info('created county');
     }
     const dataArcGis = await projectService.insertIntoArcGis(geom, project_id, cleanStringValue(projectname));
+    await projectService.addProjectToCache(project_id);
     result.push(dataArcGis);
   } catch (error) {
     logger.error('Error at special route: ', error);
@@ -181,6 +182,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       }
       logger.info('created county');
     }
+    await projectService.updateProject(project_id);
   } catch (error) {
     logger.error(error);
     return res.status(500).send(error);
