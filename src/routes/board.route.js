@@ -205,7 +205,7 @@ router.post('/', async (req, res) => {
             try {
                 project = projectService.findProject(+bp.project_id);// await projectService.getDetails(bp.project_id);
                 if (!project) {
-                    logger.info(`${bo.project_id} not found`);
+                    logger.info(`${bp.project_id} not found`);
                 }
                 /*if (project.error) {
                     console.log('Error in project Promises ', project.error);
