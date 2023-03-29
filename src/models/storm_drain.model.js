@@ -1,6 +1,6 @@
 
 export default (sequelize, DataType) => {
-  const gradeControlStructure = sequelize.define('GRADE_CONTROL_STRUCTURE', {
+  const stormDrain = sequelize.define('STORM_DRAIN', {
     OBJECTID: {
       type: DataType.INTEGER,
       primaryKey: true
@@ -147,5 +147,5 @@ export default (sequelize, DataType) => {
     updatedAt: false
   });
 
-  return gradeControlStructure;
+  return stormDrain;
 }

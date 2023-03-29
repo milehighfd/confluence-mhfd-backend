@@ -57,6 +57,22 @@ import relatedStudy from 'bc/models/related_study.model.js';
 import streamStudy from 'bc/models/stream_study.model.js';
 import projectProposedAction from 'bc/models/project_proposed_action.model.js';
 
+import gradeControlStructure from 'bc/models/grade_control_structure.model.js';
+import pipeAppurtenances from 'bc/models/pipe_appurtenances.model.js';
+import specialItemPoint from 'bc/models/special_item_point.model.js';
+import specialItemLinear from 'bc/models/special_item_linear.model.js';
+import specialItemArea from 'bc/models/special_item_area.model.js';
+import channelImprovementsLinear from 'bc/models/channel_improvements_linear.model.js';
+import channelImprovementsArea from 'bc/models/channel_improvements_area.model.js';
+import removalLine from 'bc/models/removal_line.model.js';
+import removalArea from 'bc/models/removal_area.model.js';
+import stormDrain from 'bc/models/storm_drain.model.js';
+import detentionFacilities from 'bc/models/detention_facilities.model.js';
+import maintenanceTrails from 'bc/models/maintenance_trails.model.js';
+import landAcquisition from 'bc/models/land_acquisition.model.js';
+import landscapingArea from 'bc/models/landscaping_area.model.js';
+
+
 Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
   date = this._applyTimezone(date, options);
   return date.format('YYYY-MM-DD HH:mm:ss.SSS');
@@ -109,8 +125,6 @@ db.relatedstudy = relatedStudy(sequelize, Sequelize);
 db.streamstudy = streamStudy(sequelize, Sequelize);
 db.projectProposedAction = projectProposedAction(sequelize, Sequelize);
 db.projectIndependentAction = ProjectIndependentAction(sequelize, Sequelize);
-
-//db.projectComponent = projectComponent(sequelize, Sequelize);
 db.consultants = consultants(sequelize, Sequelize);
 db.componentdependency = componentDependency(sequelize, Sequelize);
 db.configuration = configuration(sequelize, Sequelize);
@@ -129,20 +143,11 @@ db.codeAcquisitionProgressStatus = codeAcquisitionProgressStatus(sequelize, Sequ
 db.codeMaintenanceElegibilityType = codeMaintenanceElegibilityType(sequelize, Sequelize);
 db.projectCounty = projectCounty(sequelize, Sequelize);
 db.codeStateCounty = codeStateCounty(sequelize, Sequelize);
-// db.project.hasOne(
-//   db.projectCounty,
-//   { foreignKey: 'project_id' }
-// );
-
 db.projectPartner = projectPartner(sequelize, Sequelize);
 db.codeProjectPartnerType = codeProjectPartnerType(sequelize, Sequelize);
-
 db.codeStudyReason = codeStudyReason(sequelize, Sequelize);
-
 db.codeServiceArea = codeServiceArea(sequelize, Sequelize);
 db.codeLocalGoverment = codeLocalGoverment(sequelize, Sequelize);
-
-
 db.localGovernment = localGovernment(sequelize, Sequelize);
 db.project_stream = project_stream(sequelize, Sequelize);
 db.projectAttachment = projectAttachment(sequelize, Sequelize);
@@ -153,8 +158,24 @@ db.stream = stream(sequelize, Sequelize);
 db.businessAssociateContact = businessAssociateContact(sequelize, Sequelize);
 db.businessAdress = businessAdress(sequelize, Sequelize);
 db.businessAssociates = businessAssociates(sequelize, Sequelize);
-
 db.projectServiceArea = projectServiceArea(sequelize, Sequelize);
+// 14 layers called
+db.gradeControlStructure = gradeControlStructure(sequelize, Sequelize);
+db.pipeAppurtenances = pipeAppurtenances(sequelize, Sequelize);
+db.specialItemPoint = specialItemPoint(sequelize, Sequelize);
+db.specialItemLinear = specialItemLinear(sequelize, Sequelize);
+db.specialItemArea = specialItemArea(sequelize, Sequelize);
+db.channelImprovementsLinear = channelImprovementsLinear(sequelize, Sequelize);
+db.channelImprovementsArea = channelImprovementsArea(sequelize, Sequelize);
+db.removalLine = removalLine(sequelize, Sequelize);
+db.removalArea = removalArea(sequelize, Sequelize);
+db.stormDrain = stormDrain(sequelize, Sequelize);
+db.detentionFacilities = detentionFacilities(sequelize, Sequelize);
+db.maintenanceTrails = maintenanceTrails(sequelize, Sequelize);
+db.landAcquisition = landAcquisition(sequelize, Sequelize);
+db.landscapingArea = landscapingArea(sequelize, Sequelize);
+
+
 db.user.hasMany(db.ProjectFavorite, {foreignKey: 'user_id'});
 db.user.hasMany(db.problemFavorite, { foreignKey: 'user_id' });
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});

@@ -1,6 +1,6 @@
 
 export default (sequelize, DataType) => {
-  const channelImprovementsArea = sequelize.define('CHANNEL_IMPROVEMENTS_AREA', {
+  const detentionFacilities = sequelize.define('DETENTION_FACILITIES', {
     OBJECTID: {
       type: DataType.INTEGER,
       primaryKey: true
@@ -133,10 +133,10 @@ export default (sequelize, DataType) => {
     }
   }, {
     freezeTableName: true,
-    tableName: 'CHANNEL_IMPROVEMENTS_AREA',
+    tableName: 'DETENTION_FACILITIES',
     createdAt: false,
     updatedAt: false
   });
 
-  return channelImprovementsArea;
+  return detentionFacilities;
 }
