@@ -1087,6 +1087,37 @@ const findProject = (project_id) => {
   }
 }
 
+const addProjectToCache = async (project_id) => {
+  if (cache) {
+    try {
+      const project = await getDetails(project_id);
+      cache.push(project);
+      logger.info(`Project ${project_id} successful added to cache `);
+    } catch(error) {
+      logger.error(`Cannot add to cache reason: ${error}`)
+    }
+  } else {
+    logger.error('cache is not available');
+  }
+}
+
+const updateProjectOnCache = async (project_id) => {
+  if (cache) {
+    const index = cache.findIndex(project => project.project_id === project_id);
+    const project = await getDetails(project_id);
+    if (index !== -1) {
+      cache[index] = project;
+      logger.info(`Project ${project_id} updated on cache`);
+    } else {
+      logger.info(`Project ${project_id} not found on cache`);
+      cache.push(project);
+      logger.info(`Project ${project_id} successful added to cache `);
+    }
+  } else {
+    logger.error('cache is not available');
+  }
+}
+
 export default {
   getAll,
   deleteByProjectId,
@@ -1102,5 +1133,7 @@ export default {
   updateProjectStatus,
   updateProjectCurrentProjectStatusId,
   getCurrentProjectStatus,
-  findProject
+  findProject,
+  addProjectToCache,
+  updateProjectOnCache
 };
