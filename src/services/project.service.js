@@ -857,6 +857,25 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         }
       });
     */
+    const BUCKET_SIZE = 50;
+    let index = 0;
+    let bucket = BUCKET_SIZE;
+    while (index < projects.length) {
+      const promises = [];
+      const starIndex = index;
+      while (index < bucket && index < projects.length) {
+        promises.push(getProblemByProjectId(projects[index].project_id, PROPSPROBLEMTABLES.problems[6], 'asc'));
+        promises.push(getCentroidOfProjectId(projects[index].project_id));
+        index++;
+      }
+      const doneData = await Promise.all(promises);
+      for (let i = starIndex; i < index; i++) {
+        projects.problems = doneData[2 * i];
+        projects.centroid = doneData[2 * i + 1];
+      } 
+      logger.info(`BUCKET FROM ${starIndex} to ${bucket} proccesed`);
+      bucket += BUCKET_SIZE;
+    }
     cache = projects;
     return projects;
   } catch (error) {
@@ -1113,6 +1132,15 @@ const updateProjectOnCache = async (project_id) => {
       cache.push(project);
       logger.info(`Project ${project_id} successful added to cache `);
     }
+  } else {
+    logger.error('cache is not available');
+  }
+}
+
+const deleteProjectFromCache = async (project_id) => {
+  if (cache) {
+    cache = cache.filter(project => project.project_id !== project_id);
+    logger.info(`Project ${project_id} deleted from cache`);
   } else {
     logger.error('cache is not available');
   }
