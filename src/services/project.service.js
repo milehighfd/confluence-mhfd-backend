@@ -858,7 +858,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         }
       });
     */
-    const BUCKET_SIZE = 15;
+    const BUCKET_SIZE = 20;
     let index = 0;
     let bucket = BUCKET_SIZE;
     while (index < projects.length) {
