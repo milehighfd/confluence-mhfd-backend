@@ -833,6 +833,30 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
       order: [['created_date', 'DESC']]
     }).map(result => result.dataValues);
 
+    // TODO: Think logic for this
+    /*
+      projects.forEach(async project => {
+        if (project.current_project_status_id) {
+          let foundCurrent = false;
+          for (const ps of project.project_statuses) {
+            if (ps.project_status_id === project.current_project_status_id) {
+              foundCurrent = true;
+            }
+            if (foundCurrent) break;
+            if (!ps.is_done) {
+              ps.is_done = 1;
+              await ProjectStatus.update({
+                is_done: 1
+              }, {
+                where: {
+                  project_status_id: ps.project_status_id
+                }
+              });
+            }
+          }
+        }
+      });
+    */
     cache = projects;
     return projects;
   } catch (error) {
@@ -1054,6 +1078,15 @@ const updateProjectStatus = async (project_id) => {
   }
 }
 
+const findProject = (project_id) => {
+  if (cache) {
+    const project = cache.find((p) => p.project_id === project_id);
+    return project;
+  } else {
+    return null;
+  }
+}
+
 export default {
   getAll,
   deleteByProjectId,
@@ -1068,5 +1101,6 @@ export default {
   updateProject,
   updateProjectStatus,
   updateProjectCurrentProjectStatusId,
-  getCurrentProjectStatus
+  getCurrentProjectStatus,
+  findProject
 };
