@@ -22,6 +22,7 @@ import {
   getStreamsDataByProjectIds
 } from 'bc/utils/functionsProjects.js';
 import sequelize from 'sequelize';
+import { CREATE_PROJECT_TABLE } from 'bc/config/config.js';
 
 const Project = db.project;
 const ProjectPartner = db.projectPartner;
@@ -56,7 +57,7 @@ const Op = sequelize.Op;
 
 
 async function getCentroidOfProjectId (projectid) {
-  const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid FROM "denver-mile-high-admin".mhfd_projects_test where projectid = ${projectid}`;
+  const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE} where projectid = ${projectid}`;
   const LINE_URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   let data;
   try {
@@ -74,7 +75,7 @@ async function getCentroidOfProjectId (projectid) {
       });
    });
     data = await newProm1;
-    console.log('the data is ', data);
+    console.log('the data is ', projectid, data, '\n', SQL);
     return data;
   } catch (e) {
     console.error('Error with QUERY ', e);
@@ -527,7 +528,7 @@ const getDetails = async (project_id) => {
       };
     }
     let project = projectPromise.dataValues;
-    logger.info(`Adding problems ${JSON.stringify(problems)}`)
+    logger.info(`Adding problems ${JSON.stringify(problems)} to ${project_id} with name ${project.project_name}`)
     project = { ...project, problems: problems, centroid: centroidProj };
     return project;
   } catch (error) {
