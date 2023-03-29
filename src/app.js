@@ -37,9 +37,11 @@ import phasetypeRouter from 'bc/routes/phasetype.route.js';
 import projectactionitemRouter from 'bc/routes/projectactionitem.route.js'
 import projectStatusRouter from 'bc/routes/projectStatus.route.js';
 import businessRouter from 'bc/routes/business.route.js';
+import projectService from 'bc/services/project.service.js';
 
 // import serviceAreaLocalGovernment from 'bc/routes/servicearealocalgovernment.route.js';
 seed();
+await projectService.getProjects();
 
 // db.sequelize.sync();
 console.log(`ENVIRONMENT ${process.env.NODE_ENV}`);
