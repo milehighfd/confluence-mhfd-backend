@@ -57,7 +57,7 @@ import relatedStudy from 'bc/models/related_study.model.js';
 import streamStudy from 'bc/models/stream_study.model.js';
 import projectProposedAction from 'bc/models/project_proposed_action.model.js';
 
-/* import gradeControlStructure from 'bc/models/grade_control_structure.model.js';
+import gradeControlStructure from 'bc/models/grade_control_structure.model.js';
 import pipeAppurtenances from 'bc/models/pipe_appurtenances.model.js';
 import specialItemPoint from 'bc/models/special_item_point.model.js';
 import specialItemLinear from 'bc/models/special_item_linear.model.js';
@@ -70,7 +70,7 @@ import stormDrain from 'bc/models/storm_drain.model.js';
 import detentionFacilities from 'bc/models/detention_facilities.model.js';
 import maintenanceTrails from 'bc/models/maintenance_trails.model.js';
 import landAcquisition from 'bc/models/land_acquisition.model.js';
-import landscapingArea from 'bc/models/landscaping_area.model.js'; */
+import landscapingArea from 'bc/models/landscaping_area.model.js'; 
 
 
 Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
@@ -160,7 +160,7 @@ db.businessAdress = businessAdress(sequelize, Sequelize);
 db.businessAssociates = businessAssociates(sequelize, Sequelize);
 db.projectServiceArea = projectServiceArea(sequelize, Sequelize);
 // 14 layers called
-/* db.gradeControlStructure = gradeControlStructure(sequelize, Sequelize);
+db.gradeControlStructure = gradeControlStructure(sequelize, Sequelize);
 db.pipeAppurtenances = pipeAppurtenances(sequelize, Sequelize);
 db.specialItemPoint = specialItemPoint(sequelize, Sequelize);
 db.specialItemLinear = specialItemLinear(sequelize, Sequelize);
@@ -173,7 +173,7 @@ db.stormDrain = stormDrain(sequelize, Sequelize);
 db.detentionFacilities = detentionFacilities(sequelize, Sequelize);
 db.maintenanceTrails = maintenanceTrails(sequelize, Sequelize);
 db.landAcquisition = landAcquisition(sequelize, Sequelize);
-db.landscapingArea = landscapingArea(sequelize, Sequelize); */
+db.landscapingArea = landscapingArea(sequelize, Sequelize); 
 
 
 db.user.hasMany(db.ProjectFavorite, {foreignKey: 'user_id'});
