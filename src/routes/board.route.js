@@ -203,10 +203,13 @@ router.post('/', async (req, res) => {
         let projectsPromises = boardProjects.filter(bp => !!bp.project_id).map(async (bp) => {
             let project = null;
             try {
-                project = await projectService.getDetails(bp.project_id);
-                if (project.error) {
-                    console.log('Error in project Promises ', project.error);
+                project = projectService.findProject(+bp.project_id);// await projectService.getDetails(bp.project_id);
+                if (!project) {
+                    logger.info(`${bo.project_id} not found`);
                 }
+                /*if (project.error) {
+                    console.log('Error in project Promises ', project.error);
+                }*/
             } catch (error) {
             console.log('Error in project Promises ', error);
             }
@@ -216,7 +219,7 @@ router.post('/', async (req, res) => {
                 origin: bp.origin,
                 projectData: project,
             }
-            for (var i = 0 ; i <= 5; i ++) {
+            for (let i = 0 ; i <= 5; i ++) {
                 newObject[`position${i}`] = bp[`position${i}`];
                 newObject[`originPosition${i}`] = bp[`originPosition${i}`];
                 if (i > 0) {
@@ -226,7 +229,7 @@ router.post('/', async (req, res) => {
                     newObject[`year${i}`] = bp[`year${i}`];
                 }
             }
-            return !project.error && newObject;
+            return !project?.error && newObject;
         })
         let resolvedProjects = await Promise.all(projectsPromises);
         logger.info(`RESOLVERD PROJECTS: ${resolvedProjects}`)
