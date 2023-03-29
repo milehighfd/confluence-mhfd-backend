@@ -444,7 +444,8 @@ const updateProjectStatus = async (boards, status, creator) => {
                             }
                         }
                         }
-                }
+                        await projectService.updateProjectOnCache(bp.project_id);
+            }
             } catch(e) {
                 logger.error(e);
                 continue;

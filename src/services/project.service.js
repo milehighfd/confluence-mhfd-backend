@@ -22,6 +22,7 @@ import {
   getStreamsDataByProjectIds
 } from 'bc/utils/functionsProjects.js';
 import sequelize from 'sequelize';
+import { CREATE_PROJECT_TABLE } from 'bc/config/config.js';
 
 const Project = db.project;
 const ProjectPartner = db.projectPartner;
@@ -56,7 +57,7 @@ const Op = sequelize.Op;
 
 
 async function getCentroidOfProjectId (projectid) {
-  const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid FROM "denver-mile-high-admin".mhfd_projects_test where projectid = ${projectid}`;
+  const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE} where projectid = ${projectid}`;
   const LINE_URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   let data;
   try {
@@ -74,7 +75,7 @@ async function getCentroidOfProjectId (projectid) {
       });
    });
     data = await newProm1;
-    console.log('the data is ', data);
+    console.log('the data is ', projectid, data, '\n', SQL);
     return data;
   } catch (e) {
     console.error('Error with QUERY ', e);
@@ -527,7 +528,7 @@ const getDetails = async (project_id) => {
       };
     }
     let project = projectPromise.dataValues;
-    logger.info(`Adding problems ${JSON.stringify(problems)}`)
+    logger.info(`Adding problems ${JSON.stringify(problems)} to ${project_id} with name ${project.project_name}`)
     project = { ...project, problems: problems, centroid: centroidProj };
     return project;
   } catch (error) {
@@ -857,6 +858,25 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         }
       });
     */
+    const BUCKET_SIZE = 50;
+    let index = 0;
+    let bucket = BUCKET_SIZE;
+    while (index < projects.length) {
+      const promises = [];
+      const starIndex = index;
+      while (index < bucket && index < projects.length) {
+        promises.push(getProblemByProjectId(projects[index].project_id, PROPSPROBLEMTABLES.problems[6], 'asc'));
+        promises.push(getCentroidOfProjectId(projects[index].project_id));
+        index++;
+      }
+      const doneData = await Promise.all(promises);
+      for (let i = starIndex; i < index; i++) {
+        projects.problems = doneData[2 * i];
+        projects.centroid = doneData[2 * i + 1];
+      } 
+      logger.info(`BUCKET FROM ${starIndex} to ${bucket} proccesed`);
+      bucket += BUCKET_SIZE;
+    }
     cache = projects;
     return projects;
   } catch (error) {
@@ -1087,6 +1107,46 @@ const findProject = (project_id) => {
   }
 }
 
+const addProjectToCache = async (project_id) => {
+  if (cache) {
+    try {
+      const project = await getDetails(project_id);
+      cache.push(project);
+      logger.info(`Project ${project_id} successful added to cache `);
+    } catch(error) {
+      logger.error(`Cannot add to cache reason: ${error}`)
+    }
+  } else {
+    logger.error('cache is not available');
+  }
+}
+
+const updateProjectOnCache = async (project_id) => {
+  if (cache) {
+    const index = cache.findIndex(project => project.project_id === project_id);
+    const project = await getDetails(project_id);
+    if (index !== -1) {
+      cache[index] = project;
+      logger.info(`Project ${project_id} updated on cache`);
+    } else {
+      logger.info(`Project ${project_id} not found on cache`);
+      cache.push(project);
+      logger.info(`Project ${project_id} successful added to cache `);
+    }
+  } else {
+    logger.error('cache is not available');
+  }
+}
+
+const deleteProjectFromCache = async (project_id) => {
+  if (cache) {
+    cache = cache.filter(project => project.project_id !== project_id);
+    logger.info(`Project ${project_id} deleted from cache`);
+  } else {
+    logger.error('cache is not available');
+  }
+}
+
 export default {
   getAll,
   deleteByProjectId,
@@ -1102,5 +1162,7 @@ export default {
   updateProjectStatus,
   updateProjectCurrentProjectStatusId,
   getCurrentProjectStatus,
-  findProject
+  findProject,
+  addProjectToCache,
+  updateProjectOnCache
 };

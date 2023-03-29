@@ -136,6 +136,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         });
       }
       await studyService.saveStudy(project_id, studyreason, creator, creator, otherReason);
+      await projectService.addProjectToCache(project_id);
       logger.info('created study correctly');
     } catch (error) {
       logger.error('ERROR ', error);
@@ -236,6 +237,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       });
     }
     await studyService.updateStudy(project_id, creator,  otherReason);
+    await projectService.updateProjectOnCache(project_id);
     logger.info('updated study');
   } catch (error) {
     logger.error('error',error);
