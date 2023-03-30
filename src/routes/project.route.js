@@ -39,6 +39,10 @@ const listProjects = async (req, res) => {
   const { body } = req;
   const bounds = body?.bounds;
   let projects = await projectService.getProjects(null, bounds, offset, limit);
+  projects.forEach(project => {
+    delete project.centroid;
+    delete project.problems;
+  });
   logger.info(projects.length);
   
   projects = await projectsByFilters(projects, body);
