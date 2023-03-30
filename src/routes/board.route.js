@@ -740,8 +740,14 @@ router.delete('/project/:projectid/:namespaceId', [auth], async (req, res) => {
         }
     });
     boardProjects.forEach((bp) => {
+        const { project_id } = bp;
+        Project.destroy({
+            where: {
+                project_id: project_id
+            }
+        });
         bp.destroy();
-    })
+    });
     if (boardProjects.length === 0) {
         res.status(404).send({ status: 'notfound' })
     } else {
