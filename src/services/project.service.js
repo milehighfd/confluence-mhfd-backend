@@ -962,7 +962,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         }
       });
     */
-    const BUCKET_SIZE = 20;
+    const BUCKET_SIZE = 40;
     let index = 0;
     let bucket = BUCKET_SIZE;
     while (index < projects.length) {
@@ -974,9 +974,9 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
         index++;
       }
       const doneData = await Promise.all(promises);
-      for (let i = starIndex; i < index; i++) {
-        projects[i].problems = doneData[2 * i];
-        projects[i].centroid = doneData[2 * i + 1];
+      for (let i = starIndex, j = 0; i < index; i++, j++) {
+        projects[i].problems = doneData[2 * j];
+        projects[i].centroid = doneData[2 * j + 1];
       } 
       logger.info(`BUCKET FROM ${starIndex} to ${bucket} proccesed`);
       bucket += BUCKET_SIZE;
@@ -1253,6 +1253,7 @@ const deleteProjectFromCache = async (project_id) => {
 
 export default {
   getAll,
+  deleteProjectFromCache,
   deleteByProjectId,
   saveProject,
   getProjects,
