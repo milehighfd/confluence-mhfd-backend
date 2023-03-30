@@ -285,11 +285,115 @@ const getDetails = async (project_id) => {
           'current_project_status_id',
           [
             sequelize.literal(`(
-              SELECT COUNT([project_proposed_action].[project_id])
-              FROM [project_proposed_action]
-              WHERE [project_proposed_action].[project_id] = [project].[project_id]
+              SELECT COUNT([GRADE_CONTROL_STRUCTURE].[projectid])
+              FROM [GRADE_CONTROL_STRUCTURE]
+              WHERE [GRADE_CONTROL_STRUCTURE].[projectid] = [project].[project_id]
             )`),
-            'totalComponents',
+            'GRADE_CONTROL_STRUCTURE',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([PIPE_APPURTENANCES].[projectid])
+              FROM [PIPE_APPURTENANCES]
+              WHERE [PIPE_APPURTENANCES].[projectid] = [project].[project_id]
+            )`),
+            'PIPE_APPURTENANCES',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([SPECIAL_ITEM_POINT].[projectid])
+              FROM [SPECIAL_ITEM_POINT]
+              WHERE [SPECIAL_ITEM_POINT].[projectid] = [project].[project_id]
+            )`),
+            'SPECIAL_ITEM_POINT',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([SPECIAL_ITEM_LINEAR].[projectid])
+              FROM [SPECIAL_ITEM_LINEAR]
+              WHERE [SPECIAL_ITEM_LINEAR].[projectid] = [project].[project_id]
+            )`),
+            'SPECIAL_ITEM_LINEAR',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([SPECIAL_ITEM_AREA].[projectid])
+              FROM [SPECIAL_ITEM_AREA]
+              WHERE [SPECIAL_ITEM_AREA].[projectid] = [project].[project_id]
+            )`),
+            'SPECIAL_ITEM_AREA',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([CHANNEL_IMPROVEMENTS_LINEAR].[projectid])
+              FROM [CHANNEL_IMPROVEMENTS_LINEAR]
+              WHERE [CHANNEL_IMPROVEMENTS_LINEAR].[projectid] = [project].[project_id]
+            )`),
+            'CHANNEL_IMPROVEMENTS_LINEAR',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([CHANNEL_IMPROVEMENTS_AREA].[projectid])
+              FROM [CHANNEL_IMPROVEMENTS_AREA]
+              WHERE [CHANNEL_IMPROVEMENTS_AREA].[projectid] = [project].[project_id]
+            )`),
+            'CHANNEL_IMPROVEMENTS_AREA',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([REMOVAL_LINE].[projectid])
+              FROM [REMOVAL_LINE]
+              WHERE [REMOVAL_LINE].[projectid] = [project].[project_id]
+            )`),
+            'REMOVAL_LINE',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([REMOVAL_AREA].[projectid])
+              FROM [REMOVAL_AREA]
+              WHERE [REMOVAL_AREA].[projectid] = [project].[project_id]
+            )`),
+            'REMOVAL_AREA',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([STORM_DRAIN].[projectid])
+              FROM [STORM_DRAIN]
+              WHERE [STORM_DRAIN].[projectid] = [project].[project_id]
+            )`),
+            'STORM_DRAIN',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([DETENTION_FACILITIES].[projectid])
+              FROM [DETENTION_FACILITIES]
+              WHERE [DETENTION_FACILITIES].[projectid] = [project].[project_id]
+            )`),
+            'DETENTION_FACILITIES',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([MAINTENANCE_TRAILS].[projectid])
+              FROM [MAINTENANCE_TRAILS]
+              WHERE [MAINTENANCE_TRAILS].[projectid] = [project].[project_id]
+            )`),
+            'MAINTENANCE_TRAILS',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([LAND_ACQUISITION].[projectid])
+              FROM [LAND_ACQUISITION]
+              WHERE [LAND_ACQUISITION].[projectid] = [project].[project_id]
+            )`),
+            'LAND_ACQUISITION',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([LANDSCAPING_AREA].[projectid])
+              FROM [LANDSCAPING_AREA]
+              WHERE [LANDSCAPING_AREA].[projectid] = [project].[project_id]
+            )`),
+            'LANDSCAPING_AREA',
           ],
         ], 
         include: [
