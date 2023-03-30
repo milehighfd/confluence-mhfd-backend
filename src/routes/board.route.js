@@ -746,6 +746,7 @@ router.delete('/project/:projectid/:namespaceId', [auth], async (req, res) => {
                 project_id: project_id
             }
         });
+        projectService.deleteProjectFromCache(project_id);
         bp.destroy();
     });
     if (boardProjects.length === 0) {
