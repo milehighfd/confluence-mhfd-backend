@@ -871,8 +871,8 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
       }
       const doneData = await Promise.all(promises);
       for (let i = starIndex; i < index; i++) {
-        projects.problems = doneData[2 * i];
-        projects.centroid = doneData[2 * i + 1];
+        projects[i].problems = doneData[2 * i];
+        projects[i].centroid = doneData[2 * i + 1];
       } 
       logger.info(`BUCKET FROM ${starIndex} to ${bucket} proccesed`);
       bucket += BUCKET_SIZE;
