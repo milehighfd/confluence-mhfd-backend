@@ -543,7 +543,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
   const where = {};
   try {
     if (cache) {
-      return { ...cache };
+      return [ ...cache ];
     }
     let projects = await Project.findAll({
       where: where,
