@@ -351,11 +351,11 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     await studyService.updateStudy(project_id, creator, otherReason);
     await projectService.updateProjectOnCache(project_id);
     logger.info('updated study');
+    res.send('updated study');
   } catch (error) {
     logger.error('error', error);
     return res.status(500).send(error);
-  }
-  res.send('updated study');
+  };
 });
 
 export default router;

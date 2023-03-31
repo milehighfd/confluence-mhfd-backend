@@ -647,11 +647,11 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         throw error;
       }
     }
-    projectService.updateProject(project_id);
+   await projectService.updateProjectOnCache(project_id);
+   res.send(result);
   } catch (error) {
     logger.error(error);
-  }
-  res.send(result);
+  };
 });
 
 export default router;

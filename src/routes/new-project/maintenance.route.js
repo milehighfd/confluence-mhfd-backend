@@ -304,12 +304,12 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       logger.info('created county');
     }
 
-    await projectService.updateProject(project_id);
+    await projectService.updateProjectOnCache(project_id);
     logger.info('UPDATED!');
+    res.send(result);
   } catch (error) {
     logger.error(error);
-  }
-  res.send(result);
+  };
 }); 
 
 export default router;

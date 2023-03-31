@@ -301,7 +301,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       }
       logger.info('created county');
     }
-    await projectService.updateProject(project_id);
+    await projectService.updateProjectOnCache(project_id);
+    res.send(result);
   } catch (error) {
     logger.error(error);
     return res.status(500).send(error);
