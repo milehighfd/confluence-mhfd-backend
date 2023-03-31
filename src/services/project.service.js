@@ -1227,7 +1227,7 @@ const addProjectToCache = async (project_id) => {
 
 const updateProjectOnCache = async (project_id) => {
   if (cache) {
-    const index = cache.findIndex(project => project.project_id === project_id);
+    const index = cache.findIndex(project => project.project_id == project_id);
     const project = await getDetails(project_id);
     if (index !== -1) {
       cache[index] = project;
