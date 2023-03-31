@@ -124,18 +124,50 @@ router.post('/', async (req, res) => {
   }
 });
 
+
+router.put('/comment', async (req, res) => {
+  const code_phase_type_id = req.body.code_phase_type_id;
+  const project_id = req.body.project_id;
+  const comment = req.body.comment;
+  try {
+    const result = await ProjectStatus.update(
+      {
+        comment: comment,
+      },
+      {
+        where: {
+          project_id: project_id,
+          code_phase_type_id: code_phase_type_id,
+        },
+      }
+    );
+    return res.send(result);
+  } catch (error) {
+    return res.status(500).send(error);
+  }
+  ``;
+});
+
 router.put('/', async (req, res) => {
   const code_phase_type_id = req.body.code_phase_type_id;
   const project_id = req.body.project_id;
   const comment = req.body.comment;
   const actual_start_date = req.body.actual_start_date;
   const actual_end_date = req.body.actual_end_date;
-  console.log(comment)
   try {
     const result = await ProjectStatus.update(
-      { comment: comment, actual_start_date: actual_start_date, actual_end_date: actual_end_date },
-      { where: { project_id: project_id, code_phase_type_id: code_phase_type_id } }
-    )
+      {
+        comment: comment,
+        actual_start_date: actual_start_date,
+        actual_end_date: actual_end_date,
+      },
+      {
+        where: {
+          project_id: project_id,
+          code_phase_type_id: code_phase_type_id,
+        },
+      }
+    );
     return res.send(result);
   } catch (error) {
     return res.status(500).send(error);
