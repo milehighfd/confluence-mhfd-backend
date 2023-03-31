@@ -1150,6 +1150,7 @@ const updateProjectCurrentProjectStatusId = (project_id, current_project_status_
   if (cache) {
     const index = cache.findIndex(project => project.project_id === project_id);
     if (index !== -1) {
+      logger.info(`UPDATING CURRENT PROJECT ID ${project_id} WITH CURRENT PROJECT STATUS ${current_project_status_id}`)
       cache[index].current_project_status_id = current_project_status_id;
     }
   }
@@ -1197,6 +1198,7 @@ const updateProjectStatus = async (project_id) => {
     const index = cache.findIndex(project => project.project_id === project_id);
     logger.info(`Index is ${index}`)
     if (index !== -1) {
+      logger.info(`UPDATE PROJECT ID ${project_id} WITH ${JSON.stringify(projectStatuses)}`);
       cache[index].project_statuses = projectStatuses;
     }
   }
