@@ -53,19 +53,18 @@ router.post('/create-group', [auth], async (req, res) => {
     */
     const groups = [];
     let currentIndex = -1;
-    for (const [index, element] of phases.entries()) {
-      console.log(element);
+    for (const [index, element] of phases.entries()) {      
       const newStatus = {
         project_id,
-        code_phase_type_id: element.code_phase_type_id,
+        code_phase_type_id: element.phase_id,
         created_by: name,
         phase_change_date: new Date(),
         created_date: new Date(),
         modified_date: new Date(),
-        planned_start_date: element.startDate,
-        planned_end_date: element.endDate,
-        actual_start_date: element.startDate,
-        actual_end_date: element.endDate,
+        planned_start_date: element.from,
+        planned_end_date: element.to,
+        actual_start_date: element.from,
+        actual_end_date: element.to,
         duration: element.duration,
         last_modified_by: name
       }
@@ -75,11 +74,16 @@ router.post('/create-group', [auth], async (req, res) => {
       const hasStatus = await ProjectStatus.findOne({
         where: {
           project_id,
-          code_phase_type_id: element.code_phase_type_id,
+          code_phase_type_id: element.phase_id,
         }
       });
       if (hasStatus) {
-        groups.push(hasStatus);
+        groups.push(ProjectStatus.update(newStatus, {
+          where: {
+            project_id: project_id,
+            code_phase_type_id: element.phase_id,
+          }
+        }));
       } else {
         groups.push(ProjectStatus.create(newStatus));
       }
