@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,300i,400,400i,500,500i,700,700i&display=swap" rel="stylesheet">
+    <title></title>
+  </head>
+  <body style="margin: 0; font-family: Ubuntu, sans-serif; width:1200px; padding:15px;">
+    <!-- HEAD TITLE -->
+    <table width="1200px" FRAME="border" RULES="none">
+      <thead style="min-height: 80px; background: rgba(37,24,99,.03); border: hidden; border-spacing: 0px;">
+        <tr>
+          <th style="padding: 10px 20px; text-align:left;">
+            <h3 style="font-size: 21px; color: #11093c; line-height: 22px; margin: 0px 0px 7px 0px;">${problemname}</h3>
+            <p style="font-size: 14px; color: rgba(17,9,60,.5); margin: 0; font-weight: 500">
+              <span>${problemtype}</span>  •  
+              <span>${jurisdiction}</span>  •  
+              <span>${county}</span>  •  
+              <span>${servicearea}</span>  •  
+            </p>
+          </th>
+          <th style="padding: 10px 10px;">
+            <p style="font-size: 12px; color: rgba(17,9,60,.5);margin:0px 0ps 5px 0px; width: 100%; font-weight:500; text-align:left;">
+              Solution Status
+              <b style="float: right; color: #251863;">${solutionstatus}%</b>
+            </p>
+            <div style="background-color: rgba(61,46,138,.07); height:6px; border-radius: 10px; border-left: ${solutionstatusVal}px solid #fd0; display: block;"></div>
+          </th>
+          <th style="padding: 10px 20px;">
+            <div style="font-size: 14px; color: #251863; border-left: 1.5px solid rgba(61,46,138,.07); border-right: 1.5px solid rgba(61,46,138,.07); padding: 8px 0; margin: 8px 12px;">
+              ${solutioncost}
+            </div>
+          </th>
+          <th style="padding: 10px 20px;">
+            <a style="padding: 0 12px; margin: 8px 0;"><img src="https://confluence.mhfd.org/Icons/icon-01.svg" alt="" width="15px"></a>
+            <a style="padding: 0 12px; margin: 8px 0;"><img src="https://confluence.mhfd.org/Icons/icon-06.svg" alt="" width="15px"></a>
+            <a style="padding: 0 12px; margin: 8px 0;"><img src="https://confluence.mhfd.org/Icons/icon-62.svg" alt="" width="15px"></a>
+          </th>
+        </tr>
+      </thead>
+    </table>
+   <!-- END HEAD TITLE -->
+
+    <table width="1200px" FRAME="border" RULES="none">
+      <tbody style="border: hidden">
+        <tr>
+          <td style="width: 848px; min-width:848px; max-width:850px; border-right: 1.5px solid rgba(61, 46, 138, 0.07);">
+            <table style="border-spacing: 0px; text-align:center; margin: auto;">
+              <tr>
+                <td style="text-align:center;"><img src="${mainImage}" alt="" width="100%"></td>
+              </tr>
+            </table>
+
+            <table style="border-spacing: 10px; padding: 10px 40px 0px 40px; font-size: 14px; text-align: left; width:100%;">
+              <tr>
+                <td style="width:20%; color:rgba(17,9,60,.5);"><i>Stream</i></td>
+                <td style="width:30%; color:#11093c;">${streamname}</td>
+                <td style="width:20%; color:rgba(17,9,60,.5);"><i>Priority</i></td>
+                <td style="width:30%; color:#11093c;">${problempriority}</td>
+              </tr>
+              <tr>
+                <td style="width:20%; color:rgba(17,9,60,.5);"><i>Source Name</i></td>
+                <td style="width:30%; color:#11093c;">${sourcename}</td>
+                <td style="width:20%; color:rgba(17,9,60,.5);"><i>Source</i></td>
+                <td style="width:30%; color:#11093c;">${source}</td>
+              </tr>
+              <tr>
+                <td style="width:19.5%; color:rgba(17,9,60,.5); vertical-align: top;"><i>Description</i></td>
+                <td colspan="3" style="width:80%; color:#11093c;">
+                  ${problemdescription}
+                </td>
+              </tr>
+            </table>
+            <!-- PROBLEM PARTS -->
+            <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="width: 30%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">Problem Parts</td>
+                <td style="width: 65%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
+                <td style="width: 5%; text-align:right;"><img src="https://confluence.mhfd.org/Icons/icon-21.svg" alt=""/></td>
+              </tr>
+            </table>
+            <table style="border-spacing: 0px 10px; padding: 0px 40px 0px 40px; font-size: 14px; width:100%;">
+              <thead>
+                <tr>
+                  <th width="40%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">Problem Type</th>
+                  <th width="25%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">Problem Part Category</th>
+                  <th width="25%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">Problem Part Subcategory</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${problempartRows}
+              </tbody>
+            </table>
+            <!-- END PROBLEM PARTS -->
+            <!-- SOLUTION COMPONENTS -->
+            <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="width: 30%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">SOLUTION COMPONENTS</td>
+                <td style="width: 65%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
+                <td style="width: 5%; text-align:right;"><img src="https://confluence.mhfd.org/Icons/icon-21.svg" alt=""/></td>
+              </tr>
+            </table>
+            <table style="border-spacing: 0px 10px; padding: 0px 40px 0px 40px; font-size: 14px; width:100%;">
+              <thead>
+                <tr>
+                  <th width="40%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">Component Type</th>
+                  <th width="20%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">Cost</th>
+                  <th width="20%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">% Complete</th>
+                  <th width="20%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">% of Total Cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${componentRows}
+              </tbody>
+              ${totalEstimatedCost}
+            </table>
+            <!-- END SOLUTION COMPONENTS -->
+            ${spaceBetween}
+            <!-- MAP -->
+            <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="width: 10%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">MAP</td>
+                <td style="width: 85%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
+                <td style="width: 5%; text-align:right;"><img src="https://confluence.mhfd.org/Icons/icon-21.svg" alt=""/></td>
+              </tr>
+            </table>
+            <table style="padding: 20px 40px 20px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="text-align: center;"><img src="${map}" alt="" height="${mapHeight}px"></td>
+              </tr>
+            </table>
+            <!-- END MAP -->
+          </td>
+
+          <!-- COLLABORATORS AND COMMENTS -->
+          <td style="vertical-align: top;">
+            <table style="padding: 20px 25px 0px 25px;">
+              <tr>
+                <td><h3 style="font-size: 18px; color: #11093c; margin: 0px 0px 15px 0px; font-weight: bold;">TEAM COLLABORATORS</h3></td>
+              </tr>
+            </table>
+            <table style="padding: 0px 25px 20px 25px; border-spacing: 0px; ">
+              <tr>
+                <td style="width: 50px; height: 47px">
+                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px">
+                </td>
+                <td style="width: 162.5px">
+                  <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">TBD</h6>
+                  <p style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 0px; margin-top: -3px;">Project Manager</p>
+                </td>
+                <td style="width: 87.5px; text-align: right;">
+                  <span style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 15px;margin-top: -3px; margin-right:16px;">MHFD</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="width: 50px; height: 47px;">
+                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px">
+                </td>
+                <td style="width: 162.5px">
+                  <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">TBD</h6>
+                  <p style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 0px; margin-top: -3px;">Project Manager</p>
+                </td>
+                <td style="width: 87.5px; text-align: right;">
+                  <span style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 15px;margin-top: -3px; margin-right:16px;">Sponsor</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="width: 50px; height: 47px;">
+                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px">
+                </td>
+                <td style="width: 162.5px">
+                  <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">TBD</h6>
+                  <p style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 0px; margin-top: -3px;">Project Manager</p>
+                </td>
+                <td style="width: 87.5px; text-align: right;">
+                  <span style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 15px;margin-top: -3px; margin-right:16px;">Consultant</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="width: 50px; height: 47px;">
+                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px">
+                </td>
+                <td style="width: 162.5px">
+                  <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">TBD</h6>
+                  <p style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 0px; margin-top: -3px;">Project Engineer</p>
+                </td>
+                <td style="width: 87.5px; text-align: right;">
+                  <span style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 15px;margin-top: -3px; margin-right:16px;">Consultant</span>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+          <!-- END COLLABORATORS AND COMMENTS -->
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

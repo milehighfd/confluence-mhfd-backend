@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,300i,400,400i,500,500i,700,700i&display=swap" rel="stylesheet">
+    <title></title>
+    <style>
+      .grid {
+        display: grid;
+        grid-auto-flow: dense;
+        grid-auto-rows: 18vh;
+        grid-auto-columns: 1fr;
+        grid-gap: 14px;
+      }
+      .grid :nth-child(10n + 1) {
+        grid-row-start: span 2;
+        grid-column-start: 1;
+        grid-row-end: auto;
+        grid-column-end: 3;
+      }
+      .grid :nth-child(10n + 2) {
+        grid-column: 3;
+      }
+      .grid :nth-child(10n + 3) {
+        grid-column: 4;
+      }
+      .grid :nth-child(10n + 5) {
+        grid-column: 4;
+      }
+      .grid :nth-child(10n + 6) {
+        grid-column: 1;
+      }
+      .grid :nth-child(10n + 7) {
+        grid-column: 2;
+      }
+      .grid :nth-child(10n + 8) {
+        grid-column: 1;
+      }
+      .grid :nth-child(10n + 9) {
+        grid-column: 2;
+      }
+      .grid :nth-child(10n + 10) {
+        grid-row-start: span 2;
+        grid-column-start: 3;
+        grid-row-end: auto;
+        grid-column-end: 5;
+      }
+      .grid :nth-child(10n + 4) {
+        grid-column: 3;
+      }
+      .grid {
+        max-width: 88%;
+        margin: auto;
+        width: 88%;
+        counter-reset: num;
+        margin-left: 52px;
+        margin-top: 18px;
+        margin-bottom: 18px;
+      }
+      .grid * {
+        font-size: 30px;
+        border-radius: 10px;
+        background: #f5f7ff;
+      }
+      .grid * img {
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body style="margin: 0; font-family: Ubuntu, sans-serif; width:1200px; padding:15px;">
+    <!-- HEAD TITLE -->
+    <table width="1200px" FRAME="border" RULES="none">
+      <thead style="min-height: 80px; background: #f8f8fa; border: hidden; border-spacing: 0px;">
+        <tr>
+          <th style="padding: 10px 20px; text-align:left;">
+            <h3 style="font-size: 21px; color: #11093c; line-height: 22px; margin: 0px 0px 7px 0px;max-width: 700px;">${projectname}</h3>
+            <p style="font-size: 14px; color: rgba(17,9,60,.5); margin: 0; font-weight: 500">
+              <span>${projecttype}</span>  •  
+              <span>${sponsor}</span>  •   
+              <span>${county}</span>   •   
+              <span>${servicearea}</span>
+            </p>
+          </th>
+          <th style="padding: 10px 20px;">
+            <div style="color: #85809b; font-size: 13px; font-weight: 400; text-align: center; padding: 12px 0; float: right;">
+              <span style="margin-right: 12px;">Status: <span style="color: #28c499; background: #e4f4f0; padding: 7px 8px; border-radius: 5px;">${status}</span></span>
+              <span>Phase: <span style="color: #288cc4; background: #e4eef5; padding: 7px 8px; border-radius: 5px;">${phase}</span></span>
+            </div>
+          </th>
+          <th style="padding: 10px 20px;">
+            <div style="font-size: 14px; color: #251863; padding: 8px 0; margin: 8px 12px;">
+              ${cost}
+            </div>
+          </th>
+          <!-- <th style="padding: 10px 20px;">
+            <a style="padding: 0 12px; margin: 8px 0;"><img src="https://confluence.mhfd.org/Icons/icon-01.svg" alt="" width="15px"></a>
+            <a style="padding: 0 12px; margin: 8px 0;"><img src="https://confluence.mhfd.org/Icons/icon-06.svg" alt="" width="15px"></a>
+            <a style="padding: 0 12px; margin: 8px 0;"><img src="https://confluence.mhfd.org/Icons/icon-62.svg" alt="" width="15px"></a>
+          </th> -->
+        </tr>
+      </thead>
+    </table>
+   <!-- END HEAD TITLE -->
+
+    <table width="1200px" FRAME="border" RULES="none">
+      <tbody style="border: hidden">
+        <tr>
+          <td style="width: 848px; min-width:848px; max-width:850px; border-right: 1.5px solid rgba(61, 46, 138, 0.07);">
+            <table style="border-spacing: 0px; text-align:center; margin: auto;">
+              <tr>
+                <td style="text-align:center;"><img src="${attachmentUrl}" alt="" width="100%" height="252px"></td>
+              </tr>
+            </table>
+            <table style="border-spacing: 10px; padding: 10px 40px 0px 40px; font-size: 14px; text-align: left; width:100%;">
+              <tr>
+                <td style="width: 15%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">PROJECT BASICS</td>
+              </tr>
+              <tr style="height: 25px;">
+                <td style="width:20%; color:rgb(160 156 177);"><i>Stream</i></td>
+                <td style="width:30%; color:#11093c;">${streamname}</td>
+                <!-- <td style="width:20%; color:rgba(17,9,60,.5);"><i>Subtype</i></td>
+                <td style="width:30%; color:#11093c;">${projectsubtype}</td> -->
+              </tr>
+              <tr style="height: 25px;">
+                <td style="width:20%; color:rgb(160 156 177);"><i>Start Year</i></td>
+                <td style="width:30%; color:#11093c;">2018</td>
+                <td style="width:20%; color:rgb(160 156 177);"><i>Completed Year</i></td>
+                <td style="width:30%; color:#11093c;">2025 (Projected)</td>
+              </tr>
+              <tr style="height: 25px;">
+                <td style="width:20%; color:rgb(160 156 177);"><i>LG Managar</i></td>
+                <td style="width:30%; color:#11093c;">Jon Nelson</td>
+                <td style="width:20%; color:rgb(160 156 177);">MHFD Managar</td>
+                <td style="width:30%; color:#11093c;">Jon Villines</td>
+              </tr>
+              <tr style="height: 25px;">
+                <td style="width:19.5%; color:rgb(160 156 177); vertical-align: top;"><i>Description</i></td>
+                <td colspan="3" style="width:80%; color:#11093c;">
+                  ${description}
+                </td>
+              </tr>
+            </table>
+
+            <!-- PROBLEM -->
+            <table style="border-spacing: 10px; padding: 15px 40px 0px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="width: 15%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">PROBLEM</td>
+                <td style="width: 80%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
+              </tr>
+            </table>
+            <table style="border-spacing: 10px; padding: 10px 40px 0px 40px; font-size: 14px; text-align: left; width:100%;">
+              <tr>
+                <td style="width:20%; color:rgb(160 156 177);"><i>Name</i></td>
+                <td style="width:30%; color:#11093c;">Improvements at Big Dry Creek (ARAPCO) and S University Blvd</td>
+                <td style="width:20%; color:rgb(160 156 177);">Priority</td>
+                <td style="width:30%; color:#11093c;">High Priority</td>
+              </tr>
+            </table>
+            <!-- END PROBLEM -->
+
+            <!-- VENDORS -->
+            <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="width: 15%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">VENDORS</td>
+                <td style="width: 80%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
+              </tr>
+            </table>
+            <table style="border-spacing: 10px; padding: 10px 40px 0px 40px; font-size: 14px; text-align: left; width:100%;">
+              <tr>
+                <td style="width:20%; color:rgba(17,9,60,.5);"><i>Contractor</i></td>
+                <td style="width:30%; color:#11093c;">${contractor}</td>
+                <td style="width:20%; color:rgba(17,9,60,.5);"><i>Consultant</i></td>
+                <td style="width:30%; color:#11093c;">${consultant}</td>
+              </tr>
+            </table>
+            <!-- END VENDORS -->
+
+            <!-- SOLUTION COMPONENTS -->
+            <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="width: 30%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">COMPONENT & SOLUTIONS</td>
+                <td style="width: 65%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
+              </tr>
+            </table>
+            <table style="border-spacing: 0px 10px; padding: 0px 40px 0px 40px; font-size: 14px; width:100%;">
+              <thead>
+                <tr>
+                  <th width="30%" style="color: rgb(137 132 158); text-align: left; padding: 12px 20px; font-weight: 400;">Component</th>
+                  <th width="15%" style="color: rgb(137 132 158); text-align: left; padding: 12px 20px; font-weight: 400;">Cost</th>
+                  <th width="15%" style="color: rgb(137 132 158); text-align: left; padding: 12px 20px; font-weight: 400;">Status</th>
+                  <th width="40%" style="color: rgb(137 132 158); text-align: left; padding: 12px 20px; font-weight: 400;">Solution Type</th>
+                </tr>
+                <tr>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Alpha St culvert</th>
+                  <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">$500,000</th>
+                  <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;"><span style="border-radius: 4px; color: rgb(64 203 165); background: #eafaf5; padding: 2px 3px;">Active</span></th>
+                  <th width="40%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Increased Conveyance - Crossing</th>
+                </tr>
+                <tr>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Alpha St culvert</th>
+                  <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">$500,000</th>
+                  <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;"><span style="border-radius: 4px; color: rgb(64 203 165); background: #eafaf5; padding: 2px 3px;">Active</span></th>
+                  <th width="40%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Increased Conveyance - Crossing</th>
+                </tr>
+                <tr>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Alpha St culvert</th>
+                  <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">$500,000</th>
+                  <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;"><span style="border-radius: 4px; color: rgb(64 203 165); background: #eafaf5; padding: 2px 3px;">Active</span></th>
+                  <th width="40%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Increased Conveyance - Crossing</th>
+                </tr>
+                <tr>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Alpha St culvert</th>
+                  <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">$500,000</th>
+                  <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;"><span style="border-radius: 4px; color: rgb(64 203 165); background: #eafaf5; padding: 2px 3px;">Active</span></th>
+                  <th width="40%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Increased Conveyance - Crossing</th>
+                </tr>
+                <tr>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Alpha St culvert</th>
+                  <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">$500,000</th>
+                  <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;"><span style="border-radius: 4px; color: rgb(64 203 165); background: #eafaf5; padding: 2px 3px;">Active</span></th>
+                  <th width="40%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Increased Conveyance - Crossing</th>
+                </tr>
+                <tr>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600;">Total Estimated Cost</th>
+                  <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600;">$2,650,000</th>
+                  <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600;"></th>
+                  <th width="40%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600;"></th>
+                </tr>
+              </thead>
+            </table>
+            <!-- END SOLUTION COMPONENTS -->
+
+            <!-- PROJECT ROADMAP -->
+            <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="width: 30%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">PROJECT ROADMAP</td>
+                <td style="width: 65%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
+              </tr>
+            </table>
+            <table style="border-spacing: 0px 10px; padding: 0px 40px 0px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="text-align: center;"><img src="https://confluence.mhfd.org/picture/calendar.png" alt="" height="${mapHeight}px" width="750px"></td>
+              </tr>
+            </table>
+            <!-- PROJECT ROADMAP -->
+
+            <!-- PROJECT FINANCIALS -->
+            <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="width: 30%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">PROJECT FINANCIALS</td>
+                <td style="width: 65%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
+              </tr>
+            </table>
+            <table style="border-spacing: 0px 10px; padding: 0px 40px 0px 40px; font-size: 14px; width:100%;">
+              <thead>
+                <tr>
+                  <th width="20%" style="color: rgb(137 132 158); text-align: left; padding: 12px 10px; font-weight: 400;">Agreement</th>
+                  <th width="20%" style="color: rgb(137 132 158); text-align: left; padding: 12px 10px; font-weight: 400;">Amendment</th>
+                  <th width="20%" style="color: rgb(137 132 158); text-align: left; padding: 12px 10px; font-weight: 400;">Partner</th>
+                  <th width="20%" style="color: rgb(137 132 158); text-align: center; padding: 12px 10px; font-weight: 400;">Phase</th>
+                  <th width="20%" style="color: rgb(137 132 158); text-align: left; padding: 12px 10px; font-weight: 400;">Projected</th>
+                  <th width="20%" style="color: rgb(137 132 158); text-align: left; padding: 12px 10px; font-weight: 400;">Encumbered</th>
+                  <th width="20%" style="color: rgb(137 132 158); text-align: left; padding: 12px 10px; font-weight: 400;">Tyler Encumbered</th>
+                  <th width="20%" style="color: rgb(137 132 158); text-align: left; padding: 12px 10px; font-weight: 400;">Available Funds</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">A</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">SEMSWA</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: rgb(64 203 165); background: #eafaf5; padding: 2px 3px;">Funding</span></th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;"></th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">MHFD</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: rgb(64 203 165); background: #eafaf5; padding: 2px 3px;">Funding</span></th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">A</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">SEMSWA</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: #FDB32B; background: #fff8ea; padding: 2px 3px;">Concept</span></th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">B</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">Wilson @ Co.</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: #FDB32B; background: #fff8ea; padding: 2px 3px;">Concept</span></th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">A</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">ICON</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: #5E63E4; background: #edf0ff; padding: 2px 3px;">Preliminary</span></th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">B</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">MHFD</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: #FF0000; background: #ffe6e6; padding: 2px 3px;">Final</span></th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;"></th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">Wilson @ Co.</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style=" border-radius: 4px; color: #FF0000; background: #ffe6e6; padding: 2px 3px;">Final</span></th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;"></th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">Wilson @ Co.</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: #4961F6; background: #edf0ff; padding: 2px 3px;">Construction</span></th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">A</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">MHFD</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: #4961F6; background: #edf0ff; padding: 2px 3px;">Construction</span></th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">A</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">MHFD</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: #4961F6; background: #edf0ff; padding: 2px 3px;">Construction</span></th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">B</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">SSPRD</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: rgb(64 203 165); background: #eafaf5; padding: 2px 3px;">Constracting</span></th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">C</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">Naranjo</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: rgb(64 203 165); background: #eafaf5; padding: 2px 3px;">Constracting</span></th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">C</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">Naranjo</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: #C49928; background: #faf5ea; padding: 2px 3px;">Construction</span></th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr><tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">A</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">Western States</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: #C49928; background: #faf5ea; padding: 2px 3px;">Construction</span></th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">C</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">Western States</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span style="border-radius: 4px; color: #28B2C4; background: #eaf8fa; padding: 2px 3px;">Establishment</span></th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">18-08.12</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">D</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">ERO</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: center; padding: 4px 10px; font-weight: 400;"><span  style="border-radius: 4px; color: #28B2C4; background: #eaf8fa; padding: 2px 3px;">Establishment</span></th>
+                  <th width="20%" style="color: #FF0000; text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(64 203 165); text-align: left; padding: 4px 10px; font-weight: 400;">$50,000</th>
+                  <th width="20%" style="color: rgb(17 9 60); text-align: left; padding: 4px 10px; font-weight: 400;">$100,000</th>
+                </tr>
+                <tr>
+                  <th width="20%" style="color: #11093C; text-align: left; padding: 12px 10px; font-weight: 600;">Total</th>
+                  <th width="20%" style="color: #11093C; text-align: left; padding: 12px 10px; font-weight: 600;"></th>
+                  <th width="20%" style="color: #11093C; text-align: left; padding: 12px 10px; font-weight: 600;"></th>
+                  <th width="20%" style="color: #11093C; text-align: left; padding: 12px 10px; font-weight: 600;"></th>
+                  <th width="20%" style="color: #11093C; text-align: left; padding: 12px 10px; font-weight: 600;">$400,320</th>
+                  <th width="20%" style="color: #11093C; text-align: left; padding: 12px 10px; font-weight: 600;">$400,320</th>
+                  <th width="20%" style="color: #11093C; text-align: left; padding: 12px 10px; font-weight: 600;">$400,320</th>
+                  <th width="20%" style="color: #11093C; text-align: left; padding: 12px 10px; font-weight: 600;"></th>
+                </tr>
+              </thead>
+            </table>
+            <!-- PROJECT FINANCIALS -->
+
+            <!-- ${spaceBetween} -->
+            <!-- MAP -->
+            <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="width: 10%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">MAP</td>
+                <td style="width: 85%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
+              </tr>
+            </table>
+            <table style="padding: 20px 40px 20px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="text-align: center;"><img src="${map}" alt="" height="${mapHeight}px" width="750px"></td>
+              </tr>
+            </table>
+            <!-- END MAP -->
+             <!-- GALLERY -->
+             <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="width: 30%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">GALLERY</td>
+                <td style="width: 65%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
+              </tr>
+            </table>
+            <div class="grid">
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+            <!-- GALLERY -->
+             <!-- DOCUMENTS -->
+             <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
+              <tr>
+                <td style="width: 30%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">DOCUMENTS</td>
+                <td style="width: 65%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
+              </tr>
+            </table>
+            <table style="border-spacing: 10px; padding: 10px 40px 0px 40px; font-size: 14px; text-align: left; width:100%;">
+              <tr>
+                <td style="width:100%; color:rgb(37 24 99); display: flex; align-items: center;"><img src="https://confluence.mhfd.org/Icons/icon-63.svg" alt="" height="20px" style="margin-right: 3px;">Little Dry Creek_report.pdf</td>
+              </tr>
+              <tr>
+                <td style="width:100%; color:rgb(37 24 99); display: flex; align-items: center;"><img src="https://confluence.mhfd.org/Icons/icon-63.svg" alt="" height="20px" style="margin-right: 3px;">Little Dry Creek_report.pdf</td>
+              </tr>
+              <tr>
+                <td style="width:100%; color:rgb(37 24 99); display: flex; align-items: center;"><img src="https://confluence.mhfd.org/Icons/icon-63.svg" alt="" height="20px" style="margin-right: 3px;">Little Dry Creek_report.pdf</td>
+              </tr>
+            </table>
+            <br></br>
+            <!-- DOCUMENTS -->
+          </td>
+
+          <!-- COLLABORATORS AND COMMENTS -->
+          <td style="vertical-align: top;">
+            <table style="padding: 20px 25px 0px 25px;">
+              <tr>
+                <td><h3 style="font-size: 18px; color: #11093c; margin: 0px 0px 15px 0px; font-weight: bold;">TEAM COLLABORATORS</h3></td>
+              </tr>
+            </table>
+            <table style="padding: 0px 25px 20px 25px; border-spacing: 0px; ">
+              <tr>
+                <td style="width: 50px; height: 47px">
+                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px">
+                </td>
+                <td style="width: 162.5px">
+                  <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">TBD</h6>
+                  <p style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 0px; margin-top: -3px;">Project Manager</p>
+                </td>
+                <td style="width: 87.5px; text-align: right;">
+                  <span style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 15px;margin-top: -3px; margin-right:16px;">MHFD</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="width: 50px; height: 47px;">
+                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px">
+                </td>
+                <td style="width: 162.5px">
+                  <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">TBD</h6>
+                  <p style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 0px; margin-top: -3px;">Project Manager</p>
+                </td>
+                <td style="width: 87.5px; text-align: right;">
+                  <span style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 15px;margin-top: -3px; margin-right:16px;">Sponsor</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="width: 50px; height: 47px;">
+                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px"/>
+                </td>
+                <td style="width: 162.5px">
+                  <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">TBD</h6>
+                  <p style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 0px; margin-top: -3px;">Project Manager</p>
+                </td>
+                <td style="width: 87.5px; text-align: right;">
+                  <span style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 15px;margin-top: -3px; margin-right:16px;">Consultant</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="width: 50px; height: 47px;">
+                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px"/>
+                </td>
+                <td style="width: 162.5px">
+                  <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">TBD</h6>
+                  <p style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 0px; margin-top: -3px;">Project Engineer</p>
+                </td>
+                <td style="width: 87.5px; text-align: right;">
+                  <span style="font-size: 12px; color: rgba(17,9,60,.5); margin-bottom: 15px;margin-top: -3px; margin-right:16px;">Consultant</span>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
