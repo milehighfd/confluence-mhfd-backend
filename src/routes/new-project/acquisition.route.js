@@ -32,9 +32,23 @@ const multer = Multer({
 
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {isWorkPlan, projectname, description, servicearea, county, geom,
-    acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor,
-    cosponsor, cover, year, sendToWR } = req.body;
+  const {
+    isWorkPlan,
+    projectname,
+    description,
+    servicearea,
+    county,
+    geom,
+    acquisitionprogress,
+    acquisitionanticipateddate,
+    locality,
+    jurisdiction,
+    sponsor,
+    cosponsor,
+    cover,
+    year,
+    sendToWR,
+  } = req.body;
   let result = [];
   const creator = user.email;
   const defaultProjectId = '13';
@@ -42,115 +56,217 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const splitedJurisdiction = jurisdiction.split(',');
   const splitedCounty = county.split(',');
   const splitedServicearea = servicearea.split(',');
-    try {
-      const codePhaseForCapital = await CodePhaseType.findOne({
-        where: {
-          code_phase_type_id: defaultProjectId
-        }
+  try {
+    const codePhaseForCapital = await CodePhaseType.findOne({
+      where: {
+        code_phase_type_id: defaultProjectId,
+      },
+    });
+    const { duration, duration_type } = codePhaseForCapital;
+    const formatDuration = duration_type[0].toUpperCase();
+
+    const data = await projectService.saveProject(
+      CREATE_PROJECT_TABLE_V2,
+      cleanStringValue(projectname),
+      cleanStringValue(description),
+      defaultProjectId,
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      creator,
+      creator
+    );
+    result.push(data);
+    const { project_id } = data;
+    await cartoService.checkIfExistGeomThenDelete(
+      CREATE_PROJECT_TABLE,
+      project_id
+    );
+    await cartoService.insertToAcquistion(
+      CREATE_PROJECT_TABLE,
+      geom,
+      project_id
+    );
+    const response = await projectStatusService.saveProjectStatusFromCero(
+      defaultProjectId,
+      project_id,
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment()
+        .add(Number(duration), formatDuration)
+        .format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      Number(duration),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      creator,
+      creator
+    );
+    const resres = await Project.update(
+      {
+        current_project_status_id: response.project_status_id,
+      },
+      { where: { project_id: project_id } }
+    );
+    console.log(resres);
+
+    const projectsubtype = '';
+    await addProjectToBoard(
+      user,
+      servicearea,
+      county,
+      locality,
+      defaultProjectType,
+      project_id,
+      year,
+      sendToWR,
+      isWorkPlan,
+      projectname,
+      projectsubtype
+    );
+    await projectPartnerService.saveProjectPartner(
+      sponsor,
+      cosponsor,
+      project_id
+    );
+    await projectDetailService.saveProjectDetail(
+      0,
+      0,
+      project_id,
+      creator,
+      creator,
+      null,
+      0,
+      acquisitionanticipateddate,
+      acquisitionprogress
+    );
+
+    for (const j of splitedJurisdiction) {
+      await ProjectLocalGovernment.create({
+        code_local_government_id: parseInt(j),
+        project_id: project_id,
+        shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email,
       });
-      const { duration, duration_type } = codePhaseForCapital;
-      const formatDuration = duration_type[0].toUpperCase();
-
-      const data = await projectService.saveProject(CREATE_PROJECT_TABLE_V2, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
-      result.push(data)
-      const { project_id } = data;
-      await cartoService.insertToAcquistion(CREATE_PROJECT_TABLE, geom, project_id);
-      //await projectStatusService.saveProjectStatusFromCero(defaultProjectId, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
-      const response = await projectStatusService.saveProjectStatusFromCero(defaultProjectId, 
-        project_id, 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss'), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        Number(duration), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        creator, 
-        creator);
-      const resres = await Project.update({
-        current_project_status_id: response.project_status_id
-      },{ where: { project_id: project_id }});
-      console.log(resres);
-      
-      const projectsubtype = '';
-      await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan, projectname, projectsubtype);
-      await projectPartnerService.saveProjectPartner(sponsor, cosponsor, project_id);
-      await projectDetailService.saveProjectDetail(0, 0, project_id, creator, creator, null, 0, acquisitionanticipateddate, acquisitionprogress);
-
-      for (const j of splitedJurisdiction) {
-        await ProjectLocalGovernment.create({
-          code_local_government_id: parseInt(j),
-          project_id: project_id,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email
-        });
-        logger.info('created jurisdiction');
-      }
-      for (const s of splitedServicearea) {
-        await ProjectServiceArea.create({
-          project_id: project_id,
-          code_service_area_id: s,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email
-        });
-        logger.info('created service area');
-      }
-      for (const c of splitedCounty) {
-        await ProjectCounty.create({
-          state_county_id: c,
-          project_id: project_id,
-          shape_length_ft: 0
-        });
-        logger.info('created county');
-      }
-      const dataArcGis = await projectService.insertIntoArcGis(geom, project_id, cleanStringValue(projectname));
-      result.push(dataArcGis);
-      await projectService.addProjectToCache(project_id);
-    } catch (error) {
-      logger.error(error);
-      return res.status(500).send(error);
-    };
+      logger.info('created jurisdiction');
+    }
+    for (const s of splitedServicearea) {
+      await ProjectServiceArea.create({
+        project_id: project_id,
+        code_service_area_id: s,
+        shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email,
+      });
+      logger.info('created service area');
+    }
+    for (const c of splitedCounty) {
+      await ProjectCounty.create({
+        state_county_id: c,
+        project_id: project_id,
+        shape_length_ft: 0,
+      });
+      logger.info('created county');
+    }
+    const dataArcGis = await projectService.insertIntoArcGis(
+      geom,
+      project_id,
+      cleanStringValue(projectname)
+    );
+    result.push(dataArcGis);
+    await projectService.addProjectToCache(project_id);
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).send(error);
+  }
   res.send(result);
 });
 
 router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const project_id = req.params.projectid;
   const user = req.user;
-  const {isWorkPlan, projectname, description, servicearea, county, geom,
-    acquisitionprogress, acquisitionanticipateddate, locality, jurisdiction, sponsor,
-    cosponsor, cover, year, sendToWR } = req.body;
+  const {
+    isWorkPlan,
+    projectname,
+    description,
+    servicearea,
+    county,
+    geom,
+    acquisitionprogress,
+    acquisitionanticipateddate,
+    locality,
+    jurisdiction,
+    sponsor,
+    cosponsor,
+    cover,
+    year,
+    sendToWR,
+  } = req.body;
   let result = [];
   const creator = user.email;
   const splitedJurisdiction = jurisdiction.split(',');
   const splitedCounty = county.split(',');
   const splitedServicearea = servicearea.split(',');
   try {
-    const data = await projectService.updateProject(project_id, cleanStringValue(projectname), cleanStringValue(description), moment().format('YYYY-MM-DD HH:mm:ss'), creator);
-    result.push(data)
-    await cartoService.updateToCartoAcquistion(CREATE_PROJECT_TABLE, geom, project_id);
+    const data = await projectService.updateProject(
+      project_id,
+      cleanStringValue(projectname),
+      cleanStringValue(description),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      creator
+    );
+    result.push(data);
+    await cartoService.checkIfExistGeomThenDelete(
+      CREATE_PROJECT_TABLE,
+      project_id
+    );
+    await cartoService.updateToCartoAcquistion(
+      CREATE_PROJECT_TABLE,
+      geom,
+      project_id
+    );
     const projectsubtype = '';
     const projecttype = 'Acquisition';
-    updateProjectsInBoard(project_id, cleanStringValue(projectname), projecttype, projectsubtype);
-    await projectPartnerService.updateProjectPartner(sponsor, cosponsor, project_id);
-    await projectDetailService.updateProjectDetail(0, 0, project_id, creator, null, acquisitionanticipateddate, acquisitionprogress);
-    if (splitedJurisdiction) await ProjectLocalGovernment.destroy({
-      where: {
-        project_id: project_id
-      }
-    });
-    if (splitedServicearea) await ProjectServiceArea.destroy({
-      where: {
-        project_id: project_id
-      }
-    });
-    if (splitedCounty) await ProjectCounty.destroy({
-      where: {
-        project_id: project_id
-      }
-    });
+    updateProjectsInBoard(
+      project_id,
+      cleanStringValue(projectname),
+      projecttype,
+      projectsubtype
+    );
+    await projectPartnerService.updateProjectPartner(
+      sponsor,
+      cosponsor,
+      project_id
+    );
+    await projectDetailService.updateProjectDetail(
+      0,
+      0,
+      project_id,
+      creator,
+      null,
+      acquisitionanticipateddate,
+      acquisitionprogress
+    );
+    if (splitedJurisdiction)
+      await ProjectLocalGovernment.destroy({
+        where: {
+          project_id: project_id,
+        },
+      });
+    if (splitedServicearea)
+      await ProjectServiceArea.destroy({
+        where: {
+          project_id: project_id,
+        },
+      });
+    if (splitedCounty)
+      await ProjectCounty.destroy({
+        where: {
+          project_id: project_id,
+        },
+      });
     for (const j of splitedJurisdiction) {
       if (j) {
         await ProjectLocalGovernment.create({
@@ -158,21 +274,21 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
           project_id: project_id,
           shape_length_ft: 0,
           last_modified_by: user.name,
-          created_by: user.email
-        }); 
+          created_by: user.email,
+        });
       }
       logger.info('created jurisdiction');
     }
     for (const s of splitedServicearea) {
-     if(s) {
-      await ProjectServiceArea.create({
-        project_id: project_id,
-        code_service_area_id: s,
-        shape_length_ft: 0,
-        last_modified_by: user.name,
-        created_by: user.email
-      });
-     }
+      if (s) {
+        await ProjectServiceArea.create({
+          project_id: project_id,
+          code_service_area_id: s,
+          shape_length_ft: 0,
+          last_modified_by: user.name,
+          created_by: user.email,
+        });
+      }
       logger.info('created service area');
     }
     for (const c of splitedCounty) {
@@ -180,7 +296,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         await ProjectCounty.create({
           state_county_id: c,
           project_id: project_id,
-          shape_length_ft: 0
+          shape_length_ft: 0,
         });
       }
       logger.info('created county');
@@ -189,7 +305,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   } catch (error) {
     logger.error(error);
     return res.status(500).send(error);
-  };
+  }
   res.send(result);
 });
 

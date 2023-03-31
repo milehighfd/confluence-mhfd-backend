@@ -110,23 +110,47 @@ const updateCartoStudy = async (table, project_id, parsedIds) => {
   ${geomUpdate} WHERE projectid = ${project_id}`;
 
   const query = {
-    q: updateQuery
+    q: updateQuery,
   };
- try {
-  const data = await needle('post', CARTO_URL, query, { json: true });
+  try {
+    const data = await needle('post', CARTO_URL, query, { json: true });
     if (data.statusCode !== 200) logger.error(data.body);
     console.log(data.body);
     logger.info('updated');
     return data.body;
- } catch (error) {
-    logger.error('error',error);
- }
-}
-  export default {
-    insertToCarto,
-    insertToCartoStudy,
-    updateCartoStudy,
-    updateToCarto,
-    insertToAcquistion,
-    updateToCartoAcquistion
+  } catch (error) {
+    logger.error('error', error);
+  }
+};
+
+const checkIfExistGeomThenDelete = async (table, project_id) => {
+  const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)), projectid ${table} WHERE projectid = ${project_id}`;
+  const query = {
+    q: sql,
   };
+  try {
+    const data = await needle('post', CARTO_URL, query, { json: true });
+    if (data.statusCode === 200) {
+      const sql1 = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
+      const query2 = {
+        q: sql1,
+      };
+      const data = await needle('delete', CARTO_URL, query2, { json: true });
+      if (data.statusCode === 200) {
+        logger.info('DELETED 2 or more rows on carto fetch');
+      }
+    }
+  } catch (error) {
+    logger.error(error, ' pm fetch');
+  }
+};
+
+export default {
+  insertToCarto,
+  insertToCartoStudy,
+  updateCartoStudy,
+  updateToCarto,
+  insertToAcquistion,
+  updateToCartoAcquistion,
+  checkIfExistGeomThenDelete,
+};

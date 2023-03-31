@@ -38,9 +38,26 @@ const multer = Multer({
 
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {isWorkPlan, projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor, year, studyreason, otherReason, sendToWR} = req.body;
+  const {
+    isWorkPlan,
+    projectname,
+    description,
+    servicearea,
+    county,
+    ids,
+    streams,
+    cosponsor,
+    geom,
+    locality,
+    jurisdiction,
+    sponsor,
+    year,
+    studyreason,
+    otherReason,
+    sendToWR,
+  } = req.body;
   const defaultProjectId = 1;
-  const defaultProjectType = 'Study'
+  const defaultProjectType = 'Study';
   const projectsubtype = 'Master Plan';
   const creator = user.email;
   const splitedJurisdiction = jurisdiction.split(',');
@@ -57,104 +74,171 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   }
   let result = [];
 
-    try {
-      const codePhaseForCapital = await CodePhaseType.findOne({
-        where: {
-          code_phase_type_id: defaultProjectId
-        }
+  try {
+    const codePhaseForCapital = await CodePhaseType.findOne({
+      where: {
+        code_phase_type_id: defaultProjectId,
+      },
+    });
+    const { duration, duration_type } = codePhaseForCapital;
+    const formatDuration = duration_type[0].toUpperCase();
+    const data = await projectService.saveProject(
+      CREATE_PROJECT_TABLE_V2,
+      cleanStringValue(projectname),
+      cleanStringValue(description),
+      defaultProjectId,
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      creator,
+      creator
+    );
+    result.push(data);
+    const { project_id } = data;
+    if (idsArray.length) {
+      await cartoService.checkIfExistGeomThenDelete(
+        CREATE_PROJECT_TABLE,
+        project_id
+      );
+      await cartoService.insertToCartoStudy(
+        CREATE_PROJECT_TABLE,
+        project_id,
+        parsedIds
+      );
+    }
+    const response = await projectStatusService.saveProjectStatusFromCero(
+      defaultProjectId,
+      project_id,
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment()
+        .add(Number(duration), formatDuration)
+        .format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      Number(duration),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      creator,
+      creator
+    );
+    const resres = await Project.update(
+      {
+        current_project_status_id: response.project_status_id,
+      },
+      { where: { project_id: project_id } }
+    );
+
+    await addProjectToBoard(
+      user,
+      servicearea,
+      county,
+      locality,
+      defaultProjectType,
+      project_id,
+      year,
+      sendToWR,
+      isWorkPlan,
+      cleanStringValue(projectname),
+      projectsubtype
+    );
+    await projectPartnerService.saveProjectPartner(
+      sponsor,
+      cosponsor,
+      project_id
+    );
+
+    for (const j of splitedJurisdiction) {
+      await ProjectLocalGovernment.create({
+        code_local_government_id: parseInt(j),
+        project_id: project_id,
+        shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email,
       });
-      const { duration, duration_type } = codePhaseForCapital;
-      const formatDuration = duration_type[0].toUpperCase();
-      const data = await projectService.saveProject(CREATE_PROJECT_TABLE_V2, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
-      result.push(data);
-      const { project_id } = data;
-      if (idsArray.length) {
-        await cartoService.insertToCartoStudy(CREATE_PROJECT_TABLE, project_id, parsedIds);
-      }
-      const response = await projectStatusService.saveProjectStatusFromCero(defaultProjectId, 
-        project_id, 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss'), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        Number(duration), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        creator, 
-        creator);
-      const resres = await Project.update({
-        current_project_status_id: response.project_status_id
-      },{ where: { project_id: project_id }});
-      console.log(resres);
-      await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan, cleanStringValue(projectname), projectsubtype);
-      await projectPartnerService.saveProjectPartner(sponsor, cosponsor, project_id);
-      
-      for (const j of splitedJurisdiction) {
-        await ProjectLocalGovernment.create({
-          code_local_government_id: parseInt(j),
-          project_id: project_id,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email
-        });
-        logger.info('created jurisdiction');
-      }
-      for (const s of splitedServicearea) {
-        await ProjectServiceArea.create({
-          project_id: project_id,
-          code_service_area_id: s,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email
-        });
-        logger.info('created service area');
-      }
-      for (const c of splitedCounty) {
-        await ProjectCounty.create({
-          state_county_id: c,
-          project_id: project_id,
-          shape_length_ft: 0
-        });
-        logger.info('created county');
-      }
-      for (const stream of JSON.parse(streams)) {
-        await projectStreamService.saveProjectStream({
-          project_id: project_id,
-          stream_id: stream.stream ? stream.stream[0].stream_id : 0,
-          length_in_mile: new Intl.NumberFormat('en-US', {
-            style: 'decimal',
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1
-          }).format(stream.length * 0.000621371),
-          drainage_area_in_sq_miles: new Intl.NumberFormat('en-US', {
-            style: 'decimal',
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1
-          }).format(stream.drainage),
-          local_government_id: stream.code_local_goverment.length > 0 ? stream.code_local_goverment[0].objectid : 0
-        });
-      }
-      await studyService.saveStudy(project_id, studyreason, creator, creator, otherReason);
-      await projectService.addProjectToCache(project_id);
-      logger.info('created study correctly');
-    } catch (error) {
-      logger.error('ERROR ', error);
-      return res.status(500).send(error);
-    };
+      logger.info('created jurisdiction');
+    }
+    for (const s of splitedServicearea) {
+      await ProjectServiceArea.create({
+        project_id: project_id,
+        code_service_area_id: s,
+        shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email,
+      });
+      logger.info('created service area');
+    }
+    for (const c of splitedCounty) {
+      await ProjectCounty.create({
+        state_county_id: c,
+        project_id: project_id,
+        shape_length_ft: 0,
+      });
+      logger.info('created county');
+    }
+    for (const stream of JSON.parse(streams)) {
+      await projectStreamService.saveProjectStream({
+        project_id: project_id,
+        stream_id: stream.stream ? stream.stream[0].stream_id : 0,
+        length_in_mile: new Intl.NumberFormat('en-US', {
+          style: 'decimal',
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        }).format(stream.length * 0.000621371),
+        drainage_area_in_sq_miles: new Intl.NumberFormat('en-US', {
+          style: 'decimal',
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        }).format(stream.drainage),
+        local_government_id:
+          stream.code_local_goverment.length > 0
+            ? stream.code_local_goverment[0].objectid
+            : 0,
+      });
+    }
+    await studyService.saveStudy(
+      project_id,
+      studyreason,
+      creator,
+      creator,
+      otherReason
+    );
+    await projectService.addProjectToCache(project_id);
+    logger.info('created study correctly');
+  } catch (error) {
+    logger.error('ERROR ', error);
+    return res.status(500).send(error);
+  }
   res.send(result);
 });
 
 router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const project_id = req.params.projectid;
-  const {isWorkPlan, projectname, description, servicearea, county, ids, streams, cosponsor, geom, locality, jurisdiction, sponsor, year, studyreason, otherReason, sendToWR} = req.body;
+  const {
+    isWorkPlan,
+    projectname,
+    description,
+    servicearea,
+    county,
+    ids,
+    streams,
+    cosponsor,
+    geom,
+    locality,
+    jurisdiction,
+    sponsor,
+    year,
+    studyreason,
+    otherReason,
+    sendToWR,
+  } = req.body;
   const creator = user.email;
   const splitedJurisdiction = jurisdiction.split(',');
   const splitedCounty = county.split(',');
   const splitedServicearea = servicearea.split(',');
   let parsedIds = '';
-  let idsArray = JSON.parse(ids).filter(e => !!e);
+  let idsArray = JSON.parse(ids).filter((e) => !!e);
   for (const id of idsArray) {
     if (parsedIds) {
       parsedIds += ',';
@@ -168,29 +252,52 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       cleanStringValue(projectname),
       cleanStringValue(description),
       moment().format('YYYY-MM-DD HH:mm:ss'),
-      creator)
+      creator
+    );
     result.push(data);
-    if (idsArray.length) await cartoService.updateCartoStudy(CREATE_PROJECT_TABLE, project_id, parsedIds);
+    if (idsArray.length) {
+      await cartoService.checkIfExistGeomThenDelete(
+        CREATE_PROJECT_TABLE,
+        project_id
+      );
+      await cartoService.updateCartoStudy(
+        CREATE_PROJECT_TABLE,
+        project_id,
+        parsedIds
+      );
+    }
     const projecttype = 'Study';
     const projectsubtype = 'Master Plan';
-    updateProjectsInBoard(project_id, cleanStringValue(projectname), projecttype, projectsubtype);
-    await projectPartnerService.updateProjectPartner(sponsor, cosponsor, project_id);
+    updateProjectsInBoard(
+      project_id,
+      cleanStringValue(projectname),
+      projecttype,
+      projectsubtype
+    );
+    await projectPartnerService.updateProjectPartner(
+      sponsor,
+      cosponsor,
+      project_id
+    );
 
-    if (splitedJurisdiction) await ProjectLocalGovernment.destroy({
-      where: {
-        project_id: project_id
-      }
-    });
-    if (splitedServicearea) await ProjectServiceArea.destroy({
-      where: {
-        project_id: project_id
-      }
-    });
-    if (splitedCounty) await ProjectCounty.destroy({
-      where: {
-        project_id: project_id
-      }
-    });
+    if (splitedJurisdiction)
+      await ProjectLocalGovernment.destroy({
+        where: {
+          project_id: project_id,
+        },
+      });
+    if (splitedServicearea)
+      await ProjectServiceArea.destroy({
+        where: {
+          project_id: project_id,
+        },
+      });
+    if (splitedCounty)
+      await ProjectCounty.destroy({
+        where: {
+          project_id: project_id,
+        },
+      });
 
     for (const j of splitedJurisdiction) {
       if (j) {
@@ -199,21 +306,21 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
           project_id: project_id,
           shape_length_ft: 0,
           last_modified_by: user.name,
-          created_by: user.email
-        }); 
+          created_by: user.email,
+        });
       }
       logger.info('created jurisdiction');
     }
     for (const s of splitedServicearea) {
-     if(s) {
-      await ProjectServiceArea.create({
-        project_id: project_id,
-        code_service_area_id: s,
-        shape_length_ft: 0,
-        last_modified_by: user.name,
-        created_by: user.email
-      });
-     }
+      if (s) {
+        await ProjectServiceArea.create({
+          project_id: project_id,
+          code_service_area_id: s,
+          shape_length_ft: 0,
+          last_modified_by: user.name,
+          created_by: user.email,
+        });
+      }
       logger.info('created service area');
     }
     for (const c of splitedCounty) {
@@ -221,7 +328,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         await ProjectCounty.create({
           state_county_id: c,
           project_id: project_id,
-          shape_length_ft: 0
+          shape_length_ft: 0,
         });
       }
       logger.info('created county');
@@ -230,19 +337,24 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     for (const stream of JSON.parse(streams)) {
       await projectStreamService.saveProjectStream({
         project_id: project_id,
-        stream_id: stream.stream.stream_id ? stream.stream.stream_id : stream.stream[0].stream_id,
+        stream_id: stream.stream.stream_id
+          ? stream.stream.stream_id
+          : stream.stream[0].stream_id,
         length_in_mile: stream.length,
         drainage_area_in_sq_miles: stream.drainage,
-        local_government_id: stream.code_local_goverment.length > 0 ? stream.code_local_goverment[0].objectid : 0
+        local_government_id:
+          stream.code_local_goverment.length > 0
+            ? stream.code_local_goverment[0].objectid
+            : 0,
       });
     }
-    await studyService.updateStudy(project_id, creator,  otherReason);
+    await studyService.updateStudy(project_id, creator, otherReason);
     await projectService.updateProjectOnCache(project_id);
     logger.info('updated study');
   } catch (error) {
-    logger.error('error',error);
+    logger.error('error', error);
     return res.status(500).send(error);
-  };
+  }
   res.send('updated study');
 });
 

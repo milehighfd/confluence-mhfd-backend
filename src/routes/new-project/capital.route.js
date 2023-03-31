@@ -191,38 +191,47 @@ router.get('/sync', async (req, res) => {
   let isCorrectSync = false;
   const syncGeoms = [];
   // TODO: save the geom to carto
-  console.log('SYNC ******* \n\n Get Geometries from ArcGis', geoms.success, geoms.geoms.length);
+  console.log(
+    'SYNC ******* \n\n Get Geometries from ArcGis',
+    geoms.success,
+    geoms.geoms.length
+  );
   try {
-    if ( geoms.success) {
+    if (geoms.success) {
       const TOTAL_GEOMS = geoms.geoms.length;
-      for(let i = 0; i < geoms.geoms.length; ++i) {
+      for (let i = 0; i < geoms.geoms.length; ++i) {
         // if (i > 2) break;
         let currentGeojsonToUpdate = geoms.geoms[i];
         const currentProjectId = currentGeojsonToUpdate.properties.projectId;
         const currentObjectId = currentGeojsonToUpdate.properties.OBJECTID;
-        const currentProjectName = currentGeojsonToUpdate.properties.projectName;
+        const currentProjectName =
+          currentGeojsonToUpdate.properties.projectName;
         const deleteFC = await deleteFromCarto(currentProjectId); // its working, is deleting indeed
         console.log('Delete from Carto ', deleteFC);
         if (deleteFC.success) {
-          const inserted = await insertGeojsonToCarto(JSON.stringify(currentGeojsonToUpdate.geometry), currentProjectId, currentProjectName);
+          const inserted = await insertGeojsonToCarto(
+            JSON.stringify(currentGeojsonToUpdate.geometry),
+            currentProjectId,
+            currentProjectName
+          );
           console.log('SYNC ******* \n\n Inserted into Carto', inserted);
           if (inserted.success) {
             const upflag = await updateFlagArcGis(currentObjectId, 0, TOKEN);
             console.log('SYNC ******* \n\n Updated in ArcGIS');
             if (upflag.success) {
-              console.log('Complete ', i,'/',TOTAL_GEOMS);
+              console.log('Complete ', i, '/', TOTAL_GEOMS);
               isCorrectSync = true;
               syncGeoms.push({
                 projectid: currentProjectId,
                 projectname: currentProjectName,
-                sync: isCorrectSync
+                sync: isCorrectSync,
               });
             } else {
               syncGeoms.push({
                 projectid: currentProjectId,
                 projectname: currentProjectName,
                 sync: false,
-                error: upflag.error ? upflag.error : 'failed at update flag'
+                error: upflag.error ? upflag.error : 'failed at update flag',
               });
             }
           } else {
@@ -230,7 +239,7 @@ router.get('/sync', async (req, res) => {
             syncGeoms.push({
               projectid: currentProjectId,
               projectname: currentProjectName,
-              sync: false
+              sync: false,
             });
           }
         } else {
@@ -238,23 +247,42 @@ router.get('/sync', async (req, res) => {
           syncGeoms.push({
             projectid: currentProjectId,
             projectname: currentProjectName,
-            sync: false
+            sync: false,
           });
-        }  
-      };
+        }
+      }
     }
     return res.send(syncGeoms);
-
-  } catch(error) {
+  } catch (error) {
     return res.send('Failed At Syncronization');
   }
 });
-
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const { isWorkPlan, projectname, description, servicearea, county, geom,
-    overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost, year, sendToWR, componentcost, componentcount } = req.body;
+  const {
+    isWorkPlan,
+    projectname,
+    description,
+    servicearea,
+    county,
+    geom,
+    overheadcost,
+    overheadcostdescription,
+    additionalcost,
+    additionalcostdescription,
+    independetComponent,
+    locality,
+    components,
+    jurisdiction,
+    sponsor,
+    cosponsor,
+    cover,
+    estimatedcost,
+    year,
+    sendToWR,
+    componentcost,
+    componentcount,
+  } = req.body;
   const creator = user.email;
   const defaultProjectId = '5';
   const defaultProjectType = 'Capital';
@@ -263,199 +291,283 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const splitedCounty = county.split(',');
   const splitedServicearea = servicearea.split(',');
   const splitedOverheadcost = overheadcost.split(',');
-  const overheadcostIds = [2,6,7,8,9,10,12,11,13];
+  const overheadcostIds = [2, 6, 7, 8, 9, 10, 12, 11, 13];
   const aditionalCostId = 4;
+  try {
+    const codePhaseForCapital = await CodePhaseType.findOne({
+      where: {
+        code_phase_type_id: 5,
+      },
+    });
+    const { duration, duration_type } = codePhaseForCapital;
+    const formatDuration = duration_type[0].toUpperCase();
+    const data = await projectService.saveProject(
+      CREATE_PROJECT_TABLE_V2,
+      cleanStringValue(projectname),
+      cleanStringValue(description),
+      defaultProjectId,
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      creator,
+      creator
+    );
+    result.push(data);
+    const { project_id } = data;
+    await cartoService.checkIfExistGeomThenDelete(
+      CREATE_PROJECT_TABLE,
+      project_id
+    );
+    await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
+    const response = await projectStatusService.saveProjectStatusFromCero(
+      5,
+      project_id,
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment()
+        .add(Number(duration), formatDuration)
+        .format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      Number(duration),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      creator,
+      creator
+    );
+    const resres = await Project.update(
+      {
+        current_project_status_id: response.project_status_id,
+      },
+      { where: { project_id: project_id } }
+    );
+    console.log(resres);
+    //await attachmentService.uploadFiles(user, req.files, project_id, cover);
+    const projectsubtype = '';
+    await addProjectToBoard(
+      user,
+      servicearea,
+      county,
+      locality,
+      defaultProjectType,
+      project_id,
+      year,
+      sendToWR,
+      isWorkPlan,
+      projectname,
+      projectsubtype
+    );
+    await projectPartnerService.saveProjectPartner(
+      sponsor,
+      cosponsor,
+      project_id
+    );
     try {
-      const codePhaseForCapital = await CodePhaseType.findOne({
-        where: {
-          code_phase_type_id: 5
-        }
+      //creating aditional cost
+      await costService.saveProjectCost({
+        project_id: project_id,
+        cost: Number(additionalcost),
+        code_cost_type_id: aditionalCostId,
+        cost_description: additionalcostdescription,
+        created_by: creator,
+        modified_by: creator,
       });
-      const { duration, duration_type } = codePhaseForCapital;
-      const formatDuration = duration_type[0].toUpperCase();
-      const data = await projectService.saveProject(CREATE_PROJECT_TABLE_V2, cleanStringValue(projectname), cleanStringValue(description), defaultProjectId, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator)
-      result.push(data)
-      const { project_id } = data;
-      await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
-      const response = await projectStatusService.saveProjectStatusFromCero(5, 
-        project_id, 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss'), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        Number(duration), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        moment().format('YYYY-MM-DD HH:mm:ss'), 
-        creator, 
-        creator);
-      const resres = await Project.update({
-        current_project_status_id: response.project_status_id
-      },{ where: { project_id: project_id }});
-      console.log(resres);
-      //await attachmentService.uploadFiles(user, req.files, project_id, cover);
-      const projectsubtype = '';
-      await addProjectToBoard(user, servicearea, county, locality, defaultProjectType, project_id, year, sendToWR, isWorkPlan, projectname, projectsubtype);
-      await projectPartnerService.saveProjectPartner(sponsor, cosponsor, project_id);
-      try {
-        //creating aditional cost
+      //creating overhead cost
+      for (let index = 0; index < 9; index++) {
         await costService.saveProjectCost({
           project_id: project_id,
-          cost: Number(additionalcost),
-          code_cost_type_id: aditionalCostId,
-          cost_description: additionalcostdescription,
+          cost: Number(splitedOverheadcost[index]),
+          code_cost_type_id: overheadcostIds[index],
+          cost_description: index === 0 ? overheadcostdescription : null,
           created_by: creator,
           modified_by: creator,
-        })
-        //creating overhead cost
-        for (let index = 0; index < 9; index++) {
-          await costService.saveProjectCost({
-            project_id: project_id,
-            cost: Number(splitedOverheadcost[index]),
-            code_cost_type_id: overheadcostIds[index],
-            cost_description: index === 0 ? overheadcostdescription : null,
-            created_by: creator,
-            modified_by: creator,
-          })
-        }
-      } catch (error) {
-        logger.error('Error', error)
-        throw error;
-      }
-      for (const j of splitedJurisdiction) {
-        await ProjectLocalGovernment.create({
-          code_local_government_id: parseInt(j),
-          project_id: project_id,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email
         });
-        logger.info('created jurisdiction');
       }
-      for (const s of splitedServicearea) {
-        await ProjectServiceArea.create({
-          project_id: project_id,
-          code_service_area_id: s,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email
-        });
-        logger.info('created service area');
-      }
-      for (const c of splitedCounty) {
-        await ProjectCounty.create({
-          state_county_id: c,
-          project_id: project_id,
-          shape_length_ft: 0
-        });
-        logger.info('created county');
-      }
-      for (const independent of JSON.parse(independetComponent)) {
-        try {
-          await projectIndependentActionService.saveProjectIndependentAction({
-            action_name: independent.name,
-            project_id: project_id,
-            cost: Number(independent.cost),
-            action_status: independent.status,
-            last_modified_by: creator,
-            created_by: creator
-          });
-          logger.info('create independent component');
-        } catch (error) {
-          logger.error('cannot create independent component ' + error);
-        }
-      } 
-
-      for (const component of JSON.parse(components)) { 
-        try {
-          const action = {
-            project_id: project_id,
-            object_id: component.objectid,
-            source_table_name: component.table,
-            last_modified_by: creator,
-            created_by: creator
-          };
-          await projectProposedActionService.saveProjectAction(action);
-          logger.info('create component');
-        } catch (error) {
-          logger.error('cannot create component ' + error);
-        }
-      }
-      const dataArcGis = await projectService.insertIntoArcGis(geom, project_id, cleanStringValue(projectname));
-      await projectService.addProjectToCache(project_id);
-      result.push(dataArcGis);
     } catch (error) {
-      logger.error(error);
+      logger.error('Error', error);
+      throw error;
     }
+    for (const j of splitedJurisdiction) {
+      await ProjectLocalGovernment.create({
+        code_local_government_id: parseInt(j),
+        project_id: project_id,
+        shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email,
+      });
+      logger.info('created jurisdiction');
+    }
+    for (const s of splitedServicearea) {
+      await ProjectServiceArea.create({
+        project_id: project_id,
+        code_service_area_id: s,
+        shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email,
+      });
+      logger.info('created service area');
+    }
+    for (const c of splitedCounty) {
+      await ProjectCounty.create({
+        state_county_id: c,
+        project_id: project_id,
+        shape_length_ft: 0,
+      });
+      logger.info('created county');
+    }
+    for (const independent of JSON.parse(independetComponent)) {
+      try {
+        await projectIndependentActionService.saveProjectIndependentAction({
+          action_name: independent.name,
+          project_id: project_id,
+          cost: Number(independent.cost),
+          action_status: independent.status,
+          last_modified_by: creator,
+          created_by: creator,
+        });
+        logger.info('create independent component');
+      } catch (error) {
+        logger.error('cannot create independent component ' + error);
+      }
+    }
+
+    for (const component of JSON.parse(components)) {
+      try {
+        const action = {
+          project_id: project_id,
+          object_id: component.objectid,
+          source_table_name: component.table,
+          last_modified_by: creator,
+          created_by: creator,
+        };
+        await projectProposedActionService.saveProjectAction(action);
+        logger.info('create component');
+      } catch (error) {
+        logger.error('cannot create component ' + error);
+      }
+    }
+    const dataArcGis = await projectService.insertIntoArcGis(
+      geom,
+      project_id,
+      cleanStringValue(projectname)
+    );
+    await projectService.addProjectToCache(project_id);
+    result.push(dataArcGis);
+  } catch (error) {
+    logger.error(error);
+  }
   res.send(result);
 });
-
 
 router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const project_id = req.params.projectid;
   const user = req.user;
-  const { isWorkPlan, projectname, description, servicearea, county, geom,
-    overheadcost, overheadcostdescription, additionalcost, additionalcostdescription,
-    independetComponent, locality, components, jurisdiction, sponsor, cosponsor, cover, estimatedcost, year, sendToWR, componentcost, componentcount } = req.body;
+  const {
+    isWorkPlan,
+    projectname,
+    description,
+    servicearea,
+    county,
+    geom,
+    overheadcost,
+    overheadcostdescription,
+    additionalcost,
+    additionalcostdescription,
+    independetComponent,
+    locality,
+    components,
+    jurisdiction,
+    sponsor,
+    cosponsor,
+    cover,
+    estimatedcost,
+    year,
+    sendToWR,
+    componentcost,
+    componentcount,
+  } = req.body;
   const creator = user.email;
   let result = [];
   const splitedJurisdiction = jurisdiction.split(',');
   const splitedCounty = county.split(',');
   const splitedServicearea = servicearea.split(',');
-  const splitedOverheadcost = overheadcost.split(',').filter((e)=> e >= 0);
-  console.log(splitedOverheadcost, 'splitedOverheadcost');
-  const overheadcostIds = [2,6,7,8,9,10,12,11,13];
+  const splitedOverheadcost = overheadcost.split(',').filter((e) => e >= 0);
+  const overheadcostIds = [2, 6, 7, 8, 9, 10, 12, 11, 13];
   const aditionalCostId = 4;
   try {
-    const data = await projectService.updateProject(project_id, cleanStringValue(projectname), cleanStringValue(description), moment().format('YYYY-MM-DD HH:mm:ss'), creator);
-    result.push(data)
+    const data = await projectService.updateProject(
+      project_id,
+      cleanStringValue(projectname),
+      cleanStringValue(description),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      creator
+    );
+    result.push(data);
+    await cartoService.checkIfExistGeomThenDelete(
+      CREATE_PROJECT_TABLE,
+      project_id
+    );
     await cartoService.updateToCarto(CREATE_PROJECT_TABLE, geom, project_id);
     const projectsubtype = '';
     const projecttype = 'Capital';
-    updateProjectsInBoard(project_id, cleanStringValue(projectname), projecttype, projectsubtype);
-    await projectPartnerService.updateProjectPartner(sponsor, cosponsor, project_id);
+    updateProjectsInBoard(
+      project_id,
+      cleanStringValue(projectname),
+      projecttype,
+      projectsubtype
+    );
+    await projectPartnerService.updateProjectPartner(
+      sponsor,
+      cosponsor,
+      project_id
+    );
     try {
       //creating aditional cost
-      await costService.updateProjectOverhead({
-        cost: Number(additionalcost),
-        code_cost_type_id: aditionalCostId,
-        cost_description: additionalcostdescription,
-        modified_by: creator,
-      },
+      await costService.updateProjectOverhead(
+        {
+          cost: Number(additionalcost),
+          code_cost_type_id: aditionalCostId,
+          cost_description: additionalcostdescription,
+          modified_by: creator,
+        },
         project_id,
         aditionalCostId
       );
       //creating overhead cost
       for (let index = 0; index < 9; index++) {
-        await costService.updateProjectOverhead({
-          cost: Number(splitedOverheadcost[index]),
-          code_cost_type_id: overheadcostIds[index],
-          cost_description: index === 0 ? overheadcostdescription : null,
-          modified_by: creator,
-        },
-        project_id,
-        overheadcostIds[index]
+        await costService.updateProjectOverhead(
+          {
+            cost: Number(splitedOverheadcost[index]),
+            code_cost_type_id: overheadcostIds[index],
+            cost_description: index === 0 ? overheadcostdescription : null,
+            modified_by: creator,
+          },
+          project_id,
+          overheadcostIds[index]
         );
       }
     } catch (error) {
-      logger.error('Error', error)
+      logger.error('Error', error);
       throw error;
     }
-    if (splitedJurisdiction) await ProjectLocalGovernment.destroy({
-      where: {
-        project_id: project_id
-      }
-    });
-    if (splitedServicearea) await ProjectServiceArea.destroy({
-      where: {
-        project_id: project_id
-      }
-    });
-    if (splitedCounty) await ProjectCounty.destroy({
-      where: {
-        project_id: project_id
-      }
-    });
+    if (splitedJurisdiction)
+      await ProjectLocalGovernment.destroy({
+        where: {
+          project_id: project_id,
+        },
+      });
+    if (splitedServicearea)
+      await ProjectServiceArea.destroy({
+        where: {
+          project_id: project_id,
+        },
+      });
+    if (splitedCounty)
+      await ProjectCounty.destroy({
+        where: {
+          project_id: project_id,
+        },
+      });
     for (const j of splitedJurisdiction) {
       if (j) {
         await ProjectLocalGovernment.create({
@@ -463,21 +575,21 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
           project_id: project_id,
           shape_length_ft: 0,
           last_modified_by: user.name,
-          created_by: user.email
-        }); 
+          created_by: user.email,
+        });
       }
       logger.info('created jurisdiction');
     }
     for (const s of splitedServicearea) {
-     if(s) {
-      await ProjectServiceArea.create({
-        project_id: project_id,
-        code_service_area_id: s,
-        shape_length_ft: 0,
-        last_modified_by: user.name,
-        created_by: user.email
-      });
-     }
+      if (s) {
+        await ProjectServiceArea.create({
+          project_id: project_id,
+          code_service_area_id: s,
+          shape_length_ft: 0,
+          last_modified_by: user.name,
+          created_by: user.email,
+        });
+      }
       logger.info('created service area');
     }
     for (const c of splitedCounty) {
@@ -485,7 +597,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         await ProjectCounty.create({
           state_county_id: c,
           project_id: project_id,
-          shape_length_ft: 0
+          shape_length_ft: 0,
         });
       }
       logger.info('created county');
@@ -501,32 +613,32 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
             project_id: project_id,
             cost: Number(independent.cost),
             action_status: independent.status,
-            last_modified_by: creator
+            last_modified_by: creator,
           });
-        }else {
+        } else {
           await projectIndependentActionService.saveProjectIndependentAction({
             action_name: independent.action_name,
             project_id: project_id,
             cost: Number(independent.cost),
             action_status: independent.action_status,
-            last_modified_by: creator
+            last_modified_by: creator,
           });
         }
-        
+
         logger.info('create independent component');
       } catch (error) {
         logger.error('cannot create independent component ' + error);
         throw error;
       }
-    } 
-    for (const component of JSON.parse(components)) { 
+    }
+    for (const component of JSON.parse(components)) {
       try {
         const action = {
           project_id: project_id,
           object_id: component.objectid,
           source_table_name: component.table,
           last_modified_by: creator,
-          created_by: creator
+          created_by: creator,
         };
         await projectProposedActionService.saveProjectAction(action);
         logger.info('create component');
@@ -538,7 +650,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     projectService.updateProject(project_id);
   } catch (error) {
     logger.error(error);
-  };
+  }
   res.send(result);
 });
 
