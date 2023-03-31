@@ -39,6 +39,7 @@ const listProjects = async (req, res) => {
   const { body } = req;
   const bounds = body?.bounds;
   let projects = await projectService.getProjects(null, bounds, offset, limit);
+  // let projects = JSON.parse(JSON.stringify(projectsCache))
   projects.forEach(project => {
     delete project.centroid;
     delete project.problems;
