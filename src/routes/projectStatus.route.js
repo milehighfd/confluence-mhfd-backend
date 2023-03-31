@@ -80,10 +80,17 @@ router.post('/create-group', [auth], async (req, res) => {
       if (hasStatus) {
         groups.push(ProjectStatus.update(newStatus, {
           where: {
-            project_id: project_id,
+            project_id,
             code_phase_type_id: element.phase_id,
           }
-        }));
+        }).then(() => {
+          return ProjectStatus.findOne({
+            where: {
+              project_id,
+              code_phase_type_id: element.phase_id,
+            }
+          })
+        }));  
       } else {
         groups.push(ProjectStatus.create(newStatus));
       }
@@ -110,6 +117,7 @@ router.post('/create-group', [auth], async (req, res) => {
   }
   // code_phase_type  
 });
+
 
 router.post('/', async (req, res) => {
   const code_phase_type_id = req.body.code_phase_type_id;
