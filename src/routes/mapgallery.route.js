@@ -35,6 +35,7 @@ import {
    statusList
 } from 'bc/lib/gallery.constants.js';
 import ProjectService from 'bc/services/project.service.js';
+import newPrintProject from 'bc/services/mapgallery.print.service';
 const router = express.Router();
 const PROJECT_TABLES = [MAIN_PROJECT_TABLE];
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
