@@ -154,6 +154,14 @@ export const printProblem = async (data, components, map, problempart) => {
 
   return pdf.create(html, options);
 }
+
+// const validateDetailsInfo = (k, _data, value =>{
+//   if (k.includes(value) && _data[k].length > 0) {
+//       return true;
+//   }
+//   return false;
+// })
+
 export const newPrintProject = async (_data) => {
   let data = {};
 
@@ -165,46 +173,76 @@ export const newPrintProject = async (_data) => {
       data[k] = _data[k] ? _data[k] : 'N/A';
     }
     if (k.includes('project_statuses') && _data[k].length > 0) {
+      data['phase'] =
+      _data?.project_statuses[0].code_phase_type.code_status_type.status_name;
+        data['status'] =
+          _data?.project_statuses[0].code_phase_type.code_status_type.status_name;
       data['project_type_name'] =
         _data?.project_statuses[0].code_phase_type.code_project_type.project_type_name;
-    }
+    } 
+    
     if (k.includes('project_partners') && _data[k].length > 0) {
-      data['sponsor'] =
-        _data?.project_partners[0].business_associate.business_name;
-    }
+
+        for (let i = 0; i < _data?.project_partners.length; i++) {
+          if(_data?.project_partners[i]?.business_associate.code_partner_type_id == 11){
+            data['sponsor'] =
+            _data?.project_partners[i].business_associate.business_name;
+          }
+          if(_data?.project_partners[i]?.business_associate.code_partner_type_id == 8){
+            data['contractor'] =
+            _data?.project_partners[i].business_associate.business_name;
+          }
+          if(_data?.project_partners[i]?.business_associate.code_partner_type_id == 3){
+            data['consultant'] =
+            _data?.project_partners[i].business_associate.business_name;
+          }
+        }
+    } 
+    
     if (k.includes('project_counties') && _data[k].length > 0) {
       data['county'] =
         _data?.project_counties[0].CODE_STATE_COUNTY.county_name;
-    }
+    } 
+    
+    if (k.includes('project_service_areas') && _data[k].length > 0) {
+      data['servicearea'] =
+        _data?.project_service_areas[0].CODE_SERVICE_AREA.service_area_name;
+    } 
+    
+    if (k.includes('project_costs') && _data[k].length > 0) {
+      data['cost'] =
+        _data?.project_costs[0].cost;
+    } 
+    
+    if (k.includes('project_streams') && _data[k].length > 0) {
+      data['stream_name'] =
+        _data?.project_streams[0].stream.stream_name;
+    } 
+    
   });
+  
   const {
     project_name,
     county,
     project_type_name,
     sponsor,
-    // servicearea,
-    // finalcost,
-    // estimatedcost,
-    // stream_name,
+    servicearea,
+    phase,
+    cost,
+    stream_name,
     // projectsubtype,
     // attachments,
-    // status,
+    status,
     // startyear,
     // completedyear,
     // frequency,
     // mhfdmanager,
     description,
-    // contractor,
-    // consultant,
+    contractor,
+    consultant,
     // problems,
   } = data;
-
-  // let cost = 0;
-  // if (finalcost) {
-  //   cost = finalcost;
-  // } else if (estimatedcost) {
-  //   cost = estimatedcost;
-  // }
+  // let mainImage = problemtype ? `https://confdev.mhfd.org/detailed/${problemtype}.png` : 'https://i.imgur.com/kLyZbrB.jpg'
   // const mapHeight = 500;
   // const URL_BASE = 'https://confdev.mhfd.org/';
   // const urlImage = projecttype === 'Capital' ? `${URL_BASE}detailed/capital.png` :
@@ -216,23 +254,30 @@ export const newPrintProject = async (_data) => {
   //             projectsubtype === 'Minor Repairs' ? `${URL_BASE}detailed/minor-repairs.png` :
   //               `${URL_BASE}detailed/debris-management.png`) : 'https://i.imgur.com/kLyZbrB.jpg'
 
+  data.forEach(projectData => {
+    if(projectData === undefined){
+      data[projectData] = 'N/A';
+    }
+  });
   html = html.split('${projectname}').join(project_name);
   html = html.split('${projecttype}').join(project_type_name + ' Project');
   html = html.split('${sponsor}').join(sponsor);
   html = html.split('${county}').join(county);
-  // html = html.split('${servicearea}').join(servicearea);
-  // html = html.split('${cost}').join(cost ? priceFormatter(cost) : 'No Cost Data');
-  // html = html.split('${status}').join(status);
-  // html = html.split('${streamname}').join(stream_name);
+  html = html.split('${servicearea}').join(servicearea);
+  html = html.split('${cost}').join(cost ? priceFormatter(cost) : 'No Cost Data');
+  html = html.split('${status}').join(status);
+  html = html.split('${phase}').join(phase);
+  html = html.split('${streamname}').join(stream_name);
   // html = html.split('${projectsubtype}').join(projectsubtype);
   // html = html.split('${attachmentUrl}').join(attachments.length > 0 ? attachments[0] : urlImage);
   // html = html.split('${startyear}').join(startyear);
   // html = html.split('${completedyear}').join(completedyear);
   // html = html.split('${frequency}').join(frequency);
   // html = html.split('${mhfdmanager}').join(mhfdmanager);
+  // html = html.split('${mainImage}').join(mainImage);  
   html = html.split('${description}').join(description);
-  // html = html.split('${contractor}').join(contractor);
-  // html = html.split('${consultant}').join(consultant);
+  html = html.split('${contractor}').join(contractor);
+  html = html.split('${consultant}').join(consultant);
   // html = html.split('${mapHeight}').join(mapHeight);
 
   // let _problems = problems.length > 0 ? problems : [{ problemname: '', problempriority: '' }]
