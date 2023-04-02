@@ -34,7 +34,7 @@ import {
 import {
    statusList
 } from 'bc/lib/gallery.constants.js';
-
+import ProjectService from 'bc/services/project.service.js';
 const router = express.Router();
 const PROJECT_TABLES = [MAIN_PROJECT_TABLE];
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
@@ -916,6 +916,29 @@ const getProblemParts = async (id) => {
     });
    return data;
 }
+router.post('/project-pdf/:id', async (req, res) => {
+   const { id } = req.params
+   try {
+      const data = await ProjectService.getDetails(id);
+      // res.send(data);
+      // console.log(data);
+      // try {
+
+         let pdfObject = await newPrintProject(data);
+         pdfObject.toBuffer(function (err, buffer) {
+            if (err) return res.send(err);
+            res.type('pdf');
+            res.end(buffer, 'binary');
+         })
+      // } catch (e) {
+      //    logger.error(e);
+      //    // res.status(500).send({ error: 'Not able to generated PDF.' });
+      // }
+   } catch (error) {
+      logger.error(error);
+      res.send({ error: 'No there data with ID' });
+   }
+});
 
 router.post('/problem-by-id/:id/pdf', async (req, res) => {
    const id = req.params.id;
