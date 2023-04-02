@@ -158,6 +158,15 @@ export const newPrintProject = async (_data) => {
   let data = {};
 
   var html = fs.readFileSync('./pdf-templates/Projects2.html', 'utf8');
+  Object.keys(_data).forEach(k => {
+    if (k.includes('cost')) {
+      data[k] = _data[k];
+    } else if (k === 'description') {
+      data[k] = _data[k] ? _data[k] : 'No Data';
+    } else {
+      data[k] = _data[k] ? _data[k] : 'N/A';
+    }
+  })
   const {
     project_name,
     // county,
