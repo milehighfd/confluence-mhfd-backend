@@ -168,12 +168,16 @@ export const newPrintProject = async (_data) => {
       data['project_type_name'] =
         _data?.project_statuses[0].code_phase_type.code_project_type.project_type_name;
     }
+    if (k.includes('project_partners') && _data[k].length > 0) {
+      data['sponsor'] =
+        _data?.project_partners[0].business_associate.business_name;
+    }
   });
   const {
     project_name,
     // county,
     project_type_name,
-    // sponsor,
+    sponsor,
     // servicearea,
     // finalcost,
     // estimatedcost,
@@ -210,7 +214,7 @@ export const newPrintProject = async (_data) => {
 
   html = html.split('${projectname}').join(project_name);
   html = html.split('${projecttype}').join(project_type_name + ' Project');
-  // html = html.split('${sponsor}').join(sponsor);
+  html = html.split('${sponsor}').join(sponsor);
   // html = html.split('${county}').join(county);
   // html = html.split('${servicearea}').join(servicearea);
   // html = html.split('${cost}').join(cost ? priceFormatter(cost) : 'No Cost Data');
