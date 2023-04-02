@@ -160,24 +160,24 @@ export const newPrintProject = async (_data) => {
   var html = fs.readFileSync('./pdf-templates/Projects2.html', 'utf8');
   const {
     project_name,
-    county,
-    project_type_name,
-    sponsor,
-    servicearea,
+    // county,
+    // project_type_name,
+    // sponsor,
+    // servicearea,
     // finalcost,
     // estimatedcost,
-    stream_name,
-    projectsubtype,
-    attachments,
-    status,
-    startyear,
-    completedyear,
-    frequency,
-    mhfdmanager,
+    // stream_name,
+    // projectsubtype,
+    // attachments,
+    // status,
+    // startyear,
+    // completedyear,
+    // frequency,
+    // mhfdmanager,
     description,
-    contractor,
-    consultant,
-    problems,
+    // contractor,
+    // consultant,
+    // problems,
   } = data;
 
   // let cost = 0;
@@ -198,7 +198,7 @@ export const newPrintProject = async (_data) => {
   //               `${URL_BASE}detailed/debris-management.png`) : 'https://i.imgur.com/kLyZbrB.jpg'
 
   html = html.split('${projectname}').join(project_name);
-  html = html.split('${projecttype}').join(project_type_name + ' Project');
+  // html = html.split('${projecttype}').join(project_type_name + ' Project');
   // html = html.split('${sponsor}').join(sponsor);
   // html = html.split('${county}').join(county);
   // html = html.split('${servicearea}').join(servicearea);
@@ -211,7 +211,7 @@ export const newPrintProject = async (_data) => {
   // html = html.split('${completedyear}').join(completedyear);
   // html = html.split('${frequency}').join(frequency);
   // html = html.split('${mhfdmanager}').join(mhfdmanager);
-  // html = html.split('${description}').join(description);
+  html = html.split('${description}').join(description);
   // html = html.split('${contractor}').join(contractor);
   // html = html.split('${consultant}').join(consultant);
   // html = html.split('${mapHeight}').join(mapHeight);
@@ -305,7 +305,8 @@ export const newPrintProject = async (_data) => {
   // if (!(problems.length + components.length)) {
   //   height += 180
   // }
-
+  const width = 900;
+  const height = 1150;
   var options = {
     width: `${width}px`,
     height: `${height}px`,
