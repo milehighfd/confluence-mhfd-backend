@@ -158,19 +158,21 @@ export const newPrintProject = async (_data) => {
   let data = {};
 
   var html = fs.readFileSync('./pdf-templates/Projects2.html', 'utf8');
-  Object.keys(_data).forEach(k => {
-    if (k.includes('cost')) {
-      data[k] = _data[k];
-    } else if (k === 'description') {
+  Object.keys(_data).forEach((k) => {
+    if (k === 'description') {
       data[k] = _data[k] ? _data[k] : 'No Data';
     } else {
       data[k] = _data[k] ? _data[k] : 'N/A';
     }
-  })
+    if (k.includes('project_statuses') && _data[k].length > 0) {
+      data['project_type_name'] =
+        _data?.project_statuses[0].code_phase_type.code_project_type.project_type_name;
+    }
+  });
   const {
     project_name,
     // county,
-    // project_type_name,
+    project_type_name,
     // sponsor,
     // servicearea,
     // finalcost,
@@ -207,7 +209,7 @@ export const newPrintProject = async (_data) => {
   //               `${URL_BASE}detailed/debris-management.png`) : 'https://i.imgur.com/kLyZbrB.jpg'
 
   html = html.split('${projectname}').join(project_name);
-  // html = html.split('${projecttype}').join(project_type_name + ' Project');
+  html = html.split('${projecttype}').join(project_type_name + ' Project');
   // html = html.split('${sponsor}').join(sponsor);
   // html = html.split('${county}').join(county);
   // html = html.split('${servicearea}').join(servicearea);
