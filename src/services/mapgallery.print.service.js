@@ -76,8 +76,8 @@ export const printProblem = async (data, components, map, problempart) => {
     html = html.split('${componentRows}').join(componentRows);
     html = html.split('${totalEstimatedCost}').join(`<tfoot>
       <tr>
-        <th width="40%" style="padding: 17px 20px; text-align:left;"><b>Total Estimated Cost</b></th>
-        <th width="60%" colspan="3" style="padding: 17px 20px; text-align:left;"><b>${priceFormatter(sum)}</b></th>
+        <th width="40%" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600; "><b>Total Estimated Cost</b></th>
+        <th width="60%" colspan="3" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600; "><b>${priceFormatter(sum)}</b></th>
       </tr>
     </tfoot>`);
   } else {
