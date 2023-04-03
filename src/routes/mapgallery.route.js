@@ -918,25 +918,25 @@ const getProblemParts = async (id) => {
 }
 router.post('/project-pdf/:id', async (req, res) => {
    const { id } = req.params
-   try {
-      const data = await ProjectService.getDetails(id);
-      // res.send(data);
-      // console.log(data);
-      // try {
+   const mapImage = req.body.mapImage;
 
-         let pdfObject = await newPrintProject(data);
-         pdfObject.toBuffer(function (err, buffer) {
-            if (err) return res.send(err);
-            res.type('pdf');
-            res.end(buffer, 'binary');
-         })
-      // } catch (e) {
-      //    logger.error(e);
-      //    // res.status(500).send({ error: 'Not able to generated PDF.' });
-      // }
+   try {
+     const data = await ProjectService.getDetails(id);
+     let components = await componentsByEntityId(
+       id,
+       'projectid',
+       'type',
+       'asc'
+     );
+     let pdfObject = await newPrintProject(data, components, mapImage);
+     pdfObject.toBuffer(function (err, buffer) {
+       if (err) return res.send(err);
+       res.type('pdf');
+       res.end(buffer, 'binary');
+     });
    } catch (error) {
-      logger.error(error);
-      res.send({ error: 'No there data with ID' });
+     logger.error(error);
+     res.send({ error: 'No there data with ID' });
    }
 });
 
