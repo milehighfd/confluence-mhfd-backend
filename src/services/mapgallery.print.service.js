@@ -75,7 +75,7 @@ export const printProblem = async (data, components, map, problempart) => {
   if (sum >= 0) {
     html = html.split('${componentRows}').join(componentRows);
     html = html.split('${totalEstimatedCost}').join(`<tfoot>
-      <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
+      <tr>
         <th width="40%" style="padding: 17px 20px; text-align:left;"><b>Total Estimated Cost</b></th>
         <th width="60%" colspan="3" style="padding: 17px 20px; text-align:left;"><b>${priceFormatter(sum)}</b></th>
       </tr>

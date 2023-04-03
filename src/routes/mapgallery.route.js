@@ -942,7 +942,7 @@ router.post('/project-pdf/:id', async (req, res) => {
 
 router.post('/problem-by-id/:id/pdf', async (req, res) => {
    const id = req.params.id;
-   const map = req.body.map;
+   const map = req.body.mapImage;
    try {
       let data = await getDataByProblemId(id);
       let components = await componentsByEntityId(id, PROPSPROBLEMTABLES.problems[5], 'type', 'asc');
