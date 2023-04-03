@@ -175,7 +175,7 @@ export const newPrintProject = async (_data, components, mapImage) => {
       data[k] = _data[k];
     }
 
-    if (k.includes('project_statuses') && _data[k].length > 0) {
+    if (k.includes('project_statuses') && !!_data[k] && _data[k].length > 0) {
       data['project_type_name'] =
         _data?.project_statuses[0].code_phase_type.code_project_type.project_type_name;
       const currentStatus = _data.project_statuses.filter(
@@ -189,7 +189,7 @@ export const newPrintProject = async (_data, components, mapImage) => {
       }
     }
 
-    if (k.includes('project_partners') && _data[k].length > 0) {
+    if (k.includes('project_partners') && !!_data[k] && _data[k].length > 0) {
       for (let i = 0; i < _data?.project_partners.length; i++) {
         if (_data?.project_partners[i]?.code_partner_type_id === 11) {
           data['sponsor']
@@ -238,19 +238,23 @@ export const newPrintProject = async (_data, components, mapImage) => {
       }
     }
 
-    if (k.includes('project_counties') && _data[k].length > 0) {
+    if (k.includes('project_counties') && !!_data[k] && _data[k].length > 0) {
       data[
         'county'
       ] = `${_data?.project_counties[0].CODE_STATE_COUNTY.county_name} `;
     }
 
-    if (k.includes('project_service_areas') && _data[k].length > 0) {
+    if (
+      k.includes('project_service_areas') &&
+      !!_data[k] &&
+      _data[k].length > 0
+    ) {
       data[
         'servicearea'
       ] = `${_data?.project_service_areas[0].CODE_SERVICE_AREA.service_area_name} `;
     }
 
-    if (k.includes('project_costs') && _data[k].length > 0) {
+    if (k.includes('project_costs') && !!_data[k] && _data[k].length > 0) {
       const estimatedCost = _data.project_costs.filter(
         (element) => element.code_cost_type_id === 1
       );
@@ -259,7 +263,7 @@ export const newPrintProject = async (_data, components, mapImage) => {
       }
     }
 
-    if (k.includes('project_streams') && _data[k].length > 0) {
+    if (k.includes('project_streams') && !!_data[k] && _data[k].length > 0) {
       data['stream_name'] = _data?.project_streams[0].stream.stream_name;
     }
     data[k] = _data[k] ? _data[k] : 'N/A';
@@ -330,7 +334,9 @@ export const newPrintProject = async (_data, components, mapImage) => {
   // html = html.split('${mapHeight}').join(mapHeight);
 
   let _problems =
-    problems.length > 0 ? problems : [{ problemname: '', problempriority: '' }];
+    !!problems && problems.length > 0
+      ? problems
+      : [{ problemname: '', problempriority: '' }];
 
   let problemRows = _problems
     .map((p) => {
@@ -345,7 +351,9 @@ export const newPrintProject = async (_data, components, mapImage) => {
   html = html.split('${problemRows}').join(problemRows);
   // VENDORS
   let _vendors =
-    vendors.length > 0 ? vendors.split(',') : [{ type: '', name: '' }];
+    !!vendors && vendors.length > 0
+      ? vendors.split(',')
+      : [{ type: '', name: '' }];
   let _typeVendor =
     typeVendor.length > 0 ? typeVendor.split(',') : [{ type: '', name: '' }];
   let vendorRows = _vendors
@@ -361,7 +369,7 @@ export const newPrintProject = async (_data, components, mapImage) => {
   html = html.split('${vendorRows}').join(vendorRows);
   //END VENDORS
   let _components =
-    components.length > 0
+    !!components && components.length > 0
       ? components
       : [
           {
