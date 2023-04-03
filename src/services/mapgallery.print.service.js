@@ -171,25 +171,37 @@ export const newPrintProject = async (_data, components, mapImage) => {
       data[k] = _data[k] ? _data[k] : 'No Data';
     }
 
-    if (k.includes('problems') && _data[k].length > 0) {
+    if (
+      k.includes('problems') &&
+      (_data[k] !== void 0 || _data[k] !== []) &&
+      _data[k]?.length > 0
+    ) {
       data[k] = _data[k];
     }
 
-    if (k.includes('project_statuses') && !!_data[k] && _data[k].length > 0) {
+    if (
+      k.includes('project_statuses') &&
+      (_data[k] !== void 0 || _data[k] !== []) &&
+      _data[k]?.length > 0
+    ) {
       data['project_type_name'] =
         _data?.project_statuses[0].code_phase_type.code_project_type.project_type_name;
-      const currentStatus = _data.project_statuses.filter(
+      const currentStatus = _data?.project_statuses.filter(
         (element) =>
           element.project_status_id === _data.current_project_status_id
       );
-      if (currentStatus && currentStatus.length > 0) {
+      if (currentStatus && currentStatus?.length > 0) {
         data['phase'] = currentStatus[0].code_phase_type.phase_name;
         data['status'] =
           currentStatus[0].code_phase_type.code_status_type.status_name;
       }
     }
 
-    if (k.includes('project_partners') && !!_data[k] && _data[k].length > 0) {
+    if (
+      k.includes('project_partners') &&
+      (_data[k] !== void 0 || _data[k] !== []) &&
+      _data[k]?.length > 0
+    ) {
       for (let i = 0; i < _data?.project_partners.length; i++) {
         if (_data?.project_partners[i]?.code_partner_type_id === 11) {
           data['sponsor']
@@ -238,7 +250,11 @@ export const newPrintProject = async (_data, components, mapImage) => {
       }
     }
 
-    if (k.includes('project_counties') && !!_data[k] && _data[k].length > 0) {
+    if (
+      k.includes('project_counties') &&
+      (_data[k] !== void 0 || _data[k] !== []) &&
+      _data[k]?.length > 0
+    ) {
       data[
         'county'
       ] = `${_data?.project_counties[0].CODE_STATE_COUNTY.county_name} `;
@@ -246,27 +262,35 @@ export const newPrintProject = async (_data, components, mapImage) => {
 
     if (
       k.includes('project_service_areas') &&
-      !!_data[k] &&
-      _data[k].length > 0
+      (_data[k] !== void 0 || _data[k] !== []) &&
+      _data[k]?.length > 0
     ) {
       data[
         'servicearea'
       ] = `${_data?.project_service_areas[0].CODE_SERVICE_AREA.service_area_name} `;
     }
 
-    if (k.includes('project_costs') && !!_data[k] && _data[k].length > 0) {
+    if (
+      k.includes('project_costs') &&
+      (_data[k] !== void 0 || _data[k] !== []) &&
+      _data[k]?.length > 0
+    ) {
       const estimatedCost = _data.project_costs.filter(
         (element) => element.code_cost_type_id === 1
       );
-      if (estimatedCost.length > 0) {
+      if (estimatedCost?.length > 0) {
         data['cost'] = _data?.project_costs[0].cost;
       }
     }
 
-    if (k.includes('project_streams') && !!_data[k] && _data[k].length > 0) {
+    if (
+      k.includes('project_streams') &&
+      (_data[k] !== void 0 || _data[k] !== []) &&
+      _data[k]?.length > 0
+    ) {
       data['stream_name'] = _data?.project_streams[0].stream.stream_name;
     }
-    data[k] = _data[k] ? _data[k] : 'N/A';
+    data[k] = _data[k] ? _data[k] : [];
   });
 
   const {
@@ -334,7 +358,7 @@ export const newPrintProject = async (_data, components, mapImage) => {
   // html = html.split('${mapHeight}').join(mapHeight);
 
   let _problems =
-    !!problems && problems.length > 0
+    (problems !== void 0 || problems !== []) && problems?.length > 0
       ? problems
       : [{ problemname: '', problempriority: '' }];
 
@@ -351,17 +375,18 @@ export const newPrintProject = async (_data, components, mapImage) => {
   html = html.split('${problemRows}').join(problemRows);
   // VENDORS
   let _vendors =
-    !!vendors && vendors.length > 0
+    (vendors !== void 0 || vendors !== []) && vendors?.length > 0
       ? vendors.split(',')
-      : [{ type: '', name: '' }];
-  let _typeVendor =
-    typeVendor.length > 0 ? typeVendor.split(',') : [{ type: '', name: '' }];
+      : [''];
+  let _typeVendor = typeVendor ? typeVendor.split(',') : [];
   let vendorRows = _vendors
     .map((element, index) => {
       return `
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
           <td width="50%" style="padding: 17px 20px;">${element}</td>
-          <td width="50%" style="padding: 17px 20px;">${_typeVendor[index]}</td>
+          <td width="50%" style="padding: 17px 20px;">${
+            _typeVendor[index] ? _typeVendor[index] : ''
+          }</td>
         </tr>
       `;
     })
@@ -369,7 +394,7 @@ export const newPrintProject = async (_data, components, mapImage) => {
   html = html.split('${vendorRows}').join(vendorRows);
   //END VENDORS
   let _components =
-    !!components && components.length > 0
+    (components !== void 0 || components !== []) && components?.length > 0
       ? components
       : [
           {
