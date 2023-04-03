@@ -5,29 +5,9 @@ var limit = 0;
 const priceFormatter = (value) => {
   return `$${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 };
-export const newPrintProblem = async (data, components, map, problempart) => {
-  var html = fs.readFileSync('./pdf-templates/Problems2.html', 'utf8');
-  const {
-    problemname,
-    problemtype,
-    jurisdiction,
-    servicearea,
-    county,
-    solutionstatus,
-    solutioncost, 
-    streamname,
-    problempriority,
-    sourcename,
-    source,
-    problemdescription,
-  } = data;
-  
-  return pdf.create(html, options);
-}
-
 
 export const printProblem = async (data, components, map, problempart) => {
-  var html = fs.readFileSync('./pdf-templates/Problems.html', 'utf8');
+  var html = fs.readFileSync('./pdf-templates/Problems2.html', 'utf8');
   const {
     problemname,
     problemtype,
@@ -74,20 +54,20 @@ export const printProblem = async (data, components, map, problempart) => {
   let sum = _components.reduce((prev, curr) => curr.estimated_cost + prev, 0);;
   let componentRows = _components.map((c) => {
     return `
-        <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-          <td width="40%" style="padding: 17px 20px;">${c.type}</td>
-          <td width="20%" style="padding: 17px 20px;">${priceFormatter(c.estimated_cost)}</td>
-          <td width="20%" style="padding: 17px 20px;">${c.original_cost ? (Math.round(c.original_cost * 10) / 10) : 0}%</td>
-          <td width="20%" style="padding: 17px 20px;">${c.percen}%</td>
+        <tr>
+          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type}</td>
+          <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${priceFormatter(c.estimated_cost)}</td>
+          <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.original_cost ? (Math.round(c.original_cost * 10) / 10) : 0}%</td>
+          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen}%</td>
         </tr>
       `
   }).join('')
   let problempartRows = problempart.map((c) => {
     return `
-      <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-        <td width="40%" style="padding: 17px 20px;">${c.problem_type}</td>
-        <td width="25%" style="padding: 17px 20px;">${(c.problem_part_category)}</td>
-        <td width="25%" style="padding: 17px 20px;">${c.problem_part_subcategory}%</td>
+      <tr>
+        <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_type}</td>
+        <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${(c.problem_part_category)}</td>
+        <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_part_subcategory}%</td>
       </tr>
     `
   }).join('');
@@ -154,13 +134,6 @@ export const printProblem = async (data, components, map, problempart) => {
 
   return pdf.create(html, options);
 }
-
-// const validateDetailsInfo = (k, _data, value =>{
-//   if (k.includes(value) && _data[k].length > 0) {
-//       return true;
-//   }
-//   return false;
-// })
 
 export const newPrintProject = async (_data, components, mapImage) => {
   let data = {};
@@ -365,9 +338,9 @@ export const newPrintProject = async (_data, components, mapImage) => {
   let problemRows = _problems
     .map((p) => {
       return `
-        <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-          <td width="50%" style="padding: 17px 20px;">${p.problemname}</td>
-          <td width="50%" style="padding: 17px 20px;">${p.problempriority}</td>
+        <tr>
+          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problemname}</td>
+          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problempriority}</td>
         </tr>
       `;
     })
@@ -382,9 +355,9 @@ export const newPrintProject = async (_data, components, mapImage) => {
   let vendorRows = _vendors
     .map((element, index) => {
       return `
-        <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-          <td width="50%" style="padding: 17px 20px;">${element}</td>
-          <td width="50%" style="padding: 17px 20px;">${
+        <tr>
+          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${element}</td>
+          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
             _typeVendor[index] ? _typeVendor[index] : ''
           }</td>
         </tr>
@@ -408,15 +381,15 @@ export const newPrintProject = async (_data, components, mapImage) => {
   let componentRows = _components
     .map((c, i) => {
       let str = `
-        <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-          <td width="40%" style="padding: 17px 20px;">${c.type}</td>
-          <td width="20%" style="padding: 17px 20px;">${priceFormatter(
+        <tr>
+          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type}</td>
+          <td width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${priceFormatter(
             c.estimated_cost
           )}</td>
-          <td width="20%" style="padding: 17px 20px;">${
+          <td width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
             c.original_cost ? Math.round(c.original_cost * 10) / 10 : 0
           }%</td>
-          <td width="20%" style="padding: 17px 20px;">${c.percen}%</td>
+          <td width="40%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen}%</td>
         </tr>
       `;
       if (components.length === 9 && i === 6) {
@@ -429,8 +402,8 @@ export const newPrintProject = async (_data, components, mapImage) => {
   if (sum) {
     html = html.split('${componentRows}').join(componentRows);
     html = html.split('${totalEstimatedCost}').join(`<tfoot>
-      <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-        <th width="40%" style="padding: 17px 20px; text-align:left;"><b>Total Estimated Cost</b></th>
+      <tr>
+        <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600;"><b>Total Estimated Cost</b></th>
         <th width="60%" colspan="3" style="padding: 17px 20px; text-align:left;"><b>${priceFormatter(
           sum
         )}</b></th>
@@ -438,7 +411,7 @@ export const newPrintProject = async (_data, components, mapImage) => {
     </tfoot>`);
   } else {
     html = html.split('${componentRows}').join(`
-      <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
+      <tr">
         <td width="40%" style="padding: 17px 20px;"></td>
         <td width="20%" style="padding: 17px 20px;"></td>
         <td width="20%" style="padding: 17px 20px;"></td>
@@ -571,8 +544,8 @@ export const printProject = async (_data, components, map) => {
   let problemRows = _problems.map((p) => {
     return `
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-          <td width="50%" style="padding: 17px 20px;">${p.problemname}</td>
-          <td width="50%" style="padding: 17px 20px;">${p.problempriority}</td>
+          width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problemname}</td>
+          width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problempriority}</td>
         </tr>
       `
   }).join('')

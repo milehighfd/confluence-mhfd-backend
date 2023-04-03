@@ -158,34 +158,10 @@
                   <th width="50%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Name</th>
                   <th width="50%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Priority</th>
                 </tr>
-                <tr>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th>
-                </tr>
-                <tr>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th>
-                </tr>
-                <tr>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th>
-                </tr>
-                <tr>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th>
-                </tr>
-                <tr>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th>
-                </tr>
-                <tr>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th> 
-                </tr>
               </thead>
-              <!-- <tbody>
-                ${problemRows}
-              </tbody> -->
+                <tr>
+                  ${problemRows}
+                </tr>
             </table>
             <!-- END PROBLEM -->
 
@@ -203,18 +179,9 @@
                   <th width="50%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Name</th>
                 </tr>
                 <tr>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th>
+                  ${vendorRows}
                 </tr>
-                <tr>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
-                  <th width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th>
-                </tr>
-                <tr>
               </thead>
-              <tbody>
-                ${vendorRows}
-              </tbody>
             </table>
             <!-- END VENDORS -->
 
@@ -236,22 +203,12 @@
                   <th width="20%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">% of Total Cost</th>
                 </tr>
                 <tr>
-                  <th width="40%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Storm Drain (7)</th>
-                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">$22,504,000</th>
-                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">0%</th>
-                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">100%</th>
+                  ${componentRows}
                 </tr>
-                <tr>
-                  <th width="40%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600;">Total Estimated Cost (7)</th>
-                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600;">$22,504,000</th>
-                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;"></th>
-                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;"></th>
-                </tr> 
               </thead>
-              <tbody>
-                ${componentRows}
-              </tbody>
-              ${totalEstimatedCost}
+              <tr>
+                ${totalEstimatedCost}
+              </tr>
             </table>
             <!-- END SOLUTION COMPONENTS -->
 
