@@ -13,7 +13,7 @@
         <tr>
           <th style="padding: 10px 20px; text-align:left;">
             <h3 style="font-size: 21px; color: #11093c; line-height: 22px; margin: 0px 0px 7px 0px;">${problemname}</h3>
-            <p style="font-size: 14px; color: rgba(17,9,60,.5); margin: 0; font-weight: 500">
+            <p style="font-size: 14px; color: #11093c80; margin: 0; font-weight: 500;">
               <span>${problemtype}</span>  •  
               <span>${jurisdiction}</span>  •  
               <span>${county}</span>  •  
@@ -25,10 +25,15 @@
               Solution Status
               <b style="float: right; color: #251863;">${solutionstatus}%</b>
             </p>
-            <div style="background-color: rgba(61,46,138,.07); height:6px; border-radius: 10px; border-left: ${solutionstatusVal}px solid #fd0; display: block;"></div>
+            <div style="background-color: rgba(61,46,138,.07); height:6px; border-radius: 10px; border-left: 1px solid #fd0; display: block;"></div>
           </th>
           <th style="padding: 10px 20px;">
-            <div style="font-size: 14px; color: #251863; border-left: 1.5px solid rgba(61,46,138,.07); padding: 8px 0; margin: 8px 12px;">
+            <div style="font-size: 14px; color: #251863; border-left: 1.5px solid rgba(61,46,138,.07); padding: 8px 16px; margin: 8px 12px; text-align: initial; padding-right: 0px;">
+              <p
+              style="color: #85809b; font-size: 13px; font-weight: 400; text-align: initial; padding-bottom: 5px; margin: 0px;">
+              Cost
+            </p>
+            <!-- <br/> -->
               ${solutioncost}
             </div>
           </th>
@@ -49,19 +54,19 @@
 
             <table style="border-spacing: 10px; padding: 10px 40px 0px 40px; font-size: 14px; text-align: left; width:100%;">
               <tr>
-                <td style="width:20%; color:rgba(17,9,60,.5);"><i>Stream</i></td>
+                <td style="width:20%; color:#11093c80;"><i>Stream</i></td>
                 <td style="width:30%; color:#11093c;">${streamname}</td>
-                <td style="width:20%; color:rgba(17,9,60,.5);"><i>Priority</i></td>
+                <td style="width:20%; color:#11093c80;"><i>Priority</i></td>
                 <td style="width:30%; color:#11093c;">${problempriority}</td>
               </tr>
               <tr>
-                <td style="width:20%; color:rgba(17,9,60,.5);"><i>Source Name</i></td>
+                <td style="width:20%; color:#11093c80;"><i>Source Name</i></td>
                 <td style="width:30%; color:#11093c;">${sourcename}</td>
-                <td style="width:20%; color:rgba(17,9,60,.5);"><i>Source</i></td>
+                <td style="width:20%; color:#11093c80;"><i>Source</i></td>
                 <td style="width:30%; color:#11093c;">${source}</td>
               </tr>
               <tr>
-                <td style="width:19.5%; color:rgba(17,9,60,.5); vertical-align: top;"><i>Description</i></td>
+                <td style="width:19.5%; color:#11093c80; vertical-align: top;"><i>Description</i></td>
                 <td colspan="3" style="width:80%; color:#11093c;">
                   ${problemdescription}
                 </td>
@@ -70,45 +75,120 @@
             <!-- PROBLEM PARTS -->
             <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
               <tr>
-                <td style="width: 30%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">PROBLEM PARTS</td>
-                <td style="width: 65%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
+                <td style="width: 20%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">PROBLEM PARTS</td>
+                <td style="width: 80%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
                 <!-- <td style="width: 5%; text-align:right;"><img src="https://confluence.mhfd.org/Icons/icon-21.svg" alt=""/></td> -->
               </tr>
             </table>
             <table style="border-spacing: 0px 10px; padding: 0px 40px 0px 40px; font-size: 14px; width:100%;">
               <thead>
-                <tr>
+                <table style="border-spacing: 0px 10px; padding: 0px 40px 0px 40px; font-size: 14px; width:100%;">
+                  <thead>
+                    <tr>
+                      <th width="30%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Problem Type</th>
+                      <th width="35%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Problem Part Category</th>
+                      <th width="35%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Problem Part Subcategory</th>
+                    </tr>
+                    <tr>
+                      <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
+                      <th width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th>
+                      <th width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Channel</th>
+                    </tr>
+                    <tr>
+                      <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
+                      <th width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th>
+                      <th width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Channel</th>
+                    </tr>
+                    <tr>
+                      <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
+                      <th width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th>
+                      <th width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Channel</th>
+                    </tr>
+                    <tr>
+                      <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
+                      <th width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th>
+                      <th width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Channel</th>
+                    </tr>
+                    <tr>
+                      <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
+                      <th width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th>
+                      <th width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Channel</th>
+                    </tr>
+                    <tr>
+                      <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Flood Hazard</th>
+                      <th width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Lack of Capacity</th>
+                      <th width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Channel</th>
+                    </tr>
+                  </thead>
+                </table>
+                <!-- <tr>
                   <th width="40%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">Problem Type</th>
                   <th width="25%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">Problem Part Category</th>
                   <th width="25%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">Problem Part Subcategory</th>
-                </tr>
-              </thead>
-              <tbody>
+                </tr> -->
+              <!-- </thead> -->
+              <!-- <tbody>
                 ${problempartRows}
-              </tbody>
-            </table>
+              </tbody> -->
+            <!-- </table> -->
             <!-- END PROBLEM PARTS -->
             <!-- SOLUTION COMPONENTS -->
             <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
               <tr>
-                <td style="width: 30%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">PROPOSED ACTIONS</td>
-                <td style="width: 65%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
+                <td style="width: 25%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">PROPOSED ACTIONS</td>
+                <td style="width: 75%;"><div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div></td>
                 <!-- <td style="width: 5%; text-align:right;"><img src="https://confluence.mhfd.org/Icons/icon-21.svg" alt=""/></td> -->
               </tr>
             </table>
             <table style="border-spacing: 0px 10px; padding: 0px 40px 0px 40px; font-size: 14px; width:100%;">
               <thead>
                 <tr>
-                  <th width="40%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">Component Type</th>
-                  <th width="20%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">Cost</th>
-                  <th width="20%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">% Complete</th>
-                  <th width="20%" style="color: rgba(17,9,60,.5); text-align: left; padding: 12px 20px;">% of Total Cost</th>
+                  <th width="30%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Actions</th>
+                  <th width="20%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Cost</th>
+                  <th width="20%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">% Complete</th>
+                  <th width="30%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">% of Total Cost</th>
+                </tr>
+                <tr>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Detention Facilities (2)</th>
+                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">$322,000</th>
+                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">0%</th>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">9%</th>
+                </tr>
+                <tr>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Detention Facilities (2)</th>
+                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">$322,000</th>
+                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">0%</th>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">9%</th>
+                </tr>
+                <tr>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Detention Facilities (2)</th>
+                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">$322,000</th>
+                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">0%</th>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">9%</th>
+                </tr>
+                <tr>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Detention Facilities (2)</th>
+                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">$322,000</th>
+                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">0%</th>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">9%</th>
+                </tr>
+                <tr>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">Detention Facilities (2)</th>
+                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">$322,000</th>
+                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">0%</th>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">9%</th>
+                </tr>
+                <tr>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600;">Total Proposed Cost (13)</th>
+                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600;">$3,702,000</th>
+                  <th width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600;"></th>
+                  <th width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600;"></th>
                 </tr>
               </thead>
-              <tbody>
+              <!-- <tbody>
                 ${componentRows}
               </tbody>
-              ${totalEstimatedCost}
+              ${totalEstimatedCost} -->
             </table>
             <!-- END SOLUTION COMPONENTS -->
             ${spaceBetween}
@@ -138,7 +218,7 @@
             <table style="padding: 0px 25px 20px 25px; border-spacing: 0px; ">
               <tr>
                 <td style="width: 50px; height: 47px">
-                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px">
+                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px"  style="border-radius: 19px;">
                 </td>
                 <td style="width: 162.5px">
                   <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">TBD</h6>
@@ -150,7 +230,7 @@
               </tr>
               <tr>
                 <td style="width: 50px; height: 47px;">
-                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px">
+                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px"  style="border-radius: 19px;">
                 </td>
                 <td style="width: 162.5px">
                   <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">TBD</h6>
@@ -162,7 +242,7 @@
               </tr>
               <tr>
                 <td style="width: 50px; height: 47px;">
-                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px">
+                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px"  style="border-radius: 19px;">
                 </td>
                 <td style="width: 162.5px">
                   <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">TBD</h6>
@@ -174,7 +254,7 @@
               </tr>
               <tr>
                 <td style="width: 50px; height: 47px;">
-                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px">
+                  <img src="https://confluence.mhfd.org/Icons/icon-28.svg" alt="" height="35px"  style="border-radius: 19px;">
                 </td>
                 <td style="width: 162.5px">
                   <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">TBD</h6>
