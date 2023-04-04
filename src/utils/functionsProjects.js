@@ -257,9 +257,9 @@ export const projectsByFilters = async (projects, filters) => {
 export const projectsByFiltersForIds = async (projects, filters) => {
   let newprojects = [...projects];
   newprojects = await projectsByFilters(newprojects, filters);
-  newprojects = newprojects?.map((element) => 
-      element.project_id
-  );
+  // newprojects = newprojects?.map((element) => 
+  //     element.project_id
+  // );
   return newprojects;
 }
 
