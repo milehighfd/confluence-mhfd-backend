@@ -131,7 +131,14 @@ const checkIfExistGeomThenDelete = async (table, project_id) => {
   try {
     const data = await needle('post', CARTO_URL, query, { json: true });
     if (data.statusCode === 200) {
-      logger.info('DELETED 2 or more rows on carto fetch');
+      const sql1 = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
+      const query2 = {
+        q: sql1,
+      };
+      const delte = await needle('delete', CARTO_URL, query2, { json: true });
+      if (delte.statusCode === 200) {
+        logger.info('DELETED 2 or more rows on carto fetch');
+      }
     }
   } catch (error) {
     logger.error(error, ' pm fetch');
