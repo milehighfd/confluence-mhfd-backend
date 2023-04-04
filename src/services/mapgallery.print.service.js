@@ -408,8 +408,8 @@ export const newPrintProject = async (_data, components, mapImage) => {
     html = html.split('${componentRows}').join(componentRows);
     html = html.split('${totalEstimatedCost}').join(`<tfoot>
       <tr>
-        <th width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600; padding-top:0px"><b>Total Estimated Cost</b></th>
-        <th width="60%" colspan="3" style="color: #11093c; padding: 17px 20px; text-align:left; padding-top:0px"><b>${priceFormatter(
+        <th width="15%" style="margin-top:-10px; color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600; padding-top:0px"><b>Total Estimated Cost</b></th>
+        <th width="60%" colspan="3" style="margin-top:-10px; color: #11093c; padding: 17px 20px; text-align:left; padding-top:0px"><b>${priceFormatter(
           sum
         )}</b></th>
       </tr>
@@ -417,10 +417,10 @@ export const newPrintProject = async (_data, components, mapImage) => {
   } else {
     html = html.split('${componentRows}').join(`
       <tr">
-        <td width="40%" style="padding: 17px 20px;  padding-top:0px"></td>
-        <td width="20%" style="padding: 17px 20px;  padding-top:0px"></td>
-        <td width="20%" style="padding: 17px 20px;  padding-top:0px"></td>
-        <td width="20%" style="padding: 17px 20px;  padding-top:0px"></td>
+        <td width="40%" style="margin-top:-10px; padding: 17px 20px;  padding-top:0px"></td>
+        <td width="20%" style="margin-top:-10px; padding: 17px 20px;  padding-top:0px"></td>
+        <td width="20%" style="margin-top:-10px; padding: 17px 20px;  padding-top:0px"></td>
+        <td width="20%" style="margin-top:-10px; padding: 17px 20px;  padding-top:0px"></td>
       </tr>
     `);
     html = html.split('${totalEstimatedCost}').join('');
