@@ -1172,7 +1172,9 @@ const updateProjectStatus = async (project_id) => {
       'actual_start_date',
       'actual_end_date',
       'planned_end_date',
-      'project_status_id'
+      'project_status_id',
+      'is_locked',
+      'is_done'
     ],
     include: {
       model: CodePhaseType,
