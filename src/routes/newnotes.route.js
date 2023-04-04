@@ -42,10 +42,6 @@ router.get('/color-list', [auth], async (req, res) => {
 
 router.get('/get-available-colors', [auth], async (req, res) => {
   const user = req.user;
-  console.log("user")
-  console.log(user)
-  console.log("user")
-  console.log(user.user_id)
   try {
     const colors = await NoteService.getColorsByNote(user.user_id);    
     return res.send(colors);
