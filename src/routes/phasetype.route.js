@@ -17,12 +17,15 @@ router.post('/', async (req, res) => {
         code_project_type_id: code_project_type_id,
         code_status_type_id: {
           [Op.gt]: 4
+        },
+        phase_ordinal_position:{
+          [Op.not]: -1,        
         }
       },
       include: {
         all:true
       },
-      order: ['code_project_type_id', 'code_status_type_id', 'phase_ordinal_position'],
+      order: ['phase_ordinal_position'],
     });
     return res.send(codePhaseType);
   } catch(error) {
