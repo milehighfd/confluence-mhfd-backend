@@ -129,7 +129,13 @@ export const printProblem = async (data, components, map, problempart) => {
   var options = {
     width: `${width}px`,
     height: `${height}px`,
-    border: '0px'
+    border:  {
+      top: '2cm',
+      right: '2cm',
+      bottom: '2cm',
+      left: '2cm'
+    }
+
   };
 
   return pdf.create(html, options);
@@ -463,7 +469,12 @@ export const newPrintProject = async (_data, components, mapImage) => {
   var options = {
     width: `${width}px`,
     height: `${height}px`,
-    border: '0px',
+    border:  {
+      top: '2cm',
+      right: '2cm',
+      bottom: '2cm',
+      left: '2cm'
+    }
   };
 
   return pdf.create(html, options);
@@ -632,7 +643,12 @@ export const printProject = async (_data, components, map) => {
   var options = {
     width: `${width}px`,
     height: `${height}px`,
-    border: '0px'
+    border:  {
+      top: '2cm',
+      right: '2cm',
+      bottom: '2cm',
+      left: '2cm'
+    }
   };
 
   return pdf.create(html, options);
