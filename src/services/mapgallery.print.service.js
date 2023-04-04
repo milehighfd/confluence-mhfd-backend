@@ -387,33 +387,32 @@ export const newPrintProject = async (_data, components, mapImage) => {
     .map((c, i) => {
       let str = `
         <tr>
-          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type == null? 'N/A' : c.type }</td>
-          <td width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${priceFormatter(
+          <td width="30%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${c.type == null? 'N/A' : c.type }</td>
+          <td width="15%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${priceFormatter(
             c.estimated_cost
           )}</td>
-          <td width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+          <td width="15%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${
             c.original_cost ? Math.round(c.original_cost * 10) / 10 : 0
           }%</td>
-          <td width="40%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen == null? 'N/A' : c.percen}%</td>
+          <td width="40%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${c.percen == null? 'N/A' : c.percen}%</td>
         </tr>
       `;
-      if (components.length === 9 && i === 6) {
-        str +=
-          '<tr><tr/><tr><tr/><tr><tr/><tr><tr/><tr><tr/><tr><tr/><tr><tr/>';
-      }
+      // if (components.length === 9 && i === 6) {
+      //   str +=
+      //     '<tr><tr/><tr><tr/><tr><tr/><tr><tr/><tr><tr/><tr><tr/><tr><tr/>';
+      // }
       return str;
     })
     .join('');
   if (sum) {
     html = html.split('${componentRows}').join(componentRows);
-    html = html.split('${totalEstimatedCost}').join(`<tfoot>
+    html = html.split('${totalEstimatedCost}').join(`
       <tr>
-        <th width="15%" style="margin-top:-10px; color: #11093c; text-align: left; padding: 4px 20px; font-weight: 600; padding-top:0px"><b>Total Estimated Cost</b></th>
-        <th width="60%" colspan="3" style="margin-top:-10px; color: #11093c; padding: 17px 20px; text-align:left; padding-top:0px"><b>${priceFormatter(
+        <th width="15%" style="margin-top:-10px; color: #11093c; text-align: left; padding-left: 20px; padding-top: 0px; padding-right: 20px; padding-bottom: 4px; font-weight: 600;"><b>Total Estimated Cost</b></th>
+        <th width="60%" colspan="3" style="margin-top:-10px; color: #11093c; padding-left: 20px; padding-top: 0px; padding-right: 20px; padding-bottom: 4px; text-align:left;"><b>${priceFormatter(
           sum
         )}</b></th>
-      </tr>
-    </tfoot>`);
+      </tr>`);
   } else {
     html = html.split('${componentRows}').join(`
       <tr">
