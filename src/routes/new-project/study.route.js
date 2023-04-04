@@ -260,7 +260,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         CREATE_PROJECT_TABLE,
         project_id
       );
-      await cartoService.updateCartoStudy(
+      await cartoService.insertToCartoStudy(
         CREATE_PROJECT_TABLE,
         project_id,
         parsedIds

@@ -230,7 +230,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       CREATE_PROJECT_TABLE,
       project_id
     );
-    await cartoService.updateToCarto(CREATE_PROJECT_TABLE, geom, project_id);
+    await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
     const projecttype = 'Maintenance';
     updateProjectsInBoard(
       project_id,

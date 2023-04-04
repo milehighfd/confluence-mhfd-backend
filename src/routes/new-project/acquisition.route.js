@@ -222,7 +222,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       CREATE_PROJECT_TABLE,
       project_id
     );
-    await cartoService.updateToCartoAcquistion(
+    await cartoService.insertToAcquistion(
       CREATE_PROJECT_TABLE,
       geom,
       project_id
