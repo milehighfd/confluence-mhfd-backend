@@ -131,9 +131,9 @@ export const printProblem = async (data, components, map, problempart) => {
     height: `${height}px`,
     border:  {
       top: '2cm',
-      right: '2cm',
+      right: '1cm',
       bottom: '2cm',
-      left: '2cm'
+      left: '1cm'
     }
 
   };
@@ -471,9 +471,9 @@ export const newPrintProject = async (_data, components, mapImage) => {
     height: `${height}px`,
     border:  {
       top: '2cm',
-      right: '2cm',
+      right: '1cm',
       bottom: '2cm',
-      left: '2cm'
+      left: '1cm'
     }
   };
 
@@ -645,9 +645,9 @@ export const printProject = async (_data, components, map) => {
     height: `${height}px`,
     border:  {
       top: '2cm',
-      right: '2cm',
+      right: '1cm',
       bottom: '2cm',
-      left: '2cm'
+      left: '1cm'
     }
   };
 
