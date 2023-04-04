@@ -464,44 +464,47 @@ router.get('/bbox-components', async (req, res) => {
       `SELECT ST_AsGeoJSON(the_geom) as geojson, '${t.key}' as component, original_cost as cost from ${t.key} where ${field} = ${id}` 
     ).concat(extraQueries).join(' union ')
   }
-  console.log('JSON.stringify(query)\n\n\n\n', JSON.stringify(query));
   const datap = await needle('post', CARTO_URL, query, { json: true });
-  let centroids = datap.body.rows.map((r) => {
-    let geojson = JSON.parse(r.geojson);
-    let center = [0, 0];
-    if (geojson.type === 'MultiLineString') {
-      if (geojson.coordinates[0].length > 0) {
-        let len = geojson.coordinates[0].length;
-        let mid = Math.floor(len / 2);
-        center = geojson.coordinates[0][mid];
+  let centroids = [];
+  if(datap.body.rows.length > 0) {
+    centroids = datap.body.rows.map((r) => {
+      let geojson = JSON.parse(r.geojson);
+      let center = [0, 0];
+      if (geojson.type === 'MultiLineString') {
+        if (geojson.coordinates[0].length > 0) {
+          let len = geojson.coordinates[0].length;
+          let mid = Math.floor(len / 2);
+          center = geojson.coordinates[0][mid];
+        }
       }
-    }
-    if (geojson.type === 'MultiPolygon') {
-      if (geojson.coordinates[0][0].length > 0) {
-        let len = geojson.coordinates[0][0].length;
-        let mid = Math.floor(len / 2);
-        center = geojson.coordinates[0][0][mid];
+      if (geojson.type === 'MultiPolygon') {
+        if (geojson.coordinates[0][0].length > 0) {
+          let len = geojson.coordinates[0][0].length;
+          let mid = Math.floor(len / 2);
+          center = geojson.coordinates[0][0][mid];
+        }
       }
-    }
-    if (geojson.type === 'Point') {
-      center = geojson.coordinates;
-    }
-    let arcWidth;
-    if (r.cost <= 500 * 1000) {
-      arcWidth = 2;
-    } else if (r.cost <= 1 * 1000 * 1000) {
-      arcWidth = 4;
-    } else if (r.cost <= 5 * 1000 * 1000) {
-      arcWidth = 6;
-    } else {
-      arcWidth = 8;
-    }
-    return {
-      component: r.component,
-      centroid: center,
-      arcWidth
-    };
-  })
+      if (geojson.type === 'Point') {
+        center = geojson.coordinates;
+      }
+      let arcWidth;
+      if (r.cost <= 500 * 1000) {
+        arcWidth = 2;
+      } else if (r.cost <= 1 * 1000 * 1000) {
+        arcWidth = 4;
+      } else if (r.cost <= 5 * 1000 * 1000) {
+        arcWidth = 6;
+      } else {
+        arcWidth = 8;
+      }
+      return {
+        component: r.component,
+        centroid: center,
+        arcWidth
+      };
+    })
+  }
+  
 
   const bboxes = [];
   for(const data of all) {
@@ -539,7 +542,7 @@ router.get('/bbox-components', async (req, res) => {
     }
     const dataProjectLine = await needle('post', CARTO_URL, queryProjectLine, { json: true });
     let r = dataProjectLine.body.rows[0];
-    let geojson = JSON.parse(r.geojson);
+    let geojson = r? JSON.parse(r.geojson) : '';
     let projectCenter = [0, 0];
     if (geojson.type === 'MultiLineString') {
       if (geojson.coordinates[0].length > 0) {
