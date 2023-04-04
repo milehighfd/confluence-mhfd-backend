@@ -25,19 +25,18 @@ export const printProblem = async (data, components, map, problempart) => {
   let mainImage = problemtype ? `https://confdev.mhfd.org/detailed/${problemtype}.png` : 'https://i.imgur.com/kLyZbrB.jpg'
   const mapHeight = 500;
 
-  html = html.split('${problemname}').join(problemname);
-
-  html = html.split('${problemtype}').join(problemtype + ' Problem');
-  html = html.split('${jurisdiction}').join(jurisdiction + ', CO');
-  html = html.split('${county}').join(county);
-  html = html.split('${servicearea}').join(servicearea);
+  html = html.split('${problemname}').join(problemname == null? ' N/A' : problemname);
+  html = html.split('${problemtype}').join(problemtype + ' Problem' == null? ' N/A' : problemtype + ' Problem');
+  html = html.split('${jurisdiction}').join(jurisdiction + ', CO'  == null? ' N/A' : jurisdiction + ', CO');
+  html = html.split('${county}').join(county == null? ' N/A' : county);
+  html = html.split('${servicearea}').join(servicearea == null? ' N/A' : servicearea);
   html = html.split('${solutionstatus}').join(solutionstatus ? solutionstatus : 0);
   html = html.split('${solutioncost}').join(solutioncost ? priceFormatter(solutioncost) : 'No Cost Data');
-  html = html.split('${streamname}').join(streamname);
-  html = html.split('${problempriority}').join(problempriority);
-  html = html.split('${sourcename}').join(sourcename);
-  html = html.split('${source}').join(source);
-  html = html.split('${problemdescription}').join(problemdescription);
+  html = html.split('${streamname}').join(streamname == null? ' N/A' : streamname);
+  html = html.split('${problempriority}').join(problempriority == null? ' N/A' : problempriority);
+  html = html.split('${sourcename}').join(sourcename == null? ' N/A' : sourcename);
+  html = html.split('${source}').join(source == null? ' N/A' : source);
+  html = html.split('${problemdescription}').join(problemdescription == null? ' N/A' : problemdescription);
   html = html.split('${map}').join(map);
   html = html.split('${mainImage}').join(mainImage);
   html = html.split('${mapHeight}').join(mapHeight);
@@ -55,19 +54,19 @@ export const printProblem = async (data, components, map, problempart) => {
   let componentRows = _components.map((c) => {
     return `
         <tr>
-          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type}</td>
+          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type == null? 'N/A' : c.type}</td>
           <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${priceFormatter(c.estimated_cost)}</td>
           <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.original_cost ? (Math.round(c.original_cost * 10) / 10) : 0}%</td>
-          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen}%</td>
+          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen == null? 'N/A' : c.percen }%</td>
         </tr>
       `
   }).join('')
   let problempartRows = problempart.map((c) => {
     return `
       <tr>
-        <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_type}</td>
-        <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${(c.problem_part_category)}</td>
-        <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_part_subcategory}%</td>
+        <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_type == null? 'N/A' : c.problem_type}</td>
+        <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${(c.problem_part_category == null? 'N/A' : c.problem_part_category)}</td>
+        <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_part_subcategory == null? 'N/A' : c.problem_part_subcategory}%</td>
       </tr>
     `
   }).join('');
@@ -340,13 +339,13 @@ export const newPrintProject = async (_data, components, mapImage) => {
     (problems !== void 0 || problems !== []) && problems?.length > 0
       ? problems
       : [{ problemname: '', problempriority: '' }];
-
+  
   let problemRows = _problems
     .map((p) => {
       return `
         <tr>
-          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problemname}</td>
-          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problempriority}</td>
+          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problemname == null? 'N/A' : p.problemname}</td>
+          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problempriority == null? 'N/A' : p.problempriority}</td>
         </tr>
       `;
     })
@@ -362,9 +361,9 @@ export const newPrintProject = async (_data, components, mapImage) => {
     .map((element, index) => {
       return `
         <tr>
-          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${element}</td>
+          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${element == null? 'N/A' : element}</td>
           <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
-            _typeVendor[index] ? _typeVendor[index] : ''
+            _typeVendor[index] ? _typeVendor[index] == null ? 'N/A': _typeVendor[index] : ''
           }</td>
         </tr>
       `;
@@ -388,14 +387,14 @@ export const newPrintProject = async (_data, components, mapImage) => {
     .map((c, i) => {
       let str = `
         <tr>
-          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type}</td>
+          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type == null? 'N/A' : c.type }</td>
           <td width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${priceFormatter(
             c.estimated_cost
           )}</td>
           <td width="15%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
             c.original_cost ? Math.round(c.original_cost * 10) / 10 : 0
           }%</td>
-          <td width="40%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen}%</td>
+          <td width="40%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen == null? 'N/A' : c.percen}%</td>
         </tr>
       `;
       if (components.length === 9 && i === 6) {
