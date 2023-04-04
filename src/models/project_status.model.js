@@ -47,10 +47,10 @@ export default (sequelize, DataType) => {
       type: DataType.STRING
     } ,
     is_locked: {
-      type: DataType.STRING
+      type: DataType.BOOLEAN
     } ,
     is_done: {
-      type: DataType.STRING
+      type: DataType.BOOLEAN
     } 
   }, {
     tableName: 'project_status',

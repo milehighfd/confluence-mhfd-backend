@@ -66,6 +66,7 @@ router.post('/create-group', [auth], async (req, res) => {
         actual_start_date: element.from,
         actual_end_date: element.to,
         duration: element.duration,
+        is_locked:element.locked,
         last_modified_by: name
       }
       if (element.current) {
