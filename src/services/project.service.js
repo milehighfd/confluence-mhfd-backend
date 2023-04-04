@@ -475,13 +475,16 @@ const getDetails = async (project_id) => {
               'actual_start_date',
               'actual_end_date',
               'planned_end_date',
-              'project_status_id'
+              'project_status_id',
+              'is_locked',
+              'is_done'
             ],
             include: {
               model: CodePhaseType,
               required: false,
               attributes: [
                 'phase_name',
+                'phase_ordinal_position'
               ],
               include: [{
                 model: CodeStatusType,
@@ -890,6 +893,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
             required: false,
             attributes: [
               'phase_name',
+              'phase_ordinal_position'
             ],
             include: [{
               model: CodeStatusType,
