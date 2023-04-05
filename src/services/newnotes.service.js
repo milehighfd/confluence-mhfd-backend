@@ -74,127 +74,149 @@ const getColorsByNote = async (userId) => {
   }
 }
 
+const getStaticColors = async () => {
+  try {
+    const colors = await ColorNotes.findAll({
+      where: {
+        label: ['red2', 'red', 'green', 'blue', 'sky'],
+      },
+    });
+    return colors;
+  } catch (error) {
+    console.log(`the error GET STATIC COLORS ${error}`);
+    throw error;
+  }
+};
+
 const getGroups = async (id) => {
   console.log(id);
-  const groups = await GroupNotes.findAll({ 
+  const groups = await GroupNotes.findAll({
     where: {
-      user_id: +id ,
-      is_deleted: 0
-    }
+      user_id: +id,
+      is_deleted: 0,
+    },
   });
   return groups;
-}
+};
 
 const getColors = async (userId) => {
   const colors = await ColorNotes.findAll({
     where: {
       user_id: +userId,
-      is_deleted: 0
+      is_deleted: 0,
     },
-    order: [
-      ['label', 'ASC']
-    ]
+    order: [['label', 'ASC']],
   });
   colors.sort((a, b) => {
     return a.label.localeCompare(b.label);
   });
   return colors;
-}
-
+};
 
 const deleteGroups = async (id) => {
   const group = await GroupNotes.findOne({
     where: {
-      groupnotes_id: id 
-    }});
+      groupnotes_id: id,
+    },
+  });
   if (group) {
     NewNotes.destroy({ where: { groupnotes_id: id } });
-    group.update({is_deleted: 1});
+    group.update({ is_deleted: 1 });
     return true;
   } else {
     logger.info('group not found');
     return false;
   }
-}
+};
 
 const deleteColor = async (id) => {
   const color = await ColorNotes.findOne({
     where: {
-      color_id: id 
-    }});
+      color_id: id,
+    },
+  });
   await NewNotes.update(
     {
       color_id: null,
-      is_deleted: 1
+      is_deleted: 1,
     },
     {
-    where: {
-      color_id: id
+      where: {
+        color_id: id,
+      },
     }
-  });
+  );
 
   if (color) {
     logger.info('color destroyed ');
-    color.update({is_deleted: 1});
+    color.update({ is_deleted: 1 });
     return true;
   } else {
     logger.info('color not found');
     return false;
   }
-}
+};
 
 const updateGroup = async (id, group_notes_name, position) => {
   logger.info('update group ' + JSON.stringify(group_notes_name));
   try {
     let toUpdate = await GroupNotes.findOne({
       where: {
-        groupnotes_id: id
-      }
+        groupnotes_id: id,
+      },
     });
     if (toUpdate) {
       console.log('update group ', toUpdate, group_notes_name);
-      toUpdate = await toUpdate.update({group_notes_name: group_notes_name, position: position});
-    } 
+      toUpdate = await toUpdate.update({
+        group_notes_name: group_notes_name,
+        position: position,
+      });
+    }
     return toUpdate;
-  } catch(error) {
+  } catch (error) {
     console.log('the error UPDATE GROUP', error);
     throw error;
   }
-}
+};
 
 const updateColor = async (id, label, color, opacity) => {
-  logger.info('update color ', + color);
+  logger.info('update color ', +color);
   try {
     let toUpdate = await ColorNotes.findOne({
       where: {
-        color_id: id
-      }
+        color_id: id,
+      },
     });
     if (toUpdate) {
-      toUpdate = await toUpdate.update({label: label, color: color, opacity: opacity});
-    } 
+      toUpdate = await toUpdate.update({
+        label: label,
+        color: color,
+        opacity: opacity,
+      });
+    }
     return toUpdate;
-  } catch(error) {
+  } catch (error) {
     console.log('the error UPDATE COLOR', error);
-    return {error};
+    return { error };
   }
-}
+};
 
 const getAllNotesByUser = async (userId) => {
   const notes = await NewNotes.findAll({
     where: {
-      user_id: +userId
-    }
+      user_id: +userId,
+    },
   });
   return notes;
-}
+};
 
 const deleteNote = async (id) => {
   const note = await NewNotes.findOne({
     where: {
-      newnotes_id: id 
-    }});
-    console.log(id, note);
+      newnotes_id: id,
+    },
+  });
+  console.log(id, note);
   if (note) {
     logger.info('note destroyed ');
     note.destroy();
@@ -203,85 +225,90 @@ const deleteNote = async (id) => {
     logger.info('note not found');
     return false;
   }
-}
+};
 
 const getNextBucket = async (userId) => {
   const noteWithMaxPosition = await NewNotes.findAll({
     where: {
-      user_id: +userId
+      user_id: +userId,
     },
-    order: [[
-      'position', 'ASC'
-    ]],
-    limit: 1
+    order: [['position', 'ASC']],
+    limit: 1,
   });
   const groupWithMaxPosition = await GroupNotes.findAll({
     where: {
       user_id: +userId,
-      is_deleted: 0
+      is_deleted: 0,
     },
-    order: [[
-      'position', 'ASC'
-    ]],
-    limit: 1
+    order: [['position', 'ASC']],
+    limit: 1,
   });
   if (!noteWithMaxPosition.length) {
-    noteWithMaxPosition.push({position: SIZE_OF_BUCKET});
+    noteWithMaxPosition.push({ position: SIZE_OF_BUCKET });
   }
   if (!groupWithMaxPosition.length) {
-    groupWithMaxPosition.push({position: noteWithMaxPosition[0].position});
+    groupWithMaxPosition.push({ position: noteWithMaxPosition[0].position });
   }
-  const newBucket = Math.min(noteWithMaxPosition[0].position, groupWithMaxPosition[0].position) - SIZE_OF_BUCKET;
+  const newBucket =
+    Math.min(
+      noteWithMaxPosition[0].position,
+      groupWithMaxPosition[0].position
+    ) - SIZE_OF_BUCKET;
   return newBucket;
-}
+};
 const saveNote = async (note) => {
   logger.info('create note ' + JSON.stringify(note));
   try {
     note.position = await getNextBucket(note.user_id);
     const newNote = await NewNotes.create(note);
     return newNote;
-  } catch(error) {
+  } catch (error) {
     console.log('the error SAVE NOTE', error);
     throw error;
   }
-}
+};
 const saveGroup = async (name, user_id) => {
   console.log(name, user_id);
-  const myGroup = {group_notes_name: name, user_id: user_id};
+  const myGroup = { group_notes_name: name, user_id: user_id };
   myGroup.position = await getNextBucket(user_id);
   const group = await GroupNotes.create(myGroup);
   return group;
-}
+};
 
 const saveColor = async (label, color, opacity, userId) => {
   try {
-    const newColor = await ColorNotes.create({label: label, color: color, opacity: opacity, user_id: userId});
+    const newColor = await ColorNotes.create({
+      label: label,
+      color: color,
+      opacity: opacity,
+      user_id: userId,
+    });
     return newColor;
-  } catch(error) {
+  } catch (error) {
     console.log('the error SAVE COLOR', error);
     throw error;
   }
-}
+};
 
 const updateNote = async (id, note) => {
   logger.info('update note ' + JSON.stringify(note));
   try {
     let toUpdate = await NewNotes.findOne({
       where: {
-        newnotes_id: id
-      }
+        newnotes_id: id,
+      },
     });
     if (toUpdate) {
       // console.log({...note});
-      toUpdate = await toUpdate.update({...note});
+      toUpdate = await toUpdate.update({ ...note });
       // console.log(toUpdate);
-    } 
+    }
     return toUpdate;
-  } catch(error) {
+  } catch (error) {
     console.log('the error for update ', error);
-    return {object: 'Error at' + error};
+    return { object: 'Error at' + error };
   }
-}
+};
 
 export default {
   getAllNotesByUser,
@@ -298,5 +325,6 @@ export default {
   updateColor,
   deleteGroups,
   deleteNote,
-  deleteColor
+  deleteColor,
+  getStaticColors,
 };
