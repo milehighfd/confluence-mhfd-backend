@@ -55,6 +55,31 @@ const CodeStudyReason = db.codeStudyReason;
 const User = db.user;
 const Op = sequelize.Op;
 
+async function getCentroidsOfAllProjects () {
+  const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid, projectid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE}`;
+  const LINE_URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
+  let data;
+  try {
+    const newProm1 = new Promise((resolve, reject) => {
+      https.get(LINE_URL, response => {
+         if (response.statusCode === 200) {
+            let str = '';
+            response.on('data', function (chunk) {
+               str += chunk;
+            });
+            response.on('end', async function () {
+               resolve(JSON.parse(str).rows);
+            })
+         }
+      });
+   });
+    data = await newProm1;
+    return data;
+  } catch (e) {
+    console.error('Error with QUERY ', e);
+    return [];
+  }
+}
 
 async function getCentroidOfProjectId (projectid) {
   const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE} where projectid = ${projectid}`;
@@ -652,339 +677,303 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
     if (cache) {
       return JSON.parse(JSON.stringify(cache));
     }
-    let projects = await Project.findAll({
-      where: where,
-      limit,
-      offset,
-      separate: true,
-      attributes: [
-        "project_id",
-        "project_name",
-        "description",
-        "onbase_project_number",
-        "created_date",
-        'code_project_type_id',
-        'current_project_status_id',
-        [
-          sequelize.literal(`(
-            SELECT COUNT([GRADE_CONTROL_STRUCTURE].[projectid])
-            FROM [GRADE_CONTROL_STRUCTURE]
-            WHERE [GRADE_CONTROL_STRUCTURE].[projectid] = [project].[project_id]
-          )`),
-          'GRADE_CONTROL_STRUCTURE',
-        ],
-        [
-          sequelize.literal(`(
-            SELECT COUNT([PIPE_APPURTENANCES].[projectid])
-            FROM [PIPE_APPURTENANCES]
-            WHERE [PIPE_APPURTENANCES].[projectid] = [project].[project_id]
-          )`),
-          'PIPE_APPURTENANCES',
-        ],
-        [
-          sequelize.literal(`(
-            SELECT COUNT([SPECIAL_ITEM_POINT].[projectid])
-            FROM [SPECIAL_ITEM_POINT]
-            WHERE [SPECIAL_ITEM_POINT].[projectid] = [project].[project_id]
-          )`),
-          'SPECIAL_ITEM_POINT',
-        ],
-        [
-          sequelize.literal(`(
-            SELECT COUNT([SPECIAL_ITEM_LINEAR].[projectid])
-            FROM [SPECIAL_ITEM_LINEAR]
-            WHERE [SPECIAL_ITEM_LINEAR].[projectid] = [project].[project_id]
-          )`),
-          'SPECIAL_ITEM_LINEAR',
-        ],
-        [
-          sequelize.literal(`(
-            SELECT COUNT([SPECIAL_ITEM_AREA].[projectid])
-            FROM [SPECIAL_ITEM_AREA]
-            WHERE [SPECIAL_ITEM_AREA].[projectid] = [project].[project_id]
-          )`),
-          'SPECIAL_ITEM_AREA',
-        ],
-        [
-          sequelize.literal(`(
-            SELECT COUNT([CHANNEL_IMPROVEMENTS_LINEAR].[projectid])
-            FROM [CHANNEL_IMPROVEMENTS_LINEAR]
-            WHERE [CHANNEL_IMPROVEMENTS_LINEAR].[projectid] = [project].[project_id]
-          )`),
-          'CHANNEL_IMPROVEMENTS_LINEAR',
-        ],
-        [
-          sequelize.literal(`(
-            SELECT COUNT([CHANNEL_IMPROVEMENTS_AREA].[projectid])
-            FROM [CHANNEL_IMPROVEMENTS_AREA]
-            WHERE [CHANNEL_IMPROVEMENTS_AREA].[projectid] = [project].[project_id]
-          )`),
-          'CHANNEL_IMPROVEMENTS_AREA',
-        ],
-        [
-          sequelize.literal(`(
-            SELECT COUNT([REMOVAL_LINE].[projectid])
-            FROM [REMOVAL_LINE]
-            WHERE [REMOVAL_LINE].[projectid] = [project].[project_id]
-          )`),
-          'REMOVAL_LINE',
-        ],
-        [
-          sequelize.literal(`(
-            SELECT COUNT([REMOVAL_AREA].[projectid])
-            FROM [REMOVAL_AREA]
-            WHERE [REMOVAL_AREA].[projectid] = [project].[project_id]
-          )`),
-          'REMOVAL_AREA',
-        ],
-        [
-          sequelize.literal(`(
-            SELECT COUNT([STORM_DRAIN].[projectid])
-            FROM [STORM_DRAIN]
-            WHERE [STORM_DRAIN].[projectid] = [project].[project_id]
-          )`),
-          'STORM_DRAIN',
-        ],
-        [
-          sequelize.literal(`(
-            SELECT COUNT([DETENTION_FACILITIES].[projectid])
-            FROM [DETENTION_FACILITIES]
-            WHERE [DETENTION_FACILITIES].[projectid] = [project].[project_id]
-          )`),
-          'DETENTION_FACILITIES',
-        ],
-        [
-          sequelize.literal(`(
-            SELECT COUNT([MAINTENANCE_TRAILS].[projectid])
-            FROM [MAINTENANCE_TRAILS]
-            WHERE [MAINTENANCE_TRAILS].[projectid] = [project].[project_id]
-          )`),
-          'MAINTENANCE_TRAILS',
-        ],
-        [
-          sequelize.literal(`(
-            SELECT COUNT([LAND_ACQUISITION].[projectid])
-            FROM [LAND_ACQUISITION]
-            WHERE [LAND_ACQUISITION].[projectid] = [project].[project_id]
-          )`),
-          'LAND_ACQUISITION',
-        ],
-        [
-          sequelize.literal(`(
-            SELECT COUNT([LANDSCAPING_AREA].[projectid])
-            FROM [LANDSCAPING_AREA]
-            WHERE [LANDSCAPING_AREA].[projectid] = [project].[project_id]
-          )`),
-          'LANDSCAPING_AREA',
-        ],
-      ], 
-      
-      include: [
-        {
-          model: ProjectStaff,
-          required: false,
-          attributes: [
-            'code_project_staff_role_type_id',
-            'is_active',
-            'project_staff_id'
+    let [projects, centroids] = await Promise.all([
+      Project.findAll({
+        where: where,
+        limit,
+        offset,
+        separate: true,
+        attributes: [
+          "project_id",
+          "project_name",
+          "description",
+          "onbase_project_number",
+          "created_date",
+          'code_project_type_id',
+          'current_project_status_id',
+          [
+            sequelize.literal(`(
+              SELECT COUNT([GRADE_CONTROL_STRUCTURE].[projectid])
+              FROM [GRADE_CONTROL_STRUCTURE]
+              WHERE [GRADE_CONTROL_STRUCTURE].[projectid] = [project].[project_id]
+            )`),
+            'GRADE_CONTROL_STRUCTURE',
           ],
-          include: {
-            model: MHFDStaff,
+          [
+            sequelize.literal(`(
+              SELECT COUNT([PIPE_APPURTENANCES].[projectid])
+              FROM [PIPE_APPURTENANCES]
+              WHERE [PIPE_APPURTENANCES].[projectid] = [project].[project_id]
+            )`),
+            'PIPE_APPURTENANCES',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([SPECIAL_ITEM_POINT].[projectid])
+              FROM [SPECIAL_ITEM_POINT]
+              WHERE [SPECIAL_ITEM_POINT].[projectid] = [project].[project_id]
+            )`),
+            'SPECIAL_ITEM_POINT',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([SPECIAL_ITEM_LINEAR].[projectid])
+              FROM [SPECIAL_ITEM_LINEAR]
+              WHERE [SPECIAL_ITEM_LINEAR].[projectid] = [project].[project_id]
+            )`),
+            'SPECIAL_ITEM_LINEAR',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([SPECIAL_ITEM_AREA].[projectid])
+              FROM [SPECIAL_ITEM_AREA]
+              WHERE [SPECIAL_ITEM_AREA].[projectid] = [project].[project_id]
+            )`),
+            'SPECIAL_ITEM_AREA',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([CHANNEL_IMPROVEMENTS_LINEAR].[projectid])
+              FROM [CHANNEL_IMPROVEMENTS_LINEAR]
+              WHERE [CHANNEL_IMPROVEMENTS_LINEAR].[projectid] = [project].[project_id]
+            )`),
+            'CHANNEL_IMPROVEMENTS_LINEAR',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([CHANNEL_IMPROVEMENTS_AREA].[projectid])
+              FROM [CHANNEL_IMPROVEMENTS_AREA]
+              WHERE [CHANNEL_IMPROVEMENTS_AREA].[projectid] = [project].[project_id]
+            )`),
+            'CHANNEL_IMPROVEMENTS_AREA',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([REMOVAL_LINE].[projectid])
+              FROM [REMOVAL_LINE]
+              WHERE [REMOVAL_LINE].[projectid] = [project].[project_id]
+            )`),
+            'REMOVAL_LINE',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([REMOVAL_AREA].[projectid])
+              FROM [REMOVAL_AREA]
+              WHERE [REMOVAL_AREA].[projectid] = [project].[project_id]
+            )`),
+            'REMOVAL_AREA',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([STORM_DRAIN].[projectid])
+              FROM [STORM_DRAIN]
+              WHERE [STORM_DRAIN].[projectid] = [project].[project_id]
+            )`),
+            'STORM_DRAIN',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([DETENTION_FACILITIES].[projectid])
+              FROM [DETENTION_FACILITIES]
+              WHERE [DETENTION_FACILITIES].[projectid] = [project].[project_id]
+            )`),
+            'DETENTION_FACILITIES',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([MAINTENANCE_TRAILS].[projectid])
+              FROM [MAINTENANCE_TRAILS]
+              WHERE [MAINTENANCE_TRAILS].[projectid] = [project].[project_id]
+            )`),
+            'MAINTENANCE_TRAILS',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([LAND_ACQUISITION].[projectid])
+              FROM [LAND_ACQUISITION]
+              WHERE [LAND_ACQUISITION].[projectid] = [project].[project_id]
+            )`),
+            'LAND_ACQUISITION',
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COUNT([LANDSCAPING_AREA].[projectid])
+              FROM [LANDSCAPING_AREA]
+              WHERE [LANDSCAPING_AREA].[projectid] = [project].[project_id]
+            )`),
+            'LANDSCAPING_AREA',
+          ],
+        ], 
+        
+        include: [
+          {
+            model: ProjectStaff,
             required: false,
             attributes: [
-              'user_id',
-              'mhfd_staff_id',
-              'full_name'
+              'code_project_staff_role_type_id',
+              'is_active',
+              'project_staff_id'
             ],
             include: {
-              model: User,
+              model: MHFDStaff,
               required: false,
               attributes: [
-                'organization'
+                'user_id',
+                'mhfd_staff_id',
+                'full_name'
+              ],
+              include: {
+                model: User,
+                required: false,
+                attributes: [
+                  'organization'
+                ]
+              }
+            }
+            // where: {
+            //   code_cost_type_id: 1
+            // }
+          },
+          {
+            model: ProjectServiceArea,
+            required: false,
+            include: {
+              model: CodeServiceArea,
+              required: false,
+              attributes: [
+                'service_area_name',
+                'code_service_area_id'
+              ]
+            },
+            attributes: [
+              'project_service_area_id'
+            ] 
+          },        
+          {
+            model: ProjectCounty,
+            include: {
+              model: CodeStateCounty,
+              required: false,
+              attributes: [
+                'county_name',
+                'state_county_id'
+              ]
+            },
+            attributes: [
+              'project_county_id'
+            ]
+          },
+          {
+            model: ProjectStreams,
+            required: false,
+            include: {
+              model: Streams,
+              required: false,
+              attributes: [
+                'stream_id',
+                'stream_name'
               ]
             }
-          }
-          // where: {
-          //   code_cost_type_id: 1
-          // }
-        },
-        {
-          model: ProjectServiceArea,
-          required: false,
-          include: {
-            model: CodeServiceArea,
+          },
+          {
+            model: ProjectLocalGovernment,
             required: false,
+            include: {
+              model: CodeLocalGoverment,
+              required: false,
+              attributes: [
+                'local_government_name',
+                'code_local_government_id'
+              ]
+            },
             attributes: [
-              'service_area_name',
-              'code_service_area_id'
+              'project_local_government_id'
             ]
           },
-          attributes: [
-            'project_service_area_id'
-          ] 
-        },        
-        {
-          model: ProjectCounty,
-          include: {
-            model: CodeStateCounty,
+          {
+            model: ProjectCost,
             required: false,
             attributes: [
-              'county_name',
-              'state_county_id'
-            ]
-          },
-          attributes: [
-            'project_county_id'
-          ]
-        },
-        {
-          model: ProjectStreams,
-          required: false,
-          include: {
-            model: Streams,
-            required: false,
-            attributes: [
-              'stream_id',
-              'stream_name'
-            ]
-          }
-        },
-        {
-          model: ProjectLocalGovernment,
-          required: false,
-          include: {
-            model: CodeLocalGoverment,
-            required: false,
-            attributes: [
-              'local_government_name',
-              'code_local_government_id'
-            ]
-          },
-          attributes: [
-            'project_local_government_id'
-          ]
-        },
-        {
-          model: ProjectCost,
-          required: false,
-          attributes: [
-            'code_cost_type_id',
-            'cost'
-          ],
-          // where: {
-          //   code_cost_type_id: 1
-          // }
-        },
-        {
-          model: ProjectStatus,
-          required: false,
-          attributes: [
-            'code_phase_type_id',
-            'planned_start_date',
-            'actual_start_date',
-            'actual_end_date',
-            'planned_end_date',
-            'project_status_id',
-            'is_locked',
-            'is_done'
-          ],
-          include: {
-            model: CodePhaseType,
-            required: false,
-            attributes: [
-              'phase_name',
-              'phase_ordinal_position'
+              'code_cost_type_id',
+              'cost'
             ],
-            include: [{
-              model: CodeStatusType,
-              required: false,
-              attributes: [
-                'code_status_type_id',
-                'status_name'
-              ]
-            }, {
-              model: CodeProjectType,
-              required: false,
-              attributes: [
-                'code_project_type_id',
-                'project_type_name'
-              ]
-            }]
-          }
-        },         
-        {
-          model: ProjectPartner,
-          required: false,
-          attributes: [
-            'project_partner_id',
-            'code_partner_type_id'
-          ],
-          include: {
-            model: BusinessAssociate,
+            // where: {
+            //   code_cost_type_id: 1
+            // }
+          },
+          {
+            model: ProjectStatus,
             required: false,
             attributes: [
-              'business_name',
-              'business_associates_id'
-            ]
-          },
-          // where: {
-          //   code_partner_type_id: [3, 8, 11]
-          // }
-        },{
-          model: CodeProjectType,
-          required: false,
-          attributes: [
-            'code_project_type_id',
-            'project_type_name'
-          ]
-        }
-      ],
-      order: [['created_date', 'DESC']]
-    }).map(result => result.dataValues);
-
-    // TODO: Think logic for this
-    /*
-      projects.forEach(async project => {
-        if (project.current_project_status_id) {
-          let foundCurrent = false;
-          for (const ps of project.project_statuses) {
-            if (ps.project_status_id === project.current_project_status_id) {
-              foundCurrent = true;
-            }
-            if (foundCurrent) break;
-            if (!ps.is_done) {
-              ps.is_done = 1;
-              await ProjectStatus.update({
-                is_done: 1
+              'code_phase_type_id',
+              'planned_start_date',
+              'actual_start_date',
+              'actual_end_date',
+              'planned_end_date',
+              'project_status_id',
+              'is_locked',
+              'is_done'
+            ],
+            include: {
+              model: CodePhaseType,
+              required: false,
+              attributes: [
+                'phase_name',
+                'phase_ordinal_position'
+              ],
+              include: [{
+                model: CodeStatusType,
+                required: false,
+                attributes: [
+                  'code_status_type_id',
+                  'status_name'
+                ]
               }, {
-                where: {
-                  project_status_id: ps.project_status_id
-                }
-              });
+                model: CodeProjectType,
+                required: false,
+                attributes: [
+                  'code_project_type_id',
+                  'project_type_name'
+                ]
+              }]
             }
+          },         
+          {
+            model: ProjectPartner,
+            required: false,
+            attributes: [
+              'project_partner_id',
+              'code_partner_type_id'
+            ],
+            include: {
+              model: BusinessAssociate,
+              required: false,
+              attributes: [
+                'business_name',
+                'business_associates_id'
+              ]
+            },
+            // where: {
+            //   code_partner_type_id: [3, 8, 11]
+            // }
+          },{
+            model: CodeProjectType,
+            required: false,
+            attributes: [
+              'code_project_type_id',
+              'project_type_name'
+            ]
           }
-        }
-      });
-    */
-    const BUCKET_SIZE = 20;
-    let index = 0;
-    let bucket = BUCKET_SIZE;
-    while (index < projects.length) {
-      const promises = [];
-      const starIndex = index;
-      while (index < bucket && index < projects.length) {
-        promises.push(getProblemByProjectId(projects[index].project_id, PROPSPROBLEMTABLES.problems[6], 'asc'));
-        promises.push(getCentroidOfProjectId(projects[index].project_id));
-        index++;
-      }
-      const doneData = await Promise.all(promises);
-      for (let i = starIndex, j = 0; i < index; i++, j++) {
-        projects[i].problems = doneData[2 * j];
-        projects[i].centroid = doneData[2 * j + 1];
-      } 
-      logger.info(`BUCKET FROM ${starIndex} to ${bucket} proccesed`);
-      bucket += BUCKET_SIZE;
-    }
+        ],
+        order: [['created_date', 'DESC']]
+      }),
+      getCentroidsOfAllProjects()
+    ]);
+    projects = projects.map(project => project.dataValues);
+    projects = projects.map(project => {
+      project.centroid = centroids.find(centroid => centroid.projectid === project.project_id);
+      return project;
+    });
     cache = projects;
     return projects;
   } catch (error) {
