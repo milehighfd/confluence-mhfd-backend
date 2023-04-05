@@ -140,7 +140,7 @@ export const printProblem = async (data, components, map, problempart) => {
   return pdf.create(html, options);
 }
 
-export const newPrintProject = async (_data, components, mapImage) => {
+export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   let data = {};
 
   var html = fs.readFileSync('./pdf-templates/Projects2.html', 'utf8');
@@ -339,13 +339,17 @@ export const newPrintProject = async (_data, components, mapImage) => {
     (problems !== void 0 || problems !== []) && problems?.length > 0
       ? problems
       : [{ problemname: '', problempriority: '' }];
-  
+
   let problemRows = _problems
     .map((p) => {
       return `
         <tr>
-          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problemname == null? 'N/A' : p.problemname}</td>
-          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problempriority == null? 'N/A' : p.problempriority}</td>
+          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+            p.problemname == null ? 'N/A' : p.problemname
+          }</td>
+          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+            p.problempriority == null ? 'N/A' : p.problempriority
+          }</td>
         </tr>
       `;
     })
@@ -361,9 +365,15 @@ export const newPrintProject = async (_data, components, mapImage) => {
     .map((element, index) => {
       return `
         <tr>
-          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${element == null? 'N/A' : element}</td>
           <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
-            _typeVendor[index] ? _typeVendor[index] == null ? 'N/A': _typeVendor[index] : ''
+            element == null ? 'N/A' : element
+          }</td>
+          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+            _typeVendor[index]
+              ? _typeVendor[index] == null
+                ? 'N/A'
+                : _typeVendor[index]
+              : ''
           }</td>
         </tr>
       `;
@@ -387,14 +397,18 @@ export const newPrintProject = async (_data, components, mapImage) => {
     .map((c, i) => {
       let str = `
         <tr>
-          <td width="30%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${c.type == null? 'N/A' : c.type }</td>
+          <td width="30%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${
+            c.type == null ? 'N/A' : c.type
+          }</td>
           <td width="15%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${priceFormatter(
             c.estimated_cost
           )}</td>
           <td width="15%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${
             c.original_cost ? Math.round(c.original_cost * 10) / 10 : 0
           }%</td>
-          <td width="40%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${c.percen == null? 'N/A' : c.percen}%</td>
+          <td width="40%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${
+            c.percen == null ? 'N/A' : c.percen
+          }%</td>
         </tr>
       `;
       // if (components.length === 9 && i === 6) {
@@ -425,6 +439,8 @@ export const newPrintProject = async (_data, components, mapImage) => {
     html = html.split('${totalEstimatedCost}').join('');
   }
   html = html.split('${map}').join(mapImage);
+  html = html.split('${roadMap}').join(roadMap);
+
   // let q = 0;
   // let spaceBetween = '';
   // switch (components.length) {
@@ -467,12 +483,12 @@ export const newPrintProject = async (_data, components, mapImage) => {
   var options = {
     width: `${width}px`,
     height: `${height}px`,
-    border:  {
+    border: {
       top: '2cm',
       right: '1cm',
       bottom: '2cm',
-      left: '1cm'
-    }
+      left: '1cm',
+    },
   };
 
   return pdf.create(html, options);

@@ -919,6 +919,7 @@ const getProblemParts = async (id) => {
 router.post('/project-pdf/:id', async (req, res) => {
    const { id } = req.params
    const mapImage = req.body.mapImage;
+   const roadMap = req.body.roadMap;
 
    try {
      const data = await ProjectService.getDetails(id);
@@ -928,7 +929,7 @@ router.post('/project-pdf/:id', async (req, res) => {
        'type',
        'asc'
      );
-     let pdfObject = await newPrintProject(data, components, mapImage);
+     let pdfObject = await newPrintProject(data, components, mapImage, roadMap);
      pdfObject.toBuffer(function (err, buffer) {
        if (err) return res.send(err);
        res.type('pdf');
