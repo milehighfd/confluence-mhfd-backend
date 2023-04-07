@@ -1,6 +1,6 @@
 export default (sequelize, DataType) => {
   const boardProject = sequelize.define('board_project', {
-    id: {
+    board_project_id: {
       type: DataType.INTEGER,
       primaryKey: true,
       autoIncrement: true
