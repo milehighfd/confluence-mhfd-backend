@@ -154,7 +154,7 @@ const createCosts = async (req, res) => {
 
 router.get('/bbox/:project_id', getBboxProject);
 router.post('/', listProjects);
-router.post('/prueba', listProjectsDBFilter);
+router.post('/test', listProjectsDBFilter);
 router.post('/ids', listProjectsForId);
 router.get('/:project_id', getProjectDetail);
 router.get('/projectCost/:project_id', listOfCosts);
