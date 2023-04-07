@@ -1,5 +1,5 @@
 export default (sequelize, DataType) => {
-  const boardProject = sequelize.define('board-projects', {
+  const boardProject = sequelize.define('board_project', {
     id: {
       type: DataType.INTEGER,
       primaryKey: true,
@@ -83,7 +83,7 @@ export default (sequelize, DataType) => {
     }
   }, {
     freezeTableName: true,
-    tableName: 'board-projects'
+    tableName: 'board_project'
   });
   return boardProject;
 }
