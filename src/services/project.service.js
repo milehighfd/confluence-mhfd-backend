@@ -680,21 +680,21 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   let projects = await Promise.all([
     // KEYWORD 
     Project.findAll({
-      attributes: ["project_id"],
+      attributes: ["project_id","code_project_type_id"],
       where: {
         project_name: { [Op.like]: FILTER_NAME },
       }
     }),
     // PROJECT TYPE
     Project.findAll({
-      attributes: ["project_id"],
+      attributes: ["project_id","code_project_type_id"],
       where: {
         code_project_type_id: filter.projecttype,
       }
     }),
     // STATUS
     Project.findAll({
-      attributes: ["project_id"],
+      attributes: ["project_id","code_project_type_id"],
       include: [{
         attributes: [],
         model: ProjectStatus,
@@ -706,7 +706,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
     }),
     // SERVICE AREA
     Project.findAll({
-      attributes: ["project_id"],
+      attributes: ["project_id","code_project_type_id"],
       include: [{
         attributes: [],
         model: ProjectServiceArea,
@@ -719,7 +719,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
     }),
     // COUNTY
     Project.findAll({
-      attributes: ["project_id"],
+      attributes: ["project_id","code_project_type_id"],
       include: [{
         attributes: [],
         model: ProjectCounty,
@@ -732,7 +732,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
     }),
     //STREAMS 
     Project.findAll({
-      attributes: ["project_id"],
+      attributes: ["project_id","code_project_type_id"],
       include: [{
         attributes: [],
         model: ProjectStreams,
@@ -744,7 +744,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
     }),
     // JURISDICTION
     Project.findAll({
-      attributes: ["project_id"],
+      attributes: ["project_id","code_project_type_id"],
       include: [{
         model: ProjectLocalGovernment,
         include: {
@@ -755,7 +755,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
     }),
     //CONSULTANT
     Project.findAll({
-      attributes: ["project_id"],
+      attributes: ["project_id","code_project_type_id"],
       include: [{
         model: ProjectPartner,
         attributes: [],
@@ -768,7 +768,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
     }),
     //CONTRACTOR
     Project.findAll({
-      attributes: ["project_id"],
+      attributes: ["project_id","code_project_type_id"],
       include: [{
         model: ProjectPartner,
         attributes: [],
@@ -781,7 +781,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
     }),
     //ESTIMATED COST
     Project.findAll({
-      attributes: ["project_id"],
+      attributes: ["project_id","code_project_type_id"],
       include: [{
         model: ProjectCost,
         attributes: [],
