@@ -9,7 +9,7 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER
     },
     project_id: {
-      type: DataType.STRING,
+      type: DataType.INTEGER,
     },
     position0: {
       type: DataType.INTEGER
