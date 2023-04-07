@@ -148,7 +148,7 @@ router.put('/project/:id', async (req, res) => {
     } = req.body;
     let boardProject = await BoardProject.findOne({
         where: {
-            id
+            board_project_id: id
         }
     });
     boardProject.originPosition0 = originPosition0;
