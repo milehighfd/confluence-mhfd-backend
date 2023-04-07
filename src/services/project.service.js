@@ -676,6 +676,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const FILTER_NAME = filter.name ? '%' + filter.name + '%' : '';
   const CONTRACTOR = filter.contractor ? '%' + filter.contractor + '%' : '';
   const CONSULTANT = filter.consultant ? '%' + filter.consultant + '%' : '';
+  const COST = filter.cost ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : { [Op.lt]: 0 };
   let projects = await Promise.all([
     // KEYWORD 
     Project.findAll({
@@ -784,14 +785,14 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       include: [{
         model: ProjectCost,
         attributes: [],
-        where: { code_cost_type_id: ESTIMATED_ID, cost: { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } }
+        where: { code_cost_type_id: ESTIMATED_ID, cost: COST }
       }],
     }),  
   ])  
   
-  projects = projects.filter(project => project.length > 0);
-  let smallestArray = projects.reduce((a, b) => a.length <= b.length ? a : b);
-  projects.forEach(project => {
+  projects = projects?.filter(project => project.length > 0);
+  let smallestArray = projects?.reduce((a, b) => a.length <= b.length ? a : b);
+  projects?.forEach(project => {
     smallestArray = smallestArray.filter(projectId => project.find(projectId2 => projectId2.project_id === projectId.project_id));
   }); 
  
