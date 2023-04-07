@@ -669,6 +669,124 @@ const getDetails = async (project_id) => {
   }
 }
 
+const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter) => {
+  const CONSULTANT_CODE = 3;
+  const CIVIL_CONTRACTOR_ID = 8;
+  const ESTIMATED_ID = 1;
+  // KEYWORD & PROJECT TYPE  
+  let projects = await Promise.all([Project.findAll({
+    attributes: ["project_id"],
+    where: {
+      project_name: { [Op.like]: '%' + filter.name + '%' },
+      code_project_type_id: filter.projecttype
+    }
+  }),
+  // STATUS
+  Project.findAll({
+    attributes: ["project_id"],
+    include: [{
+      attributes: [],
+      model: ProjectStatus,
+      include: {
+        model: CodePhaseType,
+        where: { code_status_type_id: filter.status }
+      }
+    }]
+  }),
+  // SERVICE AREA
+  Project.findAll({
+    attributes: ["project_id"],
+    include: [{
+      attributes: [],
+      model: ProjectServiceArea,
+      include: {
+        attributes: [],
+        model: CodeServiceArea,
+      },
+      where: { code_service_area_id: filter.servicearea }
+    }]
+  }),
+  // COUNTY
+  Project.findAll({
+    attributes: ["project_id"],
+    include: [{
+      attributes: [],
+      model: ProjectCounty,
+      include: {
+        attributes: [],
+        model: CodeStateCounty,
+      },
+      where: { state_county_id: filter.county }
+    }],
+  }),
+  //STREAMS 
+    Project.findAll({
+      attributes: ["project_id"],
+      include: [{
+        attributes: [],
+        model: ProjectStreams,
+        include: {
+          model: Streams,   
+        },
+        where: { stream_id: filter.streamname }
+      }],
+    }),
+    // JURISDICTION
+    Project.findAll({
+      attributes: ["project_id"],
+      include: [{
+        model: ProjectLocalGovernment,
+        include: {
+          model: CodeLocalGoverment,
+        },
+        where: { code_local_government_id: filter.jurisdiction }        
+      }],
+    }),
+    //CONSULTANT
+    Project.findAll({
+      attributes: ["project_id"],
+      include: [{
+        model: ProjectPartner,
+        attributes: [],
+        include: {
+          model: BusinessAssociate,
+          attributes: [],
+        },
+        where: { code_partner_type_id: CONSULTANT_CODE, business_associates_id: { [Op.like]: '%' + filter.consultant + '%' } }
+      }],
+    }),
+    //CONTRACTOR
+    Project.findAll({
+      attributes: ["project_id"],
+      include: [{
+        model: ProjectPartner,
+        attributes: [],
+        include: {
+          model: BusinessAssociate,
+          attributes: [],
+        },
+        where: { code_partner_type_id: CIVIL_CONTRACTOR_ID, business_associates_id: { [Op.like]: '%' + filter.consultant + '%' } }
+      }],
+    }),
+    //ESTIMATED COST
+    Project.findAll({
+      attributes: ["project_id"],
+      include: [{
+        model: ProjectCost,
+        attributes: [],
+        where: { code_cost_type_id: ESTIMATED_ID, cost: { [Op.between]: [filter.totalcost[0], filter.totalcost[1]] } }
+      }],
+    }),  
+  ])  
+
+  let projectIds = [];
+  projects.forEach(project => {
+    project.forEach(p => {
+      projectIds.push(p.project_id);
+    })
+  })   
+  return projectIds;
+}
 
 let cache = null;
 const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
@@ -1254,6 +1372,7 @@ export default {
   deleteByProjectId,
   saveProject,
   getProjects,
+  getProjects2,
   getProjectsDeprecated,
   getProjectsIdsByBounds,
   getDetails,

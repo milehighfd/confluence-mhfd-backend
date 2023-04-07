@@ -63,6 +63,15 @@ const listProjects = async (req, res) => {
   res.send(projects);
 };
 
+const listProjectsDBFilter = async (req, res) => {
+  const { offset = 1, limit = 10000 } = req.query;
+  const { body } = req;
+  const bounds = body?.bounds;
+  let projects = await projectService.getProjects2(null, bounds, offset, limit, body);
+  logger.info('projects being called', projects.length);
+  res.send(projects);
+}
+
 const getProjectDetail = async (req, res) => {
 
   const project_id = req.params['project_id'];
@@ -145,6 +154,7 @@ const createCosts = async (req, res) => {
 
 router.get('/bbox/:project_id', getBboxProject);
 router.post('/', listProjects);
+router.post('/prueba', listProjectsDBFilter);
 router.post('/ids', listProjectsForId);
 router.get('/:project_id', getProjectDetail);
 router.get('/projectCost/:project_id', listOfCosts);
