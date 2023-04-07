@@ -41,7 +41,7 @@ import projectService from 'bc/services/project.service.js';
 
 // import serviceAreaLocalGovernment from 'bc/routes/servicearealocalgovernment.route.js';
 seed();
-await projectService.getProjects();
+//await projectService.getProjects();
 
 // db.sequelize.sync();
 console.log(`ENVIRONMENT ${process.env.NODE_ENV}`);
