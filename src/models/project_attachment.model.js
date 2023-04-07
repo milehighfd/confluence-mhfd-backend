@@ -2,7 +2,8 @@ export default (sequelize, DataType) => {
   const ProjectAttachment = sequelize.define('project_attachment', {
     project_attachment_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     attachment_url: {
       type: DataType.STRING,
@@ -45,6 +46,10 @@ export default (sequelize, DataType) => {
     },   
     is_cover: {
       type: DataType.INTEGER
+    },
+    user_id: {
+      type: DataType.INTEGER,
+      allowNull: false     
     }
   }, {
     freezeTableName: true,
