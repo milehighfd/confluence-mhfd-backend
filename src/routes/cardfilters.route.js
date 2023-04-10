@@ -40,8 +40,9 @@ const getFilters = async (req, res) => {
   data.problemtype = [];
   data.lgmanager = [];
   data.estimatedCost = [];
-  
-  let projects = await projectService.getProjects(null, null, 1);
+  let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
+  let projects = await projectService.getProjects(null, null, 1, null,projectsFilterId);
+
   projects = await projectsByFilters(projects, body);
   if (bounds) {
     const ids = await getIdsInBbox(bounds);

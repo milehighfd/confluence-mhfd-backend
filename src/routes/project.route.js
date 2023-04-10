@@ -35,10 +35,11 @@ const listProjectsForId = async (req, res) => {
 };
 
 const listProjects = async (req, res) => {
-  const { offset = 1, limit = 10000 } = req.query;
+  const { offset = 0, limit = 10000 } = req.query;
   const { body } = req;
   const bounds = body?.bounds;
-  let projects = await projectService.getProjects(null, bounds, offset, limit);
+  let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
+  let projects = await projectService.getProjects(null, bounds, offset, limit,projectsFilterId);
   // let projects = JSON.parse(JSON.stringify(projectsCache))
   projects.forEach(project => {
     delete project.centroid;
@@ -69,6 +70,10 @@ const listProjectsDBFilter = async (req, res) => {
   const bounds = body?.bounds;
   let projects = await projectService.getProjects2(null, bounds, offset, limit, body);
   logger.info('projects being called', projects.length);
+  if (bounds) {
+    const ids = await getIdsInBbox(bounds);
+    projects = projects.filter((p) => ids.includes(p.project_id));
+  }
   res.send(projects);
 }
 

@@ -808,8 +808,12 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
 }
 
 let cache = null;
-const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
-  const where = {};
+const getProjects = async (include, bounds, offset = 0, limit = 120000, project_ids) => {  
+  let where = {};
+  if(project_ids){
+    const project_ids_array = project_ids.map(project => project.project_id);
+    where = {project_id: project_ids_array};
+  } 
   try {
     if (cache) {
       return JSON.parse(JSON.stringify(cache));
@@ -817,8 +821,8 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
     let [projects, centroids] = await Promise.all([
       Project.findAll({
         where: where,
-        limit,
-        offset,
+        limit: limit,
+        offset: offset,
         separate: true,
         attributes: [
           "project_id",
@@ -1111,7 +1115,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000) => {
       project.centroid = centroids.find(centroid => centroid.projectid === project.project_id);
       return project;
     });
-    cache = projects;
+    //cache = projects;
     return projects;
   } catch (error) {
     logger.error(error);
