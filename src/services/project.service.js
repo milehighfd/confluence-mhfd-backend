@@ -677,6 +677,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const CONTRACTOR = filter.contractor ? '%' + filter.contractor + '%' : '';
   const CONSULTANT = filter.consultant ? '%' + filter.consultant + '%' : '';
   const COST = filter.cost ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : { [Op.lt]: 0 };
+  const STATUS = filter.status ? filter.status : -1;
   let projects = await Promise.all([
     // KEYWORD 
     Project.findAll({
@@ -693,15 +694,16 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       }
     }),
     // STATUS
-    Project.findAll({
+    Project.findAll({      
       attributes: ["project_id","code_project_type_id"],
       include: [{
-        attributes: [],
         model: ProjectStatus,
+        required:true ,
         include: {
-          model: CodePhaseType,          
-        },
-        where: { code_phase_type_id: filter.status }        
+          model: CodePhaseType,
+          required:true ,         
+          where: { code_status_type_id: STATUS }        
+        },        
       }]
     }),
     // SERVICE AREA
@@ -791,11 +793,17 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   ])  
   
   projects = projects?.filter(project => project.length > 0);
-  let smallestArray = projects?.reduce((a, b) => a.length <= b.length ? a : b);
-  projects?.forEach(project => {
-    smallestArray = smallestArray.filter(projectId => project.find(projectId2 => projectId2.project_id === projectId.project_id));
-  }); 
- 
+  let smallestArray =[]
+  if(projects.length === 0){
+    smallestArray= Project.findAll({
+      attributes: ["project_id","code_project_type_id"],
+    });
+  }else{
+    smallestArray = projects?.reduce((a, b) => a.length <= b.length ? a : b);
+    projects?.forEach(project => {
+      smallestArray = smallestArray.filter(projectId => project.find(projectId2 => projectId2.project_id === projectId.project_id));
+    }); 
+  };
   return smallestArray;
 }
 
