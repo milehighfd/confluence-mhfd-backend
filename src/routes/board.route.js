@@ -196,7 +196,7 @@ router.post('/', async (req, res) => {
         logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
         let boardProjects = await BoardProject.findAll({
             where: {
-              board_id: board._id
+              board_id: board.board_id
             }
         });
         logger.info(`BOARD-PROJECTS ${JSON.stringify(boardProjects)}`);
@@ -274,7 +274,7 @@ const sendBoardProjectsToProp = async (boards, prop) => {
         let board = boards[i];
         let boardProjects = await BoardProject.findAll({
             where: {
-                board_id: board._id
+                board_id: board.board_id
             }
         });
         let map = {};
@@ -322,13 +322,13 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                     propVal = propVal.trimEnd().concat(' Service Area');
                 }
                 let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype);
-                logger.info(`Destiny board by prop ${prop} id is ${destinyBoard !== null ? destinyBoard._id : destinyBoard}`);
+                logger.info(`Destiny board by prop ${prop} id is ${destinyBoard !== null ? destinyBoard.board_id : destinyBoard}`);
                 //TODO: improve to avoid multiple queries to same board
-                if (destinyBoard === null || destinyBoard._id === null) {
+                if (destinyBoard === null || destinyBoard.board_id === null) {
                     logger.info('Destiny board not found');
                 }
                 let newBoardProject = new BoardProject({
-                    board_id: destinyBoard._id,
+                    board_id: destinyBoard.board_id,
                     project_id: bp.project_id,
                     position0: bp.position0,
                     position1: bp.position1,
@@ -362,7 +362,7 @@ const updateProjectStatus = async (boards, status, creator) => {
         let board = boards[i];
         let boardProjects = await BoardProject.findAll({
             where: {
-                board_id: board._id
+                board_id: board.board_id
             }
         });
         for (var j = 0 ; j < boardProjects.length ; j++) {
@@ -461,7 +461,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
             console.log(board, "current board");
             let boardProjects = await BoardProject.findAll({
                 where: {
-                    board_id: board._id
+                    board_id: board.board_id
                 }
             });
             for (var j = 0 ; j < boardProjects.length ; j++) {
@@ -470,7 +470,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
                 console.log(destinyBoard);
                 //TODO: improve to avoid multiple queries to same board
                 await boardService.saveProjectBoard({
-                    board_id: destinyBoard._id,
+                    board_id: destinyBoard.board_id,
                     project_id: bp.project_id,
                     position0: bp.position0,
                     position1: bp.position1,
@@ -579,7 +579,7 @@ router.get('/:boardId/boards/:type', async (req, res) => {
     const { boardId, type } = req.params;
     let board = await Board.findOne({
         where: {
-            _id: boardId
+            board_id: boardId
         }
     })
     let boardLocalities = await BoardLocality.findAll({
@@ -606,7 +606,7 @@ router.get('/:boardId/boards/:type', async (req, res) => {
                     status : "Approved"
                 },{
                     where : {
-                        _id : boardFrom._id
+                        board_id : boardFrom.board_id
                     }
                 })
                 boardFrom = await Board.findOne({
@@ -708,7 +708,7 @@ router.put('/:boardId', [auth], async (req, res) => {
     const { status, comment, substatus } = req.body;
     let board = await Board.findOne({
         where: {
-            _id: boardId
+            board_id: boardId
         }
     });
     if (board) {
