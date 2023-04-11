@@ -673,17 +673,17 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const CONSULTANT_CODE = 3;
   const CIVIL_CONTRACTOR_ID = 8;
   const ESTIMATED_ID = 1;
-  const FILTER_NAME = filter.name ? '%' + filter.name + '%' : '';
-  const CONTRACTOR = filter.contractor ? '%' + filter.contractor + '%' : '';
-  const CONSULTANT = filter.consultant ? '%' + filter.consultant + '%' : '';
-  const COST = filter.cost ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : { [Op.lt]: 0 };
-  const STATUS = filter.status ? filter.status : -1;
+  const filterName = filter.name ? '%' + filter.name + '%' : '';
+  const contractor = filter.contractor ? '%' + filter.contractor + '%' : '';
+  const consultant = filter.consultant ? '%' + filter.consultant + '%' : '';
+  const cost = filter.cost ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : { [Op.lt]: 0 };
+  const status = filter.status ? filter.status : -1;
   let projects = await Promise.all([
     // KEYWORD 
     Project.findAll({
       attributes: ["project_id","code_project_type_id"],
       where: {
-        project_name: { [Op.like]: FILTER_NAME },
+        project_name: { [Op.like]: filterName },
       }
     }),
     // PROJECT TYPE
@@ -694,15 +694,16 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       }
     }),
     // STATUS
-    Project.findAll({      
-      attributes: ["project_id","code_project_type_id"],
+    Project.findAll({   
       include: [{
+        attributes: ["project_id","code_project_type_id"],
         model: ProjectStatus,
+        as: 'currentId',
         required:true ,
         include: {
           model: CodePhaseType,
           required:true ,         
-          where: { code_status_type_id: STATUS }        
+          where: { code_status_type_id: status }        
         },        
       }]
     }),
@@ -765,7 +766,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
           model: BusinessAssociate,
           attributes: [],
         },
-        where: { code_partner_type_id: CONSULTANT_CODE, business_associates_id: { [Op.like]: CONSULTANT } }
+        where: { code_partner_type_id: CONSULTANT_CODE, business_associates_id: { [Op.like]: consultant } }
       }],
     }),
     //CONTRACTOR
@@ -778,7 +779,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
           model: BusinessAssociate,
           attributes: [],
         },
-        where: { code_partner_type_id: CIVIL_CONTRACTOR_ID, business_associates_id: { [Op.like]: CONTRACTOR } }
+        where: { code_partner_type_id: CIVIL_CONTRACTOR_ID, business_associates_id: { [Op.like]: contractor } }
       }],
     }),
     //ESTIMATED COST
@@ -787,7 +788,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       include: [{
         model: ProjectCost,
         attributes: [],
-        where: { code_cost_type_id: ESTIMATED_ID, cost: COST }
+        where: { code_cost_type_id: ESTIMATED_ID, cost: cost }
       }],
     }),  
   ])  
@@ -1115,7 +1116,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000, project_
       project.centroid = centroids.find(centroid => centroid.projectid === project.project_id);
       return project;
     });
-    //cache = projects;
+    cache = projects;
     return projects;
   } catch (error) {
     logger.error(error);
