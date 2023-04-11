@@ -286,6 +286,11 @@ db.project.hasMany(
   db.projectStatus,
   { foreignKey: 'project_id' }
 );
+db.project.hasMany(
+  db.projectStatus,
+  { foreignKey: 'project_status_id',sourceKey: "current_project_status_id",
+  as: 'currentId' } 
+);
 db.projectStatus.belongsTo(
   db.codePhaseType,
   { foreignKey: 'code_phase_type_id' }
