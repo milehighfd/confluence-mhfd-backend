@@ -57,7 +57,7 @@ router.post('/', async (req, res) => {
   const year = +configuration.value;
   const boardProjectOriginal = await BoardProject.findOne({
     where: {
-      id
+      board_project_id: id
     }
   });
   const board = await getBoard('WORK_PLAN', locality, year, projecttype);
