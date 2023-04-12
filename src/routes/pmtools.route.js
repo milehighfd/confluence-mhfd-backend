@@ -5,6 +5,7 @@ import logger from 'bc/config/logger.js';
 import Sequelize from 'sequelize';
 import favoritesService from 'bc/services/favorites.service.js';
 import groupService from 'bc/services/group.service.js';
+import pmtoolsService from '../services/pmtools.service.js';
 const ProjectPartner = db.projectPartner;
 const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
@@ -576,7 +577,16 @@ const listProjects = async (req, res) => {
   res.send(projects);
 };
 
+const getDataForGroup = async (req, res) => {
+  const { groupname, filtervalue } = req.params;
+  const { page = 1, limit = 20 } = req.query;
+  logger.info(`page=${page} limit=${limit}`);
+  const group = await pmtoolsService.getProjects(groupname, filtervalue, +page, +limit);
+  res.send(group);
+}
+
 router.post('/list', listProjects);
 router.get('/groups/:groupname', getGroup);
+router.get('/groups/:groupname/:filtervalue', getDataForGroup);
 
 export default router;
