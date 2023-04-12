@@ -208,8 +208,10 @@ const getProjects = async (type, filter, page = 1, limit = 20) => {
       optionalIncludes.push({
         model: ProjectStatus,
         as: 'currentId',
-        required:true ,
+        required: true,
+        duplicating: false,
         include: {
+          duplicating: false,
           model: CodePhaseType,
           required:true ,
           where: { code_status_type_id: 5 }
