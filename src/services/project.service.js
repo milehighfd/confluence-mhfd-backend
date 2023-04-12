@@ -694,9 +694,9 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       }
     }),
     // STATUS
-    Project.findAll({   
-      include: [{
-        attributes: ["project_id","code_project_type_id"],
+    Project.findAll({  
+      attributes: ["project_id","code_project_type_id"], 
+      include: [{        
         model: ProjectStatus,
         as: 'currentId',
         required:true ,
