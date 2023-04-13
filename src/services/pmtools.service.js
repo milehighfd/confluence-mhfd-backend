@@ -239,6 +239,27 @@ const getProjects = async (type, filter, page = 1, limit = 20) => {
         ]
       });
     }
+    if (type === 'county') {
+      optionalIncludes.push({
+        model: ProjectCounty,
+        duplicating: false,
+        as: 'currentCounty',
+        required: true,
+        include: {
+          model: CodeStateCounty,
+          required: true,
+          duplicating: false,
+          attributes: [
+            'county_name',
+            'state_county_id'
+          ],
+          where: { state_county_id: +filter }
+        },
+        attributes: [
+          'project_county_id'
+        ]
+      });
+    }
     includes = includes.concat(optionalIncludes);
     console.log(includes);
     const projects = await Project.findAll({
