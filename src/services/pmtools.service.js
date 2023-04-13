@@ -260,6 +260,27 @@ const getProjects = async (type, filter, page = 1, limit = 20) => {
         ]
       });
     }
+    if (type === 'servicearea') {
+      optionalIncludes.push({
+        model: ProjectServiceArea,
+        duplicating: false,
+        as: 'currentServiceArea',
+        required: true,
+        include: {
+          model: CodeServiceArea,
+          required: true,
+          duplicating: false,
+          attributes: [
+            'service_area_name',
+            'code_service_area_id'
+          ],
+          where: { code_service_area_id: +filter }
+        },
+        attributes: [
+          'project_service_area_id'
+        ]
+      });
+    }
     includes = includes.concat(optionalIncludes);
     console.log(includes);
     const projects = await Project.findAll({
