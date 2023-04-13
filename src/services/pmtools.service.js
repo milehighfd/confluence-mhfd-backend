@@ -217,57 +217,27 @@ const getProjects = async (type, filter, page = 1, limit = 20) => {
           where: { code_status_type_id: 5 }
         },
       });
-      // where.current_project_status_id = +filter;
-      
-      /*
-      const newStatus = {
-        model: ProjectStatus,
+    }
+    if (type === 'jurisdiction') {
+      optionalIncludes.push({
+        model: ProjectLocalGovernment,
+        duplicating: false,
+        as: 'currentLocalGovernment',
         required: true,
-        type: 'status',
-        attributes: [
-          'code_phase_type_id',
-          'planned_start_date',
-          'actual_start_date',
-          'actual_end_date',
-          'planned_end_date',
-          'project_status_id',
-          'is_locked',
-          'is_done'
-        ],
-        where: {
-          project_status_id: +filter
-        },
         include: {
-          model: CodePhaseType,
-          required: false,
+          model: CodeLocalGoverment,
+          required: true,
+          duplicating: false,
           attributes: [
-            'phase_name',
-            'phase_ordinal_position'
+            'local_government_name',
+            'code_local_government_id'
           ],
-          include: [{
-            model: CodeStatusType,
-            required: false,
-            attributes: [
-              'code_status_type_id',
-              'status_name'
-            ]
-          }, {
-            model: CodeProjectType,
-            required: false,
-            attributes: [
-              'code_project_type_id',
-              'project_type_name'
-            ]
-          }]
-        }
-      };
-      optionalIncludes = optionalIncludes.map(data => {
-        if (data.type === 'status') {
-          return newStatus;
-        }
-        return data;
+          where: { code_local_government_id: +filter }
+        },
+        attributes: [
+          'project_local_government_id'
+        ]
       });
-      */
     }
     includes = includes.concat(optionalIncludes);
     console.log(includes);

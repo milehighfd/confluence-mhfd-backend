@@ -255,6 +255,8 @@ db.project_stream.belongsTo(
 // project localgovernment
 
 db.project.hasMany(db.projectLocalGovernment, {foreignKey: 'project_id'});
+db.project.hasMany(db.projectLocalGovernment, {foreignKey: 'project_id', as: 'currentLocalGovernment'});
+
 db.projectLocalGovernment.belongsTo(
   db.codeLocalGoverment,
   { foreignKey: 'code_local_government_id' }
@@ -291,6 +293,8 @@ db.project.hasMany(
   { foreignKey: 'project_status_id',sourceKey: "current_project_status_id",
   as: 'currentId' } 
 );
+
+
 db.projectStatus.belongsTo(
   db.codePhaseType,
   { foreignKey: 'code_phase_type_id' }
