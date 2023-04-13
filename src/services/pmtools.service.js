@@ -281,6 +281,31 @@ const getProjects = async (type, filter, page = 1, limit = 20) => {
         ]
       });
     }
+    if (type === 'consultant') {
+      const CONSULTANT_ID = 3;
+      optionalIncludes.push({
+        model: ProjectPartner,
+        duplicating: false,
+        as: 'currentConsultant',
+        required: true,
+        include: {
+          model: BusinessAssociate,
+          required: true,
+          duplicating: false,
+          where: { business_associates_id: +filter },
+          attributes: [
+            'business_name',
+            'business_associates_id'
+          ],
+        },
+        attributes: [
+          'project_partner_id'
+        ],
+        where: {
+          code_partner_type_id: CONSULTANT_ID
+        }
+      });
+    }
     includes = includes.concat(optionalIncludes);
     console.log(includes);
     const projects = await Project.findAll({
