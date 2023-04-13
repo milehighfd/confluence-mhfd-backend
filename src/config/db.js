@@ -251,6 +251,7 @@ db.projectServiceArea.belongsTo(
 // project stream
 
 db.project.hasMany(db.project_stream, {foreignKey: 'project_id'});
+db.project.hasMany(db.project_stream, {foreignKey: 'project_id', as: 'currentStream'});
 db.project_stream.belongsTo(
   db.stream,
   { foreignKey: 'stream_id'}

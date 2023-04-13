@@ -331,6 +331,21 @@ const getProjects = async (type, filter, page = 1, limit = 20) => {
         }
       });
     }
+    if (type === 'streams') {
+      optionalIncludes.push({
+        model: ProjectStream,
+        duplicating: false,
+        as: 'currentStream',
+        required: true,
+        attributes: [
+          'project_stream_id',
+          'stream_name'
+        ],
+        where: {
+          stream_name: filter
+        }
+      });
+    }
 
     includes = includes.concat(optionalIncludes);
     console.log(includes);
