@@ -41,6 +41,9 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
   logger.info(`page: ${page}, limit: ${limit} filter: ${filter}`);
   const offset = (page - 1) * limit;
   const where = {};
+  if (extraFilters.favorites) {
+    where.project_id = extraFilters.favorites;
+  }
   try {
     let includes = [
       {

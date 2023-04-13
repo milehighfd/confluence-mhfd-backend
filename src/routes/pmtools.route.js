@@ -580,9 +580,13 @@ const listProjects = async (req, res) => {
 const getDataForGroup = async (req, res) => {
   const { groupname, filtervalue } = req.params;
   const { page = 1, limit = 20, code_project_type_id } = req.query;
+  const { favorites } = req.body;
   const extraFilters = {};
   if (code_project_type_id) {
     extraFilters.code_project_type_id = +code_project_type_id;
+  }
+  if (favorites) {
+    extraFilters.favorites = favorites;
   }
   logger.info(`page=${page} limit=${limit}`);
   const group = await pmtoolsService.getProjects(groupname, filtervalue, extraFilters, +page, +limit);
@@ -591,6 +595,6 @@ const getDataForGroup = async (req, res) => {
 
 router.post('/list', listProjects);
 router.get('/groups/:groupname', getGroup);
-router.get('/groups/:groupname/:filtervalue', getDataForGroup);
+router.post('/groups/:groupname/:filtervalue', getDataForGroup);
 
 export default router;
