@@ -814,6 +814,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000, project_
   if(project_ids){
     const project_ids_array = project_ids.map(project => project.project_id);
     where = {project_id: project_ids_array};
+    console.log(project_ids_array)
   } 
   try {
     if (cache) {
@@ -1116,7 +1117,7 @@ const getProjects = async (include, bounds, offset = 0, limit = 120000, project_
       project.centroid = centroids.find(centroid => centroid.projectid === project.project_id);
       return project;
     });
-    cache = projects;
+    //cache = projects;
     return projects;
   } catch (error) {
     logger.error(error);

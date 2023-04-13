@@ -175,6 +175,41 @@ router.post('/projectdata', async (req, res) => {
   }
   res.send(project);
 });
+router.post('/board-for-positions', async (req, res) => {
+    const { offset = 0, limit = 20 } = req.query;
+    let body = req.body;
+    let { type, year, locality, projecttype, position } = body;
+    if (locality === 'Mile High Flood District') {
+        locality = 'MHFD District Work Plan'
+    }
+    if (!type || !year || !locality || !projecttype) {
+        return res.sendStatus(400);
+    }
+    logger.info('SEARCHING IN BOARD');
+    let board = await Board.findOne({
+        where: {
+            type, year, locality, projecttype
+        }
+    });
+    let boardProjects = [];
+    if (board) {
+        logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
+        boardProjects = await BoardProject.findAll({            
+            limit: +limit,
+            offset: +offset*limit,
+            where: {
+                board_id: board.board_id,
+                [position]: { [Op.ne]: null }
+            }
+        });
+        let projectIds = boardProjects.map((boardProject) => {
+            return ({project_id:boardProject.project_id});
+        });
+        let projects = await projectService.getProjects(null, null, 0, null, projectIds);
+        console.log(projectIds)
+        res.send(projects);
+    }        
+});
 
 router.post('/', async (req, res) => {
     let body = req.body;
