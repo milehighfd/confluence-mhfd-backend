@@ -44,6 +44,11 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
   if (extraFilters.favorites) {
     where.project_id = extraFilters.favorites;
   }
+  if (extraFilters.search) {
+    where.project_name = {
+      [Op.like]: `%${extraFilters.search}%`
+    };
+  }
   try {
     let includes = [
       {
