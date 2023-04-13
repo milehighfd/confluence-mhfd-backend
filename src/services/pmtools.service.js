@@ -37,7 +37,7 @@ const CodeStudyReason = db.codeStudyReason;
 const User = db.user;
 const Op = sequelize.Op;
 
-const getProjects = async (type, filter, page = 1, limit = 20) => {
+const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => {
   logger.info(`page: ${page}, limit: ${limit} filter: ${filter}`);
   const offset = (page - 1) * limit;
   const where = {};
@@ -201,7 +201,11 @@ const getProjects = async (type, filter, page = 1, limit = 20) => {
         attributes: [
           'code_project_type_id',
           'project_type_name'
-        ]
+        ],
+        where: extraFilters.code_project_type_id ? 
+        {
+          code_project_type_id: 5
+        }: {}
       }
     ];
     if (type === 'status') {

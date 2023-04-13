@@ -579,9 +579,13 @@ const listProjects = async (req, res) => {
 
 const getDataForGroup = async (req, res) => {
   const { groupname, filtervalue } = req.params;
-  const { page = 1, limit = 20 } = req.query;
+  const { page = 1, limit = 20, code_project_type_id } = req.query;
+  const extraFilters = {};
+  if (code_project_type_id) {
+    extraFilters.code_project_type_id = +code_project_type_id;
+  }
   logger.info(`page=${page} limit=${limit}`);
-  const group = await pmtoolsService.getProjects(groupname, filtervalue, +page, +limit);
+  const group = await pmtoolsService.getProjects(groupname, filtervalue, extraFilters, +page, +limit);
   res.send(group);
 }
 
