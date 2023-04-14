@@ -346,7 +346,14 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         }
       });
     }
-    if (type === 'contractor') {
+    if (type === 'contractor' || extraFilters?.filterby === 'contractor') {
+      const filters = [];
+      if (type === 'contractor') {
+        filters.push(+filter);
+      }
+      if (extraFilters?.filterby === 'contractor') {
+        filters.push(extraFilters.value);
+      }
       const CIVIL_CONTRACTOR_ID = 8, LANDSCAPE_CONTRACTOR_ID = 9;
       optionalIncludes.push({
         model: ProjectPartner,
@@ -357,7 +364,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
           model: BusinessAssociate,
           required: true,
           duplicating: false,
-          where: { business_associates_id: +filter },
+          where: { business_associates_id: filters },
           attributes: [
             'business_name',
             'business_associates_id'
