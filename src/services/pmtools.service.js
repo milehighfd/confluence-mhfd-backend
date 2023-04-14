@@ -258,7 +258,14 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         ]
       });
     }
-    if (type === 'county') {
+    if (type === 'county' || extraFilters?.filterby === 'county') {
+      const filters = [];
+      if (type === 'county') {
+        filters.push(+filter);
+      }
+      if (extraFilters?.filterby === 'county') {
+        filters.push(extraFilters.value);
+      }
       optionalIncludes.push({
         model: ProjectCounty,
         duplicating: false,
@@ -272,7 +279,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
             'county_name',
             'state_county_id'
           ],
-          where: { state_county_id: +filter }
+          where: { state_county_id: filters }
         },
         attributes: [
           'project_county_id'
