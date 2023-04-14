@@ -226,7 +226,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
           duplicating: false,
           model: CodePhaseType,
           required:true ,
-          where: { code_status_type_id: 5 }
+          where: { code_status_type_id: +filter }
         },
       });
     }
