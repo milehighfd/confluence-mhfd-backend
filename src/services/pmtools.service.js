@@ -314,7 +314,14 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         ]
       });
     }
-    if (type === 'consultant') {
+    if (type === 'consultant' || extraFilters?.filterby === 'consultant') {
+      const filters = [];
+      if (type === 'consultant') {
+        filters.push(+filter);
+      }
+      if (extraFilters?.filterby === 'consultant') {
+        filters.push(extraFilters.value);
+      }
       const CONSULTANT_ID = 3;
       optionalIncludes.push({
         model: ProjectPartner,
@@ -325,7 +332,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
           model: BusinessAssociate,
           required: true,
           duplicating: false,
-          where: { business_associates_id: +filter },
+          where: { business_associates_id: filters },
           attributes: [
             'business_name',
             'business_associates_id'
