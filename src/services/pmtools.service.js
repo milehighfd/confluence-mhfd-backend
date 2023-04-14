@@ -230,7 +230,14 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         },
       });
     }
-    if (type === 'jurisdiction') {
+    if (type === 'jurisdiction' || extraFilters?.filterby === 'jurisdiction') {
+      const filters = [];
+      if (type === 'jurisdiction') {
+        filters.push(+filter);
+      }
+      if (extraFilters?.filterby === 'jurisdiction') {
+        filters.push(extraFilters.value);
+      }
       optionalIncludes.push({
         model: ProjectLocalGovernment,
         duplicating: false,
@@ -244,7 +251,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
             'local_government_name',
             'code_local_government_id'
           ],
-          where: { code_local_government_id: +filter }
+          where: { code_local_government_id: filters }
         },
         attributes: [
           'project_local_government_id'
