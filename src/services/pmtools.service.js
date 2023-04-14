@@ -286,7 +286,14 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         ]
       });
     }
-    if (type === 'servicearea') {
+    if (type === 'servicearea' || extraFilters?.filterby === 'servicearea') {
+      const filters = [];
+      if (type === 'servicearea') {
+        filters.push(+filter);
+      }
+      if (extraFilters?.filterby === 'servicearea') {
+        filters.push(extraFilters.value);
+      }
       optionalIncludes.push({
         model: ProjectServiceArea,
         duplicating: false,
@@ -300,7 +307,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
             'service_area_name',
             'code_service_area_id'
           ],
-          where: { code_service_area_id: +filter }
+          where: { code_service_area_id: filters }
         },
         attributes: [
           'project_service_area_id'
