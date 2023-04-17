@@ -45,13 +45,15 @@ const listProjects = async (req, res) => {
   let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
   projectsFilterId = projectsFilterId.concat(ids);
   let projects = await projectService.getProjects(null, bounds, projectsFilterId, page, limit);
+  const set = new Set(projectsFilterId.map((p) => p.project_id));
+  const count = set.length;
   logger.info(projects.length);
   if (body?.sortby?.trim()?.length || 0) {
     projects = await sortProjects(projects, body);
   }
   
   logger.info('projects being called', projects.length);
-  res.send(projects);
+  res.send({projects, count});
 };
 
 const listProjectsDBFilter = async (req, res) => {
