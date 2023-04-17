@@ -35,30 +35,21 @@ const listProjectsForId = async (req, res) => {
 };
 
 const listProjects = async (req, res) => {
-  const { offset = 0, limit = 10000 } = req.query;
+  const { page = 1, limit = 10000 } = req.query;
   const { body } = req;
   const bounds = body?.bounds;
-  let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
-  let projects = await projectService.getProjects(null, bounds, offset, limit,projectsFilterId);
-  // let projects = JSON.parse(JSON.stringify(projectsCache))
-  projects.forEach(project => {
-    delete project.centroid;
-    delete project.problems;
-  });
-  logger.info(projects.length);
-  
-  projects = await projectsByFilters(projects, body);
+  let ids = [];
   if (bounds) {
-    const ids = await getIdsInBbox(bounds);
-    projects = projects.filter((p) => ids.includes(p.project_id));
+    ids = await getIdsInBbox(bounds);
   }
+  let projectsFilterId = [];
+  // let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
+  // projectsFilterId = projectsFilterId.concat(ids);
+  let projects = await projectService.getProjects(null, bounds, projectsFilterId, page, limit);
+  logger.info(projects.length);
   if (body?.sortby?.trim()?.length || 0) {
     projects = await sortProjects(projects, body);
   }
-  
-  // if (body?.name?.trim()?.length || 0) {
-  //   projects = projects.filter((proj) => proj?.project_name?.toUpperCase().includes(body?.name?.toUpperCase()))
-  // }
   
   logger.info('projects being called', projects.length);
   res.send(projects);
