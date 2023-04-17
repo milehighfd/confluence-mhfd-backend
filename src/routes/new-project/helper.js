@@ -50,10 +50,15 @@ export const sendBoardsToProp = async (bp, board, prop, propid) => {
     } else if (propid === 'servicearea' && !prop.includes(' Service Area')) {
       propVal = propVal.trimEnd().concat(' Service Area');
     }
-    let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype);
+    let destinyBoard = await getBoard(
+      'WORK_PLAN',
+      propVal,
+      board.year,
+      board.projecttype
+    );
     //TODO: improve to avoid multiple queries to same board
     let newBoardProject = new BoardProject({
-      board_id: destinyBoard._id,
+      board_id: destinyBoard.board_id,
       project_id: bp.project_id,
       position0: bp.position0,
       position1: bp.position1,
@@ -61,45 +66,77 @@ export const sendBoardsToProp = async (bp, board, prop, propid) => {
       position3: bp.position3,
       position4: bp.position4,
       position5: bp.position5,
-      req1: bp.req1 == null ? null : (bp.req1 / propValues.length),
-      req2: bp.req2 == null ? null : (bp.req2 / propValues.length),
-      req3: bp.req3 == null ? null : (bp.req3 / propValues.length),
-      req4: bp.req4 == null ? null : (bp.req4 / propValues.length),
-      req5: bp.req5 == null ? null : (bp.req5 / propValues.length),
+      req1: bp.req1 == null ? null : bp.req1 / propValues.length,
+      req2: bp.req2 == null ? null : bp.req2 / propValues.length,
+      req3: bp.req3 == null ? null : bp.req3 / propValues.length,
+      req4: bp.req4 == null ? null : bp.req4 / propValues.length,
+      req5: bp.req5 == null ? null : bp.req5 / propValues.length,
       year1: bp.year1,
       year2: bp.year2,
       origin: board.locality,
-    })
+    });
     await newBoardProject.save();
   }
 };
-export const updateProjectsInBoard = async (project_id, projectname, projecttype, projectsubtype) => {
+export const updateProjectsInBoard = async (
+  project_id,
+  projectname,
+  projecttype,
+  projectsubtype
+) => {
   let projectToUpdate = await BoardProject.findAll({
     where: {
-      project_id: project_id
-    }
+      project_id: project_id,
+    },
   });
   if (projectToUpdate.length) {
-    for(let i = 0 ; i < projectToUpdate.length; ++i) {
+    for (let i = 0; i < projectToUpdate.length; ++i) {
       let currentProj = projectToUpdate[i];
-      await currentProj.update({projectname: projectname, projecttype: projecttype, projectsubtype: projectsubtype});
-    } 
+      await currentProj.update({
+        projectname: projectname,
+        projecttype: projecttype,
+        projectsubtype: projectsubtype,
+      });
+    }
   }
   return true;
 };
 
-export const updateProjectInBoard = async (project_id, projectname, projecttype, projectsubtype) => {
+export const updateProjectInBoard = async (
+  project_id,
+  projectname,
+  projecttype,
+  projectsubtype
+) => {
   let projectToUpdate = await BoardProject.findOne({
     where: {
-      project_id: project_id
-    }
+      project_id: project_id,
+    },
   });
   console.log('project about to be updated');
-  await projectToUpdate.update({projectname: projectname, projecttype: projecttype, projectsubtype: projectsubtype});
+  await projectToUpdate.update({
+    projectname: projectname,
+    projecttype: projecttype,
+    projectsubtype: projectsubtype,
+  });
   console.log('project updated in projectboard');
 };
-export const addProjectToBoard = async (user, servicearea, county, locality, projecttype, project_id, year, sendToWR, isWorkPlan, projectname, projectsubtype) => {
-  const [dbLocs] = await db.sequelize.query(`SELECT name, type FROM Localities WHERE name = '${locality}'`);
+export const addProjectToBoard = async (
+  user,
+  servicearea,
+  county,
+  locality,
+  projecttype,
+  project_id,
+  year,
+  sendToWR,
+  isWorkPlan,
+  projectname,
+  projectsubtype
+) => {
+  const [dbLocs] = await db.sequelize.query(
+    `SELECT name, type FROM Localities WHERE name = '${locality}'`
+  );
   let _dbLoc = null;
   if (dbLocs.length > 0) {
     _dbLoc = dbLocs[0];
@@ -116,28 +153,37 @@ export const addProjectToBoard = async (user, servicearea, county, locality, pro
   if (!year) {
     let configuration = await Configuration.findOne({
       where: {
-        key: 'BOARD_YEAR'
-      }
+        key: 'BOARD_YEAR',
+      },
     });
     year = +configuration.value;
   }
   let board = await Board.findOne({
     where: {
-      type, year, locality, projecttype
-    }
+      type,
+      year,
+      locality,
+      projecttype,
+    },
   });
   if (!board) {
-    const response = await boardService.createNewBoard(type, year, locality, projecttype, 'Under Review')
+    const response = await boardService.createNewBoard(
+      type,
+      year,
+      locality,
+      projecttype,
+      'Under Review'
+    );
     board = response;
     logger.info('BOARD CREATED');
   }
   let boardProjectObject = {
-    board_id: board._id,
+    board_id: board.board_id,
     project_id: project_id,
-    origin: locality
-  }
+    origin: locality,
+  };
 
-/*   if (type === 'WORK_PLAN') {
+  /*   if (type === 'WORK_PLAN') {
     boardProjectObject.originPosition0 = -1;
     boardProjectObject.originPosition1 = -1;
     boardProjectObject.originPosition2 = -1;
@@ -152,14 +198,27 @@ export const addProjectToBoard = async (user, servicearea, county, locality, pro
   boardProjectObject.projectsubtype = projectsubtype;
   let boardProject = new BoardProject(boardProjectObject);
   let boardProjectSaved = boardProject;
-  updateBoardProjectAtIndex(board._id, 0);
+  updateBoardProjectAtIndex(board.board_id, 0);
   if (sendToWR === 'true' || isWorkPlan) {
-    boardProjectSaved = await boardService.saveBoard(boardProject.board_id, boardProject.project_id, boardProject.origin, boardProject.position0, boardProject.projectname, boardProject.projecttype, boardProject.projectsubtype);
+    boardProjectSaved = await boardService.saveBoard(
+      boardProject.board_id,
+      boardProject.project_id,
+      boardProject.origin,
+      boardProject.position0,
+      boardProject.projectname,
+      boardProject.projecttype,
+      boardProject.projectsubtype
+    );
   }
   if (['admin', 'staff'].includes(user.designation) && !isWorkPlan) {
-    await sendBoardsToProp(boardProjectSaved, board, servicearea, 'servicearea');
+    await sendBoardsToProp(
+      boardProjectSaved,
+      board,
+      servicearea,
+      'servicearea'
+    );
     await sendBoardsToProp(boardProjectSaved, board, county, 'county');
-  } 
+  }
 };
 
 export const getNewProjectId = async () => {
