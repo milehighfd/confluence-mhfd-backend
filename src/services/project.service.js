@@ -1115,6 +1115,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 12000
       ],
       order: [['created_date', 'DESC']]
     }).map(project => project.dataValues);
+    logger.info(`projects found: ${projects.length}`);
     /*
       projects = projects.map(project => {
         project.centroid = centroids.find(centroid => centroid.projectid === project.project_id);

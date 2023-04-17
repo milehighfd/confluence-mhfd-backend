@@ -42,9 +42,8 @@ const listProjects = async (req, res) => {
   if (bounds) {
     ids = await getIdsInBbox(bounds);
   }
-  let projectsFilterId = [];
-  // let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
-  // projectsFilterId = projectsFilterId.concat(ids);
+  let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
+  projectsFilterId = projectsFilterId.concat(ids);
   let projects = await projectService.getProjects(null, bounds, projectsFilterId, page, limit);
   logger.info(projects.length);
   if (body?.sortby?.trim()?.length || 0) {
