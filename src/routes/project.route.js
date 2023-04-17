@@ -46,7 +46,7 @@ const listProjects = async (req, res) => {
   projectsFilterId = projectsFilterId.concat(ids);
   let projects = await projectService.getProjects(null, bounds, projectsFilterId, page, limit);
   const set = new Set(projectsFilterId.map((p) => p.project_id));
-  const count = set.length;
+  const count = set.size;
   logger.info(projects.length);
   if (body?.sortby?.trim()?.length || 0) {
     projects = await sortProjects(projects, body);
