@@ -676,6 +676,11 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const filterName = filter.name ? '%' + filter.name + '%' : '';
   const contractor = filter.contractor ? '%' + filter.contractor + '%' : '';
   const consultant = filter.consultant ? '%' + filter.consultant + '%' : '';
+  const code_project_type_id = filter.projecttype ? filter.projecttype : -1;
+  const service_area = filter.servicearea ? filter.servicearea : -1;
+  const state_county_id = filter.statecounty ? filter.statecounty : -1;
+  const stream_id = filter.streamname ? filter.streamname : -1;
+  const code_local_government_id = filter.jurisdiction ? filter.jurisdiction : -1;
   const cost = filter.cost ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : { [Op.lt]: 0 };
   const status = filter.status ? filter.status : -1;
   let projects = await Promise.all([
@@ -690,7 +695,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
     Project.findAll({
       attributes: ["project_id","code_project_type_id"],
       where: {
-        code_project_type_id: filter.projecttype,
+        code_project_type_id: code_project_type_id,
       }
     }),
     // STATUS
@@ -717,7 +722,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
           attributes: [],
           model: CodeServiceArea,
         },
-        where: { code_service_area_id: filter.servicearea }
+        where: { code_service_area_id: service_area }
       }]
     }),
     // COUNTY
@@ -730,7 +735,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
           attributes: [],
           model: CodeStateCounty,
         },
-        where: { state_county_id: filter.county }
+        where: { state_county_id: state_county_id }
       }],
     }),
     //STREAMS 
@@ -742,7 +747,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
         include: {
           model: Streams,
         },
-        where: { stream_id: filter.streamname }
+        where: { stream_id: stream_id }
       }],
     }),
     // JURISDICTION
@@ -753,7 +758,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
         include: {
           model: CodeLocalGoverment,
         },
-        where: { code_local_government_id: filter.jurisdiction }
+        where: { code_local_government_id: code_local_government_id }
       }],
     }),
     //CONSULTANT
