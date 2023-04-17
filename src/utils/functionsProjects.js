@@ -316,7 +316,7 @@ export const getIdsInBbox = async (bounds) => {
     const query = { q: BBOX_SQL };
     const data = await needle('post', CARTO_URL, query, {json: true});
     if (data.statusCode === 200) {
-      return data.body.rows.map((d) => d.projectid);
+      return data.body.rows.map((d) => ({ project_id: d.projectid }));
     } else { 
       console.error('Error at bbox', data.body);
       return [];
