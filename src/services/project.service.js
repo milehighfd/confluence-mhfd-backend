@@ -817,7 +817,7 @@ let cache = null;
 const getProjects = async (include, bounds, project_ids, page = 1, limit = 120000) => {  
   let where = {};
   const offset = (page - 1) * limit;
-  if(project_ids){
+  if (project_ids?.length){
     const project_ids_array = project_ids.map(project => project.project_id);
     where = {project_id: project_ids_array};
     console.log(project_ids_array)
