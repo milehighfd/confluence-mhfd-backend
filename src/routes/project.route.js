@@ -37,6 +37,7 @@ const listProjectsForId = async (req, res) => {
 const listProjects = async (req, res) => {
   const { page = 1, limit = 10000 } = req.query;
   const { body } = req;
+  logger.info(`Calling projects endpoint with body: ${JSON.stringify(body)}, page: ${page}, limit: ${limit}`);
   const bounds = body?.bounds;
   let ids = [];
   if (bounds) {
