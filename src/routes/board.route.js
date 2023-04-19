@@ -209,10 +209,11 @@ router.post('/board-for-positions', async (req, res) => {
     let projectIds = boardProjects.map((boardProject) => {
       return { project_id: boardProject.project_id };
     });
+    console.log(projectIds); 
     let projects = await projectService.getProjects(
       null,
       null,
-      projectIds
+      projectIds,
       +page,
       +limit,
     );
