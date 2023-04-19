@@ -177,7 +177,7 @@ router.post('/projectdata', async (req, res) => {
 });
 
 router.post('/board-for-positions', async (req, res) => {
-  const { offset = 0, limit = 20 } = req.query;
+  const { page = 1, limit = 20 } = req.query;
   let body = req.body;
   let { type, year, locality, projecttype, position } = body;
   if (locality === 'Mile High Flood District') {
@@ -212,9 +212,9 @@ router.post('/board-for-positions', async (req, res) => {
     let projects = await projectService.getProjects(
       null,
       null,
-      0,
-      null,
       projectIds
+      +page,
+      +limit,
     );
     res.send({ boardProjects, projects });
   }
