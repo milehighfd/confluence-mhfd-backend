@@ -217,16 +217,24 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       }
     ];
     if (type === 'status') {
+      // optionalIncludes.push({
+      //   model: ProjectStatus,
+      //   as: 'currentId',
+      //   required: true,
+      //   duplicating: false,
+      //   include: {
+      //     duplicating: false,
+      //     model: CodePhaseType,
+      //     required:true ,
+      //     where: { code_status_type_id: +filter }
+      //   },
+      // });
       optionalIncludes.push({
         model: ProjectStatus,
         as: 'currentId',
-        required: true,
-        duplicating: false,
         include: {
-          duplicating: false,
           model: CodePhaseType,
-          required:true ,
-          where: { code_status_type_id: +filter }
+          where: { code_status_type_id: +filter },
         },
       });
     }
