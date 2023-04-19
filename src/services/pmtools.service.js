@@ -54,6 +54,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       {
         model: ProjectCost,
         required: false,
+        separate: true,
         attributes: [
           'code_cost_type_id',
           'cost'
@@ -67,6 +68,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       {
         model: ProjectStaff,
         required: false,
+        separate: true,
         attributes: [
           'code_project_staff_role_type_id',
           'is_active',
@@ -95,6 +97,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       {
         model: ProjectServiceArea,
         required: false,
+        separate: true,
         include: {
           model: CodeServiceArea,
           required: false,
@@ -109,6 +112,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       },        
       {
         model: ProjectCounty,
+        separate: true,
         include: {
           model: CodeStateCounty,
           required: false,
@@ -123,6 +127,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       },
       {
         model: ProjectStreams,
+        separate: true,
         required: false,
         include: {
           model: Streams,
@@ -135,6 +140,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       },
       {
         model: ProjectLocalGovernment,
+        separate: true,
         required: false,
         include: {
           model: CodeLocalGoverment,
@@ -150,6 +156,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       },    
       {
         model: ProjectStatus,
+        separate: true,
         required: false,
         attributes: [
           'code_phase_type_id',
@@ -187,6 +194,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       },         
       {
         model: ProjectPartner,
+        separate: true,
         required: false,
         attributes: [
           'project_partner_id',
