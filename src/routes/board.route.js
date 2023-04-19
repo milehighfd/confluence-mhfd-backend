@@ -200,7 +200,7 @@ router.post('/board-for-positions', async (req, res) => {
     logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
     boardProjects = await BoardProject.findAll({
       limit: +limit,
-      offset: +offset * limit,
+      offset: (+page - 1) * limit,
       where: {
         board_id: board.board_id,
         [position]: { [Op.ne]: null },
