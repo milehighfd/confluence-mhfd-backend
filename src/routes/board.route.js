@@ -175,115 +175,134 @@ router.post('/projectdata', async (req, res) => {
   }
   res.send(project);
 });
+
 router.post('/board-for-positions', async (req, res) => {
-    const { offset = 0, limit = 20 } = req.query;
-    let body = req.body;
-    let { type, year, locality, projecttype, position } = body;
-    if (locality === 'Mile High Flood District') {
-        locality = 'MHFD District Work Plan'
-    }
-    if (!type || !year || !locality || !projecttype) {
-        return res.sendStatus(400);
-    }
-    logger.info('SEARCHING IN BOARD');
-    let board = await Board.findOne({
-        where: {
-            type, year, locality, projecttype
-        }
+  const { offset = 0, limit = 20 } = req.query;
+  let body = req.body;
+  let { type, year, locality, projecttype, position } = body;
+  if (locality === 'Mile High Flood District') {
+    locality = 'MHFD District Work Plan';
+  }
+  if (!type || !year || !locality || !projecttype) {
+    return res.sendStatus(400);
+  }
+  logger.info('SEARCHING IN BOARD');
+  let board = await Board.findOne({
+    where: {
+      type,
+      year,
+      locality,
+      projecttype,
+    },
+  });
+  let boardProjects = [];
+  if (board) {
+    logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
+    boardProjects = await BoardProject.findAll({
+      limit: +limit,
+      offset: +offset * limit,
+      where: {
+        board_id: board.board_id,
+        [position]: { [Op.ne]: null },
+      },
     });
-    let boardProjects = [];
-    if (board) {
-        logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
-        boardProjects = await BoardProject.findAll({            
-            limit: +limit,
-            offset: +offset*limit,
-            where: {
-                board_id: board.board_id,
-                [position]: { [Op.ne]: null }
-            }
-        });
-        let projectIds = boardProjects.map((boardProject) => {
-            return ({project_id:boardProject.project_id});
-        });
-        let projects = await projectService.getProjects(null, null, 0, null, projectIds);
-        console.log(projectIds)
-        res.send(projects);
-    }        
+    let projectIds = boardProjects.map((boardProject) => {
+      return { project_id: boardProject.project_id };
+    });
+    let projects = await projectService.getProjects(
+      null,
+      null,
+      0,
+      null,
+      projectIds
+    );
+    res.send({ boardProjects, projects });
+  }
 });
 
 router.post('/', async (req, res) => {
-    let body = req.body;
-    console.log("3333333333", body);
-    let { type, year, locality, projecttype } = body;
-    if (locality === 'Mile High Flood District') {
-        locality = 'MHFD District Work Plan'
-    }
-    if (!type || !year || !locality || !projecttype) {
-        return res.sendStatus(400);
-    }
-    logger.info('SEARCHING IN BOARD');
-    let board = await Board.findOne({
-        where: {
-            type, year, locality, projecttype
-        }
+  let body = req.body;
+  let { type, year, locality, projecttype } = body;
+  if (locality === 'Mile High Flood District') {
+    locality = 'MHFD District Work Plan';
+  }
+  if (!type || !year || !locality || !projecttype) {
+    return res.sendStatus(400);
+  }
+  logger.info('SEARCHING IN BOARD');
+  let board = await Board.findOne({
+    where: {
+      type,
+      year,
+      locality,
+      projecttype,
+    },
+  });
+  if (board) {
+    logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
+    let boardProjects = await BoardProject.findAll({
+      where: {
+        board_id: board.board_id,
+      },
     });
-    if (board) {
-        logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
-        let boardProjects = await BoardProject.findAll({
-            where: {
-              board_id: board.board_id
-            }
-        });
-        logger.info(`BOARD-PROJECTS ${JSON.stringify(boardProjects)}`);
-        let projectsPromises = boardProjects.filter(bp => !!bp.project_id).map(async (bp) => {
-            let project = null;
-            try {
-                project = projectService.findProject(+bp.project_id);// await projectService.getDetails(bp.project_id);
-                if (!project) {
-                    logger.info(`${bp.project_id} not found`);
-                    project = await projectService.getDetails(bp.project_id);
-                }
-                /*if (project.error) {
+    logger.info(`BOARD-PROJECTS ${JSON.stringify(boardProjects)}`);
+    let projectsPromises = boardProjects
+      .filter((bp) => !!bp.project_id)
+      .map(async (bp) => {
+        let project = null;
+        try {
+          project = projectService.findProject(+bp.project_id); // await projectService.getDetails(bp.project_id);
+          if (!project) {
+            logger.info(`${bp.project_id} not found`);
+            project = await projectService.getDetails(bp.project_id);
+          }
+          /*if (project.error) {
                     console.log('Error in project Promises ', project.error);
                 }*/
-            } catch (error) {
-            console.log('Error in project Promises ', error);
-            }
-            let newObject = {
-                id: bp.id,
-                project_id: bp.project_id,
-                origin: bp.origin,
-                projectData: project,
-            }
-            for (let i = 0 ; i <= 5; i ++) {
-                newObject[`position${i}`] = bp[`position${i}`];
-                newObject[`originPosition${i}`] = bp[`originPosition${i}`];
-                if (i > 0) {
-                    newObject[`req${i}`] = bp[`req${i}`];
-                }
-                if (1 <= i && i <= 2) {
-                    newObject[`year${i}`] = bp[`year${i}`];
-                }
-            }
-            return !project?.error && newObject;
-        })
-        let resolvedProjects = await Promise.all(projectsPromises);
-        logger.info(`RESOLVERD PROJECTS: ${resolvedProjects}`)
-        resolvedProjects = resolvedProjects.filter(bp => bp.projectData != null);
-        let projects = resolvedProjects;
-        logger.info('FINISHING BOARD REQUEST');
-        res.send({
-            board,
-            projects
-        });
-    } else {
-    logger.info('CREATING NEW BOARD');
-    const response = await boardService.createNewBoard(type, year, locality, projecttype, 'Under Review')
+        } catch (error) {
+          console.log('Error in project Promises ', error);
+        }
+        let newObject = {
+          id: bp.id,
+          project_id: bp.project_id,
+          origin: bp.origin,
+          projectData: project,
+        };
+        for (let i = 0; i <= 5; i++) {
+          newObject[`position${i}`] = bp[`position${i}`];
+          newObject[`originPosition${i}`] = bp[`originPosition${i}`];
+          if (i > 0) {
+            newObject[`req${i}`] = bp[`req${i}`];
+          }
+          if (1 <= i && i <= 2) {
+            newObject[`year${i}`] = bp[`year${i}`];
+          }
+        }
+        return !project?.error && newObject;
+      });
+    let resolvedProjects = await Promise.all(projectsPromises);
+    logger.info(`RESOLVERD PROJECTS: ${resolvedProjects}`);
+    resolvedProjects = resolvedProjects.filter((bp) => bp.projectData != null);
+    let projects = resolvedProjects;
+    logger.info('FINISHING BOARD REQUEST');
     res.send({
-        board: response,
-        projects: []
+      board,
+      projects,
     });
-    }
+  } else {
+    logger.info('CREATING NEW BOARD');
+    const response = await boardService.createNewBoard(
+      type,
+      year,
+      locality,
+      projecttype,
+      'Under Review'
+    );
+    res.send({
+      board: response,
+      projects: [],
+    });
+  }
 });
 
 const getBoard = async (type, locality, year, projecttype) => {
