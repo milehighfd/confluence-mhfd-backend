@@ -240,6 +240,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       optionalIncludes.push({
         model: ProjectStatus,
         as: 'currentId',
+        required: true,
         include: {
           model: CodePhaseType,
           where: { code_status_type_id: +filter },
@@ -256,13 +257,10 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       }
       optionalIncludes.push({
         model: ProjectLocalGovernment,
-        duplicating: false,
         as: 'currentLocalGovernment',
         required: true,
         include: {
           model: CodeLocalGoverment,
-          required: true,
-          duplicating: false,
           attributes: [
             'local_government_name',
             'code_local_government_id'
@@ -284,13 +282,10 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       }
       optionalIncludes.push({
         model: ProjectCounty,
-        duplicating: false,
         as: 'currentCounty',
         required: true,
         include: {
           model: CodeStateCounty,
-          required: true,
-          duplicating: false,
           attributes: [
             'county_name',
             'state_county_id'
@@ -312,13 +307,10 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       }
       optionalIncludes.push({
         model: ProjectServiceArea,
-        duplicating: false,
         as: 'currentServiceArea',
         required: true,
         include: {
           model: CodeServiceArea,
-          required: true,
-          duplicating: false,
           attributes: [
             'service_area_name',
             'code_service_area_id'
@@ -341,13 +333,10 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       const CONSULTANT_ID = 3;
       optionalIncludes.push({
         model: ProjectPartner,
-        duplicating: false,
         as: 'currentConsultant',
         required: true,
         include: {
           model: BusinessAssociate,
-          required: true,
-          duplicating: false,
           where: { business_associates_id: filters },
           attributes: [
             'business_name',
@@ -373,13 +362,10 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       const CIVIL_CONTRACTOR_ID = 8, LANDSCAPE_CONTRACTOR_ID = 9;
       optionalIncludes.push({
         model: ProjectPartner,
-        duplicating: false,
         as: 'currentConsultant',
         required: true,
         include: {
           model: BusinessAssociate,
-          required: true,
-          duplicating: false,
           where: { business_associates_id: filters },
           attributes: [
             'business_name',
@@ -397,7 +383,6 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
     if (type === 'streams') {
       optionalIncludes.push({
         model: ProjectStream,
-        duplicating: false,
         as: 'currentStream',
         required: true,
         attributes: [
@@ -414,8 +399,8 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
     console.log(includes);
     const projects = await Project.findAll({
       where: where,
-      limit,
-      offset,
+      // limit,
+      // offset,
       separate: true,
       attributes: [
         "project_id",
@@ -429,7 +414,12 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       include: includes,
       order: [['created_date', 'DESC']]
     }).map(project => project.dataValues);
-    return projects;
+    const paginate = (array, size, page) => {
+      return array.slice((page - 1) * size, page * size);
+    };
+    const projectsPaginated = paginate(projects, limit, page);
+    console.log(projectsPaginated.length)
+    return projectsPaginated;
   } catch (error) {
     logger.error(error);
     throw error;
