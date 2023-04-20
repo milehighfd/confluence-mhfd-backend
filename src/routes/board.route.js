@@ -198,6 +198,12 @@ router.post('/board-for-positions', async (req, res) => {
   let boardProjects = [];
   if (board) {
     logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
+    let totalItems = await BoardProject.count({
+      where: {
+        board_id: board.board_id,
+        [position]: { [Op.ne]: null },
+      },
+    });
     boardProjects = await BoardProject.findAll({
       limit: +limit,
       offset: (+page - 1) * limit,
@@ -205,19 +211,32 @@ router.post('/board-for-positions', async (req, res) => {
         board_id: board.board_id,
         [position]: { [Op.ne]: null },
       },
+      raw: true,
+      nest: true,
     });
-    let projectIds = boardProjects.map((boardProject) => {
-      return { project_id: boardProject.project_id };
-    });
-    console.log(projectIds); 
-    let projects = await projectService.getProjects(
-      null,
-      null,
-      projectIds,
-      +page,
-      +limit,
+    let projectIds = await Promise.all(
+      boardProjects.map(async (boardProject) => {
+        boardProject.projectData = await projectService.getDetails(
+          boardProject.project_id
+        );
+        return await boardProject;
+      })
     );
-    res.send({ boardProjects, projects });
+
+    res.send({ projects: projectIds, board, limit, page, totalItems });
+  } else {
+    logger.info('CREATING NEW BOARD');
+    const response = await boardService.createNewBoard(
+      type,
+      year,
+      locality,
+      projecttype,
+      'Under Review'
+    );
+    res.send({
+      board: response,
+      projects: [],
+    });
   }
 });
 
@@ -252,14 +271,11 @@ router.post('/', async (req, res) => {
       .map(async (bp) => {
         let project = null;
         try {
-          project = projectService.findProject(+bp.project_id); // await projectService.getDetails(bp.project_id);
+          project = projectService.findProject(+bp.project_id);
           if (!project) {
             logger.info(`${bp.project_id} not found`);
             project = await projectService.getDetails(bp.project_id);
           }
-          /*if (project.error) {
-                    console.log('Error in project Promises ', project.error);
-                }*/
         } catch (error) {
           console.log('Error in project Promises ', error);
         }
