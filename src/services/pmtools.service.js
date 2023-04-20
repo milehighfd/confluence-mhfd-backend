@@ -211,16 +211,17 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         // where: {
         //   code_partner_type_id: [3, 8, 11]
         // }
-      },{
+      },
+      {
         model: CodeProjectType,
-        required: false,
+        required: true,
         attributes: [
           'code_project_type_id',
           'project_type_name'
         ],
         where: extraFilters.code_project_type_id ? 
         {
-          code_project_type_id: 5
+          code_project_type_id: extraFilters.code_project_type_id
         }: {}
       }
     ];
