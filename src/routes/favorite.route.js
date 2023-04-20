@@ -114,11 +114,14 @@ function getCounters(table, column) {
 }
 
 router.get("/", auth, async (req, res) => {
+  logger.info(`Starting endpoint favorite/ with params`);
   const { isProblem } = req.query;
   const user = req.user;
   try {
     console.log(user);
+    logger.info(`Starting function getFavorites for favorite/`);
     const favorite = await favoritesService.getFavorites(user.user_id, isProblem);
+    logger.info(`Finished function getFavorites for favorite/`);
     return res.send(favorite);
   } catch (error) {
     res.status(500).send(error);
@@ -127,6 +130,7 @@ router.get("/", auth, async (req, res) => {
 
 
 router.get("/create", auth, async (req, res) => {
+  logger.info(`Starting endpoint favorite/create with params ${JSON.stringify(req, null, 2)}`);
   const { id, isProblem } = req.query;
   const user = req.user;
   try {
@@ -136,7 +140,9 @@ router.get("/create", auth, async (req, res) => {
       creator: user.name,
     };
     logger.info("create favorite ", favorite);
+    logger.info(`Starting function saveFavorite for favorite/create`);
     const savedFavorite = await favoritesService.saveFavorite(favorite, isProblem);
+    logger.info(`Finished function saveFavorite for favorite/create`);
     res.send(savedFavorite);
   } catch (error) {
     console.log(error);
@@ -145,6 +151,7 @@ router.get("/create", auth, async (req, res) => {
 });
 
 router.delete("/", auth, async (req, res) => {
+  logger.info(`Starting endpoint favorite/ with params ${JSON.stringify(req, null, 2)}`);
   const { id } = req.body;
   const { isProblem } = req.query;
   const user = req.user;
@@ -153,7 +160,9 @@ router.delete("/", auth, async (req, res) => {
       user_id: user.user_id,
       project_id: id,
     };
+    logger.info(`Starting function getOne for favorite/`);
     const selectedFavorite = await favoritesService.getOne(favorite, isProblem);
+    logger.info(`Starting function getOne for favorite/`);
     if (selectedFavorite) {
       selectedFavorite.destroy();
     } else {
@@ -168,11 +177,14 @@ router.delete("/", auth, async (req, res) => {
 });
 
 router.get("/count", auth, async (req, res) => {
+  logger.info(`Starting endpoint favorite/count with params ${JSON.stringify(req, null, 2)}`);
   const { isProblem } = req.query;
   const user = req.user;
   try {
     console.log(user.user_id);
+    logger.info(`Starting function countFavorites for favorite/count`);
     const favorite = await favoritesService.countFavorites(user.user_id, isProblem);
+    logger.info(`Finished function countFavorites for favorite/count`);
     res.send({ count: favorite });
   } catch (error) {
     res.status(500).send("error found " + error);
@@ -180,9 +192,12 @@ router.get("/count", auth, async (req, res) => {
 });
 
 router.get("/problem-cards", auth, async (req, res) => {
+  logger.info(`Starting endpoint favorite/problem-cards with params ${JSON.stringify(req, null, 2)}`);
   const user = req.user;
   try {
+    logger.info(`Starting function getFavorites for favorite/problem-cards`);
     const favoriteObj = await favoritesService.getFavorites(user.user_id, true);
+    logger.info(`Finished function getFavorites for favorite/problem-cards`);
     const favorite = favoriteObj.map(d => d.dataValues);
     const ids = favorite
     .map((fav) => fav.problem_id);
@@ -213,7 +228,9 @@ router.get("/problem-cards", auth, async (req, res) => {
     const query = { q: `${PROBLEM_SQL}  ${filters} ` };
     console.log(`${PROBLEM_SQL}  ${filters} `);
     let answer = [];
+    logger.info(`Starting function needle for favorite/problem-cards`);
     const data = await needle("post", CARTO_URL, query, { json: true });
+    logger.info(`Finished function needle for favorite/problem-cards`);
     if (data.statusCode === 200) {
       answer = data.body.rows.map((element) => {
         return {
@@ -269,7 +286,9 @@ const getProjectCards = async (req, res) => {
       projectService.getProjects(),
       favoritesService.getFavorites(user.user_id),
     ];
+    logger.info(`Starting function all for favorite/problem-cards`);
     const [projects, favoritesObj] = await Promise.all(pr);
+    logger.info(`Finished function all for favorite/problem-cards`);
     const favorites = favoritesObj
       .map((d) => d.dataValues)
       .map((f) => f.project_id);
