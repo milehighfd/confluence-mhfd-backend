@@ -798,19 +798,30 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
     }),  
   ])  
   
-  projects = projects?.filter(project => project.length > 0);
-  let smallestArray =[]
-  if(projects.length === 0){
-    smallestArray= Project.findAll({
-      attributes: ["project_id","code_project_type_id"],
+  // projects = projects?.filter(project => project.length > 0);
+  const counterObject = {};
+  projects?.forEach(project => {
+    project.forEach(p => {
+      counterObject[p.project_id] = counterObject[p.project_id] ? counterObject[p.project_id] + 1 : 1;
     });
-  }else{
-    smallestArray = projects?.reduce((a, b) => a.length <= b.length ? a : b);
-    projects?.forEach(project => {
-      smallestArray = smallestArray.filter(projectId => project.find(projectId2 => projectId2.project_id === projectId.project_id));
-    }); 
-  };
-  return smallestArray;
+
+  });
+  const intersection = Object.keys(counterObject).filter(key => counterObject[key] === projects.length);
+  const intersectedProjects = [];
+  intersection.forEach(project_id => {
+    let found = false;
+    projects.forEach(project => {
+      if (!found) {
+        const foundProject = project.find(p => p.project_id === project_id);
+        if (foundProject) {
+          intersectedProjects.push(foundProject);
+          found = true;
+        }
+      }
+    });
+  });
+
+  return intersectedProjects;
 }
 
 let cache = null;
