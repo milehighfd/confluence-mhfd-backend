@@ -108,7 +108,7 @@ const getProjectDetail = async (req, res) => {
 
 const getBboxProject = async (req, res) => {
   
-  logger.info(`Starting endpoint project/bbox/:project_id with params ${JSON.stringify(req, null, 2)}`);
+  logger.info(`Starting endpoint project/bbox/:project_id with params ${JSON.stringify(req.params, null, 2)}`);
   const project_id = req.params['project_id'];
   try {
     const BBOX_SQL = `
