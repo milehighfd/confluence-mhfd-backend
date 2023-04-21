@@ -308,7 +308,7 @@ const getDetails = async (project_id) => {
           'code_project_type_id',
           'code_maintenance_eligibility_type_id',
           'current_project_status_id',
-          /* [
+           [
             sequelize.literal(`(
               SELECT COUNT([GRADE_CONTROL_STRUCTURE].[projectid])
               FROM [GRADE_CONTROL_STRUCTURE]
@@ -419,7 +419,7 @@ const getDetails = async (project_id) => {
               WHERE [LANDSCAPING_AREA].[projectid] = [project].[project_id]
             )`),
             'LANDSCAPING_AREA',
-          ], */
+          ],
         ], 
         include: [
           {
