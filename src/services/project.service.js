@@ -1122,7 +1122,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20) =
         }
       ],
       order: [['created_date', 'DESC']]
-    }).map(project => project);
+    });
     logger.info(`projects found: ${projects.length}`);
     /*
       projects = projects.map(project => {
