@@ -820,7 +820,6 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20) =
   if (project_ids?.length){
     const project_ids_array = project_ids.map(project => project.project_id);
     where = {project_id: project_ids_array};
-    console.log(project_ids_array)
   } 
   try {
     if (cache) {

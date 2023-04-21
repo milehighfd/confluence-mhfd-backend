@@ -56,7 +56,9 @@ const listProjects = async (req, res) => {
   logger.info(`Starting function getProjects2 for endpoint project/`);
   let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
   logger.info(`Finished function getProjects2 for endpoint project/`);
-  projectsFilterId = projectsFilterId.concat(ids);
+  projectsFilterId = projectsFilterId.map(pf => ({ project_id: pf.project_id})).filter(pid => {
+    return (ids.some(boundsids => pid.project_id === boundsids.project_id));
+  });
   logger.info(`Starting function getProjects for endpoint project/`);
   let projects = await projectService.getProjects(null, bounds, projectsFilterId, page, limit);
   logger.info(`Finished function getProjects for endpoint project/`);

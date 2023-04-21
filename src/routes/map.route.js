@@ -309,7 +309,7 @@ async function getEnvelopeProblemsComponentsAndProject(id, table, field, activet
     from (
     SELECT the_geom FROM ${table} where  projectid=${id}`;
 
-  const SQLPROBLEM = `
+    const SQLPROBLEM = `
   union 
     select the_geom from ${PROBLEM_TABLE}  
       where ${PROPSPROBLEMTABLES.problem_boundary[5]} in (SELECT problemid FROM grade_control_structure 
