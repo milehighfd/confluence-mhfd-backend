@@ -92,7 +92,6 @@ const listProjectsDBFilter = async (req, res) => {
 }
 
 const getProjectDetail = async (req, res) => {
-  logger.info(`Starting endpoint project/:project_id with params ${JSON.stringify(req, null, 2)}`);
   const project_id = req.params['project_id'];
   try {
     logger.info(`Starting function getDetails for endpoint project/:project_id`);
