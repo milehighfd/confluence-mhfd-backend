@@ -41,7 +41,7 @@ const getFilters = async (req, res) => {
   data.lgmanager = [];
   data.estimatedCost = [];
   let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
-  let projects = await projectService.getProjects(null, null, 1, null,projectsFilterId);
+  let projects = await projectService.getProjects(null, null, projectsFilterId, undefined, undefined);
 
   projects = await projectsByFilters(projects, body);
   if (bounds) {

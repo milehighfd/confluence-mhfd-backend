@@ -19,6 +19,7 @@ import projectService from 'bc/services/project.service.js';
 
 
 const getGroup = async (req, res) => {
+  logger.info(`Starting endpoint /groups/:groupname with params `);
   const groupname = req.params['groupname'];
   const data = {};
   if (groupname === 'status') {
@@ -287,6 +288,7 @@ const sortInside = (projects, sortvalue, order) => {
   return projects;
 }
 const listProjects = async (req, res) => {
+  logger.info(`Starting endpoint pmtools/list with params ${JSON.stringify(req, null, 2)}`);
   const {
     offset = 0,
     limit = 120000,
@@ -308,30 +310,38 @@ const listProjects = async (req, res) => {
   
   if(favorites == 'true'){
     logger.info('Favorites requests', _id);
+    logger.info(`Starting function getFavorites for endpoint pmtools/list`);
     let list = await favoritesService.getFavorites(_id);
+    logger.info(`Finished function getFavorites for endpoint pmtools/list`);
     list = list.map(result => result.dataValues?.project_id);
     where.project_id = list;
     console.log('list of favorites', list);
   }
 
-  let projects = await projectService.getProjects({code_project_type_id:code_project_type_id}, null);
+  logger.info(`Starting function getProjects for endpoint pmtools/list`);
+  let projects = await projectService.getProjects({code_project_type_id: code_project_type_id}, null);
+  logger.info(`Finished function getProjects for endpoint pmtools/list`);
   const ids = projects.map((p) => p.project_id);
   // xconsole.log(project_partners);
   // GET MHFD LEAD
   const MHFD_LEAD = 1;
+  logger.info(`Starting function findAll for endpoint pmtools/list`);
   const projectStaff = await ProjectStaff.findAll({
     where: {
       project_id: ids,
       code_project_staff_role_type_id: MHFD_LEAD
     }
   }).map(result => result.dataValues);
+  logger.info(`Finished function findAll for endpoint pmtools/list`);
   // console.log('the project staff is ', projectStaff);
   const mhfdIds = projectStaff.map((data) => data.mhfd_staff_id).filter((data) => data !== null);
+  logger.info(`Starting function findAll for endpoint pmtools/list`);
   const mhfdStaff = await MHFDStaff.findAll({
     where: {
       mhfd_staff_id: mhfdIds
     }
   }).map((data) => data.dataValues);
+  logger.info(`Finished function findAll for endpoint pmtools/list`);
   // TODO END THE PARSE WHEN WE HAVE EXAMPLES
   console.log(mhfdStaff);
   // Get Service Area
@@ -341,13 +351,16 @@ const listProjects = async (req, res) => {
     //GET Developer
     logger.info('Developer');
     const DEVELOPER_ID = 1;
+    logger.info(`Starting function findAll for endpoint pmtools/list`);
     let developers = await ProjectPartner.findAll({
       where: {
         project_id: ids,
         code_partner_type_id: DEVELOPER_ID
       }
     }).map(result => result.dataValues);
+    logger.info(`Finished function findAll for endpoint pmtools/list`);
     const developerIds = developers.map((data) => data.business_associates_id).filter((data) => data !== null);
+    logger.info(`Starting function findAll for endpoint pmtools/list`);
     let developerLIst = await BusinessAssociante.findAll({
       where: {
         business_associates_id: developerIds
@@ -362,6 +375,7 @@ const listProjects = async (req, res) => {
         developer
       }
     });
+    logger.info(`Finished function findAll for endpoint pmtools/list`);
     projects = projects.map((project) => {
       const staffs = developers.filter(consult => consult.project_id === project.project_id);
       const construction_start_date = project?.project_status?.code_phase_type?.code_phase_type_id === 125 ? project?.project_status?.planned_start_date : project?.project_status?.actual_start_date
@@ -373,15 +387,19 @@ const listProjects = async (req, res) => {
     });
   }
   if (myprojects) {
+    logger.info(`Starting function findAll for endpoint pmtools/list`);
     const staffs = await ProjectStaff.findAll({
       where: {
         project_id: ids
       }
     }).map(result => result.dataValues);
+    logger.info(`Finished function findAll for endpoint pmtools/list`);
     // console.log('the project staff is ', projectStaff);
     const mhfdIds = staffs.map((data) => data.mhfd_staff_id).filter((data) => data !== null);
   }
+  logger.info(`Starting function projectsByFilters for endpoint pmtools/list`);
   projects = await projectsByFilters(projects, body);
+  logger.info(`Finished function projectsByFilters for endpoint pmtools/list`);
   if ( sortby ) {
     projects = sortInside(projects, sortby, order);
   }
@@ -578,6 +596,7 @@ const listProjects = async (req, res) => {
 };
 
 const getDataForGroup = async (req, res) => {
+  logger.info(`Starting endpoint pmtools/groups/:groupname/:filtervalue with params`);
   const { groupname, filtervalue } = req.params;
   const { page = 1, limit = 20, code_project_type_id } = req.query;
   const { favorites, search, filterby, value } = req.body;
@@ -596,7 +615,9 @@ const getDataForGroup = async (req, res) => {
     extraFilters.value = value;
   }
   logger.info(`page=${page} limit=${limit}`);
+  logger.info(`Starting function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
   const group = await pmtoolsService.getProjects(groupname, filtervalue, extraFilters, +page, +limit);
+  logger.info(`Finished function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
   res.send(group);
 }
 
