@@ -39,7 +39,7 @@
     "phantomjs-prebuilt": "^2.1.16",
     "pngquant-bin": "^6.0.0",
     "request": "^2.88.2",
-    "sequelize": "^5.21.7",
+    "sequelize": "^6.31.0",
     "tedious": "^9.2.3",
     "winston": "^3.2.1",
     "wkt": "^0.1.1"

@@ -220,14 +220,10 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       optionalIncludes.push({
         model: ProjectStatus,
         as: 'currentId',
-        separate: true,
         required: true,
-        duplicating: false,
         include: {
           model: CodePhaseType,
-          required:true ,
           where: { code_status_type_id: +filter },
-          duplicating: false
         },
       });
     }
@@ -396,13 +392,11 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
     // }
 
     includes = includes.concat(optionalIncludes);
-    console.log(includes);
     console.log('VALUES TO SEARCH LIMIT', limit, 'OFFSET', offset);
     const projects = await Project.findAll({
-      where: where,
+      where,
       limit,
       offset,
-      separate: true,
       attributes: [
         "project_id",
         "project_name",
@@ -413,8 +407,9 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         'current_project_status_id',
       ],
       include: includes,
+      subQuery: false,
       order: [['created_date', 'DESC']]
-    }).map(project => project.dataValues);
+    });
     return projects;
   } catch (error) {
     logger.error(error);
