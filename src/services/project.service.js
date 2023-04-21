@@ -814,7 +814,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
 }
 
 let cache = null;
-const getProjects = async (include, bounds, project_ids, page = 1, limit = 120000) => {  
+const getProjects = async (include, bounds, project_ids, page = 1, limit = 20) => {  
   let where = {};
   const offset = (page - 1) * limit;
   if (project_ids?.length){
@@ -839,7 +839,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 12000
         "created_date",
         'code_project_type_id',
         'current_project_status_id',
-        /* [
+        [
           sequelize.literal(`(
             SELECT COUNT([GRADE_CONTROL_STRUCTURE].[projectid])
             FROM [GRADE_CONTROL_STRUCTURE]
@@ -950,13 +950,14 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 12000
             WHERE [LANDSCAPING_AREA].[projectid] = [project].[project_id]
           )`),
           'LANDSCAPING_AREA',
-        ],*/
+        ],
       ],  
       
       include: [
         {
           model: ProjectStaff,
           required: false,
+          separate: true,
           attributes: [
             'code_project_staff_role_type_id',
             'is_active',
@@ -984,6 +985,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 12000
         },
         {
           model: ProjectServiceArea,
+          separate: true,
           required: false,
           include: {
             model: CodeServiceArea,
@@ -999,6 +1001,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 12000
         },        
         {
           model: ProjectCounty,
+          separate: true,
           include: {
             model: CodeStateCounty,
             required: false,
@@ -1013,6 +1016,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 12000
         },
         {
           model: ProjectStreams,
+          separate: true,
           required: false,
           include: {
             model: Streams,
@@ -1025,6 +1029,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 12000
         },
         {
           model: ProjectLocalGovernment,
+          separate: true,
           required: false,
           include: {
             model: CodeLocalGoverment,
@@ -1040,6 +1045,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 12000
         },
         {
           model: ProjectCost,
+          separate: true,
           required: false,
           attributes: [
             'code_cost_type_id',
@@ -1051,6 +1057,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 12000
         },
         {
           model: ProjectStatus,
+          separate: true,
           required: false,
           attributes: [
             'code_phase_type_id',
@@ -1088,6 +1095,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 12000
         },         
         {
           model: ProjectPartner,
+          separate: true,
           required: false,
           attributes: [
             'project_partner_id',

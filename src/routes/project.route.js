@@ -27,7 +27,7 @@ import moment from 'moment';
 
 const listProjectsForId = async (req, res) => {
   logger.info(`Starting endpoint project/ids with params ${JSON.stringify(req, null, 2)}`);
-  const { offset = 1, limit = 10000 } = req.query;
+  const { offset = 1, limit = 20 } = req.query;
   const { body } = req;
   logger.info(`Starting function getProjects for endpoint project/ids`);
   let projects = await projectService.getProjects(null, null, offset, limit);
@@ -42,7 +42,7 @@ const listProjectsForId = async (req, res) => {
 
 const listProjects = async (req, res) => {
   logger.info(`Starting endpoint project/ with params`);
-  const { page = 1, limit = 10000 } = req.query;
+  const { page = 1, limit = 20 } = req.query;
   const { body } = req;
   logger.info(`Calling projects endpoint with body: ${JSON.stringify(body)}, page: ${page}, limit: ${limit}`);
   const bounds = body?.bounds;
