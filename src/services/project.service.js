@@ -676,128 +676,173 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const filterName = filter.name ? '%' + filter.name + '%' : '';
   const contractor = filter.contractor ? '%' + filter.contractor + '%' : '';
   const consultant = filter.consultant ? '%' + filter.consultant + '%' : '';
-  const code_project_type_id = filter.projecttype ? filter.projecttype : -1;
-  const service_area = filter.servicearea ? filter.servicearea : -1;
-  const state_county_id = filter.statecounty ? filter.statecounty : -1;
-  const stream_id = filter.streamname ? filter.streamname : -1;
-  const code_local_government_id = filter.jurisdiction ? filter.jurisdiction : -1;
-  const cost = filter.cost ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : { [Op.lt]: 0 };
-  const status = filter.status ? filter.status : -1;
-  let projects = await Promise.all([
+  const code_project_type_id = filter.projecttype ? filter.projecttype : [];
+  const service_area = filter.servicearea ? filter.servicearea : [];
+  const state_county_id = filter.statecounty ? filter.statecounty : [];
+  const stream_id = filter.streamname ? filter.streamname : [];
+  const code_local_government_id = filter.jurisdiction ? filter.jurisdiction : [];
+  const cost = filter.cost ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : null;
+  const status = filter.status ? filter.status : [];
+  const conditions = [];
+  if (filterName) {
     // KEYWORD 
-    Project.findAll({
+    logger.info(`Filtering by name ${filterName}...`);
+    conditions.push(Project.findAll({
       attributes: ["project_id","code_project_type_id"],
       where: {
         project_name: { [Op.like]: filterName },
       }
-    }),
-    // PROJECT TYPE
-    Project.findAll({
-      attributes: ["project_id","code_project_type_id"],
-      where: {
-        code_project_type_id: code_project_type_id,
-      }
-    }),
-    // STATUS
-    Project.findAll({  
-      attributes: ["project_id","code_project_type_id"], 
-      include: [{        
-        model: ProjectStatus,
-        as: 'currentId',
-        required:true ,
-        include: {
-          model: CodePhaseType,
-          required:true ,         
-          where: { code_status_type_id: status }        
-        },        
-      }]
-    }),
-    // SERVICE AREA
-    Project.findAll({
-      attributes: ["project_id","code_project_type_id"],
-      include: [{
-        attributes: [],
-        model: ProjectServiceArea,
-        include: {
+    }));
+  }
+  if (contractor) {
+    logger.info(`Filtering by contractor ${contractor}...`);
+    conditions.push(//CONTRACTOR
+      Project.findAll({
+        attributes: ["project_id","code_project_type_id"],
+        include: [{
+          model: ProjectPartner,
           attributes: [],
-          model: CodeServiceArea,
-        },
-        where: { code_service_area_id: service_area }
-      }]
-    }),
-    // COUNTY
-    Project.findAll({
-      attributes: ["project_id","code_project_type_id"],
-      include: [{
-        attributes: [],
-        model: ProjectCounty,
-        include: {
+          include: {
+            model: BusinessAssociate,
+            attributes: [],
+          },
+          where: {
+            code_partner_type_id: CIVIL_CONTRACTOR_ID,
+            business_associates_id: { [Op.like]: contractor } 
+          }
+        }],
+    }));
+  }
+  if (consultant) {
+    logger.info(`Filtering by consultant ${consultant}...`);
+    conditions.push(//CONSULTANT
+      Project.findAll({
+        attributes: ["project_id","code_project_type_id"],
+        include: [{
+          model: ProjectPartner,
           attributes: [],
-          model: CodeStateCounty,
-        },
-        where: { state_county_id: state_county_id }
-      }],
-    }),
-    //STREAMS 
-    Project.findAll({
-      attributes: ["project_id","code_project_type_id"],
-      include: [{
-        attributes: [],
-        model: ProjectStreams,
-        include: {
-          model: Streams,
-        },
-        where: { stream_id: stream_id }
-      }],
-    }),
-    // JURISDICTION
-    Project.findAll({
-      attributes: ["project_id","code_project_type_id"],
-      include: [{
-        model: ProjectLocalGovernment,
-        include: {
-          model: CodeLocalGoverment,
-        },
-        where: { code_local_government_id: code_local_government_id }
-      }],
-    }),
-    //CONSULTANT
-    Project.findAll({
-      attributes: ["project_id","code_project_type_id"],
-      include: [{
-        model: ProjectPartner,
-        attributes: [],
-        include: {
-          model: BusinessAssociate,
+          include: {
+            model: BusinessAssociate,
+            attributes: [],
+          },
+          where: {
+            code_partner_type_id: CONSULTANT_CODE,
+            business_associates_id: { [Op.like]: consultant } 
+          }
+        }],
+    }));
+  }
+  if (code_project_type_id.length) {
+    logger.info(`Filtering by project type ${code_project_type_id}...`);
+    conditions.push(//PROJECT TYPE
+      Project.findAll({
+        attributes: ["project_id","code_project_type_id"],
+        where: {
+          code_project_type_id: code_project_type_id
+        }
+    }));
+  }
+  if (service_area.length) {
+    logger.info(`Filtering by service area ${service_area}...`);
+    conditions.push(//SERVICE AREA
+      Project.findAll({
+        attributes: ["project_id","code_project_type_id"],
+        include: [{
           attributes: [],
-        },
-        where: { code_partner_type_id: CONSULTANT_CODE, business_associates_id: { [Op.like]: consultant } }
-      }],
-    }),
-    //CONTRACTOR
-    Project.findAll({
-      attributes: ["project_id","code_project_type_id"],
-      include: [{
-        model: ProjectPartner,
-        attributes: [],
-        include: {
-          model: BusinessAssociate,
+          model: ProjectServiceArea,
+          include: {
+            attributes: [],
+            model: CodeServiceArea,
+          },
+          where: { code_service_area_id: service_area }
+        }]
+    }));
+  }
+  if (state_county_id.length) {
+    logger.info(`Filtering by state county ${state_county_id}...`);
+    conditions.push(//COUNTY
+      Project.findAll({
+        attributes: ["project_id","code_project_type_id"],
+        include: [{
           attributes: [],
-        },
-        where: { code_partner_type_id: CIVIL_CONTRACTOR_ID, business_associates_id: { [Op.like]: contractor } }
-      }],
-    }),
-    //ESTIMATED COST
-    Project.findAll({
+          model: ProjectCounty,
+          include: {
+            attributes: [],
+            model: CodeStateCounty,
+          },
+          where: { code_county_id: state_county_id }
+        }]
+    }));
+  }
+  if (stream_id.length) {
+    logger.info(`Filtering by stream ${stream_id}...`);
+    conditions.push(//STREAM
+      Project.findAll({
+        attributes: ["project_id","code_project_type_id"],
+        include: [{
+          attributes: [],
+          model: ProjectStreams,
+          include: {
+            attributes: [],
+            model: Streams,
+          },
+          where: { stream_id: stream_id }
+        }]
+    }));
+  }
+  if (code_local_government_id.length) {
+    logger.info(`Filtering by jurisdiction ${code_local_government_id}...`);
+    conditions.push(//JURISDICTION
+      Project.findAll({
+        attributes: ["project_id","code_project_type_id"],
+        include: [{
+          attributes: [],
+          model: ProjectLocalGovernment,
+          include: {
+            attributes: [],
+            model: CodeLocalGoverment,
+          },
+          where: { code_local_government_id: code_local_government_id }
+        }]
+    }));
+  }
+  if (cost) {
+    logger.info(`Filtering by cost ${cost}...`);
+    conditions.push(//COST
+      Project.findAll({
+        attributes: ["project_id","code_project_type_id"],
+        include: [{
+          model: ProjectCost,
+          attributes: [],
+          where: { code_cost_type_id: ESTIMATED_ID, cost: cost }
+        }]
+    }));
+  }
+  if (status.length) {
+    logger.info(`Filtering by status ${status}...`);
+    conditions.push(//STATUS
+      Project.findAll({
+        attributes: ["project_id","code_project_type_id"],
+        include: [{
+          model: ProjectStatus,
+          as: 'currentId',
+          required:true ,
+          include: {
+            model: CodePhaseType,
+            required:true ,
+            where: { code_status_type_id: status }
+          },
+        }]
+    }));
+  }
+  if (conditions.length === 0) {
+    conditions.push(Project.findAll({
       attributes: ["project_id","code_project_type_id"],
-      include: [{
-        model: ProjectCost,
-        attributes: [],
-        where: { code_cost_type_id: ESTIMATED_ID, cost: cost }
-      }],
-    }),  
-  ])  
-  
+    }));
+  }
+  let projects = await Promise.all(conditions);
+  projects = projects.map(project => project.map(p => p.toJSON()));
+  console.log(projects);
   // projects = projects?.filter(project => project.length > 0);
   const counterObject = {};
   projects?.forEach(project => {
@@ -806,7 +851,8 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
     });
 
   });
-  const intersection = Object.keys(counterObject).filter(key => counterObject[key] === projects.length);
+  const intersection = Object.keys(counterObject).filter(key => counterObject[key] === projects.length)
+    .map(key => +key);
   const intersectedProjects = [];
   intersection.forEach(project_id => {
     let found = false;
@@ -820,7 +866,6 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       }
     });
   });
-
   return intersectedProjects;
 }
 
@@ -828,10 +873,8 @@ let cache = null;
 const getProjects = async (include, bounds, project_ids, page = 1, limit = 20) => {  
   let where = {};
   const offset = (page - 1) * limit;
-  if (project_ids?.length){
-    const project_ids_array = project_ids.map(project => project.project_id);
-    where = {project_id: project_ids_array};
-  } 
+  const project_ids_array = project_ids.map(project => project.project_id);
+  where = {project_id: project_ids_array};
   try {
     if (cache) {
       return JSON.parse(JSON.stringify(cache));
