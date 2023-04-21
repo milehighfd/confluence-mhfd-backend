@@ -25,7 +25,7 @@ const getStatus = async () => {
     order: [
       ['status_name', 'ASC']
     ]
-  }).map((data) => data.dataValues);
+  });
   const groups = codeStatusType.map((data) => {
     return { value: data.status_name, id: data.code_status_type_id };
   });
@@ -38,7 +38,7 @@ const getJurisdiction = async () => {
     order: [
       ['local_government_name', 'ASC']
     ]
-  }).map((data) => data.dataValues);
+  });
   const groups = codeLocalGoverment.map((data) => {
     return { value: data.local_government_name, id: data.code_local_government_id };
   });
@@ -50,7 +50,7 @@ const getCounty = async () => {
     order: [
       ['county_name', 'ASC']
     ]
-  }).map((data) => data.dataValues);
+  });
   const groups = codeStateCounty.map((data) => {
     return { value: data.county_name, id: data.state_county_id };
   });
@@ -62,7 +62,7 @@ const getServiceArea = async () => {
     order: [
       ['service_area_name', 'ASC']
     ]
-  }).map((data) => data.dataValues);
+  });
   const groups = codeServiceArea.map((data) => {
     return { value: data.service_area_name, id: data.code_service_area_id };
   });
@@ -75,7 +75,7 @@ const getConsultant = async () => {
     where: {
       code_partner_type_id: CONSULTANT_ID
     }
-  }).map((data) => data.dataValues);
+  });
   const ids = projectPartner.map((data) => data.business_associates_id);
   const businessAssociates = await BusinessAssociante.findAll({
     where: {
@@ -95,7 +95,7 @@ const getContractor = async () => {
     where: {
       code_partner_type_id: [CIVIL_CONTRACTOR_ID, LANDSCAPE_CONTRACTOR_ID]
     }
-  }).map((data) => data.dataValues);
+  });
   const ids = projectPartner.map((data) => data.business_associates_id);
   const businessAssociates = await BusinessAssociante.findAll({
     where: {

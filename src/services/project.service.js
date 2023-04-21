@@ -214,7 +214,7 @@ const  getProjectsDeprecated  = async (include, bounds, offset = 1, limit = 1200
           user_id: include.user_id,
           project_table_name: MAIN_PROJECT_TABLE
         }
-      }).map(result => result.dataValues);
+      });
       const pids = projectsFavorite.map((p) => p.project_id);
       if (where.project_id) {
         where.project_id = where.project_id.filter((data) => pids.includes(data));
@@ -228,7 +228,7 @@ const  getProjectsDeprecated  = async (include, bounds, offset = 1, limit = 1200
       offset,
       // include: { all: true, nested: true },
       order: [['created_date', 'DESC']]
-    }).map(result => result.dataValues);
+    });
   
     const SPONSOR_TYPE = 11; // maybe this can change in the future
     const ids = projects.map((p) => p.project_id);
@@ -239,8 +239,8 @@ const  getProjectsDeprecated  = async (include, bounds, offset = 1, limit = 1200
         code_partner_type_id: SPONSOR_TYPE,
       },
       include: { all: true, nested: true }
-    }).map(result => result.dataValues).map(res => { 
-      return {...res, business_associate: res.business_associate.dataValues }
+    }).map(res => { 
+      return {...res, business_associate: res.business_associate }
     });
   
     projects = projects.map((project) => {
@@ -659,7 +659,7 @@ const getDetails = async (project_id) => {
         message: 'Project Not Found'
       };
     }
-    let project = projectPromise.dataValues;
+    let project = projectPromise;
     logger.info(`Adding problems ${JSON.stringify(problems)} to ${project_id} with name ${project.project_name}`)
     project = { ...project, problems: problems, centroid: centroidProj };
     return project;
@@ -1122,7 +1122,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20) =
         }
       ],
       order: [['created_date', 'DESC']]
-    }).map(project => project.dataValues);
+    }).map(project => project);
     logger.info(`projects found: ${projects.length}`);
     /*
       projects = projects.map(project => {
@@ -1343,7 +1343,7 @@ const updateProjectStatus = async (project_id) => {
         ]
       }]
     },
-  }).map(d => d.dataValues);
+  });
   logger.info(JSON.stringify(projectStatuses));
   if (cache) {
     const index = cache.findIndex(project => project.project_id === project_id);

@@ -60,7 +60,7 @@ const listProjects = async (req, res) => {
   logger.info(`Starting function getProjects for endpoint project/`);
   let projects = await projectService.getProjects(null, bounds, projectsFilterId, page, limit);
   logger.info(`Finished function getProjects for endpoint project/`);
-  const set = new Set(projectsFilterId.map((p) => p?.dataValues?.project_id));
+  const set = new Set(projectsFilterId.map((p) => p?.project_id));
   const count = set.size;
   logger.info(projects.length);
   if (body?.sortby?.trim()?.length || 0) {

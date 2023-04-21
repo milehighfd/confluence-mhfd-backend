@@ -8,7 +8,7 @@ router.get('/', async (req, res) => {
 
   const sa = await streams.findAll({
     include: { all: true, nested: true }
-  }).map(result => result.dataValues);
+  });
   console.log('-------------------------------------')
   //console.log(sa);
   res.send(sa);
@@ -21,7 +21,7 @@ const getStreamDatabyID = async (req, res) => {
     where: {
       OBJECTID: objectid
     }
-  }).map(result => result.dataValues);
+  });
   if (streamData) {
     res.send(streamData)
   }

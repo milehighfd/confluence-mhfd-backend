@@ -32,7 +32,7 @@ export const getServiceAreaByProjectIds = async (ids) => {
       where: {
         project_id: ids
       }
-    }).map((data) => data.dataValues);
+    });
     projectServiceArea = projectServiceArea.map((data) => ({
       ...data,
       CODE_SERVICE_AREA: data.CODE_SERVICE_AREA.dataValues.service_area_name
@@ -49,14 +49,14 @@ export const getCountiesByProjectIds = async (ids) => {
       where: {
         project_id: ids
       }
-    }).map(data => data.dataValues);
+    });
     const codeCounties = projectCounty.map((psa) => psa.state_county_id);
     let codeStateCounties = await CodeStateCounty.findAll({
       where: {
         state_county_id: codeCounties
       },
       attributes: {exclude: ['Shape']}
-    }).map(data => data.dataValues);
+    });
     projectCounty = projectCounty.map((data) => {
       const codeStateCounty = codeStateCounties.filter((d) => d.state_county_id === data.state_county_id)[0];
       return {
@@ -84,7 +84,7 @@ export const getConsultantsByProjectids = async (ids) => {
       where: {
         business_associates_id: consultantIds
       }
-    }).map((data) => data.dataValues);
+    });
     consultants = consultants.map((staff) => {
       const consultant = consultantList.filter((cons) => {
         return cons.business_associates_id === staff.business_associates_id
@@ -114,7 +114,7 @@ export const getCivilContractorsByProjectids = async (ids) => {
       where: {
         business_associates_id: civilContractorsIds
       }
-    }).map((data) => data.dataValues);
+    });
     civilContractors = civilContractors.map((staff) => {
       const business = contractorLIst.filter((cons) => {
         return cons.business_associates_id === staff.business_associates_id
@@ -136,14 +136,14 @@ export const getLocalGovernmentByProjectids = async (ids) => {
       where: {
         project_id: ids
       }
-    }).map(data => data.dataValues);
+    });
     const codeLovalGovermentIds = projectLocalGovernment.map((psa) => psa.code_local_government_id);
     let codeLocalGoverments = await CodeLocalGoverment.findAll({
       where: {
         code_local_government_id: codeLovalGovermentIds
       },
       attributes: {exclude: ['Shape']}
-    }).map(data => data.dataValues);
+    });
     projectLocalGovernment = projectLocalGovernment.map((data) => {
       const codeLocalGoverment = codeLocalGoverments.filter((d) => d.code_local_government_id === data.code_local_government_id)[0];
       return {
@@ -178,14 +178,14 @@ export const getStreamsDataByProjectIds = async (ids) => {
       where: {
         project_id: ids
       }
-    }).map((data) => data.dataValues);
+    });
     const projectStreamsIds = projectStreams.map((data) => data.stream_id).filter((data) => data !== null);
     const streamsList = await Streams.findAll({
       where: {
         stream_id: projectStreamsIds
       },
       attributes: {exclude: ['Shape']}
-    }).map((data) => data.dataValues);
+    });
     projectStreams = projectStreams.map((data) => {
       const streamvalue = streamsList.filter((d => d.stream_id === data.stream_id));
       return {

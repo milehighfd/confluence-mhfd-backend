@@ -313,7 +313,7 @@ const listProjects = async (req, res) => {
     logger.info(`Starting function getFavorites for endpoint pmtools/list`);
     let list = await favoritesService.getFavorites(_id);
     logger.info(`Finished function getFavorites for endpoint pmtools/list`);
-    list = list.map(result => result.dataValues?.project_id);
+    list = list.map(result => result.project_id);
     where.project_id = list;
     console.log('list of favorites', list);
   }
@@ -331,7 +331,7 @@ const listProjects = async (req, res) => {
       project_id: ids,
       code_project_staff_role_type_id: MHFD_LEAD
     }
-  }).map(result => result.dataValues);
+  });
   logger.info(`Finished function findAll for endpoint pmtools/list`);
   // console.log('the project staff is ', projectStaff);
   const mhfdIds = projectStaff.map((data) => data.mhfd_staff_id).filter((data) => data !== null);
@@ -340,7 +340,7 @@ const listProjects = async (req, res) => {
     where: {
       mhfd_staff_id: mhfdIds
     }
-  }).map((data) => data.dataValues);
+  });
   logger.info(`Finished function findAll for endpoint pmtools/list`);
   // TODO END THE PARSE WHEN WE HAVE EXAMPLES
   console.log(mhfdStaff);
@@ -357,7 +357,7 @@ const listProjects = async (req, res) => {
         project_id: ids,
         code_partner_type_id: DEVELOPER_ID
       }
-    }).map(result => result.dataValues);
+    });
     logger.info(`Finished function findAll for endpoint pmtools/list`);
     const developerIds = developers.map((data) => data.business_associates_id).filter((data) => data !== null);
     logger.info(`Starting function findAll for endpoint pmtools/list`);
@@ -365,7 +365,7 @@ const listProjects = async (req, res) => {
       where: {
         business_associates_id: developerIds
       }
-    }).map((data) => data.dataValues);
+    });
     developers = developers.map((staff) => {
       const developer = developerLIst.filter((cons) => {
         return cons.business_associates_id === staff.business_associates_id
@@ -392,7 +392,7 @@ const listProjects = async (req, res) => {
       where: {
         project_id: ids
       }
-    }).map(result => result.dataValues);
+    });
     logger.info(`Finished function findAll for endpoint pmtools/list`);
     // console.log('the project staff is ', projectStaff);
     const mhfdIds = staffs.map((data) => data.mhfd_staff_id).filter((data) => data !== null);

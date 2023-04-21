@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
 
   const sa = await ServiceAreaLocalGov.findAll({
     include: { all: true, nested: true }
-  }).map(result => result.dataValues);
+  });
   // console.log(sa);
   res.send(sa);
 });

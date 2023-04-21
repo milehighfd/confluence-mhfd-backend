@@ -198,7 +198,7 @@ router.get("/problem-cards", auth, async (req, res) => {
     logger.info(`Starting function getFavorites for favorite/problem-cards`);
     const favoriteObj = await favoritesService.getFavorites(user.user_id, true);
     logger.info(`Finished function getFavorites for favorite/problem-cards`);
-    const favorite = favoriteObj.map(d => d.dataValues);
+    const favorite = favoriteObj;
     const ids = favorite
     .map((fav) => fav.problem_id);
     console.log('favorites are ', ids);
@@ -290,7 +290,6 @@ const getProjectCards = async (req, res) => {
     const [projects, favoritesObj] = await Promise.all(pr);
     logger.info(`Finished function all for favorite/problem-cards`);
     const favorites = favoritesObj
-      .map((d) => d.dataValues)
       .map((f) => f.project_id);
     res.send(projects.filter((p) => favorites.includes(p.project_id)));
   } catch (error) {
