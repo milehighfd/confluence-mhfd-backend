@@ -28,7 +28,7 @@ const CodePhaseType = db.codePhaseType;
 const Project = db.project;
 
 router.get('/coordinates/:pid', async (req, res) => {
-    logger.info(`Starting endpoint board/coordinates/:pid with params ${JSON.stringify(req, null, 2)}`);
+    logger.info(`Starting endpoint board/coordinates/:pid with params ${JSON.stringify(req.params, null, 2)}`);
     let { pid } = req.params;
     logger.info(`Starting function getCoordsByProjectId for endpoint board/coordinates/:pid`);
     let r = await getCoordsByProjectId(pid, true);
@@ -37,7 +37,7 @@ router.get('/coordinates/:pid', async (req, res) => {
 });
 
 router.get('/fix', async (req, res) => {
-    logger.info(`Starting endpoint board/fix with params ${JSON.stringify(req, null, 2)}`);
+    logger.info(`Starting endpoint board/fix with params ${JSON.stringify(req.params, null, 2)}`);
    /* let boards = await Board.update(
         {
             "status": "Under Review",
@@ -97,7 +97,7 @@ router.get('/fix', async (req, res) => {
     res.send({boards: boards, count: c});
 });
 router.get('/', async (req, res) => {
-    logger.info(`Starting endpoint board/ with params ${JSON.stringify(req, null, 2)}`);
+    logger.info(`Starting endpoint board/ with params ${JSON.stringify(req.params, null, 2)}`);
     logger.info(`Starting function findAll for board/`);
     let boards = await Board.findAll();
     logger.info(`Finished function findAll for board/`);
@@ -106,7 +106,7 @@ router.get('/', async (req, res) => {
 });
 
 router.put('/update-budget/:id', async (req, res) => {
-    logger.info(`Starting endpoint board/update-budget/:id with params ${JSON.stringify(req, null, 2)}`);
+    logger.info(`Starting endpoint board/update-budget/:id with params ${JSON.stringify(req.params, null, 2)}`);
     const { id } = req.params;
     const budget = req.body.budget;
     logger.info(`Starting function findByPk for board/update-budget/:id`);
@@ -122,7 +122,7 @@ router.put('/update-budget/:id', async (req, res) => {
 });
 
 router.get('/board-localities', async (req, res) => {
-    logger.info(`Starting endpoint board/board-localities with params ${JSON.stringify(req, null, 2)}`);
+    logger.info(`Starting endpoint board/board-localities with params ${JSON.stringify(req.params, null, 2)}`);
     logger.info(`Starting function findAll for board/board-localities`);
     let boardLocalities = await BoardLocality.findAll();
     logger.info(`Finished function findAll for board/board-localities`);
@@ -130,7 +130,7 @@ router.get('/board-localities', async (req, res) => {
 });
 
 router.put('/board-localities/:id', async (req, res) => {
-    logger.info(`Starting endpoint /board/board-localities/:id with params ${JSON.stringify(req, null, 2)}`);
+    logger.info(`Starting endpoint /board/board-localities/:id with params ${JSON.stringify(req.params, null, 2)}`);
     let { id } = req.params;
     const email = req.body.email;
     logger.info(`Starting function findOne for board/board-localities/:id`);
@@ -150,7 +150,7 @@ router.put('/board-localities/:id', async (req, res) => {
 });
 
 router.get('/projects/:bid', async (req, res) => {
-    logger.info(`Starting endpoint board/projects/:bid with params ${JSON.stringify(req, null, 2)}`)
+    logger.info(`Starting endpoint board/projects/:bid with params ${JSON.stringify(req.params, null, 2)}`)
     let { bid } = req.params;
     logger.info(`Starting function findAll for board/projects/:bid`);
     let boardProjects = await BoardProject.findAll({
@@ -164,7 +164,7 @@ router.get('/projects/:bid', async (req, res) => {
 });
 
 router.put('/project/:id', async (req, res) => {
-    logger.info(`Starting endpoint board/project/:id with params ${JSON.stringify(req, null, 2)}`)
+    logger.info(`Starting endpoint board/project/:id with params ${JSON.stringify(req.params, null, 2)}`)
     let { id } = req.params;
     let { 
         originPosition0,
@@ -194,7 +194,7 @@ router.put('/project/:id', async (req, res) => {
 });
 
 router.post('/projectdata', async (req, res) => {
-    logger.info(`Starting endpoint board/projectdata with params ${JSON.stringify(req, null, 2)}`)
+    logger.info(`Starting endpoint board/projectdata with params ${JSON.stringify(req.params, null, 2)}`)
   let body = req.body;
   let {projectid, projecttype} = body;
   if (!projectid) {
@@ -213,7 +213,7 @@ router.post('/projectdata', async (req, res) => {
 
 router.post('/board-for-positions', async (req, res) => {
   const { page = 1, limit = 20 } = req.query;
-    logger.info(`Starting endpoint board/board-for-positions with params ${JSON.stringify(req, null, 2)}`)
+    logger.info(`Starting endpoint board/board-for-positions with params ${JSON.stringify(req.params, null, 2)}`)
   
   let body = req.body;
   let { type, year, locality, projecttype, position } = body;
@@ -280,7 +280,7 @@ router.post('/board-for-positions', async (req, res) => {
 });
 logger.info(`Finished function getProjects for board/board-for-positions`);
 router.post('/', async (req, res) => {
-    logger.info(`Starting endpoint board/ with params ${JSON.stringify(req, null, 2)}`)
+    logger.info(`Starting endpoint board/ with params ${JSON.stringify(req.params, null, 2)}`)
   let body = req.body;
   let { type, year, locality, projecttype } = body;
   if (locality === 'Mile High Flood District') {
@@ -713,7 +713,7 @@ const moveCardsToNextLevel = async (board, creator) => {
 }
 
 router.get('/:boardId/boards/:type', async (req, res) => {
-    logger.info(`Starting endpoint /board/:boardId/boards/:type with params ${JSON.stringify(req, null, 2)}`)
+    logger.info(`Starting endpoint /board/:boardId/boards/:type with params ${JSON.stringify(req.params, null, 2)}`)
     const { boardId, type } = req.params;
     logger.info(`Starting function findOne for board/`);
     let board = await Board.findOne({
@@ -857,7 +857,7 @@ const sendMails = async (board, fullName) => {
 }
 
 router.put('/:boardId', [auth], async (req, res) => {
-    logger.info(`Starting endpoint /board/:boardId params ${JSON.stringify(req, null, 2)}`)
+    logger.info(`Starting endpoint /board/:boardId params ${JSON.stringify(req.params, null, 2)}`)
     const { boardId } = req.params;
     const user = req.user;
     const creator = user.email;
@@ -894,7 +894,7 @@ router.put('/:boardId', [auth], async (req, res) => {
 })
 
 router.delete('/project/:projectid/:namespaceId', [auth], async (req, res) => {
-    logger.info(`Starting endpoint board/project/:projectid/:namespaceId with params ${JSON.stringify(req, null, 2)}`)
+    logger.info(`Starting endpoint board/project/:projectid/:namespaceId with params ${JSON.stringify(req.params, null, 2)}`)
     const { projectid, namespaceId } = req.params;
 
     logger.info(`Starting function findAll for board/project/:projectid/:namespaceId`);
@@ -934,7 +934,7 @@ router.delete('/project/:projectid/:namespaceId', [auth], async (req, res) => {
 });
 
 router.get('/bbox/:projectid', async (req, res) => {
-    logger.info(`Starting endpoint board/bbox/:projectid with params ${JSON.stringify(req, null, 2)}`)
+    logger.info(`Starting endpoint board/bbox/:projectid with params ${JSON.stringify(req.params, null, 2)}`)
     const { projectid } = req.params;
     const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as bbox FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
     const query = {
@@ -959,7 +959,7 @@ router.get('/bbox/:projectid', async (req, res) => {
 });
 
 router.get('/:type/:year/', async (req, res) => {
-    logger.info(`Starting endpoint board/:type/:year/ with params ${JSON.stringify(req, null, 2)}`)
+    logger.info(`Starting endpoint board/:type/:year/ with params ${JSON.stringify(req.params, null, 2)}`)
     let { type, year } = req.params;
     logger.info(`Starting function findAll for board/:type/:year/`);
     let boards = await Board.findAll({
@@ -973,7 +973,7 @@ router.get('/:type/:year/', async (req, res) => {
 });
 
 router.post('/projects-bbox', async (req, res) => {
-    logger.info(`Starting endpoint board/projects-bbox with params ${JSON.stringify(req, null, 2)}`)
+    logger.info(`Starting endpoint board/projects-bbox with params ${JSON.stringify(req.params, null, 2)}`)
     const { projects } = req.body;
     console.log(projects);
     let projectsParsed = '';
@@ -1009,7 +1009,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 router.get('/sync', async (req,res) => {
-    logger.info(`Starting endpoint board/sync with params ${JSON.stringify(req, null, 2)}`)
+    logger.info(`Starting endpoint board/sync with params ${JSON.stringify(req.params, null, 2)}`)
   const sql = `SELECT projectid, projectname, projecttype, projectsubtype FROM ${CREATE_PROJECT_TABLE}`;
   const query = {
     q: sql

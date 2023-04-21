@@ -26,7 +26,7 @@ import moment from 'moment';
 
 
 const listProjectsForId = async (req, res) => {
-  logger.info(`Starting endpoint project/ids with params ${JSON.stringify(req, null, 2)}`);
+  logger.info(`Starting endpoint project/ids with params ${JSON.stringify(req.params null, 2)}`);
   const { offset = 1, limit = 20 } = req.query;
   const { body } = req;
   logger.info(`Starting function getProjects for endpoint project/ids`);
@@ -136,7 +136,7 @@ const getBboxProject = async (req, res) => {
 }
 
 const listOfCosts = async (req, res) => {
-  logger.info(`Starting endpoint project/projectCost/:project_id with params ${JSON.stringify(req, null, 2)}`);
+  logger.info(`Starting endpoint project/projectCost/:project_id with params ${JSON.stringify(req.params null, 2)}`);
   const project_id = req.params['project_id'];
   const Mobilization = 6, Traffic = 7, Utility = 8, Stormwater = 9, Engineering = 10, Construction = 11, Legal = 12, Contingency = 13;
     // GET Project cost, estimated and component
@@ -154,7 +154,7 @@ const listOfCosts = async (req, res) => {
 };
 
 const createCosts = async (req, res) => {
-  logger.info(`Starting endpoint project/projectCost/:project_id with params ${JSON.stringify(req, null, 2)}`);
+  logger.info(`Starting endpoint project/projectCost/:project_id with params ${JSON.stringify(req.params null, 2)}`);
   const user = req.user;
   try {
     const project_id = req.params['project_id'];

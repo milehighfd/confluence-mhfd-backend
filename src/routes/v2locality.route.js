@@ -169,7 +169,7 @@ router.get('/get-list', async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
-  logger.info(`Starting endpoint v2locality/ with params ${JSON.stringify(req, null, 2)}`);
+  logger.info(`Starting endpoint v2locality/ with params ${JSON.stringify(req.params null, 2)}`);
   /*const sa = await ServiceArea.findAll({
     include: { all: true, nested: true }
   }).map(result => result.dataValues).map(res => {

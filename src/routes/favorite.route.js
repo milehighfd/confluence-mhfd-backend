@@ -130,7 +130,7 @@ router.get("/", auth, async (req, res) => {
 
 
 router.get("/create", auth, async (req, res) => {
-  logger.info(`Starting endpoint favorite/create with params ${JSON.stringify(req, null, 2)}`);
+  logger.info(`Starting endpoint favorite/create with params ${JSON.stringify(req.params, null, 2)}`);
   const { id, isProblem } = req.query;
   const user = req.user;
   try {
@@ -151,7 +151,7 @@ router.get("/create", auth, async (req, res) => {
 });
 
 router.delete("/", auth, async (req, res) => {
-  logger.info(`Starting endpoint favorite/ with params ${JSON.stringify(req, null, 2)}`);
+  logger.info(`Starting endpoint favorite/ with params ${JSON.stringify(req.params, null, 2)}`);
   const { id } = req.body;
   const { isProblem } = req.query;
   const user = req.user;
@@ -177,7 +177,7 @@ router.delete("/", auth, async (req, res) => {
 });
 
 router.get("/count", auth, async (req, res) => {
-  logger.info(`Starting endpoint favorite/count with params ${JSON.stringify(req, null, 2)}`);
+  logger.info(`Starting endpoint favorite/count with params ${JSON.stringify(req.params, null, 2)}`);
   const { isProblem } = req.query;
   const user = req.user;
   try {
@@ -192,7 +192,7 @@ router.get("/count", auth, async (req, res) => {
 });
 
 router.get("/problem-cards", auth, async (req, res) => {
-  logger.info(`Starting endpoint favorite/problem-cards with params ${JSON.stringify(req, null, 2)}`);
+  logger.info(`Starting endpoint favorite/problem-cards with params ${JSON.stringify(req.params, null, 2)}`);
   const user = req.user;
   try {
     logger.info(`Starting function getFavorites for favorite/problem-cards`);

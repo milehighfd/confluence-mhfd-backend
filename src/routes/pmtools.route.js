@@ -288,7 +288,7 @@ const sortInside = (projects, sortvalue, order) => {
   return projects;
 }
 const listProjects = async (req, res) => {
-  logger.info(`Starting endpoint pmtools/list with params ${JSON.stringify(req, null, 2)}`);
+  logger.info(`Starting endpoint pmtools/list with params ${JSON.stringify(req.params null, 2)}`);
   const {
     offset = 0,
     limit = 120000,
