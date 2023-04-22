@@ -424,6 +424,7 @@ const getDetails = async (project_id) => {
         include: [
           {
             model: ProjectServiceArea,
+            separate: true,
             required: false,
             include: {
               model: CodeServiceArea,
@@ -440,6 +441,7 @@ const getDetails = async (project_id) => {
           {
             model: ProjectCounty,
             required: false,
+            separate: true,
             include: {
               model: CodeStateCounty,
               required: false,
@@ -455,6 +457,7 @@ const getDetails = async (project_id) => {
           {
             model: ProjectStreams,
             required: false,
+            separate: true,
             include: {
               model: Streams,
               required: false,
@@ -467,6 +470,7 @@ const getDetails = async (project_id) => {
           {
             model: ProjectLocalGovernment,
             required: false,
+            separate: true,
             include: {
               model: CodeLocalGoverment,
               required: false,
@@ -482,6 +486,7 @@ const getDetails = async (project_id) => {
           {
             model: ProjectCost,
             required: false,
+            separate: true,
             attributes: [
               'code_cost_type_id',
               'cost',
@@ -494,6 +499,7 @@ const getDetails = async (project_id) => {
           {
             model: ProjectStatus,
             required: false,
+            separate: true,
             attributes: [
               'code_phase_type_id',
               'planned_start_date',
@@ -531,6 +537,7 @@ const getDetails = async (project_id) => {
           {
             model: ProjectPartner,
             required: false,
+            separate: true,
             attributes: [
               'project_partner_id',
               'code_partner_type_id'
@@ -550,6 +557,7 @@ const getDetails = async (project_id) => {
           {
             model: ProjectProposedAction,
             required: false,
+            separate: true,
             attributes: [
               'object_id',
               'source_table_name',
@@ -562,6 +570,7 @@ const getDetails = async (project_id) => {
           {
             model: ProjectIndependentAction,
             required: false,
+            separate: true,
             attributes: [
               'action_name',
               'project_id',
@@ -575,6 +584,7 @@ const getDetails = async (project_id) => {
           {
             model: ProjectStaff,
             required: false,
+            separate: true,
             attributes: [
               'code_project_staff_role_type_id',
               'is_active',
@@ -602,6 +612,7 @@ const getDetails = async (project_id) => {
           },
           {
             model: ProjectDetail,
+            separate: true,
             required: false,
             // where: {
             //   code_cost_type_id: 1
@@ -609,6 +620,7 @@ const getDetails = async (project_id) => {
           },
           {
             model: ProjectStudy,
+            separate: true,
             required: false,
             include: {
               model: Study,
@@ -647,8 +659,7 @@ const getDetails = async (project_id) => {
               'project_type_name'
             ]
           }
-        ],
-        order: [['created_date', 'DESC']]
+        ]
       }),
       getProblemByProjectId(project_id, PROPSPROBLEMTABLES.problems[6], 'asc'),
       getCentroidOfProjectId(project_id)
