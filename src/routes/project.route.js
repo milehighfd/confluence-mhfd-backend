@@ -98,6 +98,7 @@ const getProjectDetail = async (req, res) => {
   try {
     logger.info(`Starting function getDetails for endpoint project/${project_id}`);
     let project = await projectService.getDetails(project_id);
+    logger.info(`Finished function getDetails for endpoint project/${project_id}`);
     if (project.error) {
       return res.status(project.error).send({ error: project.message });
     }
