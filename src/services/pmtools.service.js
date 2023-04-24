@@ -386,13 +386,16 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         model: ProjectStreams,
         as: 'currentStream',
         required: true,
+        include: {
+          model: Streams,
+          attributes: [
+            'stream_name',
+          ],
+          where: { stream_name: filter }
+        },
         attributes: [
           'project_stream_id',
-          'stream_name'
         ],
-        where: {
-          stream_name: filter
-        }
       });
     }
 
