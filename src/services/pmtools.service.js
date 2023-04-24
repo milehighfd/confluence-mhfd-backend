@@ -383,7 +383,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
     }
     if (type === 'streams') {
       optionalIncludes.push({
-        model: ProjectStream,
+        model: ProjectStreams,
         as: 'currentStream',
         required: true,
         attributes: [
