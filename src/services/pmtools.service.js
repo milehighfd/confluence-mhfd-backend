@@ -166,6 +166,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
           'planned_end_date',
           'project_status_id',
           'is_locked',
+          'modified_date',
           'is_done'
         ],
         include: {
