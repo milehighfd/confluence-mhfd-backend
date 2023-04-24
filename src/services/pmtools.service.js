@@ -334,7 +334,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       const CONSULTANT_ID = 3;
       optionalIncludes.push({
         model: ProjectPartner,
-        as: 'currentConsultant',
+        as: 'currentPartner',
         required: true,
         include: {
           model: BusinessAssociate,
