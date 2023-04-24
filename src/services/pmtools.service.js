@@ -10,13 +10,10 @@ const Project = db.project;
 const ProjectPartner = db.projectPartner;
 const ProjectServiceArea = db.projectServiceArea;
 const CodeServiceArea = db.codeServiceArea;
-const ProjectFavorite = db.ProjectFavorite;
 const ProjectCounty = db.projectCounty;
 const CodeStateCounty = db.codeStateCounty;
 const ProjectStreams = db.project_stream;
 const ProjectLocalGovernment = db.projectLocalGovernment;
-const ProjectProposedAction = db.projectProposedAction;
-const ProjectIndependentAction = db.projectIndependentAction;
 const CodeLocalGoverment = db.codeLocalGoverment;
 const Streams = db.stream;
 const ProjectCost = db.projectCost;
@@ -27,15 +24,189 @@ const CodeProjectType = db.codeProjectType;
 const BusinessAssociate = db.businessAssociates;
 const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
-const ProjectDetail = db.projectDetail;
-const ProjectStudy = db.projectstudy;
-const Study = db.study;
-const CodeStudyType = db.codestudytype;
-const RelatedStudy = db.relatedstudy;
-const StreamStudy = db.streamstudy;
-const CodeStudyReason = db.codeStudyReason;
 const User = db.user;
 const Op = sequelize.Op;
+
+const countProjects = async (type, filter, extraFilters) => {
+  const where = {};
+  if (extraFilters.favorites) {
+    where.project_id = extraFilters.favorites;
+  }
+  if (extraFilters.search) {
+    where.project_name = {
+      [Op.like]: `%${extraFilters.search}%`
+    };
+  }
+  const includes = [];
+  if (type === 'status') {
+    includes.push({
+      model: ProjectStatus,
+      as: 'currentId',
+      required: true,
+      include: {
+        model: CodePhaseType,
+        where: { code_status_type_id: +filter },
+      },
+    });
+  }
+  if (type === 'jurisdiction' || extraFilters?.filterby === 'jurisdiction') {
+    const filters = [];
+    if (type === 'jurisdiction') {
+      filters.push(+filter);
+    }
+    if (extraFilters?.filterby === 'jurisdiction') {
+      filters.push(extraFilters.value);
+    }
+    includes.push({
+      model: ProjectLocalGovernment,
+      as: 'currentLocalGovernment',
+      required: true,
+      include: {
+        model: CodeLocalGoverment,
+        attributes: [
+          'local_government_name',
+          'code_local_government_id'
+        ],
+        where: { code_local_government_id: filters }
+      },
+      attributes: [
+        'project_local_government_id'
+      ]
+    });
+  }
+  if (type === 'county' || extraFilters?.filterby === 'county') {
+    const filters = [];
+    if (type === 'county') {
+      filters.push(+filter);
+    }
+    if (extraFilters?.filterby === 'county') {
+      filters.push(extraFilters.value);
+    }
+    includes.push({
+      model: ProjectCounty,
+      as: 'currentCounty',
+      required: true,
+      include: {
+        model: CodeStateCounty,
+        attributes: [
+          'county_name',
+          'state_county_id'
+        ],
+        where: { state_county_id: filters }
+      },
+      attributes: [
+        'project_county_id'
+      ]
+    });
+  }
+  if (type === 'servicearea' || extraFilters?.filterby === 'servicearea') {
+    const filters = [];
+    if (type === 'servicearea') {
+      filters.push(+filter);
+    }
+    if (extraFilters?.filterby === 'servicearea') {
+      filters.push(extraFilters.value);
+    }
+    includes.push({
+      model: ProjectServiceArea,
+      as: 'currentServiceArea',
+      required: true,
+      include: {
+        model: CodeServiceArea,
+        attributes: [
+          'service_area_name',
+          'code_service_area_id'
+        ],
+        where: { code_service_area_id: filters }
+      },
+      attributes: [
+        'project_service_area_id'
+      ]
+    });
+  }
+  if (type === 'consultant' || extraFilters?.filterby === 'consultant') {
+    const filters = [];
+    if (type === 'consultant') {
+      filters.push(+filter);
+    }
+    if (extraFilters?.filterby === 'consultant') {
+      filters.push(extraFilters.value);
+    }
+    const CONSULTANT_ID = 3;
+    includes.push({
+      model: ProjectPartner,
+      as: 'currentPartner',
+      required: true,
+      include: {
+        model: BusinessAssociate,
+        where: { business_associates_id: filters },
+        attributes: [
+          'business_name',
+          'business_associates_id'
+        ],
+      },
+      attributes: [
+        'project_partner_id'
+      ],
+      where: {
+        code_partner_type_id: CONSULTANT_ID
+      }
+    });
+  }
+  if (type === 'contractor' || extraFilters?.filterby === 'contractor') {
+    const filters = [];
+    if (type === 'contractor') {
+      filters.push(+filter);
+    }
+    if (extraFilters?.filterby === 'contractor') {
+      filters.push(extraFilters.value);
+    }
+    const CIVIL_CONTRACTOR_ID = 8, LANDSCAPE_CONTRACTOR_ID = 9;
+    includes.push({
+      model: ProjectPartner,
+      as: 'currentConsultant',
+      required: true,
+      include: {
+        model: BusinessAssociate,
+        where: { business_associates_id: filters },
+        attributes: [
+          'business_name',
+          'business_associates_id'
+        ],
+      },
+      attributes: [
+        'project_partner_id'
+      ],
+      where: {
+        code_partner_type_id: [CIVIL_CONTRACTOR_ID, LANDSCAPE_CONTRACTOR_ID]
+      }
+    });
+  }
+  if (type === 'streams') {
+    includes.push({
+      model: ProjectStreams,
+      as: 'currentStream',
+      required: true,
+      include: {
+        model: Streams,
+        attributes: [
+          'stream_name',
+        ],
+        where: { stream_name: filter }
+      },
+      attributes: [
+        'project_stream_id',
+      ],
+    });
+  }
+  logger.info(`where: ${JSON.stringify(where)}`);
+  logger.info(`includes: ${JSON.stringify(includes)}`);
+  const count = await Project.count({  
+    where,
+    include: includes,
+  });
+  return count;
+};
 
 const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => {
   logger.info(`page: ${page}, limit: ${limit} filter: ${filter}`);
@@ -428,5 +599,6 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
 
 
 export default {
-  getProjects
+  getProjects,
+  countProjects
 };
