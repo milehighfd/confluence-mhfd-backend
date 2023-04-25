@@ -105,6 +105,16 @@ const getGroup = async (req, res) => {
       console.log('ERRRO AT ', groupname, error);
     }
   }
+  if (groupname === 'staff') {
+    try {
+      const groups = await groupService.getMhfdStaff();
+      console.log('groypname', groups);
+      data.table = 'staff';
+      data.groups = groups;
+    } catch (error) {
+      console.log('ERRRO AT ', groupname, error);
+    }
+  }
   res.send(data);
 }
 const safeGet = (obj, prop, defaultValue) => {

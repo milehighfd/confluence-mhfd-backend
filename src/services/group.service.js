@@ -159,6 +159,18 @@ const getProjectType = async () => {
   return groups;
 }
 
+const getMhfdStaff = async () => {
+  const types = await MHFDStaff.findAll({
+    order: [
+      ['mhfd_staff_id']
+    ]
+  });
+  const groups = types.map((data) => {
+    return { value: data.full_name, id: data.mhfd_staff_id };
+  });
+  return groups;
+}
+
 export default {
   getStatus,
   getJurisdiction,
@@ -167,5 +179,6 @@ export default {
   getConsultant,
   getContractor,
   getStreams,
-  getProjectType
+  getProjectType,
+  getMhfdStaff
 };
