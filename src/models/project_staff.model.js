@@ -7,12 +7,6 @@ export default  (sequelize, DataType) => {
     project_id: {
       type: DataType.INTEGER
     },
-    project_staff_email_do_not_use: {
-      type: DataType.STRING
-    },
-    project_staff_name_do_not_use: {
-      type: DataType.STRING
-    },
     mhfd_staff_id: {
       type: DataType.INTEGER
     },
