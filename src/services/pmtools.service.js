@@ -37,7 +37,18 @@ const countProjects = async (type, filter, extraFilters) => {
       [Op.like]: `%${extraFilters.search}%`
     };
   }
-  const includes = [];
+  const includes = [{
+    model: CodeProjectType,
+    required: true,
+    attributes: [
+      'code_project_type_id',
+      'project_type_name'
+    ],
+    where: extraFilters.code_project_type_id ? 
+    {
+      code_project_type_id: extraFilters.code_project_type_id
+    }: {}
+  }];
   if (type === 'status') {
     includes.push({
       model: ProjectStatus,
