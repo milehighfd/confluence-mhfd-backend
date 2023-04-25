@@ -74,6 +74,30 @@ const countProjects = async (type, filter, extraFilters) => {
       ]
     });
   }
+  if (type === 'staff' || extraFilters?.filterby === 'staff') {
+    const filters = [];
+    if (type === 'staff') {
+      filters.push(+filter);
+    }
+    if (extraFilters?.filterby === 'staff') {
+      filters.push(extraFilters.value);
+    }
+    includes.push({
+      model: ProjectStaff,
+      as: 'currentProjectStaff',
+      required: true,
+      include: {
+        model: MHFDStaff,
+        required: true,
+        attributes: [
+          'mhfd_staff_id',
+          'full_name'
+        ],
+        
+      },
+      where: { mhfd_staff_id: filters },        
+    });
+  }
   if (type === 'county' || extraFilters?.filterby === 'county') {
     const filters = [];
     if (type === 'county') {
