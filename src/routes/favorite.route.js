@@ -280,10 +280,10 @@ router.get("/problem-cards", auth, async (req, res) => {
 
 const getProjectCards = async (req, res) => {
   const user = req.user;
-  console.log("my user is ", user.user_id);
+  let projectsFilterId = await projectService.getProjects2(null, null, 1, null, {});
   try {
     const pr = [
-      projectService.getProjects(),
+      projectService.getProjects(null, null, projectsFilterId, null, null),
       favoritesService.getFavorites(user.user_id),
     ];
     logger.info(`Starting function all for favorite/problem-cards`);
