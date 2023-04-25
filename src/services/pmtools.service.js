@@ -259,7 +259,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
             attributes: [
               'organization'
             ]
-          }
+          }          
         }
         // where: {
         //   code_cost_type_id: 1
@@ -443,6 +443,30 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         attributes: [
           'project_local_government_id'
         ]
+      });
+    }
+    if (type === 'staff' || extraFilters?.filterby === 'staff') {
+      const filters = [];
+      if (type === 'staff') {
+        filters.push(+filter);
+      }
+      if (extraFilters?.filterby === 'staff') {
+        filters.push(extraFilters.value);
+      }
+      optionalIncludes.push({
+        model: ProjectStaff,
+        as: 'currentProjectStaff',
+        required: true,
+        include: {
+          model: MHFDStaff,
+          required: true,
+          attributes: [
+            'mhfd_staff_id',
+            'full_name'
+          ],
+          
+        },
+        where: { mhfd_staff_id: filters },        
       });
     }
     if (type === 'county' || extraFilters?.filterby === 'county') {
