@@ -359,8 +359,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
             'stream_id',
             'stream_name'
           ],
-        },
-        order: extraFilters.sortby === 'streams' ? sequelize.fn('concat', sequelize.col('stream.stream_name'), ',') : null
+        },        
       },
       {
         model: ProjectLocalGovernment,
@@ -647,7 +646,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         }
       });
     }
-    if (type === 'streams') {
+    if (extraFilters?.sortby === 'stream') {
       optionalIncludes.push({
         model: ProjectStreams,
         as: 'currentStream',
@@ -656,13 +655,17 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
           model: Streams,
           attributes: [
             'stream_name',
-          ],
-          where: { stream_name: filter }
+          ]
         },
         attributes: [
           'project_stream_id',
         ],
       });
+      if (extraFilters.sortby === 'stream') {
+        order.push([
+          'currentStream', Streams, 'stream_name', extraFilters.sortorder
+        ]);
+      }
     }
 
     includes = includes.concat(optionalIncludes);
