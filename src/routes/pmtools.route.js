@@ -609,7 +609,7 @@ const getDataForGroup = async (req, res) => {
   try {
     logger.info(`Starting endpoint pmtools/groups/:groupname/:filtervalue with params`);
     const { groupname, filtervalue } = req.params;
-    const { page = 1, limit = 20, code_project_type_id } = req.query;
+    const { page = 1, limit = 20, code_project_type_id, sortby, sortorder  } = req.query;
     const { favorites, search, filterby, value } = req.body;
     const extraFilters = {};
     if (code_project_type_id) {
@@ -624,6 +624,10 @@ const getDataForGroup = async (req, res) => {
     if (filterby) {
       extraFilters.filterby = filterby;
       extraFilters.value = value;
+    }
+    if (sortby) {
+      extraFilters.sortby = sortby;
+      extraFilters.sortorder = sortorder;
     }
     logger.info(`page=${page} limit=${limit}`);
     logger.info(`Starting function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);

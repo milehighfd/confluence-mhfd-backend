@@ -255,6 +255,29 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       [Op.like]: `%${extraFilters.search}%`
     };
   }
+  const order = [];
+  console.log(db.project);
+  if (extraFilters.sortby) {
+    if (extraFilters.sortby === 'onbase_project_number') {
+      order.push(['onbase_project_number', extraFilters.sortorder]);
+    }
+    if (extraFilters.sortby === 'status') {
+      // [Subtask.associations.Task, Task.associations.Project, 'createdAt', 'DESC'],
+      order.push([
+        sequelize.literal('project.project_status.code_status.status_name'),
+        extraFilters.sortorder
+      ]);
+    }
+    if (extraFilters.sortby === 'project_type') {
+      logger.info('estoy pasando por aca');
+      order.push([
+        'code_project_type',
+        'project_type_name',
+        extraFilters.sortorder
+      ]);
+    }
+  }
+  logger.info(`order: ${JSON.stringify(order)}`);
   try {
     let includes = [
       {
@@ -429,7 +452,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         where: extraFilters.code_project_type_id ? 
         {
           code_project_type_id: extraFilters.code_project_type_id
-        }: {}
+        }: {},
       }
     ];
     if (type === 'status') {
@@ -647,7 +670,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       ],
       include: includes,
       subQuery: false,
-      order: [['created_date', 'DESC']]
+      order: !order.length ? [['created_date', 'DESC']] : order,
     });
     return projects;
   } catch (error) {
