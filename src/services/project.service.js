@@ -689,7 +689,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const consultant = filter.consultant ? '%' + filter.consultant + '%' : '';
   const code_project_type_id = filter.projecttype ? filter.projecttype : [];
   const service_area = filter.servicearea ? filter.servicearea : [];
-  const state_county_id = filter.statecounty ? filter.statecounty : [];
+  const state_county_id = filter.county ? filter.county : [];
   const stream_id = filter.streamname ? filter.streamname : [];
   const code_local_government_id = filter.jurisdiction ? filter.jurisdiction : [];
   const cost = filter.cost ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : null;
@@ -779,9 +779,9 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
           model: ProjectCounty,
           include: {
             attributes: [],
-            model: CodeStateCounty,
-          },
-          where: { code_county_id: state_county_id }
+            model: CodeStateCounty,            
+          },          
+          where: { state_county_id: state_county_id }
         }]
     }));
   }
