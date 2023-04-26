@@ -450,7 +450,11 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         }: {},
       }
     ];
-    if (type === 'status') {
+    if (type === 'status' || extraFilters.sortby === 'status' || extraFilters.sortby === 'phase') {
+      let where = {code_status_type_id: +filter}
+      if ((extraFilters.sortby === 'status' || extraFilters.sortby === 'phase') && type !== 'status' ) {
+        where = {}
+      }
       // optionalIncludes.push({
       //   model: ProjectStatus,
       //   as: 'currentId',
@@ -469,9 +473,22 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         required: true,
         include: {
           model: CodePhaseType,
-          where: { code_status_type_id: +filter },
+          include: {
+            model: CodeStatusType,
+          },
+          where: where,
         },
       });
+      if (extraFilters.sortby === 'status') {
+        order.push([
+          'currentId', CodePhaseType, CodeStatusType, 'status_name', extraFilters.sortorder
+        ]);
+      }
+      if (extraFilters.sortby === 'phase') {
+        order.push([
+          'currentId', CodePhaseType, 'phase_name', extraFilters.sortorder
+        ]);
+      }
     }
     if (type === 'jurisdiction' || extraFilters?.filterby === 'jurisdiction') {
       const filters = [];
