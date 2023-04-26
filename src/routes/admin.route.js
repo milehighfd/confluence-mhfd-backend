@@ -143,19 +143,21 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
   const serviceArea = req.query.serviceArea;
   const designation = req.query.designation;
   const search_obj = { }; // activated: !isPending
+  const search_org = { };
   const status = req.query.status;
-  //console.log('status', status);
-  
+  //console.log('status', status);  
   const limit = +req.query.limit || NUMBER_PER_PAGE;
   const page = +req.query.page || INITIAL_PAGE;
   const name = req.query.name;
   const sort = req.query.sort ? req.query.sort : 'name';
   const sortObject = {};
-  
-  search_obj['status'] = status;
-
+  let required = false;
+  if (status){
+    search_obj['status'] = status;
+  }  
   if (organization) {
-    search_obj['organization'] = String(organization);
+    search_org['business_associates_id'] = (organization);
+    required = true;
   }
   if (serviceArea) {
     search_obj['serviceArea'] = String(serviceArea);
@@ -201,11 +203,12 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
           model: BusinessAdress,
           include: {
             model: BusinessAssociates,
-            required: false
+            where: search_org,
+            required: required
           },
-          required: false
+          required: required
         },
-        required: false
+        required: required
       },
     });
     //console.log('user list', userList.length);
