@@ -245,6 +245,7 @@ const countProjects = async (type, filter, extraFilters) => {
 
 const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => {
   logger.info(`page: ${page}, limit: ${limit} filter: ${filter}`);
+  let hasOrder = false;
   const offset = (page - 1) * limit;
   const where = {};
   if (extraFilters.favorites) {
@@ -258,18 +259,11 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
   const order = [];
   console.log(db.project);
   if (extraFilters.sortby) {
+    hasOrder = true;
     if (extraFilters.sortby === 'onbase_project_number') {
       order.push(['onbase_project_number', extraFilters.sortorder]);
     }
-    if (extraFilters.sortby === 'status') {
-      // [Subtask.associations.Task, Task.associations.Project, 'createdAt', 'DESC'],
-      order.push([
-        sequelize.literal('project.project_status.code_status.status_name'),
-        extraFilters.sortorder
-      ]);
-    }
     if (extraFilters.sortby === 'project_type') {
-      logger.info('estoy pasando por aca');
       order.push([
         'code_project_type',
         'project_type_name',
@@ -364,8 +358,9 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
           attributes: [
             'stream_id',
             'stream_name'
-          ]
-        }
+          ],
+        },
+        order: extraFilters.sortby === 'streams' ? sequelize.fn('concat', sequelize.col('stream.stream_name'), ',') : null
       },
       {
         model: ProjectLocalGovernment,
@@ -670,7 +665,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       ],
       include: includes,
       subQuery: false,
-      order: !order.length ? [['created_date', 'DESC']] : order,
+      order: !hasOrder ? [['created_date', 'DESC']] : order
     });
     return projects;
   } catch (error) {
