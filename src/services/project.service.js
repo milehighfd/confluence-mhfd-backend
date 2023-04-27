@@ -692,7 +692,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const state_county_id = filter.county ? filter.county : [];
   const stream_id = filter.streamname ? filter.streamname : [];
   const code_local_government_id = filter.jurisdiction ? filter.jurisdiction : [];
-  const cost = filter.cost ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : null;
+  const cost = filter.totalcost.length>0 ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : null;
   const status = filter.status ? filter.status : [];
   const conditions = [];
   if (filterName) {
