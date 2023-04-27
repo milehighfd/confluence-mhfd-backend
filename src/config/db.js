@@ -238,6 +238,7 @@ db.projectPartner.belongsTo(
 // project service area
 db.project.hasMany(db.projectServiceArea, {foreignKey: 'project_id'});
 db.project.hasMany(db.projectServiceArea, {foreignKey: 'project_id', as: 'currentServiceArea'});
+db.project.hasOne(db.projectServiceArea, {foreignKey: 'project_id', as: 'sortServiceArea'});
 db.projectServiceArea.belongsTo(
   db.codeServiceArea,
   { foreignKey: 'code_service_area_id'}
@@ -246,7 +247,7 @@ db.projectServiceArea.belongsTo(
  db.project.hasMany(db.projectCounty, {foreignKey: 'project_id'});
  db.project.hasMany(db.projectCounty, {foreignKey: 'project_id', as: 'currentCounty'});
  db.project.hasOne(db.projectCounty, {foreignKey: 'project_id', as: 'sortCounty'});
- 
+
  db.projectCounty.belongsTo(
   db.codeStateCounty,
   { foreignKey: 'state_county_id'}

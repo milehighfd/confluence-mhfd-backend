@@ -683,6 +683,22 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         'sortCounty', CodeStateCounty, 'county_name', extraFilters.sortorder
       ]);
     }
+    if (extraFilters?.sortby === 'servicearea') {
+      optionalIncludes.push({
+        model: ProjectServiceArea,
+        as: 'sortServiceArea',
+        required: true,
+        include: {
+          model: CodeServiceArea,
+          attributes: [
+            'service_area_name',
+          ]
+        },
+      });
+      order.push([
+        'sortServiceArea', CodeServiceArea, 'service_area_name', extraFilters.sortorder
+      ]);
+    }
     includes = includes.concat(optionalIncludes);
     console.log('VALUES TO SEARCH LIMIT', limit, 'OFFSET', offset);
     const projects = await Project.findAll({
