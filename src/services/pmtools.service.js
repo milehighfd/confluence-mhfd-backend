@@ -699,6 +699,22 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         'sortServiceArea', CodeServiceArea, 'service_area_name', extraFilters.sortorder
       ]);
     }
+    if (extraFilters?.sortby === 'staff') {
+      optionalIncludes.push({
+        model: ProjectStaff,
+        as: 'sortStaff',
+        required: true,
+        include: {
+          model: MHFDStaff,
+          attributes: [
+            'full_name',
+          ]
+        },
+      });
+      order.push([
+        'sortStaff', MHFDStaff, 'full_name', extraFilters.sortorder
+      ]);
+    }
     includes = includes.concat(optionalIncludes);
     console.log('VALUES TO SEARCH LIMIT', limit, 'OFFSET', offset);
     const projects = await Project.findAll({
