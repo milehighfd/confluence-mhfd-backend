@@ -685,8 +685,8 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const CIVIL_CONTRACTOR_ID = 8;
   const ESTIMATED_ID = 1;
   const filterName = filter.name ? '%' + filter.name + '%' : '';
-  const contractor = filter.contractor ? '%' + filter.contractor + '%' : '';
-  const consultant = filter.consultant ? '%' + filter.consultant + '%' : '';
+  const contractor = filter.contractor ?  filter.contractor  : [];
+  const consultant = filter.consultant ?  filter.consultant  : [];
   const code_project_type_id = filter.projecttype ? filter.projecttype : [];
   const service_area = filter.servicearea ? filter.servicearea : [];
   const state_county_id = filter.county ? filter.county : [];
@@ -695,6 +695,25 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const cost = filter.totalcost && filter.totalcost.length>0 ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : null;
   const status = filter.status ? filter.status : [];
   const conditions = [];
+  const mhfd_lead = filter.mhfdmanager && filter.mhfdmanager!=='' ? filter.mhfdmanager : [];  
+  if (mhfd_lead.length) {
+   //MHFD LEAD
+    conditions.push(Project.findAll({
+      attributes: ["project_id","code_project_type_id"],
+      include: [{
+        model: ProjectStaff,
+        attributes: [],
+        include: {
+          model: MHFDStaff,
+          attributes: [],
+        },
+        where: {
+          code_project_staff_role_type_id: 1,
+          mhfd_staff_id: mhfd_lead
+        }
+      }]
+    }));
+  }  
   if (filterName) {
     // KEYWORD 
     logger.info(`Filtering by name ${filterName}...`);
@@ -705,7 +724,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       }
     }));
   }
-  if (contractor) {
+  if (contractor.length) {
     logger.info(`Filtering by contractor ${contractor}...`);
     conditions.push(//CONTRACTOR
       Project.findAll({
@@ -719,12 +738,12 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
           },
           where: {
             code_partner_type_id: CIVIL_CONTRACTOR_ID,
-            business_associates_id: { [Op.like]: contractor } 
+            business_associates_id:  contractor 
           }
         }],
     }));
   }
-  if (consultant) {
+  if (consultant.length) {
     logger.info(`Filtering by consultant ${consultant}...`);
     conditions.push(//CONSULTANT
       Project.findAll({
@@ -738,7 +757,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
           },
           where: {
             code_partner_type_id: CONSULTANT_CODE,
-            business_associates_id: { [Op.like]: consultant } 
+            business_associates_id:  consultant 
           }
         }],
     }));
