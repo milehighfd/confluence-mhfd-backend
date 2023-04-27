@@ -52,6 +52,9 @@ const listProjects = async (req, res) => {
     logger.info(`Starting function getIdsInBox for endpoint project/`);
     ids = await getIdsInBbox(bounds);
     logger.info(`Finished function getIdsInBox for endpoint project/`);
+  } else {
+    let defaultBounds = `${-105.3236683149282},${39.274174328991904},${-104.48895750946532},${40.26156304805423}`;
+    ids = await getIdsInBbox(defaultBounds);
   }
   logger.info(`Starting function getProjects2 for endpoint project/`);
   let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
