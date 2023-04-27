@@ -690,7 +690,10 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const code_project_type_id = filter.projecttype ? filter.projecttype : [];
   const service_area = filter.servicearea ? filter.servicearea : [];
   const state_county_id = filter.county ? filter.county : [];
-  const stream_id = filter.streamname ? filter.streamname : [];
+  let stream_id = filter.streamname ? filter.streamname : [];
+  if (stream_id.length){
+    stream_id = stream_id[0].split(',');    
+  }
   const code_local_government_id = filter.jurisdiction ? filter.jurisdiction : [];
   const cost = filter.totalcost && filter.totalcost.length>0 ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : null;
   const status = filter.status ? filter.status : [];
