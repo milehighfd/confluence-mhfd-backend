@@ -257,13 +257,13 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
     };
   }
   const order = [];
-  console.log(db.project);
+  console.log(db.project);  
   if (extraFilters.sortby) {
     hasOrder = true;
     if (extraFilters.sortby === 'onbase_project_number') {
       order.push(['onbase_project_number', extraFilters.sortorder]);
     }
-    if (extraFilters.sortby === 'project_type') {
+    if (extraFilters.sortby === 'project_type') {   
       order.push([
         'code_project_type',
         'project_type_name',
@@ -271,6 +271,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       ]);
     }
   }
+  
   logger.info(`order: ${JSON.stringify(order)}`);
   try {
     let includes = [
@@ -448,7 +449,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
           code_project_type_id: extraFilters.code_project_type_id
         }: {},
       }
-    ];
+    ];    
     if (type === 'status' || extraFilters.sortby === 'status' || extraFilters.sortby === 'phase') {
       let where = {code_status_type_id: +filter}
       if ((extraFilters.sortby === 'status' || extraFilters.sortby === 'phase') && type !== 'status' ) {
@@ -650,9 +651,10 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       optionalIncludes.push({
         model: ProjectStreams,
         as: 'currentStream',
-        required: true,
+        required: false,
         include: {
           model: Streams,
+          required: false,
           attributes: [
             'stream_name',
           ]

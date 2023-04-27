@@ -19,7 +19,8 @@ const getFilters = async (req, res) => {
     groupService.getConsultant(),
     groupService.getContractor(),
     groupService.getStreams(),
-    groupService.getProjectType()
+    groupService.getProjectType(),
+    groupService.getMhfdStaff(),
   ];
   let resolvedPromises = await Promise.all(dataPromises);
   
@@ -32,7 +33,7 @@ const getFilters = async (req, res) => {
   data.streamname = resolvedPromises[6];
   data.projecttype = resolvedPromises[7];
   data.creator = [];
-  data.mhfdmanager = [];
+  data.mhfdmanager = resolvedPromises[8];
   data.startyear = [];
   data.completedyear = [];
   data.mhfddollarallocated = [];
@@ -232,6 +233,7 @@ const getFilters = async (req, res) => {
       return pre;
     }, 0);
   });
+  
   
   res.send({'all': 'too well', data});
 }
