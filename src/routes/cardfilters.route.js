@@ -45,12 +45,12 @@ const getFilters = async (req, res) => {
 
   // projects = await projectsByFilters(projects, body);
 
-  // commented is not applying bounds yet TODO: verify ids and filter 
-  // if (bounds) {
-  //   const ids = await getIdsInBbox(bounds);
-  //   // console.log('idssssss', ids)
-  //   projects = projects.filter((p) => { console.log('pppppp',ids.includes(p.dataValues.project_id)); return ids.includes(p.dataValues.project_id)});
-  // }
+  if (bounds) {
+    const ids = await getIdsInBbox(bounds);
+    const dataIds = ids.map((item) => item.project_id);
+    // console.log('idssssss', ids)
+    projects = projects.filter((p) => { console.log('pppppp',dataIds.includes(p.dataValues.project_id)); return dataIds.includes(p.dataValues.project_id)});
+  }
 
 
   const toMatch = [];
