@@ -245,6 +245,8 @@ db.projectServiceArea.belongsTo(
  //project county 
  db.project.hasMany(db.projectCounty, {foreignKey: 'project_id'});
  db.project.hasMany(db.projectCounty, {foreignKey: 'project_id', as: 'currentCounty'});
+ db.project.hasOne(db.projectCounty, {foreignKey: 'project_id', as: 'sortCounty'});
+ 
  db.projectCounty.belongsTo(
   db.codeStateCounty,
   { foreignKey: 'state_county_id'}

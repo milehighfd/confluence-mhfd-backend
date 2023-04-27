@@ -667,7 +667,22 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         ]);
       }
     }
-
+    if (extraFilters?.sortby === 'county') {
+      optionalIncludes.push({
+        model: ProjectCounty,
+        as: 'sortCounty',
+        required: true,
+        include: {
+          model: CodeStateCounty,
+          attributes: [
+            'county_name',
+          ]
+        },
+      });
+      order.push([
+        'sortCounty', CodeStateCounty, 'county_name', extraFilters.sortorder
+      ]);
+    }
     includes = includes.concat(optionalIncludes);
     console.log('VALUES TO SEARCH LIMIT', limit, 'OFFSET', offset);
     const projects = await Project.findAll({
