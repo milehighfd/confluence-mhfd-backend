@@ -702,7 +702,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
     if (extraFilters?.sortby === 'staff') {
       optionalIncludes.push({
         model: ProjectStaff,
-        as: 'sortStaff',
+        as: 'sortProjectStaff',
         required: true,
         include: {
           model: MHFDStaff,
@@ -712,7 +712,27 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         },
       });
       order.push([
-        'sortStaff', MHFDStaff, 'full_name', extraFilters.sortorder
+        'sortProjectStaff', MHFDStaff, 'full_name', extraFilters.sortorder
+      ]);
+    }
+    if (extraFilters?.sortby === 'sponsor') {
+      const SPONSOR = 11;
+      optionalIncludes.push({
+        model: ProjectPartner,
+        as: 'sortPartner',
+        required: true,
+        include: {
+          model: BusinessAssociate,
+          attributes: [
+            'business_name',
+          ]
+        },
+        where: {
+          code_partner_type_id: SPONSOR
+        }
+      });
+      order.push([
+        'sortPartner', BusinessAssociate, 'business_name', extraFilters.sortorder
       ]);
     }
     includes = includes.concat(optionalIncludes);

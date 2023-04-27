@@ -228,6 +228,7 @@ db.codeMaintenanceElegibilityType.belongsTo(
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id'});
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'currentPartner'});
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'currentConsultant'});
+db.project.hasOne(db.projectPartner, {foreignKey: 'project_id', as: 'sortPartner'});
 db.projectPartner.belongsTo( 
   db.businessAssociates,
   {
