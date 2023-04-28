@@ -6,6 +6,7 @@ import { PROBLEM_TABLE, CARTO_URL } from 'bc/config/config.js';
 const router = express.Router();
 
 router.get('/get-name', async (req, res) => {
+  logger.info(`Starting endpoint problem.route/get-name with params ${JSON.stringify(req.params, null, 2)}`);
   try {
     const problem_id = req.query.problem_id;
 
@@ -36,7 +37,9 @@ router.get('/get-name', async (req, res) => {
   }
 });
 
+//This endpoint fails the test
 router.post('/filters', async (req, res) => {
+  logger.info(`Starting endpoint problem.route/filters with params ${JSON.stringify(req.params, null, 2)}`);
   try {
     var filters = req.body;
     let where = '';

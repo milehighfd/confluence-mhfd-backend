@@ -376,6 +376,7 @@ const listProjects = async (req, res) => {
         business_associates_id: developerIds
       }
     });
+    logger.info(`Finished function findAll for endpoint pmtools/list`);
     developers = developers.map((staff) => {
       const developer = developerLIst.filter((cons) => {
         return cons.business_associates_id === staff.business_associates_id
@@ -385,7 +386,6 @@ const listProjects = async (req, res) => {
         developer
       }
     });
-    logger.info(`Finished function findAll for endpoint pmtools/list`);
     projects = projects.map((project) => {
       const staffs = developers.filter(consult => consult.project_id === project.project_id);
       const construction_start_date = project?.project_status?.code_phase_type?.code_phase_type_id === 125 ? project?.project_status?.planned_start_date : project?.project_status?.actual_start_date

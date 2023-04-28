@@ -3,6 +3,7 @@ import { ROLES } from 'bc/lib/enumConstants.js';
 import db from 'bc/config/db.js';
 import auth2 from 'bc/auth/auth2.js';
 import { parse } from 'wkt';
+import logger from 'bc/config/logger.js';
 const router = express.Router();
 
 const polygonParser = (coordinates) => {
@@ -131,12 +132,14 @@ const getData2 = async (req, res, next) => {
 }
 
 router.get('/', [auth2, getData],  (req, res) => {
+  logger.info(`Starting endpoint locality.route/ with params ${JSON.stringify(req.params, null, 2)}`);
     res.send({
         localities: res.locals.data
     })
 })
 
 router.get('/:type', [getData2], async (req, res) => {
+  logger.info(`Starting endpoint locality.route/:type with params ${JSON.stringify(req.params, null, 2)}`);
   let localities = res.locals.data;
   res.send({ localities });
 })

@@ -87,7 +87,9 @@ export async function getCounterComponentsWithFilter(bounds, body) {
       let answer = [];
       const SQL = `SELECT type FROM ${component} where ${filters} group by type `;
       const query = { q: ` ${SQL} ` };
+      logger.info(`Starting function needle for mapgallery.components.route/`);
       const data = await needle('post', CARTO_URL, query, { json: true });
+      logger.info(`Finished function needle for mapgallery.components.route/`);
       if (data.statusCode === 200) {
         answer = data.body.rows;
       } else if (data.statusCode === 400) {
@@ -126,7 +128,9 @@ export async function getComponentsValuesByColumnWithFilter(column, bounds, body
     }).join(' union ')
 
     const query = { q: ` ${LINE_SQL} ` };
+    logger.info(`Starting function needle for mapgallery.components.route/`);
     const data = await needle('post', CARTO_URL, query, { json: true });
+    logger.info(`Finished function needle for mapgallery.components.route/`);
     let answer = [];
 
     if (data.statusCode === 200) {
@@ -182,7 +186,9 @@ export async function getCountByYearStudyWithFilter(bounds, body) {
       }).join(' union ')
 
       const query = { q: ` ${SQL} ` };
+      logger.info(`Starting function needle for mapgallery.components.route/`);
       const data = await needle('post', CARTO_URL, query, { json: true });
+      logger.info(`Finished function needle for mapgallery.components.route/`);
       let counter = 0;
 
       if (data.statusCode === 200) {
@@ -220,7 +226,9 @@ export async function getComponentsValuesByColumnWithCountWithFilter(column, bou
 
     const query = { q: ` ${LINE_SQL} ` };
     console.log('queryyyyyyyyyy', query)
+    logger.info(`Starting function needle for mapgallery.components.route/`);
     const data = await needle('post', CARTO_URL, query, { json: true });
+    logger.info(`Finished function needle for mapgallery.components.route/`);
     console.log('dataaaaaaaaaaa: ', data.body)
     let answer = [];
     if (data.statusCode === 200) {
@@ -264,7 +272,9 @@ export async function getQuintilComponentValuesWithFilter(column, bounds, body) 
     }).join(' union ');
     const lineQuery = { q: ` ${MINMAXSQL} ` };
 
+    logger.info(`Starting function needle for mapgallery.components.route/`);
     const lineData = await needle('post', CARTO_URL, lineQuery, { json: true });
+    logger.info(`Finished function needle for mapgallery.components.route/`);
 
     const lineResult = lineData.body.rows;
     const max = Math.max.apply(Math, lineResult.map(function (element) { return element.max }));
@@ -330,7 +340,9 @@ export async function countTotalComponent(bounds, body) {
     }).join(' union ');
     console.log('COUNTES AL', COUNTSQL);
     const query = { q: ` ${COUNTSQL} ` };
+    logger.info(`Starting function needle for mapgallery.components.route/`);
     const lineData = await needle('post', CARTO_URL, query, { json: true });
+    logger.info(`Finished function needle for mapgallery.components.route/`);
     if (lineData.statusCode === 200) {
       let total = lineData.body.rows.reduce((p, c) => p + c.count, 0)
       return total;
@@ -342,10 +354,13 @@ export async function countTotalComponent(bounds, body) {
 }
 
 export async function componentCounterRoute(req, res) {
+  logger.info(`Starting endpoint mapgallery.route/components-counter with params ${JSON.stringify(req.params, null, 2)}`);
   try {
      const bounds = req.query.bounds;
      const body = req.body;
+     logger.info(`Starting function countTotalComponent for mapgallery.components.route/`);
      let total = await countTotalComponent(bounds, body);
+     logger.info(`Finished function countTotalComponent for mapgallery.components.route/`);
      res.status(200).send({
         total
      });
@@ -356,6 +371,7 @@ export async function componentCounterRoute(req, res) {
 }
 
 export async function componentParamFilterRoute(req, res) {
+  logger.info(`Starting endpoint mapgallery.component.route/params-filter-components with params ${JSON.stringify(req.params, null, 2)}`);
   try {
      const bounds = req.query.bounds;
      const body = req.body;
@@ -370,7 +386,9 @@ export async function componentParamFilterRoute(req, res) {
      requests.push(getComponentsValuesByColumnWithCountWithFilter('county', bounds, body, true));
      requests.push(getComponentsValuesByColumnWithCountWithFilter('servicearea', bounds, body, true));
 
+     logger.info(`Starting function allSettled for mapgallery.components.route/`);
      const promises = await Promise.allSettled(requests);
+     logger.info(`Finished function allSettled for mapgallery.components.route/`);
 
      const result = {
         "component_type": promises[0].status === 'fulfilled' ? promises[0].value : null,

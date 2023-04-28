@@ -1,10 +1,12 @@
 import express from 'express';
 import https from 'https';
+import logger from 'bc/config/logger.js';
 
 const router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
+  logger.info(`Starting endpoint index/ with params ${JSON.stringify(req.params, null, 2)}`);
   res.send({ title: 'Express', env: process.env });
 });
 
@@ -13,6 +15,7 @@ router.get('/echo', (_, res) => {
 });
 
 const server_style = function(req, res, next) {
+  logger.info(`Starting endpoint index/style/:styleId/:styleUser/:accessToken with params ${JSON.stringify(req.params, null, 2)}`);
   var accessToken = req.params.accessToken;
   var styleUser = req.params.styleUser;
   var styleId = req.params.styleId;

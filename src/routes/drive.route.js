@@ -1,8 +1,10 @@
 import express from 'express';
+import logger from 'bc/config/logger.js';
 
 const router = express.Router();
 
 router.get('/get-images-drive', async (req, res) => {
+  logger.info(`Starting endpoint drive.route/get-images-drive with params ${JSON.stringify(req.params, null, 2)}`);
   res
     .status(200)
     .send([

@@ -93,7 +93,9 @@ async function getValuesByColumnWithOutCountProject(column, bounds, body, needCo
       filters = getNewFilter(filters, body);
       for (const table1 of PROJECT_TABLES) {
          const query = { q: `select ${needCount ? 'count(*) as counter, ' : ''} ${column} as value from ${table1} where ${filters} group by ${column} order by ${column} ` };
+         logger.info(`Starting function needle for mapgallery.project.route/`);
          const data = await needle('post', CARTO_URL, query, { json: true });
+         logger.info(`Finished function needle for mapgallery.project.route/`);
          if (data.statusCode === 200) {
             answer = answer.concat(data.body.rows);
          } else {
@@ -104,7 +106,9 @@ async function getValuesByColumnWithOutCountProject(column, bounds, body, needCo
       if (column === 'startyear' || column === COMPLETE_YEAR_COLUMN) {
          for (const table1 of PROJECT_TABLES) {
             const query = { q: `select DISTINCT(${column}) as value from ${table1} order by ${column} ` };
+            logger.info(`Starting function needle for mapgallery.project.route/`);
             const data = await needle('post', CARTO_URL, query, { json: true });
+            logger.info(`Finished function needle for mapgallery.project.route/`);
             if (data.statusCode === 200) {
                answer = answer.concat(data.body.rows
                   .map((r) => {
@@ -166,7 +170,9 @@ async function getCountByArrayColumnsProject(column, columns, bounds, body, need
                q: `select ${needsCount? 'count(*) as count, ': ''} ${column} as column from ${table1} 
        where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
             };
+            logger.info(`Starting function needle for mapgallery.project.route/`);
             const data = await needle('post', CARTO_URL, query, { json: true });
+            logger.info(`Finished function needle for mapgallery.project.route/`);
 
             if (data.statusCode === 200) {
                if (data.body.rows.length > 0) {
@@ -226,7 +232,9 @@ async function getValuesByRangeProject(column, bounds, body) {
          }
          resolve(result2);
       });
+      logger.info(`Starting function newProm1 for mapgallery.project.route/`);
       result = await newProm1;
+      logger.info(`Finished function newProm1 for mapgallery.project.route/`);
    } catch (error) {
       logger.error(error);
       logger.error(`Range By Value, Column ${column} Connection error`);
@@ -248,7 +256,9 @@ async function getCountWorkYearProject(data, bounds, body) {
          if (!body.workplanyear || value.year == `${body.workplanyear}`) {
             for (const table of PROJECT_TABLES) {
                const query = { q: `select count(*) as count from ${table} where ${filters} and ${value.column} > 0 ` };
+               logger.info(`Starting function needle for mapgallery.project.route/`);
                const d = await needle('post', CARTO_URL, query, { json: true });
+               logger.info(`Finished function needle for mapgallery.project.route/`);
                if (d.statusCode === 200) {
                   if (d.body.rows.length > 0) {
                      counter += d.body.rows[0].count;
@@ -309,7 +319,9 @@ async function getProjectByProblemTypeProject(bounds, body) {
          for (const table of PROJECT_TABLES) {
             const newfilter = createQueryByProblemType(type, table);
             const query = { q: `select count(*) as count from ${table} where ${filters} and ${newfilter} ` };
+            logger.info(`Starting function needle for mapgallery.project.route/`);
             const data = await needle('post', CARTO_URL, query, { json: true });
+            logger.info(`Finished function needle for mapgallery.project.route/`);
 
             if (data.statusCode === 200) {
                counter += data.body.rows[0].count;
@@ -350,7 +362,9 @@ async function countTotalProjects(bounds, body) {
      }).join(' union ');
      const query = { q: ` ${COUNTSQL} ` };
      try {
+      logger.info(`Starting function needle for mapgallery.project.route/`);
       const lineData = await needle('post', CARTO_URL, query, { json: true });
+      logger.info(`Finished function needle for mapgallery.project.route/`);
       let total = lineData.body.rows.reduce((p, c) => p + c.count, 0)
       return total;   
      } catch (error) {
@@ -360,10 +374,13 @@ async function countTotalProjects(bounds, body) {
 }
 
 export async function projectCounterRoute(req, res) {
+   logger.info(`Starting endpoint mapgallery.project.route/projects-counter with params ${JSON.stringify(req.params, null, 2)}`);
    try {
       const bounds = req.query.bounds;
       const body = req.body;
+      logger.info(`Starting function countTotalProjects for mapgallery.project.route/`);
       let total = await countTotalProjects(bounds, body);
+      logger.info(`Finished function countTotalProjects for mapgallery.project.route/`);
       res.status(200).send({
          total
       });
@@ -374,6 +391,7 @@ export async function projectCounterRoute(req, res) {
 }
 
 export async function projectParamFilterRoute(req, res) {
+   logger.info(`Starting endpoint mapgallery.project.route/params-filter-projects with params ${JSON.stringify(req.params, null, 2)}`);
    try {
       const bounds = req.query.bounds;
       const body = req.body;
@@ -401,7 +419,9 @@ export async function projectParamFilterRoute(req, res) {
       requests.push(getValuesByColumnWithOutCountProject('county', bounds, body, true));
       requests.push(getValuesByColumnWithOutCountProject('servicearea', bounds, body, true));
 
+      logger.info(`Starting function all for mapgallery.project.route/`);
       const promises = await Promise.all(requests);
+      logger.info(`Finished function all for mapgallery.project.route/`);
 
       const result = {
          "creator": promises[0],
@@ -430,6 +450,7 @@ export async function projectParamFilterRoute(req, res) {
 }
 
 export const projectStatistics = async (request, response) => {
+   logger.info(`Starting endpoint mapgallery.project.route/params-filter-statitics with params ${JSON.stringify(req.params, null, 2)}`);
    const column = request.query.column;
    const bounds = request.query.bounds;
    const body = request.body;
@@ -441,6 +462,7 @@ export const projectStatistics = async (request, response) => {
    const columnsWithRanges = ['mhfddollarsallocated', 'estimatedcost'];
    if (columnsWithoutCount.includes(column)) {
       return response.status(200).send(await getValuesByColumnWithOutCountProject(column, bounds, body));
+      
    } else if (columnsWithCount.includes(column)) {
       const mapColumnsWithCount = {
          'projecttype': ['Maintenance', 'Study', 'Capital'],

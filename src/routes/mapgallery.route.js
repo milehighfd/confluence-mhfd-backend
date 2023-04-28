@@ -43,6 +43,7 @@ const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'spe
    'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area', 'stream_improvement_measure'];
 
 router.post('/', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/ with params ${JSON.stringify(req.params, null, 2)}`);
    try {
       console.log('enter here');
       if (req.body.isproblem) {
@@ -787,6 +788,7 @@ async function queriesByProblemTypeInProject(project_fields, filters, problemTyp
 
 
 router.post('/project-by-ids/pdf', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/project-by-ids/pdf with params ${JSON.stringify(req.params, null, 2)}`);
    const projectid = req.query.projectid;
    const map = req.body.map;
    let data = await getDataByProjectIds(projectid, false);
@@ -808,6 +810,7 @@ router.post('/project-by-ids/pdf', async (req, res) => {
 })
 
 router.get('/project-by-ids', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/project-by-ids with params ${JSON.stringify(req.params, null, 2)}`);
    const projectid = req.query.projectid;
    try {
       let data = await getDataByProjectIds(projectid, false);
@@ -917,6 +920,7 @@ const getProblemParts = async (id) => {
    return data;
 }
 router.post('/project-pdf/:id', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/project-pdf/:id with params ${JSON.stringify(req.params, null, 2)}`);
    const { id } = req.params
    const mapImage = req.body.mapImage;
    const roadMap = req.body.roadMap;
@@ -942,6 +946,7 @@ router.post('/project-pdf/:id', async (req, res) => {
 });
 
 router.post('/problem-by-id/:id/pdf', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/problem-by-id/:id/pdf with params ${JSON.stringify(req.params, null, 2)}`);
    const id = req.params.id;
    const map = req.body.mapImage;
    try {
@@ -966,6 +971,7 @@ router.post('/problem-by-id/:id/pdf', async (req, res) => {
 })
 
 router.get('/problem-by-id/:id', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/problem-by-id/:id with params ${JSON.stringify(req.params, null, 2)}`);
    const id = req.params.id;
    try {
       let data = await getDataByProblemId(id);
@@ -980,6 +986,7 @@ const percentageFormatter = (value) => {
    return Math.round(value * 100) / 100
  }
 router.post('/problems-by-projectid', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/problems-by-projectid with params ${JSON.stringify(req.params, null, 2)}`);
    try {
       const id = req.body.id;
       let sortby = req.body.sortby;
@@ -1107,6 +1114,7 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
 }
 
 router.post('/components-by-entityid', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/components-by-entityid with params ${JSON.stringify(req.params, null, 2)}`);
    try {
       let id = req.body.id;
       const typeid = req.body.typeid;
@@ -1123,6 +1131,7 @@ router.post('/components-by-entityid', async (req, res) => {
 })
 
 router.post('/get-coordinates', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/get-coordinates with params ${JSON.stringify(req.params, null, 2)}`);
    try {
       const table = req.body.table;
       const value = req.body.value;
@@ -1151,6 +1160,7 @@ router.post('/get-coordinates', async (req, res) => {
 })
 
 router.post('/component-counter', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/component-counter with params ${JSON.stringify(req.params, null, 2)}`);
    try {
       const column = req.body.column;
       const value = req.body.value;
@@ -1214,6 +1224,7 @@ router.post('/component-counter', async (req, res) => {
 })
 
 router.post('/group-by', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/group-by with params ${JSON.stringify(req.params, null, 2)}`);
    try {
       const table = req.body.table;
       const column = req.body.column;
@@ -1897,6 +1908,7 @@ async function getSubtotalsByComponent(table, column, bounds) {
 }
 
 router.get('/range', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/range with params ${JSON.stringify(req.params, null, 2)}`);
    try {
       bounds = req.query.bounds;
       const rangeMhfdDollarsAllocated = [
@@ -1930,6 +1942,7 @@ router.get('/range', async (req, res) => {
 })
 
 router.get('/params-filters', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/params-filters with params ${JSON.stringify(req.params, null, 2)}`);
    try {
       bounds = req.query.bounds;
       //console.log(bounds);
@@ -2097,6 +2110,7 @@ router.get('/params-filters', async (req, res) => {
 
 
 router.get('/problem_part/:id', async (req, res) => {
+   logger.info(`Starting endpoint mapgallery.route/problem_part/:id with params ${JSON.stringify(req.params, null, 2)}`);
    const id = req.params.id;
    const promises = [];
    const tables = PROBLEM_PART_TABLES;

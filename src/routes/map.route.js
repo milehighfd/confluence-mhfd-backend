@@ -14,7 +14,9 @@ import db from 'bc/config/db.js';
 const router = express.Router();
 const ComponentDependency = db.componentdependency;
 
+//This endpoint fails the test
 router.post('/', async (req, res) => { 
+  logger.info(`Starting endpoint map.route/ with params ${JSON.stringify(req.params, null, 2)}`);
   const table = req.body.table;
   let sql = `SELECT * FROM ${table}`;
   if(table.includes('mep_outfalls') || table.includes('mep_channels')){
@@ -109,7 +111,9 @@ async function getGeojsonCentroids(bounds, body) {
 
     const query = { q: ` ${sql} ` };
     try {
+      logger.info(`Starting function needle for map.route/`);
       const lineData = await needle('post', CARTO_URL, query, { json: true });
+      logger.info(`Finished function needle for map.route/`);
       const geojson = {
         type: "FeatureCollection",
         features: lineData.body.rows.map((row) => {
@@ -164,10 +168,14 @@ async function getGeojsonCentroids(bounds, body) {
 }
 
 async function getProbCentroids(req, res) {
+  logger.info(`Starting endpoint map.route/probs with params ${JSON.stringify(req.params, null, 2)}`);
   try {
      const bounds = req.query.bounds;
+     
      const body = req.body;
+     logger.info(`Starting function getGeojsonCentroids for map.route/probs`);
      let geom = await getGeojsonCentroids(bounds, body);
+     logger.info(`Finished function getGeojsonCentroids for map.route/probs`);
      res.status(200).send({
         geom
      });
@@ -180,6 +188,7 @@ router.get('/probs', getProbCentroids);
 
 
 router.get('/search/:query', async (req, res) => {
+  logger.info(`Starting endpoint map.route/search/:query with params ${JSON.stringify(req.params, null, 2)}`);
   const query = req.params.query;
   const to_url = encodeURIComponent(query);
   const map = `https://api.mapbox.com/geocoding/v5/mapbox.places/${to_url}.json?bbox=-105.39820822776036,39.38595107828999,-104.46244596259402,40.16671105031628&access_token=pk.eyJ1IjoibWlsZWhpZ2hmZCIsImEiOiJjazRqZjg1YWQwZTN2M2RudmhuNXZtdWFyIn0.oU_jVFAr808WPbcVOFnzbg`;
@@ -243,7 +252,9 @@ router.get('/search/:query', async (req, res) => {
       resolve([]);
     })})
   );  
+  logger.info(`Starting function getGeojsonCentroids for map.route/probs`);
   const all = await Promise.all(promises);
+  logger.info(`Starting function getGeojsonCentroids for map.route/probs`);
   const answer = [];
   for(const data of all) {
     answer.push(...data);
@@ -274,6 +285,7 @@ const components = [
   { key: 'landscaping_area', value: 'Landscaping Area' }
 ];
 router.get('/get-aoi-from-center', async (req, res) => {
+  logger.info(`Starting endpoint map.route/get-aoi-from-center with params ${JSON.stringify(req.params, null, 2)}`);
   const coord = (req.query.coord || '0,0');
   const sql = `SELECT cartodb_id, aoi, filter, ST_AsGeoJSON(the_geom) FROM mhfd_zoom_to_areas where ST_CONTAINS(the_geom, ST_SetSRID(ST_MakePoint(${coord}), 4326))`;
   const URL = `${CARTO_URL}&q=${sql}`;
@@ -365,12 +377,16 @@ async function getEnvelopeProblemsComponentsAndProject(id, table, field, activet
         }
     });
   });
+  logger.info(`Starting function newProm1 for map.route/get-aoi-from-center`);
   const dataInFunction = await newProm1;
+  logger.info(`Finished function newProm1 for map.route/get-aoi-from-center`);
   console.log('entraaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', dataInFunction);
   return dataInFunction;
 }
 
+//This endpoint fails the test
 router.get('/bbox-components', async (req, res) => {
+  logger.info(`Starting endpoint map.route/bbox-components with params `);
   logger.info('BBOX components executing');
   const id = req.query.id;
   const table = req.query.table;
@@ -380,10 +396,13 @@ router.get('/bbox-components', async (req, res) => {
   const extraQueries = [];
   if (table === PROBLEM_TABLE) {
     field = 'problemid';
+    logger.info(`Starting function findAll for map.route/bbox-components`);
     const comps = await ComponentDependency.findAll({
+      
       where: {'problem_id': id},
       attributes: ['component_id']
     });
+    logger.info(`Finished function findAll for map.route/bbox-components`);
     logger.info(`COMPONENTS FROM Component dependency table ${JSON.stringify(comps)}`);
     for (const component of comps) {
       let sql = `SELECT ST_extent(detention_facilities.the_geom) as bbox FROM detention_facilities
@@ -458,13 +477,17 @@ router.get('/bbox-components', async (req, res) => {
       })})
     );  
   }
+  logger.info(`Starting function all for map.route/bbox-components`);
   const all = await Promise.all(promises);
+  logger.info(`Finished function all for map.route/bbox-components`);
   const query = {
     q: components.map(t => 
       `SELECT ST_AsGeoJSON(the_geom) as geojson, '${t.key}' as component, original_cost as cost from ${t.key} where ${field} = ${id}` 
     ).concat(extraQueries).join(' union ')
   }
+  logger.info(`Starting function needle for map.route/bbox-components`);
   const datap = await needle('post', CARTO_URL, query, { json: true });
+  logger.info(`Finished function findAll for map.route/bbox-components`);
   let centroids = [];
   if(datap.body.rows.length > 0) {
     centroids = datap.body.rows.map((r) => {
@@ -540,7 +563,9 @@ router.get('/bbox-components', async (req, res) => {
         `SELECT ST_AsGeoJSON(the_geom) as geojson from ${t} where projectid = ${id}`
       ).join(' union ')
     }
+    logger.info(`Starting function needle for map.route/bbox-components`);
     const dataProjectLine = await needle('post', CARTO_URL, queryProjectLine, { json: true });
+    logger.info(`Finished function needle for map.route/bbox-components`);
     let r = dataProjectLine.body.rows[0];
     let geojson = r? JSON.parse(r.geojson) : '';
     let projectCenter = [0, 0];
@@ -558,7 +583,9 @@ router.get('/bbox-components', async (req, res) => {
 
   let SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom2, ST_AsGeoJSON(the_geom) as the_geom3 FROM ${table} where  projectid=${id} `;
   let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
+  logger.info(`Starting function needle for map.route/bbox-components`);
   const dataForBBOX = await needle('get', URL, { json: true });
+  logger.info(`Finished function needle for map.route/bbox-components`);
   console.log("\n\n\n\nSQL\n\n\n\n", SQL);
   let coordinatesForBBOX = [];
   if (dataForBBOX.statusCode === 200 && dataForBBOX.body.rows.length > 0) {
@@ -566,7 +593,9 @@ router.get('/bbox-components', async (req, res) => {
     
     let convexhull = [];
     if (result.projectid !== null && result.projectid !== undefined && result.projectid) {
+      logger.info(`Starting function getEnvelopeProblemsComponentsAndProject for map.route/bbox-components`);
       convexhull = await getEnvelopeProblemsComponentsAndProject(result.projectid, table, 'projectid', activetab);
+      logger.info(`Finished function getEnvelopeProblemsComponentsAndProject for map.route/bbox-components`);
       if(convexhull[0]){
         convexhull = JSON.parse(convexhull[0].envelope).coordinates;
       }
@@ -595,6 +624,7 @@ router.get('/bbox-components', async (req, res) => {
   });
 });
 router.get('/problemname/:problemid', async (req, res) => {
+  logger.info(`Starting endpoint map.route/problemname/:problemid with params ${JSON.stringify(req.params, null, 2)}`);
   const problemid = req.params.problemid;
   const sql = `select ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} from ${PROBLEM_TABLE} where ${PROPSPROBLEMTABLES.problem_boundary[5]} = ${problemid}`;
   const sqlURI =  encodeURIComponent(sql);

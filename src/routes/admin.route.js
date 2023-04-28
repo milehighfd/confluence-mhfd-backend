@@ -18,20 +18,24 @@ const BusinessAssociates = db.businessAssociates;
 const BusinessAdress = db.businessAdress;
 
 router.put('/change-user-state/:id/:status', [auth, isAdminAccount], async (req, res, next) => {
+  logger.info(`Starting endpoint admin.route/change-user-state/:id/:status with params ${JSON.stringify(req.params, null, 2)}`);
   const id = req.params.id;
   const status = req.params.status;
   try {
+    logger.info(`Starting function findByPk for admin.route/change-user-state/:id/:status`);
     const user = await User.findByPk(id, { raw: true });
+    logger.info(`Finished function findByPk for admin.route/change-user-state/:id/:status`);
     if (!user) {
       return res.status(404).send({ error: 'User not found' });
     }
     user.status = status;
-
+    logger.info(`Starting function update for admin.route/change-user-state/:id/:status`);
     await User.update(user, {
       where: {
         user_id: id
       }
     });
+    logger.info(`Starting function update for admin.route/change-user-state/:id/:status`);
 
     if (user.activated) {
       userService.sendApprovedAccount(user);
@@ -44,17 +48,22 @@ router.put('/change-user-state/:id/:status', [auth, isAdminAccount], async (req,
 });
 
 router.put('/edit-user/:id', [auth, isAdminAccount], async (req, res, next) => {
+  logger.info(`Starting endpoint admin.route/edit-user/:id with params ${JSON.stringify(req.params, null, 2)}`);
   const id = req.params.id;
   try {
+    logger.info(`Starting function findByPk for admin.route/edit-user/:id`);
     const user = await User.findByPk(id, { raw: true });
+    logger.info(`Finished function findByPk for admin.route/edit-user/:id`);
 
     if (!user) {
       return res.status(404).send({ error: 'User not found' });
     }
     if (user.email !== req.body.email) {
+      logger.info(`Starting function count for admin.route/edit-user/:id`);
       const count = await User.count({
         where: { email: req.body.email }
       });
+      logger.info(`Finished function count for admin.route/edit-user/:id`);
       if (count !== 0) {
         return res.status(422).send({ error: 'the email has already been registered' });
       }
@@ -70,11 +79,13 @@ router.put('/edit-user/:id', [auth, isAdminAccount], async (req, res, next) => {
     }
     user.name = user.firstName + ' ' + user.lastName;
     delete user.user_id;
+    logger.info(`Starting function apdate for admin.route/edit-user/:id`);
     await User.update(user, {
       where: {
         user_id: id
       }
     });
+    logger.info(`Finished function update for admin.route/edit-user/:id`);
     return res.status(200).send({message:'SUCCESS'});
   } catch (error) {
     logger.error(error);
@@ -83,18 +94,23 @@ router.put('/edit-user/:id', [auth, isAdminAccount], async (req, res, next) => {
 });
 
 router.put('/delete-user/:id', [auth, isAdminAccount], async (req, res, next) => {
+  logger.info(`Starting endpoint admin.route/delete-user/:id with params ${JSON.stringify(req.params, null, 2)}`);
   const id = req.params.id;
   try {
+    logger.info(`Starting function findByPk for admin.route/delete-user/:id`);
     const user = await User.findByPk(id, { raw: true });   
+    logger.info(`Finished function findByPk for admin.route/delete-user/:id`);
     user.status = 'deleted';
     user.activated = 0;
     user.name = user.firstName + ' ' + user.lastName;
     delete user.user_id;
+    logger.info(`Starting function update for admin.route/delete-user/:id`);
     await User.update(user, {
       where: {
         user_id: id
       }
     });
+    logger.info(`Finished function update for admin.route/delete-user/:id`);
     return res.status(200).send({message:'SUCCESS'});
   } catch (error) {
     logger.error(error);
@@ -103,13 +119,16 @@ router.put('/delete-user/:id', [auth, isAdminAccount], async (req, res, next) =>
 });
 
 router.delete('/delete-entry/:id', [auth, isAdminAccount], async (req, res, next) => {
+  logger.info(`Starting endpoint admin.route/delete-entry/:id with params ${JSON.stringify(req.params, null, 2)}`);
   const id = req.params.id;  
   try {    
+    logger.info(`Starting function destroy for admin.route/delete-entry/:id`);
     await User.destroy({
       where: {
         user_id: +id
       }
     });
+    logger.info(`Finished function destroy for admin.route/delete-entry/:id`);
     return res.status(200).send({message:'SUCCESS'});
   } catch (error) {
     logger.error(error);
@@ -118,18 +137,23 @@ router.delete('/delete-entry/:id', [auth, isAdminAccount], async (req, res, next
 });
 
 router.put('/modify-user-status/:id', [auth, isAdminAccount], async (req, res, next) => {
+  logger.info(`Starting endpoint admin.route/modify-user-status/:id with params ${JSON.stringify(req.params, null, 2)}`);
   const id = req.params.id;
   try {
+    logger.info(`Starting function findByPk for admin.route/modify-user-status/:id`);
     const user = await User.findByPk(id, { raw: true });   
+    logger.info(`Finished function findByPk for admin.route/modify-user-status/:id`);
     user.status = 'approved';    
     user.activated = 1;
     user.name = user.firstName + ' ' + user.lastName;
     delete user.user_id;
+    logger.info(`Starting function update for admin.route/modify-user-status/:id`);
     await User.update(user, {
       where: {
         user_id: id
       }
     });
+    logger.info(`Finished function update for admin.route/modify-user-status/:id`);
     return res.status(200).send({message:'SUCCESS'});
   } catch (error) {
     logger.error(error);
@@ -138,6 +162,7 @@ router.put('/modify-user-status/:id', [auth, isAdminAccount], async (req, res, n
 });
 
 router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
+  logger.info(`Starting endpoint admin.route/list with params ${JSON.stringify(req.params, null, 2)}`);
   //const isPending = req.query.pending || false;
   const organization = req.query.organization;
   const serviceArea = req.query.serviceArea;
@@ -173,9 +198,11 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
   }
   try {
     console.log(search_obj, limit, page, sort);
+    logger.info(`Starting function count for admin.route/list`);
     const userCount = await User.count({
       where: search_obj
     });
+    logger.info(`Finished function count for admin.route/list`);
     let sortField = [
       [sort, "asc"]
     ];
@@ -192,6 +219,7 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
         END
       `);
     }
+    logger.info(`Starting function findAll for admin.route/list`);
     const userList = await User.findAll({
       where: search_obj,
       offset: limit * (page - 1),
@@ -211,6 +239,7 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
         required: required
       },
     });
+    logger.info(`Finished function findAll for admin.route/list`);
     //console.log('user list', userList.length);
     const numberOfPages = Math.ceil(userCount / limit);
     return res.status(200).send({ users: userList, totalPages: numberOfPages, currentPage: page });

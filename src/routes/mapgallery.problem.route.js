@@ -95,7 +95,9 @@ export async function getCountByArrayColumnsProblem(table, column, columns, boun
         q: `select ${column} as column, count(*) as count from ${table} where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
       };
       let counter = 0;
+      logger.info(`Starting function needle for mapgallery.problem.route/`);
       const data = await needle('post', CARTO_URL, query, { json: true });
+      logger.info(`Finished function needle for mapgallery.problem.route/`);
       console.log('Query at array column problem', query);
       //console.log('STATUS', data.statusCode);
       if (data.statusCode === 200) {
@@ -134,7 +136,9 @@ export async function getCountByColumnProblem(table, column, bounds, body) {
         q: `select ${column} as value, count(*) as counter from ${table} where ${filters} group by ${column} order by ${column} `
       };
       console.log('query at array count by', query);
+      logger.info(`Starting function needle for mapgallery.problem.route/`);
       const data = await needle('post', CARTO_URL, query, { json: true });
+      logger.info(`Finished function needle for mapgallery.problem.route/`);
       if (data.statusCode === 200) {
         if (data.body.rows.length > 0) {
           result = result.concat(data.body.rows)
@@ -168,7 +172,9 @@ export async function getCountSolutionStatusProblem(range, bounds, body) {
 
       const query = { q: `select count(*) as count from ${PROBLEM_TABLE} where ${filters} and ${PROPSPROBLEMTABLES.problem_boundary[1]} between ${value} and ${endValue} ` };
       console.log('query at array solution status ', query);
+      logger.info(`Starting function needle for mapgallery.problem.route/`);
       const data = await needle('post', CARTO_URL, query, { json: true });
+      logger.info(`Finished function needle for mapgallery.problem.route/`);
       let counter = 0;
       if (data.statusCode === 200) {
         if (data.body.rows.length > 0) {
@@ -211,7 +217,9 @@ export async function getSubtotalsByComponentProblem(table, columnA, columnB, bo
 
       const query = { q: `select count(*) from ${table}, ${PROBLEM_TABLE} where ${PROBLEM_TABLE}.${columnA}= ${table}.${columnB} and ${filters} ` };
       console.log('Query at xxx', query.q);
+      logger.info(`Starting function needle for mapgallery.problem.route/`);
       const data = await needle('post', CARTO_URL, query, { json: true });
+      logger.info(`Finished function needle for mapgallery.problem.route/`);
       let counter = 0;
       if (data.statusCode === 200) {
         if (data.body.rows.length > 0) {
@@ -263,7 +271,9 @@ export async function getValuesByRangeProblem(table, column, range, bounds, body
             q: `SELECT max(${column}) as max, min(${column}) as min FROM ${table} where ${filters}`
         }
         console.log('query ar min max', minMaxQuery);
+        logger.info(`Starting function needle for mapgallery.problem.route/`);
         const minMaxData = await needle('post', CARTO_URL, minMaxQuery, { json: true });
+        logger.info(`Finished function needle for mapgallery.problem.route/`);
         const minMaxResult = minMaxData.body.rows || [];
         minRange = Math.min.apply(Math, minMaxResult.map(function (element) { return element.min }));
         maxRange = Math.max.apply(Math, minMaxResult.map(function (element) { return element.max }));
@@ -284,7 +294,9 @@ export async function getValuesByRangeProblem(table, column, range, bounds, body
         let counter = 0;
         const query = { q: `select count(*) from ${table} where (${column} between ${values.min} and ${values.max}) and ${filters} ` };
         console.log('query ar min max range', query.q);
+        logger.info(`Starting function needle for mapgallery.problem.route/`);
         const data = await needle('post', CARTO_URL, query, { json: true });
+        logger.info(`Finished function needle for mapgallery.problem.route/`);
         if (data.statusCode === 200) {
           const rows = data.body.rows;
           counter = rows[0].count;
@@ -295,7 +307,9 @@ export async function getValuesByRangeProblem(table, column, range, bounds, body
       }
       resolve(result2);
     });
+    logger.info(`Starting function newProm1 for mapgallery.problem.route/`);
     result = await newProm1;
+    logger.info(`Finished function newProm1 for mapgallery.problem.route/`);
   } catch (error) {
     logger.error(error);
     logger.error(`Range By Value, Column ${column} Connection error`);
@@ -312,17 +326,22 @@ export async function countTotalProblems(bounds, body) {
     let COUNTSQL = `SELECT count(*) FROM ${PROBLEM_TABLE} where ${filters}`;
 
     const query = { q: ` ${COUNTSQL} ` };
+    logger.info(`Starting function needle for mapgallery.problem.route/`);
     const lineData = await needle('post', CARTO_URL, query, { json: true });
+    logger.info(`Finished function needle for mapgallery.problem.route/`);
 
     let total = lineData.body.rows[0].count;
     return total;
 }
 
 export async function problemCounterRoute(req, res) {
+  logger.info(`Starting endpoint mapgallery.problem.route/problems-counter with params ${JSON.stringify(req.params, null, 2)}`);
   try {
      const bounds = req.query.bounds;
      const body = req.body;
+     logger.info(`Starting function countTotalProblems for mapgallery.problem.route/`);
      let total = await countTotalProblems(bounds, body);
+     logger.info(`Finished function countTotalProblems for mapgallery.problem.route/`);
      res.status(200).send({
         total
      });
@@ -333,6 +352,7 @@ export async function problemCounterRoute(req, res) {
 }
 
 export async function problemParamFilterRoute(req, res) {
+  logger.info(`Starting endpoint mapgallery.problem.route/params-filter-problems with params ${JSON.stringify(req.params, null, 2)}`);
   try {
      const bounds = req.query.bounds;
      const body = req.body;
@@ -367,7 +387,9 @@ export async function problemParamFilterRoute(req, res) {
      requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'county', bounds, body)); // 8
      requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[8], problemTypesConst, bounds, body)); //9
 
+     logger.info(`Starting function all for mapgallery.problem.route/`);
      const promises = await Promise.all(requests);
+     logger.info(`Finished function all for mapgallery.problem.route/`);
      const result = {
         "problemtype": promises[9],
         "priority": promises[0],

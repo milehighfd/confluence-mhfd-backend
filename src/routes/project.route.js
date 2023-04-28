@@ -97,6 +97,7 @@ const listProjectsDBFilter = async (req, res) => {
 }
 
 const getProjectDetail = async (req, res) => {
+  logger.info(`Starting endpoint project/:project_id with params`);
   const project_id = req.params['project_id'];
   try {
     logger.info(`Starting function getDetails for endpoint project/${project_id}`);
@@ -112,9 +113,8 @@ const getProjectDetail = async (req, res) => {
   }
 }
 
-const getBboxProject = async (req, res) => {
-  
-  logger.info(`Starting endpoint project/bbox/:project_id with params ${JSON.stringify(req.params, null, 2)}`);
+const getBboxProject = async (req, res) => {  
+  logger.info(`Starting endpoint project/bbox/:project_id with params`);
   const project_id = req.params['project_id'];
   try {
     const BBOX_SQL = `
@@ -169,9 +169,11 @@ const createCosts = async (req, res) => {
         const insertQuery = `INSERT INTO project_cost (project_id, cost, code_cost_type_id, created_by, modified_by, created, last_modified)
         OUTPUT inserted . *
         VALUES('${project_id}', '${body[costType]}', '${costType}', '${user.name}', '${user.name}', '${moment().format('YYYY-MM-DD HH:mm:ss')}', '${moment().format('YYYY-MM-DD HH:mm:ss')}')`;
+        logger.info(`Starting function transaction`);
         await db.sequelize.transaction(async (t)=>{
           db.sequelize.query(insertQuery, { transaction: t })
         });
+        logger.info(`Finished function transaction`);
       } catch (error) {
         logger.info('error on createCosts', error);
       }

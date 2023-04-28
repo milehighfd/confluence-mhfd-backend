@@ -119,9 +119,7 @@ router.get('/get-list', async (req, res) => {
     const answer = {};
     if (req.query.jurisdiction) {
       logger.info(`Starting function query_code_local_government_id for endpoint v2locality/get-list`);
-      const [lgData] = await db.sequelize.query(`SELECT
-      code_local_government_id,
-      local_government_name FROM CODE_LOCAL_GOVERNMENT_4326`);
+      const [lgData] = await db.sequelize.query(`SELECT code_local_government_id, local_government_name FROM CODE_LOCAL_GOVERNMENT_4326`);
       logger.info(`Finished function query_code_local_government_id for endpoint v2locality/get-list`);
       const lg = lgData.map(result => {
         return {
@@ -134,9 +132,7 @@ router.get('/get-list', async (req, res) => {
     }
     if (req.query.servicearea) {
       logger.info(`Starting function query_code_service_are_id for endpoint v2locality/get-list`);
-      const [saData] = await db.sequelize.query(`SELECT
-      code_service_area_id,
-      service_area_name FROM CODE_SERVICE_AREA_4326`);
+      const [saData] = await db.sequelize.query(`SELECT code_service_area_id, service_area_name FROM CODE_SERVICE_AREA_4326`);
       logger.info(`Finished function query_code_service_are_id for endpoint v2locality/get-list`);
       const sa = saData.map(result => {
         return { 
@@ -149,9 +145,7 @@ router.get('/get-list', async (req, res) => {
     }
     if (req.query.county) {
       logger.info(`Starting function query_state_county_id for endpoint v2locality/get-list`);
-      const [scData] = await db.sequelize.query(`SELECT
-        state_county_id,
-        county_name FROM CODE_STATE_COUNTY_4326`);
+      const [scData] = await db.sequelize.query(`SELECT state_county_id, county_name FROM CODE_STATE_COUNTY_4326`);
       logger.info(`Finished function query_state_county_id for endpoint v2locality/get-list`);
       const sc = scData.map(result => {
         return {

@@ -26,18 +26,24 @@ const multer = Multer({
 });
 
 router.get('/', async (req, res, next) => {
+  logger.info(`Starting endpoint users.route/ with params ${JSON.stringify(req.params, null, 2)}`);
+  logger.info(`Starting function findAllUsers for users.route/`);
   const users = await UserService.findAllUsers();
+  logger.info(`Finished function findAllUsers for users.route/`);
   res.send(users);
 });
 
 router.post('/signup', validator(UserService.requiredFields('signup')), async (req, res) => {
+  logger.info(`Starting endpoint users.route/signup with params ${JSON.stringify(req.params, null, 2)}`);
   try {
     const user = req.body;
+    logger.info(`Starting function count for users.route/signup`);
     const foundUser = await User.count({
       where: {
         email: user.email
       }
     });
+    logger.info(`Finished function count for users.route/signup`);
     if (foundUser) {
       res.status(422).send({ error: 'The email has already been registered' });
     } else {
@@ -46,10 +52,16 @@ router.post('/signup', validator(UserService.requiredFields('signup')), async (r
         user['activated'] = true;
         user['status'] = 'pending';
         user.is_sso = false;
+        logger.info(`Starting function hash for users.route/signup`);
         user.password = await bcrypt.hash(user.password, 8);
+        logger.info(`Finished function hash for users.route/signup`);
         user.name = user.firstName + ' ' + user.lastName;
+        logger.info(`Starting function create for users.route/signup`);
         const user1 = await User.create(user);
+        logger.info(`Finished function create for users.route/signup`);
+        logger.info(`Starting function generateAuthToken for users.route/signup`);
         const token = await user1.generateAuthToken();
+        logger.info(`Finished function generateAuthToken for users.route/signup`);
         UserService.sendConfirmAccount(user);
         res.status(201).send({
           user,
@@ -66,12 +78,16 @@ router.post('/signup', validator(UserService.requiredFields('signup')), async (r
 });
 
 router.put('/me', auth, async (req, res) => {
-  try {    
+  logger.info(`Starting endpoint users.route/me with params ${JSON.stringify(req.params, null, 2)}`);
+  try { 
+    logger.info(`Starting function findByPk for users.route/me`);   
     let user = await User.findByPk(req.user.user_id, { raw: true });
+    logger.info(`Finished function findByPk for users.route/me`);   
    
     if (!user) {
       return res.status(404).send({ error: 'User not found' });
     }
+    logger.info(`Starting function count for users.route/me`);   
     let checkEmail = await User.count({
       where: {
         email: req.body.email,
@@ -80,6 +96,7 @@ router.put('/me', auth, async (req, res) => {
          }
       }
     })
+    logger.info(`Finished function count for users.route/me`);   
     if (user.email !== req.body.email) {
       if (checkEmail) 
       {
@@ -98,11 +115,13 @@ router.put('/me', auth, async (req, res) => {
     user.password = req.user.password;
     delete user.user_id;
     
+    logger.info(`Starting function update for users.route/me`);   
     await User.update(user, {
       where: {
         user_id: req.user.user_id
       }
     });
+    logger.info(`Finished function update for users.route/me`);   
     return res.status(200).send(user);
   } catch (error) {
     logger.error(error);
@@ -111,6 +130,7 @@ router.put('/me', auth, async (req, res) => {
 });
 
 router.get('/me', auth, async (req, res) => {
+  logger.info(`Starting endpoint users.route/me with params ${JSON.stringify(req.params, null, 2)}`);
   let organization_query = '';
   let user = req.user
   let result1 = {};
@@ -195,7 +215,9 @@ router.get('/me', auth, async (req, res) => {
     const proms = [
       db.sequelize.query(query),
     ];
+    logger.info(`Starting function all for users.route/me`);   
     const solved = await Promise.all(proms);
+    logger.info(`Finished function all for users.route/me`); 
     const [geomData] = solved[0];
     const all_coordinates = geomData.map(result => {
       return parse(result.bbox)?.coordinates;
@@ -323,9 +345,11 @@ router.get('/me', auth, async (req, res) => {
     const sql = `SELECT COUNT( projecttype), projecttype  FROM ${table}  ${condition} group by projecttype`;
     console.log('my zoom area sql is now update', sql);
     const URL = `${CARTO_URL}&q=${sql}`;
+    logger.info(`Starting function Promise for users.route/me`);
     const promise = await new Promise(resolve => {
       https.get(URL, response => {
         console.log('status ' + response.statusCode);
+    logger.info(`Finished function Promise for users.route/me`);
         if (response.statusCode === 200) {
           let str = '';
           response.on('data', function (chunk) {
@@ -358,6 +382,7 @@ router.get('/me', auth, async (req, res) => {
 });
 
 router.post('/upload-photo', [auth, multer.array('file')], async (req, res) => {
+  logger.info(`Starting endpoint users.route/upload-photo with params ${JSON.stringify(req.params, null, 2)}`);
   console.log(req.files)  
   try {
     if (!req.files) {
@@ -365,7 +390,9 @@ router.post('/upload-photo', [auth, multer.array('file')], async (req, res) => {
       return res.status(400).send({ error: 'You must send user photo' });
     }
     let user = req.user;
+    logger.info(`Starting function uploadPhoto for users.route/upload-photo`);
     await UserService.uploadPhoto(user, req.files);
+    logger.info(`Finished function uploadPhoto for users.route/upload-photo`);
     res.status(200).send({message:'Success'});
   } catch (error) {
     logger.error(error);
@@ -374,33 +401,45 @@ router.post('/upload-photo', [auth, multer.array('file')], async (req, res) => {
 });
 
 router.post('/recovery-password', async (req, res) => {
+  logger.info(`Starting endpoint users.route/recovery-password with params ${JSON.stringify(req.params, null, 2)}`);
   const email = req.body.email;
   if (!EMAIL_VALIDATOR.test(email)) {
     return res.status(400).send({ error: 'You entered an invalid email direction' });
   }
+  logger.info(`Starting function findOne for users.route/recovery-password`);
   const user = await User.findOne({
     where: {
       email: email
     }
   });
+  logger.info(`Finished function findOne for users.route/recovery-password`);
   if (!user) {
     return res.status(422).send({ error: 'Email not found!' });
   }
+  logger.info(`Starting function generateChangePassword for users.route/recovery-password`);
   await user.generateChangePassword();
+  logger.info(`Finished function generateChangePassword for users.route/recovery-password`);
+  logger.info(`Starting function sendRecoverPasswordEmail for users.route/recovery-password`);
   await UserService.sendRecoverPasswordEmail(user);
+  logger.info(`Finished function sendRecoverPasswordEmail for users.route/recovery-password`);
   res.send(user);
 });
 
 router.post('/change-password', validator(['email', 'password', 'newpassword']), async (req, res) =>{
+  logger.info(`Starting endpoint users.route/change-password with params ${JSON.stringify(req.params, null, 2)}`);
   try {
     const {email, password, newpassword} = req.body;
+    logger.info(`Starting function findByCredentials for users.route/change-password`);
     const user = await User.findByCredentials(email, password);
+    logger.info(`Finished function findByCredentials for users.route/change-password`);
     if (!user) {
       return res.status(401).send({
         error: 'Login failed! Check authentication credentials'
       });
     }
+    logger.info(`Starting function hash for users.route/change-password`);
     const newPwd = await bcrypt.hash(newpassword, 8);
+    logger.info(`Finished function hash for users.route/change-password`);
     user.password = newPwd;
     user.save();
     res.send(use);
@@ -411,13 +450,16 @@ router.post('/change-password', validator(['email', 'password', 'newpassword']),
 });
 
 router.post('/reset-password', validator(['id', 'password']), async (req, res) => {
+  logger.info(`Starting endpoint users.route/reset-password with params ${JSON.stringify(req.params, null, 2)}`);
   try {
     const chgId = req.body.id;
+    logger.info(`Starting function findOne for users.route/reset-password`);
     const user = await User.findOne({
       where: {
         changePasswordId: chgId,
       },
     });
+    logger.info(`Finished function findOne for users.route/reset-password`);
     if (!user) {
       logger.error('Invalid recovery password id: ' + changePasswordId);
       throw new Error({
@@ -433,7 +475,9 @@ router.post('/reset-password', validator(['id', 'password']), async (req, res) =
         error: 'Recovery password id expired'
       });
     }
+    logger.info(`Starting function hash for users.route/reset-password`);
     const newPwd = await bcrypt.hash(req.body.password, 8);
+    logger.info(`Finished function hash for users.route/reset-password`);
     user.password = newPwd;
     user.changePasswordId = '';
     user.changePasswordExpiration = null;

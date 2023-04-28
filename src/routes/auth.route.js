@@ -13,12 +13,15 @@ import { ACTIVITY_TYPE } from 'bc/lib/enumConstants.js';
 import logger from 'bc/config/logger.js';
 
 router.get('/guest', async (req, res) => {
+  logger.info(`Starting endpoint auth.route/guest with params ${JSON.stringify(req.params, null, 2)}`);
   try {
+    logger.info(`Starting function findOne for auth.route/guest`);
     let user = await User.findOne({
       where: {
         email: config.GUEST_USER
       }
     });
+    logger.info(`Finished function findOne for auth.route/guest`);
     if (!user) {
       const formatTime = moment().format('YYYY-MM-DD HH:mm:ss');
       const insertQuery = `INSERT INTO users (firstName, lastName, name, email, organization, city, county,
@@ -31,13 +34,17 @@ router.get('/guest', async (req, res) => {
       {
         type: db.sequelize.QueryTypes.INSERT,
       });
+      logger.info(`Starting function findOne for auth.route/guest`);
       user = await User.findOne({
         where: {
           email: config.GUEST_USER
         }
       });
+      logger.info(`Finished function findOne for auth.route/guest`);
     }
+    logger.info(`Starting function generateGuestAuthToken for auth.route/guest`);
     const token = await user.generateGuestAuthToken();
+    logger.info(`Finished function generateGuestAuthToken for auth.route/guest`);
     let result = {};
     result['user_id'] = user.user_id;
     result['firstName'] = user.firstName;
@@ -67,12 +74,15 @@ router.get('/guest', async (req, res) => {
 })
 
 router.post('/login', async (req, res) => {
+  logger.info(`Starting endpoint auth.route/login with params ${JSON.stringify(req.params, null, 2)}`);
   try {
     const {
       email,
       password
     } = req.body;
+    logger.info(`Starting function findByCredentials for auth.route/login`);
     const user = await User.findByCredentials(email, password);
+    logger.info(`Finished function findByCredentials for auth.route/login`);
 
     const userResult = {
       email: user.email,
@@ -83,7 +93,9 @@ router.post('/login', async (req, res) => {
         error: 'Login failed! Check authentication credentials'
       });
     }
+    logger.info(`Starting function generateAuthToken for auth.route/post`);
     const token = await user.generateAuthToken();
+    logger.info(`Finished function generateAuthToken for auth.route/post`);
 
     let logActivity = {};
     logActivity.user_id = user.user_id;
@@ -101,11 +113,14 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/logout', auth, async (req, res) => {
+  logger.info(`Starting endpoint auth.route/logout with params ${JSON.stringify(req.params, null, 2)}`);
   try {
     req.user.tokens = req.user.tokens.filter((token) => {
       return token.token != req.token;
     });
+    logger.info(`Starting function save for auth.route/get`);
     await req.user.save();
+    logger.info(`Finished function save for auth.route/get`);
     res.send();
   } catch (error) {
     res.status(500).send(error);
@@ -113,9 +128,12 @@ router.get('/logout', auth, async (req, res) => {
 });
 
 router.post('/logoutall', auth, async (req, res) => {
+  logger.info(`Starting endpoint auth.route/logoutall with params ${JSON.stringify(req.params, null, 2)}`);
   try {
     req.user.tokens.splice(0, req.user.tokens.length);
+    logger.info(`Starting function save for auth.route/post`);
     await req.user.save();
+    logger.info(`Starting function save for auth.route/post`);
     res.send();
   } catch (error) {
     res.status(500).send(error);

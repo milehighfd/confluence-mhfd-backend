@@ -142,7 +142,9 @@ router.put('/board-localities/:id', async (req, res) => {
     logger.info(`Finished function findOne for board/board-localities/:id`);
     if (boardLocalities) {
         boardLocalities.email = email;
+        logger.info(`Starting function save for board/board-localities/:id`);
         await boardLocalities.save();
+        logger.info(`Finished function save for board/board-localities/:id`);
         res.send(boardLocalities);
     } else {
         res.status(404).send({error: 'Not found'});
@@ -237,12 +239,15 @@ router.post('/board-for-positions', async (req, res) => {
   let boardProjects = [];
   if (board) {
     logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
+    logger.info(`Starting function count for board/board-for-positions`);
     let totalItems = await BoardProject.count({
       where: {
         board_id: board.board_id,
         [position]: { [Op.ne]: null },
       },
     });
+    logger.info(`Finished function count for board/board-for-positions`);
+    logger.info(`Starting function findAll for board/board-for-positions`);
     boardProjects = await BoardProject.findAll({
       limit: +limit,
       offset: (+page - 1) * limit,
@@ -253,6 +258,8 @@ router.post('/board-for-positions', async (req, res) => {
       raw: true,
       nest: true,
     });
+    logger.info(`Finished function findAll for board/board-for-positions`);
+    logger.info(`Starting function all for board/board-for-positions`);
     let projectIds = await Promise.all(
       boardProjects.map(async (boardProject) => {
         boardProject.projectData = await projectService.getDetails(
@@ -265,6 +272,7 @@ router.post('/board-for-positions', async (req, res) => {
     res.send({ projects: projectIds, board, limit, page, totalItems });
   } else {
     logger.info('CREATING NEW BOARD');
+    logger.info(`Starting function createNewBoard for board/board-for-positions`);
     const response = await boardService.createNewBoard(
       type,
       year,
@@ -272,13 +280,14 @@ router.post('/board-for-positions', async (req, res) => {
       projecttype,
       'Under Review'
     );
+    logger.info(`Finished function createNewBoard for board/board-for-positions`);
     res.send({
       board: response,
       projects: [],
     });
   }
 });
-logger.info(`Finished function getProjects for board/board-for-positions`);
+
 router.post('/', async (req, res) => {
     logger.info(`Starting endpoint board/ with params ${JSON.stringify(req.params, null, 2)}`)
   let body = req.body;
@@ -398,11 +407,13 @@ const sendBoardProjectsToProp = async (boards, prop) => {
     logger.info(`Starting function findAll for board/`);
     for (var i = 0 ; i < boards.length ; i++) {
         let board = boards[i];
+        logger.info(`Starting function findAll for board/`);
         let boardProjects = await BoardProject.findAll({
             where: {
                 board_id: board.board_id
             }
         });
+        logger.info(`Finished function findAll for board/`);
         let map = {};
         [0, 1, 2, 3, 4, 5].forEach(index => {
             let arr = [];
@@ -447,7 +458,9 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                 } else if (prop === 'servicearea' && !propVal.includes(' Service Area')) {
                     propVal = propVal.trimEnd().concat(' Service Area');
                 }
+                logger.info(`Starting function getBoard for board/`);
                 let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype);
+                logger.info(`Finished function getBoard for board/`);
                 logger.info(`Destiny board by prop ${prop} id is ${destinyBoard !== null ? destinyBoard.board_id : destinyBoard}`);
                 //TODO: improve to avoid multiple queries to same board
                 if (destinyBoard === null || destinyBoard.board_id === null) {
@@ -477,11 +490,13 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                     year2: bp.year2,
                     origin: board.locality,
                 });
+                logger.info(`Starting function save for board/`);
                 await newBoardProject.save();
+                logger.info(`Finished function getBoard for board/`);
             }
         }
     }
-    logger.info(`Finished function findAll for board/`);
+
 }
 
 const updateProjectStatus = async (boards, status, creator) => {
@@ -869,12 +884,12 @@ router.put('/:boardId', [auth], async (req, res) => {
             board_id: boardId
         }
     });
-    logger.info(`Finished function findOne for board/`);
-    logger.info(`Starting function updateBoards for board/`);
+    logger.info(`Finished function findOne for board/`);    
     if (board) {
+        logger.info(`Starting function updateBoards for board/`);
         await updateBoards(board, status, comment, substatus);
-        let bodyResponse = { status: 'updated' };
         logger.info(`Finished function updateBoards for board/`);
+        let bodyResponse = { status: 'updated' };        
         if (status === 'Approved' && board.status !== status) {
             logger.info(`Approving board ${boardId}`);
             //sendMails(board, req.user.name)
@@ -944,6 +959,7 @@ router.get('/bbox/:projectid', async (req, res) => {
     try {
         logger.info(`Starting function needle for board/bbox/:projectid`);
         const data = await needle('post', CARTO_URL, query, { json: true });
+        logger.info(`Finished function needle for board/bbox/:projectid`);
         if (data.statusCode === 200) {
           const result = data.body;
           res.send(result.rows[0]);
@@ -955,7 +971,6 @@ router.get('/bbox/:projectid', async (req, res) => {
         logger.error(error);
         res.status(500).send(error);
      };
-     logger.info(`Finished function needle for board/bbox/:projectid`);
 });
 
 router.get('/:type/:year/', async (req, res) => {
@@ -1009,7 +1024,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 router.get('/sync', async (req,res) => {
-    logger.info(`Starting endpoint board/sync with params ${JSON.stringify(req.params, null, 2)}`)
+    logger.info(`Starting endpoint board/sync with params ${JSON.stringify(req.params, null, 2)}`);
   const sql = `SELECT projectid, projectname, projecttype, projectsubtype FROM ${CREATE_PROJECT_TABLE}`;
   const query = {
     q: sql
@@ -1028,9 +1043,13 @@ router.get('/sync', async (req,res) => {
         let projectData = result.rows[i];
         if(projectData.projectid){
           console.log('About to update in board', projectData.projectid, projectData.projectname);
+          logger.info(`Starting function updateProjectsinBoard for board/sync`);
           await updateProjectsInBoard(projectData.projectid, projectData.projectname, projectData.projecttype, projectData.projectsubtype);
+          logger.info(`Finished function updateProjectsinBoard for board/sync`);
           // updateProject
+          logger.info(`Starting function sleep for board/sync`);
           await sleep(30);
+          logger.info(`Starting function sleep for board/sync`);
         }
       }
       res.send(result.rows);

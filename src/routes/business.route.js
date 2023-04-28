@@ -9,9 +9,12 @@ const BusinessAssociates = db.businessAssociates;
 const router = express.Router();
 
 router.get('/business-contact/:id', async (req, res) => {
+  logger.info(`Starting endpoint business.route/business-contact/:id with params ${JSON.stringify(req.params, null, 2)}`);
   const id = req.params['id'];
   try {
+    logger.info(`Starting function findByPk for business.route/business-contact/:id`);
     const contact = await BusinessContact.findByPk(id, { raw: true });
+    logger.info(`Finished function findByPk for business.route/business-contact/:id`);
     if (!contact) {
       res.status(404).send({ error: 'Not Found' });
     }
@@ -23,9 +26,12 @@ router.get('/business-contact/:id', async (req, res) => {
 });
 
 router.get('/business-adress', async (req, res) => {
+  logger.info(`Starting endpoint business.route/business-adress with params ${JSON.stringify(req.params, null, 2)}`);
   const id = req.params['id'];
   try {
+    logger.info(`Starting function findAll for business.route/business-adress`);
     const contact = await BusinessAdress.findAll();
+    logger.info(`Finished function findAll for business.route/business-adress`);
     if (!contact) {
       res.status(404).send({ error: 'Not Found' });
     }
@@ -36,8 +42,11 @@ router.get('/business-adress', async (req, res) => {
   }
 });
 
+
 router.get('/business-associates', async (_, res) => {
+  logger.info(`Starting endpoint business.route/business-associates with params `);
   try {
+    logger.info(`Starting function findAll for business.route/business-associates`);
     const associates = await BusinessAssociates.findAll({
       include: [
         {
@@ -51,6 +60,7 @@ router.get('/business-associates', async (_, res) => {
 
       ]
     });
+    logger.info(`Finished function findAll for business.route/business-associates`);
     res.send(associates);
   } catch(error) {
     res.status(500).send(error);
@@ -58,6 +68,7 @@ router.get('/business-associates', async (_, res) => {
 });
 
 router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
+  logger.info(`Starting endpoint business.route/business-address-and-contact/:id with params ${JSON.stringify(req.params, null, 2)}`);
   const id = req.params['id'];
   const user = req.user;
   const { body } = req;
@@ -71,7 +82,9 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
       city: body.city,
       zip: body.zip
     };
+    logger.info(`Starting function create for business.route/business-associates`);
     const newBusinessAddress = await BusinessAdress.create(businessAdress);
+    logger.info(`Finished function create for business.route/business-associates`);
     const businessContact = {
       business_address_id: newBusinessAddress.business_address_id,
       contact_name: body.name,
@@ -89,6 +102,7 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
   }
 });
 router.get('/', async (req, res) => {
+  logger.info(`Starting endpoint business.route/ with params ${JSON.stringify(req.params, null, 2)}`);
   /*const sa = await ServiceArea.findAll({
     include: { all: true, nested: true }
   }).map(result => result.dataValues).map(res => {
@@ -97,7 +111,9 @@ router.get('/', async (req, res) => {
       Shape:  res.Shape.toString()
     }
   });*/ 
-  const [sa] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText()   as bbox FROM CODE_SERVICE_AREA`);
+  logger.info(`Starting function query for business.route/`);
+  const [sa] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox FROM CODE_SERVICE_AREA`);
+  logger.info(`Finished function query for business.route/`);
   console.log(sa);
   res.send(sa);
 });

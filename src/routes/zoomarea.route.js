@@ -1,10 +1,12 @@
 import express from 'express';
 import https from 'https';
 import { CARTO_URL } from 'bc/config/config.js';
+import logger from 'bc/config/logger.js';
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
+  logger.info(`Starting endpoint zoomarea.route/ with params ${JSON.stringify(req.params, null, 2)}`);
   try {
     const newProm = new Promise((resolve, reject) => {
       const sql = `select cartodb_id, aoi, filter, ST_AsGeoJSON(ST_Envelope(the_geom)) from mhfd_zoom_to_areas order by aoi`;
@@ -42,8 +44,9 @@ router.get('/', async (req, res) => {
         }
       })
     })
-
+    logger.info(`Starting function newProm for zoomarea.route/`);
     const respuesta = await newProm;
+    logger.info(`Finished function newProm for zoomarea.route/`);
     res.status(200).send(respuesta);
   } catch (error) {
     logger.error(error);
@@ -53,6 +56,7 @@ router.get('/', async (req, res) => {
 
 
 router.get('/complete', async (req, res) => {
+  logger.info(`Starting endpoint zoomarea.route/complete with params ${JSON.stringify(req.params, null, 2)}`);
   try {
     const newProm = new Promise((resolve, reject) => {
       const sql = `select cartodb_id, aoi, filter, ST_AsGeoJSON(the_geom) from mhfd_zoom_to_areas order by aoi`;
@@ -90,8 +94,9 @@ router.get('/complete', async (req, res) => {
         }
       })
     })
-
+    logger.info(`Starting function newProm for zoomarea.route/complete`);
     const respuesta = await newProm;
+    logger.info(`Finished function newProm for zoomarea.route/complete`);
     res.status(200).send(respuesta);
   } catch (error) {
     logger.error(error);
@@ -100,6 +105,7 @@ router.get('/complete', async (req, res) => {
 })
 
 router.get('/get-zoom-filter', async (req, res) => {
+  logger.info(`Starting endpoint zoomarea.route/get-zoom-filter with params ${JSON.stringify(req.params, null, 2)}`);
   try {
     const newProm = new Promise((resolve, reject) => {
       const sql = `select filter, aoi from mhfd_zoom_to_areas group by filter, aoi order by filter, aoi`;
@@ -143,8 +149,9 @@ router.get('/get-zoom-filter', async (req, res) => {
         }
       })
     })
-
+    logger.info(`Starting function newProm for zoomarea.route/get-zoom-filter`);
     const respuesta = await newProm;
+    logger.info(`Finished function newProm for zoomarea.route/get-zoom-filter`);
     res.status(200).send(respuesta);
   } catch (error) {
     logger.error(error);

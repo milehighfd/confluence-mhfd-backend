@@ -7,6 +7,7 @@ import {
   PROPSPROBLEMTABLES,
   MAIN_PROJECT_TABLE
 } from 'bc/config/config.js';
+import logger from 'bc/config/logger.js';
 
 const router = express.Router();
 const components = [
@@ -28,13 +29,16 @@ const components = [
 const PROJECT_TABLES = [MAIN_PROJECT_TABLE];
 
 router.get('/', async (req, res) => {
+  logger.info(`Starting endpoint filters.route/ with params ${JSON.stringify(req.params, null, 2)}`);
   const tables = req.query.tables ? req.query.tables.split(',') : [];
   let send = [];
   for (const table of tables) {
     const query = {q: `SELECT DISTINCT problemid FROM ${table}  WHERE problemid is not null`};
     let answer = [];
     try {
+      logger.info(`Starting function needle for filters.route/`);
       const data = await needle('post', CARTO_URL, query, {json: true});
+      logger.info(`Finished function needle for filters.route/`);
       if (data.statusCode === 200) {
         answer = data.body.rows.map(element => element.problemid);
       } else {
@@ -49,6 +53,7 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/project-filter', async (req, res) => {
+  logger.info(`Starting endpoint filters.route/project-filter with params ${JSON.stringify(req.params, null, 2)}`);
   const problemtype = req.query.problemtype ? req.query.problemtype : '';
   const problemtypeFilter = problemtype.length ? `AND ${PROBLEM_TABLE}.problemtype IN(` + problemtype.split(',').map(element => `'${element}'`).join(',') + ')' : '';
   if (!problemtype.length) {
@@ -79,7 +84,9 @@ router.get('/project-filter', async (req, res) => {
       };
     }
   }
+  logger.info(`Starting function all for filters.route/project-filter`);
   const promises =  await Promise.all(send);
+  logger.info(`Finished function all for filters.route/project-filter`);
   const answer = [];
   for (const element of promises) {
     answer.push(...element);
@@ -90,6 +97,7 @@ router.get('/project-filter', async (req, res) => {
   res.send([... new Set(answer)]);
 });
 router.get('/search/:type', async (req, res) => {
+  logger.info(`Starting endpoint filters.route/search/:type with params ${JSON.stringify(req.params, null, 2)}`);
   const type = req.params.type;
   const field = req.query.field ? req.query.field : '';
   let data = {};
@@ -97,7 +105,9 @@ router.get('/search/:type', async (req, res) => {
     const query = {q: `SELECT cartodb_id FROM ${PROBLEM_TABLE} WHERE ${PROPSPROBLEMTABLES.problem_boundary[6]} ILIKE '%${field}%' OR ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${field}%'`};
     let answer = [];
     try {
+      logger.info(`Starting function needle for filters.route/search/:type`);
       const data = await needle('post', CARTO_URL, query, {json: true});
+      logger.info(`Finished function needle for filters.route/search/:type`);
       if (data.statusCode === 200) {
         answer = data.body.rows.map(element => element.cartodb_id);
       } else {
@@ -112,7 +122,9 @@ router.get('/search/:type', async (req, res) => {
       const query = {q: `SELECT cartodb_id FROM ${project} WHERE projectname ILIKE '%${field}%' OR onbaseid::text ilike '%${field}%'`};
       let answer = [];
       try {
+        logger.info(`Starting function needle for filters.route/search/:type`);
         const data = await needle('post', CARTO_URL, query, {json: true});
+        logger.info(`Finished function needle for filters.route/search/:type`);
         if (data.statusCode === 200) {
           answer = data.body.rows.map(element => element.cartodb_id);
         } else {
@@ -139,6 +151,7 @@ const addCondition = (conditions, newCondition, connector) => {
 };
 
 router.post('/by-components', async (req, res) => {
+  logger.info(`Starting endpoint filters.route/by-components with params ${JSON.stringify(req.params, null, 2)}`);
   const body = req.body;
   let componentArray = [];
   const response = {};
@@ -211,6 +224,7 @@ router.post('/by-components', async (req, res) => {
     const query = `SELECT ${type}.cartodb_id FROM ${type}${tables} ${conditions}`;
     console.log('my query is query ', query);
     const URL = encodeURI(`${CARTO_URL}?q=${query}`);
+    logger.info(`Starting function needle for filters.route/search/:type`);
     const answer = await new Promise(resolve => {
       https.get(URL, response => {
         var str = '';
@@ -228,6 +242,7 @@ router.post('/by-components', async (req, res) => {
         }
       });
     });
+    logger.info(`Finished function needle for filters.route/search/:type`);
     response[type] = [...new Set(answer)];
   }
   return res.send(response);
@@ -235,6 +250,7 @@ router.post('/by-components', async (req, res) => {
 
 
 router.post('/v2/by-components', async (req, res) => {
+  logger.info(`Starting endpoint filters.route/v2/by-components with params ${JSON.stringify(req.params, null, 2)}`);
   const body = req.body;
   let componentArray = [];
   const response = {};
@@ -318,7 +334,9 @@ router.post('/v2/by-components', async (req, res) => {
       console.log('add the end conditions', conditions);
       conditions = '';
     }
+    logger.info(`Starting function all for filters.route/v2/by-components`);
     let answer = await Promise.all(promises); 
+    logger.info(`Finished function all for filters.route/v2/by-components`);
     const array = [];
     for (const ans of answer) {
       array.push(...ans);

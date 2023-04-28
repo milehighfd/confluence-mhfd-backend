@@ -2,12 +2,13 @@ import express from 'express';
 import groupService from 'bc/services/group.service.js';
 import projectService from 'bc/services/project.service.js';
 import { getIdsInBbox, projectsByFilters } from 'bc/utils/functionsProjects.js';
-
+import logger from 'bc/config/logger.js';
 
 const router = express.Router();
 
 
 const getFilters = async (req, res) => {
+  logger.info(`Starting endpoint cardfilters.route/ with params ${JSON.stringify(req.params, null, 2)}`);
   const { body, query } = req;
   const { bounds } = query;
   const data = {};
@@ -22,7 +23,9 @@ const getFilters = async (req, res) => {
     groupService.getProjectType(),
     groupService.getMhfdStaff(),
   ];
+  logger.info(`Starting function all for cardfilters.route/`);
   let resolvedPromises = await Promise.all(dataPromises);
+  logger.info(`Finished function all for cardfilters.route/`);
   
   data.status = resolvedPromises[0];
   data.jurisdiction = resolvedPromises[1];
@@ -41,12 +44,14 @@ const getFilters = async (req, res) => {
   data.problemtype = [];
   data.lgmanager = [];
   data.estimatedCost = [];
+  logger.info(`Starting function getProjects2 for cardfilters.route/`);
   let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
   let projects = await projectService.getProjects(null, null, projectsFilterId, null, null);
 
   // projects = await projectsByFilters(projects, body);
 
   if (bounds) {
+    logger.info(`Starting function getIdsInBbox for cardfilters.route/`);
     const ids = await getIdsInBbox(bounds);
     const dataIds = ids.map((item) => item.project_id);
     // console.log('idssssss', ids)
@@ -238,20 +243,29 @@ const getFilters = async (req, res) => {
   res.send({'all': 'too well', data});
 }
 const getProjectsComplete = async (req, res) => {
+  logger.info(`Starting endpoint business.route/projects with params ${JSON.stringify(req.params, null, 2)}`);
+  logger.info(`Starting function getProjects for cardfilters.route/projects`);
   const projects = await projectService.getProjects(null, null);
+  logger.info(`Finished function getProjects for cardfilters.route/projects`);
   console.log('projects count', projects.length);
   res.send({projects: projects});
 }
 const getProjectsPromise = async (req, res) => {
+  logger.info(`Starting endpoint business.route/projectspromise with params ${JSON.stringify(req.params, null, 2)}`);
+  logger.info(`Starting function getProjectsDeprecated for cardfilters.route/projectspromise`);
   const projects = await projectService.getProjectsDeprecated();
+  logger.info(`Finished function getProjectsDeprecated for cardfilters.route/projectspromise`);
   res.send({projects: projects});
 }
 const getProjectsIdsByBounds = async (req, res) => {
+  logger.info(`Starting endpoint business.route/getidsbounds with params ${JSON.stringify(req.params, null, 2)}`);
   const { body } = req;
   const bounds = body?.bounds;
   let projects = [];
   if (bounds) {
+    logger.info(`Starting function getProjectsIdsByBounds for cardfilters.route/getidsbounds`);
     projects = await projectService.getProjectsIdsByBounds(bounds);
+    logger.info(`Finished function getProjectsIdsByBounds for cardfilters.route/getidsbounds`);
   }  
   res.send({project_ids: projects});
 

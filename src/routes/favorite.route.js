@@ -130,7 +130,7 @@ router.get("/", auth, async (req, res) => {
 
 
 router.get("/create", auth, async (req, res) => {
-  logger.info(`Starting endpoint favorite/create with params ${JSON.stringify(req.params, null, 2)}`);
+  logger.info(`Starting endpoint favorite/create with params`);
   const { id, isProblem } = req.query;
   const user = req.user;
   try {
@@ -162,7 +162,7 @@ router.delete("/", auth, async (req, res) => {
     };
     logger.info(`Starting function getOne for favorite/`);
     const selectedFavorite = await favoritesService.getOne(favorite, isProblem);
-    logger.info(`Starting function getOne for favorite/`);
+    logger.info(`Finished function getOne for favorite/`);
     if (selectedFavorite) {
       selectedFavorite.destroy();
     } else {
@@ -279,6 +279,7 @@ router.get("/problem-cards", auth, async (req, res) => {
 });
 
 const getProjectCards = async (req, res) => {
+  logger.info(`Starting endpoint favorite/project-cards with params`);
   const user = req.user;
   let projectsFilterId = await projectService.getProjects2(null, null, 1, null, {});
   try {
