@@ -56,7 +56,7 @@ import codeStudyType from 'bc/models/code_study_type.model.js';
 import relatedStudy from 'bc/models/related_study.model.js';
 import streamStudy from 'bc/models/stream_study.model.js';
 import projectProposedAction from 'bc/models/project_proposed_action.model.js';
-
+import CodeProjectStaffRole from 'bc/models/code_project_staff_role.model.js';
 import gradeControlStructure from 'bc/models/grade_control_structure.model.js';
 import pipeAppurtenances from 'bc/models/pipe_appurtenances.model.js';
 import specialItemPoint from 'bc/models/special_item_point.model.js';
@@ -154,6 +154,7 @@ db.projectAttachment = projectAttachment(sequelize, Sequelize);
 db.projectLocalGovernment = projectLocalGovernment(sequelize, Sequelize);
 db.projectStaff = projectStaff(sequelize, Sequelize);
 db.mhfdStaff = mhfdStaff(sequelize, Sequelize);
+db.codeProjectStaffRole = CodeProjectStaffRole(sequelize, Sequelize);
 db.stream = stream(sequelize, Sequelize);
 db.businessAssociateContact = businessAssociateContact(sequelize, Sequelize);
 db.businessAdress = businessAdress(sequelize, Sequelize);
@@ -196,6 +197,7 @@ db.groupnotes.belongsTo(db.user, {foreignKey: 'user_id'});
 db.user.hasMany(db.groupnotes, {foreignKey: 'user_id'});
 db.user.hasMany(db.mhfdStaff, {foreignKey: {name: 'user_id', allowNull: true}, targetKey: 'user_id'});
 db.mhfdStaff.belongsTo(db.user, {foreignKey: {name: 'user_id', allowNull: true}, targetKey: 'user_id'});
+db.projectStaff.belongsTo(db.codeProjectStaffRole, {foreignKey: 'code_project_staff_role_type_id'});
 
 db.user.belongsTo(db.businessAssociateContact,{foreignKey: 'business_associate_contact_id'});
 db.businessAssociateContact.belongsTo(db.businessAdress,{foreignKey: 'business_address_id'});
