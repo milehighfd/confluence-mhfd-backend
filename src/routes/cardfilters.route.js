@@ -22,6 +22,7 @@ const getFilters = async (req, res) => {
     groupService.getStreams(),
     groupService.getProjectType(),
     groupService.getMhfdStaff(),
+    groupService.getLGManager(),
   ];
   logger.info(`Starting function all for cardfilters.route/`);
   let resolvedPromises = await Promise.all(dataPromises);
@@ -42,7 +43,7 @@ const getFilters = async (req, res) => {
   data.mhfddollarallocated = [];
   data.workplanyear = [];
   data.problemtype = [];
-  data.lgmanager = [];
+  data.lgmanager = resolvedPromises[9];
   data.estimatedCost = [];
   logger.info(`Starting function getProjects2 for cardfilters.route/`);
   let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
@@ -55,7 +56,7 @@ const getFilters = async (req, res) => {
     const ids = await getIdsInBbox(bounds);
     const dataIds = ids.map((item) => item.project_id);
     // console.log('idssssss', ids)
-    projects = projects.filter((p) => { console.log('pppppp',dataIds.includes(p.dataValues.project_id)); return dataIds.includes(p.dataValues.project_id)});
+    projects = projects.filter((p) => { return dataIds.includes(p.dataValues.project_id)});
   }
 
 

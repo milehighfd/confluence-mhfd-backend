@@ -18,6 +18,7 @@ const CodeStatusType = db.codeStatusType;
 const BusinessAssociante = db.businessAssociates;
 const Streams = db.stream;
 const ProjectType = db.codeProjectType;
+const CodeProjectStaffRole = db.codeProjectStaffRole;
 const Op = Sequelize.Op;
 
 const getStatus = async () => {
@@ -160,15 +161,41 @@ const getProjectType = async () => {
 }
 
 const getMhfdStaff = async () => {
-  const types = await MHFDStaff.findAll({
-    order: [
-      ['mhfd_staff_id']
-    ]
+  const types = await ProjectStaff.findAll({
+    include: [{
+      model: CodeProjectStaffRole,
+      where: {
+        project_staff_role_type_name: 'MHFD Lead',        
+      }
+    },{
+      model: MHFDStaff,
+      required: true
+    }],
   });
   const groups = types.map((data) => {
-    return { value: data.full_name, id: data.mhfd_staff_id };
+    return { value: data?.mhfd_staff?.full_name, id: data?.mhfd_staff_id };
   });
-  return groups;
+  const uniqueGroups = [...new Map(groups.map(item => [item['id'], item])).values()];
+  return uniqueGroups;
+}
+
+const getLGManager = async () => {
+  const types = await ProjectStaff.findAll({
+    include: [{
+      model: CodeProjectStaffRole,
+      where: {
+        project_staff_role_type_name: 'Local Government Lead',        
+      }
+    },{
+      model: MHFDStaff,
+      required: true
+    }],
+  });
+  const groups = types.map((data) => {
+    return { value: data?.mhfd_staff?.full_name, id: data?.mhfd_staff_id };
+  });
+  const uniqueGroups = [...new Map(groups.map(item => [item['id'], item])).values()];
+  return uniqueGroups;
 }
 
 export default {
@@ -180,5 +207,6 @@ export default {
   getContractor,
   getStreams,
   getProjectType,
-  getMhfdStaff
+  getMhfdStaff,
+  getLGManager
 };
