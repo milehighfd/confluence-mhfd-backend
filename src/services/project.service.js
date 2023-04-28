@@ -52,6 +52,7 @@ const CodeStudyType = db.codestudytype;
 const RelatedStudy = db.relatedstudy;
 const StreamStudy = db.streamstudy;
 const CodeStudyReason = db.codeStudyReason;
+const CodeProjectStaffRole = db.codeProjectStaffRole;
 const User = db.user;
 const Op = sequelize.Op;
 
@@ -690,6 +691,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const code_project_type_id = filter.projecttype ? filter.projecttype : [];
   const service_area = filter.servicearea ? filter.servicearea : [];
   const state_county_id = filter.county ? filter.county : [];
+  const lgmanager = filter.lgmanager ? filter.lgmanager : '';
   let stream_id = filter.streamname ? filter.streamname : [];
   if (stream_id.length){
     stream_id = stream_id[0].split(',');    
@@ -699,6 +701,29 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const status = filter.status ? filter.status : [];
   const conditions = [];
   const mhfd_lead = filter.mhfdmanager && filter.mhfdmanager!=='' ? filter.mhfdmanager : [];  
+  if (lgmanager !== '') {
+    logger.info(`Filtering by lgmanager ${lgmanager}...`);
+    //LG Manager
+     conditions.push(Project.findAll({
+       attributes: ["project_id", "code_project_type_id"],
+       include: [{
+         model: ProjectStaff,
+         attributes: [],
+         required: true,
+         include: [{
+           model: MHFDStaff,
+           required: true,
+           where: {full_name: lgmanager}
+         }, {
+           model: CodeProjectStaffRole,
+           required: true,
+           where: {
+             project_staff_role_type_name: 'Local Government Lead',
+           }
+         }],
+       }]
+     }));
+   }  
   if (mhfd_lead.length) {
    //MHFD LEAD
     conditions.push(Project.findAll({
