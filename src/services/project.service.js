@@ -492,9 +492,9 @@ const getDetails = async (project_id) => {
               'cost',
               'cost_description'
             ],
-            // where: {
-            //   code_cost_type_id: 1
-            // }
+            where: {
+              is_active: 1
+            }
           },
           {
             model: ProjectStatus,
@@ -847,7 +847,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
         include: [{
           model: ProjectCost,
           attributes: [],
-          where: { code_cost_type_id: ESTIMATED_ID, cost: cost }
+          where: { code_cost_type_id: ESTIMATED_ID, cost: cost , is_active: 1 }
         }]
     }));
   }
@@ -1137,9 +1137,9 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20) =
             'code_cost_type_id',
             'cost'
           ],
-          // where: {
-          //   code_cost_type_id: 1
-          // }
+          where: {
+            is_active: 1
+          }
         },
         {
           model: ProjectStatus,

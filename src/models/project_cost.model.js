@@ -37,6 +37,9 @@ export default (sequelize, DataType) => {
     },
     amendment_number: {
       type: DataType.STRING
+    },
+    is_active: {
+      type: DataType.BOOLEAN
     }
   }, {
     freezeTableName: true,

@@ -161,7 +161,8 @@ export const getEstimatedCostsByProjectids = async (ids) => {
   try {
     const projectCost = await ProjectCost.findAll({
       where: {
-        project_id: ids
+        project_id: ids,
+        is_active: 1
       }
     }).map(result => result.dataValues);
     const ESTIMATED_COST = 1;

@@ -283,9 +283,9 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
           'code_cost_type_id',
           'cost'
         ],
-        // where: {
-        //   code_cost_type_id: 1
-        // }
+        where: {
+          is_active: 1
+        }
       },
     ];
     let optionalIncludes = [ 
