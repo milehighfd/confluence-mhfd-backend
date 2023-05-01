@@ -54,6 +54,7 @@ const StreamStudy = db.streamstudy;
 const CodeStudyReason = db.codeStudyReason;
 const CodeProjectStaffRole = db.codeProjectStaffRole;
 const User = db.user;
+const CodeProjectPartnerType = db.codeProjectPartnerType;
 const Op = sequelize.Op;
 
 async function getCentroidsOfAllProjects () {
@@ -537,23 +538,28 @@ const getDetails = async (project_id) => {
           },
           {
             model: ProjectPartner,
-            required: false,
-            separate: true,
             attributes: [
               'project_partner_id',
               'code_partner_type_id'
             ],
-            include: {
+            required: false,
+            separate: true,
+            include: [{
+              model: CodeProjectPartnerType,
+              required: false,
+              attributes: [
+                'code_partner_type_id',
+                'partner_type_name',
+                'partner_type'
+              ]
+            },{
               model: BusinessAssociate,
               required: false,
               attributes: [
                 'business_name',
                 'business_associates_id'
               ]
-            },
-            // where: {
-            //   code_partner_type_id: [3, 8, 11]
-            // }
+            },],   
           },
           {
             model: ProjectProposedAction,
@@ -592,6 +598,7 @@ const getDetails = async (project_id) => {
               'project_staff_id'
             ],
             include: {
+
               model: MHFDStaff,
               required: false,
               attributes: [

@@ -238,6 +238,12 @@ db.projectPartner.belongsTo(
     targetKey: 'business_associates_id'
   }
 );
+db.projectPartner.belongsTo(
+  db.codeProjectPartnerType,
+  {
+    foreignKey: 'code_partner_type_id'
+  }
+);
 // project service area
 db.project.hasMany(db.projectServiceArea, {foreignKey: 'project_id'});
 db.project.hasMany(db.projectServiceArea, {foreignKey: 'project_id', as: 'currentServiceArea'});
