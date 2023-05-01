@@ -370,6 +370,35 @@ export async function componentCounterRoute(req, res) {
   }
 }
 
+export async function componentParamFilterCounter(req, res) {
+  try {
+    const data = {};
+    let dataPromises = [
+      groupService.getStatus(),         //0
+      groupService.getJurisdiction(),   //1
+      groupService.getCounty(),         //2
+      groupService.getServiceArea(),    //3
+      groupService.getMhfdStaff(),      //5
+      groupService.getLGManager(),      //6
+    ];
+    data.status = resolvedPromises[0];
+    data.jurisdiction = resolvedPromises[1];
+    data.county = resolvedPromises[2];
+    data.servicearea = resolvedPromises[3];
+    data.projecttype = resolvedPromises[4];
+    data.creator = [];
+    data.mhfdmanager = resolvedPromises[5];
+    data.startyear = [];
+    data.completedyear = [];
+    data.mhfddollarallocated = [];
+    data.workplanyear = [];
+    data.problemtype = [];
+    data.lgmanager = resolvedPromises[6];
+    data.estimatedCost = [];
+  } catch (error) {
+    logger.error(error);
+  } 
+}
 export async function componentParamFilterRoute(req, res) {
   logger.info(`Starting endpoint mapgallery.component.route/params-filter-components with params ${JSON.stringify(req.params, null, 2)}`);
   try {
