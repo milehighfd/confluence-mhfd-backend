@@ -62,11 +62,28 @@ const countProjects = async (type, filter, extraFilters) => {
   }
   if (type === 'jurisdiction' || extraFilters?.filterby === 'jurisdiction') {
     const filters = [];
-    if (type === 'jurisdiction') {
-      filters.push(+filter);
+    let where = [];
+    if (type === 'jurisdiction' && extraFilters?.filterby === 'jurisdiction') {
+      const array = extraFilters.value;
+      if (array.length){
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ code_local_government_id: intArray }, { code_local_government_id: +filter }] };
+      }else{
+        where = { [Op.and]: [{ code_local_government_id: extraFilters.value }, { code_local_government_id: +filter }] };
+      }        
     }
-    if (extraFilters?.filterby === 'jurisdiction') {
-      filters.push(extraFilters.value);
+    else if (type === 'jurisdiction') {
+      filters.push(+filter);
+      where = { code_local_government_id: +filter }
+    }
+    else if (extraFilters?.filterby === 'jurisdiction') {
+      const array = extraFilters.value;
+      if (array.length){
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ code_local_government_id: intArray }] };
+      }else{
+        where = { [Op.and]: [{ code_local_government_id: extraFilters.value }] };
+      }    
     }
     includes.push({
       model: ProjectLocalGovernment,
@@ -78,7 +95,7 @@ const countProjects = async (type, filter, extraFilters) => {
           'local_government_name',
           'code_local_government_id'
         ],
-        where: { code_local_government_id: filters }
+        where: where
       },
       attributes: [
         'project_local_government_id'
@@ -111,11 +128,28 @@ const countProjects = async (type, filter, extraFilters) => {
   }
   if (type === 'county' || extraFilters?.filterby === 'county') {
     const filters = [];
-    if (type === 'county') {
-      filters.push(+filter);
+    let where = [];
+    if (type === 'county' && extraFilters?.filterby === 'county') {
+      const array = extraFilters.value;
+      if (array.length){
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ state_county_id: intArray }, { state_county_id: +filter }] };
+      }else{
+        where = { [Op.and]: [{ state_county_id: extraFilters.value }, { state_county_id: +filter }] };
+      }        
     }
-    if (extraFilters?.filterby === 'county') {
-      filters.push(extraFilters.value);
+    else if (type === 'county') {
+      filters.push(+filter);
+      where = { state_county_id: +filter }
+    }
+    else if (extraFilters?.filterby === 'county') {
+      const array = extraFilters.value;
+      if (array.length) {
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ state_county_id: intArray }] };
+      } else {
+        where = { [Op.and]: [{ state_county_id: extraFilters.value }] };
+      }
     }
     includes.push({
       model: ProjectCounty,
@@ -126,9 +160,9 @@ const countProjects = async (type, filter, extraFilters) => {
         attributes: [
           'county_name',
           'state_county_id'
-        ],
-        where: { state_county_id: filters }
+        ],       
       },
+      where: where,
       attributes: [
         'project_county_id'
       ]
@@ -492,11 +526,28 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
     }
     if (type === 'jurisdiction' || extraFilters?.filterby === 'jurisdiction') {
       const filters = [];
-      if (type === 'jurisdiction') {
-        filters.push(+filter);
+      let where = [];
+      if (type === 'jurisdiction' && extraFilters?.filterby === 'jurisdiction') {
+        const array = extraFilters.value;
+        if (array.length){
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ code_local_government_id: intArray }, { code_local_government_id: +filter }] };
+        }else{
+          where = { [Op.and]: [{ code_local_government_id: extraFilters.value }, { code_local_government_id: +filter }] };
+        }        
       }
-      if (extraFilters?.filterby === 'jurisdiction') {
-        filters.push(extraFilters.value);
+      else if (type === 'jurisdiction') {
+        filters.push(+filter);
+        where = { code_local_government_id: +filter }
+      }
+      else if (extraFilters?.filterby === 'jurisdiction') {
+        const array = extraFilters.value;
+        if (array.length){
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ code_local_government_id: intArray }] };
+        }else{
+          where = { [Op.and]: [{ code_local_government_id: extraFilters.value }] };
+        }    
       }
       optionalIncludes.push({
         model: ProjectLocalGovernment,
@@ -508,7 +559,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
             'local_government_name',
             'code_local_government_id'
           ],
-          where: { code_local_government_id: filters }
+          where: where
         },
         attributes: [
           'project_local_government_id'
@@ -541,11 +592,28 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
     }
     if (type === 'county' || extraFilters?.filterby === 'county') {
       const filters = [];
-      if (type === 'county') {
-        filters.push(+filter);
+      let where = [];
+      if (type === 'county' && extraFilters?.filterby === 'county') {
+        const array = extraFilters.value;
+        if (array.length) {
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ state_county_id: intArray }, { state_county_id: +filter }] };
+        } else {
+          where = { [Op.and]: [{ state_county_id: extraFilters.value }, { state_county_id: +filter }] };
+        }
       }
-      if (extraFilters?.filterby === 'county') {
-        filters.push(extraFilters.value);
+      else if (type === 'county') {
+        filters.push(+filter);
+        where = { state_county_id: +filter }
+      }
+      else if (extraFilters?.filterby === 'county') {
+        const array = extraFilters.value;
+        if (array.length) {
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ state_county_id: intArray }] };
+        } else {
+          where = { [Op.and]: [{ state_county_id: extraFilters.value }] };
+        }
       }
       optionalIncludes.push({
         model: ProjectCounty,
@@ -557,7 +625,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
             'county_name',
             'state_county_id'
           ],
-          where: { state_county_id: filters }
+          where: where,
         },
         attributes: [
           'project_county_id'
