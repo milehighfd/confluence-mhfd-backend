@@ -60,10 +60,10 @@ router.get('/by-project/:projectid', async (req, res) => {
       }
    })
    res.send({
-      attachments 
+      attachments
    })
+   logger.info(`Finished function findAll for attachment.rote/by-project/:projectid`);
 });
-logger.info(`Finished function findAll for attachment.rote/by-project/:projectid`);
 
 router.get('/get-files', async (req, res) => {
    logger.info(`Starting endpoint attachment.rote/get-files with params ${JSON.stringify(req.params, null, 2)}`);

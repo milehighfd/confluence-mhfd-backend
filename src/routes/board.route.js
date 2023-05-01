@@ -850,7 +850,7 @@ const getEmailsForWP = async (board) => {
     }
     return emails;
 }
-    logger.info(`Finished function findAll for board/`);
+   
 
 const sendMails = async (board, fullName) => {
     let emails = [];
