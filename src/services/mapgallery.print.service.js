@@ -300,9 +300,9 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   const mapWidth = 750;
   const URL_BASE = 'https://confdev.mhfd.org/';
   const urlImage =
-    project_type_name === 'Capital (CIP)'
+    project_type_name === 'CIP'
       ? `${URL_BASE}detailed/capital.png`
-      : project_type_name === 'Planning Study (Study)'
+      : project_type_name === 'Study'
       ? `${URL_BASE}projectImages/study.jpg`
       : project_type_name === 'Vegetation Management'
       ? `${URL_BASE}detailed/vegetation-management.png`
@@ -312,7 +312,11 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       ? `${URL_BASE}detailed/restoration.png`
       : project_type_name === 'General Maintenance'
       ? `${URL_BASE}detailed/minor-repairs.png`
-      : `${URL_BASE}detailed/debris-management.png`;
+      :project_type_name === 'Restoration'
+      ? `${URL_BASE}detailed/restoration.png`
+      :project_type_name === 'Routine Trash and Debris'
+      ? `${URL_BASE}detailed/debris-management.png`
+      : `${URL_BASE}detailed/watershed-change.png`;
 
   html = html.split('${projectname}').join(_data.dataValues.project_name);
   html = html.split('${projecttype}').join(_data.dataValues.project_type_name + ' Project');
