@@ -105,7 +105,8 @@ export const getActions = async (filter) => {
               'year_of_study',
               'jurisdiction',
               'mhfdmanager',
-              ['type', 'component_type']
+              ['type', 'component_type'],
+              'component_id'
             ],
             where: where
           }));
@@ -119,7 +120,8 @@ export const getActions = async (filter) => {
               'estimated_cost_base',
               'local_government',
               'mhfd_manager',
-              'component_type'
+              'component_type',
+              'component_id'
             ],
             where: whereStreamImprovementException
           })

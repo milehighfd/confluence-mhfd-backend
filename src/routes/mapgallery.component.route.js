@@ -390,14 +390,11 @@ export async function componentFilterIds(req, res) {
     const data = {};    
     const allActions = await getActions(body);  
     // console.log('All Actions', allActions);
-    const groups = allActions.reduce((groups, item) => {
-      // console.log('Groups ', item[/component_type]);
-      const group = (groups[item.component_type] || []);
-      group.push(item);
-      groups[item.component_type] = group;
-      return groups;
-    }, {});
-    res.status(200).send(allActions);
+    const actionsIds = allActions.map(value => ({
+      ...value,
+      actions: value.actions.map(act => act.component_id)
+    }));
+    res.status(200).send(actionsIds);
   } catch (error) {
     logger.error('Error at' + error);
   }
