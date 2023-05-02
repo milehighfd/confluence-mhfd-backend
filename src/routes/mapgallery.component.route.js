@@ -379,36 +379,46 @@ export async function componentCounterRoute(req, res) {
     {value: "Completed", id: 5},
     {value: "Constructed", id: 6},
     {value: "Archived", id: 6}
-  ]
+  ];
+
 
 export async function componentParamFilterCounter(req, res) {
   try {
+    const bounds = req.query.bounds;
+    const body = req.body;
     const data = {};
     let dataPromises = [
-      actionStatuses,         //0
-      groupService.getJurisdiction(),   //1
-      groupService.getCounty(),         //2
-      groupService.getServiceArea(),    //3
-      groupService.getMhfdStaff(),      //5
-      groupService.getLGManager(),      //6
+      groupService.getJurisdiction(),   //0
+      groupService.getCounty(),         //1
+      groupService.getServiceArea(),    //2
+      groupService.getMhfdStaff(),      //3
     ];
+    //TODO: action type is the list of all actions
 
     let resolvedPromises = await Promise.all(dataPromises);
 
-    data.status = resolvedPromises[0];
-    data.jurisdiction = resolvedPromises[1];
-    data.county = resolvedPromises[2];
-    data.servicearea = resolvedPromises[3];
-    data.projecttype = resolvedPromises[4];
-    data.creator = [];
-    data.mhfdmanager = resolvedPromises[5];
-    data.startyear = [];
-    data.completedyear = [];
-    data.mhfddollarallocated = [];
-    data.workplanyear = [];
-    data.problemtype = [];
-    data.lgmanager = resolvedPromises[6];
+    data.status = actionStatuses;
+    data.jurisdiction = resolvedPromises[0];
+    data.county = resolvedPromises[1];
+    data.servicearea = resolvedPromises[2];
+    data.watershed = resolvedPromises[3];
     data.estimatedCost = [];
+    data.yearofstudy = [];
+    data.actiontype = []; //TODO: list of actions
+
+
+    const result = {
+      "component_type":  null,
+      "status":  actionStatuses,
+      "yearofstudy":  null,
+      "watershed":  data.watershed,
+      "estimatedcost":  null,
+      "jurisdiction":  data.jurisdiction,
+      "county":  data.county,
+      "servicearea":  data.servicearea
+    };
+
+    res.status(200).send(result);
   } catch (error) {
     logger.error(error);
   } 
