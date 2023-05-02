@@ -181,7 +181,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       _data[k]?.length > 0
     ) {
       for (let i = 0; i < _data?.project_partners.length; i++) {
-        if (_data?.project_partners[i]?.code_partner_type_id === 11) {
+        if (_data?.project_partners[i]?.code_project_partner_type?.partner_type === 'SPONSOR') {
           data['sponsor']
             ? (data[
                 'sponsor'
@@ -189,7 +189,9 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
             : (data['sponsor'] =
                 _data?.project_partners[i].business_associate.business_name);
         }
-        if (_data?.project_partners[i]?.code_partner_type_id === 8) {
+        console.log(_data?.project_partners[i]?.code_project_partner_type?.partner_type)
+        console.log('VENDORS')
+        if (_data?.project_partners[i]?.code_project_partner_type?.partner_type === 'VENDOR') {          
           data['vendors']
             ? (data[
                 'vendors'
@@ -198,33 +200,33 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
                 _data?.project_partners[i].business_associate.business_name);
 
           data['typeVendor']
-            ? (data['typeVendor'] += `Civil Contractor ,`)
-            : (data['typeVendor'] = 'Civil Contractor');
+            ? (data['typeVendor'] += `${_data?.project_partners[i]?.code_project_partner_type?.partner_type_name}`)
+            : (data['typeVendor'] = `${_data?.project_partners[i]?.code_project_partner_type?.partner_type_name} ,`);
         }
-        if (_data?.project_partners[i]?.code_partner_type_id === 1) {
-          data['vendors']
-            ? (data[
-                'vendors'
-              ] += `${_data?.project_partners[i].business_associate.business_name} ,`)
-            : (data['vendors'] =
-                _data?.project_partners[i].business_associate.business_name);
+        // if (_data?.project_partners[i]?.code_partner_type_id === 1) {
+        //   data['vendors']
+        //     ? (data[
+        //         'vendors'
+        //       ] += `${_data?.project_partners[i].business_associate.business_name} ,`)
+        //     : (data['vendors'] =
+        //         _data?.project_partners[i].business_associate.business_name);
 
-          data['typeVendor']
-            ? (data['typeVendor'] += `Developer ,`)
-            : (data['typeVendor'] = 'Developer');
-        }
-        if (_data?.project_partners[i]?.code_partner_type_id === 9) {
-          data['vendors']
-            ? (data[
-                'vendors'
-              ] += `${_data?.project_partners[i].business_associate.business_name} ,`)
-            : (data['vendors'] =
-                _data?.project_partners[i].business_associate.business_name);
+        //   data['typeVendor']
+        //     ? (data['typeVendor'] += `Developer ,`)
+        //     : (data['typeVendor'] = 'Developer');
+        // }
+        // if (_data?.project_partners[i]?.code_partner_type_id === 9) {
+        //   data['vendors']
+        //     ? (data[
+        //         'vendors'
+        //       ] += `${_data?.project_partners[i].business_associate.business_name} ,`)
+        //     : (data['vendors'] =
+        //         _data?.project_partners[i].business_associate.business_name);
 
-          data['typeVendor']
-            ? (data['typeVendor'] += `Landscape Contractor ,`)
-            : (data['typeVendor'] = 'Landscape Contractor');
-        }
+        //   data['typeVendor']
+        //     ? (data['typeVendor'] += `Landscape Contractor ,`)
+        //     : (data['typeVendor'] = 'Landscape Contractor');
+        // }
       }
     }
 
@@ -366,13 +368,13 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       return `
         <tr>
           <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
-            element == null ? 'N/A' : element
+            _typeVendor[index] == null ? 'N/A' :  _typeVendor[index]
           }</td>
           <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
-            _typeVendor[index]
-              ? _typeVendor[index] == null
+            element
+              ? element == null
                 ? 'N/A'
-                : _typeVendor[index]
+                : element
               : ''
           }</td>
         </tr>
