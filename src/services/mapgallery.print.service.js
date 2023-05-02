@@ -162,12 +162,14 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       (_data[k] !== void 0 || _data[k] !== []) &&
       _data[k]?.length > 0
     ) {
+      // console.log('+++++++++++++',k,'***************',_data[k], '%%%%%%%%%%%%%%%' ,_data?.project_statuses, 'KKKKKKKKKKK');
       data['project_type_name'] =
         _data?.project_statuses[0].code_phase_type.code_project_type.project_type_name;
       const currentStatus = _data?.project_statuses.filter(
         (element) =>
           element.project_status_id === _data.current_project_status_id
       );
+      // console.log(currentStatus,'currentStatus&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
       if (currentStatus && currentStatus?.length > 0) {
         data['phase'] = currentStatus[0].code_phase_type.phase_name;
         data['status'] =
@@ -314,8 +316,8 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       ? `${URL_BASE}detailed/minor-repairs.png`
       : `${URL_BASE}detailed/debris-management.png`;
 
-  html = html.split('${projectname}').join(project_name);
-  html = html.split('${projecttype}').join(project_type_name + ' Project');
+  html = html.split('${projectname}').join(_data.dataValues.project_name);
+  html = html.split('${projecttype}').join(_data.dataValues.project_type_name + ' Project');
   html = html.split('${sponsor}').join(sponsor);
   html = html.split('${county}').join(county);
   html = html.split('${servicearea}').join(servicearea);
@@ -332,7 +334,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   // html = html.split('${frequency}').join(frequency);
   html = html.split('${mhfdManager}').join('N/A');
   html = html.split('${lgManager}').join('N/A');
-  html = html.split('${description}').join(description);
+  html = html.split('${description}').join(_data.dataValues.description);
   html = html.split('${contractor}').join(contractor ? contractor : 'N/A');
   html = html.split('${consultant}').join(consultant ? consultant : 'N/A');
   // html = html.split('${mapHeight}').join(mapHeight);
