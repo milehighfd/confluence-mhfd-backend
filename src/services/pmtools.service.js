@@ -170,12 +170,29 @@ const countProjects = async (type, filter, extraFilters) => {
   }
   if (type === 'servicearea' || extraFilters?.filterby === 'servicearea') {
     const filters = [];
-    if (type === 'servicearea') {
-      filters.push(+filter);
-    }
-    if (extraFilters?.filterby === 'servicearea') {
-      filters.push(extraFilters.value);
-    }
+      let where = [];
+      if (type === 'servicearea' && extraFilters?.filterby === 'servicearea') {
+        const array = extraFilters.value;
+        if (array.length) {
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ code_service_area_id: intArray }, { code_service_area_id: +filter }] };
+        } else {
+          where = { [Op.and]: [{ code_service_area_id: extraFilters.value }, { code_service_area_id: +filter }] };
+        }
+      }
+      else if (type === 'servicearea') {
+        filters.push(+filter);
+        where = { code_service_area_id: +filter }
+      }
+      else if (extraFilters?.filterby === 'servicearea') {
+        const array = extraFilters.value;
+        if (array.length) {
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ code_service_area_id: intArray }] };
+        } else {
+          where = { [Op.and]: [{ code_service_area_id: extraFilters.value }] };
+        }
+      }
     includes.push({
       model: ProjectServiceArea,
       as: 'currentServiceArea',
@@ -186,7 +203,7 @@ const countProjects = async (type, filter, extraFilters) => {
           'service_area_name',
           'code_service_area_id'
         ],
-        where: { code_service_area_id: filters }
+        where: where
       },
       attributes: [
         'project_service_area_id'
@@ -651,11 +668,28 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
     }
     if (type === 'servicearea' || extraFilters?.filterby === 'servicearea') {
       const filters = [];
-      if (type === 'servicearea') {
-        filters.push(+filter);
+      let where = [];
+      if (type === 'servicearea' && extraFilters?.filterby === 'servicearea') {
+        const array = extraFilters.value;
+        if (array.length) {
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ code_service_area_id: intArray }, { code_service_area_id: +filter }] };
+        } else {
+          where = { [Op.and]: [{ code_service_area_id: extraFilters.value }, { code_service_area_id: +filter }] };
+        }
       }
-      if (extraFilters?.filterby === 'servicearea') {
-        filters.push(extraFilters.value);
+      else if (type === 'servicearea') {
+        filters.push(+filter);
+        where = { code_service_area_id: +filter }
+      }
+      else if (extraFilters?.filterby === 'servicearea') {
+        const array = extraFilters.value;
+        if (array.length) {
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ code_service_area_id: intArray }] };
+        } else {
+          where = { [Op.and]: [{ code_service_area_id: extraFilters.value }] };
+        }
       }
       optionalIncludes.push({
         model: ProjectServiceArea,
@@ -667,7 +701,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
             'service_area_name',
             'code_service_area_id'
           ],
-          where: { code_service_area_id: filters }
+          where: where
         },
         attributes: [
           'project_service_area_id'
