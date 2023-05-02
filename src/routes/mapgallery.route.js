@@ -2151,7 +2151,7 @@ router.get('/problem_part/:id', async (req, res) => {
  });
 
 router.post('/params-filter-components', componentParamFilterRoute)
-router.post('/params-filter-components-db', componentParamFilterCounter),
+router.post('/params-filter-components-db', componentParamFilterCounter)
 router.post('/params-filter-components-ids', componentFilterIds)
 router.post('/params-filter-projects', projectParamFilterRoute)
 router.post('/params-filter-problems', problemParamFilterRoute)

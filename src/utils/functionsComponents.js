@@ -73,6 +73,25 @@ const actionListNames = [
   'Landscaping Area',
   'Stream Improvement'
 ];
+const TABLES_COMPONENTS = [
+  'grade_control_structure',
+  'pipe_appurtenances',
+  'special_item_point',
+  'special_item_linear',
+  'special_item_area',
+  'channel_improvements_linear',
+  'channel_improvements_area',
+  'removal_line',
+  'removal_area',
+  'storm_drain',
+  'detention_facilities',
+  'maintenance_trails',
+  'land_acquisition',
+  'landscaping_area',
+  // TO DO: add stream improvement measure after client modifies table in carto UPDATE using copy of table with columns names fixed
+  // ,'stream_improvement_measure_copy'
+  'stream_improvement_measure'
+];
 
 export const getActions = async (filter) => {
     try {

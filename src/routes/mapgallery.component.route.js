@@ -459,7 +459,14 @@ export async function componentParamFilterCounter(req, res) {
         return pre;
       }, 0);
     });
-    res.status(200).send(result);
+    const actionsIds = allActions.map(value => ({
+      ...value,
+      actions: value.actions.map(act => act.component_id)
+    }));
+    res.status(200).send({
+      filtersData: result,
+      actionsIds: actionsIds
+    });
   } catch (error) {
     logger.error(error);
   } 
