@@ -379,7 +379,7 @@ export async function componentCounterRoute(req, res) {
     {value: "Complete", id: 4},
     {value: "Completed", id: 5},
     {value: "Constructed", id: 6},
-    {value: "Archived", id: 6}
+    {value: "Archived", id: 7}
   ];
 
 
@@ -419,24 +419,46 @@ export async function componentParamFilterCounter(req, res) {
     data.jurisdiction = resolvedPromises[0];
     data.county = resolvedPromises[1];
     data.servicearea = resolvedPromises[2];
-    data.watershed = resolvedPromises[3];
+    data.mhfdmanager = resolvedPromises[3];
     data.estimatedCost = [];
     data.yearofstudy = [];
     data.actiontype = []; //TODO: list of actions
     
-    getActions(body);
+    const allActions = await getActions(body);
 
     const result = {
       "component_type":  null,
       "status":  actionStatuses,
       "yearofstudy":  null,
-      "watershed":  data.watershed,
+      "mhfdmanager":  data.mhfdmanager,
       "estimatedcost":  null,
       "jurisdiction":  data.jurisdiction,
       "county":  data.county,
       "servicearea":  data.servicearea
     };
 
+    let allActionCounter = allActions.map((group) => group.actions);
+    let newAllactionCounter =[].concat.apply([], allActionCounter);
+    
+    result.county.forEach((d) => {
+        d.counter = newAllactionCounter.reduce((pre, current) => {
+          if (current?.county=== d.value) {
+            return pre + 1;
+          }
+          return pre;
+        }, 0);
+    });
+    result.servicearea.forEach((d) => {
+      d.counter = newAllactionCounter.reduce((pre, current) => {
+        if (current.servicearea && current?.servicearea === d.value) {
+          return pre + 1;
+        } 
+        if (current.service_area && current?.service_area === d.value) {
+          return pre + 1;
+        } 
+        return pre;
+      }, 0);
+    });
     res.status(200).send(result);
   } catch (error) {
     logger.error(error);
