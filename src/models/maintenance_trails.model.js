@@ -41,6 +41,9 @@ export default (sequelize, DataType) => {
     estimated_cost: {
       type: DataType.INTEGER
     },
+    description: {
+      type: DataType.STRING
+    },
     station_limits: {
       type: DataType.STRING
     },

@@ -35,9 +35,15 @@ export default (sequelize, DataType) => {
     id: {
       type: DataType.STRING
     },
-    noinlets: {
+    unit: {
+      type: DataType.STRING
+    },
+    unit_cost: {
       type: DataType.INTEGER
     },
+    // noinlets: {
+    //   type: DataType.INTEGER
+    // },
     checked_by: {
       type: DataType.STRING
     },
@@ -83,9 +89,9 @@ export default (sequelize, DataType) => {
     component_id: {
       type: DataType.INTEGER
     },
-    GlobalID: {
-      type: DataType.STRING
-    },
+    // GlobalID: {
+    //   type: DataType.STRING
+    // },
     created_user: {
       type: DataType.STRING
     },

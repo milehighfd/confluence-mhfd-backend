@@ -5,12 +5,6 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       primaryKey: true
     },
-    subtype: {
-      type: DataType.STRING
-    },
-    quantity: {
-      type: DataType.INTEGER
-    },
     jurisdiction: {
       type: DataType.STRING
     },
@@ -38,6 +32,12 @@ export default (sequelize, DataType) => {
     length: {
       type: DataType.INTEGER
     },
+    subtype: {
+      type: DataType.STRING
+    },
+    quantity: {
+      type: DataType.INTEGER
+    },
     unit: {
       type: DataType.STRING
     },
@@ -50,9 +50,9 @@ export default (sequelize, DataType) => {
     estimated_cost: {
       type: DataType.INTEGER
     },
-    station_limits: {
-      type: DataType.STRING
-    },
+    // station_limits: {
+    //   type: DataType.STRING
+    // },
     original_cost: {
       type: DataType.INTEGER
     },
@@ -86,12 +86,6 @@ export default (sequelize, DataType) => {
     status2022: {
       type: DataType.STRING
     },
-    component_id: {
-      type: DataType.INTEGER
-    },
-    GlobalID: {
-      type: DataType.STRING
-    },
     created_user: {
       type: DataType.STRING
     },
@@ -103,6 +97,12 @@ export default (sequelize, DataType) => {
     },
     last_edited_date: {
       type: DataType.DATE
+    },    
+    component_id: {
+      type: DataType.INTEGER
+    },
+    GlobalID: {
+      type: DataType.STRING
     },
     component_type: {
       type: DataType.STRING

@@ -142,7 +142,7 @@ export default (sequelize, DataType) => {
     }
   }, {
     freezeTableName: true,
-    tableName: 'GRADE_CONTROL_STRUCTURE',
+    tableName: 'STORM_DRAIN',
     createdAt: false,
     updatedAt: false
   });

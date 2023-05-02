@@ -71,6 +71,7 @@ import detentionFacilities from 'bc/models/detention_facilities.model.js';
 import maintenanceTrails from 'bc/models/maintenance_trails.model.js';
 import landAcquisition from 'bc/models/land_acquisition.model.js';
 import landscapingArea from 'bc/models/landscaping_area.model.js'; 
+import streamImprovementMeasure from 'bc/models/stream_improvement_measure.model.js'; 
 
 
 Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
@@ -175,6 +176,7 @@ db.detentionFacilities = detentionFacilities(sequelize, Sequelize);
 db.maintenanceTrails = maintenanceTrails(sequelize, Sequelize);
 db.landAcquisition = landAcquisition(sequelize, Sequelize);
 db.landscapingArea = landscapingArea(sequelize, Sequelize); 
+db.streamImprovementMeasure = landscapingArea(sequelize, Sequelize); 
 
 
 db.user.hasMany(db.ProjectFavorite, {foreignKey: 'user_id'});
