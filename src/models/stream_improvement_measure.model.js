@@ -62,7 +62,7 @@ export default (sequelize, DataType) => {
         mhfd_code: {
           type: DataType.STRING
         },
-        servicearea: {
+        service_area: {
           type: DataType.STRING
         },
         county: {
