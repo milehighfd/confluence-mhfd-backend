@@ -1,6 +1,7 @@
 import needle from 'needle';
 import { CARTO_URL } from 'bc/config/config.js';
 import logger from 'bc/config/logger.js';
+import groupService from 'bc/services/group.service.js';
 
 const distanceInYears = 1;
 
@@ -370,17 +371,30 @@ export async function componentCounterRoute(req, res) {
   }
 }
 
+  let actionStatuses = [
+    {value: "TBD", id: 1},
+    {value: "Proposed", id: 2},
+    {value: "Existing", id: 3},
+    {value: "Complete", id: 4},
+    {value: "Completed", id: 5},
+    {value: "Constructed", id: 6},
+    {value: "Archived", id: 6}
+  ]
+
 export async function componentParamFilterCounter(req, res) {
   try {
     const data = {};
     let dataPromises = [
-      groupService.getStatus(),         //0
+      actionStatuses,         //0
       groupService.getJurisdiction(),   //1
       groupService.getCounty(),         //2
       groupService.getServiceArea(),    //3
       groupService.getMhfdStaff(),      //5
       groupService.getLGManager(),      //6
     ];
+
+    let resolvedPromises = await Promise.all(dataPromises);
+
     data.status = resolvedPromises[0];
     data.jurisdiction = resolvedPromises[1];
     data.county = resolvedPromises[2];
