@@ -5,6 +5,7 @@ import {
   MAIN_PROJECT_TABLE
 } from 'bc/config/config.js';
 import projectService from 'bc/services/project.service.js';
+import { Op } from 'sequelize';
 const Projects = db.project;
 const ProjectPartner = db.projectPartner;
 const ProjectCounty = db.projectCounty;
@@ -53,23 +54,64 @@ const actionList =[
     MaintenanceTrails,
     LandAcquisition,
     LandscapingArea,
-    StreamImprovementMeasure
+    // StreamImprovementMeasure
 ]
 
-export const getActions = async () => {
+export const getActions = async (filter) => {
     try {
-    //     const actions = actionList.forEach(async actionType => {
-    //         let projectServiceArea = await actionType.findAll({
-    //             include: {
-    //               model: CodeServiceArea,
-    //               attributes: ['service_area_name']
-    //             },
-    //             where: {
-    //               project_id: ids
-    //             }
-    //           });
-    //     });
-    //   return projectServiceArea;
+        let promises = [];
+        let where = {};
+        let whereStreamImprovementException = {};
+        const service_area = filter.servicearea ? filter.servicearea : [];
+
+        if (service_area.length) {
+          where = {
+            ...where,
+            servicearea: {[Op.in]: service_area}
+          };
+          whereStreamImprovementException = {
+            ...whereStreamImprovementException,
+            service_area: {[Op.in]: service_area}
+          };
+        }
+        // if (county) {
+
+        // }
+
+        actionList.forEach(async actionType => {
+          promises.push(actionType.findAll({
+            attribute: [
+              'servicearea',
+              'county',
+              'status',
+              'estimatedcost',
+              'yearofstudy',
+              'jurisdiction',
+              'mhfdmanager',
+              'component_type'
+            ],
+            where: where
+          }));
+        });
+        promises.push(
+          StreamImprovementMeasure.findAll({
+            attribute: [
+              'service_area',
+              'county',
+              'status',
+              'estimated_cost_base',
+              'local_government',
+              'mhfd_manager',
+              'component_type'
+            ],
+            where: whereStreamImprovementException
+          })
+        );
+
+        let allActions = await Promise.all(promises);
+        allActions = allActions.map(action =>  action.map(act => act.toJSON()))
+        // console.log('All Actions \n ******* \n', allActions);
+        return allActions;
     } catch (error) {
       throw error;
     }

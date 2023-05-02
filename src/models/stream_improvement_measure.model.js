@@ -35,7 +35,7 @@ export default (sequelize, DataType) => {
         complexity_subtype: {
           type: DataType.STRING
         },
-        site_setting: {
+        site_settings: {
           type: DataType.STRING
         },
         existing_channel_presence: {

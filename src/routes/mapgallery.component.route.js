@@ -2,6 +2,7 @@ import needle from 'needle';
 import { CARTO_URL } from 'bc/config/config.js';
 import logger from 'bc/config/logger.js';
 import groupService from 'bc/services/group.service.js';
+import { getActions } from 'bc/utils/functionsComponents.js';
 
 const distanceInYears = 1;
 
@@ -405,7 +406,8 @@ export async function componentParamFilterCounter(req, res) {
     data.estimatedCost = [];
     data.yearofstudy = [];
     data.actiontype = []; //TODO: list of actions
-
+    
+    getActions(body);
 
     const result = {
       "component_type":  null,

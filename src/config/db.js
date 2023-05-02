@@ -176,7 +176,7 @@ db.detentionFacilities = detentionFacilities(sequelize, Sequelize);
 db.maintenanceTrails = maintenanceTrails(sequelize, Sequelize);
 db.landAcquisition = landAcquisition(sequelize, Sequelize);
 db.landscapingArea = landscapingArea(sequelize, Sequelize); 
-db.streamImprovementMeasure = landscapingArea(sequelize, Sequelize); 
+db.streamImprovementMeasure = streamImprovementMeasure(sequelize, Sequelize); 
 
 
 db.user.hasMany(db.ProjectFavorite, {foreignKey: 'user_id'});
