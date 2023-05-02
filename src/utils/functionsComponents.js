@@ -80,12 +80,12 @@ export const getActions = async (filter) => {
 
         actionList.forEach(async actionType => {
           promises.push(actionType.findAll({
-            attribute: [
+            attributes: [
               'servicearea',
               'county',
               'status',
-              'estimatedcost',
-              'yearofstudy',
+              'estimated_cost',
+              'year_of_study',
               'jurisdiction',
               'mhfdmanager',
               'component_type'
@@ -95,7 +95,7 @@ export const getActions = async (filter) => {
         });
         promises.push(
           StreamImprovementMeasure.findAll({
-            attribute: [
+            attributes: [
               'service_area',
               'county',
               'status',
@@ -110,7 +110,7 @@ export const getActions = async (filter) => {
 
         let allActions = await Promise.all(promises);
         allActions = allActions.map(action =>  action.map(act => act.toJSON()))
-        // console.log('All Actions \n ******* \n', allActions);
+        console.log('All Actions \n ******* \n', allActions);
         return allActions;
     } catch (error) {
       throw error;

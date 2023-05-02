@@ -383,6 +383,18 @@ export async function componentCounterRoute(req, res) {
   ];
 
 
+export async function componentFilterIds(req, res) {
+  try {
+    const bounds = req.query.bounds;
+    const body = req.body;
+    const data = {};    
+    const allActions = getActions(body);
+    res.status(200).send(allActions);
+  } catch (error) {
+    logger.error(error);
+  }
+}
+
 export async function componentParamFilterCounter(req, res) {
   try {
     const bounds = req.query.bounds;
