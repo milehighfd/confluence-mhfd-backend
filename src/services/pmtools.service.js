@@ -195,11 +195,28 @@ const countProjects = async (type, filter, extraFilters) => {
   }
   if (type === 'consultant' || extraFilters?.filterby === 'consultant') {
     const filters = [];
-    if (type === 'consultant') {
-      filters.push(+filter);
+    let where = [];
+    if (type === 'consultant' && extraFilters?.filterby === 'consultant') {
+      const array = extraFilters.value;
+      if (array.length){
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ business_associates_id: intArray }, { business_associates_id: +filter }] };
+      }else{
+        where = { [Op.and]: [{ business_associates_id: extraFilters.value }, { business_associates_id: +filter }] };
+      }        
     }
-    if (extraFilters?.filterby === 'consultant') {
-      filters.push(extraFilters.value);
+    else if (type === 'consultant') {
+      filters.push(+filter);
+      where = { business_associates_id: +filter }
+    }
+    else if (extraFilters?.filterby === 'consultant') {
+      const array = extraFilters.value;
+      if (array.length) {
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ business_associates_id: intArray }] };
+      } else {
+        where = { [Op.and]: [{ business_associates_id: extraFilters.value }] };
+      }
     }
     const CONSULTANT_ID = 3;
     includes.push({
@@ -208,7 +225,7 @@ const countProjects = async (type, filter, extraFilters) => {
       required: true,
       include: {
         model: BusinessAssociate,
-        where: { business_associates_id: filters },
+        where: where,
         attributes: [
           'business_name',
           'business_associates_id'
@@ -659,11 +676,28 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
     }
     if (type === 'consultant' || extraFilters?.filterby === 'consultant') {
       const filters = [];
-      if (type === 'consultant') {
-        filters.push(+filter);
+      let where = [];
+      if (type === 'consultant' && extraFilters?.filterby === 'consultant') {
+        const array = extraFilters.value;
+        if (array.length){
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ business_associates_id: intArray }, { business_associates_id: +filter }] };
+        }else{
+          where = { [Op.and]: [{ business_associates_id: extraFilters.value }, { business_associates_id: +filter }] };
+        }        
       }
-      if (extraFilters?.filterby === 'consultant') {
-        filters.push(extraFilters.value);
+      else if (type === 'consultant') {
+        filters.push(+filter);
+        where = { business_associates_id: +filter }
+      }
+      else if (extraFilters?.filterby === 'consultant') {
+        const array = extraFilters.value;
+        if (array.length) {
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ business_associates_id: intArray }] };
+        } else {
+          where = { [Op.and]: [{ business_associates_id: extraFilters.value }] };
+        }
       }
       const CONSULTANT_ID = 3;
       optionalIncludes.push({
@@ -672,7 +706,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         required: true,
         include: {
           model: BusinessAssociate,
-          where: { business_associates_id: filters },
+          where: where,
           attributes: [
             'business_name',
             'business_associates_id'
