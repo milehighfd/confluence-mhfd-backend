@@ -19,6 +19,9 @@ const ComponentDependency = db.componentdependency;
 
 router.post('/', async (req, res) => { 
   const table = req.body.table;
+  if (!table) {
+    return res.status(400).send({ error: 'You must send table parameter' });
+  }
   let sql = `SELECT * FROM ${table}`;
   if(table.includes('mep_outfalls') || table.includes('mep_channels')){
     sql =  `SELECT cartodb_id, the_geom, the_geom_webmercator, projectname, mep_eligibilitystatus, projectno, mhfd_servicearea, mep_date_designapproval::text,mep_date_constructionapproval::text,mep_date_finalacceptance::text,mep_date_ineligible::text FROM ${table}` ;
