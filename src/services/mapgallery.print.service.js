@@ -162,14 +162,12 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       (_data[k] !== void 0 || _data[k] !== []) &&
       _data[k]?.length > 0
     ) {
-      // console.log('+++++++++++++',k,'***************',_data[k], '%%%%%%%%%%%%%%%' ,_data?.project_statuses, 'KKKKKKKKKKK');
       data['project_type_name'] =
         _data?.project_statuses[0].code_phase_type.code_project_type.project_type_name;
       const currentStatus = _data?.project_statuses.filter(
         (element) =>
-          element.project_status_id === _data.current_project_status_id
+        element.project_status_id === _data._previousDataValues.current_project_status_id
       );
-      // console.log(currentStatus,'currentStatus&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
       if (currentStatus && currentStatus?.length > 0) {
         data['phase'] = currentStatus[0].code_phase_type.phase_name;
         data['status'] =
