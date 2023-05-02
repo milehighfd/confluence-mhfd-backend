@@ -388,10 +388,18 @@ export async function componentFilterIds(req, res) {
     const bounds = req.query.bounds;
     const body = req.body;
     const data = {};    
-    const allActions = getActions(body);
+    const allActions = await getActions(body);  
+    // console.log('All Actions', allActions);
+    const groups = allActions.reduce((groups, item) => {
+      // console.log('Groups ', item[/component_type]);
+      const group = (groups[item.component_type] || []);
+      group.push(item);
+      groups[item.component_type] = group;
+      return groups;
+    }, {});
     res.status(200).send(allActions);
   } catch (error) {
-    logger.error(error);
+    logger.error('Error at' + error);
   }
 }
 

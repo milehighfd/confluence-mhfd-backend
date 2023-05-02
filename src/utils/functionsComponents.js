@@ -56,6 +56,23 @@ const actionList =[
     LandscapingArea,
     // StreamImprovementMeasure
 ]
+const actionListNames = [
+  'Grade Control Structure',
+  'Pipe Appurtenances',
+  'Special Item Point',
+  'Special Item Linear',
+  'Special Item Area',
+  'Channel Improvements Lin',
+  'Channel Improvements Area',
+  'Removal Line',
+  'Removal Area',
+  'Storm Drain',
+  'Detention Facilities',
+  'Maintenance Trails',
+  'Land Acquisition',
+  'Landscaping Area',
+  'Stream Improvement'
+];
 
 export const getActions = async (filter) => {
     try {
@@ -88,7 +105,7 @@ export const getActions = async (filter) => {
               'year_of_study',
               'jurisdiction',
               'mhfdmanager',
-              'component_type'
+              ['type', 'component_type']
             ],
             where: where
           }));
@@ -109,10 +126,14 @@ export const getActions = async (filter) => {
         );
 
         let allActions = await Promise.all(promises);
-        allActions = allActions.map(action =>  action.map(act => act.toJSON()))
-        console.log('All Actions \n ******* \n', allActions);
+        allActions = allActions.map((action, index) =>  ({
+          component_type: actionListNames[index],
+          actions: action.map(act => act.toJSON())
+        }))
+        // console.log('All Actions \n ******* \n', allActions);
         return allActions;
     } catch (error) {
+      console.log('error at components' + error);
       throw error;
     }
   }
