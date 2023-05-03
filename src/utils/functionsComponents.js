@@ -99,7 +99,7 @@ export const getActions = async (filter) => {
         let where = {};
         let whereStreamImprovementException = {};
         const service_area = filter.servicearea ? filter.servicearea : [];
-
+        const county = filter.county ? filter.county : [];
         if (service_area.length) {
           where = {
             ...where,
@@ -110,9 +110,16 @@ export const getActions = async (filter) => {
             service_area: {[Op.in]: service_area}
           };
         }
-        // if (county) {
-
-        // }
+        if (county.length) {
+          where = {
+            ...where,
+            county: {[Op.in]: county}
+          };
+          whereStreamImprovementException = {
+            ...whereStreamImprovementException,
+            county: {[Op.in]: county}
+          };
+        }
 
         actionList.forEach(async actionType => {
           promises.push(actionType.findAll({
