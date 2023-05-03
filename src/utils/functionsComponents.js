@@ -140,11 +140,11 @@ export const getActions = async (filter) => {
         promises.push(
           StreamImprovementMeasure.findAll({
             attributes: [
-              'service_area',
+              ['service_area', 'servicearea'],
               'county',
               'status',
-              'estimated_cost_base',
-              'local_government',
+              ['estimated_cost_base', 'estimated_cost'],
+              ['local_government', 'jurisdiction'],
               'mhfd_manager',
               'component_type',
               'component_id'
