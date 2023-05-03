@@ -104,6 +104,7 @@ export const getActions = async (filter) => {
         const status = filter.status ? filter.status : [];
         const jurisdiction = filter.jurisdiction ? filter.jurisdiction : [];
         const mhfdmanager = filter.mhfdmanager ? filter.mhfdmanager : [];
+        const cost = filter.estimatedcost && filter.estimatedcost.length > 0 ? { [Op.between]: [+filter.estimatedcost[0], +filter.estimatedcost[1]] } : null;
         if (service_area.length) {
           where = {
             ...where,
@@ -162,6 +163,17 @@ export const getActions = async (filter) => {
           whereStreamImprovementException = {
             ...whereStreamImprovementException,
             mhfd_manager: {[Op.in]: mhfdmanager}
+          };
+        }
+        console.log('******** cost *******\n', cost);
+        if(cost) {
+          where = {
+            ...where,
+            estimated_cost: cost
+          };
+          whereStreamImprovementException = {
+            ...whereStreamImprovementException,
+            estimated_cost_base: cost
           };
         }
         actionList.forEach(async actionType => {
