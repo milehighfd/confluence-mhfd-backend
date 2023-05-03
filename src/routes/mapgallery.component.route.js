@@ -382,6 +382,23 @@ export async function componentCounterRoute(req, res) {
     {value: "Archived", id: 7}
   ];
 
+  let componentTypes = [
+    {value: "Grade Control Structure"},
+    {value: "Pipe Appurtenances"},
+    {value: "Special Item Point"},
+    {value: "Special Item Linear"},
+    {value: "Special Item Area"},
+    {value: "Channel Improvements Lin"},
+    {value: "Channel Improvements Area"},
+    {value: "Removal Line"},
+    {value: "Removal Area"},
+    {value: "Storm Drain"},
+    {value: "Detention Facilities"},
+    {value: "Maintenance Trails"},
+    {value: "Land Acquisition"},
+    {value: "Landscaping Area"},
+    {value: "Stream Improvement"}
+  ]
 
 export async function componentFilterIds(req, res) {
   try {
@@ -427,7 +444,7 @@ export async function componentParamFilterCounter(req, res) {
     const allActions = await getActions(body);
 
     const result = {
-      "component_type":  null,
+      "component_type":  componentTypes,
       "status":  actionStatuses,
       "yearofstudy":  null,
       "mhfdmanager":  data.mhfdmanager,

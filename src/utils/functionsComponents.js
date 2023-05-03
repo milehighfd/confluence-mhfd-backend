@@ -100,6 +100,10 @@ export const getActions = async (filter) => {
         let whereStreamImprovementException = {};
         const service_area = filter.servicearea ? filter.servicearea : [];
         const county = filter.county ? filter.county : [];
+        const component_type = filter.component_type ? filter.component_type : [];
+        const status = filter.status ? filter.status : [];
+        const jurisdiction = filter.jurisdiction ? filter.jurisdiction : [];
+        const mhfdmanager = filter.mhfdmanager ? filter.mhfdmanager : [];
         if (service_area.length) {
           where = {
             ...where,
@@ -120,7 +124,46 @@ export const getActions = async (filter) => {
             county: {[Op.in]: county}
           };
         }
-
+        if (component_type.length) {
+          where = {
+            ...where,
+            type: {[Op.in]: component_type}
+          };
+          whereStreamImprovementException = {
+            ...whereStreamImprovementException,
+            component_part_category: {[Op.in]: component_type}
+          };
+        }
+        if (status.length) {
+          where = {
+            ...where,
+            status: {[Op.in]: status}
+          };
+          whereStreamImprovementException = {
+            ...whereStreamImprovementException,
+            status: {[Op.in]: status}
+          };
+        }
+        if (jurisdiction.length) {
+          where = {
+            ...where,
+            jurisdiction: {[Op.in]: jurisdiction}
+          };
+          whereStreamImprovementException = {
+            ...whereStreamImprovementException,
+            local_government: {[Op.in]: jurisdiction}
+          };
+        }
+        if (mhfdmanager.length) {
+          where = {
+            ...where,
+            mhfdmanager: {[Op.in]: mhfdmanager}
+          };
+          whereStreamImprovementException = {
+            ...whereStreamImprovementException,
+            mhfd_manager: {[Op.in]: mhfdmanager}
+          };
+        }
         actionList.forEach(async actionType => {
           promises.push(actionType.findAll({
             attributes: [
@@ -146,7 +189,7 @@ export const getActions = async (filter) => {
               ['estimated_cost_base', 'estimated_cost'],
               ['local_government', 'jurisdiction'],
               'mhfd_manager',
-              'component_type',
+              ['component_part_category', 'component_type'],
               'component_id'
             ],
             where: whereStreamImprovementException
