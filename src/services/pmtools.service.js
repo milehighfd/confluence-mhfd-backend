@@ -28,14 +28,28 @@ const User = db.user;
 const Op = sequelize.Op;
 
 const countProjects = async (type, filter, extraFilters) => {
-  const where = {};
+  let where = {};
   if (extraFilters.favorites) {
     where.project_id = extraFilters.favorites;
   }
   if (extraFilters.search) {
-    where.project_name = {
-      [Op.like]: `%${extraFilters.search}%`
-    };
+    where={[Op.or]: [
+      { project_name: { [Op.like]: `%${extraFilters.search}%` } },
+      { onbase_project_number: { [Op.like]: `%${extraFilters.search}%` } },
+    ]}
+  }
+  if (extraFilters.search && extraFilters.favorites){
+    where = {
+      [Op.and]: [
+        { project_id: extraFilters.favorites },
+        {
+          [Op.or]: [
+            { project_name: { [Op.like]: `%${extraFilters.search}%` } },
+            { onbase_project_number: { [Op.like]: `%${extraFilters.search}%` } },
+          ]
+        }
+      ]
+    }
   }
   const includes = [{
     model: CodeProjectType,
@@ -104,11 +118,28 @@ const countProjects = async (type, filter, extraFilters) => {
   }
   if (type === 'staff' || extraFilters?.filterby === 'staff') {
     const filters = [];
-    if (type === 'staff') {
-      filters.push(+filter);
+    let where = [];
+    if (type === 'staff' && extraFilters?.filterby === 'staff') {
+      const array = extraFilters.value;
+      if (array.length) {
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ mhfd_staff_id: intArray }, { mhfd_staff_id: +filter }] };
+      } else {
+        where = { [Op.and]: [{ mhfd_staff_id: extraFilters.value }, { mhfd_staff_id: +filter }] };
+      }
     }
-    if (extraFilters?.filterby === 'staff') {
-      filters.push(extraFilters.value);
+    else if (type === 'staff') {
+      filters.push(+filter);
+      where = { mhfd_staff_id: +filter }
+    }
+    else if (extraFilters?.filterby === 'staff') {
+      const array = extraFilters.value;
+      if (array.length) {
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ mhfd_staff_id: intArray }] };
+      } else {
+        where = { [Op.and]: [{ mhfd_staff_id: extraFilters.value }] };
+      }
     }
     includes.push({
       model: ProjectStaff,
@@ -123,7 +154,7 @@ const countProjects = async (type, filter, extraFilters) => {
         ],
         
       },
-      where: { mhfd_staff_id: filters },        
+      where: where,        
     });
   }
   if (type === 'county' || extraFilters?.filterby === 'county') {
@@ -258,11 +289,28 @@ const countProjects = async (type, filter, extraFilters) => {
   }
   if (type === 'contractor' || extraFilters?.filterby === 'contractor') {
     const filters = [];
-    if (type === 'contractor') {
-      filters.push(+filter);
+    let where = [];
+    if (type === 'contractor' && extraFilters?.filterby === 'contractor') {
+      const array = extraFilters.value;
+      if (array.length){
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ business_associates_id: intArray }, { business_associates_id: +filter }] };
+      }else{
+        where = { [Op.and]: [{ business_associates_id: extraFilters.value }, { business_associates_id: +filter }] };
+      }        
     }
-    if (extraFilters?.filterby === 'contractor') {
-      filters.push(extraFilters.value);
+    else if (type === 'contractor') {
+      filters.push(+filter);
+      where = { business_associates_id: +filter }
+    }
+    else if (extraFilters?.filterby === 'contractor') {
+      const array = extraFilters.value;
+      if (array.length) {
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ business_associates_id: intArray }] };
+      } else {
+        where = { [Op.and]: [{ business_associates_id: extraFilters.value }] };
+      }
     }
     const CIVIL_CONTRACTOR_ID = 8, LANDSCAPE_CONTRACTOR_ID = 9;
     includes.push({
@@ -271,7 +319,7 @@ const countProjects = async (type, filter, extraFilters) => {
       required: true,
       include: {
         model: BusinessAssociate,
-        where: { business_associates_id: filters },
+        where: where,
         attributes: [
           'business_name',
           'business_associates_id'
@@ -315,14 +363,30 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
   logger.info(`page: ${page}, limit: ${limit} filter: ${filter}`);
   let hasOrder = false;
   const offset = (page - 1) * limit;
-  const where = {};
+  let where = {};
   if (extraFilters.favorites) {
     where.project_id = extraFilters.favorites;
   }
   if (extraFilters.search) {
-    where.project_name = {
-      [Op.like]: `%${extraFilters.search}%`
-    };
+    where = {
+      [Op.or]: [
+        { project_name: { [Op.like]: `%${extraFilters.search}%` } },
+        { onbase_project_number: { [Op.like]: `%${extraFilters.search}%` } },
+      ]
+    }
+  }
+  if (extraFilters.search && extraFilters.favorites){
+    where = {
+      [Op.and]: [
+        { project_id: extraFilters.favorites },
+        {
+          [Op.or]: [
+            { project_name: { [Op.like]: `%${extraFilters.search}%` } },
+            { onbase_project_number: { [Op.like]: `%${extraFilters.search}%` } },
+          ]
+        }
+      ]
+    }
   }
   const order = [];
   console.log(db.project);  
@@ -602,11 +666,28 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
     }
     if (type === 'staff' || extraFilters?.filterby === 'staff') {
       const filters = [];
-      if (type === 'staff') {
-        filters.push(+filter);
+      let where = [];
+      if (type === 'staff' && extraFilters?.filterby === 'staff') {
+        const array = extraFilters.value;
+        if (array.length) {
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ mhfd_staff_id: intArray }, { mhfd_staff_id: +filter }] };
+        } else {
+          where = { [Op.and]: [{ mhfd_staff_id: extraFilters.value }, { mhfd_staff_id: +filter }] };
+        }
       }
-      if (extraFilters?.filterby === 'staff') {
-        filters.push(extraFilters.value);
+      else if (type === 'staff') {
+        filters.push(+filter);
+        where = { mhfd_staff_id: +filter }
+      }
+      else if (extraFilters?.filterby === 'staff') {
+        const array = extraFilters.value;
+        if (array.length) {
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ mhfd_staff_id: intArray }] };
+        } else {
+          where = { [Op.and]: [{ mhfd_staff_id: extraFilters.value }] };
+        }
       }
       optionalIncludes.push({
         model: ProjectStaff,
@@ -621,7 +702,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
           ],
           
         },
-        where: { mhfd_staff_id: filters },        
+        where: where,        
       });
     }
     if (type === 'county' || extraFilters?.filterby === 'county') {
@@ -756,11 +837,28 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
     }
     if (type === 'contractor' || extraFilters?.filterby === 'contractor') {
       const filters = [];
-      if (type === 'contractor') {
-        filters.push(+filter);
+      let where = [];
+      if (type === 'contractor' && extraFilters?.filterby === 'contractor') {
+        const array = extraFilters.value;
+        if (array.length) {
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ business_associates_id: intArray }, { business_associates_id: +filter }] };
+        } else {
+          where = { [Op.and]: [{ business_associates_id: extraFilters.value }, { business_associates_id: +filter }] };
+        }
       }
-      if (extraFilters?.filterby === 'contractor') {
-        filters.push(extraFilters.value);
+      else if (type === 'contractor') {
+        filters.push(+filter);
+        where = { business_associates_id: +filter }
+      }
+      else if (extraFilters?.filterby === 'contractor') {
+        const array = extraFilters.value;
+        if (array.length) {
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ business_associates_id: intArray }] };
+        } else {
+          where = { [Op.and]: [{ business_associates_id: extraFilters.value }] };
+        }
       }
       const CIVIL_CONTRACTOR_ID = 8, LANDSCAPE_CONTRACTOR_ID = 9;
       optionalIncludes.push({
