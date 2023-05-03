@@ -30,7 +30,7 @@ const getStatus = async () => {
   const groups = codeStatusType.map((data) => {
     return { value: data.status_name, id: data.code_status_type_id };
   });
-  groups.push( { value:'NoGroupAvailable', id:-1 } );
+  groups.push( { value:'Unknown', id:-1 } );
   return groups;
 }
 
@@ -85,8 +85,17 @@ const getConsultant = async () => {
     order: [['business_name', 'ASC']]
   });
   const groups = businessAssociates.map((data) => {
-    return { value: data.business_name, id: data.business_associates_id };
+    return { value: data.business_name === '' ? 'Unknown' : data.business_name, id: data.business_associates_id };
   });
+  groups.sort((a, b) => {
+    if (a.value === 'Unknown') {
+      return 1;
+    }
+    if (b.value === 'Unknown') {
+      return -1;
+    }
+    return a.value.localeCompare(b.value);
+  });  
   return groups;
 }
 
@@ -105,7 +114,16 @@ const getContractor = async () => {
     order: [['business_name', 'ASC']]
   });
   const groups = businessAssociates.map((data) => {
-    return { value: data.business_name, id: data.business_associates_id };
+    return { value: data.business_name === '' ? 'Unknown' : data.business_name, id: data.business_associates_id };
+  });
+  groups.sort((a, b) => {
+    if (a.value === 'Unknown') {
+      return 1;
+    }
+    if (b.value === 'Unknown') {
+      return -1;
+    }
+    return a.value.localeCompare(b.value);
   });
   return groups;
 }
