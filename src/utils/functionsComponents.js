@@ -5,7 +5,7 @@ import {
   MAIN_PROJECT_TABLE
 } from 'bc/config/config.js';
 import projectService from 'bc/services/project.service.js';
-import { Op } from 'sequelize';
+import pkg from 'sequelize';
 const Projects = db.project;
 const ProjectPartner = db.projectPartner;
 const ProjectCounty = db.projectCounty;
@@ -92,6 +92,8 @@ const TABLES_COMPONENTS = [
   // ,'stream_improvement_measure_copy'
   'stream_improvement_measure'
 ];
+
+const { Op } = pkg;
 
 export const getActions = async (filter) => {
     try {
