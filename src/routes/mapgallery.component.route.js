@@ -441,7 +441,16 @@ export async function componentParamFilterCounter(req, res) {
     data.yearofstudy = [];
     data.actiontype = []; //TODO: list of actions
     
-    const allActions = await getActions(body);
+    const filters = {
+      servicearea: body.servicearea ? body.servicearea.split(','): '',
+      county: body.county ? body.county.split(','): '',
+      component_type: body.component_type ? body.component_type.split(','): '',
+      status: body.status ? body.status.split(','): '',
+      jurisdiction: body.jurisdiction ? body.jurisdiction.split(','): '',
+      mhfdmanager: body.mhfdmanager ? body.mhfdmanager.split(','): '' 
+    };
+    console.log('filters', filters);
+    const allActions = await getActions(filters);
 
     const result = {
       "component_type":  componentTypes,
