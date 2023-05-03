@@ -63,14 +63,38 @@ const countProjects = async (type, filter, extraFilters) => {
       code_project_type_id: extraFilters.code_project_type_id
     }: {}
   }];
-  if (type === 'status') {
+  if (type === 'status' || extraFilters?.filterby === 'status') {
+    const filters = [];
+    let where = [];
+    if (type === 'status' && extraFilters?.filterby === 'status') {
+      const array = extraFilters.value;
+      if (array.length) {
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ code_status_type_id: intArray }, { code_status_type_id: +filter }] };
+      } else {
+        where = { [Op.and]: [{ code_status_type_id: extraFilters.value }, { code_status_type_id: +filter }] };
+      }
+    }
+    else if (type === 'status') {
+      filters.push(+filter);
+      where = { code_status_type_id: +filter }
+    }
+    else if (extraFilters?.filterby === 'status') {
+      const array = extraFilters.value;
+      if (array.length) {
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ code_status_type_id: intArray }] };
+      } else {
+        where = { [Op.and]: [{ code_status_type_id: extraFilters.value }] };
+      }
+    }
     includes.push({
       model: ProjectStatus,
       as: 'currentId',
       required: true,
       include: {
         model: CodePhaseType,
-        where: { code_status_type_id: +filter },
+        where: where,
       },
     });
   }
@@ -292,12 +316,12 @@ const countProjects = async (type, filter, extraFilters) => {
     let where = [];
     if (type === 'contractor' && extraFilters?.filterby === 'contractor') {
       const array = extraFilters.value;
-      if (array.length){
+      if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
         where = { [Op.and]: [{ business_associates_id: intArray }, { business_associates_id: +filter }] };
-      }else{
+      } else {
         where = { [Op.and]: [{ business_associates_id: extraFilters.value }, { business_associates_id: +filter }] };
-      }        
+      }
     }
     else if (type === 'contractor') {
       filters.push(+filter);
@@ -582,11 +606,32 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         }: {},
       }
     ];    
-    if (type === 'status' || extraFilters.sortby === 'status' || extraFilters.sortby === 'phase') {
-      let where = {code_status_type_id: +filter}
-      if ((extraFilters.sortby === 'status' || extraFilters.sortby === 'phase') && type !== 'status' ) {
-        where = {}
+    if (type === 'status' || extraFilters.sortby === 'status' || extraFilters.sortby === 'phase' || extraFilters?.filterby === 'status') {      
+      const filters = [];
+      let where = [];
+      if (type === 'status' && extraFilters?.filterby === 'status') {
+        const array = extraFilters.value;
+        if (array.length){
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ code_status_type_id: intArray }, { code_status_type_id: +filter }] };
+        }else{
+          where = { [Op.and]: [{ code_status_type_id: extraFilters.value }, { code_status_type_id: +filter }] };
+        }        
       }
+      else if (type === 'status') {
+        filters.push(+filter);
+        where = { code_status_type_id: +filter }
+      }
+      else if (extraFilters?.filterby === 'status') {
+        const array = extraFilters.value;
+        if (array.length){
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ code_status_type_id: intArray }] };
+        }else{
+          where = { [Op.and]: [{ code_status_type_id: extraFilters.value }] };
+        }    
+      }
+
       // optionalIncludes.push({
       //   model: ProjectStatus,
       //   as: 'currentId',
@@ -867,7 +912,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         required: true,
         include: {
           model: BusinessAssociate,
-          where: { business_associates_id: filters },
+          where: where,
           attributes: [
             'business_name',
             'business_associates_id'
