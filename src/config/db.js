@@ -286,6 +286,7 @@ db.projectCost.belongsTo(
   db.codeCostType,
    { foreignKey: 'code_cost_type_id' }
 );
+db.project.hasMany(db.projectCost, {foreignKey: 'project_id', as : 'currentCost'});
 
 // project project-component
 db.project.hasMany(db.projectProposedAction, {foreignKey: 'project_id'});

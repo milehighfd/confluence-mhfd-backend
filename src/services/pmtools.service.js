@@ -264,7 +264,7 @@ const countProjects = async (type, filter, extraFilters) => {
         'project_service_area_id'
       ]
     });
-  }
+  }  
   if (type === 'consultant' || extraFilters?.filterby === 'consultant') {
     const filters = [];
     let where = [];
@@ -372,6 +372,22 @@ const countProjects = async (type, filter, extraFilters) => {
       attributes: [
         'project_stream_id',
       ],
+    });
+  }
+  if (extraFilters?.filterby === 'cost') {
+    const ESTIMATED_ID = 1;
+    const cost = extraFilters.value;
+    includes.push({
+      model: ProjectCost,
+      required: true,
+      as: 'currentCost',
+      where: {
+        code_cost_type_id: ESTIMATED_ID,
+        cost: {
+          [Op.between]: cost,
+        },
+        is_active: 1,
+      },
     });
   }
   logger.info(`where: ${JSON.stringify(where)}`);
@@ -833,7 +849,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
           'project_service_area_id'
         ]
       });
-    }
+    }    
     if (type === 'consultant' || extraFilters?.filterby === 'consultant') {
       const filters = [];
       let where = [];
@@ -947,6 +963,23 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
           'currentStream', Streams, 'stream_name', extraFilters.sortorder
         ]);
       }
+    }
+    if (extraFilters?.filterby === 'cost') {
+      const ESTIMATED_ID = 1;
+      const cost = extraFilters.value;
+      logger.info(`Filtering by cost ${cost}...`);
+      optionalIncludes.push({
+        model: ProjectCost,
+        required: true,
+        as: 'currentCost',
+        where: {
+          code_cost_type_id: ESTIMATED_ID,
+          cost: {
+            [Op.between]: cost,
+          },
+          is_active: 1,
+        },
+      });
     }
     if (extraFilters?.sortby === 'county') {
       optionalIncludes.push({
