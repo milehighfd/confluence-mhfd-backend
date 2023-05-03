@@ -442,6 +442,7 @@ export async function componentParamFilterCounter(req, res) {
     data.actiontype = []; //TODO: list of actions
     
     const filters = {
+      ...body,
       servicearea: body.servicearea ? body.servicearea.split(','): '',
       county: body.county ? body.county.split(','): '',
       component_type: body.component_type ? body.component_type.split(','): '',
