@@ -16,6 +16,8 @@ const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
 const CodeStatusType = db.codeStatusType;
 const BusinessAssociante = db.businessAssociates;
+const BusinessAssociateContact = db.businessAssociateContact;
+const User = db.user;
 const Streams = db.stream;
 const ProjectType = db.codeProjectType;
 const CodeProjectStaffRole = db.codeProjectStaffRole;
@@ -182,18 +184,27 @@ const getMhfdStaff = async () => {
   const types = await ProjectStaff.findAll({
     include: [{
       model: CodeProjectStaffRole,
-      where: {
+      required: true,
+      where: {        
         project_staff_role_type_name: 'MHFD Lead',        
       }
     },{
-      model: MHFDStaff,
-      required: true
+      model: BusinessAssociateContact,
+      required: true,
+      include: [{
+        model: User,
+        required: true,
+      }]
     }],
   });
   const groups = types.map((data) => {
-    return { value: data?.mhfd_staff?.full_name, id: data?.mhfd_staff_id };
+    return { value: data?.business_associate_contact?.user?.name, id: data?.business_associate_contact?.user?.user_id };
   });
-  const uniqueGroups = [...new Map(groups.map(item => [item['id'], item])).values()];
+  let uniqueGroups = [...new Map(groups.map(item => [item['id'], item])).values()];
+  uniqueGroups= uniqueGroups.filter(obj => Object.keys(obj).length !== 0);
+  uniqueGroups.sort((a, b) => {
+    return a.value.localeCompare(b.value);
+  });  
   return uniqueGroups;
 }
 
@@ -201,18 +212,24 @@ const getLGManager = async () => {
   const types = await ProjectStaff.findAll({
     include: [{
       model: CodeProjectStaffRole,
-      where: {
+      required: true,
+      where: {        
         project_staff_role_type_name: 'Local Government Lead',        
       }
     },{
-      model: MHFDStaff,
-      required: true
+      model: BusinessAssociateContact,
+      required: true,
+      include: [{
+        model: User,
+        required: true,
+      }]
     }],
   });
   const groups = types.map((data) => {
-    return { value: data?.mhfd_staff?.full_name, id: data?.mhfd_staff_id };
+    return { value: data?.business_associate_contact?.user?.name, id: data?.business_associate_contact?.user?.user_id };
   });
-  const uniqueGroups = [...new Map(groups.map(item => [item['id'], item])).values()];
+  let uniqueGroups = [...new Map(groups.map(item => [item['id'], item])).values()];
+  uniqueGroups= uniqueGroups.filter(obj => Object.keys(obj).length !== 0);
   return uniqueGroups;
 }
 
