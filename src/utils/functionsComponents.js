@@ -129,9 +129,12 @@ export const getActions = async (filter, bounds) => {
         let promises = [];
         let where = {};
         let whereStreamImprovementException = {};
-
-        const ids = await getIdsInsideBoundsCarto(bounds);
-        console.log('ids \n ******** \n', ids);
+        let ids = [];
+        if (bounds) {
+          ids = await getIdsInsideBoundsCarto(bounds);
+        }
+        
+        
         const service_area = filter.servicearea ? filter.servicearea : [];
         const county = filter.county ? filter.county : [];
         const component_type = filter.component_type ? filter.component_type : [];
@@ -223,7 +226,13 @@ export const getActions = async (filter, bounds) => {
           };
         }
 
-        actionList.forEach(async actionType => {
+        actionList.forEach(async (actionType, idx) => {
+          if(ids[idx]){
+            where = {
+              ...where,
+              component_id: {[Op.in]: ids[idx].actionids}
+            }
+          }
           promises.push(actionType.findAll({
             attributes: [
               'servicearea',
@@ -239,6 +248,12 @@ export const getActions = async (filter, bounds) => {
             where: where
           }));
         });
+        if(ids[actionList.length]){
+          whereStreamImprovementException = {
+            ...whereStreamImprovementException,
+            component_id: {[Op.in]: ids[actionList.length].actionids}
+          }
+        }
         promises.push(
           StreamImprovementMeasure.findAll({
             attributes: [
