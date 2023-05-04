@@ -388,7 +388,7 @@ export async function componentCounterRoute(req, res) {
     {value: "Special Item Point"},
     {value: "Special Item Linear"},
     {value: "Special Item Area"},
-    {value: "Channel Improvements Line"},
+    {value: "Channel Improvements Lin"},
     {value: "Channel Improvements Area"},
     {value: "Removal Line"},
     {value: "Removal Area"},
@@ -397,7 +397,7 @@ export async function componentCounterRoute(req, res) {
     {value: "Maintenance Trails"},
     {value: "Land Acquisition"},
     {value: "Landscaping Area"},
-    {value: "Stream Improvement Measure"}
+    {value: "Stream Improvement"}
   ]
 
 export async function componentFilterIds(req, res) {
