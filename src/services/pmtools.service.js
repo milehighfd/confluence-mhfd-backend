@@ -22,10 +22,11 @@ const CodePhaseType = db.codePhaseType;
 const CodeStatusType = db.codeStatusType;
 const CodeProjectType = db.codeProjectType;
 const BusinessAssociate = db.businessAssociates;
+const BusinessAssociateContact = db.businessAssociateContact;
 const ProjectStaff = db.projectStaff;
-const MHFDStaff = db.mhfdStaff;
 const User = db.user;
 const Op = sequelize.Op;
+const CodeProjectStaffRole = db.codeProjectStaffRole;
 
 const countProjects = async (type, filter, extraFilters) => {
   let where = {};
@@ -147,38 +148,46 @@ const countProjects = async (type, filter, extraFilters) => {
       const array = extraFilters.value;
       if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
-        where = { [Op.and]: [{ mhfd_staff_id: intArray }, { mhfd_staff_id: +filter }] };
+        where = { [Op.and]: [{ user_id: intArray }, { user_id: +filter }] };
       } else {
-        where = { [Op.and]: [{ mhfd_staff_id: extraFilters.value }, { mhfd_staff_id: +filter }] };
+        where = { [Op.and]: [{ user_id: extraFilters.value }, { user_id: +filter }] };
       }
     }
     else if (type === 'staff') {
       filters.push(+filter);
-      where = { mhfd_staff_id: +filter }
+      where = { user_id: +filter }
     }
     else if (extraFilters?.filterby === 'staff') {
       const array = extraFilters.value;
       if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
-        where = { [Op.and]: [{ mhfd_staff_id: intArray }] };
+        where = { [Op.and]: [{ user_id: intArray }] };
       } else {
-        where = { [Op.and]: [{ mhfd_staff_id: extraFilters.value }] };
+        where = { [Op.and]: [{ user_id: extraFilters.value }] };
       }
     }
     includes.push({
       model: ProjectStaff,
+      attributes: [],
       as: 'currentProjectStaff',
       required: true,
-      include: {
-        model: MHFDStaff,
+      include: [{
+        model: BusinessAssociateContact,
+        attributes: [],
         required: true,
-        attributes: [
-          'mhfd_staff_id',
-          'full_name'
-        ],
-        
-      },
-      where: where,        
+        include: [{
+          model: User,
+          attributes: [],
+          required: true,
+          where: where,
+        }]
+      }, {
+        model: CodeProjectStaffRole,
+        required: true,
+        where: {
+          project_staff_role_type_name: 'MHFD Lead',
+        }
+      }]
     });
   }
   if (type === 'county' || extraFilters?.filterby === 'county') {
@@ -357,20 +366,46 @@ const countProjects = async (type, filter, extraFilters) => {
       }
     });
   }
-  if (type === 'streams') {
+  if (extraFilters?.filterby === 'lgmanager') {
+    const filter = extraFilters.value;
+    includes.push({
+      model: ProjectStaff,
+      attributes: [],
+      as: 'currentProjectStaff',
+      required: true,
+      include: [{
+        model: BusinessAssociateContact,
+        attributes: [],
+        required: true,
+        include: [{
+          model: User,
+          attributes: [],
+          required: true,
+          where : { user_id: filter },
+        }]
+      },{
+        model: CodeProjectStaffRole,
+        required: true,
+        where: {
+          project_staff_role_type_name: 'Local Government Lead',
+        }
+      }]
+    });
+  }
+  if (extraFilters?.filterby === 'stream') {
+    const filter = extraFilters.value;
     includes.push({
       model: ProjectStreams,
       as: 'currentStream',
       required: true,
+      subQuery: true,
       include: {
         model: Streams,
-        attributes: [
-          'stream_name',
-        ],
-        where: { stream_name: filter }
+        attributes: [],
+        where: { stream_id: filter }
       },
       attributes: [
-        'project_stream_id',
+        'project_id',
       ],
     });
   }
@@ -470,22 +505,21 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
           'is_active',
           'project_staff_id'
         ],
-        include: {
-          model: MHFDStaff,
+        include: [{
+          model: BusinessAssociateContact,
           required: false,
-          attributes: [
-            'user_id',
-            'mhfd_staff_id',
-            'full_name'
-          ],
-          include: {
+          include: [{
+            attributes: [
+              'name',
+              'user_id',
+            ],
             model: User,
             required: false,
-            attributes: [
-              'organization'
-            ]
-          }          
-        }
+          }]
+        },{
+          model: CodeProjectStaffRole,
+          required: false,
+        }]
         // where: {
         //   code_cost_type_id: 1
         // }
@@ -732,38 +766,46 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         const array = extraFilters.value;
         if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
-          where = { [Op.and]: [{ mhfd_staff_id: intArray }, { mhfd_staff_id: +filter }] };
+          where = { [Op.and]: [{ user_id: intArray }, { user_id: +filter }] };
         } else {
-          where = { [Op.and]: [{ mhfd_staff_id: extraFilters.value }, { mhfd_staff_id: +filter }] };
+          where = { [Op.and]: [{ user_id: extraFilters.value }, { user_id: +filter }] };
         }
       }
       else if (type === 'staff') {
         filters.push(+filter);
-        where = { mhfd_staff_id: +filter }
+        where = { user_id: +filter }
       }
       else if (extraFilters?.filterby === 'staff') {
         const array = extraFilters.value;
         if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
-          where = { [Op.and]: [{ mhfd_staff_id: intArray }] };
+          where = { [Op.and]: [{ user_id: intArray }] };
         } else {
-          where = { [Op.and]: [{ mhfd_staff_id: extraFilters.value }] };
+          where = { [Op.and]: [{ user_id: extraFilters.value }] };
         }
       }
       optionalIncludes.push({
         model: ProjectStaff,
+        attributes: [],
         as: 'currentProjectStaff',
         required: true,
-        include: {
-          model: MHFDStaff,
+        include: [{
+          model: BusinessAssociateContact,
+          attributes: [],
           required: true,
-          attributes: [
-            'mhfd_staff_id',
-            'full_name'
-          ],
-          
-        },
-        where: where,        
+          include: [{
+            model: User,
+            attributes: [],
+            required: true,
+            where: where,
+          }]
+        }, {
+          model: CodeProjectStaffRole,
+          required: true,
+          where: {
+            project_staff_role_type_name: 'MHFD Lead',
+          }
+        }]
       });
     }
     if (type === 'county' || extraFilters?.filterby === 'county') {
@@ -942,27 +984,47 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         }
       });
     }
-    if (extraFilters?.sortby === 'stream') {
-      optionalIncludes.push({
+    if (extraFilters?.filterby === 'lgmanager') {
+      const filter = extraFilters.value;
+      includes.push({
+        model: ProjectStaff,
+        attributes: [],
+        as: 'currentProjectStaff',
+        required: true,
+        include: [{
+          model: BusinessAssociateContact,
+          attributes: [],
+          required: true,
+          include: [{
+            model: User,
+            attributes: [],
+            required: true,
+            where : { user_id: filter },
+          }]
+        },{
+          model: CodeProjectStaffRole,
+          required: true,
+          where: {
+            project_staff_role_type_name: 'Local Government Lead',
+          }
+        }]
+      });
+    }
+    if (extraFilters?.filterby === 'stream') {
+      const filter = extraFilters.value;
+      includes.push({
         model: ProjectStreams,
         as: 'currentStream',
-        required: false,
+        required: true,
         include: {
           model: Streams,
-          required: false,
-          attributes: [
-            'stream_name',
-          ]
+          attributes: [],
+          where: { stream_id: filter }
         },
         attributes: [
-          'project_stream_id',
+          'project_id',
         ],
       });
-      if (extraFilters.sortby === 'stream') {
-        order.push([
-          'currentStream', Streams, 'stream_name', extraFilters.sortorder
-        ]);
-      }
     }
     if (extraFilters?.filterby === 'cost') {
       const ESTIMATED_ID = 1;
@@ -1012,23 +1074,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       order.push([
         'sortServiceArea', CodeServiceArea, 'service_area_name', extraFilters.sortorder
       ]);
-    }
-    if (extraFilters?.sortby === 'staff') {
-      optionalIncludes.push({
-        model: ProjectStaff,
-        as: 'sortProjectStaff',
-        required: true,
-        include: {
-          model: MHFDStaff,
-          attributes: [
-            'full_name',
-          ]
-        },
-      });
-      order.push([
-        'sortProjectStaff', MHFDStaff, 'full_name', extraFilters.sortorder
-      ]);
-    }
+    }    
     if (extraFilters?.sortby === 'sponsor') {
       const SPONSOR = 11;
       optionalIncludes.push({
@@ -1067,6 +1113,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
       include: includes,
       subQuery: false,
       order: !hasOrder ? [['created_date', 'DESC']] : order
+      
     });
     return projects;
   } catch (error) {
