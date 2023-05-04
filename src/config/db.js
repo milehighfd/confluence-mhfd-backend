@@ -306,6 +306,7 @@ db.project.hasMany(db.projectStaff, { foreignKey: 'project_id' , as: 'currentPro
 db.project.hasOne(db.projectStaff, { foreignKey: 'project_id' , as: 'sortProjectStaff'});
 db.projectStaff.belongsTo(db.mhfdStaff, { foreignKey: 'mhfd_staff_id' });
 db.projectStaff.hasOne(db.businessAssociateContact, { foreignKey: 'business_associate_contact_id',sourceKey: "business_associate_contact_id" });
+db.projectStaff.hasOne(db.businessAssociateContact, { foreignKey: 'business_associate_contact_id',sourceKey: "business_associate_contact_id", as: 'currentProjectStaff' });
 db.businessAssociateContact.hasOne(db.user, { foreignKey: 'business_associate_contact_id',sourceKey: "business_associate_contact_id" });
 
 db.project.hasMany(
