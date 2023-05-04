@@ -693,6 +693,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const CIVIL_CONTRACTOR_ID = 8;
   const ESTIMATED_ID = 1;
   const filterName = filter.name ? '%' + filter.name + '%' : '';
+  const filterBase = filter.name ? filter.name: -1;
   const contractor = filter.contractor ?  filter.contractor  : [];
   const consultant = filter.consultant ?  filter.consultant  : [];
   const code_project_type_id = filter.projecttype ? filter.projecttype : [];
@@ -749,15 +750,29 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       }]
     }));
   }  
-  if (filterName) {
+  if (filterName || filterBase) {
     // KEYWORD 
     logger.info(`Filtering by name ${filterName}...`);
-    conditions.push(Project.findAll({
-      attributes: ["project_id","code_project_type_id"],
-      where: {
-        project_name: { [Op.like]: filterName },
-      }
-    }));
+    let whereOr = [];
+    if (filterName) {
+      whereOr.push({
+        project_name: { [Op.like]: filterName }
+      });
+    }
+    if (filterBase != -1) {
+      whereOr.push({
+        onbase_project_number: { [Op.like]: filterName}
+      });
+    }
+    if (whereOr.length) {
+      conditions.push(Project.findAll({
+        attributes: ["project_id","code_project_type_id"],
+        where: {
+          [Op.or]: whereOr
+        }
+      }));
+    }
+    console.log('WHEREORRR', whereOr);
   }
   if (contractor.length) {
     logger.info(`Filtering by contractor ${contractor}...`);
