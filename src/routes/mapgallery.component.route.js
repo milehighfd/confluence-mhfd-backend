@@ -388,7 +388,7 @@ export async function componentCounterRoute(req, res) {
     {value: "Special Item Point"},
     {value: "Special Item Linear"},
     {value: "Special Item Area"},
-    {value: "Channel Improvements Lin"},
+    {value: "Channel Improvements Line"},
     {value: "Channel Improvements Area"},
     {value: "Removal Line"},
     {value: "Removal Area"},
@@ -397,7 +397,7 @@ export async function componentCounterRoute(req, res) {
     {value: "Maintenance Trails"},
     {value: "Land Acquisition"},
     {value: "Landscaping Area"},
-    {value: "Stream Improvement"}
+    {value: "Stream Improvement Measure"}
   ]
 
 export async function componentFilterIds(req, res) {
@@ -492,7 +492,8 @@ export async function componentParamFilterCounter(req, res) {
     }));
     res.status(200).send({
       filtersData: result,
-      actionsIds: actionsIds
+      actionsIds: actionsIds,
+      counter: newAllactionCounter.length
     });
   } catch (error) {
     logger.error(error);
