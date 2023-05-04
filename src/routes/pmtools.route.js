@@ -45,7 +45,7 @@ const getGroup = async (req, res) => {
   if (groupname === 'county') {
     try{
       const groups = await groupService.getCounty();
-      data.table = 'CODE_STATE_COUNTY_4326';
+      data.table = 'CODE_STATE_COUNTY_CLIP_4326';
       data.groups = groups;
     } catch(error) {
       logger.error(error);

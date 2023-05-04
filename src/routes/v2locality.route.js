@@ -35,7 +35,7 @@ router.get('/all-localities', async (req, res) => {
         local_government_name FROM CODE_LOCAL_GOVERNMENT_4326`),
       db.sequelize.query(`SELECT  ${geom}
         state_county_id,
-        county_name FROM CODE_STATE_COUNTY_4326`),
+        county_name FROM CODE_STATE_COUNTY_CLIP_4326`),
       db.sequelize.query(`SELECT  ${geom}
         OBJECTID,
         'Mile High Flood District' as name FROM MHFD_BOUNDARY_4326`)
@@ -145,7 +145,7 @@ router.get('/get-list', async (req, res) => {
     }
     if (req.query.county) {
       logger.info(`Starting function query_state_county_id for endpoint v2locality/get-list`);
-      const [scData] = await db.sequelize.query(`SELECT state_county_id, county_name FROM CODE_STATE_COUNTY_4326`);
+      const [scData] = await db.sequelize.query(`SELECT state_county_id, county_name FROM CODE_STATE_COUNTY_CLIP_4326`);
       logger.info(`Finished function query_state_county_id for endpoint v2locality/get-list`);
       const sc = scData.map(result => {
         return {

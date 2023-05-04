@@ -21,7 +21,7 @@ export default  (sequelize, DataType) => {
     }
   }, {
     freezeTableName: true,
-    tableName: 'CODE_STATE_COUNTY_4326',
+    tableName: 'CODE_STATE_COUNTY_CLIP_4326',
     createdAt: false,
     updatedAt: false
   });

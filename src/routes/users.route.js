@@ -194,7 +194,7 @@ router.get('/me', auth, async (req, res) => {
       case COUNTY: 
         query = `SELECT  ${geom}
         state_county_id,
-        county_name FROM CODE_STATE_COUNTY_4326
+        county_name FROM CODE_STATE_COUNTY_CLIP_4326
         WHERE county_name = '${organization_query}'
         `;
         break

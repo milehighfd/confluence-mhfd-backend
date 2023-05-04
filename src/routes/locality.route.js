@@ -41,7 +41,7 @@ const getData2 = async (req, res, next) => {
         local_government_name FROM CODE_LOCAL_GOVERNMENT_4326`),
       db.sequelize.query(`SELECT  ${geom}
         state_county_id,
-        county_name FROM CODE_STATE_COUNTY_4326`),
+        county_name FROM CODE_STATE_COUNTY_CLIP_4326`),
       db.sequelize.query(`SELECT  ${geom}
         OBJECTID,
         'Mile High Flood District' as name FROM MHFD_BOUNDARY_4326`)
