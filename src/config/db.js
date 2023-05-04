@@ -266,7 +266,7 @@ db.projectServiceArea.belongsTo(
 // project stream
 
 db.project.hasMany(db.project_stream, {foreignKey: 'project_id'});
-db.project.hasOne(db.project_stream, {foreignKey: 'project_id', as: 'currentStream'});
+db.project.hasMany(db.project_stream, {foreignKey: 'project_id', as: 'currentStream'});
 db.project_stream.belongsTo(
   db.stream,
   { foreignKey: 'stream_id'}
@@ -305,6 +305,8 @@ db.project.hasMany(db.projectStaff, { foreignKey: 'project_id' });
 db.project.hasMany(db.projectStaff, { foreignKey: 'project_id' , as: 'currentProjectStaff'});
 db.project.hasOne(db.projectStaff, { foreignKey: 'project_id' , as: 'sortProjectStaff'});
 db.projectStaff.belongsTo(db.mhfdStaff, { foreignKey: 'mhfd_staff_id' });
+db.projectStaff.belongsTo(db.businessAssociateContact, { foreignKey: 'business_associate_contact_id' });
+db.businessAssociateContact.belongsTo(db.user, { foreignKey: 'business_associate_contact_id' });
 
 db.project.hasMany(
   db.projectStatus,
