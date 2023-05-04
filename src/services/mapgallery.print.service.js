@@ -176,33 +176,33 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     }
 
     if (
-      k.includes('project_partners') &&
+      k.includes('project_local_governments') &&
       (_data[k] !== void 0 || _data[k] !== []) &&
       _data[k]?.length > 0
     ) {
-      for (let i = 0; i < _data?.project_partners.length; i++) {
-        if (_data?.project_partners[i]?.code_project_partner_type?.partner_type === 'SPONSOR') {
-          data['sponsor']
+      for (let i = 0; i < _data?.project_local_governments.length; i++) {
+        if (_data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT) {
+          data['local_government']
             ? (data[
-                'sponsor'
-              ] += `${_data?.project_partners[i].business_associate.business_name} `)
-            : (data['sponsor'] =
-                _data?.project_partners[i].business_associate.business_name);
+                'local_government'
+              ] += `${_data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT.local_government_name}, `)
+            : (data['local_government'] =
+                _data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT.local_government_name);
         }
-        console.log(_data?.project_partners[i]?.code_project_partner_type?.partner_type)
-        console.log('VENDORS')
-        if (_data?.project_partners[i]?.code_project_partner_type?.partner_type === 'VENDOR') {          
-          data['vendors']
-            ? (data[
-                'vendors'
-              ] += `${_data?.project_partners[i].business_associate.business_name} `)
-            : (data['vendors'] =
-                _data?.project_partners[i].business_associate.business_name);
+        // console.log(_data?.project_partners[i]?.code_project_partner_type?.partner_type)
+        // console.log('VENDORS')
+        // if (_data?.project_partners[i]?.code_project_partner_type?.partner_type === 'VENDOR') {          
+        //   data['vendors']
+        //     ? (data[
+        //         'vendors'
+        //       ] += `${_data?.project_partners[i].business_associate.business_name} `)
+        //     : (data['vendors'] =
+        //         _data?.project_partners[i].business_associate.business_name);
 
-          data['typeVendor']
-            ? (data['typeVendor'] += `${_data?.project_partners[i]?.code_project_partner_type?.partner_type_name}`)
-            : (data['typeVendor'] = `${_data?.project_partners[i]?.code_project_partner_type?.partner_type_name} ,`);
-        }
+        //   data['typeVendor']
+        //     ? (data['typeVendor'] += `${_data?.project_partners[i]?.code_project_partner_type?.partner_type_name}`)
+        //     : (data['typeVendor'] = `${_data?.project_partners[i]?.code_project_partner_type?.partner_type_name} ,`);
+        // }
         // if (_data?.project_partners[i]?.code_partner_type_id === 1) {
         //   data['vendors']
         //     ? (data[
@@ -277,7 +277,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     project_name,
     county,
     project_type_name,
-    sponsor,
+    local_government,
     servicearea,
     phase,
     cost,
@@ -319,9 +319,9 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       : `${URL_BASE}detailed/watershed-change.png`;
 
   html = html.split('${projectname}').join(_data.dataValues.project_name);
-  html = html.split('${projecttype}').join(_data.dataValues.project_type_name + ' Project');
+  html = html.split('${projecttype}').join(_data.dataValues.code_project_type.project_type_name + ' Project');
   html = html.split('${onBaseId}').join(_data.dataValues.onbase_project_number);
-  html = html.split('${sponsor}').join(sponsor);
+  html = html.split('${local_government}').join(local_government);
   html = html.split('${county}').join(county);
   html = html.split('${servicearea}').join(servicearea);
   html = html
@@ -517,7 +517,7 @@ export const printProject = async (_data, components, map) => {
     projectname,
     county,
     projecttype,
-    sponsor,
+    local_government,
     servicearea,
     finalcost,
     estimatedcost,
@@ -554,7 +554,7 @@ export const printProject = async (_data, components, map) => {
 
   html = html.split('${projectname}').join(projectname);
   html = html.split('${projecttype}').join(projecttype + ' Project');
-  html = html.split('${sponsor}').join(sponsor);
+  html = html.split('${local_government}').join(local_government);
   html = html.split('${county}').join(county);
   html = html.split('${servicearea}').join(servicearea);
   html = html.split('${cost}').join(cost ? priceFormatter(cost) : 'No Cost Data');
