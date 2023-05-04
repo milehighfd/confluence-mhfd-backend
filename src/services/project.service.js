@@ -56,6 +56,7 @@ const CodeProjectStaffRole = db.codeProjectStaffRole;
 const User = db.user;
 const CodeProjectPartnerType = db.codeProjectPartnerType;
 const Op = sequelize.Op;
+const BusinessAssociateContact = db.businessAssociateContact;
 
 async function getCentroidsOfAllProjects () {
   const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid, projectid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE}`;
@@ -712,41 +713,57 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   if (lgmanager !== '') {
     logger.info(`Filtering by lgmanager ${lgmanager}...`);
     //LG Manager
-     conditions.push(Project.findAll({
-       attributes: ["project_id", "code_project_type_id"],
-       include: [{
-         model: ProjectStaff,
-         attributes: [],
-         required: true,
-         include: [{
-           model: MHFDStaff,
-           required: true,
-           where: {full_name: lgmanager}
-         }, {
-           model: CodeProjectStaffRole,
-           required: true,
-           where: {
-             project_staff_role_type_name: 'Local Government Lead',
-           }
-         }],
-       }]
-     }));
+    conditions.push(Project.findAll({
+      attributes: ["project_id", "code_project_type_id"],
+      include: [{
+        model: ProjectStaff,
+        attributes: [],
+        required: true,
+        include: [{
+            model: BusinessAssociateContact,
+            attributes: [],
+            required: true,
+            include: [{
+              model: User,
+              attributes: [],
+              required: true,
+              where : { user_id: lgmanager },
+            }]          
+        }, {
+          model: CodeProjectStaffRole,
+          required: true,
+          where: {
+            project_staff_role_type_name: 'Local Government Lead',
+          }
+        }],
+      }]
+    }));
    }  
   if (mhfd_lead.length) {
    //MHFD LEAD
     conditions.push(Project.findAll({
-      attributes: ["project_id","code_project_type_id"],
+      attributes: ["project_id", "code_project_type_id"],
       include: [{
         model: ProjectStaff,
         attributes: [],
-        include: {
-          model: MHFDStaff,
-          attributes: [],
-        },
-        where: {
-          code_project_staff_role_type_id: 1,
-          mhfd_staff_id: mhfd_lead
-        }
+        required: true,
+        include: [{
+            model: BusinessAssociateContact,
+            attributes: [],
+            required: true,
+            include: [{
+              model: User,
+              attributes: [],
+              required: true,
+              where : { user_id: mhfd_lead },
+            }]          
+        }, {
+          model: CodeProjectStaffRole,
+          required: true,
+          where: {
+            project_staff_role_type_name: 'MHFD Lead',
+          }
+        }],
       }]
     }));
   }  
