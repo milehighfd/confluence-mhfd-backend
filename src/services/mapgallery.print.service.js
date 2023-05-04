@@ -320,6 +320,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
 
   html = html.split('${projectname}').join(_data.dataValues.project_name);
   html = html.split('${projecttype}').join(_data.dataValues.project_type_name + ' Project');
+  html = html.split('${onBaseId}').join(_data.dataValues.onbase_project_number);
   html = html.split('${sponsor}').join(sponsor);
   html = html.split('${county}').join(county);
   html = html.split('${servicearea}').join(servicearea);
