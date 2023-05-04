@@ -772,7 +772,6 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
         }
       }));
     }
-    console.log('WHEREORRR', whereOr);
   }
   if (contractor.length) {
     logger.info(`Filtering by contractor ${contractor}...`);
