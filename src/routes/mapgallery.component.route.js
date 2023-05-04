@@ -451,7 +451,7 @@ export async function componentParamFilterCounter(req, res) {
       mhfdmanager: body.mhfdmanager ? body.mhfdmanager.split(','): '' 
     };
     console.log('filters', filters);
-    const allActions = await getActions(filters);
+    const allActions = await getActions(filters, bounds);
 
     const result = {
       "component_type":  componentTypes,

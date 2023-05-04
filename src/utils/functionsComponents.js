@@ -95,11 +95,43 @@ const TABLES_COMPONENTS = [
 
 const { Op } = pkg;
 
-export const getActions = async (filter) => {
+const getIdsInsideBoundsCarto = async (bounds) => {
+  const coords = bounds.split(',');
+  let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+  let result = [];
+  try {
+    for(let i = 0 ; i < actionListNames.length ; ++i) {
+      const SQL = `SELECT component_id FROM ${TABLES_COMPONENTS[i]} where ${filters}`;
+      const query = { q: ` ${SQL} ` };
+      const data = await needle('post', CARTO_URL, query, { json: true });
+      if (data.statusCode === 200) {
+        result.push({
+          component_type: actionListNames[i],
+          actionids: data.body.rows.map(compid => compid.component_id)
+        });
+      } else if (data.statusCode === 400) {
+        logger.error('data.statusCode 400', data.body);
+      } else {
+        logger.error('Error on getCounterComponentsWithFilter');
+        logger.error(data.statusCode);
+        logger.error(data.body);
+      }
+    }
+  } catch(error) {
+    logger.error('Error at inside bounds' + error);
+  }
+  return result;
+}
+
+export const getActions = async (filter, bounds) => {
     try {
         let promises = [];
         let where = {};
         let whereStreamImprovementException = {};
+
+        const ids = await getIdsInsideBoundsCarto(bounds);
+        console.log('ids \n ******** \n', ids);
         const service_area = filter.servicearea ? filter.servicearea : [];
         const county = filter.county ? filter.county : [];
         const component_type = filter.component_type ? filter.component_type : [];
@@ -108,6 +140,7 @@ export const getActions = async (filter) => {
         const mhfdmanager = filter.mhfdmanager ? filter.mhfdmanager : [];
         const cost = filter.estimatedcost && filter.estimatedcost.length > 0 ? { [Op.between]: [+filter.estimatedcost[0], +filter.estimatedcost[1]] } : null;
         const yearofstudy = (filter.yearofstudy && filter.yearofstudy.split(',').length > 0 ? { [Op.between]: [+filter.yearofstudy.split(',')[0], +filter.yearofstudy.split(',')[1]] } : null) 
+
         if (service_area.length) {
           where = {
             ...where,
@@ -189,6 +222,7 @@ export const getActions = async (filter) => {
             source_complete_year: yearofstudy
           };
         }
+
         actionList.forEach(async actionType => {
           promises.push(actionType.findAll({
             attributes: [
