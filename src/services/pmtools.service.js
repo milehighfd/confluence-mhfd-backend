@@ -36,7 +36,7 @@ const countProjects = async (type, filter, extraFilters) => {
   if (extraFilters.search) {
     where={[Op.or]: [
       { project_name: { [Op.like]: `%${extraFilters.search}%` } },
-      { onbase_project_number: { [Op.like]: `%${extraFilters.search}%` } },
+      { onbase_project_number: { [Op.like]: `${extraFilters.search}` } },
     ]}
   }
   if (extraFilters.search && extraFilters.favorites){
@@ -46,7 +46,7 @@ const countProjects = async (type, filter, extraFilters) => {
         {
           [Op.or]: [
             { project_name: { [Op.like]: `%${extraFilters.search}%` } },
-            { onbase_project_number: { [Op.like]: `%${extraFilters.search}%` } },
+            { onbase_project_number: { [Op.like]: `${extraFilters.search}` } },
           ]
         }
       ]
@@ -446,7 +446,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
     where = {
       [Op.or]: [
         { project_name: { [Op.like]: `%${extraFilters.search}%` } },
-        { onbase_project_number: { [Op.like]: `%${extraFilters.search}%` } },
+        { onbase_project_number: { [Op.like]: `${extraFilters.search}` } },
       ]
     }
   }
@@ -457,7 +457,7 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         {
           [Op.or]: [
             { project_name: { [Op.like]: `%${extraFilters.search}%` } },
-            { onbase_project_number: { [Op.like]: `%${extraFilters.search}%` } },
+            { onbase_project_number: { [Op.like]: `${extraFilters.search}` } },
           ]
         }
       ]
