@@ -270,6 +270,13 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     ) {
       data['stream_name'] = _data?.project_streams[0].stream.stream_name;
     }
+    if (
+      k.includes('project_staffs') &&
+      (_data[k] !== void 0 || _data[k] !== []) &&
+      _data[k]?.length > 0
+    ) {
+      data['project_staffs'] = _data?.project_staffs;
+    }
     data[k] = _data[k] ? _data[k] : [];
   });
 
@@ -362,6 +369,29 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     })
     .join('');
   html = html.split('${problemRows}').join(problemRows);
+
+  // TEAMS
+  let teamRow = data.project_staffs.map((el) => {
+    const STAFF_ROL_MAP = {
+      [MHFD_LEAD]: 'MHFD Lead/PM',
+      [MHFD_SUPPORT]: 'MHFD Support',
+      [ADMIN_STAFF]: 'Admin Staff'
+    };
+    return `
+    <tr>
+      <td style="width: 152.5px; padding: 7px 0px;">
+        <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">${el.business_associate_contact.contact_name}</h6>
+        <p style="font-size: 12px; color: #a09cb1; margin-bottom: 0px; margin-top: -3px; padding-top: 5px;">${STAFF_ROL_MAP[ps.code_project_staff_role_type_id]}</p>
+      </td>
+      <td style="width:  87.5px; text-align: right;">
+        <span style="font-size: 12px; color: #a09cb1; margin-bottom: 15px;margin-top: -3px; margin-right:16px;">${el.business_associate_contact.user.organization}</span>
+      </td>
+    </tr>
+  `
+  })
+  .join('');
+  html = html.split('${teamRow}').join(teamRow);
+
   // VENDORS
   let _vendors =
     (vendors !== void 0 || vendors !== []) && vendors?.length > 0
