@@ -596,9 +596,11 @@ const getDetails = async (project_id) => {
             attributes: [
               'code_project_staff_role_type_id',
               'is_active',
-              'project_staff_id'
+              'project_staff_id',
+              'business_associate_contact_id'
             ],
-            include: {
+            
+            include: [{
 
               model: MHFDStaff,
               required: false,
@@ -607,6 +609,7 @@ const getDetails = async (project_id) => {
                 'mhfd_staff_id',
                 'full_name'
               ],
+              
               include: {
                 model: User,
                 required: false,
@@ -614,7 +617,14 @@ const getDetails = async (project_id) => {
                   'organization'
                 ]
               }
-            }
+            },{
+              model: BusinessAssociateContact,
+              required: true,
+              include: [{
+                model: User,
+                required: true,
+              }]
+            }]
             // where: {
             //   code_cost_type_id: 1
             // }
@@ -1574,3 +1584,4 @@ export default {
   addProjectToCache,
   updateProjectOnCache
 };
+//ALTER TABLE apr29.dbo.project_staff ADD CONSTRAINT project_staff_FK FOREIGN KEY (business_associate_contact_id) REFERENCES apr29.dbo.business_associate_contact(business_associate_contact_id) ON DELETE CASCADE ON UPDATE CASCADE;
