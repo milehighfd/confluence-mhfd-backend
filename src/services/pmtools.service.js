@@ -64,29 +64,53 @@ const countProjects = async (type, filter, extraFilters) => {
       code_project_type_id: extraFilters.code_project_type_id
     }: {}
   }];
+  if (extraFilters?.filterby?.includes('projecttype')) {
+    const index = extraFilters?.filterby?.findIndex(item => item === 'projecttype');    
+    let where = [];    
+    if (extraFilters?.filterby?.includes('projecttype')) {
+      const array = extraFilters.value[index];
+      if (array.length) {
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ code_project_type_id: intArray }] };
+      } else {
+        where = { [Op.and]: [{ code_project_type_id: extraFilters.value[index] }] };
+      }
+    }
+    includes.push({
+      model: CodeProjectType,
+      as: 'currentProjectType',
+      required: true,
+      attributes: [
+        'code_project_type_id',
+        'project_type_name'
+      ],
+      where: where
+    });
+  }
   if (type === 'status' || extraFilters?.filterby === 'status') {
+    const index = extraFilters?.filterby?.findIndex(item => item === 'status');
     const filters = [];
     let where = [];
-    if (type === 'status' && extraFilters?.filterby === 'status') {
-      const array = extraFilters.value;
+    if (type === 'status' && extraFilters?.filterby?.includes('status')) {
+      const array = extraFilters.value[index];
       if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
         where = { [Op.and]: [{ code_status_type_id: intArray }, { code_status_type_id: +filter }] };
       } else {
-        where = { [Op.and]: [{ code_status_type_id: extraFilters.value }, { code_status_type_id: +filter }] };
+        where = { [Op.and]: [{ code_status_type_id: extraFilters.value[index] }, { code_status_type_id: +filter }] };
       }
     }
     else if (type === 'status') {
       filters.push(+filter);
       where = { code_status_type_id: +filter }
     }
-    else if (extraFilters?.filterby === 'status') {
-      const array = extraFilters.value;
+    else if (extraFilters?.filterby?.includes('status')) {
+      const array = extraFilters.value[index];
       if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
         where = { [Op.and]: [{ code_status_type_id: intArray }] };
       } else {
-        where = { [Op.and]: [{ code_status_type_id: extraFilters.value }] };
+        where = { [Op.and]: [{ code_status_type_id: extraFilters.value[index] }] };
       }
     }
     includes.push({
@@ -99,30 +123,31 @@ const countProjects = async (type, filter, extraFilters) => {
       },
     });
   }
-  if (type === 'jurisdiction' || extraFilters?.filterby === 'jurisdiction') {
+  if (type === 'jurisdiction' || extraFilters?.filterby?.includes('jurisdiction')) {
+    const index = extraFilters?.filterby?.findIndex(item => item === 'jurisdiction');
     const filters = [];
     let where = [];
-    if (type === 'jurisdiction' && extraFilters?.filterby === 'jurisdiction') {
-      const array = extraFilters.value;
-      if (array.length){
+    if (type === 'jurisdiction' && extraFilters?.filterby?.includes('jurisdiction')) {
+      const array = extraFilters.value[index];
+      if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
         where = { [Op.and]: [{ code_local_government_id: intArray }, { code_local_government_id: +filter }] };
-      }else{
-        where = { [Op.and]: [{ code_local_government_id: extraFilters.value }, { code_local_government_id: +filter }] };
-      }        
+      } else {
+        where = { [Op.and]: [{ code_local_government_id: extraFilters.value[index] }, { code_local_government_id: +filter }] };
+      }
     }
     else if (type === 'jurisdiction') {
       filters.push(+filter);
       where = { code_local_government_id: +filter }
     }
-    else if (extraFilters?.filterby === 'jurisdiction') {
-      const array = extraFilters.value;
-      if (array.length){
+    else if (extraFilters?.filterby?.includes('jurisdiction')) {
+      const array = extraFilters.value[index];
+      if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
         where = { [Op.and]: [{ code_local_government_id: intArray }] };
-      }else{
-        where = { [Op.and]: [{ code_local_government_id: extraFilters.value }] };
-      }    
+      } else {
+        where = { [Op.and]: [{ code_local_government_id: extraFilters.value[index] }] };
+      }
     }
     includes.push({
       model: ProjectLocalGovernment,
@@ -141,29 +166,30 @@ const countProjects = async (type, filter, extraFilters) => {
       ]
     });
   }
-  if (type === 'staff' || extraFilters?.filterby === 'staff') {
+  if (type === 'staff' || extraFilters?.filterby?.includes('staff')) {
+    const index = extraFilters?.filterby?.findIndex(item => item === 'staff');
     const filters = [];
     let where = [];
-    if (type === 'staff' && extraFilters?.filterby === 'staff') {
-      const array = extraFilters.value;
+    if (type === 'staff' && extraFilters?.filterby?.includes('staff')) {
+      const array = extraFilters.value[index];
       if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
         where = { [Op.and]: [{ user_id: intArray }, { user_id: +filter }] };
       } else {
-        where = { [Op.and]: [{ user_id: extraFilters.value }, { user_id: +filter }] };
+        where = { [Op.and]: [{ user_id: extraFilters.value[index] }, { user_id: +filter }] };
       }
     }
     else if (type === 'staff') {
       filters.push(+filter);
       where = { user_id: +filter }
     }
-    else if (extraFilters?.filterby === 'staff') {
-      const array = extraFilters.value;
+    else if (extraFilters?.filterby?.includes('staff')) {
+      const array = extraFilters.value[index];
       if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
         where = { [Op.and]: [{ user_id: intArray }] };
       } else {
-        where = { [Op.and]: [{ user_id: extraFilters.value }] };
+        where = { [Op.and]: [{ user_id: extraFilters.value[index] }] };
       }
     }
     includes.push({
@@ -190,29 +216,30 @@ const countProjects = async (type, filter, extraFilters) => {
       }]
     });
   }
-  if (type === 'county' || extraFilters?.filterby === 'county') {
+  if (type === 'county' || extraFilters?.filterby?.includes('county')) {
+    const index = extraFilters?.filterby?.findIndex(item => item === 'county');
     const filters = [];
     let where = [];
-    if (type === 'county' && extraFilters?.filterby === 'county') {
-      const array = extraFilters.value;
-      if (array.length){
+    if (type === 'county' && extraFilters?.filterby?.includes('county')) {
+      const array = extraFilters.value[index];
+      if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
         where = { [Op.and]: [{ state_county_id: intArray }, { state_county_id: +filter }] };
-      }else{
-        where = { [Op.and]: [{ state_county_id: extraFilters.value }, { state_county_id: +filter }] };
-      }        
+      } else {
+        where = { [Op.and]: [{ state_county_id: extraFilters.value[index] }, { state_county_id: +filter }] };
+      }
     }
     else if (type === 'county') {
       filters.push(+filter);
       where = { state_county_id: +filter }
     }
-    else if (extraFilters?.filterby === 'county') {
-      const array = extraFilters.value;
+    else if (extraFilters?.filterby?.includes('county')) {
+      const array = extraFilters.value[index];
       if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
         where = { [Op.and]: [{ state_county_id: intArray }] };
       } else {
-        where = { [Op.and]: [{ state_county_id: extraFilters.value }] };
+        where = { [Op.and]: [{ state_county_id: extraFilters.value[index] }] };
       }
     }
     includes.push({
@@ -232,31 +259,32 @@ const countProjects = async (type, filter, extraFilters) => {
       ]
     });
   }
-  if (type === 'servicearea' || extraFilters?.filterby === 'servicearea') {
+  if (type === 'servicearea' || extraFilters?.filterby?.includes('servicearea')) {
+    const index = extraFilters?.filterby?.findIndex(item => item === 'servicearea');
     const filters = [];
-      let where = [];
-      if (type === 'servicearea' && extraFilters?.filterby === 'servicearea') {
-        const array = extraFilters.value;
-        if (array.length) {
-          const intArray = array.map(str => parseInt(str, 10));
-          where = { [Op.and]: [{ code_service_area_id: intArray }, { code_service_area_id: +filter }] };
-        } else {
-          where = { [Op.and]: [{ code_service_area_id: extraFilters.value }, { code_service_area_id: +filter }] };
-        }
+    let where = [];
+    if (type === 'servicearea' && extraFilters?.filterby?.includes('servicearea')) {
+      const array = extraFilters.value[index];
+      if (array.length) {
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ code_service_area_id: intArray }, { code_service_area_id: +filter }] };
+      } else {
+        where = { [Op.and]: [{ code_service_area_id: extraFilters.value[index] }, { code_service_area_id: +filter }] };
       }
-      else if (type === 'servicearea') {
-        filters.push(+filter);
-        where = { code_service_area_id: +filter }
+    }
+    else if (type === 'servicearea') {
+      filters.push(+filter);
+      where = { code_service_area_id: +filter }
+    }
+    else if (extraFilters?.filterby?.includes('servicearea')) {
+      const array = extraFilters.value[index];
+      if (array.length) {
+        const intArray = array.map(str => parseInt(str, 10));
+        where = { [Op.and]: [{ code_service_area_id: intArray }] };
+      } else {
+        where = { [Op.and]: [{ code_service_area_id: extraFilters.value[index] }] };
       }
-      else if (extraFilters?.filterby === 'servicearea') {
-        const array = extraFilters.value;
-        if (array.length) {
-          const intArray = array.map(str => parseInt(str, 10));
-          where = { [Op.and]: [{ code_service_area_id: intArray }] };
-        } else {
-          where = { [Op.and]: [{ code_service_area_id: extraFilters.value }] };
-        }
-      }
+    }
     includes.push({
       model: ProjectServiceArea,
       as: 'currentServiceArea',
@@ -273,30 +301,31 @@ const countProjects = async (type, filter, extraFilters) => {
         'project_service_area_id'
       ]
     });
-  }  
-  if (type === 'consultant' || extraFilters?.filterby === 'consultant') {
+  }
+  if (type === 'consultant' || extraFilters?.filterby?.includes('consultant')) {
+    const index = extraFilters?.filterby?.findIndex(item => item === 'consultant');
     const filters = [];
     let where = [];
-    if (type === 'consultant' && extraFilters?.filterby === 'consultant') {
-      const array = extraFilters.value;
-      if (array.length){
+    if (type === 'consultant' && extraFilters?.filterby?.includes('consultant')) {
+      const array = extraFilters.value[index];
+      if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
         where = { [Op.and]: [{ business_associates_id: intArray }, { business_associates_id: +filter }] };
-      }else{
-        where = { [Op.and]: [{ business_associates_id: extraFilters.value }, { business_associates_id: +filter }] };
-      }        
+      } else {
+        where = { [Op.and]: [{ business_associates_id: extraFilters.value[index] }, { business_associates_id: +filter }] };
+      }
     }
     else if (type === 'consultant') {
       filters.push(+filter);
       where = { business_associates_id: +filter }
     }
-    else if (extraFilters?.filterby === 'consultant') {
-      const array = extraFilters.value;
+    else if (extraFilters?.filterby?.includes('consultant')) {
+      const array = extraFilters.value[index];
       if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
         where = { [Op.and]: [{ business_associates_id: intArray }] };
       } else {
-        where = { [Op.and]: [{ business_associates_id: extraFilters.value }] };
+        where = { [Op.and]: [{ business_associates_id: extraFilters.value[index] }] };
       }
     }
     const CONSULTANT_ID = 3;
@@ -320,29 +349,30 @@ const countProjects = async (type, filter, extraFilters) => {
       }
     });
   }
-  if (type === 'contractor' || extraFilters?.filterby === 'contractor') {
+  if (type === 'contractor' || extraFilters?.filterby?.includes('contractor')) {
+    const index = extraFilters?.filterby?.findIndex(item => item === 'contractor');
     const filters = [];
     let where = [];
-    if (type === 'contractor' && extraFilters?.filterby === 'contractor') {
-      const array = extraFilters.value;
+    if (type === 'contractor' && extraFilters?.filterby?.includes('contractor')) {
+      const array = extraFilters.value[index];
       if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
         where = { [Op.and]: [{ business_associates_id: intArray }, { business_associates_id: +filter }] };
       } else {
-        where = { [Op.and]: [{ business_associates_id: extraFilters.value }, { business_associates_id: +filter }] };
+        where = { [Op.and]: [{ business_associates_id: extraFilters.value[index] }, { business_associates_id: +filter }] };
       }
     }
     else if (type === 'contractor') {
       filters.push(+filter);
       where = { business_associates_id: +filter }
     }
-    else if (extraFilters?.filterby === 'contractor') {
-      const array = extraFilters.value;
+    else if (extraFilters?.filterby?.includes('contractor')) {
+      const array = extraFilters.value[index];
       if (array.length) {
         const intArray = array.map(str => parseInt(str, 10));
         where = { [Op.and]: [{ business_associates_id: intArray }] };
       } else {
-        where = { [Op.and]: [{ business_associates_id: extraFilters.value }] };
+        where = { [Op.and]: [{ business_associates_id: extraFilters.value[index] }] };
       }
     }
     const CIVIL_CONTRACTOR_ID = 8, LANDSCAPE_CONTRACTOR_ID = 9;
@@ -366,8 +396,9 @@ const countProjects = async (type, filter, extraFilters) => {
       }
     });
   }
-  if (extraFilters?.filterby === 'lgmanager') {
-    const filter = extraFilters.value;
+  if (extraFilters?.filterby.includes('lgmanager')) {
+    const index = extraFilters?.filterby?.findIndex(item => item === 'lgmanager');
+    const filter = extraFilters.value[index];
     includes.push({
       model: ProjectStaff,
       attributes: [],
@@ -392,8 +423,30 @@ const countProjects = async (type, filter, extraFilters) => {
       }]
     });
   }
-  if (extraFilters?.filterby === 'stream') {
-    const filter = extraFilters.value;
+  if (extraFilters?.filterby.includes('teams')) {
+    const index = extraFilters?.filterby?.findIndex(item => item === 'teams');
+    const filter = extraFilters.value[index];
+    includes.push({
+      model: ProjectStaff,
+      attributes: [],
+      as: 'currentProjectStaff',
+      required: true,
+      include: [{
+        model: BusinessAssociateContact,
+        attributes: [],
+        required: true,
+        include: [{
+          model: User,
+          attributes: [],
+          required: true,
+          where : { user_id: filter },
+        }]
+      }]
+    });
+  }
+  if (extraFilters?.filterby.includes('stream')) {
+    const index = extraFilters?.filterby?.findIndex(item => item === 'stream');
+    const filter = extraFilters.value[index];
     includes.push({
       model: ProjectStreams,
       as: 'currentStream',
@@ -409,9 +462,11 @@ const countProjects = async (type, filter, extraFilters) => {
       ],
     });
   }
-  if (extraFilters?.filterby === 'cost') {
+  if (extraFilters?.filterby.includes('cost')) {
+    const index = extraFilters?.filterby?.findIndex(item => item === 'cost');
     const ESTIMATED_ID = 1;
-    const cost = extraFilters.value;
+    const cost = extraFilters.value[index];
+    logger.info(`Filtering by cost ${cost}...`);
     includes.push({
       model: ProjectCost,
       required: true,
@@ -656,44 +711,55 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         }: {},
       }
     ];    
-    if (type === 'status' || extraFilters.sortby === 'status' || extraFilters.sortby === 'phase' || extraFilters?.filterby === 'status') {      
+    if (extraFilters?.filterby?.includes('projecttype')) {
+      const index = extraFilters?.filterby?.findIndex(item => item === 'projecttype');    
+      let where = [];    
+      if (extraFilters?.filterby?.includes('projecttype')) {
+        const array = extraFilters.value[index];
+        if (array.length) {
+          const intArray = array.map(str => parseInt(str, 10));
+          where = { [Op.and]: [{ code_project_type_id: intArray }] };
+        } else {
+          where = { [Op.and]: [{ code_project_type_id: extraFilters.value[index] }] };
+        }
+      }
+      optionalIncludes.push({
+        model: CodeProjectType,
+        as: 'currentProjectType',
+        required: true,
+        attributes: [
+          'code_project_type_id',
+          'project_type_name'
+        ],
+        where: where
+      });
+    }
+    if (type === 'status' || extraFilters?.filterby === 'status') {
+      const index = extraFilters?.filterby?.findIndex(item => item === 'status');
       const filters = [];
       let where = [];
-      if (type === 'status' && extraFilters?.filterby === 'status') {
-        const array = extraFilters.value;
-        if (array.length){
+      if (type === 'status' && extraFilters?.filterby?.includes('status')) {
+        const array = extraFilters.value[index];
+        if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ code_status_type_id: intArray }, { code_status_type_id: +filter }] };
-        }else{
-          where = { [Op.and]: [{ code_status_type_id: extraFilters.value }, { code_status_type_id: +filter }] };
-        }        
+        } else {
+          where = { [Op.and]: [{ code_status_type_id: extraFilters.value[index] }, { code_status_type_id: +filter }] };
+        }
       }
       else if (type === 'status') {
         filters.push(+filter);
         where = { code_status_type_id: +filter }
       }
-      else if (extraFilters?.filterby === 'status') {
-        const array = extraFilters.value;
-        if (array.length){
+      else if (extraFilters?.filterby?.includes('status')) {
+        const array = extraFilters.value[index];
+        if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ code_status_type_id: intArray }] };
-        }else{
-          where = { [Op.and]: [{ code_status_type_id: extraFilters.value }] };
-        }    
+        } else {
+          where = { [Op.and]: [{ code_status_type_id: extraFilters.value[index] }] };
+        }
       }
-
-      // optionalIncludes.push({
-      //   model: ProjectStatus,
-      //   as: 'currentId',
-      //   required: true,
-      //   duplicating: false,
-      //   include: {
-      //     duplicating: false,
-      //     model: CodePhaseType,
-      //     required:true ,
-      //     where: { code_status_type_id: +filter }
-      //   },
-      // });
       optionalIncludes.push({
         model: ProjectStatus,
         as: 'currentId',
@@ -717,30 +783,31 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         ]);
       }
     }
-    if (type === 'jurisdiction' || extraFilters?.filterby === 'jurisdiction') {
+    if (type === 'jurisdiction' || extraFilters?.filterby?.includes('jurisdiction')) {
+      const index = extraFilters?.filterby?.findIndex(item => item === 'jurisdiction');
       const filters = [];
       let where = [];
-      if (type === 'jurisdiction' && extraFilters?.filterby === 'jurisdiction') {
-        const array = extraFilters.value;
-        if (array.length){
+      if (type === 'jurisdiction' && extraFilters?.filterby?.includes('jurisdiction')) {
+        const array = extraFilters.value[index];
+        if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ code_local_government_id: intArray }, { code_local_government_id: +filter }] };
-        }else{
-          where = { [Op.and]: [{ code_local_government_id: extraFilters.value }, { code_local_government_id: +filter }] };
-        }        
+        } else {
+          where = { [Op.and]: [{ code_local_government_id: extraFilters.value[index] }, { code_local_government_id: +filter }] };
+        }
       }
       else if (type === 'jurisdiction') {
         filters.push(+filter);
         where = { code_local_government_id: +filter }
       }
-      else if (extraFilters?.filterby === 'jurisdiction') {
-        const array = extraFilters.value;
-        if (array.length){
+      else if (extraFilters?.filterby?.includes('jurisdiction')) {
+        const array = extraFilters.value[index];
+        if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ code_local_government_id: intArray }] };
-        }else{
-          where = { [Op.and]: [{ code_local_government_id: extraFilters.value }] };
-        }    
+        } else {
+          where = { [Op.and]: [{ code_local_government_id: extraFilters.value[index] }] };
+        }
       }
       optionalIncludes.push({
         model: ProjectLocalGovernment,
@@ -759,29 +826,30 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         ]
       });
     }
-    if (type === 'staff' || extraFilters?.filterby === 'staff') {
+    if (type === 'staff' || extraFilters?.filterby?.includes('staff')) {
+      const index = extraFilters?.filterby?.findIndex(item => item === 'staff');
       const filters = [];
       let where = [];
-      if (type === 'staff' && extraFilters?.filterby === 'staff') {
-        const array = extraFilters.value;
+      if (type === 'staff' && extraFilters?.filterby?.includes('staff')) {
+        const array = extraFilters.value[index];
         if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ user_id: intArray }, { user_id: +filter }] };
         } else {
-          where = { [Op.and]: [{ user_id: extraFilters.value }, { user_id: +filter }] };
+          where = { [Op.and]: [{ user_id: extraFilters.value[index] }, { user_id: +filter }] };
         }
       }
       else if (type === 'staff') {
         filters.push(+filter);
         where = { user_id: +filter }
       }
-      else if (extraFilters?.filterby === 'staff') {
-        const array = extraFilters.value;
+      else if (extraFilters?.filterby?.includes('staff')) {
+        const array = extraFilters.value[index];
         if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ user_id: intArray }] };
         } else {
-          where = { [Op.and]: [{ user_id: extraFilters.value }] };
+          where = { [Op.and]: [{ user_id: extraFilters.value[index] }] };
         }
       }
       optionalIncludes.push({
@@ -808,29 +876,30 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         }]
       });
     }
-    if (type === 'county' || extraFilters?.filterby === 'county') {
+    if (type === 'county' || extraFilters?.filterby?.includes('county')) {
+      const index = extraFilters?.filterby?.findIndex(item => item === 'county');
       const filters = [];
       let where = [];
-      if (type === 'county' && extraFilters?.filterby === 'county') {
-        const array = extraFilters.value;
+      if (type === 'county' && extraFilters?.filterby?.includes('county')) {
+        const array = extraFilters.value[index];
         if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ state_county_id: intArray }, { state_county_id: +filter }] };
         } else {
-          where = { [Op.and]: [{ state_county_id: extraFilters.value }, { state_county_id: +filter }] };
+          where = { [Op.and]: [{ state_county_id: extraFilters.value[index] }, { state_county_id: +filter }] };
         }
       }
       else if (type === 'county') {
         filters.push(+filter);
         where = { state_county_id: +filter }
       }
-      else if (extraFilters?.filterby === 'county') {
-        const array = extraFilters.value;
+      else if (extraFilters?.filterby?.includes('county')) {
+        const array = extraFilters.value[index];
         if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ state_county_id: intArray }] };
         } else {
-          where = { [Op.and]: [{ state_county_id: extraFilters.value }] };
+          where = { [Op.and]: [{ state_county_id: extraFilters.value[index] }] };
         }
       }
       optionalIncludes.push({
@@ -850,29 +919,30 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         ]
       });
     }
-    if (type === 'servicearea' || extraFilters?.filterby === 'servicearea') {
+    if (type === 'servicearea' || extraFilters?.filterby?.includes('servicearea')) {
+      const index = extraFilters?.filterby?.findIndex(item => item === 'servicearea');
       const filters = [];
       let where = [];
-      if (type === 'servicearea' && extraFilters?.filterby === 'servicearea') {
-        const array = extraFilters.value;
+      if (type === 'servicearea' && extraFilters?.filterby?.includes('servicearea')) {
+        const array = extraFilters.value[index];
         if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ code_service_area_id: intArray }, { code_service_area_id: +filter }] };
         } else {
-          where = { [Op.and]: [{ code_service_area_id: extraFilters.value }, { code_service_area_id: +filter }] };
+          where = { [Op.and]: [{ code_service_area_id: extraFilters.value[index] }, { code_service_area_id: +filter }] };
         }
       }
       else if (type === 'servicearea') {
         filters.push(+filter);
         where = { code_service_area_id: +filter }
       }
-      else if (extraFilters?.filterby === 'servicearea') {
-        const array = extraFilters.value;
+      else if (extraFilters?.filterby?.includes('servicearea')) {
+        const array = extraFilters.value[index];
         if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ code_service_area_id: intArray }] };
         } else {
-          where = { [Op.and]: [{ code_service_area_id: extraFilters.value }] };
+          where = { [Op.and]: [{ code_service_area_id: extraFilters.value[index] }] };
         }
       }
       optionalIncludes.push({
@@ -892,29 +962,30 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         ]
       });
     }    
-    if (type === 'consultant' || extraFilters?.filterby === 'consultant') {
+    if (type === 'consultant' || extraFilters?.filterby?.includes('consultant')) {
+      const index = extraFilters?.filterby?.findIndex(item => item === 'consultant');
       const filters = [];
       let where = [];
-      if (type === 'consultant' && extraFilters?.filterby === 'consultant') {
-        const array = extraFilters.value;
-        if (array.length){
+      if (type === 'consultant' && extraFilters?.filterby?.includes('consultant')) {
+        const array = extraFilters.value[index];
+        if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ business_associates_id: intArray }, { business_associates_id: +filter }] };
-        }else{
-          where = { [Op.and]: [{ business_associates_id: extraFilters.value }, { business_associates_id: +filter }] };
-        }        
+        } else {
+          where = { [Op.and]: [{ business_associates_id: extraFilters.value[index] }, { business_associates_id: +filter }] };
+        }
       }
       else if (type === 'consultant') {
         filters.push(+filter);
         where = { business_associates_id: +filter }
       }
-      else if (extraFilters?.filterby === 'consultant') {
-        const array = extraFilters.value;
+      else if (extraFilters?.filterby?.includes('consultant')) {
+        const array = extraFilters.value[index];
         if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ business_associates_id: intArray }] };
         } else {
-          where = { [Op.and]: [{ business_associates_id: extraFilters.value }] };
+          where = { [Op.and]: [{ business_associates_id: extraFilters.value[index] }] };
         }
       }
       const CONSULTANT_ID = 3;
@@ -938,29 +1009,30 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         }
       });
     }
-    if (type === 'contractor' || extraFilters?.filterby === 'contractor') {
+    if (type === 'contractor' || extraFilters?.filterby?.includes('contractor')) {
+      const index = extraFilters?.filterby?.findIndex(item => item === 'contractor');
       const filters = [];
       let where = [];
-      if (type === 'contractor' && extraFilters?.filterby === 'contractor') {
-        const array = extraFilters.value;
+      if (type === 'contractor' && extraFilters?.filterby?.includes('contractor')) {
+        const array = extraFilters.value[index];
         if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ business_associates_id: intArray }, { business_associates_id: +filter }] };
         } else {
-          where = { [Op.and]: [{ business_associates_id: extraFilters.value }, { business_associates_id: +filter }] };
+          where = { [Op.and]: [{ business_associates_id: extraFilters.value[index] }, { business_associates_id: +filter }] };
         }
       }
       else if (type === 'contractor') {
         filters.push(+filter);
         where = { business_associates_id: +filter }
       }
-      else if (extraFilters?.filterby === 'contractor') {
-        const array = extraFilters.value;
+      else if (extraFilters?.filterby?.includes('contractor')) {
+        const array = extraFilters.value[index];
         if (array.length) {
           const intArray = array.map(str => parseInt(str, 10));
           where = { [Op.and]: [{ business_associates_id: intArray }] };
         } else {
-          where = { [Op.and]: [{ business_associates_id: extraFilters.value }] };
+          where = { [Op.and]: [{ business_associates_id: extraFilters.value[index] }] };
         }
       }
       const CIVIL_CONTRACTOR_ID = 8, LANDSCAPE_CONTRACTOR_ID = 9;
@@ -984,9 +1056,10 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         }
       });
     }
-    if (extraFilters?.filterby === 'lgmanager') {
-      const filter = extraFilters.value;
-      includes.push({
+    if (extraFilters?.filterby.includes('lgmanager')) {
+      const index = extraFilters?.filterby?.findIndex(item => item === 'lgmanager');
+      const filter = extraFilters.value[index];
+      optionalIncludes.push({
         model: ProjectStaff,
         attributes: [],
         as: 'currentProjectStaff',
@@ -1010,12 +1083,35 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         }]
       });
     }
-    if (extraFilters?.filterby === 'stream') {
-      const filter = extraFilters.value;
+    if (extraFilters?.filterby.includes('teams')) {
+      const index = extraFilters?.filterby?.findIndex(item => item === 'teams');
+      const filter = extraFilters.value[index];
+      optionalIncludes.push({
+        model: ProjectStaff,
+        attributes: [],
+        as: 'currentProjectStaff',
+        required: true,
+        include: [{
+          model: BusinessAssociateContact,
+          attributes: [],
+          required: true,
+          include: [{
+            model: User,
+            attributes: [],
+            required: true,
+            where : { user_id: filter },
+          }]
+        }]
+      });
+    }
+    if (extraFilters?.filterby.includes('stream')) {
+      const index = extraFilters?.filterby?.findIndex(item => item === 'stream');
+      const filter = extraFilters.value[index];
       includes.push({
         model: ProjectStreams,
         as: 'currentStream',
         required: true,
+        subQuery: true,
         include: {
           model: Streams,
           attributes: [],
@@ -1026,9 +1122,10 @@ const getProjects = async (type, filter, extraFilters, page = 1, limit = 20) => 
         ],
       });
     }
-    if (extraFilters?.filterby === 'cost') {
+    if (extraFilters?.filterby.includes('cost')) {
+      const index = extraFilters?.filterby?.findIndex(item => item === 'cost');
       const ESTIMATED_ID = 1;
-      const cost = extraFilters.value;
+      const cost = extraFilters.value[index];
       logger.info(`Filtering by cost ${cost}...`);
       optionalIncludes.push({
         model: ProjectCost,
