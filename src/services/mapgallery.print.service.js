@@ -382,17 +382,12 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     };
     return `
     <tr>
-      <td style="width: 152.5px; padding: 7px 0px;">
+      <td style="width: 132.5px; padding: 7px 0px;">
         <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">${el.business_associate_contact.contact_name}</h6>
         <p style="font-size: 12px; color: #a09cb1; margin-bottom: 0px; margin-top: -3px; padding-top: 5px;">${STAFF_ROL_MAP[el.code_project_staff_role_type_id]}</p>
       </td>
-      <td style="width:  87.5px; text-align: right;
-      overflow:hidden; 
-text-overflow:ellipsis;
-display:-webkit-box; 
--webkit-box-orient:vertical;
--webkit-line-clamp:2; line-height: 15px; margin-top:7px;">
-        <span style="font-size: 12px; color: #a09cb1; margin-bottom: 15px;margin-top: -3px; margin-right:16px;">${el.business_associate_contact.user.organization}</span>
+      <td style="width:  107.5px; text-align: end; line-height: 15px; margin-top:7px;">
+        <span style="font-size: 12px; color: #a09cb1; margin-bottom: 15px;margin-top: -3px;">${el.business_associate_contact.user.organization}</span>
       </td>
     </tr>
   `
