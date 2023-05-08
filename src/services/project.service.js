@@ -1101,13 +1101,13 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
   const offset = (page - 1) * limit;
   const toRange = +offset + +limit;
   let project_ids_array = project_ids.map(project => project.project_id);
-  if (filters.sortby) {
+  if (filters?.sortby) {
     project_ids_array = project_ids_array.slice(offset, toRange);
   }
   console.log('projects in eere projects', project_ids_array);
   where = {project_id: project_ids_array};
-  let limitRange = filters.sortby ? undefined : limit;
-  let offsetRange = filters.sortby ? undefined : offset;
+  let limitRange = filters?.sortby ? undefined : limit;
+  let offsetRange = filters?.sortby ? undefined : offset;
   try {
     if (cache) {
       return JSON.parse(JSON.stringify(cache));
