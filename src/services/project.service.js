@@ -698,6 +698,16 @@ const getDetails = async (project_id) => {
     throw error;
   }
 }
+const  safeGet = (obj, props, defaultValue) => {
+  try {
+    const dataReturn = props.split('.').reduce(function(obj, p) {
+      return obj[p];
+    }, obj);
+    return dataReturn;
+  } catch(e) {
+    return defaultValue
+  }
+}
 
 const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter) => {
   const CONSULTANT_CODE = 3;
@@ -720,6 +730,55 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const status = filter.status ? filter.status : [];
   const conditions = [];
   const mhfd_lead = filter.mhfdmanager && filter.mhfdmanager!=='' ? filter.mhfdmanager : [];  
+  const sortby = filter.sortby && filter.sortby !== '' ? filter.sortby : '';
+  const sorttype = filter.sorttype && filter.sorttype !== '' ? filter.sorttype : 'asc';
+  let projectsSorted = [];
+  if (sortby) { 
+    let includesValues = [];
+    let attributes = ["project_id"];
+    let sortattrib = '';
+    if (sortby === 'projecttype') {
+      includesValues.push({
+        model: CodeProjectType,
+        required: false,
+        attributes: [
+          'code_project_type_id',
+          'project_type_name'
+        ]
+      });
+      sortattrib = 'code_project_type.project_type_name';
+    }
+    if (sortby === 'projectname') {
+      sortattrib = 'project_name';
+      attributes.push('project_name');
+    }
+    projectsSorted = await Project.findAll({
+      attributes: attributes,
+      include: includesValues
+    });
+    
+    projectsSorted = projectsSorted.sort((x,y) => {
+      const nameX = safeGet(x, sortattrib, Infinity).toUpperCase();
+      const nameY = safeGet(y, sortattrib, Infinity).toUpperCase();
+      if (nameX > nameY) {
+        return -1 * (sorttype === 'asc' ? -1 : 1);
+      }
+      if (nameX < nameY) {
+        return 1 * (sorttype === 'asc' ? -1 : 1);
+      }
+      // names must be equal
+      return 0;
+    })
+    if (sortby === 'projecttype') {
+      // console.log('PROJECT SORTED ', projectsSorted.map((p) => ({p_id: p.project_id, type_name: p.code_project_type.project_type_name})));
+    } else {
+      // console.log('PROJECT SORTED ', projectsSorted);
+    }
+    
+    // TODO: 1
+    // get all projectds with the attribute to sort after
+    // the at the end of this function 
+  }
   if (lgmanager !== '') {
     logger.info(`Filtering by lgmanager ${lgmanager}...`);
     //LG Manager
@@ -948,14 +1007,13 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   }
   let projects = await Promise.all(conditions);
   projects = projects.map(project => project.map(p => p.toJSON()));
-  console.log(projects);
+  // console.log(projects);
   // projects = projects?.filter(project => project.length > 0);
   const counterObject = {};
   projects?.forEach(project => {
     project.forEach(p => {
       counterObject[p.project_id] = counterObject[p.project_id] ? counterObject[p.project_id] + 1 : 1;
     });
-
   });
   const intersection = Object.keys(counterObject).filter(key => counterObject[key] === projects.length)
     .map(key => +key);
@@ -972,9 +1030,67 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       }
     });
   });
+  const intersectedProjectsSorted = [];
+  if (sortby) {
+    projectsSorted.forEach((project) => {
+      let found = false;
+      if (!found) {
+        
+        const foundProject = intersectedProjects.find(p => {
+          return p.project_id === project.project_id
+        });
+        if (foundProject) {
+          intersectedProjectsSorted.push(foundProject);
+          found = true;
+        }
+      }
+    });
+  }
+  // console.log('SORTED PROJECTs', JSON.stringify(projectsSorted));
+  // console.log('intersected Projects', JSON.stringify(intersectedProjects));
+  // console.log('\n\n\nSORTED AND INTERSECTED\n\n\n', JSON.stringify(intersectedProjectsSorted));
+  // TODO 2: 
+  // intersect with the intersected projects 
+  // and get the ids within the segment of pagination 
   return intersectedProjects;
 }
-
+const getProjectsSortedTest = async (include, page = 1, limit = 20) => {  
+  let where = {};
+  const offset = (page - 1) * limit;
+  try {
+    let projects = await Project.findAll({
+      limit: limit,
+      offset: offset,
+      // separate: true,
+      attributes: [
+        "project_id",
+        "project_name",
+        "description",
+        "onbase_project_number",
+        "created_date",
+        'code_project_type_id',
+        'current_project_status_id',
+      ], 
+      include: [{
+        model: CodeProjectType,
+        required: true,
+        attributes: [
+          'code_project_type_id',
+          'project_type_name'
+        ]
+      }],
+      subQuery: false,
+      order: [[[
+        'project_name',
+        'DESC'
+      ]]]
+    });
+    return projects;
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+}
 let cache = null;
 const getProjects = async (include, bounds, project_ids, page = 1, limit = 20) => {  
   let where = {};
@@ -1568,6 +1684,7 @@ export default {
   deleteProjectFromCache,
   deleteByProjectId,
   saveProject,
+  getProjectsSortedTest,
   getProjects,
   getProjects2,
   getProjectsDeprecated,
