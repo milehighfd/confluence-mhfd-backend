@@ -63,7 +63,7 @@ const listProjects = async (req, res) => {
     return (ids.some(boundsids => pid.project_id === boundsids.project_id));
   });
   logger.info(`Starting function getProjects for endpoint project/`);
-  let projects = await projectService.getProjects(null, bounds, projectsFilterId, page, limit);
+  let projects = await projectService.getProjects(null, bounds, projectsFilterId, page, limit, body);
   logger.info(`Finished function getProjects for endpoint project/`);
   const set = new Set(projectsFilterId.map((p) => p?.project_id));
   const count = set.size;

@@ -1069,22 +1069,22 @@ const getProjectsSortedTest = async (include, page = 1, limit = 20) => {
         'code_project_type_id',
         'current_project_status_id',
       ], 
-      include: [{
-        limit: limit,
-        offset: offset,
-        model: CodeProjectType,
-        as: 'currentProjectType',
-        required: true,
-        attributes: [
-          'code_project_type_id',
-          'project_type_name'
-        ],
-        order: [[[
-          'project_type_name',
-          'DESC'
-        ]]]
-      }],
-      subQuery: true,
+      // include: [{
+      //   limit: limit,
+      //   offset: offset,
+      //   model: CodeProjectType,
+      //   as: 'currentProjectType',
+      //   required: true,
+      //   attributes: [
+      //     'code_project_type_id',
+      //     'project_type_name'
+      //   ],
+      //   order: [[[
+      //     'project_type_name',
+      //     'DESC'
+      //   ]]]
+      // }],
+      // subQuery: true,
       
     });
     return projects;
@@ -1094,11 +1094,15 @@ const getProjectsSortedTest = async (include, page = 1, limit = 20) => {
   }
 }
 let cache = null;
-const getProjects = async (include, bounds, project_ids, page = 1, limit = 20) => {  
+const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, filters) => {  
   let where = {};
   const offset = (page - 1) * limit;
-  const project_ids_array = project_ids.map(project => project.project_id);
-  console.log('REACH IDS SORTED??', project_ids_array);
+  const toRange = +offset + +limit;
+  let project_ids_array = project_ids.map(project => project.project_id);
+  if (filters.sortby) {
+    project_ids_array = project_ids_array.slice(offset, toRange);
+  }
+  console.log('projects in eere projects', project_ids_array);
   where = {project_id: project_ids_array};
   try {
     if (cache) {
@@ -1106,8 +1110,8 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20) =
     }
     let projects = await Project.findAll({
       where: where,
-      limit: limit,
-      offset: offset,
+      // limit: limit,
+      // offset: offset,
       separate: true,
       // attributes: [
       //   "project_id",
@@ -1399,9 +1403,6 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20) =
       //     ]
       //   }
       // ],
-      order: [
-        [sequelize.fn('FIELD', sequelize.col('project.project_id'), project_ids_array)]
-      ]
     });
     logger.info(`projects found: ${projects.length}`);
     /*
