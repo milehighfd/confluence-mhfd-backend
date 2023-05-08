@@ -1030,7 +1030,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       }
     });
   });
-  const intersectedProjectsSorted = [];
+  let intersectedProjectsSorted = [];
   if (sortby) {
     projectsSorted.forEach((project) => {
       let found = false;
@@ -1045,6 +1045,8 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
         }
       }
     });
+  } else {
+    intersectedProjectsSorted = intersectedProjects;
   }
   // console.log('SORTED PROJECTs', JSON.stringify(projectsSorted));
   // console.log('intersected Projects', JSON.stringify(intersectedProjects));
@@ -1104,14 +1106,16 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
   }
   console.log('projects in eere projects', project_ids_array);
   where = {project_id: project_ids_array};
+  let limitRange = filters.sortby ? undefined : limit;
+  let offsetRange = filters.sortby ? undefined : offset;
   try {
     if (cache) {
       return JSON.parse(JSON.stringify(cache));
     }
     let projects = await Project.findAll({
       where: where,
-      // limit: limit,
-      // offset: offset,
+      limit: limitRange,
+      offset: offsetRange,
       separate: true,
       // attributes: [
       //   "project_id",
