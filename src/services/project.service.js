@@ -1098,7 +1098,6 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20) =
   let where = {};
   const offset = (page - 1) * limit;
   const project_ids_array = project_ids.map(project => project.project_id);
-  console.log('REACH IDS SORTED??', project_ids_array);
   where = {project_id: project_ids_array};
   try {
     if (cache) {
@@ -1109,299 +1108,297 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20) =
       limit: limit,
       offset: offset,
       separate: true,
-      // attributes: [
-      //   "project_id",
-      //   "project_name",
-      //   "description",
-      //   "onbase_project_number",
-      //   "created_date",
-      //   'code_project_type_id',
-      //   'current_project_status_id',
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([GRADE_CONTROL_STRUCTURE].[projectid])
-      //       FROM [GRADE_CONTROL_STRUCTURE]
-      //       WHERE [GRADE_CONTROL_STRUCTURE].[projectid] = [project].[project_id]
-      //     )`),
-      //     'GRADE_CONTROL_STRUCTURE',
-      //   ],
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([PIPE_APPURTENANCES].[projectid])
-      //       FROM [PIPE_APPURTENANCES]
-      //       WHERE [PIPE_APPURTENANCES].[projectid] = [project].[project_id]
-      //     )`),
-      //     'PIPE_APPURTENANCES',
-      //   ],
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([SPECIAL_ITEM_POINT].[projectid])
-      //       FROM [SPECIAL_ITEM_POINT]
-      //       WHERE [SPECIAL_ITEM_POINT].[projectid] = [project].[project_id]
-      //     )`),
-      //     'SPECIAL_ITEM_POINT',
-      //   ],
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([SPECIAL_ITEM_LINEAR].[projectid])
-      //       FROM [SPECIAL_ITEM_LINEAR]
-      //       WHERE [SPECIAL_ITEM_LINEAR].[projectid] = [project].[project_id]
-      //     )`),
-      //     'SPECIAL_ITEM_LINEAR',
-      //   ],
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([SPECIAL_ITEM_AREA].[projectid])
-      //       FROM [SPECIAL_ITEM_AREA]
-      //       WHERE [SPECIAL_ITEM_AREA].[projectid] = [project].[project_id]
-      //     )`),
-      //     'SPECIAL_ITEM_AREA',
-      //   ],
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([CHANNEL_IMPROVEMENTS_LINEAR].[projectid])
-      //       FROM [CHANNEL_IMPROVEMENTS_LINEAR]
-      //       WHERE [CHANNEL_IMPROVEMENTS_LINEAR].[projectid] = [project].[project_id]
-      //     )`),
-      //     'CHANNEL_IMPROVEMENTS_LINEAR',
-      //   ],
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([CHANNEL_IMPROVEMENTS_AREA].[projectid])
-      //       FROM [CHANNEL_IMPROVEMENTS_AREA]
-      //       WHERE [CHANNEL_IMPROVEMENTS_AREA].[projectid] = [project].[project_id]
-      //     )`),
-      //     'CHANNEL_IMPROVEMENTS_AREA',
-      //   ],
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([REMOVAL_LINE].[projectid])
-      //       FROM [REMOVAL_LINE]
-      //       WHERE [REMOVAL_LINE].[projectid] = [project].[project_id]
-      //     )`),
-      //     'REMOVAL_LINE',
-      //   ],
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([REMOVAL_AREA].[projectid])
-      //       FROM [REMOVAL_AREA]
-      //       WHERE [REMOVAL_AREA].[projectid] = [project].[project_id]
-      //     )`),
-      //     'REMOVAL_AREA',
-      //   ],
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([STORM_DRAIN].[projectid])
-      //       FROM [STORM_DRAIN]
-      //       WHERE [STORM_DRAIN].[projectid] = [project].[project_id]
-      //     )`),
-      //     'STORM_DRAIN',
-      //   ],
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([DETENTION_FACILITIES].[projectid])
-      //       FROM [DETENTION_FACILITIES]
-      //       WHERE [DETENTION_FACILITIES].[projectid] = [project].[project_id]
-      //     )`),
-      //     'DETENTION_FACILITIES',
-      //   ],
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([MAINTENANCE_TRAILS].[projectid])
-      //       FROM [MAINTENANCE_TRAILS]
-      //       WHERE [MAINTENANCE_TRAILS].[projectid] = [project].[project_id]
-      //     )`),
-      //     'MAINTENANCE_TRAILS',
-      //   ],
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([LAND_ACQUISITION].[projectid])
-      //       FROM [LAND_ACQUISITION]
-      //       WHERE [LAND_ACQUISITION].[projectid] = [project].[project_id]
-      //     )`),
-      //     'LAND_ACQUISITION',
-      //   ],
-      //   [
-      //     sequelize.literal(`(
-      //       SELECT COUNT([LANDSCAPING_AREA].[projectid])
-      //       FROM [LANDSCAPING_AREA]
-      //       WHERE [LANDSCAPING_AREA].[projectid] = [project].[project_id]
-      //     )`),
-      //     'LANDSCAPING_AREA',
-      //   ],
-      // ],  
+      attributes: [
+        "project_id",
+        "project_name",
+        "description",
+        "onbase_project_number",
+        "created_date",
+        'code_project_type_id',
+        'current_project_status_id',
+        [
+          sequelize.literal(`(
+            SELECT COUNT([GRADE_CONTROL_STRUCTURE].[projectid])
+            FROM [GRADE_CONTROL_STRUCTURE]
+            WHERE [GRADE_CONTROL_STRUCTURE].[projectid] = [project].[project_id]
+          )`),
+          'GRADE_CONTROL_STRUCTURE',
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT([PIPE_APPURTENANCES].[projectid])
+            FROM [PIPE_APPURTENANCES]
+            WHERE [PIPE_APPURTENANCES].[projectid] = [project].[project_id]
+          )`),
+          'PIPE_APPURTENANCES',
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT([SPECIAL_ITEM_POINT].[projectid])
+            FROM [SPECIAL_ITEM_POINT]
+            WHERE [SPECIAL_ITEM_POINT].[projectid] = [project].[project_id]
+          )`),
+          'SPECIAL_ITEM_POINT',
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT([SPECIAL_ITEM_LINEAR].[projectid])
+            FROM [SPECIAL_ITEM_LINEAR]
+            WHERE [SPECIAL_ITEM_LINEAR].[projectid] = [project].[project_id]
+          )`),
+          'SPECIAL_ITEM_LINEAR',
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT([SPECIAL_ITEM_AREA].[projectid])
+            FROM [SPECIAL_ITEM_AREA]
+            WHERE [SPECIAL_ITEM_AREA].[projectid] = [project].[project_id]
+          )`),
+          'SPECIAL_ITEM_AREA',
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT([CHANNEL_IMPROVEMENTS_LINEAR].[projectid])
+            FROM [CHANNEL_IMPROVEMENTS_LINEAR]
+            WHERE [CHANNEL_IMPROVEMENTS_LINEAR].[projectid] = [project].[project_id]
+          )`),
+          'CHANNEL_IMPROVEMENTS_LINEAR',
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT([CHANNEL_IMPROVEMENTS_AREA].[projectid])
+            FROM [CHANNEL_IMPROVEMENTS_AREA]
+            WHERE [CHANNEL_IMPROVEMENTS_AREA].[projectid] = [project].[project_id]
+          )`),
+          'CHANNEL_IMPROVEMENTS_AREA',
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT([REMOVAL_LINE].[projectid])
+            FROM [REMOVAL_LINE]
+            WHERE [REMOVAL_LINE].[projectid] = [project].[project_id]
+          )`),
+          'REMOVAL_LINE',
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT([REMOVAL_AREA].[projectid])
+            FROM [REMOVAL_AREA]
+            WHERE [REMOVAL_AREA].[projectid] = [project].[project_id]
+          )`),
+          'REMOVAL_AREA',
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT([STORM_DRAIN].[projectid])
+            FROM [STORM_DRAIN]
+            WHERE [STORM_DRAIN].[projectid] = [project].[project_id]
+          )`),
+          'STORM_DRAIN',
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT([DETENTION_FACILITIES].[projectid])
+            FROM [DETENTION_FACILITIES]
+            WHERE [DETENTION_FACILITIES].[projectid] = [project].[project_id]
+          )`),
+          'DETENTION_FACILITIES',
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT([MAINTENANCE_TRAILS].[projectid])
+            FROM [MAINTENANCE_TRAILS]
+            WHERE [MAINTENANCE_TRAILS].[projectid] = [project].[project_id]
+          )`),
+          'MAINTENANCE_TRAILS',
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT([LAND_ACQUISITION].[projectid])
+            FROM [LAND_ACQUISITION]
+            WHERE [LAND_ACQUISITION].[projectid] = [project].[project_id]
+          )`),
+          'LAND_ACQUISITION',
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT([LANDSCAPING_AREA].[projectid])
+            FROM [LANDSCAPING_AREA]
+            WHERE [LANDSCAPING_AREA].[projectid] = [project].[project_id]
+          )`),
+          'LANDSCAPING_AREA',
+        ],
+      ],  
       
-      // include: [
-      //   {
-      //     model: ProjectStaff,
-      //     required: false,
-      //     separate: true,
-      //     attributes: [
-      //       'code_project_staff_role_type_id',
-      //       'is_active',
-      //       'project_staff_id'
-      //     ],
-      //     include: {
-      //       model: MHFDStaff,
-      //       required: false,
-      //       attributes: [
-      //         'user_id',
-      //         'mhfd_staff_id',
-      //         'full_name'
-      //       ],
-      //       include: {
-      //         model: User,
-      //         required: false,
-      //         attributes: [
-      //           'organization'
-      //         ]
-      //       }
-      //     }
-      //     // where: {
-      //     //   code_cost_type_id: 1
-      //     // }
-      //   },
-      //   {
-      //     model: ProjectServiceArea,
-      //     separate: true,
-      //     required: false,
-      //     include: {
-      //       model: CodeServiceArea,
-      //       required: false,
-      //       attributes: [
-      //         'service_area_name',
-      //         'code_service_area_id'
-      //       ]
-      //     },
-      //     attributes: [
-      //       'project_service_area_id'
-      //     ] 
-      //   },        
-      //   {
-      //     model: ProjectCounty,
-      //     separate: true,
-      //     include: {
-      //       model: CodeStateCounty,
-      //       required: false,
-      //       attributes: [
-      //         'county_name',
-      //         'state_county_id'
-      //       ]
-      //     },
-      //     attributes: [
-      //       'project_county_id'
-      //     ]
-      //   },
-      //   {
-      //     model: ProjectStreams,
-      //     separate: true,
-      //     required: false,
-      //     include: {
-      //       model: Streams,
-      //       required: false,
-      //       attributes: [
-      //         'stream_id',
-      //         'stream_name'
-      //       ]
-      //     }
-      //   },
-      //   {
-      //     model: ProjectLocalGovernment,
-      //     separate: true,
-      //     required: false,
-      //     include: {
-      //       model: CodeLocalGoverment,
-      //       required: false,
-      //       attributes: [
-      //         'local_government_name',
-      //         'code_local_government_id'
-      //       ]
-      //     },
-      //     attributes: [
-      //       'project_local_government_id'
-      //     ]
-      //   },
-      //   {
-      //     model: ProjectCost,
-      //     separate: true,
-      //     required: false,
-      //     attributes: [
-      //       'code_cost_type_id',
-      //       'cost'
-      //     ],
-      //     where: {
-      //       is_active: 1
-      //     }
-      //   },
-      //   {
-      //     model: ProjectStatus,
-      //     separate: true,
-      //     required: false,
-      //     attributes: [
-      //       'code_phase_type_id',
-      //       'planned_start_date',
-      //       'actual_start_date',
-      //       'actual_end_date',
-      //       'planned_end_date',
-      //       'project_status_id',
-      //       'is_locked',
-      //       'is_done'
-      //     ],
-      //     include: {
-      //       model: CodePhaseType,
-      //       required: false,
-      //       attributes: [
-      //         'phase_name',
-      //         'phase_ordinal_position'
-      //       ],
-      //       include: [{
-      //         model: CodeStatusType,
-      //         required: false,
-      //         attributes: [
-      //           'code_status_type_id',
-      //           'status_name'
-      //         ]
-      //       }, {
-      //         model: CodeProjectType,
-      //         required: false,
-      //         attributes: [
-      //           'code_project_type_id',
-      //           'project_type_name'
-      //         ]
-      //       }]
-      //     }
-      //   },         
-      //   {
-      //     model: ProjectPartner,
-      //     separate: true,
-      //     required: false,
-      //     attributes: [
-      //       'project_partner_id',
-      //       'code_partner_type_id'
-      //     ],
-      //     include: {
-      //       model: BusinessAssociate,
-      //       required: false,
-      //       attributes: [
-      //         'business_name',
-      //         'business_associates_id'
-      //       ]
-      //     },
-      //     // where: {
-      //     //   code_partner_type_id: [3, 8, 11]
-      //     // }
-      //   },{
-      //     model: CodeProjectType,
-      //     required: false,
-      //     attributes: [
-      //       'code_project_type_id',
-      //       'project_type_name'
-      //     ]
-      //   }
-      // ],
-      order: [
-        [sequelize.fn('FIELD', sequelize.col('project.project_id'), project_ids_array)]
-      ]
+      include: [
+        {
+          model: ProjectStaff,
+          required: false,
+          separate: true,
+          attributes: [
+            'code_project_staff_role_type_id',
+            'is_active',
+            'project_staff_id'
+          ],
+          include: {
+            model: MHFDStaff,
+            required: false,
+            attributes: [
+              'user_id',
+              'mhfd_staff_id',
+              'full_name'
+            ],
+            include: {
+              model: User,
+              required: false,
+              attributes: [
+                'organization'
+              ]
+            }
+          }
+          // where: {
+          //   code_cost_type_id: 1
+          // }
+        },
+        {
+          model: ProjectServiceArea,
+          separate: true,
+          required: false,
+          include: {
+            model: CodeServiceArea,
+            required: false,
+            attributes: [
+              'service_area_name',
+              'code_service_area_id'
+            ]
+          },
+          attributes: [
+            'project_service_area_id'
+          ] 
+        },        
+        {
+          model: ProjectCounty,
+          separate: true,
+          include: {
+            model: CodeStateCounty,
+            required: false,
+            attributes: [
+              'county_name',
+              'state_county_id'
+            ]
+          },
+          attributes: [
+            'project_county_id'
+          ]
+        },
+        {
+          model: ProjectStreams,
+          separate: true,
+          required: false,
+          include: {
+            model: Streams,
+            required: false,
+            attributes: [
+              'stream_id',
+              'stream_name'
+            ]
+          }
+        },
+        {
+          model: ProjectLocalGovernment,
+          separate: true,
+          required: false,
+          include: {
+            model: CodeLocalGoverment,
+            required: false,
+            attributes: [
+              'local_government_name',
+              'code_local_government_id'
+            ]
+          },
+          attributes: [
+            'project_local_government_id'
+          ]
+        },
+        {
+          model: ProjectCost,
+          separate: true,
+          required: false,
+          attributes: [
+            'code_cost_type_id',
+            'cost'
+          ],
+          where: {
+            is_active: 1
+          }
+        },
+        {
+          model: ProjectStatus,
+          separate: true,
+          required: false,
+          attributes: [
+            'code_phase_type_id',
+            'planned_start_date',
+            'actual_start_date',
+            'actual_end_date',
+            'planned_end_date',
+            'project_status_id',
+            'is_locked',
+            'is_done'
+          ],
+          include: {
+            model: CodePhaseType,
+            required: false,
+            attributes: [
+              'phase_name',
+              'phase_ordinal_position'
+            ],
+            include: [{
+              model: CodeStatusType,
+              required: false,
+              attributes: [
+                'code_status_type_id',
+                'status_name'
+              ]
+            }, {
+              model: CodeProjectType,
+              required: false,
+              attributes: [
+                'code_project_type_id',
+                'project_type_name'
+              ]
+            }]
+          }
+        },         
+        {
+          model: ProjectPartner,
+          separate: true,
+          required: false,
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          include: {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+              'business_associates_id'
+            ]
+          },
+          // where: {
+          //   code_partner_type_id: [3, 8, 11]
+          // }
+        },{
+          model: CodeProjectType,
+          required: false,
+          attributes: [
+            'code_project_type_id',
+            'project_type_name'
+          ]
+        }
+      ],
+      order: [['created_date', 'DESC']]
     });
     logger.info(`projects found: ${projects.length}`);
     /*
