@@ -532,6 +532,6 @@ export async function componentParamFilterRoute(req, res) {
      res.status(200).send(result);
   } catch (error) {
      logger.error(error);
-     logger.error(`getSubtotalsByComponent Connection error`);
+     logger.error(`componentParamFilterRoute Connection error`);
   }
 }

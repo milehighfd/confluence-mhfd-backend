@@ -3,6 +3,7 @@ import cookieParser from  'cookie-parser';
 import morgan from  'morgan';
 import http from  'http';
 import cors from  'cors';
+import needle from 'needle';
 import logger from 'bc/config/logger.js';
 import indexRouter from 'bc/routes/index.js';
 import usersRouter from 'bc/routes/users.route.js';
@@ -29,7 +30,6 @@ import projectRouter from 'bc/routes/project.route.js';
 import v2Localities from 'bc/routes/v2locality.route.js';
 import pmToolsRouter from 'bc/routes/pmtools.route.js';
 import cardFilterRouter from 'bc/routes/cardfilters.route.js';
-import db from 'bc/config/db.js';
 import seed from 'bc/config/seed.js'
 import projectServiceArea from 'bc/routes/projectservicearea.route.js';
 import streamsRouter from 'bc/routes/streams.route.js';
@@ -37,16 +37,16 @@ import phasetypeRouter from 'bc/routes/phasetype.route.js';
 import projectactionitemRouter from 'bc/routes/projectactionitem.route.js'
 import projectStatusRouter from 'bc/routes/projectStatus.route.js';
 import businessRouter from 'bc/routes/business.route.js';
-import projectService from 'bc/services/project.service.js';
 
-// import serviceAreaLocalGovernment from 'bc/routes/servicearealocalgovernment.route.js';
 seed();
-//await projectService.getProjects();
 
-// db.sequelize.sync();
 console.log(`ENVIRONMENT ${process.env.NODE_ENV}`);
 const app = express();
 const server = http.createServer(app);
+
+needle.defaults({
+  open_timeout: 60000,
+});
 
 app.use(morgan('dev', {stream: logger.stream}));
 app.use(express.json({limit: '20mb'}));
@@ -96,6 +96,5 @@ app.use('/projectservicearea', projectServiceArea);
 app.use('/streams', streamsRouter);
 app.use('/card-filters', cardFilterRouter);
 app.use('/business', businessRouter);
-// app.use('/servicearealocalgovernment', serviceAreaLocalGovernment);
 
 export default server;

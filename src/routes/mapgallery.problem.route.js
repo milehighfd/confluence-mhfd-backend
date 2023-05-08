@@ -95,9 +95,9 @@ export async function getCountByArrayColumnsProblem(table, column, columns, boun
         q: `select ${column} as column, count(*) as count from ${table} where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
       };
       let counter = 0;
-      logger.info(`Starting function needle for mapgallery.problem.route/`);
+      logger.info(`Starting function needle for getCountByArrayColumnsProblem`);
       const data = await needle('post', CARTO_URL, query, { json: true });
-      logger.info(`Finished function needle for mapgallery.problem.route/`);
+      logger.info(`Finished function needle for getCountByArrayColumnsProblem`);
       console.log('Query at array column problem', query);
       //console.log('STATUS', data.statusCode);
       if (data.statusCode === 200) {
@@ -136,9 +136,9 @@ export async function getCountByColumnProblem(table, column, bounds, body) {
         q: `select ${column} as value, count(*) as counter from ${table} where ${filters} group by ${column} order by ${column} `
       };
       console.log('query at array count by', query);
-      logger.info(`Starting function needle for mapgallery.problem.route/`);
+      logger.info(`Starting function needle for getCountByColumnProblem`);
       const data = await needle('post', CARTO_URL, query, { json: true });
-      logger.info(`Finished function needle for mapgallery.problem.route/`);
+      logger.info(`Finished function needle for getCountByColumnProblem`);
       if (data.statusCode === 200) {
         if (data.body.rows.length > 0) {
           result = result.concat(data.body.rows)
@@ -183,7 +183,7 @@ export async function getCountSolutionStatusProblem(range, bounds, body) {
       } else {
         logger.error('getCountSolutionStatusProblem error');
         logger.error(data.statusCode);
-        logger.error(data.body);
+        logger.error(JSON.stringify(data.body));
       }
       result.push({
         value: value,
@@ -192,7 +192,7 @@ export async function getCountSolutionStatusProblem(range, bounds, body) {
     }
   } catch (error) {
     logger.error(error);
-    logger.error(`getCountSolutionStatus Connection error`);
+    logger.error(`getCountSolutionStatusProblem Connection error`);
   }
 
   return result;
@@ -217,9 +217,9 @@ export async function getSubtotalsByComponentProblem(table, columnA, columnB, bo
 
       const query = { q: `select count(*) from ${table}, ${PROBLEM_TABLE} where ${PROBLEM_TABLE}.${columnA}= ${table}.${columnB} and ${filters} ` };
       console.log('Query at xxx', query.q);
-      logger.info(`Starting function needle for mapgallery.problem.route/`);
+      logger.info(`Starting function needle for getSubtotalsByComponentProblem fn`);
       const data = await needle('post', CARTO_URL, query, { json: true });
-      logger.info(`Finished function needle for mapgallery.problem.route/`);
+      logger.info(`Finished function needle for getSubtotalsByComponentProblem fn`);
       let counter = 0;
       if (data.statusCode === 200) {
         if (data.body.rows.length > 0) {
@@ -238,7 +238,7 @@ export async function getSubtotalsByComponentProblem(table, columnA, columnB, bo
     }
 
   } catch (error) {
-    logger.error(`getSubtotalsByComponent Connection error`);
+    logger.error(`getSubtotalsByComponentProblem Connection error`);
     logger.error(error);
   }
 
