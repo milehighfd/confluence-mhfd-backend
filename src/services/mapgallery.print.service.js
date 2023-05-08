@@ -391,7 +391,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
 text-overflow:ellipsis;
 display:-webkit-box; 
 -webkit-box-orient:vertical;
--webkit-line-clamp:2; line-height: 15px; margin-top:5px;">
+-webkit-line-clamp:2; line-height: 15px; margin-top:7px;">
         <span style="font-size: 12px; color: #a09cb1; margin-bottom: 15px;margin-top: -3px; margin-right:16px;">${el.business_associate_contact.user.organization}</span>
       </td>
     </tr>
