@@ -339,7 +339,7 @@ export const safeGet = (obj, props, defaultValue) => {
   }
 }
 
-export const sortProjectsByAttrib = async (sortby, sorttype) => {
+export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
   let includesValues = [];
   let attributes = ["project_id"];
   let sortattrib = '';
@@ -392,4 +392,30 @@ export const sortProjectsByAttrib = async (sortby, sorttype) => {
     return 0;
   });
   return projectsSorted;
+}
+
+export const sortProjectsByAttrib = async (projects, filters) => {
+  let sortattrib = '';
+  let valuetype = 'string';
+  if (filters?.sortby?.includes('cost')) {
+    sortattrib = 'project_costs.0.cost';
+    valuetype = 'number';
+  }
+  if (filters?.sortby === 'projecttype') {
+    sortattrib = 'code_project_type.project_type_name';
+  }
+  if (sortattrib) {
+    projects = projects.sort((x,y) => {
+      const nameX = valuetype === 'string' ? safeGet(x, sortattrib, Infinity).toUpperCase(): safeGet(x, sortattrib, Infinity);
+      const nameY = valuetype === 'string' ? safeGet(y, sortattrib, Infinity).toUpperCase(): safeGet(y, sortattrib, Infinity);
+      if (nameX > nameY) {
+        return -1 * (filters?.sorttype === 'asc' ? -1 : 1);
+      }
+      if (nameX < nameY) {
+        return 1 * (filters?.sorttype === 'asc' ? -1 : 1);
+      }
+      return 0;
+    })
+  }
+  return projects;
 }

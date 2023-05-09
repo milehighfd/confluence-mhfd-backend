@@ -20,7 +20,7 @@ import {
   getLocalGovernmentByProjectids,
   getEstimatedCostsByProjectids,
   getStreamsDataByProjectIds,
-  safeGet,
+  getSortedProjectsByAttrib,
   sortProjectsByAttrib
 } from 'bc/utils/functionsProjects.js';
 import sequelize from 'sequelize';
@@ -729,7 +729,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
   const type_idF = type_id ? type_id : [];
   let projectsSorted = [];
   if (sortby) { 
-    projectsSorted = await sortProjectsByAttrib(sortby, sorttype);
+    projectsSorted = await getSortedProjectsByAttrib(sortby, sorttype);
     // console.log('projects very sorted', projectsSorted.map(p => ({id: p.project_id, cost: p.currentCost[0].cost})));
   }
   if (lgmanager !== '') {
@@ -1384,29 +1384,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
     */
     //cache = projects;
     if (filters?.sortby) {
-      let sortattrib = '';
-      let valuetype = 'string';
-      if (filters?.sortby?.includes('cost')) {
-        sortattrib = 'project_costs.0.cost';
-        valuetype = 'number';
-      }
-      if (filters?.sortby === 'projecttype') {
-        sortattrib = 'code_project_type.project_type_name';
-      }
-      if (sortattrib) {
-        projects = projects.sort((x,y) => {
-          const nameX = valuetype === 'string' ? safeGet(x, sortattrib, Infinity).toUpperCase(): safeGet(x, sortattrib, Infinity);
-          const nameY = valuetype === 'string' ? safeGet(y, sortattrib, Infinity).toUpperCase(): safeGet(y, sortattrib, Infinity);
-          if (nameX > nameY) {
-            return -1 * (filters?.sorttype === 'asc' ? -1 : 1);
-          }
-          if (nameX < nameY) {
-            return 1 * (filters?.sorttype === 'asc' ? -1 : 1);
-          }
-          return 0;
-        })
-        // console.log('projects sortedd', projects.map(p => ({id: p.project_id, cost: p.project_costs[0].cost})));
-      }
+      projects = await sortProjectsByAttrib(projects, filters);
     }
     return projects;
   } catch (error) {
