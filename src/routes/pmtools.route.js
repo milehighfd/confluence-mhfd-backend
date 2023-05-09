@@ -699,11 +699,33 @@ const getDataForGroupFilters = async (req, res) => {
   }
 };
 
+const countDataForGroupFilters = async (req, res) => {
+  try {
+    logger.info(`Starting endpoint pmtools/groups/:groupname/:filtervalue with params`);
+    const { groupname, filtervalue } = req.params;
+    const { page = 1, limit = 20, code_project_type_id } = req.query;
+    const { body } = req;
+    logger.info(`page=${page} limit=${limit}`);
+    logger.info(`Starting function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
+    logger.info(`Filtering by lgmanager ${groupname, filtervalue, code_project_type_id}...`);
+    const group = await projectService.getProjects2(null, null, page, +limit, body, groupname, filtervalue, code_project_type_id);
+    logger.info(`Finished function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
+    logger.info(`Starting function getProjects for endpoint project/`);
+    const set = new Set(group.map((p) => p?.project_id));
+    const count = set.size;
+    res.send(count);
+  } catch (error) {
+    logger.error(`Error in endpoint pmtools/groups/:groupname/:filtervalue: ${error.message}`);
+    res.status(500).send({ error: error });
+  }
+};
+
 
 router.post('/list', listProjects);
 router.get('/groups/:groupname', getGroup);
 router.post('/groups/:groupname/:filtervalue', getDataForGroup);
 router.post('/groups/count/:groupname/:filtervalue', countForGroup);
 router.post('/groupsFilter/:groupname/:filtervalue', getDataForGroupFilters);
+router.post('/groupsFilter/count/:groupname/:filtervalue', countDataForGroupFilters);
 
 export default router;
