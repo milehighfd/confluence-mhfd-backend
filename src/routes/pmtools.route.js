@@ -710,10 +710,10 @@ const countDataForGroupFilters = async (req, res) => {
     logger.info(`Filtering by lgmanager ${groupname, filtervalue, code_project_type_id}...`);
     const group = await projectService.getProjects2(null, null, page, +limit, body, groupname, filtervalue, code_project_type_id);
     logger.info(`Finished function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
-    logger.info(`Starting function getProjects for endpoint project/`);
+    logger.info(`Starting function getProjects for endpoint project/`);    
     const set = new Set(group.map((p) => p?.project_id));
     const count = set.size;
-    res.send(count);
+    res.send({count: count});
   } catch (error) {
     logger.error(`Error in endpoint pmtools/groups/:groupname/:filtervalue: ${error.message}`);
     res.status(500).send({ error: error });
