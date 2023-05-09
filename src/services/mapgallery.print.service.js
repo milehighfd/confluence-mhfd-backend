@@ -336,14 +336,16 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       [MHFD_SUPPORT]: 'MHFD Support',
       [ADMIN_STAFF]: 'Admin Staff'
     };
+    // console.log(el.business_associate_contact.contact_name.substring(0,50) === el.business_associate_contact.contact_name.substring(0,51) ? el.business_associate_contact.contact_name.substring(0,50) + '...': el.business_associate_contact.contact_name.substring(0,50), )
+    // console.log(${STAFF_ROL_MAP[el.code_project_staff_role_type_id].substring(0,50) === STAFF_ROL_MAP[el.code_project_staff_role_type_id].substring(0,51) ? STAFF_ROL_MAP[el.code_project_staff_role_type_id].substring(0,50) + '...': STAFF_ROL_MAP[el.code_project_staff_role_type_id].substring(0,50)})
+    // console.log(el.business_associate_contact.business_address.business_associate.business_name.substring(0,50) === el.business_associate_contact.business_address.business_associate.business_name.substring(0,51) ? el.business_associate_contact.business_address.business_associate.business_name.substring(0,50) + '...': STAFF_ROL_MAP[el.code_project_staff_role_type_id].substring(0,50))
+   console.log(el.business_associate_contact.contact_name.substring(0,20), '***', '****',el.business_associate_contact.business_address.business_associate.business_name.substring(0,30) )
     return `
     <tr>
-      <td style="width: 132.5px; padding: 7px 0px;">
-        <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">${el.business_associate_contact.contact_name}</h6>
+      <td style="width: 242.5px; padding: 7px 0px;">
+        <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">${el.business_associate_contact.contact_name.substring(0,30) === el.business_associate_contact.contact_name.substring(0,31) ? el.business_associate_contact.contact_name.substring(0,30): (el.business_associate_contact.contact_name.substring(0,30) + '...')}</h6>
         <p style="font-size: 12px; color: #a09cb1; margin-bottom: 0px; margin-top: -3px; padding-top: 5px;">${STAFF_ROL_MAP[el.code_project_staff_role_type_id]}</p>
-      </td>
-      <td style="width:  107.5px; text-align: end; line-height: 15px; margin-top:7px;">
-        <span style="font-size: 12px; color: #a09cb1; margin-bottom: 15px;margin-top: -3px;">${el.business_associate_contact.business_address.business_associate.business_name}</span>
+        <span style="font-size: 12px; color: #a09cb1; margin-bottom: 15px;margin-top: -3px;">${el.business_associate_contact.business_address.business_associate.business_name.substring(0,30) === el.business_associate_contact.business_address.business_associate.business_name.substring(0,31) ? el.business_associate_contact.business_address.business_associate.business_name.substring(0,30):  (el.business_associate_contact.business_address.business_associate.business_name.substring(0,30) + '...')}</span>
       </td>
     </tr>
   `
