@@ -447,6 +447,9 @@ export const sortProjectsByAttrib = async (projects, filters) => {
   if (filters?.sortby === 'projecttype') {
     sortattrib = 'code_project_type.project_type_name';
   }
+  if (filters?.sortby === 'projectname') {
+    sortattrib = 'project_name'
+  }
   if (sortattrib) {
     projects = sortArrayOfProjects(valuetype, sortattrib, sorttype, projects);
   }
