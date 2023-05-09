@@ -737,6 +737,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
     let includesValues = [];
     let attributes = ["project_id"];
     let sortattrib = '';
+    let valuetype = 'string';
     if (sortby === 'projecttype') {
       includesValues.push({
         model: CodeProjectType,
@@ -752,32 +753,38 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       sortattrib = 'project_name';
       attributes.push('project_name');
     }
+    if (sortby?.includes('cost')) {
+      includesValues.push({
+        model: ProjectCost,
+        required: true,
+        as: 'currentCost',
+        attributes: [
+          'cost'
+        ],
+        where: {
+          code_cost_type_id: ESTIMATED_ID,
+          is_active: 1,
+        },
+      });
+      sortattrib = 'currentCost.0.cost';
+      valuetype = 'number';
+    }
     projectsSorted = await Project.findAll({
       attributes: attributes,
       include: includesValues
     });
-    
     projectsSorted = projectsSorted.sort((x,y) => {
-      const nameX = safeGet(x, sortattrib, Infinity).toUpperCase();
-      const nameY = safeGet(y, sortattrib, Infinity).toUpperCase();
+      const nameX = valuetype === 'string' ? safeGet(x, sortattrib, Infinity).toUpperCase(): safeGet(x, sortattrib, Infinity);
+      const nameY = valuetype === 'string' ? safeGet(y, sortattrib, Infinity).toUpperCase(): safeGet(y, sortattrib, Infinity);
       if (nameX > nameY) {
         return -1 * (sorttype === 'asc' ? -1 : 1);
       }
       if (nameX < nameY) {
         return 1 * (sorttype === 'asc' ? -1 : 1);
       }
-      // names must be equal
       return 0;
-    })
-    if (sortby === 'projecttype') {
-      // console.log('PROJECT SORTED ', projectsSorted.map((p) => ({p_id: p.project_id, type_name: p.code_project_type.project_type_name})));
-    } else {
-      // console.log('PROJECT SORTED ', projectsSorted);
-    }
-    
-    // TODO: 1
-    // get all projectds with the attribute to sort after
-    // the at the end of this function 
+    });
+    // console.log('projects very sorted', projectsSorted.map(p => ({id: p.project_id, cost: p.currentCost[0].cost})));
   }
   if (lgmanager !== '') {
     logger.info(`Filtering by lgmanager ${lgmanager}...`);
@@ -1030,6 +1037,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       }
     });
   });
+
   let intersectedProjectsSorted = [];
   if (sortby) {
     projectsSorted.forEach((project) => {
@@ -1048,12 +1056,6 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   } else {
     intersectedProjectsSorted = intersectedProjects;
   }
-  // console.log('SORTED PROJECTs', JSON.stringify(projectsSorted));
-  // console.log('intersected Projects', JSON.stringify(intersectedProjects));
-  console.log('\n\n\nSORTED AND INTERSECTED\n\n\n', (intersectedProjectsSorted.map(p => p.project_id)));
-  // TODO 2: 
-  // intersect with the intersected projects 
-  // and get the ids within the segment of pagination 
   return intersectedProjectsSorted;
 }
 const getProjectsSortedTest = async (include, page = 1, limit = 20) => {  
@@ -1416,6 +1418,31 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
       });
     */
     //cache = projects;
+    if (filters?.sortby) {
+      let sortattrib = '';
+      let valuetype = 'string';
+      if (filters?.sortby?.includes('cost')) {
+        sortattrib = 'project_costs.0.cost';
+        valuetype = 'number';
+      }
+      if (filters?.sortby === 'projecttype') {
+        sortattrib = 'code_project_type.project_type_name';
+      }
+      if (sortattrib) {
+        projects = projects.sort((x,y) => {
+          const nameX = valuetype === 'string' ? safeGet(x, sortattrib, Infinity).toUpperCase(): safeGet(x, sortattrib, Infinity);
+          const nameY = valuetype === 'string' ? safeGet(y, sortattrib, Infinity).toUpperCase(): safeGet(y, sortattrib, Infinity);
+          if (nameX > nameY) {
+            return -1 * (filters?.sorttype === 'asc' ? -1 : 1);
+          }
+          if (nameX < nameY) {
+            return 1 * (filters?.sorttype === 'asc' ? -1 : 1);
+          }
+          return 0;
+        })
+        // console.log('projects sortedd', projects.map(p => ({id: p.project_id, cost: p.project_costs[0].cost})));
+      }
+    }
     return projects;
   } catch (error) {
     logger.error(error);
