@@ -13,7 +13,8 @@ const BusinessAssociante = db.businessAssociates;
 
 const router = express.Router();
 import {
-  projectsByFilters
+  projectsByFilters,
+  sortProjects,
 } from 'bc/utils/functionsProjects.js';
 import projectService from 'bc/services/project.service.js';
 
@@ -667,10 +668,42 @@ const countForGroup = async (req, res) => {
   res.status(200).send({count: count});
 };
 
+const getDataForGroupFilters = async (req, res) => {
+  try {
+    logger.info(`Starting endpoint pmtools/groups/:groupname/:filtervalue with params`);
+    const { groupname, filtervalue } = req.params;
+    const { page = 1, limit = 20, sortby, sortorder, code_project_type_id } = req.query;
+    const { body } = req;
+    const extraFilters = {};
+    if (sortby) {
+      extraFilters.sortby = sortby;
+      extraFilters.sortorder = sortorder;
+    }
+    logger.info(`page=${page} limit=${limit}`);
+    logger.info(`Starting function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
+    logger.info(`Filtering by lgmanager ${groupname, filtervalue, code_project_type_id}...`);
+    const group = await projectService.getProjects2(null, null, page, +limit, body, groupname, filtervalue, code_project_type_id);
+    logger.info(`Finished function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
+    logger.info(`Starting function getProjects for endpoint project/`);
+    let projects = await projectService.getProjects(null, null, group, page, limit, body);
+    logger.info(`Finished function getProjects for endpoint project/`);
+    if (body?.sortby?.trim()?.length || 0) {
+      logger.info(`Starting function sortProjects for endpoint project/`);
+      projects = await sortProjects(projects, body);
+      logger.info(`Finished function sortProjects for endpoint project/`);
+    }
+    res.send(projects);
+  } catch (error) {
+    logger.error(`Error in endpoint pmtools/groups/:groupname/:filtervalue: ${error.message}`);
+    res.status(500).send({ error: error });
+  }
+};
+
 
 router.post('/list', listProjects);
 router.get('/groups/:groupname', getGroup);
 router.post('/groups/:groupname/:filtervalue', getDataForGroup);
 router.post('/groups/count/:groupname/:filtervalue', countForGroup);
+router.post('/groupsFilter/:groupname/:filtervalue', getDataForGroupFilters);
 
 export default router;
