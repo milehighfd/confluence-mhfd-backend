@@ -189,44 +189,6 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
             : (data['local_government'] =
                 _data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT.local_government_name);
         }
-        // console.log(_data?.project_partners[i]?.code_project_partner_type?.partner_type)
-        // console.log('VENDORS')
-        // if (_data?.project_partners[i]?.code_project_partner_type?.partner_type === 'VENDOR') {          
-        //   data['vendors']
-        //     ? (data[
-        //         'vendors'
-        //       ] += `${_data?.project_partners[i].business_associate.business_name} `)
-        //     : (data['vendors'] =
-        //         _data?.project_partners[i].business_associate.business_name);
-
-        //   data['typeVendor']
-        //     ? (data['typeVendor'] += `${_data?.project_partners[i]?.code_project_partner_type?.partner_type_name}`)
-        //     : (data['typeVendor'] = `${_data?.project_partners[i]?.code_project_partner_type?.partner_type_name} ,`);
-        // }
-        // if (_data?.project_partners[i]?.code_partner_type_id === 1) {
-        //   data['vendors']
-        //     ? (data[
-        //         'vendors'
-        //       ] += `${_data?.project_partners[i].business_associate.business_name} ,`)
-        //     : (data['vendors'] =
-        //         _data?.project_partners[i].business_associate.business_name);
-
-        //   data['typeVendor']
-        //     ? (data['typeVendor'] += `Developer ,`)
-        //     : (data['typeVendor'] = 'Developer');
-        // }
-        // if (_data?.project_partners[i]?.code_partner_type_id === 9) {
-        //   data['vendors']
-        //     ? (data[
-        //         'vendors'
-        //       ] += `${_data?.project_partners[i].business_associate.business_name} ,`)
-        //     : (data['vendors'] =
-        //         _data?.project_partners[i].business_associate.business_name);
-
-        //   data['typeVendor']
-        //     ? (data['typeVendor'] += `Landscape Contractor ,`)
-        //     : (data['typeVendor'] = 'Landscape Contractor');
-        // }
       }
     }
 
@@ -337,18 +299,12 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   html = html.split('${status}').join(status);
   html = html.split('${phase}').join(phase);
   html = html.split('${streamname}').join(stream_name);
-  // html = html.split('${projectsubtype}').join(projectsubtype);
   html = html.split('${attachmentUrl}').join(urlImage);
-  // html = html.split('${startyear}').join(startyear);
-  // html = html.split('${completedyear}').join(completedyear);
-  // html = html.split('${frequency}').join(frequency);
   html = html.split('${mhfdManager}').join('N/A');
   html = html.split('${lgManager}').join('N/A');
   html = html.split('${description}').join(_data.dataValues.description);
   html = html.split('${contractor}').join(contractor ? contractor : 'N/A');
   html = html.split('${consultant}').join(consultant ? consultant : 'N/A');
-  // html = html.split('${mapHeight}').join(mapHeight);
-
   let _problems =
     (problems !== void 0 || problems !== []) && problems?.length > 0
       ? problems
@@ -387,7 +343,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
         <p style="font-size: 12px; color: #a09cb1; margin-bottom: 0px; margin-top: -3px; padding-top: 5px;">${STAFF_ROL_MAP[el.code_project_staff_role_type_id]}</p>
       </td>
       <td style="width:  107.5px; text-align: end; line-height: 15px; margin-top:7px;">
-        <span style="font-size: 12px; color: #a09cb1; margin-bottom: 15px;margin-top: -3px;">${el.business_associate_contact.user.organization}</span>
+        <span style="font-size: 12px; color: #a09cb1; margin-bottom: 15px;margin-top: -3px;">${el.business_associate_contact.business_address.business_associate.business_name}</span>
       </td>
     </tr>
   `
