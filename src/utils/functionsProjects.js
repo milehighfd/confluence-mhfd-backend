@@ -437,21 +437,8 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
 }
 
 export const sortProjectsByAttrib = async (projects, sortOrder, filters) => {
-  let sortattrib = '';
-  let valuetype = 'string';
-  const sorttype = filters.sorttype && filters.sorttype !== '' ? filters.sorttype : 'asc';
-  if (filters?.sortby?.includes('cost')) {
-    sortattrib = 'project_costs.0.cost';
-    valuetype = 'number';
-  }
-  if (filters?.sortby === 'projecttype') {
-    sortattrib = 'code_project_type.project_type_name';
-  }
-  if (filters?.sortby === 'projectname') {
-    sortattrib = 'project_name'
-  }
 
-  if (sortattrib) {
+  if (sortOrder.length) {
     const itemPositions = {};
     for (const [index, id] of sortOrder.entries()) {
       itemPositions[id] = index;
