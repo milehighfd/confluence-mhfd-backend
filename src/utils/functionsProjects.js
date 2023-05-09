@@ -5,7 +5,7 @@ import {
   MAIN_PROJECT_TABLE
 } from 'bc/config/config.js';
 import projectService from 'bc/services/project.service.js';
-const Projects = db.project;
+const Project = db.project;
 const ProjectPartner = db.projectPartner;
 const ProjectCounty = db.projectCounty;
 const CodeStateCounty = db.codeStateCounty;
@@ -21,6 +21,7 @@ const BusinessAssociante = db.businessAssociates;
 const ProjectStreams = db.project_stream;
 const Streams = db.stream;
 const Attachment = db.projectAttachment;
+
 
 export const getServiceAreaByProjectIds = async (ids) => {
   try {
@@ -326,4 +327,69 @@ export const getIdsInBbox = async (bounds) => {
     console.log('This error ', error);
     return [];
   }
+}
+export const safeGet = (obj, props, defaultValue) => {
+  try {
+    const dataReturn = props.split('.').reduce(function(obj, p) {
+      return obj[p];
+    }, obj);
+    return dataReturn;
+  } catch(e) {
+    return defaultValue
+  }
+}
+
+export const sortProjectsByAttrib = async (sortby, sorttype) => {
+  let includesValues = [];
+  let attributes = ["project_id"];
+  let sortattrib = '';
+  let valuetype = 'string';
+  let projectsSorted = [];
+  if (sortby === 'projecttype') {
+    includesValues.push({
+      model: CodeProjectType,
+      required: false,
+      attributes: [
+        'code_project_type_id',
+        'project_type_name'
+      ]
+    });
+    sortattrib = 'code_project_type.project_type_name';
+  }
+  if (sortby === 'projectname') {
+    sortattrib = 'project_name';
+    attributes.push('project_name');
+  }
+  if (sortby?.includes('cost')) {
+    includesValues.push({
+      model: ProjectCost,
+      required: true,
+      as: 'currentCost',
+      attributes: [
+        'cost'
+      ],
+      where: {
+        code_cost_type_id: ESTIMATED_ID,
+        is_active: 1,
+      },
+    });
+    sortattrib = 'currentCost.0.cost';
+    valuetype = 'number';
+  }
+  projectsSorted = await Project.findAll({
+    attributes: attributes,
+    include: includesValues
+  });
+  projectsSorted = projectsSorted.sort((x,y) => {
+    const nameX = valuetype === 'string' ? safeGet(x, sortattrib, Infinity).toUpperCase(): safeGet(x, sortattrib, Infinity);
+    const nameY = valuetype === 'string' ? safeGet(y, sortattrib, Infinity).toUpperCase(): safeGet(y, sortattrib, Infinity);
+    if (nameX > nameY) {
+      return -1 * (sorttype === 'asc' ? -1 : 1);
+    }
+    if (nameX < nameY) {
+      return 1 * (sorttype === 'asc' ? -1 : 1);
+    }
+    return 0;
+  });
+  return projectsSorted;
 }

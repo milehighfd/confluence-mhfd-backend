@@ -19,7 +19,9 @@ import {
   getCivilContractorsByProjectids,
   getLocalGovernmentByProjectids,
   getEstimatedCostsByProjectids,
-  getStreamsDataByProjectIds
+  getStreamsDataByProjectIds,
+  safeGet,
+  sortProjectsByAttrib
 } from 'bc/utils/functionsProjects.js';
 import sequelize from 'sequelize';
 import { CREATE_PROJECT_TABLE } from 'bc/config/config.js';
@@ -698,16 +700,6 @@ const getDetails = async (project_id) => {
     throw error;
   }
 }
-const  safeGet = (obj, props, defaultValue) => {
-  try {
-    const dataReturn = props.split('.').reduce(function(obj, p) {
-      return obj[p];
-    }, obj);
-    return dataReturn;
-  } catch(e) {
-    return defaultValue
-  }
-}
 
 const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter, groupname, filtervalue,type_id) => {  
   const CONSULTANT_CODE = 3;
@@ -737,56 +729,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
   const type_idF = type_id ? type_id : [];
   let projectsSorted = [];
   if (sortby) { 
-    let includesValues = [];
-    let attributes = ["project_id"];
-    let sortattrib = '';
-    let valuetype = 'string';
-    if (sortby === 'projecttype') {
-      includesValues.push({
-        model: CodeProjectType,
-        required: false,
-        attributes: [
-          'code_project_type_id',
-          'project_type_name'
-        ]
-      });
-      sortattrib = 'code_project_type.project_type_name';
-    }
-    if (sortby === 'projectname') {
-      sortattrib = 'project_name';
-      attributes.push('project_name');
-    }
-    if (sortby?.includes('cost')) {
-      includesValues.push({
-        model: ProjectCost,
-        required: true,
-        as: 'currentCost',
-        attributes: [
-          'cost'
-        ],
-        where: {
-          code_cost_type_id: ESTIMATED_ID,
-          is_active: 1,
-        },
-      });
-      sortattrib = 'currentCost.0.cost';
-      valuetype = 'number';
-    }
-    projectsSorted = await Project.findAll({
-      attributes: attributes,
-      include: includesValues
-    });
-    projectsSorted = projectsSorted.sort((x,y) => {
-      const nameX = valuetype === 'string' ? safeGet(x, sortattrib, Infinity).toUpperCase(): safeGet(x, sortattrib, Infinity);
-      const nameY = valuetype === 'string' ? safeGet(y, sortattrib, Infinity).toUpperCase(): safeGet(y, sortattrib, Infinity);
-      if (nameX > nameY) {
-        return -1 * (sorttype === 'asc' ? -1 : 1);
-      }
-      if (nameX < nameY) {
-        return 1 * (sorttype === 'asc' ? -1 : 1);
-      }
-      return 0;
-    });
+    projectsSorted = await sortProjectsByAttrib(sortby, sorttype);
     // console.log('projects very sorted', projectsSorted.map(p => ({id: p.project_id, cost: p.currentCost[0].cost})));
   }
   if (lgmanager !== '') {
