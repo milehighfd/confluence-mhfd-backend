@@ -5,7 +5,7 @@ import {
   MAIN_PROJECT_TABLE
 } from 'bc/config/config.js';
 import projectService from 'bc/services/project.service.js';
-const Projects = db.project;
+const Project = db.project;
 const ProjectPartner = db.projectPartner;
 const ProjectCounty = db.projectCounty;
 const CodeStateCounty = db.codeStateCounty;
@@ -21,6 +21,11 @@ const BusinessAssociante = db.businessAssociates;
 const ProjectStreams = db.project_stream;
 const Streams = db.stream;
 const Attachment = db.projectAttachment;
+const ProjectStatus = db.projectStatus;
+const CodePhaseType = db.codePhaseType;
+const CodeStatusType = db.codeStatusType;
+const CodeProjectType = db.codeProjectType;
+
 
 export const getServiceAreaByProjectIds = async (ids) => {
   try {
@@ -326,4 +331,124 @@ export const getIdsInBbox = async (bounds) => {
     console.log('This error ', error);
     return [];
   }
+}
+export const safeGet = (obj, props, defaultValue) => {
+  try {
+    const dataReturn = props.split('.').reduce(function(obj, p) {
+      return obj[p];
+    }, obj);
+    return dataReturn;
+  } catch(e) {
+    return defaultValue
+  }
+}
+
+const sortArrayOfProjects = (valuetype, sortattrib, sorttype, projectsToSort) => {
+  return projectsToSort.sort((x,y) => {
+    const valueX = safeGet(x, sortattrib, Infinity);
+    const valueY = safeGet(y, sortattrib, Infinity);
+    // console.log('This are the values to sort', sortattrib, valueX, valueY);
+    const nameX = valuetype === 'string' && valueX !== Infinity ? valueX.toUpperCase(): valueX;
+    const nameY = valuetype === 'string' && valueY !== Infinity ? valueY.toUpperCase(): valueY;
+    if (nameX > nameY) {
+      // console.log('ValueX bigger', valueX, valueY);
+      return -1 * (sorttype === 'asc' ? -1 : 1);
+    }
+    if (nameX < nameY) {
+      // console.log('ValueY bigger', valueX, valueY);
+      return 1 * (sorttype === 'asc' ? -1 : 1);
+    }
+    // console.log('EQUALAS??', valueX, valueY);
+    return 0;
+  });
+}
+export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
+  let includesValues = [];
+  let attributes = ["project_id"];
+  let sortattrib = '';
+  let valuetype = 'string';
+  let projectsSorted = [];
+  if (sortby === 'projecttype') {
+    includesValues.push({
+      model: CodeProjectType,
+      required: false,
+      attributes: [
+        'code_project_type_id',
+        'project_type_name'
+      ]
+    });
+    sortattrib = 'code_project_type.project_type_name';
+  }
+  if (sortby === 'projectname') {
+    sortattrib = 'project_name';
+    attributes.push('project_name');
+  }
+  if (sortby?.includes('cost')) {
+    const ESTIMATED_ID = 1;
+    includesValues.push({
+      model: ProjectCost,
+      required: false,
+      as: 'currentCost',
+      attributes: [
+        'cost'
+      ],
+      where: {
+        code_cost_type_id: ESTIMATED_ID,
+        is_active: 1,
+      },
+    });
+    sortattrib = 'currentCost.0.cost';
+    valuetype = 'number';
+  }
+  if (sortby === 'status') {
+    includesValues.push({
+      model: ProjectStatus,
+      separate: true,
+      required: false,
+      attributes: [
+        'code_phase_type_id'
+      ],
+      as: 'currentId',
+      include: {
+        model: CodePhaseType,
+        required: false,
+        attributes: [
+          'code_phase_type_id'
+        ],
+        include: [{
+          model: CodeStatusType,
+          required: false,
+          attributes: [
+            'status_name'
+          ]
+        }]
+      }
+    });
+    sortattrib = 'currentId.0.code_phase_type.code_status_type.status_name';
+  }
+  projectsSorted = await Project.findAll({
+    attributes: attributes,
+    include: includesValues
+  });
+  projectsSorted = sortArrayOfProjects(valuetype, sortattrib, sorttype, projectsSorted);
+  // console.log('projects very sorted', projectsSorted.map(p => ({id: p.project_id, cost: JSON.stringify(p.currentCost[0])})));
+  // console.log('Projects Sorted', JSON.stringify(projectsSorted));
+  return projectsSorted;
+}
+
+export const sortProjectsByAttrib = async (projects, filters) => {
+  let sortattrib = '';
+  let valuetype = 'string';
+  const sorttype = filters.sorttype && filters.sorttype !== '' ? filters.sorttype : 'asc';
+  if (filters?.sortby?.includes('cost')) {
+    sortattrib = 'project_costs.0.cost';
+    valuetype = 'number';
+  }
+  if (filters?.sortby === 'projecttype') {
+    sortattrib = 'code_project_type.project_type_name';
+  }
+  if (sortattrib) {
+    projects = sortArrayOfProjects(valuetype, sortattrib, sorttype, projects);
+  }
+  return projects;
 }

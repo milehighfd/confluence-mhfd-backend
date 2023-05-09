@@ -63,16 +63,16 @@ const listProjects = async (req, res) => {
     return (ids.some(boundsids => pid.project_id === boundsids.project_id));
   });
   logger.info(`Starting function getProjects for endpoint project/`);
-  let projects = await projectService.getProjects(null, bounds, projectsFilterId, page, limit);
+  let projects = await projectService.getProjects(null, bounds, projectsFilterId, page, limit, body);
   logger.info(`Finished function getProjects for endpoint project/`);
   const set = new Set(projectsFilterId.map((p) => p?.project_id));
   const count = set.size;
   logger.info(projects.length);
-  if (body?.sortby?.trim()?.length || 0) {
-    logger.info(`Starting function sortProjects for endpoint project/`);
-    projects = await sortProjects(projects, body);
-    logger.info(`Finished function sortProjects for endpoint project/`);
-  }
+  // if (body?.sortby?.trim()?.length || 0) {
+  //   logger.info(`Starting function sortProjects for endpoint project/`);
+  //   projects = await sortProjects(projects, body);
+  //   logger.info(`Finished function sortProjects for endpoint project/`);
+  // }
 
   logger.info('projects being called', projects.length);
   res.send({ projects, count: count });
@@ -185,14 +185,7 @@ const createCosts = async (req, res) => {
   }
   
 };
-const getProjectsSorted = async (req, res) => {
-  const { page = 1, limit = 20 } = req.query;
-  const { body } = req;
-  
-  let projects = await projectService.getProjectsSortedTest(page,limit);
-  logger.info('projects being called', projects.length);
-  res.send({ projects, count: count });
-}
+
 
 router.get('/bbox/:project_id', getBboxProject);
 router.post('/', listProjects);
@@ -201,5 +194,5 @@ router.post('/ids', listProjectsForId);
 router.get('/:project_id', getProjectDetail);
 router.get('/projectCost/:project_id', listOfCosts);
 router.post('/projectCost/:project_id', [auth], createCosts);
-router.post('/projectssorted', getProjectsSorted);
+
 export default router;
