@@ -345,9 +345,8 @@ export const safeGet = (obj, props, defaultValue) => {
 
 const sortArrayOfProjects = (valuetype, sortattrib, sorttype, projectsToSort) => {
   return projectsToSort.sort((x,y) => {
-    const valueX = safeGet(x, sortattrib, Infinity);
-    const valueY = safeGet(y, sortattrib, Infinity);
-    // console.log('This are the values to sort', sortattrib, valueX, valueY);
+    const valueX = safeGet(x, sortattrib, valuetype === 'string' ? 'π': Infinity);
+    const valueY = safeGet(y, sortattrib, valuetype === 'string' ? 'π': Infinity);
     const nameX = valuetype === 'string' && valueX !== Infinity ? valueX.toUpperCase(): valueX;
     const nameY = valuetype === 'string' && valueY !== Infinity ? valueY.toUpperCase(): valueY;
     if (nameX > nameY) {
@@ -426,12 +425,32 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     });
     sortattrib = 'currentId.0.code_phase_type.code_status_type.status_name';
   }
+  if (sortby === 'phase') {
+    includesValues.push({
+      model: ProjectStatus,
+      separate: true,
+      required: false,
+      attributes: [
+        'code_phase_type_id'
+      ],
+      as: 'currentId',
+      include: {
+        model: CodePhaseType,
+        required: false,
+        attributes: [
+          'phase_name'
+        ],
+      }
+    });
+    sortattrib = 'currentId.0.code_phase_type.phase_name';
+  }
   projectsSorted = await Project.findAll({
     attributes: attributes,
     include: includesValues
   });
+  // console.log('projects not sorted', projectsSorted.map(p => ({id: p.project_id, cost: JSON.stringify(p.currentId)})));
   projectsSorted = sortArrayOfProjects(valuetype, sortattrib, sorttype, projectsSorted);
-  // console.log('projects very sorted', projectsSorted.map(p => ({id: p.project_id, cost: JSON.stringify(p.currentCost[0])})));
+  // console.log('projects very sorted', projectsSorted.map(p => ({id: p.project_id, cost: JSON.stringify(p.currentId)})));
   // console.log('Projects Sorted', JSON.stringify(projectsSorted));
   return projectsSorted;
 }
