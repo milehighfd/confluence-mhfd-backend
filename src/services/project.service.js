@@ -59,6 +59,7 @@ const User = db.user;
 const CodeProjectPartnerType = db.codeProjectPartnerType;
 const Op = sequelize.Op;
 const BusinessAssociateContact = db.businessAssociateContact;
+const Favorites = db.favorites;
 
 async function getCentroidsOfAllProjects () {
   const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid, projectid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE}`;
@@ -713,6 +714,8 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
   const service_area = filter.servicearea ? filter.servicearea : [];
   const state_county_id = filter.county ? filter.county : [];
   const lgmanager = filter.lgmanager ? filter.lgmanager : '';
+  const favorites = filter.favorites ? filter.favorites : '';
+  const teams = filter.teams ? filter.teams : '';
   let stream_id = filter.streamname ? filter.streamname : [];
   if (stream_id.length){
     stream_id = stream_id[0].split(',');    
@@ -730,6 +733,42 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
   let projectsSorted = [];
   if (sortby) { 
     projectsSorted = await getSortedProjectsByAttrib(sortby, sorttype);
+  }
+  if (favorites !== '') {
+    // conditions.push(Favorites.findAll({
+    //   attributes: ["project_id"],
+    //   include: [{
+    //     model: User,
+    //     require: true,
+    //     where : { user_id: favorites },
+    //   }]
+    // }));
+  }
+  if (teams !== '') {
+    logger.info(`Filtering by teams ${teams}...`);
+    //Teams
+    conditions.push(Project.findAll({
+      attributes: ["project_id", "code_project_type_id"],
+      include: [{
+        model: ProjectStaff,
+        attributes: [],
+        required: true,
+        include: [{
+            model: BusinessAssociateContact,
+            attributes: [],
+            required: true,
+            include: [{
+              model: User,
+              attributes: [],
+              required: true,
+              where : { user_id: teams },
+            }]          
+        }, {
+          model: CodeProjectStaffRole,
+          required: true,
+        }],
+      }]
+    }));
   }
   if (lgmanager !== '') {
     logger.info(`Filtering by lgmanager ${lgmanager}...`);
