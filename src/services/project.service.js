@@ -709,7 +709,7 @@ const  safeGet = (obj, props, defaultValue) => {
   }
 }
 
-const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter) => {
+const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter, groupname, filtervalue,type_id) => {  
   const CONSULTANT_CODE = 3;
   const CIVIL_CONTRACTOR_ID = 8;
   const ESTIMATED_ID = 1;
@@ -732,6 +732,9 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
   const mhfd_lead = filter.mhfdmanager && filter.mhfdmanager!=='' ? filter.mhfdmanager : [];  
   const sortby = filter.sortby && filter.sortby !== '' ? filter.sortby : '';
   const sorttype = filter.sorttype && filter.sorttype !== '' ? filter.sorttype : 'asc';
+  const groupN = groupname ? groupname : '';
+	const filterN = filtervalue ? filtervalue : '';
+  const type_idF = type_id ? type_id : [];
   let projectsSorted = [];
   if (sortby) { 
     let includesValues = [];
@@ -815,8 +818,16 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       }]
     }));
    }  
-  if (mhfd_lead.length) {
-   //MHFD LEAD
+  if (mhfd_lead.length || groupN === 'staff') {
+    //MHFD LEAD
+    let where = {};
+    if (groupN === 'staff' && mhfd_lead.length) {
+      where = { [Op.and]: [{ user_id: filterN }, { user_id: mhfd_lead }] };
+    } else if (groupN === 'staff') {
+      where = { user_id: filterN };
+    } else {
+      where = { user_id: mhfd_lead };
+    }
     conditions.push(Project.findAll({
       attributes: ["project_id", "code_project_type_id"],
       include: [{
@@ -831,7 +842,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
               model: User,
               attributes: [],
               required: true,
-              where : { user_id: mhfd_lead },
+              where : where,
             }]          
         }, {
           model: CodeProjectStaffRole,
@@ -866,11 +877,19 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
       }));
     }
   }
-  if (contractor.length) {
+  if (contractor.length || groupN === 'contractor') {
     logger.info(`Filtering by contractor ${contractor}...`);
+    let where = {};
+    if (groupN === 'contractor' && contractor.length) {
+      where = { [Op.and]: [{ code_partner_type_id: CIVIL_CONTRACTOR_ID }, { business_associates_id: filterN }, { business_associates_id: contractor }] };
+    } else if (groupN === 'contractor') {
+      where = { [Op.and]: [{ code_partner_type_id: CIVIL_CONTRACTOR_ID }, { business_associates_id: filterN }] };
+    } else {
+      where = { [Op.and]: [{ code_partner_type_id: CIVIL_CONTRACTOR_ID }, { business_associates_id: contractor }] };
+    }
     conditions.push(//CONTRACTOR
       Project.findAll({
-        attributes: ["project_id","code_project_type_id"],
+        attributes: ["project_id", "code_project_type_id"],
         include: [{
           model: ProjectPartner,
           attributes: [],
@@ -878,18 +897,23 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
             model: BusinessAssociate,
             attributes: [],
           },
-          where: {
-            code_partner_type_id: CIVIL_CONTRACTOR_ID,
-            business_associates_id:  contractor 
-          }
+          where: where
         }],
-    }));
+      }));
   }
-  if (consultant.length) {
+  if (consultant.length || groupN === 'consultant') {
     logger.info(`Filtering by consultant ${consultant}...`);
+    let where = {};
+    if (groupN === 'consultant' && consultant.length) {
+      where = { [Op.and]: [{ code_partner_type_id: CONSULTANT_CODE }, { business_associates_id: filterN }, { business_associates_id: consultant }] };
+    } else if (groupN === 'consultant') {
+      where = { [Op.and]: [{ code_partner_type_id: CONSULTANT_CODE }, { business_associates_id: filterN }] };
+    } else {
+      where = { [Op.and]: [{ code_partner_type_id: CONSULTANT_CODE }, { business_associates_id: consultant }] };
+    }
     conditions.push(//CONSULTANT
       Project.findAll({
-        attributes: ["project_id","code_project_type_id"],
+        attributes: ["project_id", "code_project_type_id"],
         include: [{
           model: ProjectPartner,
           attributes: [],
@@ -897,55 +921,74 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
             model: BusinessAssociate,
             attributes: [],
           },
-          where: {
-            code_partner_type_id: CONSULTANT_CODE,
-            business_associates_id:  consultant 
-          }
+          where: where
         }],
-    }));
+      }));
   }
-  if (code_project_type_id.length) {
-    logger.info(`Filtering by project type ${code_project_type_id}...`);
-    conditions.push(//PROJECT TYPE
-      Project.findAll({
-        attributes: ["project_id","code_project_type_id"],
-        where: {
-          code_project_type_id: code_project_type_id
-        }
-    }));
-  }
-  if (service_area.length) {
-    logger.info(`Filtering by service area ${service_area}...`);
-    conditions.push(//SERVICE AREA
-      Project.findAll({
-        attributes: ["project_id","code_project_type_id"],
-        include: [{
-          attributes: [],
-          model: ProjectServiceArea,
-          include: {
-            attributes: [],
-            model: CodeServiceArea,
-          },
-          where: { code_service_area_id: service_area }
-        }]
-    }));
-  }
-  if (state_county_id.length) {
-    logger.info(`Filtering by state county ${state_county_id}...`);
-    conditions.push(//COUNTY
-      Project.findAll({
-        attributes: ["project_id","code_project_type_id"],
-        include: [{
-          attributes: [],
-          model: ProjectCounty,
-          include: {
-            attributes: [],
-            model: CodeStateCounty,            
-          },          
-          where: { state_county_id: state_county_id }
-        }]
-    }));
-  }
+  if (code_project_type_id.length || type_idF > 0) {
+	  logger.info(`Filtering by project_type ${code_project_type_id}...`);
+	  let where = {};
+	  if (type_idF > 0 && code_project_type_id.length) {
+		where = { [Op.and]: [{  code_project_type_id: type_idF }, { code_project_type_id: code_project_type_id }] };
+	  } else if (type_idF > 0) {
+		where = { code_project_type_id: type_idF };
+	  } else {
+		where = { code_project_type_id: code_project_type_id };
+	  }
+	  conditions.push(//PROJECT TYPE
+		Project.findAll({
+		  attributes: ["project_id","code_project_type_id"],
+		  where: where
+	  }));
+	}
+  if (service_area.length || groupN === 'servicearea') {    
+	  logger.info(`Filtering by service area ${service_area}...`);
+	  let where = {};
+	  if (groupN === 'servicearea' && service_area.length) {
+		where = { [Op.and]: [{ code_service_area_id: filterN }, { code_service_area_id: service_area }] };
+	  } else if (groupN === 'servicearea') {
+		where = { code_service_area_id: filterN };
+	  } else {
+		where = { code_service_area_id: service_area };
+	  }
+	  conditions.push(//SERVICE AREA
+		Project.findAll({
+		  attributes: ["project_id","code_project_type_id"],
+		  include: [{
+			attributes: [],
+			model: ProjectServiceArea,
+			include: {
+			  attributes: [],
+			  model: CodeServiceArea,
+			},
+			where: where
+		  }]
+	  }));
+	}
+  if (state_county_id.length || groupN === 'county') {
+	  logger.info(`Filtering by county ${groupN}...`);
+	  let where = {};
+	  if (groupN === 'county' && state_county_id.length) {
+		where = { [Op.and]: [{ state_county_id: filterN }, { state_county_id: state_county_id }] };
+	  } else if (groupN === 'county') {
+		where = { state_county_id: filterN };
+	  } else {
+		where = { state_county_id: state_county_id };
+	  }
+	  conditions.push(//COUNTY
+		Project.findAll({
+		  attributes: ["project_id","code_project_type_id"],
+		  include: [{
+			attributes: [],
+			model: ProjectCounty,
+			include: {
+			  attributes: [],
+			  model: CodeStateCounty,            
+			},          
+			where: where
+		  }]
+	  }));
+	}
   if (stream_id.length) {
     logger.info(`Filtering by stream ${stream_id}...`);
     conditions.push(//STREAM
@@ -962,22 +1005,30 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
         }]
     }));
   }
-  if (code_local_government_id.length) {
-    logger.info(`Filtering by jurisdiction ${code_local_government_id}...`);
-    conditions.push(//JURISDICTION
-      Project.findAll({
-        attributes: ["project_id","code_project_type_id"],
-        include: [{
-          attributes: [],
-          model: ProjectLocalGovernment,
-          include: {
-            attributes: [],
-            model: CodeLocalGoverment,
-          },
-          where: { code_local_government_id: code_local_government_id }
-        }]
-    }));
-  }
+  if (code_local_government_id.length || groupN === 'jurisdiction') {
+	  logger.info(`Filtering by name ${groupN}...`);
+	  let where = {};
+	  if (groupN === 'jurisdiction' && code_local_government_id.length) {
+		where = { [Op.and]: [{ code_local_government_id: filterN }, { code_local_government_id: code_local_government_id }] };
+	  } else if (groupN === 'jurisdiction') {
+		where = { code_local_government_id: filterN };
+	  } else {
+		where = { code_local_government_id: code_local_government_id };
+	  }
+	  conditions.push(//JURISDICTION
+		Project.findAll({
+		  attributes: ["project_id","code_project_type_id"],
+		  include: [{
+			attributes: [],
+			model: ProjectLocalGovernment,
+			include: {
+			  attributes: [],
+			  model: CodeLocalGoverment,
+			},
+			where: where
+		  }]
+	  }));
+	}
   if (cost) {
     logger.info(`Filtering by cost ${cost}...`);
     conditions.push(//COST
@@ -990,23 +1041,32 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter)
         }]
     }));
   }
-  if (status.length) {
-    logger.info(`Filtering by status ${status}...`);
-    conditions.push(//STATUS
-      Project.findAll({
-        attributes: ["project_id","code_project_type_id"],
-        include: [{
-          model: ProjectStatus,
-          as: 'currentId',
-          required:true ,
-          include: {
-            model: CodePhaseType,
-            required:true ,
-            where: { code_status_type_id: status }
-          },
-        }]
-    }));
-  }
+  if (status.length || groupN === 'status') {
+	  logger.info(`Filtering by name ${status}...`);
+	  let where = {};
+	  if (groupN === 'status' && status.length) {
+		where = { [Op.and]: [{ code_status_type_id: filterN }, { code_status_type_id: status }] };
+	  } else if (groupN === 'status') {
+		where = { code_status_type_id: filterN };
+	  } else {
+		where = { code_status_type_id: status };
+	  }
+	  conditions.push(//STATUS
+		Project.findAll({
+		  attributes: ["project_id","code_project_type_id"],
+		  include: [{
+			model: ProjectStatus,
+			attributes: [],
+			as: 'currentId',
+			required:true ,
+			include: {
+			  model: CodePhaseType,
+			  required:true ,
+			  where: where
+			},
+		  }]
+	  }));
+	}
   if (conditions.length === 0) {
     conditions.push(Project.findAll({
       attributes: ["project_id","code_project_type_id"],
@@ -1407,6 +1467,14 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
             'code_project_type_id',
             'project_type_name'
           ]
+        },{
+          model: ProjectStatus,
+          attributes: [],
+          as: 'currentId',
+          required: false,
+          include: {
+            model: CodePhaseType,
+          },
         }
       ],
     });
