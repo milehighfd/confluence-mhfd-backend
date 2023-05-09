@@ -24,6 +24,7 @@ const Attachment = db.projectAttachment;
 const ProjectStatus = db.projectStatus;
 const CodePhaseType = db.codePhaseType;
 const CodeStatusType = db.codeStatusType;
+const CodeProjectType = db.codeProjectType;
 
 
 export const getServiceAreaByProjectIds = async (ids) => {
