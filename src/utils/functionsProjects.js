@@ -388,6 +388,11 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     sortattrib = 'project_name';
     attributes.push('project_name');
   }
+  if (sortby === 'on_base') {
+    sortattrib = 'onbase_project_number';
+    attributes.push('onbase_project_number');
+    valuetype = 'number';
+  }
   if (sortby?.includes('cost')) {
     const ESTIMATED_ID = 1;
     includesValues.push({
@@ -469,7 +474,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     });
     sortattrib = 'project_counties.0.CODE_STATE_COUNTY.county_name';
   }
-  if (sortby === 'lglead') {
+  if (sortby === 'lg_lead') {
     includesValues.push({
       model: ProjectStaff,
       attributes: [
@@ -498,6 +503,63 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     });
     //testing purposes
     sortattrib = 'project_staffs.0.business_associate_contact.user.name';
+  }
+  if (sortby === 'mhfd') {
+    includesValues.push({
+      model: ProjectStaff,
+      attributes: [
+        'project_staff_id'
+      ],
+      required: false,
+      include: [{
+          model: BusinessAssociateContact,
+          attributes: [
+            'business_associate_contact_id'
+          ],
+          required: false,
+          include: [{
+            model: User,
+            attributes: [
+              'name'
+            ],
+          }]          
+      }, {
+        model: CodeProjectStaffRole,
+        required: false,
+        where: {
+          project_staff_role_type_name: 'MHFD Lead',
+        }
+      }],
+    });
+    //testing purposes
+    sortattrib = 'project_staffs.0.business_associate_contact.user.name';
+  }
+  if (sortby === 'service_area') {
+    includesValues.push({
+      model: ProjectServiceArea,
+			attributes: ['project_service_area_id'],			
+			include: {
+			  attributes: ['service_area_name'],
+			  model: CodeServiceArea,
+			},		  
+	  });
+    sortattrib = 'project_service_areas.0.CODE_SERVICE_AREA.service_area_name';
+  }
+  if (sortby === 'stream') {
+    includesValues.push({
+      model: ProjectStreams,
+      required: false,
+      separate: true,
+      include: {
+        model: Streams,
+        required: false,
+        attributes: [
+          'stream_id',
+          'stream_name'
+        ]
+      }
+    });
+    sortattrib = 'project_streams.0.stream.stream_name';
   }
   projectsSorted = await Project.findAll({
     attributes: attributes,
