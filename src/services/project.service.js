@@ -1118,45 +1118,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
   }
   return intersectedProjectsSorted;
 }
-const getProjectsSortedTest = async (include, page = 1, limit = 20) => {  
-  let where = {};
-  const offset = (page - 1) * limit;
-  try {
-    let projects = await Project.findAll({
-      // separate: true,
-      attributes: [
-        "project_id",
-        "project_name",
-        "description",
-        "onbase_project_number",
-        "created_date",
-        'code_project_type_id',
-        'current_project_status_id',
-      ], 
-      // include: [{
-      //   limit: limit,
-      //   offset: offset,
-      //   model: CodeProjectType,
-      //   as: 'currentProjectType',
-      //   required: true,
-      //   attributes: [
-      //     'code_project_type_id',
-      //     'project_type_name'
-      //   ],
-      //   order: [[[
-      //     'project_type_name',
-      //     'DESC'
-      //   ]]]
-      // }],
-      // subQuery: true,
-      
-    });
-    return projects;
-  } catch (error) {
-    logger.error(error);
-    throw error;
-  }
-}
+
 let cache = null;
 const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, filters) => {  
   let where = {};
@@ -1467,14 +1429,6 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
             'code_project_type_id',
             'project_type_name'
           ]
-        },{
-          model: ProjectStatus,
-          attributes: [],
-          as: 'currentId',
-          required: false,
-          include: {
-            model: CodePhaseType,
-          },
         }
       ],
     });
@@ -1789,7 +1743,6 @@ export default {
   deleteProjectFromCache,
   deleteByProjectId,
   saveProject,
-  getProjectsSortedTest,
   getProjects,
   getProjects2,
   getProjectsDeprecated,
