@@ -347,6 +347,7 @@ const sortArrayOfProjects = (valuetype, sortattrib, sorttype, projectsToSort) =>
   return projectsToSort.sort((x,y) => {
     const valueX = safeGet(x, sortattrib, Infinity);
     const valueY = safeGet(y, sortattrib, Infinity);
+    // console.log('This are the values to sort', sortattrib, valueX, valueY);
     const nameX = valuetype === 'string' && valueX !== Infinity ? valueX.toUpperCase(): valueX;
     const nameY = valuetype === 'string' && valueY !== Infinity ? valueY.toUpperCase(): valueY;
     if (nameX > nameY) {
@@ -430,6 +431,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     include: includesValues
   });
   projectsSorted = sortArrayOfProjects(valuetype, sortattrib, sorttype, projectsSorted);
+  // console.log('projects very sorted', projectsSorted.map(p => ({id: p.project_id, cost: JSON.stringify(p.currentCost[0])})));
   // console.log('Projects Sorted', JSON.stringify(projectsSorted));
   return projectsSorted;
 }

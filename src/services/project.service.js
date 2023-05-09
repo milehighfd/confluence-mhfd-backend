@@ -730,7 +730,6 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
   let projectsSorted = [];
   if (sortby) { 
     projectsSorted = await getSortedProjectsByAttrib(sortby, sorttype);
-    // console.log('projects very sorted', projectsSorted.map(p => ({id: p.project_id, cost: p.currentCost[0].cost})));
   }
   if (lgmanager !== '') {
     logger.info(`Filtering by lgmanager ${lgmanager}...`);
@@ -1059,6 +1058,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
   } else {
     intersectedProjectsSorted = intersectedProjects;
   }
+  // console.log('intersectedProjects', intersectedProjectsSorted.map(p => ({id: p.project_id, cost: JSON.stringify(p)})));
   // console.log('length', intersectedProjects.length,'sorted', intersectedProjectsSorted.length, 'bf inter', projectsSorted.length);
   return intersectedProjectsSorted;
 }
@@ -1072,7 +1072,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
   if (filters?.sortby) {
     project_ids_array = project_ids_array.slice(offset, toRange);
   }
-  console.log('projects in eere projects', project_ids_array);
+  console.log('projects to filter by id (sorted)', project_ids_array);
   where = {project_id: project_ids_array};
   let limitRange = filters?.sortby ? undefined : limit;
   let offsetRange = filters?.sortby ? undefined : offset;

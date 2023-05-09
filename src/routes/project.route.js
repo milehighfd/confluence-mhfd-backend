@@ -68,11 +68,11 @@ const listProjects = async (req, res) => {
   const set = new Set(projectsFilterId.map((p) => p?.project_id));
   const count = set.size;
   logger.info(projects.length);
-  if (body?.sortby?.trim()?.length || 0) {
-    logger.info(`Starting function sortProjects for endpoint project/`);
-    projects = await sortProjects(projects, body);
-    logger.info(`Finished function sortProjects for endpoint project/`);
-  }
+  // if (body?.sortby?.trim()?.length || 0) {
+  //   logger.info(`Starting function sortProjects for endpoint project/`);
+  //   projects = await sortProjects(projects, body);
+  //   logger.info(`Finished function sortProjects for endpoint project/`);
+  // }
 
   logger.info('projects being called', projects.length);
   res.send({ projects, count: count });
