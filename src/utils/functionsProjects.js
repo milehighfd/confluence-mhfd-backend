@@ -383,6 +383,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     attributes.push('project_name');
   }
   if (sortby?.includes('cost')) {
+    const ESTIMATED_ID = 1;
     includesValues.push({
       model: ProjectCost,
       required: true,
