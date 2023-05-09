@@ -436,7 +436,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
   return projectsSorted;
 }
 
-export const sortProjectsByAttrib = async (projects, filters) => {
+export const sortProjectsByAttrib = async (projects, sortOrder, filters) => {
   let sortattrib = '';
   let valuetype = 'string';
   const sorttype = filters.sorttype && filters.sorttype !== '' ? filters.sorttype : 'asc';
@@ -450,8 +450,14 @@ export const sortProjectsByAttrib = async (projects, filters) => {
   if (filters?.sortby === 'projectname') {
     sortattrib = 'project_name'
   }
+
   if (sortattrib) {
-    projects = sortArrayOfProjects(valuetype, sortattrib, sorttype, projects);
+    const itemPositions = {};
+    for (const [index, id] of sortOrder.entries()) {
+      itemPositions[id] = index;
+    }
+    projects = projects.sort((a, b) => itemPositions[a.project_id] - itemPositions[b.project_id]);
   }
+
   return projects;
 }

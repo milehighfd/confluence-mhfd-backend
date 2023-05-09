@@ -1459,7 +1459,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
     */
     //cache = projects;
     if (filters?.sortby) {
-      projects = await sortProjectsByAttrib(projects, filters);
+      projects = await sortProjectsByAttrib(projects, project_ids_array, filters);
     }
     return projects;
   } catch (error) {
