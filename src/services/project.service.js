@@ -60,7 +60,6 @@ const CodeProjectPartnerType = db.codeProjectPartnerType;
 const Op = sequelize.Op;
 const BusinessAssociateContact = db.businessAssociateContact;
 const BusinessAddress = db.businessAdress;
-const Favorites = db.favorites;
 
 async function getCentroidsOfAllProjects () {
   const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid, projectid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE}`;
@@ -751,14 +750,14 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
     projectsSorted = await getSortedProjectsByAttrib(sortby, sorttype);
   }
   if (favorites !== '') {
-    // conditions.push(Favorites.findAll({
-    //   attributes: ["project_id"],
-    //   include: [{
-    //     model: User,
-    //     require: true,
-    //     where : { user_id: favorites },
-    //   }]
-    // }));
+    conditions.push(ProjectFavorite.findAll({
+      attributes: ["project_id"],
+      include: [{
+        model: User,
+        require: true,
+        where : { user_id: favorites },
+      }]
+    }));
   }
   if (teams !== '') {
     logger.info(`Filtering by teams ${teams}...`);
