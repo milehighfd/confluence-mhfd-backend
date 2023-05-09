@@ -386,7 +386,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     const ESTIMATED_ID = 1;
     includesValues.push({
       model: ProjectCost,
-      required: true,
+      required: false,
       as: 'currentCost',
       attributes: [
         'cost'
@@ -446,7 +446,7 @@ export const sortProjectsByAttrib = async (projects, filters) => {
     sortattrib = 'code_project_type.project_type_name';
   }
   if (sortattrib) {
-    projects = sortArrayOfProjects(valuetype, sortattrib, sorttype, projectsSorted);
+    projects = sortArrayOfProjects(valuetype, sortattrib, sorttype, projects);
   }
   return projects;
 }

@@ -1059,6 +1059,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
   } else {
     intersectedProjectsSorted = intersectedProjects;
   }
+  // console.log('length', intersectedProjects.length,'sorted', intersectedProjectsSorted.length, 'bf inter', projectsSorted.length);
   return intersectedProjectsSorted;
 }
 
