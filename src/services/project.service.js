@@ -1216,25 +1216,21 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
             'is_active',
             'project_staff_id'
           ],
-          include: {
-            model: MHFDStaff,
+          include: [{
+            model: BusinessAssociateContact,
             required: false,
-            attributes: [
-              'user_id',
-              'mhfd_staff_id',
-              'full_name'
-            ],
-            include: {
+            include: [{
+              attributes: [
+                'name',
+                'user_id',
+              ],
               model: User,
               required: false,
-              attributes: [
-                'organization'
-              ]
-            }
-          }
-          // where: {
-          //   code_cost_type_id: 1
-          // }
+            }]
+          },{
+            model: CodeProjectStaffRole,
+            required: false,
+          }]
         },
         {
           model: ProjectServiceArea,
