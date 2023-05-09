@@ -342,6 +342,8 @@ export const safeGet = (obj, props, defaultValue) => {
     }, obj);
     return dataReturn;
   } catch(e) {
+
+    // console.log('error on safe get', e, obj);
     return defaultValue
   }
 }
@@ -352,6 +354,7 @@ const sortArrayOfProjects = (valuetype, sortattrib, sorttype, projectsToSort) =>
     const valueY = safeGet(y, sortattrib, valuetype === 'string' ? 'π': Infinity);
     const nameX = valuetype === 'string' && valueX !== Infinity ? valueX.toUpperCase(): valueX;
     const nameY = valuetype === 'string' && valueY !== Infinity ? valueY.toUpperCase(): valueY;
+    // console.log('SORTED VALUES are', nameX, nameY);
     if (nameX > nameY) {
       // console.log('ValueX bigger', valueX, valueY);
       return -1 * (sorttype === 'asc' ? -1 : 1);
@@ -466,13 +469,43 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     });
     sortattrib = 'project_counties.0.CODE_STATE_COUNTY.county_name';
   }
+  if (sortby === 'lglead') {
+    includesValues.push({
+      model: ProjectStaff,
+      attributes: [
+        'project_staff_id'
+      ],
+      required: false,
+      include: [{
+          model: BusinessAssociateContact,
+          attributes: [
+            'business_associate_contact_id'
+          ],
+          required: false,
+          include: [{
+            model: User,
+            attributes: [
+              'name'
+            ],
+          }]          
+      }, {
+        model: CodeProjectStaffRole,
+        required: false,
+        where: {
+          project_staff_role_type_name: 'Local Government Lead',
+        }
+      }],
+    });
+    //testing purposes
+    sortattrib = 'project_staffs.0.business_associate_contact.user.name';
+  }
   projectsSorted = await Project.findAll({
     attributes: attributes,
     include: includesValues
   });
   // console.log('projects not sorted', projectsSorted.map(p => ({id: p.project_id, cost: JSON.stringify(p.currentId)})));
   projectsSorted = sortArrayOfProjects(valuetype, sortattrib, sorttype, projectsSorted);
-  // console.log('projects very sorted', projectsSorted.map(p => ({id: p.project_id, cost: JSON.stringify(p.currentId)})));
+  // console.log('projects very sorted', JSON.stringify(projectsSorted.map(p => ({id: p.project_id, cost: (p.project_staffs)}))));
   // console.log('Projects Sorted', JSON.stringify(projectsSorted));
   return projectsSorted;
 }
