@@ -339,6 +339,19 @@ export const safeGet = (obj, props, defaultValue) => {
   }
 }
 
+const sortArrayOfProjects = (valuetype, sortattrib, sorttype, projectsToSort) => {
+  return projectsToSort.sort((x,y) => {
+    const nameX = valuetype === 'string' ? safeGet(x, sortattrib, Infinity).toUpperCase(): safeGet(x, sortattrib, Infinity);
+    const nameY = valuetype === 'string' ? safeGet(y, sortattrib, Infinity).toUpperCase(): safeGet(y, sortattrib, Infinity);
+    if (nameX > nameY) {
+      return -1 * (sorttype === 'asc' ? -1 : 1);
+    }
+    if (nameX < nameY) {
+      return 1 * (sorttype === 'asc' ? -1 : 1);
+    }
+    return 0;
+  });
+}
 export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
   let includesValues = [];
   let attributes = ["project_id"];
@@ -380,23 +393,14 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     attributes: attributes,
     include: includesValues
   });
-  projectsSorted = projectsSorted.sort((x,y) => {
-    const nameX = valuetype === 'string' ? safeGet(x, sortattrib, Infinity).toUpperCase(): safeGet(x, sortattrib, Infinity);
-    const nameY = valuetype === 'string' ? safeGet(y, sortattrib, Infinity).toUpperCase(): safeGet(y, sortattrib, Infinity);
-    if (nameX > nameY) {
-      return -1 * (sorttype === 'asc' ? -1 : 1);
-    }
-    if (nameX < nameY) {
-      return 1 * (sorttype === 'asc' ? -1 : 1);
-    }
-    return 0;
-  });
+  projectsSorted = sortArrayOfProjects(valuetype, sortattrib, sorttype, projectsSorted);
   return projectsSorted;
 }
 
 export const sortProjectsByAttrib = async (projects, filters) => {
   let sortattrib = '';
   let valuetype = 'string';
+  const sorttype = filters.sorttype && filters.sorttype !== '' ? filters.sorttype : 'asc';
   if (filters?.sortby?.includes('cost')) {
     sortattrib = 'project_costs.0.cost';
     valuetype = 'number';
@@ -405,17 +409,7 @@ export const sortProjectsByAttrib = async (projects, filters) => {
     sortattrib = 'code_project_type.project_type_name';
   }
   if (sortattrib) {
-    projects = projects.sort((x,y) => {
-      const nameX = valuetype === 'string' ? safeGet(x, sortattrib, Infinity).toUpperCase(): safeGet(x, sortattrib, Infinity);
-      const nameY = valuetype === 'string' ? safeGet(y, sortattrib, Infinity).toUpperCase(): safeGet(y, sortattrib, Infinity);
-      if (nameX > nameY) {
-        return -1 * (filters?.sorttype === 'asc' ? -1 : 1);
-      }
-      if (nameX < nameY) {
-        return 1 * (filters?.sorttype === 'asc' ? -1 : 1);
-      }
-      return 0;
-    })
+    projects = sortArrayOfProjects(valuetype, sortattrib, sorttype, projectsSorted);
   }
   return projects;
 }
