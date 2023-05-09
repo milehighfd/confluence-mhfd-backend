@@ -1114,7 +1114,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
     intersectedProjectsSorted = intersectedProjects;
   }
   // console.log('intersectedProjects', intersectedProjectsSorted.map(p => ({id: p.project_id, cost: JSON.stringify(p)})));
-  // console.log('length', intersectedProjects.length,'sorted', intersectedProjectsSorted.length, 'bf inter', projectsSorted.length);
+  console.log('length', intersectedProjects.length,'sorted', intersectedProjectsSorted.length, 'bf inter', projectsSorted.length);
   return intersectedProjectsSorted;
 }
 
@@ -1424,6 +1424,29 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
             'code_project_type_id',
             'project_type_name'
           ]
+        },
+        {
+          model: ProjectStatus,
+          separate: true,
+          required: false,
+          attributes: [
+            'code_phase_type_id'
+          ],
+          as: 'currentId',
+          include: {
+            model: CodePhaseType,
+            required: false,
+            attributes: [
+              'code_phase_type_id'
+            ],
+            include: [{
+              model: CodeStatusType,
+              required: false,
+              attributes: [
+                'status_name'
+              ]
+            }]
+          }
         }
       ],
     });
