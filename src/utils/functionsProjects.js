@@ -21,6 +21,9 @@ const BusinessAssociante = db.businessAssociates;
 const ProjectStreams = db.project_stream;
 const Streams = db.stream;
 const Attachment = db.projectAttachment;
+const ProjectStatus = db.projectStatus;
+const CodePhaseType = db.codePhaseType;
+const CodeStatusType = db.codeStatusType;
 
 
 export const getServiceAreaByProjectIds = async (ids) => {
@@ -341,14 +344,19 @@ export const safeGet = (obj, props, defaultValue) => {
 
 const sortArrayOfProjects = (valuetype, sortattrib, sorttype, projectsToSort) => {
   return projectsToSort.sort((x,y) => {
-    const nameX = valuetype === 'string' ? safeGet(x, sortattrib, Infinity).toUpperCase(): safeGet(x, sortattrib, Infinity);
-    const nameY = valuetype === 'string' ? safeGet(y, sortattrib, Infinity).toUpperCase(): safeGet(y, sortattrib, Infinity);
+    const valueX = safeGet(x, sortattrib, Infinity);
+    const valueY = safeGet(y, sortattrib, Infinity);
+    const nameX = valuetype === 'string' && valueX !== Infinity ? valueX.toUpperCase(): valueX;
+    const nameY = valuetype === 'string' && valueY !== Infinity ? valueY.toUpperCase(): valueY;
     if (nameX > nameY) {
+      // console.log('ValueX bigger', valueX, valueY);
       return -1 * (sorttype === 'asc' ? -1 : 1);
     }
     if (nameX < nameY) {
+      // console.log('ValueY bigger', valueX, valueY);
       return 1 * (sorttype === 'asc' ? -1 : 1);
     }
+    // console.log('EQUALAS??', valueX, valueY);
     return 0;
   });
 }
@@ -389,11 +397,38 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     sortattrib = 'currentCost.0.cost';
     valuetype = 'number';
   }
+  if (sortby === 'status') {
+    includesValues.push({
+      model: ProjectStatus,
+      separate: true,
+      required: false,
+      attributes: [
+        'code_phase_type_id'
+      ],
+      as: 'currentId',
+      include: {
+        model: CodePhaseType,
+        required: false,
+        attributes: [
+          'code_phase_type_id'
+        ],
+        include: [{
+          model: CodeStatusType,
+          required: false,
+          attributes: [
+            'status_name'
+          ]
+        }]
+      }
+    });
+    sortattrib = 'currentId.0.code_phase_type.code_status_type.status_name';
+  }
   projectsSorted = await Project.findAll({
     attributes: attributes,
     include: includesValues
   });
   projectsSorted = sortArrayOfProjects(valuetype, sortattrib, sorttype, projectsSorted);
+  // console.log('Projects Sorted', JSON.stringify(projectsSorted));
   return projectsSorted;
 }
 
