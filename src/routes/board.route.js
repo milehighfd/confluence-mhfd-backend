@@ -75,7 +75,7 @@ router.get('/fix', async (req, res) => {
     if (boards) {
         for (const board of boards) { 
             logger.info(`Starting function moveCardsToNextLevel for board/fix`);
-            let r = await moveCardsToNextLevel(board);
+            moveCardsToNextLevel(board);
             logger.info(`Finished function moveCardsToNextLevel for board/fix`);
             c++;
         }
@@ -402,239 +402,180 @@ const getBoard = async (type, locality, year, projecttype) => {
     }
 }
 
-const sendBoardProjectsToProp = async (boards, prop) => {
-    console.log(boards, prop);
-    logger.info(`Starting function findAll for board/`);
-    for (var i = 0 ; i < boards.length ; i++) {
-        let board = boards[i];
-        logger.info(`Starting function findAll for board/`);
-        let boardProjects = await BoardProject.findAll({
+const updateProjectStatus = async (boards, status, creator) => {
+    logger.info(`Starting function updateProjectStatus for board/`);
+    const prs = [];
+    for (const board of boards) {
+        prs.push(BoardProject.findAll({
             where: {
                 board_id: board.board_id
             }
-        });
-        logger.info(`Finished function findAll for board/`);
-        let map = {};
-        [0, 1, 2, 3, 4, 5].forEach(index => {
-            let arr = [];
-            for (var j = 0 ; j < boardProjects.length ; j++) {
-                let bp = boardProjects[j];
-                if (bp[`position${index}`] != null) {
-                    arr.push({
-                        bp,
-                        value: bp[`position${index}`]
-                    });
-                }
-            };
-            arr.sort((a, b) => {
-                return a.value - b.value;
-            });
-            arr
-                .forEach((r, i) => {
-                    if (!map[r.bp.project_id]) {
-                        map[r.bp.project_id] = {}
-                    }
-                    map[r.bp.project_id][index] = i;
-                });
-        });
-        for (var j = 0 ; j < boardProjects.length ; j++) {
-            let bp = boardProjects[j];
-            let p;
-            try {
-                p = await getMinimumDateByProjectId(bp.project_id);
-            } catch(e) {
-                logger.info(`Project not found ${bp.project_id}`);
-                continue;
-            }
-            if (!p[prop]) {
-                logger.info(`Property not found ${prop}`);
-                continue;
-            }
-            let propValues = p[prop].split(',');
-            for (let k = 0 ; k < propValues.length ; k++) {
-                let propVal = propValues[k];
-                if (prop === 'county' && !propVal.includes('County')) {
-                    propVal = propVal.trimEnd().concat(' County');
-                } else if (prop === 'servicearea' && !propVal.includes(' Service Area')) {
-                    propVal = propVal.trimEnd().concat(' Service Area');
-                }
-                logger.info(`Starting function getBoard for board/`);
-                let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype);
-                logger.info(`Finished function getBoard for board/`);
-                logger.info(`Destiny board by prop ${prop} id is ${destinyBoard !== null ? destinyBoard.board_id : destinyBoard}`);
-                //TODO: improve to avoid multiple queries to same board
-                if (destinyBoard === null || destinyBoard.board_id === null) {
-                    logger.info('Destiny board not found');
-                }
-                let newBoardProject = new BoardProject({
-                    board_id: destinyBoard.board_id,
-                    project_id: bp.project_id,
-                    position0: bp.position0,
-                    position1: bp.position1,
-                    position2: bp.position2,
-                    position3: bp.position3,
-                    position4: bp.position4,
-                    position5: bp.position5,
-                    originPosition0: map[bp.project_id][0],
-                    originPosition1: map[bp.project_id][1],
-                    originPosition2: map[bp.project_id][2],
-                    originPosition3: map[bp.project_id][3],
-                    originPosition4: map[bp.project_id][4],
-                    originPosition5: map[bp.project_id][5],
-                    req1: bp.req1 == null ? null : (bp.req1 / propValues.length),
-                    req2: bp.req2 == null ? null : (bp.req2 / propValues.length),
-                    req3: bp.req3 == null ? null : (bp.req3 / propValues.length),
-                    req4: bp.req4 == null ? null : (bp.req4 / propValues.length),
-                    req5: bp.req5 == null ? null : (bp.req5 / propValues.length),
-                    year1: bp.year1,
-                    year2: bp.year2,
-                    origin: board.locality,
-                });
-                logger.info(`Starting function save for board/`);
-                await newBoardProject.save();
-                logger.info(`Finished function getBoard for board/`);
-            }
+        }));
+    }
+    const boardProjects = await Promise.all(prs);
+    const prs2 = [];
+    for (const boardProject of boardProjects) {
+        if (boardProject.position0 === null) {
+            prs2.push(ProjectStatus.findOne({
+                where: {
+                    project_id: boardProject.project_id
+                },
+                include: {
+                    model: CodePhaseType,
+                    required: true,
+                    attributes:['code_project_type_id', 'code_phase_type_id']
+                },
+                raw: true,
+                nest: true,
+            }));
+        } else {
+            prs2.push(Promise.resolve(null));
         }
     }
-
-}
-
-const updateProjectStatus = async (boards, status, creator) => {
-    for (var i = 0 ; i < boards.length ; i++) {
-        let board = boards[i];
-        logger.info(`Starting function findAll for board/`);
-        let boardProjects = await BoardProject.findAll({
-            where: {
-                board_id: board.board_id
+    const projectStatuses = await Promise.all(prs2);
+    const prs3 = [];
+    const updatedProjectsStatuses = [];
+    for (const projectStatus of projectStatuses) {
+        if (projectStatus) {
+            prs3.push(CodePhaseType.findOne({
+                where: {
+                    code_status_type_id: status,
+                    code_project_type_id: projectStatus?.code_phase_type?.code_project_type_id,
+                },
+            }));
+            updatedProjectsStatuses.push(ProjectStatus.update({            
+                actual_end_date: moment().format('YYYY-MM-DD HH:mm:ss')
+            }, 
+            {
+                where: {
+                    code_status_type_id: status,
+                    code_project_type_id: projectStatus?.code_phase_type?.code_project_type_id,
+                }
+            }));
+        } else {
+            prs3.push(Promise.resolve(null));
+        }
+    }
+    Promise.all(updatedProjectsStatuses).then(() => {
+        logger.info('Project statuses are updated');
+    });
+    const nextCodePhases = await Promise.all(prs3);
+    const prs4 = [];
+    for (let i = 0; i < boardProjects.length; i++) {
+        const boardProject = boardProjects[i];
+        if (boardProject.position0 == null) {
+            const { duration, duration_type } = nextCodePhases[i];
+            const formatDuration = duration_type[0].toUpperCase();
+            prs4.push(projectStatusService.saveProjectStatusFromCero(
+                nextCodePhases[i].code_phase_type_id, 
+                boardProject.project_id,
+                moment().format('YYYY-MM-DD HH:mm:ss'), 
+                moment().add(1, 'd').format('YYYY-MM-DD HH:mm:ss'),
+                moment().format('YYYY-MM-DD HH:mm:ss'), 
+                moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss'), 
+                moment().format('YYYY-MM-DD HH:mm:ss'), 
+                Number(duration), 
+                moment().format('YYYY-MM-DD HH:mm:ss'), 
+                moment().format('YYYY-MM-DD HH:mm:ss'), 
+                creator, 
+                creator
+            ));
+        } else {
+            prs4.push(Promise.resolve(null));
+        }
+    }
+    const newProjectStatuses = await Promise.all(prs4);
+    const prs5 = [];
+    for (let i = 0; i < boardProjects.length; i++) {
+        if (boardProjects[i].position0 == null) {
+           prs5.push(Project.update({
+            current_project_status_id: newProjectStatuses[i].project_status_id
+           },{ where: { project_id: boardProjects[i].project_id }}));
+        }
+    }
+    Promise.all(prs5).then(() => {
+        logger.info('Projects are updated');
+    });
+    const DRAFT_STATUS = 1;
+    const REQUESTED_STATUS = 2;
+    const APPROVED_STATUS = 3;
+    if (status === APPROVED_STATUS) {
+        const notDoneStatuses = await CodePhaseType.findAll({
+            where:{
+                code_project_type_id: currentProjectStatus?.code_phase_type?.code_project_type_id,
+                code_status_type_id: {
+                    [Op.not]: [DRAFT_STATUS, REQUESTED_STATUS, APPROVED_STATUS],
+                }
             }
         });
-        logger.info(`Finished function findAll for board/`);
-        logger.info(`Starting function findOne for board/`);
-        for (var j = 0 ; j < boardProjects.length ; j++) {
-            let bp = boardProjects[j];
+        const prs6 = [];
+        for (const statusType of notDoneStatuses) {
             try {
-                if (bp.position0 === null) {
-                    const currentProjectStatus = await ProjectStatus.findOne({
-                        where: {
-                            project_id: bp.project_id
-                        },
-                        include: {
-                            model: CodePhaseType,
-                            required: true,
-                            attributes:['code_project_type_id', 'code_phase_type_id']
-                        },
-                        raw: true,
-                        nest: true,
-                        });
-                        const nextCodePhase = await CodePhaseType.findOne({
-                            where:{
-                                code_status_type_id: status,
-                                code_project_type_id: currentProjectStatus?.code_phase_type?.code_project_type_id
-                            }
-                        });
-                        await ProjectStatus.update({            
-                            actual_end_date: moment().format('YYYY-MM-DD HH:mm:ss')
-                        }, { where: { project_status_id: currentProjectStatus.project_status_id } });
-
-                        const { duration, duration_type } = nextCodePhase;
-                        const formatDuration = duration_type[0].toUpperCase();
-                        const responseOfNewStatus = await projectStatusService.saveProjectStatusFromCero(
-                            nextCodePhase.code_phase_type_id, 
-                            bp.project_id,
-                            moment().format('YYYY-MM-DD HH:mm:ss'), 
-                            moment().add(1, 'd').format('YYYY-MM-DD HH:mm:ss'),
-                            moment().format('YYYY-MM-DD HH:mm:ss'), 
-                            moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss'), 
-                            moment().format('YYYY-MM-DD HH:mm:ss'), 
-                            Number(duration), 
-                            moment().format('YYYY-MM-DD HH:mm:ss'), 
-                            moment().format('YYYY-MM-DD HH:mm:ss'), 
-                            creator, 
-                            creator
-                        );
-                        const resres = await Project.update({
-                            current_project_status_id: responseOfNewStatus.project_status_id
-                          },{ where: { project_id: bp.project_id }});
-                        console.log(resres);
-                        logger.info('Updated', bp.project_id);
-
-                        if(status === 3 ){
-                        const currentStatusForType = await CodePhaseType.findAll({
-                            where:{
-                                code_project_type_id: currentProjectStatus?.code_phase_type?.code_project_type_id,
-                                code_status_type_id: {
-                                    [Op.not]: [1, 2, 3],
-                                }
-                            }
-                        });
-                        for (const statusType of currentStatusForType) {
-                            try {
-                                await projectStatusService.saveProjectStatusFromCero(
-                                    statusType.code_phase_type_id, 
-                                    bp.project_id,
-                                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                                    moment().format('YYYY-MM-DD HH:mm:ss'),  
-                                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                                    Number(duration), 
-                                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                                    creator, 
-                                    creator
-                                );   
-                                logger.info ('status created', statusType.code_phase_type_id)
-                            } catch (error) {
-                                logger.info (error, 'can not create status')
-                            }
-                        }
-                        }
-                        await projectService.updateProjectOnCache(bp.project_id);
-            }
-            } catch(e) {
-                logger.error(e);
-                continue;
+                prs6.push(projectStatusService.saveProjectStatusFromCero(
+                    statusType.code_phase_type_id, 
+                    bp.project_id,
+                    moment().format('YYYY-MM-DD HH:mm:ss'), 
+                    moment().format('YYYY-MM-DD HH:mm:ss'), 
+                    moment().format('YYYY-MM-DD HH:mm:ss'), 
+                    moment().format('YYYY-MM-DD HH:mm:ss'),  
+                    moment().format('YYYY-MM-DD HH:mm:ss'), 
+                    Number(duration), 
+                    moment().format('YYYY-MM-DD HH:mm:ss'), 
+                    moment().format('YYYY-MM-DD HH:mm:ss'), 
+                    creator, 
+                    creator
+                ));   
+                logger.info ('status created', statusType.code_phase_type_id)
+            } catch (error) {
+                logger.info (error, 'can not create status')
             }
         }
-        logger.info(`Finished function findOne for board/`);
+        Promise.all(prs6).then(() => {
+            logger.info('new statuses  are created');
+        });
+        logger.info(`Ending function updateProjectStatus`);
     }
 }
 
 const sendBoardProjectsToDistrict = async (boards) => {
     try {
         logger.info(`Starting function findAll for board/`);
-        for (var i = 0 ; i < boards.length ; i++) {
-            let board = boards[i];
+        for (let board of boards) {
             console.log(board, "current board");
-            let boardProjects = await BoardProject.findAll({
+            let destinyBoard = await getBoard('WORK_PLAN', 'MHFD District Work Plan', board.year, board.projecttype);
+            BoardProject.findAll({
                 where: {
                     board_id: board.board_id
                 }
-            });
-            for (var j = 0 ; j < boardProjects.length ; j++) {
-                let bp = boardProjects[j];
-                let destinyBoard = await getBoard('WORK_PLAN', 'MHFD District Work Plan', board.year, board.projecttype);
-                console.log(destinyBoard);
-                //TODO: improve to avoid multiple queries to same board
-                await boardService.saveProjectBoard({
-                    board_id: destinyBoard.board_id,
-                    project_id: bp.project_id,
-                    position0: bp.position0,
-                    position1: bp.position1,
-                    position2: bp.position2,
-                    position3: bp.position3,
-                    position4: bp.position4,
-                    position5: bp.position5,
-                    req1: bp.req1,
-                    req2: bp.req2,
-                    req3: bp.req3,
-                    req4: bp.req4,
-                    req5: bp.req5,
-                    year1: bp.year1,
-                    year2: bp.year2,
-                    origin: board.locality,
-                })
-            }
+            }).then(((boardProjects) => {
+                const prs = [];
+                for (const bp of boardProjects) {
+                    prs.push(
+                    boardService.saveProjectBoard({
+                        board_id: destinyBoard.board_id,
+                        project_id: bp.project_id,
+                        position0: bp.position0,
+                        position1: bp.position1,
+                        position2: bp.position2,
+                        position3: bp.position3,
+                        position4: bp.position4,
+                        position5: bp.position5,
+                        req1: bp.req1,
+                        req2: bp.req2,
+                        req3: bp.req3,
+                        req4: bp.req4,
+                        req5: bp.req5,
+                        year1: bp.year1,
+                        year2: bp.year2,
+                        origin: board.locality,
+                    }));
+                }
+                Promise.all(prs).then((values) => {
+                    logger.info('success on sendBoardProjectsToDistrict');
+                }).catch((error) => {
+                    logger.error(`error on sendBoardProjectsToDistrict ${error}`);
+                });
+            }));
         }
         logger.info(`Finished function findAll for board/`);
         logger.info('success on sendBoardProjectsToDistrict');
@@ -648,8 +589,7 @@ const updateBoards = async (board, status, comment, substatus) => {
     logger.info('Updating all boards different project type');
     let pjts = ['Capital', 'Maintenance', 'Study', 'Acquisition', 'Special'];
     logger.info(`Starting function findOne for board/`);
-    for (var i = 0 ; i < pjts.length ; i++) {
-        let pjt = pjts[i];
+    for (const pjt of pjts) {
         let body = {
             type: board.type,
             year: board.year,
@@ -665,7 +605,7 @@ const updateBoards = async (board, status, comment, substatus) => {
         logger.info(`Project type ${pjt}`);
         if (!b) {
             logger.info(`Creating new board for ${pjt}`);
-             await boardService.specialCreationBoard(board.type, board.year, board.locality, pjt, status, comment, substatus)
+            boardService.specialCreationBoard(board.type, board.year, board.locality, pjt, status, comment, substatus)
         } else {
             logger.info('Updating board');
             let newFields = {
@@ -676,7 +616,7 @@ const updateBoards = async (board, status, comment, substatus) => {
             if (status === 'Approved' && board.status !== status) {
                 newFields['submissionDate'] = new Date();
             }
-            await b.update(newFields)
+            b.update(newFields)
         }
     }
     logger.info(`Finished function findOne for board/`);
