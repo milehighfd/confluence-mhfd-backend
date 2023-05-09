@@ -25,6 +25,9 @@ const ProjectStatus = db.projectStatus;
 const CodePhaseType = db.codePhaseType;
 const CodeStatusType = db.codeStatusType;
 const CodeProjectType = db.codeProjectType;
+const BusinessAssociateContact = db.businessAssociateContact;
+const User = db.user;
+const CodeProjectStaffRole = db.codeProjectStaffRole;
 
 
 export const getServiceAreaByProjectIds = async (ids) => {
@@ -443,6 +446,25 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
       }
     });
     sortattrib = 'currentId.0.code_phase_type.phase_name';
+  }
+  if (sortby === 'county') {
+    includesValues.push({
+      model: ProjectCounty,
+      required: false,
+      separate: true,
+      include: {
+        model: CodeStateCounty,
+        required: false,
+        attributes: [
+          'county_name',
+          'state_county_id'
+        ]
+      },
+      attributes: [
+        'project_county_id'
+      ]
+    });
+    sortattrib = 'project_counties.0.CODE_STATE_COUNTY.county_name';
   }
   projectsSorted = await Project.findAll({
     attributes: attributes,
