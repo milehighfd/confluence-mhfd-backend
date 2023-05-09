@@ -57,6 +57,7 @@ const User = db.user;
 const CodeProjectPartnerType = db.codeProjectPartnerType;
 const Op = sequelize.Op;
 const BusinessAssociateContact = db.businessAssociateContact;
+const BusinessAddress = db.businessAdress;
 
 async function getCentroidsOfAllProjects () {
   const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid, projectid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE}`;
@@ -619,10 +620,25 @@ const getDetails = async (project_id) => {
               }
             },{
               model: BusinessAssociateContact,
+              attributes: [
+                'contact_name',
+                'business_associate_contact_id'
+              ],
               required: true,
               include: [{
-                model: User,
+                model: BusinessAddress,
                 required: true,
+                attributes: [
+                  'business_associate_id',
+                  'business_address_id'
+                ],
+                include: [{
+                  model: BusinessAssociate,
+                  required: true,
+                  attributes: [
+                    'business_name'
+                  ]
+                }]
               }]
             }]
             // where: {
