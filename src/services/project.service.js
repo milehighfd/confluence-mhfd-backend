@@ -556,14 +556,14 @@ const getDetails = async (project_id) => {
                 'partner_type_name',
                 'partner_type'
               ]
-            },{
+            }, {
               model: BusinessAssociate,
               required: false,
               attributes: [
                 'business_name',
                 'business_associates_id'
               ]
-            },],   
+            },],
           },
           {
             model: ProjectProposedAction,
@@ -718,7 +718,7 @@ const getDetails = async (project_id) => {
 }
 
 const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter, groupname, filtervalue,type_id) => {  
-  const CONSULTANT_CODE = 3;
+  const CONSULTANT_ID = 3;  
   const CIVIL_CONTRACTOR_ID = 8;
   const ESTIMATED_ID = 1;
   const filterName = filter.name ? '%' + filter.name + '%' : '';
@@ -788,6 +788,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
   if (lgmanager !== '') {
     logger.info(`Filtering by lgmanager ${lgmanager}...`);
     //LG Manager
+    const LG_LEAD = 10;
     conditions.push(Project.findAll({
       attributes: ["project_id", "code_project_type_id"],
       include: [{
@@ -808,7 +809,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
           model: CodeProjectStaffRole,
           required: true,
           where: {
-            project_staff_role_type_name: 'Local Government Lead',
+            code_project_staff_role_type_id: LG_LEAD,
           }
         }],
       }]
@@ -816,6 +817,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
    }  
   if (mhfd_lead.length || groupN === 'staff') {
     //MHFD LEAD
+    const MHFD_LEAD = 1;
     let where = {};
     if (groupN === 'staff' && mhfd_lead.length) {
       where = { [Op.and]: [{ user_id: filterN }, { user_id: mhfd_lead }] };
@@ -844,7 +846,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
           model: CodeProjectStaffRole,
           required: true,
           where: {
-            project_staff_role_type_name: 'MHFD Lead',
+            code_project_staff_role_type_id: MHFD_LEAD,
           }
         }],
       }]
@@ -901,11 +903,11 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
     logger.info(`Filtering by consultant ${consultant}...`);
     let where = {};
     if (groupN === 'consultant' && consultant.length) {
-      where = { [Op.and]: [{ code_partner_type_id: CONSULTANT_CODE }, { business_associates_id: filterN }, { business_associates_id: consultant }] };
+      where = { [Op.and]: [{ code_partner_type_id: CONSULTANT_ID }, { business_associates_id: filterN }, { business_associates_id: consultant }] };
     } else if (groupN === 'consultant') {
-      where = { [Op.and]: [{ code_partner_type_id: CONSULTANT_CODE }, { business_associates_id: filterN }] };
+      where = { [Op.and]: [{ code_partner_type_id: CONSULTANT_ID }, { business_associates_id: filterN }] };
     } else {
-      where = { [Op.and]: [{ code_partner_type_id: CONSULTANT_CODE }, { business_associates_id: consultant }] };
+      where = { [Op.and]: [{ code_partner_type_id: CONSULTANT_ID }, { business_associates_id: consultant }] };
     }
     conditions.push(//CONSULTANT
       Project.findAll({
@@ -1119,6 +1121,9 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
 
 let cache = null;
 const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, filters) => {  
+  const CONSULTANT = 3;
+  const LANDSCAPE_CONTRACTOR_ID = 9;
+  const CIVIL_CONTRACTOR_ID = 8;
   let where = {};
   const offset = (page - 1) * limit;
   const toRange = +offset + +limit;
@@ -1445,6 +1450,100 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
                 'status_name'
               ]
             }]
+          }
+        },
+        {
+          model: ProjectPartner,
+          as: 'currentConsultant',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { code_partner_type_id: CONSULTANT }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+        },
+        {
+          model: ProjectPartner,
+          as: 'landscapeContractor',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { code_partner_type_id: LANDSCAPE_CONTRACTOR_ID }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+        },
+        {
+          model: ProjectPartner,
+          as: 'civilContractor',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { code_partner_type_id: CIVIL_CONTRACTOR_ID }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+        },
+        {
+          model: ProjectStatus,
+          separate: true,
+          required: false,
+          attributes: [
+            'code_phase_type_id',
+            'planned_start_date',
+            'actual_start_date',
+          ],
+          as: 'construction_phase',
+          include: {
+            model: CodePhaseType,
+            required: true,
+            attributes: [
+              'code_phase_type_id',
+              'phase_name',
+            ],
+            where: {
+              phase_name: 'Construction',
+            }
           }
         }
       ],

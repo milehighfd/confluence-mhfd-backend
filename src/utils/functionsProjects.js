@@ -15,12 +15,9 @@ const ProjectLocalGovernment = db.projectLocalGovernment;
 const CodeLocalGoverment = db.codeLocalGoverment;
 const ProjectCost = db.projectCost;
 const ProjectStaff = db.projectStaff;
-const MHFDStaff = db.mhfdStaff;
-const ProjectDetail = db.projectDetail;
 const BusinessAssociante = db.businessAssociates;
 const ProjectStreams = db.project_stream;
 const Streams = db.stream;
-const Attachment = db.projectAttachment;
 const ProjectStatus = db.projectStatus;
 const CodePhaseType = db.codePhaseType;
 const CodeStatusType = db.codeStatusType;
@@ -28,6 +25,8 @@ const CodeProjectType = db.codeProjectType;
 const BusinessAssociateContact = db.businessAssociateContact;
 const User = db.user;
 const CodeProjectStaffRole = db.codeProjectStaffRole;
+const CodeProjectPartnerType = db.codeProjectPartnerType;
+const BusinessAssociate = db.businessAssociates;
 
 
 export const getServiceAreaByProjectIds = async (ids) => {
@@ -475,6 +474,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     sortattrib = 'project_counties.0.CODE_STATE_COUNTY.county_name';
   }
   if (sortby === 'lg_lead') {
+    const LG_LEAD = 10;
     includesValues.push({
       model: ProjectStaff,
       attributes: [
@@ -497,7 +497,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
         model: CodeProjectStaffRole,
         required: false,
         where: {
-          project_staff_role_type_name: 'Local Government Lead',
+          code_project_staff_role_type_id: LG_LEAD,
         }
       }],
     });
@@ -505,6 +505,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     sortattrib = 'project_staffs.0.business_associate_contact.user.name';
   }
   if (sortby === 'mhfd') {
+    const MHFD_LEAD = 1;
     includesValues.push({
       model: ProjectStaff,
       attributes: [
@@ -527,7 +528,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
         model: CodeProjectStaffRole,
         required: false,
         where: {
-          project_staff_role_type_name: 'MHFD Lead',
+          code_project_staff_role_type_id: MHFD_LEAD,
         }
       }],
     });
@@ -560,6 +561,90 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
       }
     });
     sortattrib = 'project_streams.0.stream.stream_name';
+  }
+  if (sortby === 'consultant') {
+    const CONSULTANT = 3;
+    includesValues.push({
+      model: ProjectPartner,
+      attributes: [
+        'project_partner_id',
+        'code_partner_type_id'
+      ],
+      required: false,
+      separate: true,
+      as: 'currentConsultant',
+      include: [{
+        model: CodeProjectPartnerType,
+        required: true,
+        attributes: [
+          'code_partner_type_id',          
+        ],
+        where: {code_partner_type_id: CONSULTANT}
+      }, {
+        model: BusinessAssociate,
+        required: false,
+        attributes: [
+          'business_name',
+        ]
+      },],
+    });
+    sortattrib = 'currentConsultant.0.business_associate.business_name';
+  }
+  if (sortby === 'landscape_contractor') {
+    const LANDSCAPE_CONTRACTOR_ID = 9;
+    includesValues.push({
+      model: ProjectPartner,
+      as: 'landscapeContractor',
+      attributes: [
+        'project_partner_id',
+        'code_partner_type_id'
+      ],
+      required: false,
+      separate: true,          
+      include: [{
+        model: CodeProjectPartnerType,
+        required: true,
+        attributes: [
+          'code_partner_type_id',
+        ],
+        where: { code_partner_type_id: LANDSCAPE_CONTRACTOR_ID }
+      }, {
+        model: BusinessAssociate,
+        required: false,
+        attributes: [
+          'business_name',
+        ]
+      },],
+    });
+    sortattrib = 'landscapeContractor.0.business_associate.business_name';
+  }
+  if (sortby === 'civil_contractor') {
+    const CIVIL_CONTRACTOR_ID = 8;
+    includesValues.push({
+      model: ProjectPartner,
+          as: 'civilContractor',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,          
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { code_partner_type_id: CIVIL_CONTRACTOR_ID }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+    });
+    sortattrib = 'civilContractor.0.business_associate.business_name';
   }
   projectsSorted = await Project.findAll({
     attributes: attributes,
