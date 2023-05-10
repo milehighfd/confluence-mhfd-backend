@@ -339,32 +339,35 @@ export const safeGet = (obj, props, defaultValue) => {
     const dataReturn = props.split('.').reduce(function(obj, p) {
       return obj[p];
     }, obj);
-    return dataReturn;
+    
+    return dataReturn !== null ? dataReturn : defaultValue;
   } catch(e) {
-
-    // console.log('error on safe get', e, obj);
     return defaultValue
   }
 }
 
 const sortArrayOfProjects = (valuetype, sortattrib, sorttype, projectsToSort) => {
   return projectsToSort.sort((x,y) => {
-    const valueX = safeGet(x, sortattrib, valuetype === 'string' ? 'π': Infinity);
-    const valueY = safeGet(y, sortattrib, valuetype === 'string' ? 'π': Infinity);
-    console.log('SORTED VALUES are', valueX, valueY);
+    const defaultValue = valuetype === 'string' ? 'π': (valuetype === 'date' ? '2999-05-01 00:00:00.000' : Infinity);
+    const valueX = safeGet(x, sortattrib, defaultValue);
+    const valueY = safeGet(y, sortattrib, defaultValue);
     const nameX = valuetype === 'string' && valueX !== Infinity ? valueX.toUpperCase(): valueX;
     const nameY = valuetype === 'string' && valueY !== Infinity ? valueY.toUpperCase(): valueY;
+    if ( valuetype === 'date' ) {
+      return (Date.parse(nameX) - Date.parse(nameY)) * (sorttype === 'asc' ? 1 : -1);
+    } else {
+      if (nameX > nameY) {
+        // console.log('ValueX bigger', valueX, valueY);
+        return -1 * (sorttype === 'asc' ? -1 : 1);
+      }
+      if (nameX < nameY) {
+        // console.log('ValueY bigger', valueX, valueY);
+        return 1 * (sorttype === 'asc' ? -1 : 1);
+      }
+      // console.log('EQUALAS??', valueX, valueY);
+      return 0;
+    }
     
-    if (nameX > nameY) {
-      // console.log('ValueX bigger', valueX, valueY);
-      return -1 * (sorttype === 'asc' ? -1 : 1);
-    }
-    if (nameX < nameY) {
-      // console.log('ValueY bigger', valueX, valueY);
-      return 1 * (sorttype === 'asc' ? -1 : 1);
-    }
-    // console.log('EQUALAS??', valueX, valueY);
-    return 0;
   });
 }
 export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
