@@ -248,27 +248,36 @@ router.post('/board-for-positions', async (req, res) => {
     });
     logger.info(`Finished function count for board/board-for-positions`);
     logger.info(`Starting function findAll for board/board-for-positions`);
-    boardProjects = await BoardProject.findAll({
+    boardProjects = (await BoardProject.findAll({
       limit: +limit,
       offset: (+page - 1) * limit,
       where: {
         board_id: board.board_id,
         [position]: { [Op.ne]: null },
       },
-      raw: true,
       nest: true,
-    });
+    })).map(d => d.dataValues);
     logger.info(`Finished function findAll for board/board-for-positions`);
     logger.info(`Starting function all for board/board-for-positions`);
     let projectIds = await Promise.all(
       boardProjects.map(async (boardProject) => {
-        boardProject.projectData = await projectService.getDetails(
+        const details = (await projectService.getDetails(
           boardProject.project_id
+        )).dataValues;
+        details.code_project_type = details.code_project_type.dataValues;
+        details.project_service_areas = details.project_service_areas.map(
+            (psa) => psa.dataValues
         );
-        return await boardProject;
+        details.project_counties = details.project_counties.map(
+            (pc) => pc.dataValues
+        );
+        details.project_proposed_actions = details.project_proposed_actions.map(
+            (ppa) => ppa.dataValues
+        );
+        boardProject.projectData = details;
+        return boardProject;
       })
     );
-
     res.send({ projects: projectIds, board, limit, page, totalItems });
   } else {
     logger.info('CREATING NEW BOARD');

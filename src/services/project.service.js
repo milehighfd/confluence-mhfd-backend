@@ -314,7 +314,7 @@ const getDetails = async (project_id) => {
           'code_project_type_id',
           'code_maintenance_eligibility_type_id',
           'current_project_status_id',
-           [
+          [
             sequelize.literal(`(
               SELECT COUNT([GRADE_CONTROL_STRUCTURE].[projectid])
               FROM [GRADE_CONTROL_STRUCTURE]
@@ -442,7 +442,7 @@ const getDetails = async (project_id) => {
             },
             attributes: [
               'project_service_area_id'
-            ] 
+            ]
           },
           {
             model: ProjectCounty,
@@ -587,10 +587,7 @@ const getDetails = async (project_id) => {
               'project_id',
               'cost',
               'action_status'
-            ],
-            // where: {
-            //   code_cost_type_id: 1
-            // }
+            ]
           },
           {
             model: ProjectStaff,
@@ -602,9 +599,7 @@ const getDetails = async (project_id) => {
               'project_staff_id',
               'business_associate_contact_id'
             ],
-            
             include: [{
-
               model: MHFDStaff,
               required: false,
               attributes: [
@@ -612,7 +607,6 @@ const getDetails = async (project_id) => {
                 'mhfd_staff_id',
                 'full_name'
               ],
-              
               include: {
                 model: User,
                 required: false,
@@ -643,17 +637,11 @@ const getDetails = async (project_id) => {
                 }]
               }]
             }]
-            // where: {
-            //   code_cost_type_id: 1
-            // }
           },
           {
             model: ProjectDetail,
             separate: true,
             required: false,
-            // where: {
-            //   code_cost_type_id: 1
-            // }
           },
           {
             model: ProjectStudy,
