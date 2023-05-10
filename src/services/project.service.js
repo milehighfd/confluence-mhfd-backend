@@ -846,6 +846,11 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
         onbase_project_number: { [Op.like]: filterName}
       });
     }
+    if (filterBase != -1) {
+      whereOr.push({
+        project_id: { [Op.like]: filterName}
+      });
+    }
     if (whereOr.length) {
       conditions.push(Project.findAll({
         attributes: ["project_id","code_project_type_id"],
