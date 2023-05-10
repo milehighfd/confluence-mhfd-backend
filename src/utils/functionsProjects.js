@@ -351,9 +351,10 @@ const sortArrayOfProjects = (valuetype, sortattrib, sorttype, projectsToSort) =>
   return projectsToSort.sort((x,y) => {
     const valueX = safeGet(x, sortattrib, valuetype === 'string' ? 'π': Infinity);
     const valueY = safeGet(y, sortattrib, valuetype === 'string' ? 'π': Infinity);
+    console.log('SORTED VALUES are', valueX, valueY);
     const nameX = valuetype === 'string' && valueX !== Infinity ? valueX.toUpperCase(): valueX;
     const nameY = valuetype === 'string' && valueY !== Infinity ? valueY.toUpperCase(): valueY;
-    // console.log('SORTED VALUES are', nameX, nameY);
+    
     if (nameX > nameY) {
       // console.log('ValueX bigger', valueX, valueY);
       return -1 * (sorttype === 'asc' ? -1 : 1);
@@ -645,6 +646,32 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
           },],
     });
     sortattrib = 'civilContractor.0.business_associate.business_name';
+  }
+  if (sortby === 'construction_start_date') {
+    includesValues.push({
+      model: ProjectStatus,
+      separate: true,
+      required: false,
+      attributes: [
+        'code_phase_type_id',
+        'planned_start_date',
+        'actual_start_date',
+      ],
+      as: 'construction_phase',
+      include: {
+        model: CodePhaseType,
+        required: true,
+        attributes: [
+          'code_phase_type_id',
+          'phase_name',
+        ],
+        where: {
+          phase_name: 'Construction',
+        }
+      }
+    });
+    sortattrib = 'construction_phase.0.actual_start_date';
+    valuetype = 'date';
   }
   projectsSorted = await Project.findAll({
     attributes: attributes,
