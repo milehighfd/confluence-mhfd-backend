@@ -181,12 +181,13 @@ const getProjectType = async () => {
 }
 
 const getMhfdStaff = async () => {
+  const MHFD_LEAD = 1;
   const types = await ProjectStaff.findAll({
     include: [{
       model: CodeProjectStaffRole,
       required: true,
       where: {        
-        project_staff_role_type_name: 'MHFD Lead',        
+        code_project_staff_role_type_id: MHFD_LEAD,        
       }
     },{
       model: BusinessAssociateContact,
@@ -209,12 +210,13 @@ const getMhfdStaff = async () => {
 }
 
 const getLGManager = async () => {
+  const LG_LEAD = 10;
   const types = await ProjectStaff.findAll({
     include: [{
       model: CodeProjectStaffRole,
       required: true,
       where: {        
-        project_staff_role_type_name: 'Local Government Lead',        
+        code_project_staff_role_type_id: LG_LEAD,        
       }
     },{
       model: BusinessAssociateContact,
