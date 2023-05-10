@@ -230,9 +230,9 @@ db.codeMaintenanceElegibilityType.belongsTo(
 // );
 // project partner 
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id'});
-db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'currentPartner'});
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'currentConsultant'});
-db.project.hasOne(db.projectPartner, {foreignKey: 'project_id', as: 'sortPartner'});
+db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'civilContractor'});
+db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'landscapeContractor'});
 db.projectPartner.belongsTo( 
   db.businessAssociates,
   {
@@ -317,6 +317,10 @@ db.project.hasMany(
   db.projectStatus,
   { foreignKey: 'project_status_id',sourceKey: "current_project_status_id",
   as: 'currentId' } 
+);
+db.project.hasMany(
+  db.projectStatus,
+  { foreignKey: 'project_id', as: 'construction_phase' } 
 );
 
 
