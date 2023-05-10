@@ -673,6 +673,34 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     sortattrib = 'construction_phase.0.actual_start_date';
     valuetype = 'date';
   }
+  if (sortby === 'project_sponsor') {
+    const SPONSOR = 'SPONSOR';
+    includesValues.push({
+      model: ProjectPartner,
+          as: 'sponsor',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,          
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { partner_type: SPONSOR }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+    });
+    sortattrib = 'sponsor.0.business_associate.business_name';
+  }
   projectsSorted = await Project.findAll({
     attributes: attributes,
     include: includesValues
