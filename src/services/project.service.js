@@ -600,21 +600,6 @@ const getDetails = async (project_id) => {
               'business_associate_contact_id'
             ],
             include: [{
-              model: MHFDStaff,
-              required: false,
-              attributes: [
-                'user_id',
-                'mhfd_staff_id',
-                'full_name'
-              ],
-              include: {
-                model: User,
-                required: false,
-                attributes: [
-                  'organization'
-                ]
-              }
-            },{
               model: BusinessAssociateContact,
               attributes: [
                 'contact_name',
@@ -622,6 +607,13 @@ const getDetails = async (project_id) => {
               ],
               required: true,
               include: [{
+                attributes: [
+                  'name',
+                  'user_id',
+                ],
+                model: User,
+                required: false,
+              }, {
                 model: BusinessAddress,
                 required: true,
                 attributes: [
