@@ -1543,7 +1543,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
         },
         {
           model: ProjectPartner,
-          as: 'sponsor',
+          as: 'project_sponsor',
           attributes: [
             'project_partner_id',
             'code_partner_type_id'

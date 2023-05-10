@@ -680,7 +680,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     const SPONSOR = 'SPONSOR';
     includesValues.push({
       model: ProjectPartner,
-          as: 'sponsor',
+          as: 'project_sponsor',
           attributes: [
             'project_partner_id',
             'code_partner_type_id'
@@ -702,7 +702,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
             ]
           },],
     });
-    sortattrib = 'sponsor.0.business_associate.business_name';
+    sortattrib = 'project_sponsor.0.business_associate.business_name';
   }
   projectsSorted = await Project.findAll({
     attributes: attributes,
