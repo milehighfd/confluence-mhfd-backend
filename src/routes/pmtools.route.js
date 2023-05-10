@@ -5,7 +5,6 @@ import logger from 'bc/config/logger.js';
 import Sequelize from 'sequelize';
 import favoritesService from 'bc/services/favorites.service.js';
 import groupService from 'bc/services/group.service.js';
-import pmtoolsService from '../services/pmtools.service.js';
 const ProjectPartner = db.projectPartner;
 const ProjectStaff = db.projectStaff;
 const MHFDStaff = db.mhfdStaff;
@@ -606,68 +605,6 @@ const listProjects = async (req, res) => {
   res.send(projects);
 };
 
-const getDataForGroup = async (req, res) => {
-  try {
-    logger.info(`Starting endpoint pmtools/groups/:groupname/:filtervalue with params`);
-    const { groupname, filtervalue } = req.params;
-    const { page = 1, limit = 20, code_project_type_id, sortby, sortorder  } = req.query;
-    const { favorites, search, filterby, value } = req.body;
-    const extraFilters = {};
-    if (code_project_type_id) {
-      extraFilters.code_project_type_id = +code_project_type_id;
-    }
-    if (favorites) {
-      extraFilters.favorites = favorites;
-    }
-    if (search) {
-      extraFilters.search = search;
-    }
-    if (filterby) {
-      extraFilters.filterby = filterby;
-      extraFilters.value = value;
-    }
-    if (sortby) {
-      extraFilters.sortby = sortby;
-      extraFilters.sortorder = sortorder;
-    }
-    logger.info(`page=${page} limit=${limit}`);
-    logger.info(`Starting function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
-    const group = await pmtoolsService.getProjects(groupname, filtervalue, extraFilters, +page, +limit);
-    logger.info(`Finished function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
-    res.send(group);
-  } catch (error) {
-    logger.error(`Error in endpoint pmtools/groups/:groupname/:filtervalue: ${error.message}`);
-    res.status(500).send({ error: error });
-  }
-};
-
-const countForGroup = async (req, res) => {
-  logger.info(`Starting endpoint pmtools/groups/count/:groupname/:filtervalue with params`);
-  const { groupname, filtervalue } = req.params;
-  const { page = 1, limit = 20, code_project_type_id } = req.query;
-  const { favorites, search, filterby, value } = req.body;
-  const extraFilters = {};
-  if (code_project_type_id) {
-    extraFilters.code_project_type_id = +code_project_type_id;
-  }
-  if (favorites) {
-    extraFilters.favorites = favorites;
-  }
-  if (search) {
-    extraFilters.search = search;
-  }
-  if (filterby) {
-    extraFilters.filterby = filterby;
-    extraFilters.value = value;
-  }
-  logger.info(`page=${page} limit=${limit}`);
-  logger.info(`Starting function getProjects for endpoint pmtools/groups/count/:groupname/:filtervalue`);
-  const count = await pmtoolsService.countProjects(groupname, filtervalue, extraFilters);
-  logger.info(`Finished function getProjects for endpoint pmtools/groups/count/:groupname/:filtervalue`);
-  logger.info(`Count: ${count}`);
-  res.status(200).send({count: count});
-};
-
 const getDataForGroupFilters = async (req, res) => {
   try {
     logger.info(`Starting endpoint pmtools/groups/:groupname/:filtervalue with params`);
@@ -723,8 +660,6 @@ const countDataForGroupFilters = async (req, res) => {
 
 router.post('/list', listProjects);
 router.get('/groups/:groupname', getGroup);
-router.post('/groups/:groupname/:filtervalue', getDataForGroup);
-router.post('/groups/count/:groupname/:filtervalue', countForGroup);
 router.post('/groupsFilter/:groupname/:filtervalue', getDataForGroupFilters);
 router.post('/groupsFilter/count/:groupname/:filtervalue', countDataForGroupFilters);
 
