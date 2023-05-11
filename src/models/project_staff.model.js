@@ -7,9 +7,6 @@ export default  (sequelize, DataType) => {
     project_id: {
       type: DataType.INTEGER
     },
-    mhfd_staff_id: {
-      type: DataType.INTEGER
-    },
     code_project_staff_role_type_id: {
       type: DataType.INTEGER
     },
