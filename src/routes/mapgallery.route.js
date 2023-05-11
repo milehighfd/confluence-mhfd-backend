@@ -37,6 +37,24 @@ import {
    statusList
 } from 'bc/lib/gallery.constants.js';
 import ProjectService from 'bc/services/project.service.js';
+import db from 'bc/config/db.js';
+
+const Grade_control_structure = db.gradeControlStructure;
+const Pipe_appurtenances = db.pipeAppurtenances;
+const Special_item_point = db.specialItemPoint;
+const Special_item_linear = db.specialItemLinear;
+const Special_item_area = db.specialItemArea;
+const Channel_improvements_linear = db.channelImprovementsLinear;
+const Channel_improvements_area = db.channelImprovementsArea;
+const Removal_line = db.removalLine;
+const Removal_area = db.removalArea;
+const Storm_drain = db.stormDrain;
+const Detention_facilities = db.detentionFacilities;
+const Land_acquisition = db.landAcquisition;
+const Landscaping_area = db.landscapingArea;
+const Stream_improvement_measure = db.streamImprovementMeasure;
+const Maintenance_trails = db.maintenanceTrails;
+
 const router = express.Router();
 const PROJECT_TABLES = [MAIN_PROJECT_TABLE];
 const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
@@ -52,8 +70,8 @@ router.post('/', async (req, res) => {
          let filters = '';
          filters = getFilters(req.body);
          // 
-         const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, ${PROPSPROBLEMTABLES.problem_boundary[17]},  ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCountersProblems(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[5], PROPSPROBLEMTABLES.problem_boundary[5] )}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEM_TABLE} `;
-         const query = { q: `${PROBLEM_SQL} ${filters}` }; 
+         const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, ${PROPSPROBLEMTABLES.problem_boundary[17]},  ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCountersProblems(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[5], PROPSPROBLEMTABLES.problem_boundary[5])}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEM_TABLE} `;
+         const query = { q: `${PROBLEM_SQL} ${filters}` };
          let answer = [];
          try {
             const data = await needle('post', CARTO_URL, query, { json: true });
@@ -90,7 +108,7 @@ router.post('/', async (req, res) => {
          res.send(answer);
       } else {
          let filters = '';
-         let send = [];         
+         let send = [];
          filters = getFilters(req.body);
          const PROJECT_FIELDS = 'cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, ' +
             'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county, component_cost, component_count ';
@@ -103,7 +121,7 @@ router.post('/', async (req, res) => {
                let query = ''
                if (table === MAIN_PROJECT_TABLE) {
                   query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters(MAIN_PROJECT_TABLE, 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
-                  
+
                }
                let answer = [];
                try {
@@ -178,7 +196,7 @@ function getCounters(table, column) {
       (select count(*) from landscaping_area where ${column} = cast(${table}.${column} as integer) ) as count_la1 `;
 }
 function getCountersProblems(table, column, newcolumn) {
-  return ` (select count(*) from grade_control_structure where ${column} = cast(${table}.${newcolumn} as integer) ) as count_gcs, 
+   return ` (select count(*) from grade_control_structure where ${column} = cast(${table}.${newcolumn} as integer) ) as count_gcs, 
      (select count(*) from pipe_appurtenances where ${column} = cast(${table}.${newcolumn} as integer) ) as count_pa,
      (select count(*) from special_item_point where ${column} = cast(${table}.${newcolumn} as integer) ) as count_sip, 
      (select count(*) from special_item_linear where ${column} = cast(${table}.${newcolumn} as integer) ) as count_sil, 
@@ -796,7 +814,7 @@ router.post('/project-by-ids/pdf', async (req, res) => {
    let data = await getDataByProjectIds(projectid, false);
    let components = [];
    if (data.projectid) {
-     components = await componentsByEntityId(data.projectid, 'projectid', 'type', 'asc');
+      components = await componentsByEntityId(data.projectid, 'projectid', 'type', 'asc');
    }
    try {
       let pdfObject = await printProject(data, components, map);
@@ -824,13 +842,13 @@ router.get('/project-by-ids', async (req, res) => {
 });
 
 let getEnvelopeOfProblemAndProblemParts = (problem_id) => {
-  let querypart = [`select the_geom from ${PROBLEM_TABLE} where ${PROPSPROBLEMTABLES.problem_boundary[5]}='${problem_id}'`];
-  const tables = PROBLEM_PART_TABLES;
-  for (const element of tables) {
-    querypart.push(`select the_geom from ${element} where ${PROPSPROBLEMTABLES.problem_boundary[5]}='${problem_id}'`);
-  }
+   let querypart = [`select the_geom from ${PROBLEM_TABLE} where ${PROPSPROBLEMTABLES.problem_boundary[5]}='${problem_id}'`];
+   const tables = PROBLEM_PART_TABLES;
+   for (const element of tables) {
+      querypart.push(`select the_geom from ${element} where ${PROPSPROBLEMTABLES.problem_boundary[5]}='${problem_id}'`);
+   }
 
-  return `ST_Envelope(ST_collect(array(${querypart.join(' union ')})))`;
+   return `ST_Envelope(ST_collect(array(${querypart.join(' union ')})))`;
 }
 let getDataByProblemId = async (id) => {
    const PROBLEM_SQL = `SELECT ST_AsGeoJSON(${getEnvelopeOfProblemAndProblemParts(id)}) as the_geom, cartodb_id,
@@ -839,7 +857,7 @@ let getDataByProblemId = async (id) => {
     ${PROPSPROBLEMTABLES.problem_boundary[3]} as ${PROPSPROBLEMTABLES.problems[3]}, ${PROPSPROBLEMTABLES.problem_boundary[9]} as ${PROPSPROBLEMTABLES.problems[9]}, county,${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[15]} as ${PROPSPROBLEMTABLES.problems[15]},
     ${PROPSPROBLEMTABLES.problem_boundary[12]} as ${PROPSPROBLEMTABLES.problems[12]}, ${PROPSPROBLEMTABLES.problem_boundary[11]} as ${PROPSPROBLEMTABLES.problems[11]}, ${PROPSPROBLEMTABLES.problem_boundary[10]} as ${PROPSPROBLEMTABLES.problems[10]}
     FROM ${PROBLEM_TABLE} where ${PROPSPROBLEMTABLES.problem_boundary[5]}='${id}'`;
-    console.log('PROBLEM SQL', PROBLEM_SQL);
+   console.log('PROBLEM SQL', PROBLEM_SQL);
    const URL = encodeURI(`${CARTO_URL}&q=${PROBLEM_SQL}`);
    const data = await needle('get', URL, { json: true });
    if (data.statusCode === 200) {
@@ -878,32 +896,33 @@ const getProblemParts = async (id) => {
    const promises = [];
    const tables = PROBLEM_PART_TABLES;
    for (const element of tables) {
-     let sql = `SELECT problem_type, problem_part_category, problem_part_subcategory, globalid FROM ${element}
+      let sql = `SELECT problem_type, problem_part_category, problem_part_subcategory, globalid FROM ${element}
      WHERE problem_id = ${id}`;
-     console.log('my sql ', sql);
-     sql = encodeURIComponent(sql);
-     const URL = `${CARTO_URL}&q=${sql}`;
-     promises.push(new Promise((resolve, reject) => {
-       https.get(URL, response => {   
-         if (response.statusCode == 200) {
-           let str = '';
-           response.on('data', function (chunk) {
-             str += chunk;
-           });
-           response.on('end', function () {
-             const rows = JSON.parse(str).rows;
-             console.log(rows);
-             resolve(rows);
-           });
-         } else {
-           console.log('status ', response.statusCode, URL);
-           resolve([]);
-         }
-       }).on('error', err => {
-         console.log('failed call to ', URL, 'with error ', err);
-         resolve([]);
-       })})
-     );  
+      console.log('my sql ', sql);
+      sql = encodeURIComponent(sql);
+      const URL = `${CARTO_URL}&q=${sql}`;
+      promises.push(new Promise((resolve, reject) => {
+         https.get(URL, response => {
+            if (response.statusCode == 200) {
+               let str = '';
+               response.on('data', function (chunk) {
+                  str += chunk;
+               });
+               response.on('end', function () {
+                  const rows = JSON.parse(str).rows;
+                  console.log(rows);
+                  resolve(rows);
+               });
+            } else {
+               console.log('status ', response.statusCode, URL);
+               resolve([]);
+            }
+         }).on('error', err => {
+            console.log('failed call to ', URL, 'with error ', err);
+            resolve([]);
+         })
+      })
+      );
    }
    const all = await Promise.all(promises);
    const data = [];
@@ -912,13 +931,13 @@ const getProblemParts = async (id) => {
    });
    data.sort((a, b) => {
       if (a.problem_type.localeCompare(b.problem_type) === 0) {
-        if (a.problem_part_category.localeCompare(b.problem_part_category) === 0) {
-          return a.problem_part_subcategory.localeCompare(b.problem_part_subcategory);
-        }
-        return a.problem_part_category.localeCompare(b.problem_part_category);
+         if (a.problem_part_category.localeCompare(b.problem_part_category) === 0) {
+            return a.problem_part_subcategory.localeCompare(b.problem_part_subcategory);
+         }
+         return a.problem_part_category.localeCompare(b.problem_part_category);
       }
       return a.problem_type.localeCompare(b.problem_type);
-    });
+   });
    return data;
 }
 router.post('/project-pdf/:id', async (req, res) => {
@@ -928,22 +947,22 @@ router.post('/project-pdf/:id', async (req, res) => {
    const roadMap = req.body.roadMap;
 
    try {
-     const data = await ProjectService.getDetails(id);
-     let components = await componentsByEntityId(
-       id,
-       'projectid',
-       'type',
-       'asc'
-     );
-     let pdfObject = await newPrintProject(data, components, mapImage, roadMap);
-     pdfObject.toBuffer(function (err, buffer) {
-       if (err) return res.send(err);
-       res.type('pdf');
-       res.end(buffer, 'binary');
-     });
+      const data = await ProjectService.getDetails(id);
+      let components = await componentsByEntityId(
+         id,
+         'projectid',
+         'type',
+         'asc'
+      );
+      let pdfObject = await newPrintProject(data, components, mapImage, roadMap);
+      pdfObject.toBuffer(function (err, buffer) {
+         if (err) return res.send(err);
+         res.type('pdf');
+         res.end(buffer, 'binary');
+      });
    } catch (error) {
-     logger.error(error);
-     res.send({ error: 'No there data with ID' });
+      logger.error(error);
+      res.send({ error: 'No there data with ID' });
    }
 });
 
@@ -986,7 +1005,7 @@ router.get('/problem-by-id/:id', async (req, res) => {
 const percentageFormatter = (value) => {
    value = value * 100;
    return Math.round(value * 100) / 100
- }
+}
 router.post('/problems-by-projectid', async (req, res) => {
    logger.info(`Starting endpoint mapgallery.route/problems-by-projectid with params ${JSON.stringify(req.params, null, 2)}`);
    try {
@@ -1015,103 +1034,301 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
       table = PROBLEM_TABLE;
       finalcost = `${PROBLEM_TABLE}.${PROPSPROBLEMTABLES.problem_boundary[0]}`;
       extraColumnProb = PROPSPROBLEMTABLES.problem_boundary[5];
+
    } else {
       table = PROBLEM_TABLE;
       finalcost = PROPSPROBLEMTABLES.problem_boundary[0];
    }
    let COMPONENTS_SQL = '';
    let union = '';
-   for (const component of TABLES_COMPONENTS) {
-      if (component === 'stream_improvement_measure') {
-         let typeidSp = typeid === 'projectid' ? 'project_id' : 'problem_id';
-         let cost_column = 'estimated_cost_base';
-         COMPONENTS_SQL += union + `SELECT component_part_category as type, count(*), 
-         coalesce(sum(${cost_column}), 0) as estimated_cost, 
-         case 
-          when cast(${finalcost} as integer) > 0 
-          then 
-          coalesce(
-              (select sum(${cost_column}) as aux from ${component} where ${component}.status = 'Complete')
-              , 
-              0
-          )  /  cast(${finalcost} as integer)
-          else
-          0
-          END as original_cost,
-          coalesce(complete_t.sum, 0) as complete_cost
-          , coalesce(complete_t2.count, 0) as component_count
-          , coalesce(complete_t3.count, 0) as component_count_total
-          FROM ${component}, ${table}, ( select sum(estimated_cost_base) as sum from ${component} where ${component}.status = 'Complete' ) complete_t, 
-          ( select count(*) as count from ${component} where ${component}.status = 'Complete' and ${component}.${typeidSp}=${id}) complete_t2,
-          ( select count(*) as count from ${component} where ${component}.${typeidSp}=${id}) complete_t3
-          where ${component}.${typeidSp}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum, complete_t2.count, complete_t3.count`;
-      } else {
-        COMPONENTS_SQL += union + `SELECT type, count(*)
-        , coalesce(sum(original_cost), 0) as estimated_cost, 
-          case 
-            when cast(${finalcost} as integer) > 0 
-            then 
-            coalesce(
-               (select sum(original_cost) as aux from ${component} where ${component}.status = 'Complete')
-               , 
-               0
-            )  /  cast(${finalcost} as integer)
-            else
-            0
-          END as original_cost, coalesce(complete_t.sum, 0) as complete_cost
-          , coalesce(complete_t2.count, 0) as component_count
-          , coalesce(complete_t3.count, 0) as component_count_total
-             FROM ${component}, ${table}, ( select sum(estimated_cost) as sum from ${component} where ${component}.status = 'Complete' ) complete_t, 
-             ( select count(*) as count from ${component} where ${component}.status = 'Complete' and ${component}.${typeid}=${id}) complete_t2,
-             ( select count(*) as count from ${component} where ${component}.${typeid}=${id}) complete_t3
-             where ${component}.${typeid}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum, complete_t2.count, complete_t3.count`;
-      }
-      union = ' union ';
-   }
-   if (sortby) {
-      if (!sorttype) {
-         sorttype = 'desc';
-      }
-      COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
-   }
-    console.log('COMPONENTS SQL', COMPONENTS_SQL);
-   const componentQuery = { q: `${COMPONENTS_SQL}` };
-   const data = await needle('post', CARTO_URL, componentQuery, { json: true });
-   if (data.statusCode === 200) {
-      let result = data.body.rows.map(element => {
-         return {
-            type: element.type + ' (' + element.component_count_total + ')',
-            estimated_cost: element.estimated_cost,
-            original_cost: element.original_cost,
-            complete_cost: element.complete_cost,
-            component_count_complete : element.component_count,
-            component_count_total : element.component_count_total
-         }
-      })
-      if (sortby === 'percen') {
-         result.sort((a, b) => {
-            if (sorttype === 'asc') {
-               return a.estimated_cost - b.estimated_cost;
-            } else {
-               return b.estimated_cost - a.estimated_cost;
-            }
-         })
-      }
-      let sum = result.reduce((prev, curr) => curr.estimated_cost + prev, 0);
-      return result.map((element) => {
-         return {
-            type: element.type,
-            estimated_cost: element.estimated_cost,
-            original_cost: element.original_cost,
-            percen: percentageFormatter(sum == 0 ? 0 : element.estimated_cost / sum),
-            complete_cost: element.complete_cost,
-            component_count_complete : element.component_count_complete,
-            component_count_total: element.component_count_total
+
+   if (typeid === 'projectid') {
+      let projectLayers = [];
+      const grade_control_structure = await Grade_control_structure.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
          }
       });
+      grade_control_structure.action = 'grade_control_structure';
+      projectLayers.push(grade_control_structure);
+      const pipe_appurtenances = await Pipe_appurtenances.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
+         }
+      })
+      pipe_appurtenances.action = 'pipe_appurtenances';
+      projectLayers.push(pipe_appurtenances);
+      const special_item_point = await Special_item_point.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
+         }
+      });
+      special_item_point.action = 'special_item_point';
+      projectLayers.push(special_item_point);
+      const special_item_linear = await Special_item_linear.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
+         }
+      });
+      special_item_linear.action = 'special_item_linear';
+      projectLayers.push(special_item_linear);
+      const special_item_area = await Special_item_area.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
+         }
+      });
+      special_item_area.action = 'special_item_area';
+      projectLayers.push(special_item_area);
+      const channel_improvements_linear = await Channel_improvements_linear.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
+         }
+      });
+      channel_improvements_linear.action = 'channel_improvements_linear';
+      projectLayers.push(channel_improvements_linear);
+      const channel_improvements_area = await Channel_improvements_area.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
+         }
+      });
+      channel_improvements_area.action = 'channel_improvements_area';
+      projectLayers.push(channel_improvements_area);
+      const removal_line = await Removal_line.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
+         }
+      });
+      removal_line.action = 'removal_line';
+      projectLayers.push(removal_line);
+      const removal_area = await Removal_area.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
+         }
+      });
+      removal_area.action = 'removal_area';
+      projectLayers.push(removal_area);
+      const storm_drain = await Storm_drain.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
+         }
+      });
+      storm_drain.action = 'storm_drain';
+      projectLayers.push(storm_drain);
+      const detention_facilities = await Detention_facilities.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
+         }
+      });
+      detention_facilities.action = 'detention_facilities';
+      projectLayers.push(detention_facilities);
+      const land_acquisition = await Land_acquisition.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
+         }
+      });
+      land_acquisition.action = 'land_acquisition';
+      projectLayers.push(land_acquisition);
+      const landscaping_area = await Landscaping_area.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
+         }
+      });
+      landscaping_area.action = 'landscaping_area';
+      projectLayers.push(landscaping_area);
+      const stream_improvement_measure = await Stream_improvement_measure.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            project_id: id,
+         }
+      });
+      stream_improvement_measure.action = 'stream_improvement_measure';
+      projectLayers.push(stream_improvement_measure);
+      const maintenance_trails = await Maintenance_trails.findAll({
+         raw: true,
+         nest: true,
+         where: {
+            projectid: id,
+         }
+      });
+      maintenance_trails.action = 'maintenance_trails';
+      projectLayers.push(maintenance_trails);
+
+      let costs = [];
+      let totalCost = 0;
+      let original_Cost = 0;
+      projectLayers.map(element => {
+         if (element.length > 0) {
+            element.map(subElement => {
+               if (element.action === 'stream_improvement_measure') {
+                  if (element.status === 'Complete') {
+                     original_Cost += subElement.estimated_cost_base
+                  }
+                  totalCost += subElement.estimated_cost_base
+               } else {
+                  if (element.status === 'Complete') {
+                     original_Cost += subElement.original_cost
+                  }
+                  totalCost += subElement.original_cost
+               }
+            })
+            return totalCost
+         }
+      })
+
+      projectLayers.map(element => {
+         if (element.length > 0) {
+            let actionName = '';
+            let estimated_cost = 0;
+            let countOfProjectActions = 0;
+            let countCompletedActions = 0;
+            element.map(subElement => {
+               actionName = element.action === 'stream_improvement_measure' ? subElement.component_type : subElement.type;
+               countOfProjectActions++;
+               if (subElement.status === 'Complete') {
+                  countCompletedActions++;
+               }
+               if (element.action === 'stream_improvement_measure') {
+                  estimated_cost += subElement.estimated_cost_base
+               } else {
+                  estimated_cost += subElement.original_cost
+               }
+            })
+            costs.push({
+               type: actionName + ' (' + countOfProjectActions + ')',
+               complete_cost: (countCompletedActions / countOfProjectActions) * 100,
+               component_count_complete: countCompletedActions,
+               component_count_total: countOfProjectActions,
+               estimated_cost: estimated_cost,
+               original_cost: original_Cost,
+               percen: Math.round((estimated_cost / totalCost) * 10000) / 100
+            });
+         }
+      })
+      return costs;
    } else {
-      console.log('bad status ', response.statusCode, response.body);
-      throw new Error('');
+      for (const component of TABLES_COMPONENTS) {
+
+         if (component === 'stream_improvement_measure') {
+            let typeidSp = typeid === 'projectid' ? 'project_id' : 'problem_id';
+            let cost_column = 'estimated_cost_base';
+
+            COMPONENTS_SQL += union + `
+            SELECT   component_part_category as type, 
+                     count(*), 
+                     coalesce(sum(${cost_column}), 0) as estimated_cost, 
+                     case 
+                        when cast(${finalcost} as integer) > 0 
+                        then 
+                        coalesce( (select sum(${cost_column}) as aux from ${component} where ${component}.status = 'Complete') , 0 )  /  cast(${finalcost} as integer)
+                        else
+                        0
+                     END as original_cost,
+                     coalesce(complete_t.sum, 0) as complete_cost, 
+                     coalesce(complete_t2.count, 0) as component_count, 
+                     coalesce(complete_t3.count, 0) as component_count_total
+                     
+            FROM ${component}, ${table}, ( select sum(estimated_cost_base) as sum from ${component} where ${component}.status = 'Complete' ) complete_t, 
+            
+                     ( select count(*) as count from ${component} where ${component}.status = 'Complete' and ${component}.${typeidSp}=${id}) complete_t2,
+                     ( select count(*) as count from ${component} where ${component}.${typeidSp}=${id}) complete_t3
+            
+            where ${component}.${typeidSp}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum, complete_t2.count, complete_t3.count`;
+
+         } else {
+            COMPONENTS_SQL += union + `SELECT type, count(*)
+           , coalesce(sum(original_cost), 0) as estimated_cost, 
+             case 
+               when cast(${finalcost} as integer) > 0 
+               then 
+               coalesce(
+                  (select sum(original_cost) as aux from ${component} where ${component}.status = 'Complete')
+                  , 
+                  0
+               )  /  cast(${finalcost} as integer)
+               else
+               0
+             END as original_cost, coalesce(complete_t.sum, 0) as complete_cost
+             , coalesce(complete_t2.count, 0) as component_count
+             , coalesce(complete_t3.count, 0) as component_count_total
+                FROM ${component}, ${table}, ( select sum(estimated_cost) as sum from ${component} where ${component}.status = 'Complete' ) complete_t, 
+                ( select count(*) as count from ${component} where ${component}.status = 'Complete' and ${component}.${typeid}=${id}) complete_t2,
+                ( select count(*) as count from ${component} where ${component}.${typeid}=${id}) complete_t3
+                where ${component}.${typeid}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum, complete_t2.count, complete_t3.count`;
+         }
+         union = ' union ';
+      }
+      if (sortby) {
+         if (!sorttype) {
+            sorttype = 'desc';
+         }
+         COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
+      }
+      console.log('COMPONENTS SQL', COMPONENTS_SQL);
+      const componentQuery = { q: `${COMPONENTS_SQL}` };
+      const data = await needle('post', CARTO_URL, componentQuery, { json: true });
+      if (data.statusCode === 200) {
+         let result = data.body.rows.map(element => {
+            return {
+               type: element.type + ' (' + element.component_count_total + ')',
+               estimated_cost: element.estimated_cost,
+               original_cost: element.original_cost,
+               complete_cost: element.complete_cost,
+               component_count_complete: element.component_count,
+               component_count_total: element.component_count_total
+            }
+         })
+         if (sortby === 'percen') {
+            result.sort((a, b) => {
+               if (sorttype === 'asc') {
+                  return a.estimated_cost - b.estimated_cost;
+               } else {
+                  return b.estimated_cost - a.estimated_cost;
+               }
+            })
+         }
+         let sum = result.reduce((prev, curr) => curr.estimated_cost + prev, 0);
+         return result.map((element) => {
+            return {
+               type: element.type,
+               estimated_cost: element.estimated_cost,
+               original_cost: element.original_cost,
+               percen: percentageFormatter(sum == 0 ? 0 : element.estimated_cost / sum),
+               complete_cost: element.complete_cost,
+               component_count_complete: element.component_count_complete,
+               component_count_total: element.component_count_total
+            }
+         });
+      } else {
+         console.log('bad status ', response.statusCode, response.body);
+         throw new Error('');
+      }
    }
 }
 
@@ -2118,38 +2335,39 @@ router.get('/problem_part/:id', async (req, res) => {
    const promises = [];
    const tables = PROBLEM_PART_TABLES;
    for (const element of tables) {
-     let sql = `SELECT problem_type, problem_part_category, problem_part_subcategory, globalid FROM ${element}
+      let sql = `SELECT problem_type, problem_part_category, problem_part_subcategory, globalid FROM ${element}
      WHERE problem_id = ${id}`;
-     console.log('my sql ', sql);
-     sql = encodeURIComponent(sql);
-     const URL = `${CARTO_URL}&q=${sql}`;
-     promises.push(new Promise((resolve, reject) => {
-       https.get(URL, response => {   
-         if (response.statusCode == 200) {
-           let str = '';
-           response.on('data', function (chunk) {
-             str += chunk;
-           });
-           response.on('end', function () {
-             const rows = JSON.parse(str).rows;
-             console.log(rows);
-             resolve(rows);
-           });
-         } else {
-           console.log('status ', response.statusCode, URL);
-           resolve([]);
-         }
-       }).on('error', err => {
-         console.log('failed call to ', URL, 'with error ', err);
-         resolve([]);
-       })})
-     );  
+      console.log('my sql ', sql);
+      sql = encodeURIComponent(sql);
+      const URL = `${CARTO_URL}&q=${sql}`;
+      promises.push(new Promise((resolve, reject) => {
+         https.get(URL, response => {
+            if (response.statusCode == 200) {
+               let str = '';
+               response.on('data', function (chunk) {
+                  str += chunk;
+               });
+               response.on('end', function () {
+                  const rows = JSON.parse(str).rows;
+                  console.log(rows);
+                  resolve(rows);
+               });
+            } else {
+               console.log('status ', response.statusCode, URL);
+               resolve([]);
+            }
+         }).on('error', err => {
+            console.log('failed call to ', URL, 'with error ', err);
+            resolve([]);
+         })
+      })
+      );
    }
    const all = await Promise.all(promises);
    res.send({
       data: all
    });
- });
+});
 
 router.post('/params-filter-components', componentParamFilterRoute)
 router.post('/params-filter-components-db', componentParamFilterCounter)
