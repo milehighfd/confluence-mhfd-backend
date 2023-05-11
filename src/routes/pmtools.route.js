@@ -108,11 +108,19 @@ const getGroup = async (req, res) => {
   if (groupname === 'staff') {
     try {
       const groups = await groupService.getMhfdStaff();
-      console.log('groypname', groups);
       data.table = 'staff';
       data.groups = groups;
     } catch (error) {
       console.log('ERRRO AT ', groupname, error);
+    }
+  }
+  if (groupname === 'lg_lead') {
+    try {
+      const groups = await groupService.getLGManager();
+      data.table = 'lg_lead';
+      data.groups = groups;
+    } catch (error) {
+      console.log('Arrot at', groupname, error);
     }
   }
   res.send(data);
