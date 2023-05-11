@@ -299,10 +299,8 @@ db.project.hasMany(db.projectDetail, { foreignKey: 'project_id' });
 
 // project project-staff
 db.project.hasMany(db.projectStaff, { foreignKey: 'project_id' });
-db.project.hasMany(db.projectStaff, { foreignKey: 'project_id' , as: 'currentProjectStaff'});
-db.project.hasOne(db.projectStaff, { foreignKey: 'project_id' , as: 'sortProjectStaff'});
+db.project.hasMany(db.projectStaff, {foreignKey: 'project_id', as: 'currentProjectStaff'});
 db.projectStaff.hasOne(db.businessAssociateContact, { foreignKey: 'business_associate_contact_id',sourceKey: "business_associate_contact_id" });
-db.projectStaff.hasOne(db.businessAssociateContact, { foreignKey: 'business_associate_contact_id',sourceKey: "business_associate_contact_id", as: 'currentProjectStaff' });
 db.businessAssociateContact.hasOne(db.user, { foreignKey: 'business_associate_contact_id',sourceKey: "business_associate_contact_id" });
 
 db.project.hasMany(

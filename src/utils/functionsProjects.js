@@ -502,7 +502,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
           }]          
       }, {
         model: CodeProjectStaffRole,
-        required: false,
+        required: true,
         where: {
           code_project_staff_role_type_id: LG_LEAD,
         }

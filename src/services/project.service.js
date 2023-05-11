@@ -1568,30 +1568,35 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
         },
         {
           model: ProjectStaff,
+          required: false,
+          separate: true,
           as: 'currentProjectStaff',
-          attributes: [],
-          required: true,
+          where: {
+            is_active: 1
+          },
+          attributes: [
+            'code_project_staff_role_type_id',
+            'is_active',
+            'project_staff_id'
+          ],
           include: [{
             model: BusinessAssociateContact,
-            attributes: [
-              'business_associate_contact_id',
-              'contact_name'
-            ],
             required: false,
             include: [{
+              attributes: [
+                'name',
+                'user_id',
+              ],
               model: User,
               required: false,
-              attributes: [
-                'name'
-              ],
             }]
-          }, {
+          },{
             model: CodeProjectStaffRole,
-            required: false,
+            required: true,
             where: {
               code_project_staff_role_type_id: LG_LEAD,
-            }
-          }],
+            },
+          }]
         }
       ],
     });
