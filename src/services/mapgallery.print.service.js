@@ -288,9 +288,13 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       : `${URL_BASE}detailed/watershed-change.png`;
 
   let mhfdManager = 'N/A'
+  let lgManager = 'N/A'
   data.project_staffs.map((el) => {
     if(el.code_project_staff_role_type_id === 1){
       mhfdManager = el.business_associate_contact.contact_name
+    }
+    if(el.code_project_staff_role_type_id === 10){
+      lgManager = el.business_associate_contact.contact_name
     }
   })
   let projectId = data._previousDataValues.project_id ? data._previousDataValues.project_id : 'N/A'
@@ -310,7 +314,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   html = html.split('${attachmentUrl}').join(urlImage);
   html = html.split('${projectId}').join(projectId);
   html = html.split('${mhfdManager}').join(mhfdManager);
-  html = html.split('${lgManager}').join('N/A');
+  html = html.split('${lgManager}').join(lgManager);
   html = html.split('${description}').join(_data.dataValues.description);
   html = html.split('${contractor}').join(contractor ? contractor : 'N/A');
   html = html.split('${consultant}').join(consultant ? consultant : 'N/A');
@@ -340,10 +344,12 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     const MHFD_LEAD = 1; 
     const MHFD_SUPPORT = 4;
     const ADMIN_STAFF = 5;
+    const LG_LEAD = 10;
     const STAFF_ROL_MAP = {
       [MHFD_LEAD]: 'MHFD Lead',
       [MHFD_SUPPORT]: 'MHFD Support',
-      [ADMIN_STAFF]: 'Admin Staff'
+      [ADMIN_STAFF]: 'Admin Staff',
+      [LG_LEAD]: 'LG Lead',
     };
     if(STAFF_ROL_MAP[el.code_project_staff_role_type_id]){
       return `
