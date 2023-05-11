@@ -287,6 +287,13 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       ? `${URL_BASE}detailed/debris-management.png`
       : `${URL_BASE}detailed/watershed-change.png`;
 
+      let mhfdManager = 'N/A'
+      data.project_staffs.map((el) => {
+        if(el.code_project_staff_role_type_id === 1){
+          mhfdManager = el.business_associate_contact.contact_name
+        }
+      })
+
   html = html.split('${projectname}').join(_data.dataValues.project_name);
   html = html.split('${projecttype}').join(_data.dataValues.code_project_type.project_type_name + ' Project');
   html = html.split('${onBaseId}').join(_data.dataValues.onbase_project_number);
@@ -300,7 +307,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   html = html.split('${phase}').join(phase);
   html = html.split('${streamname}').join(stream_name);
   html = html.split('${attachmentUrl}').join(urlImage);
-  html = html.split('${mhfdManager}').join('N/A');
+  html = html.split('${mhfdManager}').join(mhfdManager);
   html = html.split('${lgManager}').join('N/A');
   html = html.split('${description}').join(_data.dataValues.description);
   html = html.split('${contractor}').join(contractor ? contractor : 'N/A');
@@ -336,10 +343,6 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       [MHFD_SUPPORT]: 'MHFD Support',
       [ADMIN_STAFF]: 'Admin Staff'
     };
-    // console.log(el.business_associate_contact.contact_name.substring(0,50) === el.business_associate_contact.contact_name.substring(0,51) ? el.business_associate_contact.contact_name.substring(0,50) + '...': el.business_associate_contact.contact_name.substring(0,50), )
-    // console.log(${STAFF_ROL_MAP[el.code_project_staff_role_type_id].substring(0,50) === STAFF_ROL_MAP[el.code_project_staff_role_type_id].substring(0,51) ? STAFF_ROL_MAP[el.code_project_staff_role_type_id].substring(0,50) + '...': STAFF_ROL_MAP[el.code_project_staff_role_type_id].substring(0,50)})
-    // console.log(el.business_associate_contact.business_address.business_associate.business_name.substring(0,50) === el.business_associate_contact.business_address.business_associate.business_name.substring(0,51) ? el.business_associate_contact.business_address.business_associate.business_name.substring(0,50) + '...': STAFF_ROL_MAP[el.code_project_staff_role_type_id].substring(0,50))
-   console.log(el.business_associate_contact.contact_name.substring(0,20), '***', '****',el.business_associate_contact.business_address.business_associate.business_name.substring(0,30) )
     return `
     <tr>
       <td style="width: 242.5px; padding: 7px 0px;">
