@@ -605,14 +605,8 @@ const getDetails = async (project_id) => {
                 'business_associate_contact_id'
               ],
               required: true,
-              include: [{
-                attributes: [
-                  'name',
-                  'user_id',
-                ],
-                model: User,
-                required: false,
-              }, {
+              include: [
+                {
                 model: BusinessAddress,
                 required: true,
                 attributes: [
@@ -751,12 +745,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
             model: BusinessAssociateContact,
             attributes: [],
             required: true,
-            where : { business_associate_contact_id: teams },
-            include: [{
-              model: User,
-              attributes: [],
-              required: false,
-            }]          
+            where : { business_associate_contact_id: teams },            
         }, {
           model: CodeProjectStaffRole,
           required: true,
@@ -778,12 +767,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
             model: BusinessAssociateContact,
             attributes: [],
             required: true,
-            where : { business_associate_contact_id: lgmanager },
-            include: [{
-              model: User,
-              attributes: [],
-              required: false,              
-            }]          
+            where : { business_associate_contact_id: lgmanager },            
         }, {
           model: CodeProjectStaffRole,
           required: true,
@@ -815,12 +799,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
             model: BusinessAssociateContact,
             attributes: [],
             required: true,
-            where : where,
-            include: [{
-              model: User,
-              attributes: [],
-              required: false,              
-            }]          
+            where : where,             
         }, {
           model: CodeProjectStaffRole,
           required: true,
@@ -1266,15 +1245,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
           ],
           include: [{
             model: BusinessAssociateContact,
-            required: false,
-            include: [{
-              attributes: [
-                'name',
-                'user_id',
-              ],
-              model: User,
-              required: false,
-            }]
+            required: false,           
           },{
             model: CodeProjectStaffRole,
             required: false,
@@ -1582,14 +1553,6 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
           include: [{
             model: BusinessAssociateContact,
             required: false,
-            include: [{
-              attributes: [
-                'name',
-                'user_id',
-              ],
-              model: User,
-              required: false,
-            }]
           },{
             model: CodeProjectStaffRole,
             required: true,
