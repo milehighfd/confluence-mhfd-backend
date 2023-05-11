@@ -98,7 +98,6 @@ const getGroup = async (req, res) => {
   if (groupname === 'projecttype') {
     try {
       const groups = await groupService.getProjectType();
-      console.log('groypname', groups);
       data.table = 'projecttype';
       data.groups = groups;
     } catch (error) {
@@ -111,7 +110,7 @@ const getGroup = async (req, res) => {
       data.table = 'staff';
       data.groups = groups;
     } catch (error) {
-      console.log('ERRRO AT ', groupname, error);
+      console.log('Error at ', groupname, error);
     }
   }
   if (groupname === 'lg_lead') {
@@ -134,23 +133,6 @@ const safeGet = (obj, prop, defaultValue) => {
 }
 
 const sortInside = (projects, sortvalue, order) => {
-  // on_base     onbase_project_number
-  // project_sponsor   .sponsor
-  // project_type   .project_status?.code_phase_type?.code_project_type?.project_type_name
-  // status     .project_status?.code_phase_type?.code_status_type?.status_name
-  // phase      .project_status?.code_phase_type?.phase_name
-  // service_area     .serviceArea?.codeServiceArea?.service_area_name
-  // stream           .streams?.stream?.stream_name
-  // consultant       .consultants[0]?.consultant[0]?.business_name
-  // civil_contractor .civilContractor[0]?.business[0]?.business_name
-  // landscape_contractor .landscapeContractor[0]?.business[0]?.business_name
-  // county           .county?.codeStateCounty?.county_name
-  // total_funding
-  // developer 
-  // construction_start_date 
-  // lg_lead            
-  // estimated_cost   .estimatedCost?.cost
-  // MHFD_lead   ??
 
   switch (sortvalue) {
       case 'on_base': 
@@ -340,8 +322,7 @@ const listProjects = async (req, res) => {
   let projects = await projectService.getProjects({code_project_type_id: code_project_type_id}, null);
   logger.info(`Finished function getProjects for endpoint pmtools/list`);
   const ids = projects.map((p) => p.project_id);
-  // xconsole.log(project_partners);
-  // GET MHFD LEAD
+
   const MHFD_LEAD = 1;
   logger.info(`Starting function findAll for endpoint pmtools/list`);
   const projectStaff = await ProjectStaff.findAll({
@@ -350,8 +331,7 @@ const listProjects = async (req, res) => {
       code_project_staff_role_type_id: MHFD_LEAD
     }
   });
-  logger.info(`Finished function findAll for endpoint pmtools/list`);
-  // console.log('the project staff is ', projectStaff);
+  logger.info(`Finished function findAll for endpoint pmtools/list`);  
   const mhfdIds = projectStaff.map((data) => data.mhfd_staff_id).filter((data) => data !== null);
   logger.info(`Starting function findAll for endpoint pmtools/list`);
   const mhfdStaff = await MHFDStaff.findAll({
@@ -360,9 +340,6 @@ const listProjects = async (req, res) => {
     }
   });
   logger.info(`Finished function findAll for endpoint pmtools/list`);
-  // TODO END THE PARSE WHEN WE HAVE EXAMPLES
-  console.log(mhfdStaff);
-  // Get Service Area
   const DEVELOPER_CODE = 6;
   logger.info('projects being called');
   if (+code_project_type_id === DEVELOPER_CODE) {
@@ -446,7 +423,6 @@ const listProjects = async (req, res) => {
     projects = projects.filter(project => {
       const consultants = project.civilContractor || [];
       const landscapeContractors = project.landscapeContractor || [];
-      console.log(consultants.length, landscapeContractors.length);
       let possible = 0;
       consultants.forEach((consultant) => {
         const business = consultant?.business || [];
@@ -606,7 +582,6 @@ const listProjects = async (req, res) => {
         groupProjects[-1].push(project);
       }
     });
-    console.log(groupProjects[-1].length);
     res.send(groupProjects);
     return;
   }

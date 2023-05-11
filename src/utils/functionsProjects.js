@@ -711,10 +711,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
     attributes: attributes,
     include: includesValues
   });
-  // console.log('projects not sorted', projectsSorted.map(p => ({id: p.project_id, cost: JSON.stringify(p.currentId)})));
   projectsSorted = sortArrayOfProjects(valuetype, sortattrib, sorttype, projectsSorted);
-  // console.log('projects very sorted', JSON.stringify(projectsSorted.map(p => ({id: p.project_id, cost: (p.project_staffs)}))));
-  // console.log('Projects Sorted', JSON.stringify(projectsSorted));
   return projectsSorted;
 }
 
