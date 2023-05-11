@@ -249,4 +249,29 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
   }
 });
 
+router.get('/listTotal', [auth, isAdminAccount], async (req, res, next) => {
+  logger.info(`Starting endpoint admin.route/list with params ${JSON.stringify(req.params, null, 2)}`); 
+  try {    
+    const userList = await User.findAll({
+      attributes: ['user_id','status'],
+      include: {
+        model: BusinessAssociateContact,        
+        attributes: ['business_associate_contact_id','business_address_id'],
+        include: {          
+          model: BusinessAdress,
+          attributes: ['business_address_id','business_associate_id'],
+          include: {
+            model: BusinessAssociates,  
+            attributes: ['business_associates_id','business_name'],
+          },
+        },
+      },
+    });
+    return res.status(200).send({ users: userList });
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).send({ error: error });
+  }
+});
+
 export default router;
