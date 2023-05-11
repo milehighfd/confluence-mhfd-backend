@@ -1256,6 +1256,9 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
           model: ProjectStaff,
           required: false,
           separate: true,
+          where: {
+            is_active: 1
+          },
           attributes: [
             'code_project_staff_role_type_id',
             'is_active',
