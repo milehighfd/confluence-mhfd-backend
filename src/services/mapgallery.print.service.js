@@ -287,12 +287,13 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       ? `${URL_BASE}detailed/debris-management.png`
       : `${URL_BASE}detailed/watershed-change.png`;
 
-      let mhfdManager = 'N/A'
-      data.project_staffs.map((el) => {
-        if(el.code_project_staff_role_type_id === 1){
-          mhfdManager = el.business_associate_contact.contact_name
-        }
-      })
+  let mhfdManager = 'N/A'
+  data.project_staffs.map((el) => {
+    if(el.code_project_staff_role_type_id === 1){
+      mhfdManager = el.business_associate_contact.contact_name
+    }
+  })
+  let projectId = data._previousDataValues.project_id ? data._previousDataValues.project_id : 'N/A'
 
   html = html.split('${projectname}').join(_data.dataValues.project_name);
   html = html.split('${projecttype}').join(_data.dataValues.code_project_type.project_type_name + ' Project');
@@ -307,6 +308,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   html = html.split('${phase}').join(phase);
   html = html.split('${streamname}').join(stream_name);
   html = html.split('${attachmentUrl}').join(urlImage);
+  html = html.split('${projectId}').join(projectId);
   html = html.split('${mhfdManager}').join(mhfdManager);
   html = html.split('${lgManager}').join('N/A');
   html = html.split('${description}').join(_data.dataValues.description);
