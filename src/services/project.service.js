@@ -1108,6 +1108,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
   const CONSULTANT = 3;
   const LANDSCAPE_CONTRACTOR_ID = 9;
   const CIVIL_CONTRACTOR_ID = 8;
+  const LG_LEAD = 10;
   let where = {};
   const offset = (page - 1) * limit;
   const toRange = +offset + +limit;
