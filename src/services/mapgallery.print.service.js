@@ -339,20 +339,22 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     const MHFD_SUPPORT = 4;
     const ADMIN_STAFF = 5;
     const STAFF_ROL_MAP = {
-      [MHFD_LEAD]: 'MHFD Lead/PM',
+      [MHFD_LEAD]: 'MHFD Lead',
       [MHFD_SUPPORT]: 'MHFD Support',
       [ADMIN_STAFF]: 'Admin Staff'
     };
-    return `
-    <tr>
-      <td style="width: 242.5px; padding: 7px 0px;">
-        <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">${el.business_associate_contact.contact_name.substring(0,30) === el.business_associate_contact.contact_name.substring(0,31) ? el.business_associate_contact.contact_name.substring(0,30): (el.business_associate_contact.contact_name.substring(0,30) + '...')}</h6>
-        <p style="font-size: 12px; color: #a09cb1; margin-bottom: 0px; margin-top: -3px; padding-top: 5px;">${STAFF_ROL_MAP[el.code_project_staff_role_type_id]}</p>
-        <span style="font-size: 12px; color: #a09cb1; margin-bottom: 15px;margin-top: -3px;">${el.business_associate_contact.business_address.business_associate.business_name.substring(0,30) === el.business_associate_contact.business_address.business_associate.business_name.substring(0,31) ? el.business_associate_contact.business_address.business_associate.business_name.substring(0,30):  (el.business_associate_contact.business_address.business_associate.business_name.substring(0,30) + '...')}</span>
-      </td>
-    </tr>
-  `
-  })
+    if(STAFF_ROL_MAP[el.code_project_staff_role_type_id]){
+      return `
+        <tr>
+          <td style="width: 242.5px; padding: 7px 0px;">
+            <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">${el.business_associate_contact.contact_name.substring(0,30) === el.business_associate_contact.contact_name.substring(0,31) ? el.business_associate_contact.contact_name.substring(0,30): (el.business_associate_contact.contact_name.substring(0,30) + '...')}</h6>
+            <p style="font-size: 12px; color: #a09cb1; margin-bottom: 0px; margin-top: -3px; padding-top: 5px;">${STAFF_ROL_MAP[el.code_project_staff_role_type_id]}</p>
+            <span style="font-size: 12px; color: #a09cb1; margin-bottom: 15px;margin-top: -3px;">${el.business_associate_contact.business_address.business_associate.business_name.substring(0,30) === el.business_associate_contact.business_address.business_associate.business_name.substring(0,31) ? el.business_associate_contact.business_address.business_associate.business_name.substring(0,30):  (el.business_associate_contact.business_address.business_associate.business_name.substring(0,30) + '...')}</span>
+          </td>
+        </tr>
+    `
+    }
+    })
   .join('');
   html = html.split('${teamRow}').join(teamRow);
 
