@@ -46,7 +46,6 @@ const CodeStatusType = db.codeStatusType;
 const CodeProjectType = db.codeProjectType;
 const BusinessAssociate = db.businessAssociates;
 const ProjectStaff = db.projectStaff;
-const MHFDStaff = db.mhfdStaff;
 const ProjectDetail = db.projectDetail;
 const ProjectStudy = db.projectstudy;
 const Study = db.study;

@@ -2,18 +2,11 @@ import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import Sequelize from 'sequelize';
 
-const Projects = db.project;
 const ProjectPartner = db.projectPartner;
-const ProjectCounty = db.projectCounty;
 const CodeStateCounty = db.codeStateCounty;
-const ProjectServiceArea = db.projectServiceArea;
 const CodeServiceArea = db.codeServiceArea;
-const ProjectLocalGovernment = db.projectLocalGovernment;
 const CodeLocalGoverment = db.codeLocalGoverment;
-const ProjectCost = db.projectCost;
 const ProjectStaff = db.projectStaff;
-const MHFDStaff = db.mhfdStaff;
-const ProjectDetail = db.projectDetail;
 const CodeStatusType = db.codeStatusType;
 const BusinessAssociante = db.businessAssociates;
 const BusinessAssociateContact = db.businessAssociateContact;

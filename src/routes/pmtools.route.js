@@ -7,7 +7,6 @@ import favoritesService from 'bc/services/favorites.service.js';
 import groupService from 'bc/services/group.service.js';
 const ProjectPartner = db.projectPartner;
 const ProjectStaff = db.projectStaff;
-const MHFDStaff = db.mhfdStaff;
 const BusinessAssociante = db.businessAssociates;
 
 const router = express.Router();
@@ -332,13 +331,6 @@ const listProjects = async (req, res) => {
     }
   });
   logger.info(`Finished function findAll for endpoint pmtools/list`);  
-  const mhfdIds = projectStaff.map((data) => data.mhfd_staff_id).filter((data) => data !== null);
-  logger.info(`Starting function findAll for endpoint pmtools/list`);
-  const mhfdStaff = await MHFDStaff.findAll({
-    where: {
-      mhfd_staff_id: mhfdIds
-    }
-  });
   logger.info(`Finished function findAll for endpoint pmtools/list`);
   const DEVELOPER_CODE = 6;
   logger.info('projects being called');
