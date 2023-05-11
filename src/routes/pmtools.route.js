@@ -615,12 +615,13 @@ const countDataForGroupFilters = async (req, res) => {
   try {
     logger.info(`Starting endpoint pmtools/groups/:groupname/:filtervalue with params`);
     const { groupname, filtervalue } = req.params;
+    const filtervalue2 = filtervalue.split('&').filter((f) => !f.includes('sortby') && !f.includes('sortorder')).join('&');
     const { page = 1, limit = 20, code_project_type_id } = req.query;
     const { body } = req;
     logger.info(`page=${page} limit=${limit}`);
     logger.info(`Starting function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
-    logger.info(`Filtering by lgmanager ${groupname, filtervalue, code_project_type_id}...`);
-    const group = await projectService.getProjects2(null, null, page, +limit, body, groupname, filtervalue, code_project_type_id);
+    logger.info(`Filtering by lgmanager ${JSON.stringify(filtervalue2)}...`);
+    const group = await projectService.getProjects2(null, null, page, +limit, body, groupname, filtervalue2, code_project_type_id);
     logger.info(`Finished function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
     logger.info(`Starting function getProjects for endpoint project/`);    
     const set = new Set(group.map((p) => p?.project_id));
