@@ -187,12 +187,12 @@ const getMhfdStaff = async () => {
       required: true,
       include: [{
         model: User,
-        required: true,
+        required: false,
       }]
     }],
   });
   const groups = types.map((data) => {
-    return { value: data?.business_associate_contact?.user?.name, id: data?.business_associate_contact?.user?.user_id };
+    return { value: data?.business_associate_contact?.contact_name, id: data?.business_associate_contact?.business_associate_contact_id };
   });
   let uniqueGroups = [...new Map(groups.map(item => [item['id'], item])).values()];
   uniqueGroups= uniqueGroups.filter(obj => Object.keys(obj).length !== 0);
@@ -216,12 +216,12 @@ const getLGManager = async () => {
       required: true,
       include: [{
         model: User,
-        required: true,
+        required: false,
       }]
     }],
   });
   const groups = types.map((data) => {
-    return { value: data?.business_associate_contact?.user?.name, id: data?.business_associate_contact?.user?.user_id };
+    return { value: data?.business_associate_contact?.contact_name, id: data?.business_associate_contact?.business_associate_contact_id };
   });
   let uniqueGroups = [...new Map(groups.map(item => [item['id'], item])).values()];
   uniqueGroups= uniqueGroups.filter(obj => Object.keys(obj).length !== 0);

@@ -751,11 +751,11 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
             model: BusinessAssociateContact,
             attributes: [],
             required: true,
+            where : { business_associate_contact_id: teams },
             include: [{
               model: User,
               attributes: [],
-              required: true,
-              where : { user_id: teams },
+              required: false,
             }]          
         }, {
           model: CodeProjectStaffRole,
@@ -778,11 +778,11 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
             model: BusinessAssociateContact,
             attributes: [],
             required: true,
+            where : { business_associate_contact_id: lgmanager },
             include: [{
               model: User,
               attributes: [],
-              required: true,
-              where : { user_id: lgmanager },
+              required: false,              
             }]          
         }, {
           model: CodeProjectStaffRole,
@@ -799,11 +799,11 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
     const MHFD_LEAD = 1;
     let where = {};
     if (groupN === 'staff' && mhfd_lead.length) {
-      where = { [Op.and]: [{ user_id: filterN }, { user_id: mhfd_lead }] };
+      where = { [Op.and]: [{ business_associate_contact_id: filterN }, { business_associate_contact_id: mhfd_lead }] };
     } else if (groupN === 'staff') {
-      where = { user_id: filterN };
+      where = { business_associate_contact_id: filterN };
     } else {
-      where = { user_id: mhfd_lead };
+      where = { business_associate_contact_id: mhfd_lead };
     }
     conditions.push(Project.findAll({
       attributes: ["project_id", "code_project_type_id"],
@@ -815,11 +815,11 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
             model: BusinessAssociateContact,
             attributes: [],
             required: true,
+            where : where,
             include: [{
               model: User,
               attributes: [],
-              required: true,
-              where : where,
+              required: false,              
             }]          
         }, {
           model: CodeProjectStaffRole,
@@ -1561,9 +1561,36 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
             model: BusinessAssociate,
             required: false,
             attributes: [
-              'business_name',
-            ]
-          },],
+                'business_name',
+              ]
+            },],
+        },
+        {
+          model: ProjectStaff,
+          as: 'currentProjectStaff',
+          attributes: [],
+          required: true,
+          include: [{
+            model: BusinessAssociateContact,
+            attributes: [
+              'business_associate_contact_id',
+              'contact_name'
+            ],
+            required: false,
+            include: [{
+              model: User,
+              required: false,
+              attributes: [
+                'name'
+              ],
+            }]
+          }, {
+            model: CodeProjectStaffRole,
+            required: false,
+            where: {
+              code_project_staff_role_type_id: LG_LEAD,
+            }
+          }],
         }
       ],
     });

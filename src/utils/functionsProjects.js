@@ -484,15 +484,18 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
       attributes: [
         'project_staff_id'
       ],
+      as: 'currentProjectStaff',
       required: false,
       include: [{
           model: BusinessAssociateContact,
           attributes: [
-            'business_associate_contact_id'
+            'business_associate_contact_id',
+            'contact_name'
           ],
           required: false,
           include: [{
             model: User,
+            required: false,
             attributes: [
               'name'
             ],
@@ -506,7 +509,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
       }],
     });
     //testing purposes
-    sortattrib = 'project_staffs.0.business_associate_contact.user.name';
+    sortattrib = 'currentProjectStaff.0.business_associate_contact.contact_name';
   }
   if (sortby === 'mhfd') {
     const MHFD_LEAD = 1;
@@ -522,11 +525,13 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
       include: [{
           model: BusinessAssociateContact,
           attributes: [
-            'business_associate_contact_id'
+            'business_associate_contact_id',
+            'contact_name'
           ],
           required: false,
           include: [{
             model: User,
+            required: false,
             attributes: [
               'name'
             ],
@@ -540,7 +545,7 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
       }],
     });
     //testing purposes
-    sortattrib = 'project_staffs.0.business_associate_contact.user.name';
+    sortattrib = 'project_staffs.0.business_associate_contact.contact_name';
   }
   if (sortby === 'service_area') {
     includesValues.push({
