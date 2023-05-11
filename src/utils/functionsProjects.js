@@ -515,6 +515,9 @@ export const getSortedProjectsByAttrib = async (sortby, sorttype) => {
       attributes: [
         'project_staff_id'
       ],
+      where: {
+        is_active: 1
+      },
       required: false,
       include: [{
           model: BusinessAssociateContact,
