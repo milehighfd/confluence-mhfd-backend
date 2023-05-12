@@ -303,7 +303,11 @@ router.get('/components-by-problemid', auth, async (req, res) => {
         };
       });
       for (const component of COMPONENTS_TABLES) {
-        const componentSQL = `SELECT cartodb_id, type, jurisdiction, status, original_cost, problemid, objectid
+        const type = component === 'stream_improvement_measure' ? 'component_part_category as type' : 'type';
+        const jurisdiction = component === 'stream_improvement_measure' ? 'service_area as jurisdiction' : 'jurisdiction'; 
+        const cost = component === 'stream_improvement_measure' ? 'estimated_cost_base as original_cost' : 'original_cost';
+        const problemidattrib = component === 'stream_improvement_measure' ? 'problem_id' : 'problemid';
+        const componentSQL = `SELECT cartodb_id, ${type}, ${jurisdiction}, status, ${cost}, ${problemidattrib}, objectid
          FROM ${component} WHERE problemid = ${problemid} AND projectid is null`;
         logger.info(componentSQL);
         const componentQuery = {
