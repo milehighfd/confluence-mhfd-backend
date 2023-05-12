@@ -4,6 +4,7 @@ import morgan from  'morgan';
 import http from  'http';
 import cors from  'cors';
 import needle from 'needle';
+import cron from 'node-cron';
 import logger from 'bc/config/logger.js';
 import indexRouter from 'bc/routes/index.js';
 import usersRouter from 'bc/routes/users.route.js';
@@ -38,6 +39,7 @@ import projectactionitemRouter from 'bc/routes/projectactionitem.route.js'
 import projectStatusRouter from 'bc/routes/projectStatus.route.js';
 import businessRouter from 'bc/routes/business.route.js';
 import notificationRouter from 'bc/routes/notifications.route.js';
+import { createNotifications } from 'bc/utils/functionsNotifications.js';
 
 seed();
 
@@ -47,6 +49,12 @@ const server = http.createServer(app);
 
 needle.defaults({
   open_timeout: 60000,
+});
+// 0 secs 0 mins 0 hours everyday will be triggered
+const scheduleAtbegginigOfDay = '0 0 0 * * *';
+
+cron.schedule('0 51 * * * *', function () {
+  createNotifications();
 });
 
 app.use(morgan('dev', {stream: logger.stream}));
