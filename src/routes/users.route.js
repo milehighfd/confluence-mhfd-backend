@@ -242,89 +242,6 @@ router.get('/me', auth, async (req, res) => {
       latitude: (latitude_max + latitude_min) / 2
     };
     console.log('coordinates', coordinates, 'polygon', polygon);
-    // const newProm = new Promise((resolve, reject) => {
-    //   const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) FROM mhfd_zoom_to_areas WHERE aoi = '${organization_query}' `;
-    //   const URL = `${CARTO_URL}&q=${sql}`;
-    //   let result = [];
-    //   //console.log('URL', URL);
-    //   https.get(URL, response => {
-    //     console.log('status ' + response.statusCode);
-    //     if (response.statusCode === 200) {
-    //       let str = '';
-    //       response.on('data', function (chunk) {
-    //         str += chunk;
-    //       });
-    //       response.on('end', function () {
-    //         result = JSON.parse(str).rows;
-    //         if (result.length > 0) {
-    //           const all_coordinates = JSON.parse(result[0].st_asgeojson).coordinates;
-    //           let latitude_array = [];
-    //           let longitude_array = [];
-    //           console.log('COORDENADAS', all_coordinates);
-    //           for (const key in all_coordinates[0]) {
-    //             const row = JSON.stringify(all_coordinates[0][key]).replace("[", "").replace("]", "").split(',')
-    //             let coordinate_num = [];
-    //             coordinate_num.push(parseFloat(row[0]));
-    //             coordinate_num.push(parseFloat(row[1]));
-    //             longitude_array.push(parseFloat(row[0]));
-    //             latitude_array.push(parseFloat(row[1]));
-    //             polygon.push(coordinate_num);
-    //           }
-    //           const latitude_min = Math.min.apply(Math, latitude_array);
-    //           const latitude_max = Math.max.apply(Math, latitude_array);
-    //           const longitude_min = Math.min.apply(Math, longitude_array);
-    //           const longitude_max = Math.max.apply(Math, longitude_array);
-    //           coordinates = {
-    //             longitude: (longitude_max + longitude_min) / 2,
-    //             latitude: (latitude_max + latitude_min) / 2
-    //           };
-
-    //         } else {
-    //           coordinates = {
-    //             longitude: -104.9063129121965,
-    //             latitude: 39.768682416183
-    //           };
-    //           //console.log('NO HAY DATOS');
-    //           polygon = [
-    //             [
-    //               -105.32366831,
-    //               39.40578787
-    //             ],
-    //             [
-    //               -105.32366831,
-    //               40.13157697
-    //             ],
-    //             [
-    //               -104.48895751,
-    //               40.13157697
-    //             ],
-    //             [
-    //               -104.48895751,
-    //               39.40578787
-    //             ],
-    //             [
-    //               -105.32366831,
-    //               39.40578787
-    //             ]
-    //           ];
-
-    //         }
-
-    //         resolve({
-    //           polygon: polygon,
-    //           coordinates: coordinates
-    //         });
-
-    //       });
-    //     }
-    //   }).on('error', err => {
-    //     logger.error(`failed call to  with error  ${err}`)
-
-    //   });
-    // });
-
-    // const respuesta = await newProm;
-
   } catch (error) {
     logger.error(error);
   }
@@ -367,7 +284,6 @@ router.get('/me', auth, async (req, res) => {
           });
         }
       }).on('error', err => {
-        //console.log('failed call to ', url, 'with error ', err);
         logger.error(`failed call to  with error  ${err}`)
         resolve({});
       });
