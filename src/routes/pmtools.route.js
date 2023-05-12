@@ -381,8 +381,6 @@ const listProjects = async (req, res) => {
       }
     });
     logger.info(`Finished function findAll for endpoint pmtools/list`);
-    // console.log('the project staff is ', projectStaff);
-    const mhfdIds = staffs.map((data) => data.mhfd_staff_id).filter((data) => data !== null);
   }
   logger.info(`Starting function projectsByFilters for endpoint pmtools/list`);
   projects = await projectsByFilters(projects, body);
