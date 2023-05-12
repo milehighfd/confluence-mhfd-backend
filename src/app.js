@@ -53,7 +53,8 @@ needle.defaults({
 // 0 secs 0 mins 0 hours everyday will be triggered
 const scheduleAtbegginigOfDay = '0 0 0 * * *';
 
-cron.schedule('0 51 * * * *', function () {
+cron.schedule('*/5 * * * * *', function () {
+  console.log('Are you going to call?');
   createNotifications();
 });
 
