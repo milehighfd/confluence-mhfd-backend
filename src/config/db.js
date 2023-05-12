@@ -71,7 +71,9 @@ import maintenanceTrails from 'bc/models/maintenance_trails.model.js';
 import landAcquisition from 'bc/models/land_acquisition.model.js';
 import landscapingArea from 'bc/models/landscaping_area.model.js'; 
 import streamImprovementMeasure from 'bc/models/stream_improvement_measure.model.js'; 
-
+import codeNotificationType from 'bc/models/code_notification_type.model.js';
+import projectStatusNotification from 'bc/models/project_status_notification.model.js';
+import notifications from 'bc/models/notification.model.js';
 
 Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
   date = this._applyTimezone(date, options);
@@ -159,6 +161,9 @@ db.businessAssociateContact = businessAssociateContact(sequelize, Sequelize);
 db.businessAdress = businessAdress(sequelize, Sequelize);
 db.businessAssociates = businessAssociates(sequelize, Sequelize);
 db.projectServiceArea = projectServiceArea(sequelize, Sequelize);
+db.notifications = notifications(sequelize, Sequelize);
+db.codeNotificationType = codeNotificationType(sequelize, Sequelize);
+db.projectStatusNotification = projectStatusNotification(sequelize, Sequelize);
 // 14 layers called
 db.gradeControlStructure = gradeControlStructure(sequelize, Sequelize);
 db.pipeAppurtenances = pipeAppurtenances(sequelize, Sequelize);

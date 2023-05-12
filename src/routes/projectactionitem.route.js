@@ -4,10 +4,7 @@ import sequelize from 'sequelize';
 import logger from 'bc/config/logger.js';
 
 const router = express.Router();
-const CodePhaseType = db.codePhaseType;
-const CodeRuleActionItem = db.codeRuleActionItem;
 const ProjectActionItem = db.projectActionItem;
-const Op = sequelize.Op;
 
 router.get('/', async (req, res) => {
   logger.info(`Starting endpoint projectationitem.route/filters with params ${JSON.stringify(req.params, null, 2)}`);
