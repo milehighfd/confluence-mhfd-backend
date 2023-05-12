@@ -6,7 +6,6 @@ const Notifications = db.notifications;
 
 const getNotifications = async (req, res) => {
     let notification = await Notifications.findAll({
-        attributes: ['project_id', 'project_action_item_id', 'code_rule_action_item_id'],
         include: {
             all: true
         },

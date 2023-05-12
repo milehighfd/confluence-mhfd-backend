@@ -37,6 +37,7 @@ import phasetypeRouter from 'bc/routes/phasetype.route.js';
 import projectactionitemRouter from 'bc/routes/projectactionitem.route.js'
 import projectStatusRouter from 'bc/routes/projectStatus.route.js';
 import businessRouter from 'bc/routes/business.route.js';
+import notificationRouter from 'bc/routes/notifications.route.js';
 
 seed();
 
@@ -96,5 +97,6 @@ app.use('/projectservicearea', projectServiceArea);
 app.use('/streams', streamsRouter);
 app.use('/card-filters', cardFilterRouter);
 app.use('/business', businessRouter);
+app.use('/notifications', notificationRouter);
 
 export default server;

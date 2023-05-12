@@ -26,8 +26,8 @@ export default (sequelize, DataType) => {
       type: DataType.DATE,
       defaultValue: DataType.NOW
     },
-    last_modified_date: {
-      type: DataType.DATE,
+    last_modified_by: {
+      type: DataType.STRING,
     },
     created_by: {
       type: DataType.STRING
