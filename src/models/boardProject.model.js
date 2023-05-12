@@ -29,6 +29,24 @@ export default (sequelize, DataType) => {
     position5: {
       type: DataType.INTEGER
     },
+    rank0: {
+      type: DataType.STRING
+    },
+    rank1: {
+      type: DataType.STRING
+    },
+    rank2: {
+      type: DataType.STRING
+    },
+    rank3: {
+      type: DataType.STRING
+    },
+    rank4: {
+      type: DataType.STRING
+    },
+    rank5: {
+      type: DataType.STRING
+    },
     originPosition0: {
       type: DataType.INTEGER
     },

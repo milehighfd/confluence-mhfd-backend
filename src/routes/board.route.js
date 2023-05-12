@@ -39,71 +39,46 @@ router.get('/lexorank-update', async (req, res) => {
         rank4: {},
         rank5: {}
     };
+    const originPositions = ['position0', 'position1', 'position2', 'position3', 'position4', 'position5'];
+    const positions =  ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+    
     for (const board of boards) {
-        let [rank0, rank1, rank2, rank3, rank4, rank5] = [LexoRank.middle(), LexoRank.middle(), LexoRank.middle(), LexoRank.middle(), LexoRank.middle(), LexoRank.middle()];
-        for (const bp of boardProjects) {
-            if (board.board_id === bp.board_id) {
-                let [value0, value1, value2, value3, value4, value5] = [null, null, null, null, null, null];
-                if (bp.position0 != null) {
-                    value0 = rank0.toString();
-                    if(!updates.rank0[value0]) {
-                        updates.rank0[value0] = [];
+        let lexoRanks = {
+            rank0: LexoRank.middle(),
+            rank1: LexoRank.middle(),
+            rank2: LexoRank.middle(),
+            rank3: LexoRank.middle(),
+            rank4: LexoRank.middle(),
+            rank5: LexoRank.middle()
+        };
+        for (const [index, position] of originPositions.entries()) {
+            boardProjects.sort((a, b) => {
+                if (a[position] == null) return -1;
+                if (b[position] == null) return 1;
+                return a[position] - b[position];
+            });
+            for (const bp of boardProjects) {
+                if (board.board_id === bp.board_id) {
+                    if (bp[position] != null) {
+                        const value = lexoRanks[positions[index]].toString();
+                        if (!updates[positions[index]][value]) {
+                            updates[positions[index]][value] = [];
+                        }
+                        updates[positions[index]][value].push(bp.board_project_id);
+                        lexoRanks[positions[index]] = lexoRanks[positions[index]].genNext();
                     }
-                    updates.rank0[value0].push(bp.board_project_id);
-                    rank0 = rank0.genNext();
-                }
-                if (bp.position1 != null) {
-                    value1 = rank1.toString();
-                    if (!updates.rank1[value1]) {
-                        updates.rank1[value1] = [];
-                    }
-                    updates.rank1[value1].push(bp.board_project_id);
-                    rank1 = rank1.genNext();
-                }
-                if (bp.position2 != null) {
-                    value2 = rank2.toString();
-                    if (!updates.rank2[value2]) {
-                        updates.rank2[value2] = [];
-                    }
-                    updates.rank2[value2].push(bp.board_project_id);
-                    rank2 = rank2.genNext();
-                }
-                if (bp.position3 != null) {
-                    value3 = rank3.toString();
-                    if (!updates.rank3[value3]) {
-                        updates.rank3[value3] = [];
-                    }
-                    updates.rank3[value3].push(bp.board_project_id);
-                    rank3 = rank3.genNext();
-                }
-                if (bp.position4 != null) {
-                    value4 = rank4.toString();
-                    if (!updates.rank4[value4]) {
-                        updates.rank4[value4] = [];
-                    }
-                    updates.rank4[value4].push(bp.board_project_id);
-                    rank4 = rank4.genNext();
-                }
-                if (bp.position5 != null) {
-                    value5 = rank5.toString();
-                    if (!updates.rank5[value5]) {
-                        updates.rank5[value5] = [];
-                    }
-                    updates.rank5[value5].push(bp.board_project_id);
-                    rank5 = rank5.genNext();
                 }
             }
         }
     }
     let c = 0;
-    const positions =  ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
     console.log(updates);
+    const prs = [];
     for (const position of positions) {
         for (const value in updates[position]) {
             c++;
-            const currentRank = position.replace('position', 'rank');
-            logger.info(`Updating ${currentRank} to ${value} for ${updates[position][value]}`);
-            BoardProject.update(
+            logger.info(`Updating ${position} to ${value} for ${updates[position][value]}`);
+            prs.push(BoardProject.update(
                 {
                     [position]: value
                 },
@@ -112,9 +87,10 @@ router.get('/lexorank-update', async (req, res) => {
                         board_project_id: updates[position][value]
                     }
                 }
-            );
+            ));
         }
     }
+    await Promise.all(prs);
     res.send({
         counter: c,
     });
