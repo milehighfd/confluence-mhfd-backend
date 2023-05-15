@@ -59,6 +59,6 @@ const updateNotification = async (req, res) => {
 }
 
 router.get('/', auth, getNotifications);
-router.put('/', auth, updateNotification)
+router.post('/', auth, updateNotification)
 
 export default router;
