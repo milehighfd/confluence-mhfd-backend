@@ -307,8 +307,9 @@ router.get('/components-by-problemid', auth, async (req, res) => {
         const jurisdiction = component === 'stream_improvement_measure' ? 'service_area as jurisdiction' : 'jurisdiction'; 
         const cost = component === 'stream_improvement_measure' ? 'estimated_cost_base as original_cost' : 'original_cost';
         const problemidattrib = component === 'stream_improvement_measure' ? 'problem_id' : 'problemid';
+        const projectidattrib = component === 'stream_improvement_measure' ? 'project_id' : 'projectid';
         const componentSQL = `SELECT cartodb_id, ${type}, ${jurisdiction}, status, ${cost}, ${problemidattrib}, objectid
-         FROM ${component} WHERE problemid = ${problemid} AND projectid is null`;
+         FROM ${component} WHERE ${problemidattrib} = ${problemid} AND ${projectidattrib} is null`;
         logger.info(componentSQL);
         const componentQuery = {
           q: componentSQL
