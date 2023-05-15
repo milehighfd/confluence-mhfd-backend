@@ -13,7 +13,7 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       allowNull: false
     },
-    local_government_id: {
+    code_local_government_id: {
       type: DataType.INTEGER,
       allowNull: false
     },

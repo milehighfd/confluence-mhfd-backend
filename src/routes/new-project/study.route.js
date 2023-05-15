@@ -190,7 +190,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
           minimumFractionDigits: 1,
           maximumFractionDigits: 1,
         }).format(stream.drainage),
-        local_government_id:
+        code_local_government_id:
           stream.code_local_goverment.length > 0
             ? stream.code_local_goverment[0].objectid
             : 0,
@@ -342,7 +342,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
           : stream.stream[0].stream_id,
         length_in_mile: stream.length,
         drainage_area_in_sq_miles: stream.drainage,
-        local_government_id:
+        code_local_government_id:
           stream.code_local_goverment.length > 0
             ? stream.code_local_goverment[0].objectid
             : 0,
