@@ -3,7 +3,8 @@ export default (sequelize, DataType) => {
   const ProjectStatusNotification = sequelize.define('project_status_notification', {
     project_status_notification: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     project_status_id: {
       type: DataType.INTEGER,
@@ -11,9 +12,9 @@ export default (sequelize, DataType) => {
     notification_id: {
       type: DataType.INTEGER,
     },
-    notification_type_name: {
-      type: DataType.STRING,
-    },
+    // notification_type_name: {
+    //   type: DataType.STRING,
+    // },
     created_date: {
       type: DataType.DATE,
       defaultValue: DataType.NOW
@@ -22,8 +23,8 @@ export default (sequelize, DataType) => {
       type: DataType.DATE,
       defaultValue: DataType.NOW
     },
-    last_modified_date: {
-      type: DataType.DATE,
+    last_modified_by: {
+      type: DataType.STRING,
     },
     created_by: {
       type: DataType.STRING

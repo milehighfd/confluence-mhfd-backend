@@ -52,11 +52,12 @@ needle.defaults({
 });
 // 0 secs 0 mins 0 hours everyday will be triggered
 const scheduleAtbegginigOfDay = '0 0 0 * * *';
+const fiveseconds = '*/5 * * * * *';
 
-// cron.schedule('*/5 * * * * *', function () {
-//   console.log('Are you going to call?');
-//   createNotifications();
-// });
+cron.schedule(scheduleAtbegginigOfDay, function () {
+  console.log('Are you going to call?');
+  createNotifications();
+});
 
 app.use(morgan('dev', {stream: logger.stream}));
 app.use(express.json({limit: '20mb'}));

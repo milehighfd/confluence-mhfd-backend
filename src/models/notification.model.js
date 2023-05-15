@@ -3,7 +3,8 @@ export default (sequelize, DataType) => {
   const Notifications = sequelize.define('notification', {
     notification_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     recipient_user_id: {
       type: DataType.INTEGER,
@@ -35,6 +36,9 @@ export default (sequelize, DataType) => {
     is_read: {
       type: DataType.BOOLEAN
     },
+    code_notification_type_id: {
+      type: DataType.INTEGER,
+    }
   }, {
     freezeTableName: true,
     tableName: 'notification',
