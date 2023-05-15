@@ -181,7 +181,12 @@ db.landAcquisition = landAcquisition(sequelize, Sequelize);
 db.landscapingArea = landscapingArea(sequelize, Sequelize); 
 db.streamImprovementMeasure = streamImprovementMeasure(sequelize, Sequelize); 
 
-
+//Notifications
+db.notifications.hasOne(db.user, {foreignKey: 'user_id', sourceKey: 'recipient_user_id'});
+db.notifications.hasOne(db.projectStatusNotification, {foreignKey: 'notification_id', sourceKey: 'notification_id'});
+db.projectStatusNotification.hasOne(db.projectStatus, {foreignKey: 'project_status_id', sourceKey: 'project_status_id'});
+db.notifications.hasOne(db.project, {foreignKey: 'project_id', sourceKey: 'project_id'});
+// user
 db.user.hasMany(db.ProjectFavorite, {foreignKey: 'user_id'});
 db.user.hasMany(db.problemFavorite, { foreignKey: 'user_id' });
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
