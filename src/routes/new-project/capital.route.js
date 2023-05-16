@@ -301,9 +301,10 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     });
     const { duration, duration_type } = codePhaseForCapital;
     const formatDuration = duration_type[0].toUpperCase();
+    const officialProjectName = projectname + (projectname === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '')
     const data = await projectService.saveProject(
       CREATE_PROJECT_TABLE_V2,
-      cleanStringValue(projectname),
+      cleanStringValue(officialProjectName),
       cleanStringValue(description),
       defaultProjectId,
       moment().format('YYYY-MM-DD HH:mm:ss'),
