@@ -1715,13 +1715,15 @@ const insertIntoArcGis = async (geom, projectid, projectname) => {
     const TOKEN = JSON.parse(token_data.body).token;
     const bodyFD = createRandomGeomOnARCGIS(JSON.parse(geom).coordinates, cleanStringValue(projectname), TOKEN, projectid);
     const createOnArcGis = await needle('post',`${ARCGIS_SERVICE}/applyEdits`, bodyFD, { multipart: true });
-    console.log('create on arc gis at ', ARCGIS_SERVICE, createOnArcGis.statusCode, createOnArcGis.body);
+    console.log('create on arc gis at ', ARCGIS_SERVICE, createOnArcGis.statusCode, JSON.stringify(createOnArcGis.body));
     if (createOnArcGis.statusCode == 200) {
       if (createOnArcGis.body.error) {
+        console.log('Error at ARGIS creation', createOnArcGis.body.error);
         return { successArcGis: false, error: createOnArcGis.body.error };  
       }
       return { successArcGis: createOnArcGis.body.addResults[0].success };
     } else {
+      console.log('Error at ARGIS creation', createOnArcGis.body);
       return { successArcGis: false, error:createOnArcGis.body};
     }
   } catch(e) {

@@ -129,9 +129,10 @@ const checkIfExistGeomThenDelete = async (table, project_id) => {
     q: sql,
   };
   try {
+    console.log('Delete in this table', table);
     const data = await needle('post', CARTO_URL, query, { json: true });
     if (data.statusCode === 200) {
-      const sql1 = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
+      const sql1 = `DELETE FROM ${table} WHERE projectid = ${project_id}`;
       const query2 = {
         q: sql1,
       };

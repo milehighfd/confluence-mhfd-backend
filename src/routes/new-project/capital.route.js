@@ -288,7 +288,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const defaultProjectType = 'Capital';
   let result = [];
   const splitedJurisdiction = jurisdiction.split(',');
-  const splitedCounty = county.split(',');
+  const splitedCounty = county ? county.split(',') : [];
   const splitedServicearea = servicearea.split(',');
   const splitedOverheadcost = overheadcost.split(',');
   const overheadcostIds = [2, 6, 7, 8, 9, 10, 12, 11, 13];
@@ -451,10 +451,10 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       project_id,
       cleanStringValue(projectname)
     );
-    await projectService.addProjectToCache(project_id);
+    // await projectService.addProjectToCache(project_id);
     result.push(dataArcGis);
   } catch (error) {
-    logger.error(error);
+    logger.error('error at create capital'+ error);
   }
   res.send(result);
 });
