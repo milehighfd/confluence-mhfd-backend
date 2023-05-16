@@ -387,7 +387,6 @@ router.post('/', async (req, res) => {
   });
   logger.info(`Finished function findOne for board/`);
   if (board) {
-    logger.info(`BOARD INFO: ${JSON.stringify(board)}`);
     logger.info(`Starting function findAll for board/`);
     let boardProjects = await BoardProject.findAll({
       where: {
@@ -395,7 +394,6 @@ router.post('/', async (req, res) => {
       },
     });
     logger.info(`Finished function findAll for board/`);
-    logger.info(`BOARD-PROJECTS ${JSON.stringify(boardProjects)}`);
     let projectsPromises = boardProjects
       .filter((bp) => !!bp.project_id)
       .map(async (bp) => {
@@ -405,7 +403,7 @@ router.post('/', async (req, res) => {
           if (!project) {
             logger.info(`${bp.project_id} not found`);
             logger.info(`Starting function getDetails for board/`);
-            project = await projectService.getDetails(bp.project_id);
+            //project = await projectService.getDetails(bp.project_id);
             logger.info(`Finished function getDetails for board/`);
           }
         } catch (error) {
@@ -415,7 +413,7 @@ router.post('/', async (req, res) => {
           id: bp.id,
           project_id: bp.project_id,
           origin: bp.origin,
-          projectData: project,
+          projectData: {},
         };
         for (let i = 0; i <= 5; i++) {
           newObject[`position${i}`] = bp[`position${i}`];
@@ -432,9 +430,10 @@ router.post('/', async (req, res) => {
     logger.info(`Starting function all for board/`);
     let resolvedProjects = await Promise.all(projectsPromises);
     logger.info(`Finished function all for board/`);
-    logger.info(`RESOLVERD PROJECTS: ${resolvedProjects}`);
-    resolvedProjects = resolvedProjects.filter((bp) => bp.projectData != null);
-    let projects = resolvedProjects;
+    logger.info(`RESOLVERD PROJECTS: `);
+    console.log(resolvedProjects)
+    resolvedProjects = resolvedProjects?.filter((bp) => bp.projectData != null);
+    let projects = resolvedProjects || [];
     logger.info('FINISHING BOARD REQUEST');
     res.send({
       board,

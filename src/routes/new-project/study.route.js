@@ -82,9 +82,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     });
     const { duration, duration_type } = codePhaseForCapital;
     const formatDuration = duration_type[0].toUpperCase();
+    const officialProjectName = projectname + (projectname === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '')
+
     const data = await projectService.saveProject(
       CREATE_PROJECT_TABLE_V2,
-      cleanStringValue(projectname),
+      cleanStringValue(officialProjectName),
       cleanStringValue(description),
       defaultProjectId,
       moment().format('YYYY-MM-DD HH:mm:ss'),
@@ -129,6 +131,8 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       { where: { project_id: project_id } }
     );
 
+    /* 
+    TODO: enable with WR and WP changes to add the project to cards 
     await addProjectToBoard(
       user,
       servicearea,
@@ -141,7 +145,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       isWorkPlan,
       cleanStringValue(projectname),
       projectsubtype
-    );
+    ); */
     await projectPartnerService.saveProjectPartner(
       sponsor,
       cosponsor,
@@ -203,7 +207,6 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       creator,
       otherReason
     );
-    await projectService.addProjectToCache(project_id);
     logger.info('created study correctly');
   } catch (error) {
     logger.error('ERROR ', error);
@@ -349,7 +352,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       });
     }
     await studyService.updateStudy(project_id, creator, otherReason);
-    await projectService.updateProjectOnCache(project_id);
     logger.info('updated study');
     res.send('updated study');
   } catch (error) {

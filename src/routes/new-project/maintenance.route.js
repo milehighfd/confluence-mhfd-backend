@@ -76,9 +76,10 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     });
     const { duration, duration_type } = codePhaseForCapital;
     const formatDuration = duration_type[0].toUpperCase();
+    const officialProjectName = projectname + (projectname === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '')
     const data = await projectService.saveProject(
       CREATE_PROJECT_TABLE_V2,
-      cleanStringValue(projectname),
+      cleanStringValue(officialProjectName),
       cleanStringValue(description),
       defaultProjectId.code_project_type_id,
       moment().format('YYYY-MM-DD HH:mm:ss'),
@@ -95,8 +96,6 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       project_id
     );
     await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
-    //await projectStatusService.saveProjectStatusFromCero(defaultProjectId.code_project_type_id, project_id, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), 2, moment().format('YYYY-MM-DD HH:mm:ss'), moment().format('YYYY-MM-DD HH:mm:ss'), creator, creator);
-
     const response = await projectStatusService.saveProjectStatusFromCero(
       defaultProjectId.code_project_type_id,
       project_id,
@@ -129,6 +128,8 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       creator
     );
     //await attachmentService.uploadFiles(user, req.files, projectId, cover);
+    /* 
+    TODO: enable with WR and WP changes to add the project to cards 
     await addProjectToBoard(
       user,
       servicearea,
@@ -141,7 +142,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       isWorkPlan,
       projectname,
       projectsubtype
-    );
+    ); */
     await projectPartnerService.saveProjectPartner(
       sponsor,
       cosponsor,
@@ -180,7 +181,6 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       project_id,
       cleanStringValue(projectname)
     );
-    await projectService.addProjectToCache(project_id);
     result.push(dataArcGis);
   } catch (error) {
     console.error('aaa:', error);
@@ -303,8 +303,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       }
       logger.info('created county');
     }
-
-    await projectService.updateProjectOnCache(project_id);
     logger.info('UPDATED!');
     res.send(result);
   } catch (error) {

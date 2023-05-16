@@ -62,10 +62,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     });
     const { duration, duration_type } = codePhaseForCapital;
     const formatDuration = duration_type[0].toUpperCase();
+    const officialProjectName = projectname + (projectname === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '')
 
     const data = await projectService.saveProject(
       CREATE_PROJECT_TABLE_V2,
-      cleanStringValue(projectname),
+      cleanStringValue(officialProjectName),
       cleanStringValue(description),
       defaultProjectId,
       moment().format('YYYY-MM-DD HH:mm:ss'),
@@ -103,9 +104,10 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       },
       { where: { project_id: project_id } }
     );
-    console.log(resres);
 
     const projectsubtype = '';
+    /* 
+    TODO: enable with WR and WP changes to add the project to cards 
     await addProjectToBoard(
       user,
       servicearea,
@@ -118,7 +120,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       isWorkPlan,
       projectname,
       projectsubtype
-    );
+    ); */
     await projectPartnerService.saveProjectPartner(
       sponsor,
       cosponsor,
@@ -157,7 +159,6 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       project_id,
       cleanStringValue(projectname)
     );
-    await projectService.addProjectToCache(project_id);
     result.push(dataArcGis);
   } catch (error) {
     logger.error('Error at special route: ', error);
@@ -269,7 +270,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       }
       logger.info('created county');
     }
-    await projectService.updateProjectOnCache(project_id);
     res.send(result);
   } catch (error) {
     logger.error(error);
