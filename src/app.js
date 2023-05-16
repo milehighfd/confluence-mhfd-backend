@@ -39,7 +39,7 @@ import projectactionitemRouter from 'bc/routes/projectactionitem.route.js'
 import projectStatusRouter from 'bc/routes/projectStatus.route.js';
 import businessRouter from 'bc/routes/business.route.js';
 import notificationRouter from 'bc/routes/notifications.route.js';
-import { createNotifications } from 'bc/utils/functionsNotifications.js';
+import { createNotifications,deleteNotifications } from 'bc/utils/functionsNotifications.js';
 
 seed();
 
@@ -51,12 +51,19 @@ needle.defaults({
   open_timeout: 60000,
 });
 // 0 secs 0 mins 0 hours everyday will be triggered
-const scheduleAtbegginigOfDay = '0 0 0 * * *';
+const scheduleAtbegginigOfDay = '0 30 11 * * *';
 const fiveseconds = '*/5 * * * * *';
 
 cron.schedule(scheduleAtbegginigOfDay, function () {
   console.log('Are you going to call?');
-  createNotifications();
+  try {
+    createNotifications();
+    deleteNotifications();
+    return res.status(200).send({ message: 'SUCCESS' });
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).send({ error: error });
+  }
 });
 
 app.use(morgan('dev', {stream: logger.stream}));

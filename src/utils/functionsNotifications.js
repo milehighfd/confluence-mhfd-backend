@@ -10,6 +10,22 @@ const User = db.user;
 const Op = sequelize.Op;
 const ProjectStatusNotification = db.projectStatusNotification;
 
+export const deleteNotifications = async () => {
+  const quantityOfDays = 60;
+  let bDate = moment(moment(0, "HH"), "MM-DD-YYYY").subtract(quantityOfDays, 'days');
+  const deleteProjectId = await Notifications.findAll({
+    attributes: ['notification_id'],
+    where: { notification_date: {[Op.lt]: bDate} }
+  });
+  const deletedProjectStatusNotification = await ProjectStatusNotification.destroy({
+    where: { notification_id: deleteProjectId.map(id => id.notification_id) }
+  });  
+  const deletedNotifications = await Notifications.destroy({
+    where: { notification_id: deleteProjectId.map(id => id.notification_id) }
+  });
+  console.log('Deleted correctly', deletedProjectStatusNotification, deletedNotifications);
+}
+
 
 export const createNotifications = async () => {
   const quantityOfDays = 14 - 2;

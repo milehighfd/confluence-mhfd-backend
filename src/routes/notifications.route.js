@@ -2,7 +2,7 @@ import express from 'express';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import auth from 'bc/auth/auth.js';
-import { createNotifications } from 'bc/utils/functionsNotifications.js';
+import { createNotifications,deleteNotifications } from 'bc/utils/functionsNotifications.js';
 
 const router = express.Router();
 const Notifications = db.notifications;
@@ -61,7 +61,8 @@ const updateNotification = async (req, res) => {
 
 const testNotifications = async (req, res) => {
   try {
-    createNotifications();
+    //createNotifications();
+    //deleteNotifications();
     return res.status(200).send({ message: 'SUCCESS' });
   } catch (error) {
     logger.error(error);
@@ -71,5 +72,6 @@ const testNotifications = async (req, res) => {
 
 router.get('/', auth, getNotifications);
 router.post('/', auth, updateNotification);
+router.get('/test', testNotifications);
 
 export default router;
