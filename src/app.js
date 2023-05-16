@@ -51,7 +51,7 @@ needle.defaults({
   open_timeout: 60000,
 });
 // 0 secs 0 mins 0 hours everyday will be triggered
-const scheduleAtbegginigOfDay = '0 30 11 * * *';
+const scheduleAtbegginigOfDay = '0 0 0 * * *';
 const fiveseconds = '*/5 * * * * *';
 
 cron.schedule(scheduleAtbegginigOfDay, function () {
