@@ -694,7 +694,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
   const CONSULTANT_ID = 3;  
   const CIVIL_CONTRACTOR_ID = 8;
   const ESTIMATED_ID = 1;
-  const filterName = filter.name ? '%' + filter.name + '%' : '';
+  const filterName = filter.name ? '%' + filter.name + ' %' : '';
   const filterBase = filter.name ? filter.name: -1;
   const contractor = filter.contractor ?  filter.contractor  : [];
   const consultant = filter.consultant ?  filter.consultant  : [];
