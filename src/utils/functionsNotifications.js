@@ -13,12 +13,20 @@ const ProjectStatusNotification = db.projectStatusNotification;
 
 export const createNotifications = async () => {
   const quantityOfDays = 14 - 2;
-  const aDate = moment(moment(0, "HH"), "MM-DD-YYYY").add(quantityOfDays, 'days');
+  const aDate = moment(moment(0, "HH"), "MM-DD-YYYY");
   let bDate = moment(moment(0, "HH"), "MM-DD-YYYY").add(quantityOfDays + 1, 'days').subtract(1,'s');
   // Get all projectids in statuses that are 14 day away from today (between beginning and ending)
   const allStatuses = await ProjectStatus.findAll({
     attributes: ['project_id', 'project_status_id'],
     where: { actual_end_date: {[Op.between]: [aDate, bDate]} }
+  });  
+  const sentNotifications = await Notifications.findAll({
+    attributes: ['project_id'],
+    include: [{
+      model: ProjectStatusNotification,
+      attributes: ['project_status_id'],
+      where: { project_status_id: allStatuses.map(status => status.project_status_id)}
+    }]
   });
   const allProjectStaffs = await ProjectStaff.findAll({
     attributes: [
@@ -43,8 +51,10 @@ export const createNotifications = async () => {
         ],
       }]          
     }]
-  });
-  allProjectStaffs.forEach(async (pS) => {
+  });    
+  const filteredProjectStaffs = allProjectStaffs.filter(pS => !sentNotifications.find(sN => sN.project_id == pS.project_id));
+  
+  filteredProjectStaffs.forEach(async (pS) => {
     const CODE_STATUS = 1;
     const newNotification = {
       is_read: false,
@@ -64,5 +74,5 @@ export const createNotifications = async () => {
     }
   });
   
-  // console.log('allStatus', allStatuses.map(status => status.project_id), 'allstaffs ', allProjectStaffs.map(bs => bs.business_associate_contact));
+  //console.log('allStatus', filteredProjectStaffs.map(status => status.project_id));
 }
