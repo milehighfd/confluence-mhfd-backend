@@ -1334,6 +1334,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
             'actual_end_date',
             'planned_end_date',
             'project_status_id',
+            'modified_date',
             'is_locked',
             'is_done'
           ],
