@@ -9,7 +9,7 @@ const BusinessAssociates = db.businessAssociates;
 const codePhaseType = db.codePhaseType;
 const router = express.Router();
 
-router.get('/get-costs-by-id/:id', auth, async (req, res) => {
+router.get('/get-costs-by-id/:id', [auth], async (req, res) => {
     let { id } = req.params;
     logger.info('get-costs-by-id');
     try {
