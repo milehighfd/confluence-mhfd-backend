@@ -5,6 +5,7 @@ const ProjectCost = db.projectCost;
 
 const saveProjectCost = async (cost) => {
   try {
+    console.log('Creating project cost with this data', cost);
     const response  = await ProjectCost.create(cost);
     logger.info('cost created');
     return response;
