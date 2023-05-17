@@ -15,12 +15,12 @@ export const printProblem = async (data, components, map, problempart) => {
     servicearea,
     county,
     solutionstatus,
-    solutioncost, 
     streamname,
     problempriority,
     sourcename,
     source,
     problemdescription,
+    component_cost,
   } = data;
   let mainImage = problemtype ? `https://confdev.mhfd.org/detailed/${problemtype}.png` : 'https://i.imgur.com/kLyZbrB.jpg'
   const mapHeight = 500;
@@ -31,7 +31,7 @@ export const printProblem = async (data, components, map, problempart) => {
   html = html.split('${county}').join(county == null? ' N/A' : county);
   html = html.split('${servicearea}').join(servicearea == null? ' N/A' : servicearea);
   html = html.split('${solutionstatus}').join(solutionstatus ? solutionstatus : 0);
-  html = html.split('${solutioncost}').join(solutioncost ? priceFormatter(solutioncost) : 'No Cost Data');
+  html = html.split('${solutioncost}').join(component_cost ? priceFormatter(component_cost) : 'No Cost Data');
   html = html.split('${streamname}').join(streamname == null? ' N/A' : streamname);
   html = html.split('${problempriority}').join(problempriority == null? ' N/A' : problempriority);
   html = html.split('${sourcename}').join(sourcename == null? ' N/A' : sourcename);
@@ -50,14 +50,15 @@ export const printProblem = async (data, components, map, problempart) => {
     original_cost: 0,
     percen: 0
   }]
-  let sum = _components.reduce((prev, curr) => curr.estimated_cost + prev, 0);;
+  let sum = _components.reduce((prev, curr) => curr.estimated_cost + prev, 0);
+  let totalComponents = _components.reduce((prev, next) => prev + next.component_count_total, 0);
   let componentRows = _components.map((c) => {
     return `
         <tr>
           <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type == null? 'N/A' : c.type}</td>
           <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${priceFormatter(c.estimated_cost)}</td>
           <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.original_cost ? (Math.round(c.original_cost * 10) / 10) : 0}%</td>
-          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen == null? 'N/A' : c.percen }%</td>
+          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen == null? 'N/A' : `${Math.round(c.percen)}%` }</td>
         </tr>
       `
   }).join('')
@@ -75,7 +76,7 @@ export const printProblem = async (data, components, map, problempart) => {
     html = html.split('${componentRows}').join(componentRows);
     html = html.split('${totalEstimatedCost}').join(`<tfoot>
       <tr>
-        <th width="40%" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>Total Estimated Cost</b></th>
+        <th width="40%" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>Total Proposed Cost (${totalComponents})</b></th>
         <th width="60%" colspan="3" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>${priceFormatter(sum)}</b></th>
       </tr>
     </tfoot>`);
