@@ -1683,14 +1683,15 @@ const updateProject = async (
 }
 
 
-const createRandomGeomOnARCGIS = (coordinates, projectname, token, projectid) => {  
-  const newGEOM = [{"geometry":{"paths":[ ] ,"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0,"projectName":projectname, "projectId": projectid}}];
+const createGeomDataForARCGIS = (coordinates, token, projectid) => {  
+  const newGEOM = [{"geometry":{"paths":[ ] ,"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0, "project_id": projectid}}];
   newGEOM[0].geometry.paths = coordinates;
   const formData = {
     'f': 'pjson',
     'token': token,
     'adds': JSON.stringify(newGEOM)
   };
+  console.log('DATA TO SEND', JSON.stringify(newGEOM));
   return formData;
 };
 
@@ -1713,7 +1714,7 @@ const insertIntoArcGis = async (geom, projectid, projectname) => {
     const fd = getAuthenticationFormData();
     const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
     const TOKEN = JSON.parse(token_data.body).token;
-    const bodyFD = createRandomGeomOnARCGIS(JSON.parse(geom).coordinates, cleanStringValue(projectname), TOKEN, projectid);
+    const bodyFD = createGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, projectid);
     const createOnArcGis = await needle('post',`${ARCGIS_SERVICE}/applyEdits`, bodyFD, { multipart: true });
     console.log('create on arc gis at ', ARCGIS_SERVICE, createOnArcGis.statusCode, JSON.stringify(createOnArcGis.body));
     if (createOnArcGis.statusCode == 200) {
@@ -1861,7 +1862,7 @@ export default {
   getDetails,
   insertIntoArcGis,
   getAuthenticationFormData,
-  createRandomGeomOnARCGIS,
+  createRandomGeomOnARCGIS: createGeomDataForARCGIS,
   updateProject,
   updateProjectStatus,
   updateProjectCurrentProjectStatusId,
