@@ -77,14 +77,18 @@ export const createNotifications = async () => {
       project_id: pS.project_id,
       recipient_user_id: pS?.business_associate_contact?.user?.user_id,
       notification_date: moment(0,'HH'),
-      "code_notification_type_id": CODE_STATUS
+      "code_notification_type_id": CODE_STATUS,
+      last_modified_by: 'cron service',
+      created_by: 'cron service'
     };
     const newNotif = await Notifications.create(newNotification);
     if (newNotif?.dataValues) { 
       const projectstatus = allStatuses.find(status => status.project_id == pS.project_id);
       const newStatusNotif = await ProjectStatusNotification.create({
         project_status_id: projectstatus.project_status_id,
-        notification_id: newNotif.notification_id
+        notification_id: newNotif.notification_id,
+        last_modified_by: 'cron service',
+        created_by: 'cron service'
       });
       console.log('Created correctly', newStatusNotif);
     }
