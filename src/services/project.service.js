@@ -690,6 +690,63 @@ const getDetails = async (project_id) => {
   }
 }
 
+const getLightDetails = async (project_id) => {
+  const project = await Project.findByPk(project_id, {
+    attributes: [
+      "project_id",
+      "project_name",
+      'current_project_status_id',
+    ],
+    include: [
+      {
+        model: ProjectStatus,
+        required: false,
+        separate: true,
+        attributes: [
+          'code_phase_type_id',
+          'planned_start_date',
+          'actual_start_date',
+          'actual_end_date',
+          'planned_end_date',
+          'project_status_id',
+          'is_locked',
+          'is_done'
+        ],
+        include: {
+          model: CodePhaseType,
+          required: false,
+          attributes: [
+            'phase_name',
+            'phase_ordinal_position'
+          ],
+          include: [{
+            model: CodeStatusType,
+            required: false,
+            attributes: [
+              'code_status_type_id',
+              'status_name'
+            ]
+          }, {
+            model: CodeProjectType,
+            required: false,
+            attributes: [
+              'code_project_type_id',
+              'project_type_name'
+            ]
+          }]
+        }
+      }
+    ]
+  });
+  if (!project) {
+    return {
+      error: 404,
+      message: 'Project Not Found'
+    };
+  }
+  return project;
+}
+
 const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter, groupname, filtervalue,type_id) => {  
   const CONSULTANT_ID = 3;  
   const CIVIL_CONTRACTOR_ID = 8;
@@ -1861,6 +1918,7 @@ export default {
   getProjectsDeprecated,
   getProjectsIdsByBounds,
   getDetails,
+  getLightDetails,
   insertIntoArcGis,
   getAuthenticationFormData,
   createRandomGeomOnARCGIS: createGeomDataForARCGIS,

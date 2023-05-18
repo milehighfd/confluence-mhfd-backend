@@ -406,15 +406,25 @@ router.post('/board-for-positions2', async (req, res) => {
   if (`${position}` !== '0') {
     attributes.push(`req${position}`);
   }
-  const projects = (await BoardProject.findAll({
+  const boardProjects = (await BoardProject.findAll({
     attributes,
     where: {
       board_id: board_id,
       [`position${position}`]: { [Op.ne]: null },
     }
   })).map(d => d.dataValues);
+  let boardProjectsWithData = await Promise.all(
+    boardProjects.map(async (boardProject) => {
+      console.log(JSON.stringify(boardProject, null, 2));
+      const details = (await projectService.getLightDetails(
+        boardProject.project_id
+      )).dataValues;
+      boardProject.projectData = details;
+      return boardProject;
+    })
+  );
   logger.info(`Finished endpoint for board/board-for-positions2`);
-  res.send(projects);
+  res.send(boardProjectsWithData);
 });
 
 router.post('/', async (req, res) => {
