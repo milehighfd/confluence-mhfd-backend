@@ -28,6 +28,9 @@ const BoardLocality = db.boardLocality;
 const ProjectStatus = db.projectStatus;
 const CodePhaseType = db.codePhaseType;
 const Project = db.project;
+const ProjectServiceArea = db.projectServiceArea;
+const ProjectCounty = db.projectCounty;
+const ProjectProposedAction = db.projectProposedAction;
 
 router.get('/lexorank-update', async (req, res) => {
     const boards = await Board.findAll();
@@ -324,30 +327,50 @@ router.post('/board-for-positions', async (req, res) => {
         board_id: board.board_id,
         [position]: { [Op.ne]: null },
       },
+      include: [
+        {
+          model: Project,
+          attributes: ['project_id', 'code_project_type_id'],
+          include: [
+            {
+              model: ProjectServiceArea,
+              as: 'project_service_areas',
+            },
+            {
+              model: ProjectCounty,
+              as: 'project_counties',
+            },
+            {
+              model: ProjectProposedAction,
+              as: 'project_proposed_actions',
+            },
+          ],
+        },
+      ],
       nest: true,
     })).map(d => d.dataValues);
     logger.info(`Finished function findAll for board/board-for-positions`);
     logger.info(`Starting function all for board/board-for-positions`);
-    let projectIds = await Promise.all(
-      boardProjects.map(async (boardProject) => {
-        const details = (await projectService.getDetails(
-          boardProject.project_id
-        )).dataValues;
-        details.code_project_type = details.code_project_type.dataValues;
-        details.project_service_areas = details.project_service_areas.map(
-            (psa) => psa.dataValues
-        );
-        details.project_counties = details.project_counties.map(
-            (pc) => pc.dataValues
-        );
-        details.project_proposed_actions = details.project_proposed_actions.map(
-            (ppa) => ppa.dataValues
-        );
-        boardProject.projectData = details;
-        return boardProject;
-      })
-    );
-    res.send({ projects: projectIds, board, limit, page, totalItems });
+    // let projectIds = await Promise.all(
+    //   boardProjects.map(async (boardProject) => {
+    //     const details = (await projectService.getDetails(
+    //       boardProject.project_id
+    //     )).dataValues;
+    //     details.code_project_type = details.code_project_type.dataValues;
+    //     details.project_service_areas = details.project_service_areas.map(
+    //         (psa) => psa.dataValues
+    //     );
+    //     details.project_counties = details.project_counties.map(
+    //         (pc) => pc.dataValues
+    //     );
+    //     details.project_proposed_actions = details.project_proposed_actions.map(
+    //         (ppa) => ppa.dataValues
+    //     );
+    //     boardProject.projectData = details;
+    //     return boardProject;
+    //   })
+    // );
+    res.send({ projects: boardProjects, board, limit, page, totalItems });
   } else {
     logger.info('CREATING NEW BOARD');
     logger.info(`Starting function createNewBoard for board/board-for-positions`);
