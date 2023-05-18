@@ -31,6 +31,7 @@ const Project = db.project;
 const ProjectServiceArea = db.projectServiceArea;
 const ProjectCounty = db.projectCounty;
 const ProjectProposedAction = db.projectProposedAction;
+const CodeStateCounty = db.codeStateCounty;
 
 router.get('/lexorank-update', async (req, res) => {
     const boards = await Board.findAll();
@@ -340,6 +341,17 @@ router.post('/board-for-positions', async (req, res) => {
             {
               model: ProjectCounty,
               as: 'project_counties',
+              include: {
+                model: CodeStateCounty,
+                required: false,
+                attributes: [
+                  'county_name',
+                  'state_county_id'
+                ]
+              },
+              attributes: [
+                'project_county_id'
+              ]
             },
             {
               model: ProjectProposedAction,
