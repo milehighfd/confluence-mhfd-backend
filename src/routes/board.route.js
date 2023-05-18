@@ -388,7 +388,7 @@ router.post('/get-or-create', async (req, res) => {
     );
   }
   logger.info(`Finished endpoint for board/get-or-create`);
-  res.send(response);
+  res.send(board);
 });
 
 router.post('/board-for-positions2', async (req, res) => {
