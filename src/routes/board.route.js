@@ -18,6 +18,7 @@ import projectService from 'bc/services/project.service.js';
 import moment from 'moment';
 import projectStatusService from 'bc/services/projectStatus.service.js';
 import sequelize from 'sequelize';
+
 const { Op } = sequelize;
 const router = express.Router();
 const Board = db.board;
@@ -363,6 +364,57 @@ router.post('/board-for-positions', async (req, res) => {
       projects: [],
     });
   }
+});
+
+router.post('/get-or-create', async (req, res) => {
+  logger.info(`Starting endpoint board/get-or-create`)
+  let body = req.body;
+  let { type, year, locality, projecttype } = body;
+  let board = await Board.findOne({
+    where: {
+      type,
+      year,
+      locality,
+      projecttype,
+    },
+  });
+  if (!board) {
+    board = await boardService.createNewBoard(
+      type,
+      year,
+      locality,
+      projecttype,
+      'Under Review'
+    );
+  }
+  logger.info(`Finished endpoint for board/get-or-create`);
+  res.send(response);
+});
+
+router.post('/board-for-positions2', async (req, res) => {
+  logger.info(`Starting endpoint board/board-for-positions2 with params ${JSON.stringify(req.body, null, 2)}`)
+  let { board_id, position } = req.body;
+  if (!board_id || position === undefined || position === null) {
+    return res.sendStatus(400);
+  }
+  const attributes = [
+    'project_id',
+    'projectname',
+    `position${position}`,
+    'origin'
+  ];
+  if (`${position}` !== '0') {
+    attributes.push(`req${position}`);
+  }
+  const projects = (await BoardProject.findAll({
+    attributes,
+    where: {
+      board_id: board_id,
+      [`position${position}`]: { [Op.ne]: null },
+    }
+  })).map(d => d.dataValues);
+  logger.info(`Finished endpoint for board/board-for-positions2`);
+  res.send(projects);
 });
 
 router.post('/', async (req, res) => {
