@@ -360,6 +360,7 @@ router.post('/board-for-positions', async (req, res) => {
           ],
         },
       ],
+      order: [[position, 'ASC']],
       nest: true,
     })).map(d => d.dataValues);
     logger.info(`Finished function findAll for board/board-for-positions`);
@@ -436,7 +437,7 @@ router.post('/board-for-positions2', async (req, res) => {
   const attributes = [
     'project_id',
     'projectname',
-    `position${position}`,
+    `rank${position}`,
     'origin'
   ];
   if (`${position}` !== '0') {
@@ -446,8 +447,9 @@ router.post('/board-for-positions2', async (req, res) => {
     attributes,
     where: {
       board_id: board_id,
-      [`position${position}`]: { [Op.ne]: null },
-    }
+      [`rank${position}`]: { [Op.ne]: null },
+    },
+    order: [[`rank${position}`, 'ASC']],
   })).map(d => d.dataValues);
   let boardProjectsWithData = await Promise.all(
     boardProjects.map(async (boardProject) => {
