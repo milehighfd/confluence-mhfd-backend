@@ -363,7 +363,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       cosponsor,
       project_id
     );
-    try {
+    /* try {
       //creating aditional cost
       await costService.saveProjectCost({
         project_id: project_id,
@@ -387,7 +387,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     } catch (error) {
       logger.error('Error', error);
       throw error;
-    }
+    } */
     for (const j of splitedJurisdiction) {
       await ProjectLocalGovernment.create({
         code_local_government_id: parseInt(j),
