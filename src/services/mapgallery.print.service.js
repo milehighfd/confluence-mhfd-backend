@@ -28,8 +28,8 @@ export const printProblem = async (data, components, map, problempart) => {
   html = html.split('${problemname}').join(problemname == null? ' N/A' : problemname);
   html = html.split('${problemtype}').join(problemtype + ' Problem' == null? ' N/A' : problemtype + ' Problem');
   html = html.split('${jurisdiction}').join(jurisdiction + ', CO'  == null? ' N/A' : jurisdiction + ', CO');
-  html = html.split('${county}').join(county == null? ' N/A' : county);
-  html = html.split('${servicearea}').join(servicearea == null? ' N/A' : servicearea);
+  html = html.split('${county}').join(county == null? ' N/A' : county + ' County');
+  html = html.split('${servicearea}').join(servicearea == null? ' N/A' : servicearea + ' Service Area');
   html = html.split('${solutionstatus}').join(solutionstatus ? solutionstatus : 0);
   html = html.split('${solutioncost}').join(component_cost ? priceFormatter(component_cost) : 'No Cost Data');
   html = html.split('${streamname}').join(streamname == null? ' N/A' : streamname);

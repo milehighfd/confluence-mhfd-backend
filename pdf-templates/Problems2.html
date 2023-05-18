@@ -16,18 +16,18 @@
           <th style="padding: 10px 20px; text-align:left; padding-bottom: 30px;">
             <h3 style="font-size: 21px; color: #11093c; line-height: 22px; margin: 0px 0px 7px 0px;">${problemname}</h3>
             <p style="font-size: 14px; color: #a09cb1; margin: 0; font-weight: 400;">
-              <span>${problemtype}</span>  •  
-              <span>${jurisdiction}</span>  •  
-              <span>${county}</span>  •  
-              <span>${servicearea}</span>  •  
+              <span>${problemtype}</span>&nbsp;&nbsp;•&nbsp;&nbsp;
+              <span>${jurisdiction}</span>&nbsp;&nbsp;•&nbsp;&nbsp;
+              <span>${county}</span>&nbsp;&nbsp;•&nbsp;&nbsp;
+              <span>${servicearea}</span>
             </p>
           </th>
           <th style="padding: 10px 10px; width: 250px;">
             <p style="font-size: 12px; color: #a09cb1;margin:0px 0ps 5px 0px; width: 100%; font-weight:500; text-align:left;">
               Solution Status
-              <b style="float: right; color: #251863;">${solutionstatus}%</b>
+              <b id='value_status' style="float: right; color: #251863;">${solutionstatus}%</b>
             </p>
-            <div style="background-color: #e7e8f6; height:6px; border-radius: 10px; border-left: 1px solid #11093c; display: block;"></div>
+            <div id='bar_id' style="background-color: #e7e8f6; height:6px; border-radius: 10px; border-left: 1px solid #11093c; display: block;"></div>
           </th>
           <th style="padding: 10px 20px; padding-right: 70px;">
             <div style="font-size: 14px; color: #251863; border-left: 1.5px solid #3d2e8a12; padding: 8px 16px; margin: 8px 12px; text-align: initial; padding-right: 0px;">
@@ -199,4 +199,12 @@
       </tbody>
     </table>
   </body>
+  <script>
+    var valeStatusElement = document.getElementById('value_status');
+    var solutionstatus = valeStatusElement.textContent;
+    var solutionstatusSinUltimo = solutionstatus.slice(0, -1);
+    var valueStatus =( Number(solutionstatusSinUltimo) * 250) / 100;
+    var divElement = document.getElementById("bar_id");
+    divElement.style.borderLeft = valueStatus + 'px solid #11093c';
+  </script>
 </html>
