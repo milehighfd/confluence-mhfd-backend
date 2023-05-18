@@ -182,7 +182,7 @@ db.landscapingArea = landscapingArea(sequelize, Sequelize);
 db.streamImprovementMeasure = streamImprovementMeasure(sequelize, Sequelize); 
 
 //Boards
-db.boardProject.hasOne(db.project, {foreignKey: 'project_id', sourceKey: 'project_id'});
+db.boardProject.hasOne(db.project, {foreignKey: 'project_id', sourceKey: 'project_id', as: 'projectData'});
 //Notifications
 db.notifications.hasOne(db.user, {foreignKey: 'user_id', sourceKey: 'recipient_user_id'});
 db.notifications.hasOne(db.projectStatusNotification, {foreignKey: 'notification_id', sourceKey: 'notification_id'});

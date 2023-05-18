@@ -330,6 +330,7 @@ router.post('/board-for-positions', async (req, res) => {
       include: [
         {
           model: Project,
+          as: 'projectData',
           attributes: ['project_id', 'code_project_type_id'],
           include: [
             {
@@ -371,7 +372,7 @@ router.post('/board-for-positions', async (req, res) => {
     //   })
     // );
     res.send({ projects: boardProjects, board, limit, page, totalItems });
-  } else {
+    } else {
     logger.info('CREATING NEW BOARD');
     logger.info(`Starting function createNewBoard for board/board-for-positions`);
     const response = await boardService.createNewBoard(
