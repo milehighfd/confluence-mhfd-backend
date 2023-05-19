@@ -94,6 +94,7 @@ export const sendApprovedAccount = async (user) => {
 }
 
 export const sendConfirmAccount = async (user) => {
+  const transporter = getTransporter();
   const redirectUrl = MHFD_FRONTEND;
   // const transporter = getTransporter();
   const completeName = user.firstName + ' ' + user.lastName;
@@ -101,11 +102,13 @@ export const sendConfirmAccount = async (user) => {
   const adminTemplate = fs.readFileSync(__dirname + '/templates/email_admin_new_user.html', 'utf8');
   const adminEmailToSend = adminTemplate.split('{{completeName}}').join(completeName).split('{{url}}').join(redirectUrl);
   logger.info(adminEmailToSend);
+  logger.info('--------------------------------------------');
+  logger.info(process.env.NODE_ENV);
   const adminOptions = {
     from: MHFD_EMAIL,
     // commented in order to avoid sending mails to mhfd domain during test time
     to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'ricardo@vizonomy.com' :'confluence.support@mhfd.org'),
-    // to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'cesar@vizonomy.com' :'cesar@vizonomy.com'),
+    //to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'cesar@vizonomy.com' :'cesar@vizonomy.com'),
     subject: 'MHFD Confluence - New User Registered!',
     html: adminEmailToSend,
     attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
