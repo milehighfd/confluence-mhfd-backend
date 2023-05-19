@@ -19,6 +19,12 @@ export default (sequelize, DataType) => {
     created: {
       type: DataType.DATE
     },
+    is_income: {
+      type: DataType.BOOLEAN
+    },
+    is_overhead: {
+      type: DataType.BOOLEAN
+    },
   }, {
     freezeTableName: true,
     tableName: 'code_cost_type',

@@ -27,6 +27,7 @@ const ProjectCounty = db.projectCounty;
 const ProjectServiceArea = db.projectServiceArea;
 const Project = db.project;
 const CodePhaseType = db.codePhaseType;
+const CodeCostType = db.codeCostType
 
 const router = express.Router();
 const multer = Multer({
@@ -257,6 +258,7 @@ router.get('/sync', async (req, res) => {
     return res.send('Failed At Syncronization');
   }
 });
+
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
   const {
@@ -291,9 +293,24 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const splitedCounty = county ? county.split(',') : [];
   const splitedServicearea = servicearea.split(',');
   const splitedOverheadcost = overheadcost.split(',');
-  const overheadcostIds = [2, 6, 7, 8, 9, 10, 12, 11, 13];
+  const filterFrontOverheadCosts = splitedOverheadcost.slice(1);
+
   const aditionalCostId = 4;
   try {
+    const overheadcostIds = await CodeCostType.findAll({
+      attributes: [
+        'code_cost_type_id'
+      ],
+      where: {
+        is_overhead: true
+      },
+    });
+    const filtered = overheadcostIds.map((element) => {
+      if (element.code_cost_type_id !== 2) {
+        return element.code_cost_type_id
+      }
+    }).filter(Number);
+
     const codePhaseForCapital = await CodePhaseType.findOne({
       where: {
         code_phase_type_id: 5,
@@ -363,7 +380,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       cosponsor,
       project_id
     );
-    /* try {
+    try {
       //creating aditional cost
       await costService.saveProjectCost({
         project_id: project_id,
@@ -372,22 +389,27 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         cost_description: additionalcostdescription,
         created_by: creator,
         modified_by: creator,
+        is_active: true
       });
       //creating overhead cost
-      for (let index = 0; index < 9; index++) {
+      console.log(filtered)
+      for (const [index, element] of filtered.entries()) {
+        console.log(index, element)
+        console.log(filterFrontOverheadCosts)
+        console.log(filterFrontOverheadCosts[index])
         await costService.saveProjectCost({
           project_id: project_id,
-          cost: Number(splitedOverheadcost[index]),
-          code_cost_type_id: overheadcostIds[index],
-          cost_description: index === 0 ? overheadcostdescription : null,
+          cost: Number(filterFrontOverheadCosts[index]) ? Number(filterFrontOverheadCosts[index]) : 0,
+          code_cost_type_id: element,
           created_by: creator,
           modified_by: creator,
+          is_active: true
         });
       }
     } catch (error) {
       logger.error('Error', error);
       throw error;
-    } */
+    }
     for (const j of splitedJurisdiction) {
       await ProjectLocalGovernment.create({
         code_local_government_id: parseInt(j),
@@ -493,9 +515,22 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const splitedCounty = county.split(',');
   const splitedServicearea = servicearea.split(',');
   const splitedOverheadcost = overheadcost.split(',').filter((e) => e >= 0);
-  const overheadcostIds = [2, 6, 7, 8, 9, 10, 12, 11, 13];
   const aditionalCostId = 4;
   try {
+    const overheadcostIds = await CodeCostType.findAll({
+      attributes: [
+        'code_cost_type_id'
+      ],
+      where: {
+        is_overhead: true
+      },
+    });
+    const filtered = overheadcostIds.map((element) => {
+      if (element.code_cost_type_id !== 2) {
+        return element.code_cost_type_id
+      }
+    }).filter(Number);
+
     const data = await projectService.updateProject(
       project_id,
       cleanStringValue(projectname),
@@ -523,28 +558,34 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       project_id
     );
     try {
-      //creating aditional cost
+
+      //update aditional cost
       await costService.updateProjectOverhead(
         {
+          project_id: project_id,
           cost: Number(additionalcost),
           code_cost_type_id: aditionalCostId,
           cost_description: additionalcostdescription,
+          created_by: creator,
           modified_by: creator,
+          is_active: true
         },
         project_id,
         aditionalCostId
       );
-      //creating overhead cost
-      for (let index = 0; index < 9; index++) {
+      //update overhead cost
+      for (const element of filtered) {
         await costService.updateProjectOverhead(
           {
-            cost: Number(splitedOverheadcost[index]),
-            code_cost_type_id: overheadcostIds[index],
-            cost_description: index === 0 ? overheadcostdescription : null,
+            project_id: project_id,
+            cost: Number(splitedOverheadcost[element]),
+            code_cost_type_id: element,
+            created_by: creator,
             modified_by: creator,
+            is_active: true
           },
           project_id,
-          overheadcostIds[index]
+          element
         );
       }
     } catch (error) {
@@ -612,7 +653,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
           await projectIndependentActionService.saveProjectIndependentAction({
             action_name: independent.name,
             project_id: project_id,
-            cost: Number(independent.cost),
+            cost: Number(independent.cost) ? Number(independent.cost) : 0,
             action_status: independent.status,
             last_modified_by: creator,
           });
@@ -620,7 +661,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
           await projectIndependentActionService.saveProjectIndependentAction({
             action_name: independent.action_name,
             project_id: project_id,
-            cost: Number(independent.cost),
+            cost: Number(independent.cost) ? Number(independent.cost) : 0,
             action_status: independent.action_status,
             last_modified_by: creator,
           });
