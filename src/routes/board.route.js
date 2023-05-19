@@ -435,6 +435,7 @@ router.post('/board-for-positions2', async (req, res) => {
     return res.sendStatus(400);
   }
   const attributes = [
+    'board_project_id',
     'project_id',
     'projectname',
     `rank${position}`,
