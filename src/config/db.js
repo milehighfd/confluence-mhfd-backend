@@ -389,6 +389,10 @@ db.streamstudy.belongsTo(db.stream, { foreignKey: 'stream_id' })
 db.study.hasMany(db.streamstudy, {foreignKey: 'study_id'});
 db.streamstudy.belongsTo(db.study, { foreignKey: 'study_id' });
 
+// relation businessAssociates projectPartner
+db.businessAssociates.belongsTo(db.projectPartner, {foreignKey: 'business_associates_id'});
+db.projectPartner.hasMany(db.businessAssociates, { foreignKey: 'business_associates_id' });
+
 db.sequelize.authenticate().then(()=>{
   console.log("Connected to Database");
 }).catch((error)=>{

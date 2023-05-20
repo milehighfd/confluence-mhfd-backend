@@ -9,14 +9,28 @@ const BusinessAssociates = db.businessAssociates;
 const codePhaseType = db.codePhaseType;
 const router = express.Router();
 
-router.get('/get-costs-by-id/:id', [auth], async (req, res) => {
+router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
     let { id } = req.params;
+    let filters = req.body;
+    const PARTNER_FILTER = filters[0];
+    const PHASE_FILTER = filters[1];
+    const PROJECT_ACTIVE_STATE = 1;
+
     logger.info('get-costs-by-id');
+    
     try {
+        let where = {
+            project_id: id,
+            is_active: PROJECT_ACTIVE_STATE
+        }
+        if (PARTNER_FILTER) {
+            where.project_partner_id = PARTNER_FILTER 
+        }
+        if (PHASE_FILTER) {
+            where.code_phase_type_id = PHASE_FILTER 
+        }
         let resProjectCost = await ProjectCost.findAll({
-            where: {
-                project_id: id,
-            },
+            where: where,
             raw: true,
             nest: true,
             attributes: ['agreement_number', 'amendment_number', 'code_phase_type_id', 'project_partner_id'],
