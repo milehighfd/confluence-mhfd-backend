@@ -64,7 +64,13 @@ const getNewFilter = (filters, body, withPrefix) => {
     filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[3]} = '${body.mhfdmanager}'`;
   }
   if (body.keyword) {
-    filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${body.keyword}%'`;
+    console.log('filters', filters);
+    if (filters.length > 0) {
+      filters += ` and (${prefix}${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${body.keyword}%' OR ${prefix}${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${body.keyword}%')`;
+    }
+    else {
+      filters = ` (${prefix}${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${body.keyword}%' OR ${prefix}${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${params.name}%') `;
+    }
   }
   if (body.cost.length) {
     
