@@ -38,7 +38,9 @@ import {
 } from 'bc/lib/gallery.constants.js';
 import ProjectService from 'bc/services/project.service.js';
 import db from 'bc/config/db.js';
+import sequelize from 'sequelize';
 
+const Op = sequelize.Op;
 const Grade_control_structure = db.gradeControlStructure;
 const Pipe_appurtenances = db.pipeAppurtenances;
 const Special_item_point = db.specialItemPoint;
@@ -54,6 +56,11 @@ const Land_acquisition = db.landAcquisition;
 const Landscaping_area = db.landscapingArea;
 const Stream_improvement_measure = db.streamImprovementMeasure;
 const Maintenance_trails = db.maintenanceTrails;
+const ProjectStaff = db.projectStaff;
+const Project = db.project;
+const BusinessAssociateContact = db.businessAssociateContact;
+const BusinessAddress = db.businessAdress;
+const BusinessAssociate = db.businessAssociates;
 
 const router = express.Router();
 const PROJECT_TABLES = [MAIN_PROJECT_TABLE];
@@ -63,120 +70,185 @@ const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'spe
    'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area', 'stream_improvement_measure'];
 
 router.post('/', async (req, res) => {
-   logger.info(`Starting endpoint mapgallery.route/ with params ${JSON.stringify(req.params, null, 2)}`);
-   try {
-      console.log('enter here');
-      if (req.body.isproblem) {
-         let filters = '';
-         filters = getFilters(req.body);
-         // 
-         const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, ${PROPSPROBLEMTABLES.problem_boundary[17]},  ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCountersProblems(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[5], PROPSPROBLEMTABLES.problem_boundary[5])}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEM_TABLE} `;
-         const query = { q: `${PROBLEM_SQL} ${filters}` };
-         let answer = [];
-         try {
-            const data = await needle('post', CARTO_URL, query, { json: true });
-            //console.log('status', data.statusCode);
-            if (data.statusCode === 200) {
-               /* let coordinates = [];
-               if (JSON.parse(element.the_geom).coordinates) {
-                 coordinates = JSON.parse(element.the_geom).coordinates;
-               } */
-               answer = data.body.rows.map(element => {
-                  return {
-                     cartodb_id: element.cartodb_id,
-                     type: 'problem_boundary',
-                     problemid: element.problemid,
-                     problemname: element.problemname,
-                     solutioncost: element.solutioncost,
-                     component_cost: element.component_cost,
-                     jurisdiction: element.jurisdiction,
-                     problempriority: element.problempriority,
-                     solutionstatus: element.solutionstatus,
-                     problemtype: element.problemtype,
-                     county: element.county,
-                     totalComponents: element.component_count,
-                     coordinates: JSON.parse(element.the_geom).coordinates ? JSON.parse(element.the_geom).coordinates : []
-                  }
-               })
-            } else {
-               console.log('bad status at gallery', response.statusCode, response.body);
-               logger.error('bad status', response.statusCode, response.body);
+  logger.info(`Starting endpoint mapgallery.route/ with params ${JSON.stringify(req.params, null, 2)}`);
+  try {
+    console.log('enter here');
+    if (req.body.isproblem) {
+      let filters = '';
+      filters = getFilters(req.body);
+      // 
+      const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, ${PROPSPROBLEMTABLES.problem_boundary[17]},  ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCountersProblems(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[5], PROPSPROBLEMTABLES.problem_boundary[5])}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEM_TABLE} `;
+      const query = { q: `${PROBLEM_SQL} ${filters}` };
+      let answer = [];
+      try {
+        const data = await needle('post', CARTO_URL, query, { json: true });
+        //console.log('status', data.statusCode);
+        if (data.statusCode === 200) {
+          /* let coordinates = [];
+          if (JSON.parse(element.the_geom).coordinates) {
+            coordinates = JSON.parse(element.the_geom).coordinates;
+          } */
+          answer = data.body.rows.map(element => {
+            return {
+              cartodb_id: element.cartodb_id,
+              type: 'problem_boundary',
+              problemid: element.problemid,
+              problemname: element.problemname,
+              solutioncost: element.solutioncost,
+              component_cost: element.component_cost,
+              jurisdiction: element.jurisdiction,
+              problempriority: element.problempriority,
+              solutionstatus: element.solutionstatus,
+              problemtype: element.problemtype,
+              county: element.county,
+              totalComponents: element.component_count,
+              coordinates: JSON.parse(element.the_geom).coordinates ? JSON.parse(element.the_geom).coordinates : []
             }
-         } catch (error) {
-            console.log('Error', error);
-         }
-         res.send(answer);
-      } else {
-         let filters = '';
-         let send = [];
-         filters = getFilters(req.body);
-         const PROJECT_FIELDS = 'cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, ' +
-            'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county, component_cost, component_count ';
+          })
 
-         if (req.body.problemtype) {
-            const result = await queriesByProblemTypeInProject(PROJECT_FIELDS, filters, req.body.problemtype);
-            return res.status(200).send(result);
-         } else {
-            for (const table of PROJECT_TABLES) {
-               let query = ''
-               if (table === MAIN_PROJECT_TABLE) {
-                  query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters(MAIN_PROJECT_TABLE, 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
-
-               }
-               let answer = [];
-               try {
-                  const data = await needle('post', CARTO_URL, query, { json: true });
-                  console.log('STATUS', data.statusCode);
-                  if (data.statusCode === 200) {
-                     const result = data.body.rows;
-                     for (const element of result) {
-                        let valor = '';
-                        if (element.attachments) {
-                           valor = await attachmentService.findCoverImage(element.attachments);
-                        }
-                        let coordinates = [];
-                        if (JSON.parse(element.the_geom).coordinates) {
-                           coordinates = JSON.parse(element.the_geom).coordinates;
-                        }
-                        answer.push({
-                           type: element.type,
-                           cartodb_id: element.cartodb_id,
-                           objectid: element.objectid,
-                           projectid: element.projectid,
-                           projecttype: element.projecttype,
-                           projectsubtype: element.projectsubtype,
-                           coverimage: element.coverimage,
-                           sponsor: element.sponsor,
-                           finalcost: element.finalcost,
-                           component_cost: element.component_cost,
-                           estimatedcost: element.estimatedcost,
-                           status: element.status,
-                           attachments: element.attachments,
-                           projectname: element.projectname,
-                           jurisdiction: element.jurisdiction,
-                           streamname: element.streamname,
-                           county: element.county,
-                           attachments: valor,
-                           totalComponents: element.component_count,
-                           coordinates: coordinates
-                        });
-                     }
-                     send = send.concat(answer);
-                  } else {
-                     console.log('bad status ', data.statusCode, data.body);
-                  }
-               } catch (error) {
-                  console.log(error);
-               };
-            }
-         }
-         return res.send(send);
+        } else {
+          console.log('bad status', response.statusCode, response.body);
+          logger.error('bad status', response.statusCode, response.body);
+        }
+      } catch (error) {
+        console.log('Error', error);
       }
-   } catch (error) {
-      logger.error(error);
-      res.status(500).send({ error: error }).send({ error: 'Error with C connection' });
-   }
+      const problemIds = answer.map(element => element.problemid);
+      const [
+        gradeControlStructureData, 
+        pipeAppurtenancesData, 
+        specialItemPointData, 
+        specialItemLinearData, 
+        specialItemAreaData, 
+        channelImprovementsLinearData, 
+        channelImprovementsAreaData, 
+        removalLineData, 
+        removalAreaData, 
+        stormDrainData, 
+        detentionFacilitiesData, 
+        maintenanceTrailsData, 
+        landAcquisitionData, 
+        landscapingAreaData, 
+        streamImprovementMeasureData
+      ] = await Promise.all([
+        Grade_control_structure.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Pipe_appurtenances.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Special_item_point.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Special_item_linear.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Special_item_area.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Channel_improvements_linear.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Channel_improvements_area.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Removal_line.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Removal_area.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Storm_drain.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Detention_facilities.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Maintenance_trails.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Land_acquisition.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Landscaping_area.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+        Stream_improvement_measure.findAll({ where: { problem_id: problemIds, project_id: { [Op.not]: null } }, attributes: ['project_id','problem_id'], include: [{ model: ProjectStaff }] })
+      ]);
+      const modelData = [
+        gradeControlStructureData.map(instance => instance.dataValues),
+        pipeAppurtenancesData.map(instance => instance.dataValues),
+        specialItemPointData.map(instance => instance.dataValues),
+        specialItemLinearData.map(instance => instance.dataValues),
+        specialItemAreaData.map(instance => instance.dataValues),
+        channelImprovementsLinearData.map(instance => instance.dataValues),
+        channelImprovementsAreaData.map(instance => instance.dataValues),
+        removalLineData.map(instance => instance.dataValues),
+        removalAreaData.map(instance => instance.dataValues),
+        stormDrainData.map(instance => instance.dataValues),
+        detentionFacilitiesData.map(instance => instance.dataValues),
+        maintenanceTrailsData.map(instance => instance.dataValues),
+        landAcquisitionData.map(instance => instance.dataValues),
+        landscapingAreaData.map(instance => instance.dataValues),
+        streamImprovementMeasureData.map(instance => {
+          const { project_id, problem_id, ...rest } = instance.dataValues;
+          return { ...rest, projectid: project_id, problemid: problem_id };
+        })
+      ];     
+      const mergedData = answer.map(element => {
+        const problemId = element.problemid;
+        const modelDatum = modelData.reduce((acc, curr) => {
+          const matchingDatum = curr.find(datum => datum.problemid === problemId);
+          if (matchingDatum) {
+            acc.push(matchingDatum);
+          }
+          return acc;
+        }, []);
+        return { ...element, modelData: modelDatum };
+      });
+      res.send(mergedData);
+    } else {
+      let filters = '';
+      let send = [];
+      filters = getFilters(req.body);
+      const PROJECT_FIELDS = 'cartodb_id, objectid, projectid, projecttype, projectsubtype, coverimage, sponsor, finalCost, ' +
+        'estimatedCost, status, attachments, projectname, jurisdiction, streamname, county, component_cost, component_count ';
 
+      if (req.body.problemtype) {
+        const result = await queriesByProblemTypeInProject(PROJECT_FIELDS, filters, req.body.problemtype);
+        return res.status(200).send(result);
+      } else {
+        for (const table of PROJECT_TABLES) {
+          let query = ''
+          if (table === MAIN_PROJECT_TABLE) {
+            query = { q: `SELECT '${table}' as type, ${PROJECT_FIELDS}, ${getCounters(MAIN_PROJECT_TABLE, 'projectid')}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${table} ${filters} ` };
+
+          }
+          let answer = [];
+          try {
+            const data = await needle('post', CARTO_URL, query, { json: true });
+            console.log('STATUS', data.statusCode);
+            if (data.statusCode === 200) {
+              const result = data.body.rows;
+              for (const element of result) {
+                let valor = '';
+                if (element.attachments) {
+                  valor = await attachmentService.findCoverImage(element.attachments);
+                }
+                let coordinates = [];
+                if (JSON.parse(element.the_geom).coordinates) {
+                  coordinates = JSON.parse(element.the_geom).coordinates;
+                }
+                answer.push({
+                  type: element.type,
+                  cartodb_id: element.cartodb_id,
+                  objectid: element.objectid,
+                  projectid: element.projectid,
+                  projecttype: element.projecttype,
+                  projectsubtype: element.projectsubtype,
+                  coverimage: element.coverimage,
+                  sponsor: element.sponsor,
+                  finalcost: element.finalcost,
+                  component_cost: element.component_cost,
+                  estimatedcost: element.estimatedcost,
+                  status: element.status,
+                  attachments: element.attachments,
+                  projectname: element.projectname,
+                  jurisdiction: element.jurisdiction,
+                  streamname: element.streamname,
+                  county: element.county,
+                  attachments: valor,
+                  totalComponents: element.component_count,
+                  coordinates: coordinates
+                });
+              }
+              send = send.concat(answer);
+            } else {
+              console.log('bad status ', data.statusCode, data.body);
+            }
+          } catch (error) {
+            console.log(error);
+          };
+        }
+      }
+      return res.send(send);
+    }
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send({ error: error }).send({ error: 'Error with C connection' });
+  }
 });
 
 function getCounters(table, column) {
@@ -1310,7 +1382,7 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
                percen: percentageFormatter(sum == 0 ? 0 : element.estimated_cost / sum),
                complete_cost: element.complete_cost,
                component_count_complete: element.component_count_complete,
-               component_count_total: element.component_count_total
+               component_count_total: element.component_count_total,
             }
          });
       } else {
@@ -1335,6 +1407,121 @@ router.post('/components-by-entityid', async (req, res) => {
       logger.error(error);
       res.status(500).send({ error: error }).send({ error: 'Connection error' });
    }
+})
+
+router.post('/teams-by-entityid', async (req, res) => {
+  logger.info(`Starting endpoint mapgallery.route/teams-by-entityid with params ${JSON.stringify(req.params, null, 2)}`);
+  try {
+     let id = req.body.id;
+     const [
+      gradeControlStructureData, 
+      pipeAppurtenancesData, 
+      specialItemPointData, 
+      specialItemLinearData, 
+      specialItemAreaData, 
+      channelImprovementsLinearData, 
+      channelImprovementsAreaData, 
+      removalLineData, 
+      removalAreaData, 
+      stormDrainData, 
+      detentionFacilitiesData, 
+      maintenanceTrailsData, 
+      landAcquisitionData, 
+      landscapingAreaData, 
+      streamImprovementMeasureData
+    ] = await Promise.all([
+      Grade_control_structure.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Pipe_appurtenances.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Special_item_point.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Special_item_linear.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Special_item_area.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Channel_improvements_linear.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Channel_improvements_area.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Removal_line.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Removal_area.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Storm_drain.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Detention_facilities.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Maintenance_trails.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Land_acquisition.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Landscaping_area.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+      Stream_improvement_measure.findAll({ where: { problem_id: id, project_id: { [Op.not]: null } }, attributes: ['project_id',] })
+    ]);
+    const modelData = [
+      gradeControlStructureData.map(instance => instance.dataValues),
+      pipeAppurtenancesData.map(instance => instance.dataValues),
+      specialItemPointData.map(instance => instance.dataValues),
+      specialItemLinearData.map(instance => instance.dataValues),
+      specialItemAreaData.map(instance => instance.dataValues),
+      channelImprovementsLinearData.map(instance => instance.dataValues),
+      channelImprovementsAreaData.map(instance => instance.dataValues),
+      removalLineData.map(instance => instance.dataValues),
+      removalAreaData.map(instance => instance.dataValues),
+      stormDrainData.map(instance => instance.dataValues),
+      detentionFacilitiesData.map(instance => instance.dataValues),
+      maintenanceTrailsData.map(instance => instance.dataValues),
+      landAcquisitionData.map(instance => instance.dataValues),
+      landscapingAreaData.map(instance => instance.dataValues),
+      streamImprovementMeasureData.map(instance => {
+        const { project_id, problem_id, ...rest } = instance.dataValues;
+        return { ...rest, projectid: project_id, problemid: problem_id };
+      })
+    ].filter(arr => arr.length > 0);
+    const flattenedArray = modelData.flat();
+    const flattenedArrayMap = flattenedArray.reduce((acc, element) => {
+      const projectId = element.projectid;
+      if (!acc[projectId]) {
+        acc[projectId] = element;
+      }
+      return acc;
+    }, {});    
+    const uniqueFlattenedArray = Object.values(flattenedArrayMap);
+    const flattenedArray2 = uniqueFlattenedArray.flat();
+    const projectIdsArray = flattenedArray2.map(element => element.projectid);
+    const teamsProject = await Project.findAll({
+      where: { project_id: { [Op.in]: projectIdsArray } }, 
+      attributes: ['project_id'] ,
+      include: [{
+        model: ProjectStaff,
+        required: false,
+        separate: true,
+        attributes: [
+          'code_project_staff_role_type_id',
+          'is_active',
+          'project_staff_id',
+          'business_associate_contact_id'
+        ],
+        include: [{
+          model: BusinessAssociateContact,
+          attributes: [
+            'contact_name',
+            'business_associate_contact_id'
+          ],
+          required: true,
+          include: [
+            {
+            model: BusinessAddress,
+            required: true,
+            attributes: [
+              'business_associate_id',
+              'business_address_id'
+            ],
+            include: [{
+              model: BusinessAssociate,
+              required: true,
+              attributes: [
+                'business_name'
+              ]
+            }]
+          }]
+        }]
+      }]
+    });
+    logger.info(`${JSON.stringify(teamsProject)}`);
+    return res.status(200).send(teamsProject);
+  } catch (error) {
+     logger.error(error);
+     res.status(500).send({ error: error }).send({ error: 'Connection error' });
+  }
 })
 
 router.post('/get-coordinates', async (req, res) => {
