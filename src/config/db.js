@@ -181,6 +181,22 @@ db.landAcquisition = landAcquisition(sequelize, Sequelize);
 db.landscapingArea = landscapingArea(sequelize, Sequelize); 
 db.streamImprovementMeasure = streamImprovementMeasure(sequelize, Sequelize); 
 
+//14 layers for projectstatus
+db.gradeControlStructure.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.pipeAppurtenances.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.specialItemPoint.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.specialItemLinear.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.specialItemArea.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.channelImprovementsLinear.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.channelImprovementsArea.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.removalLine.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.removalArea.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.stormDrain.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.detentionFacilities.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.maintenanceTrails.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.landAcquisition.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.landscapingArea.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'projectid'});
+db.streamImprovementMeasure.hasOne(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'project_id'});
 //Boards
 db.boardProject.hasOne(db.project, {foreignKey: 'project_id', sourceKey: 'project_id', as: 'projectData'});
 //Notifications
@@ -194,13 +210,13 @@ db.user.hasMany(db.problemFavorite, { foreignKey: 'user_id' });
 db.user.hasMany(db.logActivity, {foreignKey: 'user_id'});
 db.user.hasMany(db.color, {foreignKey: 'user_id'});
 db.color.belongsTo(db.user, {foreignKey: 'user_id'});
-
-db.color.hasMany(db.newnotes, {foreignKey: {name: 'color_id', allowNull: true}});
-db.newnotes.belongsTo(db.color, {foreignKey: {name: 'color_id', allowNull: true}});
-
 db.logActivity.belongsTo(db.user, {foreignKey: 'user_id'});
 db.ProjectFavorite.belongsTo(db.user, {foreignKey: 'user_id'});
 db.problemFavorite.belongsTo(db.user, { foreignKey: 'user_id' });
+//notes
+db.color.hasMany(db.newnotes, {foreignKey: {name: 'color_id', allowNull: true}});
+db.newnotes.belongsTo(db.color, {foreignKey: {name: 'color_id', allowNull: true}});
+
 // db.user.hasMany(db.newnotes, {foreignKey: 'user_id'});
 db.newnotes.belongsTo(db.user, {foreignKey: 'user_id'});
 db.newnotes.belongsTo(db.groupnotes, {foreignKey: {name: 'groupnotes_id', allowNull: true}});
