@@ -33,6 +33,18 @@ const ProjectCounty = db.projectCounty;
 const ProjectProposedAction = db.projectProposedAction;
 const CodeStateCounty = db.codeStateCounty;
 
+router.get('/test-function', async (req, res) => {
+    try {
+        const board = await getBoard('WORK_PLAN', 'MHFD District Work Plan', 2022, 'Capital');
+        const counter = await boardService.countByGroup('rank1', board.board_id);
+        console.log(counter);
+        console.log(counter[1]);
+        console.log(counter[0]);
+        res.send({counter: counter});
+    } catch (e) {
+        res.status(500).send({message: e.message});
+    }
+});
 router.get('/lexorank-update', async (req, res) => {
     const boards = await Board.findAll();
     const boardProjects = await BoardProject.findAll();
@@ -714,6 +726,7 @@ const updateProjectStatus = async (boards, status, creator) => {
     }
 }
 
+
 const sendBoardProjectsToDistrict = async (boards) => {
     try {
         logger.info(`Starting function findAll for board/`);
@@ -724,19 +737,19 @@ const sendBoardProjectsToDistrict = async (boards) => {
                 where: {
                     board_id: board.board_id
                 }
-            }).then(((boardProjects) => {
+            }).then((async (boardProjects) => {
                 const prs = [];
                 for (const bp of boardProjects) {
                     prs.push(
                     boardService.saveProjectBoard({
                         board_id: destinyBoard.board_id,
                         project_id: bp.project_id,
-                        position0: bp.position0,
-                        position1: bp.position1,
-                        position2: bp.position2,
-                        position3: bp.position3,
-                        position4: bp.position4,
-                        position5: bp.position5,
+                        rank0: bp.rank0,
+                        rank1: bp.rank1,
+                        rank2: bp.rank2,
+                        rank3: bp.rank3,
+                        rank4: bp.rank4,
+                        rank5: bp.rank5,
                         req1: bp.req1,
                         req2: bp.req2,
                         req3: bp.req3,
@@ -747,11 +760,28 @@ const sendBoardProjectsToDistrict = async (boards) => {
                         origin: board.locality,
                     }));
                 }
-                Promise.all(prs).then((values) => {
+                await Promise.all(prs).then((values) => {
                     logger.info('success on sendBoardProjectsToDistrict');
                 }).catch((error) => {
                     logger.error(`error on sendBoardProjectsToDistrict ${error}`);
                 });
+                const updatePromises = [];
+                for (let i = 0; i < 6; i++) {
+                    const rank = `rank${i}`;
+                    logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
+                    const counter = await boardService.countProjectsByRank(destinyBoard.board_id, rank);
+                    logger.info(`Finish counter: ${JSON.stringify(counter)}}`);
+                    if (counter[1]) {
+                        updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank));
+                    }   
+                }
+                if (updatePromises.length) {
+                    await Promise.all(updatePromises).then((values) => {
+                        logger.info('success on recalculate Columns');
+                    }).catch((error) => {
+                        logger.error(`error on recalculate columns ${error}`);
+                    });
+                }
             }));
         }
         logger.info(`Finished function findAll for board/`);
