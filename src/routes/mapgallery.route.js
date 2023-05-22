@@ -450,6 +450,7 @@ function getFilters(params) {
       }
    }
 
+   //TODO here is the filter that needs to be related to DB
    if (params.mhfdmanager) {
       const query = createQueryForIn(params.mhfdmanager.split(','));
       if (filters.length > 0) {

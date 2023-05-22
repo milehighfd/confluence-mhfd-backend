@@ -16,14 +16,6 @@ const getNewFilter = (filters, body, withPrefix) => {
     let problemtypeIn = problemtype.map(s => `'${s}'`)
     filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[8]} in (${problemtypeIn.join(',')})`
   }
-  if (body.cost && body.cost.length !== 0) {
-    let column = `${prefix}${PROPSPROBLEMTABLES.problem_boundary[0]}`;
-    let minPair = body.cost[0];
-    let maxPair = body.cost[body.cost.length - 1];
-    let minimumValue = minPair.split(',')[0];
-    let maximumValue = maxPair.split(',')[1];
-    filters += ` and ${column} between ${minimumValue} and ${maximumValue}`
-  }
   if (body.solutionstatus) {
     const ranges = body.solutionstatus.split(',');
     const statusfilters = [];
@@ -73,6 +65,10 @@ const getNewFilter = (filters, body, withPrefix) => {
   }
   if (body.keyword) {
     filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${body.keyword}%'`;
+  }
+  if (body.cost.length) {
+    
+    filters += ` and (${prefix}${PROPSPROBLEMTABLES.problem_boundary[0]} between ${body.cost[0]} and ${ +body.cost[1]-1})`
   }
   return filters;
 }
@@ -254,57 +250,16 @@ export async function getValuesByRangeProblem(table, column, range, bounds, body
     filters = getNewFilter(filters, body);
 
     const newProm1 = new Promise(async (resolve, reject) => {
-      let minRange, maxRange;
-      let bodyColumn = column === PROPSPROBLEMTABLES.problem_boundary[0] ? body['cost'] : body[column];
-      if (column === PROPSPROBLEMTABLES.problem_boundary[0]) {
-        minRange = 0;
-        maxRange = 12000000;
-      } else if (bodyColumn && bodyColumn.length !== 0) {
-        let minPair = bodyColumn[0];
-        let maxPair = bodyColumn[bodyColumn.length - 1];
-        let minimumValue = minPair.split(',')[0];
-        let maximumValue = maxPair.split(',')[1];
-        minRange = +minimumValue;
-        maxRange = +maximumValue;
-      } else {
-        const minMaxQuery = {
-            q: `SELECT max(${column}) as max, min(${column}) as min FROM ${table} where ${filters}`
-        }
-        console.log('query ar min max', minMaxQuery);
-        logger.info(`Starting function needle for mapgallery.problem.route/`);
-        const minMaxData = await needle('post', CARTO_URL, minMaxQuery, { json: true });
-        logger.info(`Finished function needle for mapgallery.problem.route/`);
-        const minMaxResult = minMaxData.body.rows || [];
-        minRange = Math.min.apply(Math, minMaxResult.map(function (element) { return element.min }));
-        maxRange = Math.max.apply(Math, minMaxResult.map(function (element) { return element.max }));
-      }
-
-      let width = maxRange - minRange;
-      const lenRange = column === PROPSPROBLEMTABLES.problem_boundary[0] ? 13 : 20;
-      let intervalWidth = column === PROPSPROBLEMTABLES.problem_boundary[0] ? 1000000 : width / lenRange;
-      let result2 = [];
-      let epsilon = 0.001;
-
-      for (let i = 0 ; i < lenRange ; i++) {
-        const isLast = i === (lenRange - 1);
-        let values = {
-           min: minRange + i * intervalWidth,
-           max: minRange + (i + 1) * intervalWidth - (isLast ? 0 : epsilon)
-        }
-        let counter = 0;
-        const query = { q: `select count(*) from ${table} where (${column} between ${values.min} and ${values.max}) and ${filters} ` };
+      let result2 = {};
+      const query = { q: `select count(*) from ${table} where ${filters} ` };
         console.log('query ar min max range', query.q);
         logger.info(`Starting function needle for mapgallery.problem.route/`);
         const data = await needle('post', CARTO_URL, query, { json: true });
         logger.info(`Finished function needle for mapgallery.problem.route/`);
         if (data.statusCode === 200) {
           const rows = data.body.rows;
-          counter = rows[0].count;
+          result2.counter = rows[0].count;
         }
-
-        result2.push({ min: values.min, max: values.max, counter: counter, last: isLast });
-
-      }
       resolve(result2);
     });
     logger.info(`Starting function newProm1 for mapgallery.problem.route/`);

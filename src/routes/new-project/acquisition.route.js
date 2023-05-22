@@ -109,8 +109,6 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       },
       { where: { project_id: project_id } }
     );
-    console.log(resres);
-
     const projectsubtype = '';
    /*  
   TODO: enable with WR and WP changes to add the project to cards 
