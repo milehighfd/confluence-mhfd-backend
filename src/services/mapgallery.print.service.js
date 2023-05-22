@@ -287,7 +287,6 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       :project_type_name === 'Routine Trash and Debris'
       ? `${URL_BASE}detailed/debris-management.png`
       : `${URL_BASE}detailed/watershed-change.png`;
-
   let mhfdManager = 'N/A'
   let lgManager = 'N/A'
   data.project_staffs.map((el) => {
@@ -311,12 +310,12 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     .join(cost ? priceFormatter(cost) : 'No Cost Data');
   html = html.split('${status}').join(status);
   html = html.split('${phase}').join(phase);
-  html = html.split('${streamname}').join(stream_name);
+  html = html.split('${streamname}').join(stream_name ? stream_name:'N/A' );
   html = html.split('${attachmentUrl}').join(urlImage);
   html = html.split('${projectId}').join(projectId);
   html = html.split('${mhfdManager}').join(mhfdManager);
   html = html.split('${lgManager}').join(lgManager);
-  html = html.split('${description}').join(_data.dataValues.description);
+  html = html.split('${description}').join(_data.dataValues.description ? _data.dataValues.description : 'N/A');
   html = html.split('${contractor}').join(contractor ? contractor : 'N/A');
   html = html.split('${consultant}').join(consultant ? consultant : 'N/A');
   let _problems =
@@ -356,9 +355,9 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       return `
         <tr>
           <td style="width: 242.5px; padding: 7px 0px;">
-            <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 400;">${el.business_associate_contact.contact_name.substring(0,30) === el.business_associate_contact.contact_name.substring(0,31) ? el.business_associate_contact.contact_name.substring(0,30): (el.business_associate_contact.contact_name.substring(0,30) + '...')}</h6>
-            <p style="font-size: 12px; color: #a09cb1; margin-bottom: 0px; margin-top: -3px; padding-top: 5px;">${STAFF_ROL_MAP[el.code_project_staff_role_type_id]}</p>
-            <span style="font-size: 12px; color: #a09cb1; margin-bottom: 15px;margin-top: -3px;">${el.business_associate_contact.business_address.business_associate.business_name.substring(0,30) === el.business_associate_contact.business_address.business_associate.business_name.substring(0,31) ? el.business_associate_contact.business_address.business_associate.business_name.substring(0,30):  (el.business_associate_contact.business_address.business_associate.business_name.substring(0,30) + '...')}</span>
+            <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 600;">${el.business_associate_contact.contact_name.substring(0,30) === el.business_associate_contact.contact_name.substring(0,31) ? el.business_associate_contact.contact_name.substring(0,30): (el.business_associate_contact.contact_name.substring(0,30) + '...')}</h6>
+            <p style="font-size: 12px; color: #11093c; margin-bottom: 0px; margin-top: -3px; padding-top: 5px;">${STAFF_ROL_MAP[el.code_project_staff_role_type_id]}</p>
+            <span style="font-size: 12px; color: #11093c; margin-bottom: 15px;margin-top: -3px; line-height: 10px;">${el.business_associate_contact.business_address.business_associate.business_name}</span>
           </td>
         </tr>
     `
@@ -564,14 +563,14 @@ export const printProject = async (_data, components, map) => {
   html = html.split('${servicearea}').join(servicearea);
   html = html.split('${cost}').join(cost ? priceFormatter(cost) : 'No Cost Data');
   html = html.split('${status}').join(status);
-  html = html.split('${streamname}').join(streamname);
+  html = html.split('${streamname}').join(streamname.length > 0 ? streamname :'N/A');
   html = html.split('${projectsubtype}').join(projectsubtype);
   html = html.split('${attachmentUrl}').join(attachments.length > 0 ? attachments[0] : urlImage);
   html = html.split('${startyear}').join(startyear);
   html = html.split('${completedyear}').join(completedyear);
   html = html.split('${frequency}').join(frequency);
   html = html.split('${mhfdmanager}').join(mhfdmanager);
-  html = html.split('${description}').join(description);
+  html = html.split('${description}').join(description.length > 0 ? description: 'N/A');
   html = html.split('${contractor}').join(contractor);
   html = html.split('${consultant}').join(consultant);
   html = html.split('${mapHeight}').join(mapHeight);
