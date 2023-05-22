@@ -99,7 +99,7 @@ router.post('/', async (req, res) => {
                   }
                })
             } else {
-               console.log('bad status', response.statusCode, response.body);
+               console.log('bad status at gallery', response.statusCode, response.body);
                logger.error('bad status', response.statusCode, response.body);
             }
          } catch (error) {
@@ -425,20 +425,7 @@ function getFilters(params) {
    }
 
    if (params.cost && params.cost.length > 0) {
-      let query = '';
-      let operator = '';
-      for (const val of params.cost) {
-         const values = val.split(',');
-
-         query += operator + ` (cast(${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[0] : PROPSPROBLEMTABLES.problems[0]} as bigint) between ${values[0]} and ${values[1]})`;
-         operator = ' or ';
-      }
-
-      if (filters.length > 0) {
-         filters += ` and ${query}`;
-      } else {
-         filters = ` ${query}`;
-      }
+    filters += ` ${filters.length > 0 ? 'and': ''}  (${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[0] : PROPSPROBLEMTABLES.problems[0]} between ${params.cost[0]} and ${ +params.cost[1]-1})`;
    }
 
    if (params.servicearea) {
