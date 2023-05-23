@@ -418,7 +418,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
             c.original_cost ? Math.round(c.original_cost * 10) / 10 : 0
           }%</td>
           <td width="40%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${
-            c.percen == null ? 'N/A' : c.percen
+            c.percen == null ? 'N/A' : Math.round(c.percen)
           }%</td>
         </tr>
       `;
