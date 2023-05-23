@@ -32,6 +32,62 @@ const Stream_improvement_measure = db.streamImprovementMeasure;
 const Maintenance_trails = db.maintenanceTrails;
 const ProjectStaff = db.projectStaff;
 
+export const getCountForProblemId = async (problemId) => {
+  try {
+    const [
+      gradeControlStructureData,
+      pipeAppurtenancesData,
+      specialItemPointData,
+      specialItemLinearData,
+      specialItemAreaData,
+      channelImprovementsLinearData,
+      channelImprovementsAreaData,
+      removalLineData,
+      removalAreaData,
+      stormDrainData,
+      detentionFacilitiesData,
+      maintenanceTrailsData,
+      landAcquisitionData,
+      landscapingAreaData,
+      streamImprovementMeasureData
+    ] = await Promise.all([
+      Grade_control_structure.count({ where: { problemid: problemId } }),
+      Pipe_appurtenances.count({ where: { problemid: problemId } }),
+      Special_item_point.count({ where: { problemid: problemId } }),
+      Special_item_linear.count({ where: { problemid: problemId } }),
+      Special_item_area.count({ where: { problemid: problemId } }),
+      Channel_improvements_linear.count({ where: { problemid: problemId } }),
+      Channel_improvements_area.count({ where: { problemid: problemId } }),
+      Removal_line.count({ where: { problemid: problemId } }),
+      Removal_area.count({ where: { problemid: problemId } }),
+      Storm_drain.count({ where: { problemid: problemId } }),
+      Detention_facilities.count({ where: { problemid: problemId } }),
+      Maintenance_trails.count({ where: { problemid: problemId } }),
+      Land_acquisition.count({ where: { problemid: problemId } }),
+      Landscaping_area.count({ where: { problemid: problemId } }),
+      Stream_improvement_measure.count({ where: { problem_id: problemId } })
+    ]);
+    const totalCount = gradeControlStructureData +
+      pipeAppurtenancesData +
+      specialItemPointData +
+      specialItemLinearData +
+      specialItemAreaData +
+      channelImprovementsLinearData +
+      channelImprovementsAreaData +
+      removalLineData +
+      removalAreaData +
+      stormDrainData +
+      detentionFacilitiesData +
+      maintenanceTrailsData +
+      landAcquisitionData +
+      landscapingAreaData +
+      streamImprovementMeasureData;
+    return totalCount;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export const getDataProblemSql = async (problemIds,answer) => {
   try {
     const [

@@ -32,7 +32,8 @@ import {
    getDataByProjectIds,
    getProblemByProjectId,
    getCoordinatesOfComponents,
-   getDataProblemSql
+   getDataProblemSql,
+   getCountForProblemId,
 } from 'bc/services/mapgallery.service.js';
 import {
    statusList
@@ -250,13 +251,17 @@ function getFilters(params) {
 
    if (params.isproblem) {
       // console.log('PROBLEMS');
-      tipoid = 'problemid';
+      tipoid = 'problemid';      
       if (params.name) {
+         let name = params.name;
+         if (!Number.isInteger(Number(name))) {
+            name += ' ';
+          }
          if (filters.length > 0) {
-            filters = filters = ` and (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${params.name}%' OR ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${params.name}%')`;
+            filters = filters = ` and (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${name}%' OR ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${name}%')`;
          }
          else {
-            filters = ` (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${params.name}%' OR ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${params.name}%') `;
+            filters = ` (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${name}%' OR ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${name}%') `;
          }
       }
 
@@ -2383,12 +2388,20 @@ router.get('/problem_part/:id', async (req, res) => {
       data: all
    });
 });
+const getcountForProblem = async (req, res) => {
+   const problemid = req.params['problemid'];
+   const totalCount = await getCountForProblemId(problemid);
+   res.send({
+      data: totalCount
+   });
+}
 
 router.post('/params-filter-components', componentParamFilterRoute)
 router.post('/params-filter-components-db', componentParamFilterCounter)
 router.post('/params-filter-components-ids', componentFilterIds)
 router.post('/params-filter-projects', projectParamFilterRoute)
 router.post('/params-filter-problems', problemParamFilterRoute)
+router.get('/count-for-problem/:problemid', getcountForProblem);
 
 router.post('/project-statistics', projectStatistics)
 
