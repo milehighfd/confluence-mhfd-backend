@@ -1082,6 +1082,18 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
    let table = '';
    let finalcost = '';
    let extraColumnProb = typeid;
+   let conditionalWhere = {};
+
+   if (typeid === PROPSPROBLEMTABLES.problems[5]) {
+      conditionalWhere = {
+         problemid: id,
+      }
+   } else {
+      conditionalWhere = {
+         projectid: id,
+      }
+   }
+
    if (typeid === 'projectid') {
       table = MAIN_PROJECT_TABLE;
       finalcost = 'finalcost';
@@ -1094,132 +1106,106 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
       table = PROBLEM_TABLE;
       finalcost = PROPSPROBLEMTABLES.problem_boundary[0];
    }
-   let COMPONENTS_SQL = '';
-   let union = '';
 
-   if (typeid === 'projectid') {
+
       let projectLayers = [];
       const grade_control_structure = await Grade_control_structure.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       });
       grade_control_structure.action = 'grade_control_structure';
       projectLayers.push(grade_control_structure);
       const pipe_appurtenances = await Pipe_appurtenances.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       })
       pipe_appurtenances.action = 'pipe_appurtenances';
       projectLayers.push(pipe_appurtenances);
       const special_item_point = await Special_item_point.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       });
       special_item_point.action = 'special_item_point';
       projectLayers.push(special_item_point);
       const special_item_linear = await Special_item_linear.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       });
       special_item_linear.action = 'special_item_linear';
       projectLayers.push(special_item_linear);
       const special_item_area = await Special_item_area.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       });
       special_item_area.action = 'special_item_area';
       projectLayers.push(special_item_area);
       const channel_improvements_linear = await Channel_improvements_linear.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       });
       channel_improvements_linear.action = 'channel_improvements_linear';
       projectLayers.push(channel_improvements_linear);
       const channel_improvements_area = await Channel_improvements_area.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       });
       channel_improvements_area.action = 'channel_improvements_area';
       projectLayers.push(channel_improvements_area);
       const removal_line = await Removal_line.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       });
       removal_line.action = 'removal_line';
       projectLayers.push(removal_line);
       const removal_area = await Removal_area.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       });
       removal_area.action = 'removal_area';
       projectLayers.push(removal_area);
       const storm_drain = await Storm_drain.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       });
       storm_drain.action = 'storm_drain';
       projectLayers.push(storm_drain);
       const detention_facilities = await Detention_facilities.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       });
       detention_facilities.action = 'detention_facilities';
       projectLayers.push(detention_facilities);
       const land_acquisition = await Land_acquisition.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       });
       land_acquisition.action = 'land_acquisition';
       projectLayers.push(land_acquisition);
       const landscaping_area = await Landscaping_area.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       });
       landscaping_area.action = 'landscaping_area';
       projectLayers.push(landscaping_area);
       const stream_improvement_measure = await Stream_improvement_measure.findAll({
          raw: true,
          nest: true,
-         where: {
+         where: typeid === PROPSPROBLEMTABLES.problems[5] ? {
+            problem_id: id,
+         } : {
             project_id: id,
          }
       });
@@ -1228,9 +1214,7 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
       const maintenance_trails = await Maintenance_trails.findAll({
          raw: true,
          nest: true,
-         where: {
-            projectid: id,
-         }
+         where: conditionalWhere
       });
       maintenance_trails.action = 'maintenance_trails';
       projectLayers.push(maintenance_trails);
@@ -1287,104 +1271,6 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
          }
       })
       return costs;
-   } else {
-      for (const component of TABLES_COMPONENTS) {
-
-         if (component === 'stream_improvement_measure') {
-            let typeidSp = typeid === 'projectid' ? 'project_id' : 'problem_id';
-            let cost_column = 'estimated_cost_base';
-
-            COMPONENTS_SQL += union + `
-            SELECT   component_part_category as type, 
-                     count(*), 
-                     coalesce(sum(${cost_column}), 0) as estimated_cost, 
-                     case 
-                        when cast(${finalcost} as integer) > 0 
-                        then 
-                        coalesce( (select sum(${cost_column}) as aux from ${component} where ${component}.status = 'Complete') , 0 )  /  cast(${finalcost} as integer)
-                        else
-                        0
-                     END as original_cost,
-                     coalesce(complete_t.sum, 0) as complete_cost, 
-                     coalesce(complete_t2.count, 0) as component_count, 
-                     coalesce(complete_t3.count, 0) as component_count_total
-                     
-            FROM ${component}, ${table}, ( select sum(estimated_cost_base) as sum from ${component} where ${component}.status = 'Complete' ) complete_t, 
-            
-                     ( select count(*) as count from ${component} where ${component}.status = 'Complete' and ${component}.${typeidSp}=${id}) complete_t2,
-                     ( select count(*) as count from ${component} where ${component}.${typeidSp}=${id}) complete_t3
-            
-            where ${component}.${typeidSp}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum, complete_t2.count, complete_t3.count`;
-
-         } else {
-            COMPONENTS_SQL += union + `SELECT type, count(*)
-           , coalesce(sum(original_cost), 0) as estimated_cost, 
-             case 
-               when cast(${finalcost} as integer) > 0 
-               then 
-               coalesce(
-                  (select sum(original_cost) as aux from ${component} where ${component}.status = 'Complete')
-                  , 
-                  0
-               )  /  cast(${finalcost} as integer)
-               else
-               0
-             END as original_cost, coalesce(complete_t.sum, 0) as complete_cost
-             , coalesce(complete_t2.count, 0) as component_count
-             , coalesce(complete_t3.count, 0) as component_count_total
-                FROM ${component}, ${table}, ( select sum(estimated_cost) as sum from ${component} where ${component}.status = 'Complete' ) complete_t, 
-                ( select count(*) as count from ${component} where ${component}.status = 'Complete' and ${component}.${typeid}=${id}) complete_t2,
-                ( select count(*) as count from ${component} where ${component}.${typeid}=${id}) complete_t3
-                where ${component}.${typeid}=${id} and ${table}.${extraColumnProb}=${id} group by type, ${finalcost}, complete_t.sum, complete_t2.count, complete_t3.count`;
-         }
-         union = ' union ';
-      }
-      if (sortby) {
-         if (!sorttype) {
-            sorttype = 'desc';
-         }
-         COMPONENTS_SQL += ` order by ${sortby} ${sorttype}`;
-      }
-      console.log('COMPONENTS SQL', COMPONENTS_SQL);
-      const componentQuery = { q: `${COMPONENTS_SQL}` };
-      const data = await needle('post', CARTO_URL, componentQuery, { json: true });
-      if (data.statusCode === 200) {
-         let result = data.body.rows.map(element => {
-            return {
-               type: element.type + ' (' + element.component_count_total + ')',
-               estimated_cost: element.estimated_cost,
-               original_cost: element.original_cost,
-               complete_cost: element.complete_cost,
-               component_count_complete: element.component_count,
-               component_count_total: element.component_count_total
-            }
-         })
-         if (sortby === 'percen') {
-            result.sort((a, b) => {
-               if (sorttype === 'asc') {
-                  return a.estimated_cost - b.estimated_cost;
-               } else {
-                  return b.estimated_cost - a.estimated_cost;
-               }
-            })
-         }
-         let sum = result.reduce((prev, curr) => curr.estimated_cost + prev, 0);
-         return result.map((element) => {
-            return {
-               type: element.type,
-               estimated_cost: element.estimated_cost,
-               original_cost: element.original_cost,
-               percen: percentageFormatter(sum == 0 ? 0 : element.estimated_cost / sum),
-               complete_cost: element.complete_cost,
-               component_count_complete: element.component_count_complete,
-               component_count_total: element.component_count_total,
-            }
-         });
-      } else {
-         console.log('bad status ', response.statusCode, response.body);
-         throw new Error('');
-      }
-   }
 }
 
 router.post('/components-by-entityid', async (req, res) => {
