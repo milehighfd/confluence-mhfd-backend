@@ -1,10 +1,12 @@
 import needle from 'needle';
 import { LexoRank } from 'lexorank';
+import sequelize from 'sequelize';
 import db from 'bc/config/db.js';
 import { CREATE_PROJECT_TABLE, CARTO_URL } from 'bc/config/config.js';
 import logger from 'bc/config/logger.js';
 import boardService from 'bc/services/board.service.js';
 
+const { Op } = sequelize;
 const Configuration = db.configuration;
 const Board = db.board;
 const BoardProject = db.boardProject;
