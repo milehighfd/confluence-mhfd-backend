@@ -61,9 +61,9 @@ const getNewFilter = (filters, body, withPrefix) => {
   if (body.jurisdiction) {
     filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[2]} = '${body.jurisdiction}'`;
   }
-  if (body.mhfdmanager) {
-    filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[3]} = '${body.mhfdmanager}'`;
-  }
+  // if (body.mhfdmanager) {
+  //   filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[3]} = '${body.mhfdmanager}'`;
+  // }
   if (body.keyword) {
     console.log('filters', filters);
     if (filters.length > 0) {
@@ -125,6 +125,74 @@ export async function getCountByArrayColumnsProblem(table, column, columns, boun
 
   return result;
 }
+export async function getCountByArrayColumnsProblemWithoutCounter(table, column, columns, bounds, body) {
+  let result = [];
+  try {
+    // const coords = bounds.split(',');
+    // let filters;
+    // if (coords) {
+    //   filters  = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    //   filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+    // }
+    
+
+    // filters = getNewFilter(filters, body);
+
+    for (const value of columns) {
+    //   const query = {
+    //     q: `select ${column} as column, count(*) as count from ${table} where ${column}='${value}' and ${filters} group by ${column} order by ${column} `
+    //   };
+    //   let counter = 0;
+    //   logger.info(`Starting function needle for getCountByArrayColumnsProblem`);
+    //   const data = await needle('post', CARTO_URL, query, { json: true });
+    //   logger.info(`Finished function needle for getCountByArrayColumnsProblem`);
+    //   console.log('Query at array column problem', query);
+    //   //console.log('STATUS', data.statusCode);
+    //   if (data.statusCode === 200) {
+    //     //const result1 = data.body.rows;
+    //     if (data.body.rows.length > 0) {
+    //       counter = data.body.rows[0].count
+    //     }
+
+    //   } else {
+    //     console.log('data.statusCode', data.statusCode);
+    //     console.log('data.body', data.body);
+    //   }
+      result.push({
+        value: value,
+        counter: 0
+      });
+    }
+  } catch (error) {
+    logger.error(error);
+    logger.error(`getCountByArrayColumns Table: ${table}, Column: ${column} Connection error`);
+  }
+
+  return result;
+}
+
+export async function getJurisdiction(table, column, bounds, body) {
+  let result = [];
+  try {
+      const query = {
+        q: `select distinct ${column} as value from ${table} group by ${column} order by ${column} `
+      };
+      console.log('query at array count by', query);
+      logger.info(`Starting function needle for getCountByColumnProblem`);
+      const data = await needle('post', CARTO_URL, query, { json: true });
+      logger.info(`Finished function needle for getCountByColumnProblem`);
+      if (data.statusCode === 200) {
+        if (data.body.rows.length > 0) {
+          result = result.concat(data.body.rows)
+        }
+      }
+  } catch (error) {
+    logger.error(error);
+    logger.error(`getCountByColumnProblem Table: ${table}, Column: ${column} Connection error`);
+  }
+
+  return result;
+}
 
 export async function getCountByColumnProblem(table, column, bounds, body) {
   let result = [];
@@ -159,38 +227,38 @@ export async function getCountByColumnProblem(table, column, bounds, body) {
 export async function getCountSolutionStatusProblem(range, bounds, body) {
   let result = [];
   try {
-    const coords = bounds.split(',');
-    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+    // const coords = bounds.split(',');
+    // let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    // filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
 
-    filters = getNewFilter(filters, body);
+    // filters = getNewFilter(filters, body);
 
     for (const value of range) {
-      let endValue = 0;
-      if (+value === 75) {
-        endValue = +value + 25;
-      } else {
-        endValue = +value + 24;
-      }
+    //   let endValue = 0;
+    //   if (+value === 75) {
+    //     endValue = +value + 25;
+    //   } else {
+    //     endValue = +value + 24;
+    //   }
 
-      const query = { q: `select count(*) as count from ${PROBLEM_TABLE} where ${filters} and ${PROPSPROBLEMTABLES.problem_boundary[1]} between ${value} and ${endValue} ` };
-      console.log('query at array solution status ', query);
-      logger.info(`Starting function needle for mapgallery.problem.route/`);
-      const data = await needle('post', CARTO_URL, query, { json: true });
-      logger.info(`Finished function needle for mapgallery.problem.route/`);
-      let counter = 0;
-      if (data.statusCode === 200) {
-        if (data.body.rows.length > 0) {
-          counter = data.body.rows[0].count;
-        }
-      } else {
-        logger.error('getCountSolutionStatusProblem error');
-        logger.error(data.statusCode);
-        logger.error(JSON.stringify(data.body));
-      }
+      // const query = { q: `select count(*) as count from ${PROBLEM_TABLE} where ${filters} and ${PROPSPROBLEMTABLES.problem_boundary[1]} between ${value} and ${endValue} ` };
+      // console.log('query at array solution status ', query);
+      // logger.info(`Starting function needle for mapgallery.problem.route/`);
+      // const data = await needle('post', CARTO_URL, query, { json: true });
+      // logger.info(`Finished function needle for mapgallery.problem.route/`);
+      // let counter = 0;
+      // if (data.statusCode === 200) {
+      //   if (data.body.rows.length > 0) {
+          // counter = data.body.rows[0].count;
+      //   }
+      // } else {
+      //   logger.error('getCountSolutionStatusProblem error');
+      //   logger.error(data.statusCode);
+      //   logger.error(JSON.stringify(data.body));
+      // }
       result.push({
         value: value,
-        counter: counter
+        counter: 0
       });
     }
   } catch (error) {
@@ -251,26 +319,26 @@ export async function getSubtotalsByComponentProblem(table, columnA, columnB, bo
 export async function getValuesByRangeProblem(table, column, range, bounds, body) {
   let result = [];
   try {
-    const coords = bounds.split(',');
-    let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-    filters = getNewFilter(filters, body);
+    // const coords = bounds.split(',');
+    // let filters = `(ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    // filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+    // filters = getNewFilter(filters, body);
 
-    const newProm1 = new Promise(async (resolve, reject) => {
-      let result2 = {};
-      const query = { q: `select count(*) from ${table} where ${filters} ` };
-        console.log('query ar min max range', query.q);
-        logger.info(`Starting function needle for mapgallery.problem.route/`);
-        const data = await needle('post', CARTO_URL, query, { json: true });
-        logger.info(`Finished function needle for mapgallery.problem.route/`);
-        if (data.statusCode === 200) {
-          const rows = data.body.rows;
-          result2.counter = rows[0].count;
-        }
-      resolve(result2);
-    });
+    // const newProm1 = new Promise(async (resolve, reject) => {
+    //   let result2 = {};
+    //   const query = { q: `select count(*) from ${table} where ${filters} ` };
+    //     console.log('query ar min max range', query.q);
+    //     logger.info(`Starting function needle for mapgallery.problem.route/`);
+    //     const data = await needle('post', CARTO_URL, query, { json: true });
+    //     logger.info(`Finished function needle for mapgallery.problem.route/`);
+    //     if (data.statusCode === 200) {
+    //       const rows = data.body.rows;
+    //       result2.counter = rows[0].count;
+    //     }
+    //   resolve(result2);
+    // });
     logger.info(`Starting function newProm1 for mapgallery.problem.route/`);
-    result = await newProm1;
+    result = { counter: 0};
     logger.info(`Finished function newProm1 for mapgallery.problem.route/`);
   } catch (error) {
     logger.error(error);
@@ -338,13 +406,13 @@ export async function problemParamFilterRoute(req, res) {
       }
    ]
      let problemTypesConst = [ 'Flood Hazard', 'Stream Function', 'Watershed Change'];
-     requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], ['High', 'Medium', 'Low'], bounds, body)); //0
+     requests.push(getCountByArrayColumnsProblemWithoutCounter(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], ['High', 'Medium', 'Low'], bounds, body)); //0
      requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body)); //1
      requests.push(groupService.getMhfdStaff()); //2
      requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[14], bounds, body)); //3
      requests.push(getSubtotalsByComponentProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[5], PROPSPROBLEMTABLES.problems[5], bounds, body)); //4
      requests.push(getValuesByRangeProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[0], rangeSolution, bounds, body)); //5
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[2], bounds, body)); //6
+     requests.push(getJurisdiction(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[2], bounds, body)); //6
      requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[9], bounds, body)); //7
      requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'county', bounds, body)); // 8
      requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[8], problemTypesConst, bounds, body)); //9

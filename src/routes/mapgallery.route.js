@@ -126,13 +126,9 @@ router.post('/', async (req, res) => {
             }
             return booleantest;
           });
-          // if booleancheck is true then it should be in the array 
-          // booleancheck is true if modeldata has the mhfdmanager id that is in the search
           return booleanCheck;
         });
       }
-      // console.log('----------------------------------')
-      // console.log(queryProblem.map(qp => qp.modelData));
       res.send(queryProblem);
     } else {
       let filters = '';
