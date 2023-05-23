@@ -11,6 +11,108 @@ import {
   COSPONSOR1,
   COSPONSOR
 } from 'bc/config/config.js';
+import sequelize from 'sequelize';
+import db from 'bc/config/db.js';
+
+const Op = sequelize.Op;
+const Grade_control_structure = db.gradeControlStructure;
+const Pipe_appurtenances = db.pipeAppurtenances;
+const Special_item_point = db.specialItemPoint;
+const Special_item_linear = db.specialItemLinear;
+const Special_item_area = db.specialItemArea;
+const Channel_improvements_linear = db.channelImprovementsLinear;
+const Channel_improvements_area = db.channelImprovementsArea;
+const Removal_line = db.removalLine;
+const Removal_area = db.removalArea;
+const Storm_drain = db.stormDrain;
+const Detention_facilities = db.detentionFacilities;
+const Land_acquisition = db.landAcquisition;
+const Landscaping_area = db.landscapingArea;
+const Stream_improvement_measure = db.streamImprovementMeasure;
+const Maintenance_trails = db.maintenanceTrails;
+const ProjectStaff = db.projectStaff;
+
+export const getDataProblemSql = async (problemIds,answer) => {
+  try {
+    const [
+      gradeControlStructureData, 
+      pipeAppurtenancesData, 
+      specialItemPointData, 
+      specialItemLinearData, 
+      specialItemAreaData, 
+      channelImprovementsLinearData, 
+      channelImprovementsAreaData, 
+      removalLineData, 
+      removalAreaData, 
+      stormDrainData, 
+      detentionFacilitiesData, 
+      maintenanceTrailsData, 
+      landAcquisitionData, 
+      landscapingAreaData, 
+      streamImprovementMeasureData
+    ] = await Promise.all([
+      Grade_control_structure.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Pipe_appurtenances.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Special_item_point.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Special_item_linear.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Special_item_area.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Channel_improvements_linear.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Channel_improvements_area.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Removal_line.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Removal_area.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Storm_drain.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Detention_facilities.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Maintenance_trails.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Land_acquisition.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Landscaping_area.findAll({ where: { problemid: problemIds}, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
+      Stream_improvement_measure.findAll({ where: { problem_id: problemIds,}, attributes: ['project_id','problem_id'], include: [{ model: ProjectStaff }] })
+    ]);
+    const modelData = [
+      gradeControlStructureData.map(instance => instance.dataValues),
+      pipeAppurtenancesData.map(instance => instance.dataValues),
+      specialItemPointData.map(instance => instance.dataValues),
+      specialItemLinearData.map(instance => instance.dataValues),
+      specialItemAreaData.map(instance => instance.dataValues),
+      channelImprovementsLinearData.map(instance => instance.dataValues),
+      channelImprovementsAreaData.map(instance => instance.dataValues),
+      removalLineData.map(instance => instance.dataValues),
+      removalAreaData.map(instance => instance.dataValues),
+      stormDrainData.map(instance => instance.dataValues),
+      detentionFacilitiesData.map(instance => instance.dataValues),
+      maintenanceTrailsData.map(instance => instance.dataValues),
+      landAcquisitionData.map(instance => instance.dataValues),
+      landscapingAreaData.map(instance => instance.dataValues),
+      streamImprovementMeasureData.map(instance => {
+        const { project_id, problem_id, ...rest } = instance.dataValues;
+        return { ...rest, projectid: project_id, problemid: problem_id };
+      })
+    ];   
+    const problemIdCounts = modelData.reduce((counts, data) => {
+      data.forEach(instance => {
+        const problemId = instance.problemid;
+        counts[problemId] = (counts[problemId] || 0) + 1;
+      });
+      return counts;
+    }, {});  
+
+    const mergedData = answer.map(element => {
+      const problemId = element.problemid;
+      const modelDatum = modelData.reduce((acc, curr) => {
+        const matchingDatum = curr.find(datum => datum.problemid === problemId);
+        if (matchingDatum) {
+          acc.push(matchingDatum);
+        }
+        return acc;
+      }, []);
+      const count = problemIdCounts[problemId] || 0;
+      return { ...element, modelData: modelDatum, count };
+    });
+    return mergedData;
+  } catch (error) {
+    throw new Error(error);
+  }
+  
+}
 
 export const getCoordsByProjectId = async (projectid, isDev) => {
   let table = MAIN_PROJECT_TABLE;
