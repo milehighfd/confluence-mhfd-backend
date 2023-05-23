@@ -110,9 +110,28 @@ router.post('/', async (req, res) => {
         console.log('Error', error);
       }
       const problemIds = answer.map(element => element.problemid);      
-      const queryProblem = await getDataProblemSql(problemIds,answer);
-      console.log('----------------------------------')
-      console.log(queryProblem);
+      let queryProblem = await getDataProblemSql(problemIds,answer);
+      if (req.body?.mhfdmanager?.length > 0) {
+        queryProblem = queryProblem.filter((qp) => { 
+          let booleanCheck = qp.modelData.some((md) => {
+            const managerstotest = req.body?.mhfdmanager;
+            let booleantest = false;
+            for(let i = 0 ; i < managerstotest.length; ++i) {
+              if (md?.project_staffs && !booleantest) {
+                booleantest = md.project_staffs.some((ps) => {
+                  return ps.business_associate_contact_id == managerstotest[i]
+                });
+              }
+            }
+            return booleantest;
+          });
+          // if booleancheck is true then it should be in the array 
+          // booleancheck is true if modeldata has the mhfdmanager id that is in the search
+          return booleanCheck;
+        });
+      }
+      // console.log('----------------------------------')
+      // console.log(queryProblem.map(qp => qp.modelData));
       res.send(queryProblem);
     } else {
       let filters = '';
@@ -303,24 +322,24 @@ function getFilters(params) {
 
    }
 
-   if (params.watershed) {
-      const values = createQueryForIn(params.watershed.split(','));
-      let query = '';
-      let operator = '';
-      //for (const value of values) {
-      for (const component of VALUES_COMPONENTS) {
-         query += operator +
-            ` ${tipoid} in (select ${tipoid} from ${component} where ${component}.${tipoid}=${tipoid} and mhfdmanager in (${values})) `;
-         operator = ' or ';
-      }
-      //}
+  //  if (params.watershed) {
+  //     const values = createQueryForIn(params.watershed.split(','));
+  //     let query = '';
+  //     let operator = '';
+  //     //for (const value of values) {
+  //     for (const component of VALUES_COMPONENTS) {
+  //        query += operator +
+  //           ` ${tipoid} in (select ${tipoid} from ${component} where ${component}.${tipoid}=${tipoid} and mhfdmanager in (${values})) `;
+  //        operator = ' or ';
+  //     }
+  //     //}
 
-      if (filters.length > 0) {
-         filters += ` AND (${query})`;
-      } else {
-         filters = ` (${query})`;
-      }
-   }
+  //     if (filters.length > 0) {
+  //        filters += ` AND (${query})`;
+  //     } else {
+  //        filters = ` (${query})`;
+  //     }
+  //  }
 
    if (params.yearofstudy) {
       const values = params.yearofstudy.split(',');
@@ -445,14 +464,14 @@ function getFilters(params) {
    }
 
    //TODO here is the filter that needs to be related to DB
-   if (params.mhfdmanager) {
-      const query = createQueryForIn(params.mhfdmanager.split(','));
-      if (filters.length > 0) {
-         filters = filters + ` and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[3] : PROPSPROBLEMTABLES.problems[3]} in (${query})`;
-      } else {
-         filters = `${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[3] : PROPSPROBLEMTABLES.problems[3]} in (${query})`;
-      }
-   }
+  //  if (params.mhfdmanager) {
+  //     const query = createQueryForIn(params.mhfdmanager.split(','));
+  //     if (filters.length > 0) {
+  //        filters = filters + ` and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[3] : PROPSPROBLEMTABLES.problems[3]} in (${query})`;
+  //     } else {
+  //        filters = `${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[3] : PROPSPROBLEMTABLES.problems[3]} in (${query})`;
+  //     }
+  //  }
 
    if (params.source) {
       const query = createQueryForIn(params.source.split(','));
