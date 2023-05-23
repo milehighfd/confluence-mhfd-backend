@@ -31,7 +31,8 @@ import { printProject, printProblem, newPrintProject } from 'bc/services/mapgall
 import {
    getDataByProjectIds,
    getProblemByProjectId,
-   getCoordinatesOfComponents
+   getCoordinatesOfComponents,
+   getDataProblemSql
 } from 'bc/services/mapgallery.service.js';
 import {
    statusList
@@ -108,72 +109,11 @@ router.post('/', async (req, res) => {
       } catch (error) {
         console.log('Error', error);
       }
-      const problemIds = answer.map(element => element.problemid);
-      const [
-        gradeControlStructureData, 
-        pipeAppurtenancesData, 
-        specialItemPointData, 
-        specialItemLinearData, 
-        specialItemAreaData, 
-        channelImprovementsLinearData, 
-        channelImprovementsAreaData, 
-        removalLineData, 
-        removalAreaData, 
-        stormDrainData, 
-        detentionFacilitiesData, 
-        maintenanceTrailsData, 
-        landAcquisitionData, 
-        landscapingAreaData, 
-        streamImprovementMeasureData
-      ] = await Promise.all([
-        Grade_control_structure.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Pipe_appurtenances.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Special_item_point.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Special_item_linear.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Special_item_area.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Channel_improvements_linear.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Channel_improvements_area.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Removal_line.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Removal_area.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Storm_drain.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Detention_facilities.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Maintenance_trails.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Land_acquisition.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Landscaping_area.findAll({ where: { problemid: problemIds, projectid: { [Op.not]: null } }, attributes: ['projectid','problemid'], include: [{ model: ProjectStaff }] }),
-        Stream_improvement_measure.findAll({ where: { problem_id: problemIds, project_id: { [Op.not]: null } }, attributes: ['project_id','problem_id'], include: [{ model: ProjectStaff }] })
-      ]);
-      const modelData = [
-        gradeControlStructureData.map(instance => instance.dataValues),
-        pipeAppurtenancesData.map(instance => instance.dataValues),
-        specialItemPointData.map(instance => instance.dataValues),
-        specialItemLinearData.map(instance => instance.dataValues),
-        specialItemAreaData.map(instance => instance.dataValues),
-        channelImprovementsLinearData.map(instance => instance.dataValues),
-        channelImprovementsAreaData.map(instance => instance.dataValues),
-        removalLineData.map(instance => instance.dataValues),
-        removalAreaData.map(instance => instance.dataValues),
-        stormDrainData.map(instance => instance.dataValues),
-        detentionFacilitiesData.map(instance => instance.dataValues),
-        maintenanceTrailsData.map(instance => instance.dataValues),
-        landAcquisitionData.map(instance => instance.dataValues),
-        landscapingAreaData.map(instance => instance.dataValues),
-        streamImprovementMeasureData.map(instance => {
-          const { project_id, problem_id, ...rest } = instance.dataValues;
-          return { ...rest, projectid: project_id, problemid: problem_id };
-        })
-      ];     
-      const mergedData = answer.map(element => {
-        const problemId = element.problemid;
-        const modelDatum = modelData.reduce((acc, curr) => {
-          const matchingDatum = curr.find(datum => datum.problemid === problemId);
-          if (matchingDatum) {
-            acc.push(matchingDatum);
-          }
-          return acc;
-        }, []);
-        return { ...element, modelData: modelDatum };
-      });
-      res.send(mergedData);
+      const problemIds = answer.map(element => element.problemid);      
+      const queryProblem = await getDataProblemSql(problemIds,answer);
+      console.log('----------------------------------')
+      console.log(queryProblem);
+      res.send(queryProblem);
     } else {
       let filters = '';
       let send = [];
