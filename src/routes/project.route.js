@@ -106,7 +106,7 @@ const getProjectDetail = async (req, res) => {
     if (project.error) {
       return res.status(project.error).send({ error: project.message });
     }
-    return res.send(project.dataValues);
+    return res.send(project);
   } catch (error) {
     console.log('ERror', error);
     res.status(500).send({ error: error });

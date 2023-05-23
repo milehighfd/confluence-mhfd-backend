@@ -680,7 +680,7 @@ const getDetails = async (project_id) => {
         message: 'Project Not Found'
       };
     }
-    let project = projectPromise;
+    let project = projectPromise.dataValues;
     logger.info(`Adding problems ${JSON.stringify(problems)} to ${project_id} with name ${project.project_name}`)
     project = { ...project, problems: problems, centroid: centroidProj };
     return project;
