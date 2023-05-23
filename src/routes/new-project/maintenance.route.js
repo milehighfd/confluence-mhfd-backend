@@ -128,8 +128,6 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       creator
     );
     //await attachmentService.uploadFiles(user, req.files, projectId, cover);
-    /* 
-    TODO: enable with WR and WP changes to add the project to cards 
     await addProjectToBoard(
       user,
       servicearea,
@@ -142,7 +140,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       isWorkPlan,
       projectname,
       projectsubtype
-    ); */
+    );
     await projectPartnerService.saveProjectPartner(
       sponsor,
       cosponsor,

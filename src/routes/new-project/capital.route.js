@@ -362,7 +362,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     console.log(resres);
     //await attachmentService.uploadFiles(user, req.files, project_id, cover);
     const projectsubtype = '';
-   /*  await addProjectToBoard(
+    await addProjectToBoard(
       user,
       servicearea,
       county,
@@ -374,7 +374,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       isWorkPlan,
       projectname,
       projectsubtype
-    ); */
+    );
     await projectPartnerService.saveProjectPartner(
       sponsor,
       cosponsor,

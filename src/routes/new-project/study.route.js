@@ -131,8 +131,6 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       { where: { project_id: project_id } }
     );
 
-    /* 
-    TODO: enable with WR and WP changes to add the project to cards 
     await addProjectToBoard(
       user,
       servicearea,
@@ -145,7 +143,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       isWorkPlan,
       cleanStringValue(projectname),
       projectsubtype
-    ); */
+    );
     await projectPartnerService.saveProjectPartner(
       sponsor,
       cosponsor,
