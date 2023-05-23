@@ -11,7 +11,7 @@ const saveBoard = async (
   board_id, 
   project_id,
   origin, 
-  position0 ,
+  rank0 ,
   projectname,
   projecttype,
   projectsubtype
@@ -20,7 +20,7 @@ const saveBoard = async (
     board_id, 
     project_id,
     origin, 
-    position0,
+    rank0,
     projectname,
     projecttype,
     projectsubtype
@@ -30,7 +30,7 @@ const saveBoard = async (
       board_id: board_id,
       project_id: project_id,
       origin: origin,
-      position0: position0,
+      rank0: rank0,
       projectname: projectname,
       projecttype: projecttype,
       projectsubtype: projectsubtype,

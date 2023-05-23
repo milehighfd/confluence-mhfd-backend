@@ -1,4 +1,5 @@
 import needle from 'needle';
+import { LexoRank } from 'lexorank';
 import db from 'bc/config/db.js';
 import { CREATE_PROJECT_TABLE, CARTO_URL } from 'bc/config/config.js';
 import logger from 'bc/config/logger.js';
@@ -8,21 +9,6 @@ const Configuration = db.configuration;
 const Board = db.board;
 const BoardProject = db.boardProject;
 const Project = db.project;
-
-export const updateBoardProjectAtIndex = async (boardId, index) => {
-  let bps = await BoardProject.findAll({
-    where: {
-      board_id: boardId
-    }
-  });
-  bps.forEach(async (bp) => {
-    if (bp[`position${index}`] != null) {
-      await bp.update({
-        [`position${index}`]: bp[`position${index}`] + 1
-      })
-    }
-  })
-};
 
 export const getBoard = async (type, locality, year, projecttype) => {
   let board = await Board.findOne({
@@ -60,12 +46,12 @@ export const sendBoardsToProp = async (bp, board, prop, propid) => {
     let newBoardProject = new BoardProject({
       board_id: destinyBoard.board_id,
       project_id: bp.project_id,
-      position0: bp.position0,
-      position1: bp.position1,
-      position2: bp.position2,
-      position3: bp.position3,
-      position4: bp.position4,
-      position5: bp.position5,
+      rank0: bp.rank0,
+      rank1: bp.rank1,
+      rank2: bp.rank2,
+      rank3: bp.rank3,
+      rank4: bp.rank4,
+      rank5: bp.rank5,
       req1: bp.req1 == null ? null : bp.req1 / propValues.length,
       req2: bp.req2 == null ? null : bp.req2 / propValues.length,
       req3: bp.req3 == null ? null : bp.req3 / propValues.length,
@@ -76,6 +62,23 @@ export const sendBoardsToProp = async (bp, board, prop, propid) => {
       origin: board.locality,
     });
     await newBoardProject.save();
+    const updatePromises = [];
+    for (let i = 0; i < 6; i++) {
+      const rank = `rank${i}`;
+      logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
+      const counter = await boardService.countProjectsByRank(destinyBoard.board_id, rank);
+      logger.info(`Finish counter: ${JSON.stringify(counter)}}`);
+      if (counter[1]) {
+          updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank));
+      }   
+    }
+    if (updatePromises.length) {
+      await Promise.all(updatePromises).then((values) => {
+          logger.info('success on recalculate Columns');
+      }).catch((error) => {
+          logger.error(`error on recalculate columns ${error}`);
+      });
+    }
   }
 };
 export const updateProjectsInBoard = async (
@@ -182,7 +185,22 @@ export const addProjectToBoard = async (
     project_id: project_id,
     origin: locality,
   };
-
+  const firstProject = await BoardProject.findOne({
+    where: {
+      board_id: board.board_id,
+      rank0: {
+        [Op.ne]: null,
+      }
+    }, 
+    order: ['rank0', 'ASC'],
+  });
+  if (firstProject) {
+    boardProjectObject.rank0 = LexoRank.parse(firstProject.rank0)
+      .genPrev()
+      .toString();
+  } else { 
+    boardProjectObject.rank0 = LexoRank.middle().toString();
+  }
   /*   if (type === 'WORK_PLAN') {
     boardProjectObject.originPosition0 = -1;
     boardProjectObject.originPosition1 = -1;
@@ -191,20 +209,18 @@ export const addProjectToBoard = async (
     boardProjectObject.originPosition4 = -1;
     boardProjectObject.originPosition5 = -1;
   } */
-  boardProjectObject.position0 = 0;
   // NEW ADITION
   boardProjectObject.projectname = projectname;
   boardProjectObject.projecttype = projecttype;
   boardProjectObject.projectsubtype = projectsubtype;
   let boardProject = new BoardProject(boardProjectObject);
   let boardProjectSaved = boardProject;
-  updateBoardProjectAtIndex(board.board_id, 0);
   if (sendToWR === 'true' || isWorkPlan) {
     boardProjectSaved = await boardService.saveBoard(
       boardProject.board_id,
       boardProject.project_id,
       boardProject.origin,
-      boardProject.position0,
+      boardProject.rank0,
       boardProject.projectname,
       boardProject.projecttype,
       boardProject.projectsubtype
