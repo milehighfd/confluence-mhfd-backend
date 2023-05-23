@@ -77,18 +77,12 @@ router.post('/', async (req, res) => {
       let filters = '';
       filters = getFilters(req.body);
       console.log('filters', filters);
-      // 
       const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, ${PROPSPROBLEMTABLES.problem_boundary[17]},  ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCountersProblems(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[5], PROPSPROBLEMTABLES.problem_boundary[5])}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEM_TABLE} `;
       const query = { q: `${PROBLEM_SQL} ${filters}` };
       let answer = [];
       try {
         const data = await needle('post', CARTO_URL, query, { json: true });
-        //console.log('status', data.statusCode);
         if (data.statusCode === 200) {
-          /* let coordinates = [];
-          if (JSON.parse(element.the_geom).coordinates) {
-            coordinates = JSON.parse(element.the_geom).coordinates;
-          } */
           answer = data.body.rows.map(element => {
             return {
               cartodb_id: element.cartodb_id,
@@ -1248,12 +1242,12 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
          if (element.length > 0) {
             element.map(subElement => {
                if (element.action === 'stream_improvement_measure') {
-                  if (element.status === 'Complete') {
+                  if (element.status === 'Constructed') {
                      original_Cost += subElement.estimated_cost_base
                   }
                   totalCost += subElement.estimated_cost_base
                } else {
-                  if (element.status === 'Complete') {
+                  if (element.status === 'Constructed') {
                      original_Cost += subElement.original_cost
                   }
                   totalCost += subElement.original_cost
@@ -1272,7 +1266,7 @@ let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
             element.map(subElement => {
                actionName = element.action === 'stream_improvement_measure' ? subElement.component_type : subElement.type;
                countOfProjectActions++;
-               if (subElement.status === 'Complete') {
+               if (subElement.status === 'Constructed') {
                   countCompletedActions++;
                }
                if (element.action === 'stream_improvement_measure') {
