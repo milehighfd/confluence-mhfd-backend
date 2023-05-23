@@ -194,7 +194,7 @@ export const addProjectToBoard = async (
         [Op.ne]: null,
       }
     }, 
-    order: ['rank0', 'ASC'],
+    order: [['rank0', 'ASC']]
   });
   if (firstProject) {
     boardProjectObject.rank0 = LexoRank.parse(firstProject.rank0)
