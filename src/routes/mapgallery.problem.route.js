@@ -6,6 +6,12 @@ import {
 } from 'bc/config/config.js';
 import groupService from 'bc/services/group.service.js';
 import logger from 'bc/config/logger.js';
+import {
+  getDataProblemSql
+} from 'bc/services/mapgallery.service.js';
+import {
+  getFilters
+} from 'bc/utils/functionsProblems.js';
 
 const getNewFilter = (filters, body, withPrefix) => {
   let prefix = '';
@@ -194,6 +200,25 @@ export async function getJurisdiction(table, column, bounds, body) {
   return result;
 }
 
+export async function getListOfcolumnValues(table, column) {
+  let result = [];
+  try {
+    const query = {
+      q: `select distinct ${column} as value from ${table}`
+    };
+    console.log('QUERY CARTO CHECK', query);
+    const data = await needle('post', CARTO_URL, query, { json: true });
+    logger.info(`Finished function needle for getCountByColumnProblem`);
+    if (data.statusCode === 200) {
+      if (data.body.rows.length > 0) {
+        result = result.concat(data.body.rows)
+      }
+    }
+  } catch (error) {
+    logger.error(error);
+  }
+  return result;
+}
 export async function getCountByColumnProblem(table, column, bounds, body) {
   let result = [];
   try {
@@ -405,32 +430,109 @@ export async function problemParamFilterRoute(req, res) {
          max: 50000000
       }
    ]
-     let problemTypesConst = [ 'Flood Hazard', 'Stream Function', 'Watershed Change'];
-     requests.push(getCountByArrayColumnsProblemWithoutCounter(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], ['High', 'Medium', 'Low'], bounds, body)); //0
-     requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body)); //1
-     requests.push(groupService.getMhfdStaff()); //2
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[14], bounds, body)); //3
-     requests.push(getSubtotalsByComponentProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[5], PROPSPROBLEMTABLES.problems[5], bounds, body)); //4
-     requests.push(getValuesByRangeProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[0], rangeSolution, bounds, body)); //5
-     requests.push(getJurisdiction(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[2], bounds, body)); //6
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[9], bounds, body)); //7
-     requests.push(getCountByColumnProblem(PROBLEM_TABLE, 'county', bounds, body)); // 8
-     requests.push(getCountByArrayColumnsProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[8], problemTypesConst, bounds, body)); //9
 
-     logger.info(`Starting function all for mapgallery.problem.route/`);
-     const promises = await Promise.all(requests);
-     logger.info(`Finished function all for mapgallery.problem.route/`);
+     let filters = '';
+     let filtersBody = {...req.body, isproblem: true};
+     filters = getFilters(filtersBody);
+     console.log('Filters ', filters);
+     let answer;
+     const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${PROPSPROBLEMTABLES.problem_boundary[9]} FROM ${PROBLEM_TABLE} `;
+     const query = { q: `${PROBLEM_SQL} ${filters}` };
+     console.log('Query ', query);
+     try {
+      const data = await needle('post', CARTO_URL, query, { json: true });
+      if (data.statusCode === 200) {
+        answer = data.body.rows.map(element => {
+          return {
+            cartodb_id: element.cartodb_id,
+            type: 'problem_boundary',
+            problemid: element.problemid,
+            problemtype: element.problemtype,
+            service_area: element.service_area,
+            county: element.county,
+          }
+        })
+
+      } else {
+        console.log('bad status', data.statusCode, data.body);
+        logger.error('bad status', data.statusCode, data.body);
+      }
+    } catch (error) {
+      console.log('Error', error);
+    }
+    const problemIds = answer.map(element => element.problemid);      
+    let queryProblem = await getDataProblemSql(problemIds,answer);
+    if (req.body?.mhfdmanager?.length > 0) {
+      queryProblem = queryProblem.filter((qp) => { 
+        let booleanCheck = qp.modelData.some((md) => {
+          const managerstotest = req.body?.mhfdmanager;
+          let booleantest = false;
+          for(let i = 0 ; i < managerstotest.length; ++i) {
+            if (md?.project_staffs && !booleantest) {
+              booleantest = md.project_staffs.some((ps) => {
+                return ps.business_associate_contact_id == managerstotest[i]
+              });
+            }
+          }
+          return booleantest;
+        });
+        return booleanCheck;
+      });
+    }
+
+    let problemTypesConst = [ 'Flood Hazard', 'Stream Function', 'Watershed Change'];
+    requests.push(getCountByArrayColumnsProblemWithoutCounter(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], ['High', 'Medium', 'Low'], bounds, body)); //0
+    requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body)); //1
+    requests.push(groupService.getMhfdStaff()); //2
+    requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[14], bounds, body)); //3
+    requests.push(getSubtotalsByComponentProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[5], PROPSPROBLEMTABLES.problems[5], bounds, body)); //4
+    requests.push(getValuesByRangeProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[0], rangeSolution, bounds, body)); //5
+    requests.push(getJurisdiction(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[2], bounds, body)); //6
+    requests.push(getListOfcolumnValues(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[9])); //7  
+    requests.push(getListOfcolumnValues(PROBLEM_TABLE, 'county')); // 8 
+
+    logger.info(`Starting function all for mapgallery.problem.route/`);
+    const promises = await Promise.all(requests);
+    logger.info(`Finished function all for mapgallery.problem.route/`);
+    let countercounty = [...promises[8]];
+    countercounty.forEach((d) => {
+      d.counter = queryProblem.reduce((pre, current) => {
+        if (current?.county === d.value) {
+          return pre + 1;
+        }
+        return pre;
+      }, 0);
+    });
+    let counterServicearea = [...promises[7]];
+    let serviceareaProp = PROPSPROBLEMTABLES.problem_boundary[9];
+    counterServicearea.forEach((d) => {
+      d.counter = queryProblem.reduce((pre, current) => {
+        if (current[serviceareaProp] === d.value) {
+          return pre + 1;
+        } 
+        return pre;
+      }, 0);
+    });
+    let counterProblemType = [{value: problemTypesConst[0]}, {value: problemTypesConst[1]}, {value: problemTypesConst[2]}];
+    counterProblemType.forEach((d) => {
+      d.counter = queryProblem.reduce((pre, current) => {
+        if (current?.problemtype === d?.value) {
+          return pre + 1;
+        } 
+        return pre;
+      }, 0);
+    });
      const result = {
-        "problemtype": promises[9],
+        "problemtype": counterProblemType,// COUNTER
         "priority": promises[0],
         "solutionstatus": promises[1],
-        "county": promises[8],
+        "county": countercounty,    // COUNTER
         "jurisdiction": promises[6],
         "mhfdmanager": promises[2],
         "source": promises[3],
         "components": promises[4],
         "cost": promises[5],
-        "servicearea": promises[7]
+        "servicearea": counterServicearea // COUNTER
      };
      res.status(200).send(result);
   } catch (error) {
