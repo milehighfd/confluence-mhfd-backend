@@ -59,6 +59,7 @@ const CodeProjectPartnerType = db.codeProjectPartnerType;
 const Op = sequelize.Op;
 const BusinessAssociateContact = db.businessAssociateContact;
 const BusinessAddress = db.businessAdress;
+const CodeRuleActionItem = db.codeRuleActionItem;
 
 async function getCentroidsOfAllProjects () {
   const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid, projectid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE}`;
@@ -1288,6 +1289,22 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
       ],  
       
       include: [
+        {
+          model: CodePhaseType,
+          required: false,
+          include: {
+            model: CodeRuleActionItem,
+            required: false,
+          },
+          where : {
+            phase_ordinal_position: {
+              [Op.not]: -1
+            },
+            code_phase_type_id: {
+              [Op.gt]: 4
+            }
+          },
+        },
         {
           model: ProjectStaff,
           required: false,
