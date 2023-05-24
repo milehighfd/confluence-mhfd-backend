@@ -348,7 +348,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   else{
     let problemRows = `
     <tr>
-      <td style="text-align: center;">No section available</td>
+      <td style="text-align: center;">No data available</td>
     </tr> `;
     html = html.split('${problemRows}').join(problemRows);
   }
@@ -414,7 +414,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   }else{
     let vendorRows = `
       <tr>
-        <td style="text-align: center;">No section available</td>
+        <td style="text-align: center;">No data available</td>
       </tr>`;
     html = html.split('${vendorRows}').join(vendorRows);
   }
@@ -486,7 +486,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     }else{
     html = html.split('${componentRows}').join(`
       <tr>
-        <td style="text-align: center;">No section available</td>
+        <td style="text-align: center;">No data available</td>
       </tr>`);
     html = html.split('${totalEstimatedCost}').join(``);
   }
