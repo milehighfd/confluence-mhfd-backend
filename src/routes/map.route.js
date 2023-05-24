@@ -14,10 +14,24 @@ import db from 'bc/config/db.js';
 const router = express.Router();
 const ComponentDependency = db.componentdependency;
 
+const cache = {};
+
 //This endpoint fails the test
 router.post('/', async (req, res) => { 
-  logger.info(`Starting endpoint map.route/ with params ${JSON.stringify(req.params, null, 2)}`);
+  logger.info(`Starting endpoint map.route/ with params ${JSON.stringify(req.body, null, 2)}`);
   const table = req.body.table;
+  const cacheEntry = cache[table];
+  if (cacheEntry) {
+    const currentTime = new Date().getTime();
+    if ((currentTime - cacheEntry.time) < (1000 * 60)) {
+      logger.info(`Using cache for ${table}`);
+      if (cacheEntry.error) {
+        return res.status(cacheEntry.statusCode).send({ error: cacheEntry.error })
+      } else {
+        return res.send(cacheEntry.data);
+      }
+    }
+  }
   let sql = `SELECT * FROM ${table}`;
   if(table.includes('mep_outfalls') || table.includes('mep_channels')){
     // the original query is commented and, in the second one, mhfd_servicearea was removed cause it was causing the error
@@ -53,6 +67,8 @@ router.post('/', async (req, res) => {
   const URL = `${CARTO_URL_MAP}&config=${mapConfig}`;
   logger.info(URL);
   https.get(URL, response => {
+    logger.info(response.statusCode);
+    logger.info(JSON.stringify(response.headers, null, 2));
     if (response.statusCode == 200) {
       let str = '';
       response.on('data', function (chunk) {
@@ -60,10 +76,28 @@ router.post('/', async (req, res) => {
       });
       response.on('end', function () {
         const tiles = JSON.parse(str).metadata.tilejson.vector.tiles;
+        cache[table] = {
+          time: new Date().getTime(),
+          data: tiles
+        };
         return res.send(tiles);
       });
     } else {
-      return res.status(response.statusCode).send({error: 'error'});
+      if (response.statusCode === 404) {
+        const data = [];
+        cache[table] = {
+          time: new Date().getTime(),
+          data,
+        }
+        return res.send(data);
+      } else {
+        cache[table] = {
+          time: new Date().getTime(),
+          error: 'error',
+          statusCode: response.statusCode
+        }
+        return res.status(response.statusCode).send({error: 'error'});
+      }
     }
   }).on('error', err => {
     //console.log('failed call to ', URL, 'with error ', err);
