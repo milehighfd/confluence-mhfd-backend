@@ -370,14 +370,12 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   const validIds = "VENDORS";
   const projectPartners = data.project_partners.filter((pp) => validIds.includes(pp?.code_project_partner_type?.partner_type))
     .map((pp) => {
-      console.log('VEEEEEEEEEEEEEEEEEEEEEEEEE', pp)
       return {
         type: pp?.code_project_partner_type?.partner_type_name || '',
         name: pp?.business_associate?.business_name || '',
         key: pp?.project_partner_id || -1
       }
     })
-    console.log('VEEEEEEEEEEEEEEEEEEEEEEEEE', projectPartners)
   let vendorRows = projectPartners
     .map((element, index) => {
       return `
