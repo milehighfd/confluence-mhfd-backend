@@ -367,24 +367,26 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   html = html.split('${teamRow}').join(teamRow);
 
   // VENDORS
-  let _vendors =
-    (vendors !== void 0 || vendors !== []) && vendors?.length > 0
-      ? vendors.split(',')
-      : [''];
-  let _typeVendor = typeVendor ? typeVendor.split(',') : [];
-  let vendorRows = _vendors
+  const validIds = "VENDORS";
+  const projectPartners = data.project_partners.filter((pp) => validIds.includes(pp?.code_project_partner_type?.partner_type))
+    .map((pp) => {
+      console.log('VEEEEEEEEEEEEEEEEEEEEEEEEE', pp)
+      return {
+        type: pp?.code_project_partner_type?.partner_type_name || '',
+        name: pp?.business_associate?.business_name || '',
+        key: pp?.project_partner_id || -1
+      }
+    })
+    console.log('VEEEEEEEEEEEEEEEEEEEEEEEEE', projectPartners)
+  let vendorRows = projectPartners
     .map((element, index) => {
       return `
         <tr>
           <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
-            _typeVendor[index] == null ? 'N/A' :  _typeVendor[index]
+            element.type
           }</td>
           <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
-            element
-              ? element == null
-                ? 'N/A'
-                : element
-              : ''
+            element.name
           }</td>
         </tr>
       `;
