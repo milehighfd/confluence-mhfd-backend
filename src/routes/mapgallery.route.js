@@ -12,6 +12,7 @@ import {
    PROBLEM_PART_TABLES
 } from 'bc/config/config.js';
 import attachmentService from 'bc/services/attachment.service.js';
+import teamService from 'bc/services/teams.service.js';
 import {
    componentCounterRoute,
    componentParamFilterRoute,
@@ -41,6 +42,7 @@ import {
 import ProjectService from 'bc/services/project.service.js';
 import db from 'bc/config/db.js';
 import sequelize from 'sequelize';
+
 
 const Op = sequelize.Op;
 const Grade_control_structure = db.gradeControlStructure;
@@ -1253,112 +1255,10 @@ router.post('/components-by-entityid', async (req, res) => {
 router.post('/teams-by-entityid', async (req, res) => {
   logger.info(`Starting endpoint mapgallery.route/teams-by-entityid with params ${JSON.stringify(req.params, null, 2)}`);
   try {
-     let id = req.body.id;
-     const [
-      gradeControlStructureData, 
-      pipeAppurtenancesData, 
-      specialItemPointData, 
-      specialItemLinearData, 
-      specialItemAreaData, 
-      channelImprovementsLinearData, 
-      channelImprovementsAreaData, 
-      removalLineData, 
-      removalAreaData, 
-      stormDrainData, 
-      detentionFacilitiesData, 
-      maintenanceTrailsData, 
-      landAcquisitionData, 
-      landscapingAreaData, 
-      streamImprovementMeasureData
-    ] = await Promise.all([
-      Grade_control_structure.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Pipe_appurtenances.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Special_item_point.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Special_item_linear.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Special_item_area.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Channel_improvements_linear.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Channel_improvements_area.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Removal_line.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Removal_area.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Storm_drain.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Detention_facilities.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Maintenance_trails.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Land_acquisition.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Landscaping_area.findAll({ where: { problemid: id, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      Stream_improvement_measure.findAll({ where: { problem_id: id, project_id: { [Op.not]: null } }, attributes: ['project_id',] })
-    ]);
-    const modelData = [
-      gradeControlStructureData.map(instance => instance.dataValues),
-      pipeAppurtenancesData.map(instance => instance.dataValues),
-      specialItemPointData.map(instance => instance.dataValues),
-      specialItemLinearData.map(instance => instance.dataValues),
-      specialItemAreaData.map(instance => instance.dataValues),
-      channelImprovementsLinearData.map(instance => instance.dataValues),
-      channelImprovementsAreaData.map(instance => instance.dataValues),
-      removalLineData.map(instance => instance.dataValues),
-      removalAreaData.map(instance => instance.dataValues),
-      stormDrainData.map(instance => instance.dataValues),
-      detentionFacilitiesData.map(instance => instance.dataValues),
-      maintenanceTrailsData.map(instance => instance.dataValues),
-      landAcquisitionData.map(instance => instance.dataValues),
-      landscapingAreaData.map(instance => instance.dataValues),
-      streamImprovementMeasureData.map(instance => {
-        const { project_id, problem_id, ...rest } = instance.dataValues;
-        return { ...rest, projectid: project_id, problemid: problem_id };
-      })
-    ].filter(arr => arr.length > 0);
-    const flattenedArray = modelData.flat();
-    const flattenedArrayMap = flattenedArray.reduce((acc, element) => {
-      const projectId = element.projectid;
-      if (!acc[projectId]) {
-        acc[projectId] = element;
-      }
-      return acc;
-    }, {});    
-    const uniqueFlattenedArray = Object.values(flattenedArrayMap);
-    const flattenedArray2 = uniqueFlattenedArray.flat();
-    const projectIdsArray = flattenedArray2.map(element => element.projectid);
-    const teamsProject = await Project.findAll({
-      where: { project_id: { [Op.in]: projectIdsArray } }, 
-      attributes: ['project_id'] ,
-      include: [{
-        model: ProjectStaff,
-        required: false,
-        separate: true,
-        attributes: [
-          'code_project_staff_role_type_id',
-          'is_active',
-          'project_staff_id',
-          'business_associate_contact_id'
-        ],
-        include: [{
-          model: BusinessAssociateContact,
-          attributes: [
-            'contact_name',
-            'business_associate_contact_id'
-          ],
-          required: true,
-          include: [
-            {
-            model: BusinessAddress,
-            required: true,
-            attributes: [
-              'business_associate_id',
-              'business_address_id'
-            ],
-            include: [{
-              model: BusinessAssociate,
-              required: true,
-              attributes: [
-                'business_name'
-              ]
-            }]
-          }]
-        }]
-      }]
-    });
-    logger.info(`${JSON.stringify(teamsProject)}`);
-    return res.status(200).send(teamsProject);
+      let id = req.body.id;
+      const teamsProject = await teamService.getTeamsByEntityId(id);
+      logger.info(`${JSON.stringify(teamsProject)}`);
+      return res.status(200).send(teamsProject);
   } catch (error) {
      logger.error(error);
      res.status(500).send({ error: error }).send({ error: 'Connection error' });
