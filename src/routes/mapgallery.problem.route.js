@@ -433,15 +433,15 @@ export async function problemParamFilterRoute(req, res) {
 
      let filtersBody = {...req.body, isproblem: true};
      const coords = bounds.split(',');
-     let filters = `where (ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
-     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+     let filters;
  
      filters += getFilters(filtersBody);
+    filters += `${filters.includes('where')? ' AND ' : ' WHERE '} (ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+    filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
      console.log('Filters ', filters);
      let answer = [];
      const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${PROPSPROBLEMTABLES.problem_boundary[9]} FROM ${PROBLEM_TABLE} `;
      const query = { q: `${PROBLEM_SQL} ${filters}` };
-     console.log('Query ', query);
      try {
       const data = await needle('post', CARTO_URL, query, { json: true });
       if (data.statusCode === 200) {
