@@ -8,8 +8,6 @@ import logger from 'bc/config/logger.js';
 import db from 'bc/config/db.js';
 import {
     getCoordsByProjectId,
-    getMidByProjectIdV2,
-    getMinimumDateByProjectId,
     getProjectData
 } from 'bc/services/mapgallery.service.js';
 import { sendBoardNotification } from 'bc/services/user.service.js';
@@ -33,18 +31,6 @@ const ProjectCounty = db.projectCounty;
 const ProjectProposedAction = db.projectProposedAction;
 const CodeStateCounty = db.codeStateCounty;
 
-router.get('/test-function', async (req, res) => {
-    try {
-        const board = await getBoard('WORK_PLAN', 'MHFD District Work Plan', 2022, 'Capital');
-        const counter = await boardService.countByGroup('rank1', board.board_id);
-        console.log(counter);
-        console.log(counter[1]);
-        console.log(counter[0]);
-        res.send({counter: counter});
-    } catch (e) {
-        res.status(500).send({message: e.message});
-    }
-});
 router.get('/lexorank-update', async (req, res) => {
     const boards = await Board.findAll();
     const boardProjects = await BoardProject.findAll();
@@ -112,6 +98,7 @@ router.get('/lexorank-update', async (req, res) => {
         counter: c,
     });
 });
+
 router.get('/coordinates/:pid', async (req, res) => {
     logger.info(`Starting endpoint board/coordinates/:pid with params ${JSON.stringify(req.params, null, 2)}`);
     let { pid } = req.params;
@@ -123,16 +110,6 @@ router.get('/coordinates/:pid', async (req, res) => {
 
 router.get('/fix', async (req, res) => {
     logger.info(`Starting endpoint board/fix with params ${JSON.stringify(req.params, null, 2)}`);
-   /* let boards = await Board.update(
-        {
-            "status": "Under Review",
-            "substatus": "",
-        },{
-        where: {
-            year: ['2018', '2019', '2020', '2021'],
-            type: 'WORK_REQUEST'
-        }
-    });*/
     logger.info(`Starting function findAll for board/fix`);
     let boards = await Board.findAll(
         {
@@ -1075,24 +1052,6 @@ router.delete('/project/:projectid/:namespaceId', [auth], async (req, res) => {
     } else {
         res.send({ status: 'ok' })
     }
-    // const sql = `DELETE FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
-    // const query = {
-    //     q: sql
-    // };
-    // try {
-    //     const data = await needle('post', CARTO_URL, query, { json: true });
-    //     //console.log('STATUS', data.statusCode);
-    //     if (data.statusCode === 200) {
-    //       result = data.body;
-    //       res.send(result);
-    //     } else {
-    //       logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
-    //       return res.status(data.statusCode).send(data.body);
-    //     }
-    //  } catch (error) {
-    //     logger.error(error);
-    //     res.status(500).send(error);
-    //  };
 });
 
 router.get('/bbox/:projectid', async (req, res) => {
@@ -1154,7 +1113,6 @@ router.post('/projects-bbox', async (req, res) => {
         logger.info(`Starting function needle for board/projects-bbox`);
         const data = await needle('post', CARTO_URL, query, { json: true });
         logger.info(`Finished function needle for board/projects-bbox`);
-        //console.log('STATUS', data.statusCode);
         if (data.statusCode === 200) {
           result = data.body;
           res.send(result.rows[0]);
@@ -1182,7 +1140,6 @@ router.get('/sync', async (req,res) => {
     logger.info(`Starting function needle for board/sync`);
     const data = await needle('post', CARTO_URL, query, { json: true });
     logger.info(`Finished function needle for board/sync`);
-    //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       result = data.body;
       let allPromises = [];
