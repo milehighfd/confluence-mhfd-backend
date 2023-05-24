@@ -431,11 +431,14 @@ export async function problemParamFilterRoute(req, res) {
       }
    ]
 
-     let filters = '';
      let filtersBody = {...req.body, isproblem: true};
-     filters = getFilters(filtersBody);
+     const coords = bounds.split(',');
+     let filters = `where (ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
+     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
+ 
+     filters += getFilters(filtersBody);
      console.log('Filters ', filters);
-     let answer;
+     let answer = [];
      const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${PROPSPROBLEMTABLES.problem_boundary[9]} FROM ${PROBLEM_TABLE} `;
      const query = { q: `${PROBLEM_SQL} ${filters}` };
      console.log('Query ', query);
@@ -536,6 +539,7 @@ export async function problemParamFilterRoute(req, res) {
      };
      res.status(200).send(result);
   } catch (error) {
+    console.trace("THIS ERROr", error);
      logger.error("error at problem route", error);
      logger.error(`get Error at  Connection error`);
   }

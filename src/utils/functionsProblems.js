@@ -1,3 +1,7 @@
+import {
+  PROPSPROBLEMTABLES
+} from 'bc/config/config.js';
+
 export const createQueryForIn = (data) => {
   let query = '';
   let separator = '';
