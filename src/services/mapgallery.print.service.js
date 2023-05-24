@@ -167,7 +167,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
         _data?.project_statuses[0].code_phase_type.code_project_type.project_type_name;
       const currentStatus = _data?.project_statuses.filter(
         (element) =>
-        element.project_status_id === _data._previousDataValues.current_project_status_id
+        element.project_status_id === _data.current_project_status_id
       );
       if (currentStatus && currentStatus?.length > 0) {
         data['phase'] = currentStatus[0].code_phase_type.phase_name;
@@ -297,11 +297,11 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       lgManager = el.business_associate_contact.contact_name
     }
   })
-  let projectId = data._previousDataValues.project_id ? data._previousDataValues.project_id : 'N/A'
+  let projectId = data.project_id ? data.project_id : 'N/A'
 
-  html = html.split('${projectname}').join(_data.dataValues.project_name);
-  html = html.split('${projecttype}').join(_data.dataValues.code_project_type.project_type_name + ' Project');
-  html = html.split('${onBaseId}').join(_data.dataValues.onbase_project_number);
+  html = html.split('${projectname}').join(_data.project_name);
+  html = html.split('${projecttype}').join(_data.code_project_type.project_type_name + ' Project');
+  html = html.split('${onBaseId}').join(_data.onbase_project_number);
   html = html.split('${local_government}').join(local_government);
   html = html.split('${county}').join(county);
   html = html.split('${servicearea}').join(servicearea);
@@ -315,7 +315,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   html = html.split('${projectId}').join(projectId);
   html = html.split('${mhfdManager}').join(mhfdManager);
   html = html.split('${lgManager}').join(lgManager);
-  html = html.split('${description}').join(_data.dataValues.description ? _data.dataValues.description : 'N/A');
+  html = html.split('${description}').join(_data.description ? _data.description : 'N/A');
   html = html.split('${contractor}').join(contractor ? contractor : 'N/A');
   html = html.split('${consultant}').join(consultant ? consultant : 'N/A');
   let _problems =
