@@ -24,74 +24,68 @@ const BusinessAddress = db.businessAdress;
 const BusinessAssociate = db.businessAssociates;
 
 
-const getTeamsByEntityId = async (problemId) => {
+const getProjectIdByProblemId = async (problemId) => {
+  const [
+    gradeControlStructureData, 
+    pipeAppurtenancesData, 
+    specialItemPointData, 
+    specialItemLinearData, 
+    specialItemAreaData, 
+    channelImprovementsLinearData, 
+    channelImprovementsAreaData, 
+    removalLineData, 
+    removalAreaData, 
+    stormDrainData, 
+    detentionFacilitiesData, 
+    maintenanceTrailsData, 
+    landAcquisitionData, 
+    landscapingAreaData, 
+    streamImprovementMeasureData
+  ] = await Promise.all([
+    GradeControlStructure.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    PipeAppurtenances.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    SpecialItemPoint.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    SpecialItemLinear.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    SpecialItemArea.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    ChannelImprovementsLinear.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    ChannelImprovementsArea.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    RemovalLine.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    RemovalArea.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    StormDrain.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    DetentionFacilities.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    MaintenanceTrails.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    LandAcquisition.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    LandscapingArea.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
+    StreamImprovementMeasure.findAll({ where: { problem_id: problemId, project_id: { [Op.not]: null } }, attributes: ['project_id',] })
+  ]);
+  const modelData = [
+    gradeControlStructureData.map(instance => instance.dataValues),
+    pipeAppurtenancesData.map(instance => instance.dataValues),
+    specialItemPointData.map(instance => instance.dataValues),
+    specialItemLinearData.map(instance => instance.dataValues),
+    specialItemAreaData.map(instance => instance.dataValues),
+    channelImprovementsLinearData.map(instance => instance.dataValues),
+    channelImprovementsAreaData.map(instance => instance.dataValues),
+    removalLineData.map(instance => instance.dataValues),
+    removalAreaData.map(instance => instance.dataValues),
+    stormDrainData.map(instance => instance.dataValues),
+    detentionFacilitiesData.map(instance => instance.dataValues),
+    maintenanceTrailsData.map(instance => instance.dataValues),
+    landAcquisitionData.map(instance => instance.dataValues),
+    landscapingAreaData.map(instance => instance.dataValues),
+    streamImprovementMeasureData.map(instance => {
+      const { project_id, problem_id, ...rest } = instance.dataValues;
+      return { ...rest, projectid: project_id, problemid: problem_id };
+    })
+  ].filter(arr => arr.length > 0);
+  const cleanArray = modelData.flat().flatMap(element => element.projectid);
+  const uniqueArray = [...new Set(cleanArray)];
+  return uniqueArray;
+}
+const getTeams = async (projectList) => {
   try {
-    const [
-      gradeControlStructureData, 
-      pipeAppurtenancesData, 
-      specialItemPointData, 
-      specialItemLinearData, 
-      specialItemAreaData, 
-      channelImprovementsLinearData, 
-      channelImprovementsAreaData, 
-      removalLineData, 
-      removalAreaData, 
-      stormDrainData, 
-      detentionFacilitiesData, 
-      maintenanceTrailsData, 
-      landAcquisitionData, 
-      landscapingAreaData, 
-      streamImprovementMeasureData
-    ] = await Promise.all([
-      GradeControlStructure.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      PipeAppurtenances.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      SpecialItemPoint.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      SpecialItemLinear.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      SpecialItemArea.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      ChannelImprovementsLinear.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      ChannelImprovementsArea.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      RemovalLine.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      RemovalArea.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      StormDrain.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      DetentionFacilities.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      MaintenanceTrails.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      LandAcquisition.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      LandscapingArea.findAll({ where: { problemid: problemId, projectid: { [Op.not]: null } }, attributes: ['projectid'] }),
-      StreamImprovementMeasure.findAll({ where: { problem_id: problemId, project_id: { [Op.not]: null } }, attributes: ['project_id',] })
-    ]);
-    const modelData = [
-      gradeControlStructureData.map(instance => instance.dataValues),
-      pipeAppurtenancesData.map(instance => instance.dataValues),
-      specialItemPointData.map(instance => instance.dataValues),
-      specialItemLinearData.map(instance => instance.dataValues),
-      specialItemAreaData.map(instance => instance.dataValues),
-      channelImprovementsLinearData.map(instance => instance.dataValues),
-      channelImprovementsAreaData.map(instance => instance.dataValues),
-      removalLineData.map(instance => instance.dataValues),
-      removalAreaData.map(instance => instance.dataValues),
-      stormDrainData.map(instance => instance.dataValues),
-      detentionFacilitiesData.map(instance => instance.dataValues),
-      maintenanceTrailsData.map(instance => instance.dataValues),
-      landAcquisitionData.map(instance => instance.dataValues),
-      landscapingAreaData.map(instance => instance.dataValues),
-      streamImprovementMeasureData.map(instance => {
-        const { project_id, problem_id, ...rest } = instance.dataValues;
-        return { ...rest, projectid: project_id, problemid: problem_id };
-      })
-    ].filter(arr => arr.length > 0);
-    const flattenedArray = modelData.flat();
-    const flattenedArrayMap = flattenedArray.reduce((acc, element) => {
-      const projectId = element.projectid;
-      if (!acc[projectId]) {
-        acc[projectId] = element;
-      }
-      return acc;
-    }, {});    
-    const uniqueFlattenedArray = Object.values(flattenedArrayMap);
-    const flattenedArray2 = uniqueFlattenedArray.flat();
-    const projectIdsArray = flattenedArray2.map(element => element.projectid);
     const teamsProject = await Project.findAll({
-      where: { project_id: { [Op.in]: projectIdsArray } }, 
+      where: { project_id: { [Op.in]: projectList } }, 
       attributes: ['project_id'] ,
       include: [{
         model: ProjectStaff,
@@ -130,6 +124,15 @@ const getTeamsByEntityId = async (problemId) => {
       }]
     });
     return teamsProject.map(instance => instance.dataValues);
+  } catch (error){
+    throw error;
+  }
+}
+const getTeamsByEntityId = async (problemId) => {
+  try {
+    const projectIdsArray = await getProjectIdByProblemId(problemId);
+    const teams = await getTeams(projectIdsArray);
+    return teams;
   } catch (error) {
     throw error;
   }
