@@ -42,6 +42,8 @@ import {
 import ProjectService from 'bc/services/project.service.js';
 import db from 'bc/config/db.js';
 import sequelize from 'sequelize';
+import teamsService from 'bc/services/teams.service.js';
+
 
 
 const Op = sequelize.Op;
@@ -991,8 +993,9 @@ router.post('/problem-by-id/:id/pdf', async (req, res) => {
       let data = await getDataByProblemId(id);
       let components = await componentsByEntityId(id, PROPSPROBLEMTABLES.problems[5], 'type', 'asc');
       let problempart = await getProblemParts(id);
+      let teamsProblems = await teamsService.getTeamsByEntityId(id);
       try {
-         let pdfObject = await printProblem(data, components, map, problempart);
+         let pdfObject = await printProblem(data, components, map, problempart, teamsProblems);
          pdfObject.toBuffer(function (err, buffer) {
             if (err) return res.send(err);
             res.type('pdf');

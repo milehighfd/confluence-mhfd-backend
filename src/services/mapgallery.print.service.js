@@ -6,7 +6,7 @@ const priceFormatter = (value) => {
   return `$${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 };
 
-export const printProblem = async (data, components, map, problempart) => {
+export const printProblem = async (data, components, map, problempart,teamsProblems) => {
   var html = fs.readFileSync('./pdf-templates/Problems2.html', 'utf8');
   const {
     problemname,
@@ -24,7 +24,6 @@ export const printProblem = async (data, components, map, problempart) => {
   } = data;
   let mainImage = problemtype ? `https://confdev.mhfd.org/detailed/${problemtype}.png` : 'https://i.imgur.com/kLyZbrB.jpg'
   const mapHeight = 500;
-
   html = html.split('${problemname}').join(problemname == null? ' N/A' : problemname);
   html = html.split('${problemtype}').join(problemtype + ' Problem' == null? ' N/A' : problemtype + ' Problem');
   html = html.split('${jurisdiction}').join(jurisdiction + ', CO'  == null? ' N/A' : jurisdiction + ', CO');
@@ -40,6 +39,33 @@ export const printProblem = async (data, components, map, problempart) => {
   html = html.split('${map}').join(map);
   html = html.split('${mainImage}').join(mainImage);
   html = html.split('${mapHeight}').join(mapHeight);
+
+  const flattenedStaff = teamsProblems.flatMap((item) => item.project_staffs);
+  let teamRow = flattenedStaff.map((el) => {
+    const MHFD_LEAD = 1; 
+    const MHFD_SUPPORT = 4;
+    const ADMIN_STAFF = 5;
+    const LG_LEAD = 10;
+    const STAFF_ROL_MAP = {
+      [MHFD_LEAD]: 'MHFD Lead',
+      [MHFD_SUPPORT]: 'MHFD Support',
+      [ADMIN_STAFF]: 'Admin Staff',
+      [LG_LEAD]: 'LG Lead',
+    };
+    if(STAFF_ROL_MAP[el.code_project_staff_role_type_id] && el.is_active){
+      return `
+        <tr>
+          <td style="width: 242.5px; padding: 7px 0px;">
+            <h6 style="font-size: 14px; color: #11093c; margin: 0; font-weight: 600;">${el.business_associate_contact.contact_name.substring(0,30) === el.business_associate_contact.contact_name.substring(0,31) ? el.business_associate_contact.contact_name.substring(0,30): (el.business_associate_contact.contact_name.substring(0,30) + '...')}</h6>
+            <p style="font-size: 12px; color: #11093c; margin-bottom: 0px; margin-top: -3px; padding-top: 5px;">${STAFF_ROL_MAP[el.code_project_staff_role_type_id]}</p>
+            <span style="font-size: 12px; color: #11093c; margin-bottom: 15px;margin-top: -3px; line-height: 10px;">${el.business_associate_contact.business_address.business_associate.business_name}</span>
+          </td>
+        </tr>
+    `
+    }
+    })
+  .join('');
+  html = html.split('${teamRow}').join(teamRow);
 
   let solutionstatusVal = solutionstatus ? solutionstatus : 0;
   solutionstatusVal = Math.floor((solutionstatusVal / 100) * 150)
@@ -365,7 +391,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       [ADMIN_STAFF]: 'Admin Staff',
       [LG_LEAD]: 'LG Lead',
     };
-    if(STAFF_ROL_MAP[el.code_project_staff_role_type_id]){
+    if(STAFF_ROL_MAP[el.code_project_staff_role_type_id] && el.is_active){
       return `
         <tr>
           <td style="width: 242.5px; padding: 7px 0px;">
