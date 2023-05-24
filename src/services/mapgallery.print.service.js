@@ -322,22 +322,36 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     (problems !== void 0 || problems !== []) && problems?.length > 0
       ? problems
       : [{ problemname: '', problempriority: '' }];
-
-  let problemRows = _problems
-    .map((p) => {
-      return `
-        <tr>
-          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
-            p.problemname == null ? 'N/A' : p.problemname
-          }</td>
-          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
-            p.problempriority == null ? 'N/A' : p.problempriority
-          }</td>
-        </tr>
-      `;
-    })
-    .join('');
-  html = html.split('${problemRows}').join(problemRows);
+  if(_problems.length > 0 && (_problems[0].problemname != '' || _problems[0].problempriority != '') ){
+    let problemRows = `<thead>
+      <tr>
+        <th width="50%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Name</th>
+        <th width="50%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Priority</th>
+      </tr>
+    </thead>`;
+    problemRows = problemRows + _problems
+      .map((p) => {
+        return `
+          <tr>
+            <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+              p.problemname == null ? 'N/A' : p.problemname
+            }</td>
+            <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+              p.problempriority == null ? 'N/A' : p.problempriority
+            }</td>
+          </tr>
+        `;
+      })
+      .join('');
+    html = html.split('${problemRows}').join(problemRows);
+  }
+  else{
+    let problemRows = `
+    <tr>
+      <td style="text-align: center;">No section available</td>
+    </tr> `;
+    html = html.split('${problemRows}').join(problemRows);
+  }
 
   // TEAMS
   let teamRow = data.project_staffs.map((el) => {
@@ -376,21 +390,34 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
         key: pp?.project_partner_id || -1
       }
     })
-  let vendorRows = projectPartners
-    .map((element, index) => {
-      return `
-        <tr>
-          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
-            element.type
-          }</td>
-          <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
-            element.name
-          }</td>
-        </tr>
-      `;
-    })
-    .join('');
-  html = html.split('${vendorRows}').join(vendorRows);
+  if(projectPartners.length > 0){
+    let vendorRows = `
+    <tr>
+      <th width="50%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Name</th>
+      <th width="50%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Priority</th>
+    </tr>`;
+    vendorRows = vendorRows +  projectPartners
+      .map((element, index) => {
+        return `
+          <tr>
+            <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+              element.type
+            }</td>
+            <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+              element.name
+            }</td>
+          </tr>
+        `;
+      })
+      .join('');
+    html = html.split('${vendorRows}').join(vendorRows);
+  }else{
+    let vendorRows = `
+      <tr>
+        <td style="text-align: center;">No section available</td>
+      </tr>`;
+    html = html.split('${vendorRows}').join(vendorRows);
+  }
   //END VENDORS
   let _components =
     (components !== void 0 || components !== []) && components?.length > 0
@@ -404,50 +431,64 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
           },
         ];
   let sum = _components.reduce((prev, curr) => curr.estimated_cost + prev, 0);
-  let componentRows = _components
-    .map((c, i) => {
-      let str = `
-        <tr>
-          <td width="30%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${
-            c.type == null ? 'N/A' : c.type
-          }</td>
-          <td width="15%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${priceFormatter(
-            c.estimated_cost
-          )}</td>
-          <td width="15%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${
-            c.original_cost ? Math.round(c.original_cost * 10) / 10 : 0
-          }%</td>
-          <td width="40%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${
-            c.percen == null ? 'N/A' : Math.round(c.percen)
-          }%</td>
-        </tr>
-      `;
-      // if (components.length === 9 && i === 6) {
-      //   str +=
-      //     '<tr><tr/><tr><tr/><tr><tr/><tr><tr/><tr><tr/><tr><tr/><tr><tr/>';
-      // }
-      return str;
-    })
-    .join('');
-  if (sum) {
-    html = html.split('${componentRows}').join(componentRows);
-    html = html.split('${totalEstimatedCost}').join(`
-      <tr>
-        <th width="15%" style="margin-top:-10px; color: #11093c; text-align: left; padding-left: 20px; padding-top: 0px; padding-right: 20px; padding-bottom: 4px; font-weight: 600;"><b>Total Estimated Cost</b></th>
-        <th width="60%" colspan="3" style="margin-top:-10px; color: #11093c; padding-left: 20px; padding-top: 0px; padding-right: 20px; padding-bottom: 4px; text-align:left;"><b>${priceFormatter(
-          sum
-        )}</b></th>
-      </tr>`);
-  } else {
+  if(_components.length > 0 && (_components[0].type !== '')){
+    let componentRows =`
+    <tr>
+      <th width="40%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Component Type</th>
+      <th width="20%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Cost</th>
+      <th width="20%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">% Complete</th>
+      <th width="20%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">% of Total Cost</th>
+    </tr>
+    `;
+    componentRows = componentRows + _components
+      .map((c, i) => {
+        let str = `
+          <tr>
+            <td width="30%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${
+              c.type == null ? 'N/A' : c.type
+            }</td>
+            <td width="15%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${priceFormatter(
+              c.estimated_cost
+            )}</td>
+            <td width="15%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${
+              c.original_cost ? Math.round(c.original_cost * 10) / 10 : 0
+            }%</td>
+            <td width="40%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${
+              c.percen == null ? 'N/A' : Math.round(c.percen)
+            }%</td>
+          </tr>
+        `;
+        return str;
+      })
+      .join('');
+      
+      let totalComponents = _components.reduce((prev, next) => prev + next.component_count_total, 0);
+      if (sum) {
+        html = html.split('${componentRows}').join(componentRows);
+        html = html.split('${totalEstimatedCost}').join(`
+          <tr>
+            <th width="15%" style="margin-top:-10px; color: #11093c; text-align: left; padding-left: 20px; padding-top: 0px; padding-right: 20px; padding-bottom: 4px; font-weight: 600;"><b>Total Estimated Cost(${totalComponents})</b></th>
+            <th width="60%" colspan="3" style="margin-top:-10px; color: #11093c; padding-left: 20px; padding-top: 0px; padding-right: 20px; padding-bottom: 4px; text-align:left;"><b>${priceFormatter(
+              sum
+            )}</b></th>
+          </tr>`);
+      } else {
+        html = html.split('${componentRows}').join(`
+          <tr">
+            <td width="40%" style="margin-top:-10px; padding: 17px 20px;  padding-top:0px"></td>
+            <td width="20%" style="margin-top:-10px; padding: 17px 20px;  padding-top:0px"></td>
+            <td width="20%" style="margin-top:-10px; padding: 17px 20px;  padding-top:0px"></td>
+            <td width="20%" style="margin-top:-10px; padding: 17px 20px;  padding-top:0px"></td>
+          </tr>
+        `);
+        html = html.split('${totalEstimatedCost}').join(``);
+      }
+    }else{
     html = html.split('${componentRows}').join(`
-      <tr">
-        <td width="40%" style="margin-top:-10px; padding: 17px 20px;  padding-top:0px"></td>
-        <td width="20%" style="margin-top:-10px; padding: 17px 20px;  padding-top:0px"></td>
-        <td width="20%" style="margin-top:-10px; padding: 17px 20px;  padding-top:0px"></td>
-        <td width="20%" style="margin-top:-10px; padding: 17px 20px;  padding-top:0px"></td>
-      </tr>
-    `);
-    html = html.split('${totalEstimatedCost}').join('');
+      <tr>
+        <td style="text-align: center;">No section available</td>
+      </tr>`);
+    html = html.split('${totalEstimatedCost}').join(``);
   }
   html = html.split('${map}').join(mapImage);
   html = html.split('${roadMap}').join(roadMap);
