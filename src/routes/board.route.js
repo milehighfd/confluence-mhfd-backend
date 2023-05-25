@@ -444,24 +444,41 @@ router.post('/board-for-positions2', async (req, res) => {
   let boardProjectsWithData = await Promise.all(
     boardProjects.map(async (boardProject) => {
       console.log(JSON.stringify(boardProject, null, 2));
-      const details = (await projectService.getLightDetails(
-        boardProject.project_id
-      )).dataValues;
-      if (details.project_service_areas && details.project_service_areas.length > 0) {
-        details.project_service_areas = details.project_service_areas.map(
-            (psa) => ({
-                code_service_area_id: psa.code_service_area_id,
-                service_area_name: psa.CODE_SERVICE_AREA.service_area_name,
-            })
-        );
+      let details;
+      try {
+        details = (await projectService.getLightDetails(
+          boardProject.project_id
+        )).dataValues;
+      } catch (e) {
+        logger.error(e);
       }
-      if (details.project_counties && details.project_counties.length > 0) {
-        details.project_counties = details.project_counties.map(
-            (pc) => ({
-                project_county_id: pc.project_county_id,
-                county_name: pc.CODE_STATE_COUNTY.county_name,
-            })
-        );
+      if (details) {
+        if (details.project_service_areas && details.project_service_areas.length > 0) {
+          details.project_service_areas = details.project_service_areas.map(
+              (psa) => ({
+                  code_service_area_id: psa.code_service_area_id,
+                  service_area_name: psa.CODE_SERVICE_AREA.service_area_name,
+              })
+          );
+        }
+        if (details.project_counties && details.project_counties.length > 0) {
+          details.project_counties = details.project_counties.map(
+              (pc) => ({
+                  state_county_id: pc.state_county_id,
+                  county_name: pc.CODE_STATE_COUNTY.county_name,
+              })
+          );
+        }
+        if (details.project_local_governments && details.project_local_governments.length > 0) {
+          details.project_local_governments = details.project_local_governments.map(
+              (plg) => {
+                return ({
+                  code_local_government_id: plg.code_local_government_id,
+                  local_government_name: plg.CODE_LOCAL_GOVERNMENT.local_government_name,
+                });
+              }
+          );
+        }
       }
       boardProject.projectData = details;
       return boardProject;
