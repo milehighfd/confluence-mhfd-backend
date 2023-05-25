@@ -22,7 +22,9 @@ export const printProblem = async (data, components, map, problempart,teamsProbl
     problemdescription,
     component_cost,
   } = data;
-  let mainImage = problemtype ? `https://confdev.mhfd.org/detailed/${problemtype}.png` : 'https://i.imgur.com/kLyZbrB.jpg'
+  let mainImage = problemtype ? `https://confdev.mhfd.org/detailed/${
+    problemtype==='Watershed Change'?"watershed-change.png": problemtype + ".png"
+  }` : 'https://i.imgur.com/kLyZbrB.jpg'
   const mapHeight = 500;
   html = html.split('${problemname}').join(problemname == null? ' N/A' : problemname);
   html = html.split('${problemtype}').join(problemtype + ' Problem' == null? ' N/A' : problemtype + ' Problem');
