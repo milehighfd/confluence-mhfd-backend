@@ -700,6 +700,47 @@ const getLightDetails = async (project_id) => {
     ],
     include: [
       {
+        model: ProjectServiceArea,
+        required: false,
+        attributes: ['project_service_area_id'],			
+        include: {
+          model: CodeServiceArea,
+          required: false,
+          attributes: ['service_area_name'],
+        }
+      },
+      {
+        model: ProjectCounty,
+        required: false,
+        separate: true,
+        attributes: [
+          'project_county_id'
+        ],
+        include: {
+          model: CodeStateCounty,
+          required: false,
+          attributes: [
+            'county_name',
+            'state_county_id'
+          ]
+        }
+      },
+      {
+        model: ProjectServiceArea,
+        required: false,
+        attributes: [
+          'project_service_area_id',
+          'code_service_area_id'
+        ],
+        include: {
+          model: CodeServiceArea,
+          required: false,
+          attributes: [
+            'service_area_name'
+          ],
+        }
+      },
+      {
         model: CodeProjectType,
         required: false,
         attributes: [
