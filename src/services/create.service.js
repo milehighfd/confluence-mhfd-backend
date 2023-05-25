@@ -24,6 +24,20 @@ class Project {
     this.creationDate = creationDate;
   }
 }
+class ProjectBuilder {
+  constructor() {
+    this.project = new Project();
+  }
+
+  // Common methods
+  setName(name) {}
+  setDescription(description) {}
+  setCreator(creator) {}
+  setCreationDate(creationDate) {}
+
+  // Specific method to retrieve the built project
+  getProject() {}
+}
 
 class CapitalProjectBuilder extends ProjectBuilder {
   setName(name) {
@@ -128,4 +142,5 @@ specialProjectBuilder.setSpecialAttribute("Special Attribute");
 
 const capitalProject = capitalProjectBuilder.getProject();
 const studyProject = studyProjectBuilder.getProject();
-const specialProject = specialProject
+console.log(capitalProject)
+console.log(studyProject)
