@@ -47,7 +47,7 @@ const getFilters = async (req, res) => {
   data.estimatedCost = [];
   logger.info(`Starting function getProjects2 for cardfilters.route/`);
   let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
-  let projects = await projectService.getProjects(null, null, projectsFilterId, null, null);
+  let projects = await projectService.getProjects(null, null, projectsFilterId, 1, 10000000);
 
   // projects = await projectsByFilters(projects, body);
 

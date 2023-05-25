@@ -1202,7 +1202,6 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
   // if (filters?.sortby) {
     project_ids_array = project_ids_array.slice(offset, toRange);
   // }
-  console.log('projects to filter by id (sorted)', project_ids_array);
   where = {project_id: project_ids_array};
   let limitRange = filters?.sortby ? undefined : limit;
   let offsetRange = filters?.sortby ? undefined : offset;
