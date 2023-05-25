@@ -1,90 +1,131 @@
-// Producto: Proyecto
-function Proyecto(name, description, creator, creationDate) {
-  this.name = name;
-  this.description = description;
-  this.creator = creator;
-  this.creationDate = creationDate;
-}
+//Project
+class Project {
+  constructor() {
+    this.name = "";
+    this.description = "";
+    this.creator = "";
+    this.creationDate = "";
+  }
 
-// Creador: Factory de Proyectos
-function ProyectoFactory() {}
+  // Common methods
+  setName(name) {
+    this.name = name;
+  }
 
-ProyectoFactory.prototype.crearProyecto = function(tipo, name, description, creator, creationDate) {
-  switch (tipo) {
-    case 'capital':
-      return new ProyectoCapital(name, description, creator, creationDate);
-    case 'study':
-      return new ProyectoStudy(name, description, creator, creationDate);
-    case 'special':
-      return new ProyectoSpecial(name, description, creator, creationDate);
-    default:
-      throw new Error('Tipo de proyecto no válido');
+  setDescription(description) {
+    this.description = description;
+  }
+
+  setCreator(creator) {
+    this.creator = creator;
+  }
+
+  setCreationDate(creationDate) {
+    this.creationDate = creationDate;
   }
 }
 
-// Producto Concreto: Proyecto Capital
-function ProyectoCapital(name, description, creator, creationDate) {
-  Proyecto.call(this, name, description, creator, creationDate);
-  this.capitalAmount = 0;
+class CapitalProjectBuilder extends ProjectBuilder {
+  setName(name) {
+    this.project.setName(name);
+  }
+
+  setDescription(description) {
+    this.project.setDescription(description);
+  }
+
+  setCreator(creator) {
+    this.project.setCreator(creator);
+  }
+
+  setCreationDate(creationDate) {
+    this.project.setCreationDate(creationDate);
+  }
+
+  setCapitalAmount(amount) {
+    this.project.capitalAmount = amount;
+  }
+
+  getProject() {
+    return this.project;
+  }
 }
 
-ProyectoCapital.prototype = Object.create(Proyecto.prototype);
-ProyectoCapital.prototype.constructor = ProyectoCapital;
+class StudyProjectBuilder extends ProjectBuilder {
+  setName(name) {
+    this.project.setName(name);
+  }
 
-ProyectoCapital.prototype.setCapitalAmount = function(amount) {
-  this.capitalAmount = amount;
+  setDescription(description) {
+    this.project.setDescription(description);
+  }
+
+  setCreator(creator) {
+    this.project.setCreator(creator);
+  }
+
+  setCreationDate(creationDate) {
+    this.project.setCreationDate(creationDate);
+  }
+
+
+  setStudyDuration(duration) {
+    this.project.studyDuration = duration;
+  }
+
+  getProject() {
+    return this.project;
+  }
 }
 
-ProyectoCapital.prototype.getCapitalAmount = function() {
-  return this.capitalAmount;
+// Implementation of the Builder for building a Special Project
+class SpecialProjectBuilder extends ProjectBuilder {
+  setName(name) {
+    this.project.setName(name);
+  }
+
+  setDescription(description) {
+    this.project.setDescription(description);
+  }
+
+  setCreator(creator) {
+    this.project.setCreator(creator);
+  }
+
+  setCreationDate(creationDate) {
+    this.project.setCreationDate(creationDate);
+  }
+
+  setSpecialAttribute(attribute) {
+    this.project.specialAttribute = attribute;
+  }
+
+  getProject() {
+    return this.project;
+  }
 }
 
-// Producto Concreto: Proyecto Study
-function ProyectoStudy(name, description, creator, creationDate) {
-  Proyecto.call(this, name, description, creator, creationDate);
-  this.studyDuration = 0;
-}
+const capitalProjectBuilder = new CapitalProjectBuilder();
+capitalProjectBuilder.setName("Capital Project");
+capitalProjectBuilder.setDescription("Description of the Capital Project");
+capitalProjectBuilder.setCreator("John Doe");
+capitalProjectBuilder.setCreationDate(new Date());
+capitalProjectBuilder.setCapitalAmount(1000000);
 
-ProyectoStudy.prototype = Object.create(Proyecto.prototype);
-ProyectoStudy.prototype.constructor = ProyectoStudy;
+const studyProjectBuilder = new StudyProjectBuilder();
+studyProjectBuilder.setName("Study Project");
+studyProjectBuilder.setDescription("Description of the Study Project");
+studyProjectBuilder.setCreator("Jane Smith");
+studyProjectBuilder.setCreationDate(new Date());
+studyProjectBuilder.setStudyDuration(6);
 
-ProyectoStudy.prototype.setStudyDuration = function(duration) {
-  this.studyDuration = duration;
-}
+const specialProjectBuilder = new SpecialProjectBuilder();
+specialProjectBuilder.setName("Special Project");
+specialProjectBuilder.setDescription("Description of the Special Project");
+specialProjectBuilder.setCreator("Alice Johnson");
+specialProjectBuilder.setCreationDate(new Date());
+specialProjectBuilder.setSpecialAttribute("Special Attribute");
 
-ProyectoStudy.prototype.getStudyDuration = function() {
-  return this.studyDuration;
-}
-
-// Producto Concreto: Proyecto Special
-function ProyectoSpecial(name, description, creator, creationDate) {
-  Proyecto.call(this, name, description, creator, creationDate);
-  this.specialAttribute = '';
-}
-
-ProyectoSpecial.prototype = Object.create(Proyecto.prototype);
-ProyectoSpecial.prototype.constructor = ProyectoSpecial;
-
-ProyectoSpecial.prototype.setSpecialAttribute = function(attribute) {
-  this.specialAttribute = attribute;
-}
-
-ProyectoSpecial.prototype.getSpecialAttribute = function() {
-  return this.specialAttribute;
-}
-
-// Uso del patrón Factory
-const proyectoFactory = new ProyectoFactory();
-
-const proyectoCapital = proyectoFactory.crearProyecto('capital', 'Proyecto de Capital', 'John Doe', new Date());
-proyectoCapital.setCapitalAmount(1000000);
-
-const proyectoStudy = proyectoFactory.crearProyecto('study', 'Proyecto de Estudio', 'Jane Smith', new Date());
-proyectoStudy.setStudyDuration(6);
-
-const proyectoSpecial = proyectoFactory.crearProyecto('special', 'Proyecto Especial', 'Alice Johnson', new Date());
-proyectoSpecial.setSpecialAttribute('Especial');
-
-console.log(proyectoCapital);
-console.log(proyectoStudy);
-console.log(proyectoSpecial);
+const capitalProject = capitalProjectBuilder.getProject();
+const studyProject = studyProjectBuilder.getProject();
+const specialProject = specialProject
