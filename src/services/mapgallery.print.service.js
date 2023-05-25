@@ -63,7 +63,7 @@ export const printProblem = async (data, components, map, problempart,teamsProbl
             <span style="font-size: 12px; color: #11093c; margin-bottom: 15px;margin-top: -3px; line-height: 10px;">${el.business_associate_contact.business_address.business_associate.business_name}</span>
           </td>
         </tr>
-    `
+      `
     }
     })
   .join('');
@@ -80,38 +80,73 @@ export const printProblem = async (data, components, map, problempart,teamsProbl
   }]
   let sum = _components.reduce((prev, curr) => curr.estimated_cost + prev, 0);
   let totalComponents = _components.reduce((prev, next) => prev + next.component_count_total, 0);
-  let componentRows = _components.map((c) => {
-    return `
-        <tr>
-          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type == null? 'N/A' : c.type}</td>
-          <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${priceFormatter(c.estimated_cost)}</td>
-          <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.original_cost ? (Math.round(c.original_cost * 10) / 10) : 0}%</td>
-          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen == null? 'N/A' : `${Math.round(c.percen)}%` }</td>
-        </tr>
-      `
-  }).join('')
-  let problempartRows = problempart.map((c) => {
-    return `
+  let componentRows
+  if(_components.length > 0 && _components[0].type !== ''){
+    componentRows = `
       <tr>
-        <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_type == null? 'N/A' : c.problem_type}</td>
-        <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${(c.problem_part_category == null? 'N/A' : c.problem_part_category)}</td>
-        <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_part_subcategory == null? 'N/A' : c.problem_part_subcategory}</td>
+        <th width="30%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Actions</th>
+        <th width="20%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Cost</th>
+        <th width="20%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">% Complete</th>
+        <th width="30%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">% of Total Cost</th>
       </tr>
     `
-  }).join('');
-  html = html.split('${problempartRows}').join(problempartRows);
-  if (sum >= 0) {
-    html = html.split('${componentRows}').join(componentRows);
-    html = html.split('${totalEstimatedCost}').join(`<tfoot>
+    componentRows = componentRows + _components.map((c) => {
+      return `
+          <tr>
+            <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type == null? 'N/A' : c.type}</td>
+            <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${priceFormatter(c.estimated_cost)}</td>
+            <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.original_cost ? (Math.round(c.original_cost * 10) / 10) : 0}%</td>
+            <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen == null? 'N/A' : `${Math.round(c.percen)}%` }</td>
+          </tr>
+        `
+    }).join('');
+    if (sum >= 0) {
+      html = html.split('${componentRows}').join(componentRows);
+      html = html.split('${totalEstimatedCost}').join(`<tfoot>
+        <tr>
+          <th width="40%" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>Total Proposed Cost (${totalComponents? totalComponents: 0})</b></th>
+          <th width="60%" colspan="3" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>${priceFormatter(sum)}</b></th>
+        </tr>
+      </tfoot>`);
+    } else {
+      html = html.split('${componentRows}').join(componentRows);
+      html = html.split('${totalEstimatedCost}').join('');
+    }
+  } else{
+    componentRows = `
       <tr>
-        <th width="40%" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>Total Proposed Cost (${totalComponents? totalComponents: 0})</b></th>
-        <th width="60%" colspan="3" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>${priceFormatter(sum)}</b></th>
+        <td style="text-align: center;">No data available</td>
       </tr>
-    </tfoot>`);
-  } else {
+    `;
     html = html.split('${componentRows}').join(componentRows);
     html = html.split('${totalEstimatedCost}').join('');
   }
+
+  if(problempart.length > 0){
+    let problempartRows = `<tr>
+      <th width="30%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Problem Type</th>
+      <th width="35%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Problem Part Category</th>
+      <th width="35%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Problem Part Subcategory</th>
+    </tr>`
+    problempartRows = problempartRows + problempart.map((c) => {
+      return `
+        <tr>
+          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_type == null? 'N/A' : c.problem_type}</td>
+          <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${(c.problem_part_category == null? 'N/A' : c.problem_part_category)}</td>
+          <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_part_subcategory == null? 'N/A' : c.problem_part_subcategory}</td>
+        </tr>
+      `
+    }).join('');
+    html = html.split('${problempartRows}').join(problempartRows);
+  }else{
+    let problempartRows = `
+      <tr>
+        <td style="text-align: center;">No data available</td>
+      </tr>
+    `;
+    html = html.split('${problempartRows}').join(problempartRows);
+  }
+
   let q = 0;
   let spaceBetween = '';
   switch (components.length) {
@@ -521,43 +556,6 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   html = html.split('${map}').join(mapImage);
   html = html.split('${roadMap}').join(roadMap);
 
-  // let q = 0;
-  // let spaceBetween = '';
-  // switch (components.length) {
-  //   case 0:
-  //     q = 0;
-  //     break;
-  //   case 1:
-  //     q = 25;
-  //     break;
-  //   case 2:
-  //     q = 20;
-  //     break;
-  //   case 3:
-  //     q = 17;
-  //     break;
-  //   case 4:
-  //     q = 13;
-  //     break;
-  //   case 5:
-  //     q = 8;
-  //     break;
-  //   case 6:
-  //     q = 5;
-  //     break;
-  //   case 7:
-  //     q = 3;
-  //     break;
-  // }
-  // for (var i = 0; i < q; i++) {
-  //   spaceBetween += '<br/>'
-  // }
-  // html = html.split('${spaceBetween}').join(components.length > limit ? `<br><div style="page-break-after:always;"></div>` : '');
-  // let width = 900;
-  // let height = 1150;
-  // if (!(problems.length + components.length)) {
-  //   height += 180
-  // }
   const width = 900;
   const height = 1150;
   var options = {
