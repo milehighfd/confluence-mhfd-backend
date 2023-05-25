@@ -700,6 +700,14 @@ const getLightDetails = async (project_id) => {
     ],
     include: [
       {
+        model: CodeProjectType,
+        required: false,
+        attributes: [
+          'code_project_type_id',
+          'project_type_name'
+        ]
+      },
+      {
         model: ProjectStatus,
         required: false,
         separate: true,
