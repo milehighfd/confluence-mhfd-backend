@@ -75,6 +75,154 @@ const TABLES_COMPONENTS = ['grade_control_structure', 'pipe_appurtenances', 'spe
    'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
    'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area', 'stream_improvement_measure'];
 
+async function getLayersInfo (conditionalWhere, typeid, id) {
+   let projectLayers = [];
+       let grade_control_structure = await Promise.resolve(Grade_control_structure.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] 
+      }));
+      grade_control_structure = grade_control_structure.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      grade_control_structure.action = 'grade_control_structure';
+      projectLayers.push(grade_control_structure);
+
+
+      let pipe_appurtenances = await Promise.resolve(Pipe_appurtenances.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type']
+      }))
+      pipe_appurtenances = pipe_appurtenances.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      pipe_appurtenances.action = 'pipe_appurtenances';
+      projectLayers.push(pipe_appurtenances);
+
+
+      let special_item_point = await Promise.resolve(Special_item_point.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type']
+      }));
+      special_item_point = special_item_point.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      special_item_point.action = 'special_item_point';
+      projectLayers.push(special_item_point);
+
+
+      let special_item_linear = await Promise.resolve(Special_item_linear.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type']
+      }));
+      special_item_linear = special_item_linear.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      special_item_linear.action = 'special_item_linear';
+      projectLayers.push(special_item_linear);
+
+
+      let special_item_area = await Promise.resolve(Special_item_area.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type']
+      }));
+      special_item_area = special_item_area.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      special_item_area.action = 'special_item_area';
+      projectLayers.push(special_item_area);
+
+
+      let channel_improvements_linear = await Promise.resolve(Channel_improvements_linear.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type']
+      }));
+      channel_improvements_linear = channel_improvements_linear.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      channel_improvements_linear.action = 'channel_improvements_linear';
+      projectLayers.push(channel_improvements_linear);
+
+
+      let channel_improvements_area = await Promise.resolve(Channel_improvements_area.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type']
+      }));
+      channel_improvements_area = channel_improvements_area.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      channel_improvements_area.action = 'channel_improvements_area';
+      projectLayers.push(channel_improvements_area);
+
+
+      let removal_line = await Promise.resolve(Removal_line.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type']
+      }));
+      removal_line = removal_line.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      removal_line.action = 'removal_line';
+      projectLayers.push(removal_line);
+
+
+      let removal_area = await Promise.resolve(Removal_area.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type']
+      }));
+      removal_area = removal_area.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      removal_area.action = 'removal_area';
+      projectLayers.push(removal_area);
+
+
+      let storm_drain = await Promise.resolve(Storm_drain.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type']
+      }));
+      storm_drain = storm_drain.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      storm_drain.action = 'storm_drain';
+      projectLayers.push(storm_drain);
+
+
+      let detention_facilities = await Promise.resolve(Detention_facilities.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type']
+      }));
+      detention_facilities = detention_facilities.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      detention_facilities.action = 'detention_facilities';
+      projectLayers.push(detention_facilities);
+
+
+      let land_acquisition = await Promise.resolve(Land_acquisition.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type']
+      }));
+      land_acquisition = land_acquisition.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      land_acquisition.action = 'land_acquisition';
+      projectLayers.push(land_acquisition);
+
+
+      let landscaping_area = await Promise.resolve(Landscaping_area.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type']
+      }));
+      landscaping_area = landscaping_area.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      landscaping_area.action = 'landscaping_area';
+      projectLayers.push(landscaping_area);
+
+
+      let stream_improvement_measure = await Promise.resolve(
+        Stream_improvement_measure.findAll({
+          where:
+            typeid === PROPSPROBLEMTABLES.problems[5]
+              ? {
+                  problem_id: id,
+                }
+              : {
+                  project_id: id,
+                },
+            attributes: ['status', 'estimated_cost_base', 'component_type']
+        })
+      );
+      stream_improvement_measure = stream_improvement_measure.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      stream_improvement_measure.action = 'stream_improvement_measure';
+      projectLayers.push(stream_improvement_measure);
+
+
+      let maintenance_trails = await Promise.resolve(Maintenance_trails.findAll({
+         where: conditionalWhere,
+         attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type']
+      }));
+      maintenance_trails = maintenance_trails.map(instance => instance.dataValues).filter(arr => Object.keys(arr).length > 0);
+      maintenance_trails.action = 'maintenance_trails';
+      projectLayers.push(maintenance_trails);
+
+      return projectLayers;
+}
+
 router.post('/', async (req, res) => {
   logger.info(`Starting endpoint mapgallery.route/ with params ${JSON.stringify(req.params, null, 2)}`);
   try {
@@ -1040,203 +1188,78 @@ router.post('/problems-by-projectid', async (req, res) => {
    }
 });
 
-let componentsByEntityId = async (id, typeid, sortby, sorttype) => {
-   if (id === '') {
-      id = null;
-   }
-   let table = '';
-   let finalcost = '';
-   let extraColumnProb = typeid;
-   let conditionalWhere = {};
+let componentsByEntityId = async (id, typeid) => {
+  if (id === '') {
+    id = null;
+  }
+  let conditionalWhere = {};
 
-   if (typeid === PROPSPROBLEMTABLES.problems[5]) {
-      conditionalWhere = {
-         problemid: id,
-      }
-   } else {
-      conditionalWhere = {
-         projectid: id,
-      }
-   }
+  if (typeid === PROPSPROBLEMTABLES.problems[5]) {
+    conditionalWhere = {
+      problemid: id,
+    };
+  } else {
+    conditionalWhere = {
+      projectid: id,
+    };
+  }
+  const projectLayers = await getLayersInfo(conditionalWhere, typeid, id);
+  let costs = [];
+  let totalCost = 0;
+  let original_Cost = 0;
+  projectLayers.forEach((element) => {
+    if (element.length > 0) {
+      element.forEach((subElement) => {
+        if (element.action === 'stream_improvement_measure') {
+          if (element.status === 'Constructed') {
+            original_Cost += subElement.estimated_cost_base;
+          }
+          totalCost += subElement.estimated_cost_base;
+        } else {
+          if (element.status === 'Constructed') {
+            original_Cost += subElement.original_cost;
+          }
+          totalCost += subElement.original_cost;
+        }
+      });
+      return totalCost;
+    }
+  });
 
-   if (typeid === 'projectid') {
-      table = MAIN_PROJECT_TABLE;
-      finalcost = 'finalcost';
-   } else if (typeid === PROPSPROBLEMTABLES.problems[5]) {
-      table = PROBLEM_TABLE;
-      finalcost = `${PROBLEM_TABLE}.${PROPSPROBLEMTABLES.problem_boundary[0]}`;
-      extraColumnProb = PROPSPROBLEMTABLES.problem_boundary[5];
-
-   } else {
-      table = PROBLEM_TABLE;
-      finalcost = PROPSPROBLEMTABLES.problem_boundary[0];
-   }
-
-
-      let projectLayers = [];
-      const grade_control_structure = await Grade_control_structure.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
+  projectLayers.forEach((element) => {
+    if (element.length > 0) {
+      let actionName = '';
+      let estimated_cost = 0;
+      let countOfProjectActions = 0;
+      let countCompletedActions = 0;
+      element.forEach((subElement) => {
+        actionName =
+          element.action === 'stream_improvement_measure'
+            ? subElement.component_type
+            : subElement.type;
+        countOfProjectActions++;
+        if (subElement.status === 'Constructed') {
+          countCompletedActions++;
+        }
+        if (element.action === 'stream_improvement_measure') {
+          estimated_cost += subElement.estimated_cost_base;
+        } else {
+          estimated_cost += subElement.original_cost;
+        }
       });
-      grade_control_structure.action = 'grade_control_structure';
-      projectLayers.push(grade_control_structure);
-      const pipe_appurtenances = await Pipe_appurtenances.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
-      })
-      pipe_appurtenances.action = 'pipe_appurtenances';
-      projectLayers.push(pipe_appurtenances);
-      const special_item_point = await Special_item_point.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
+      costs.push({
+        type: actionName + ' (' + countOfProjectActions + ')',
+        complete_cost: (countCompletedActions / countOfProjectActions) * 100,
+        component_count_complete: countCompletedActions,
+        component_count_total: countOfProjectActions,
+        estimated_cost: estimated_cost,
+        original_cost: original_Cost,
+        percen: Math.round((estimated_cost / totalCost) * 10000) / 100,
       });
-      special_item_point.action = 'special_item_point';
-      projectLayers.push(special_item_point);
-      const special_item_linear = await Special_item_linear.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
-      });
-      special_item_linear.action = 'special_item_linear';
-      projectLayers.push(special_item_linear);
-      const special_item_area = await Special_item_area.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
-      });
-      special_item_area.action = 'special_item_area';
-      projectLayers.push(special_item_area);
-      const channel_improvements_linear = await Channel_improvements_linear.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
-      });
-      channel_improvements_linear.action = 'channel_improvements_linear';
-      projectLayers.push(channel_improvements_linear);
-      const channel_improvements_area = await Channel_improvements_area.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
-      });
-      channel_improvements_area.action = 'channel_improvements_area';
-      projectLayers.push(channel_improvements_area);
-      const removal_line = await Removal_line.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
-      });
-      removal_line.action = 'removal_line';
-      projectLayers.push(removal_line);
-      const removal_area = await Removal_area.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
-      });
-      removal_area.action = 'removal_area';
-      projectLayers.push(removal_area);
-      const storm_drain = await Storm_drain.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
-      });
-      storm_drain.action = 'storm_drain';
-      projectLayers.push(storm_drain);
-      const detention_facilities = await Detention_facilities.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
-      });
-      detention_facilities.action = 'detention_facilities';
-      projectLayers.push(detention_facilities);
-      const land_acquisition = await Land_acquisition.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
-      });
-      land_acquisition.action = 'land_acquisition';
-      projectLayers.push(land_acquisition);
-      const landscaping_area = await Landscaping_area.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
-      });
-      landscaping_area.action = 'landscaping_area';
-      projectLayers.push(landscaping_area);
-      const stream_improvement_measure = await Stream_improvement_measure.findAll({
-         raw: true,
-         nest: true,
-         where: typeid === PROPSPROBLEMTABLES.problems[5] ? {
-            problem_id: id,
-         } : {
-            project_id: id,
-         }
-      });
-      stream_improvement_measure.action = 'stream_improvement_measure';
-      projectLayers.push(stream_improvement_measure);
-      const maintenance_trails = await Maintenance_trails.findAll({
-         raw: true,
-         nest: true,
-         where: conditionalWhere
-      });
-      maintenance_trails.action = 'maintenance_trails';
-      projectLayers.push(maintenance_trails);
-
-      let costs = [];
-      let totalCost = 0;
-      let original_Cost = 0;
-      projectLayers.map(element => {
-         if (element.length > 0) {
-            element.map(subElement => {
-               if (element.action === 'stream_improvement_measure') {
-                  if (element.status === 'Constructed') {
-                     original_Cost += subElement.estimated_cost_base
-                  }
-                  totalCost += subElement.estimated_cost_base
-               } else {
-                  if (element.status === 'Constructed') {
-                     original_Cost += subElement.original_cost
-                  }
-                  totalCost += subElement.original_cost
-               }
-            })
-            return totalCost
-         }
-      })
-
-      projectLayers.map(element => {
-         if (element.length > 0) {
-            let actionName = '';
-            let estimated_cost = 0;
-            let countOfProjectActions = 0;
-            let countCompletedActions = 0;
-            element.map(subElement => {
-               actionName = element.action === 'stream_improvement_measure' ? subElement.component_type : subElement.type;
-               countOfProjectActions++;
-               if (subElement.status === 'Constructed') {
-                  countCompletedActions++;
-               }
-               if (element.action === 'stream_improvement_measure') {
-                  estimated_cost += subElement.estimated_cost_base
-               } else {
-                  estimated_cost += subElement.original_cost
-               }
-            })
-            costs.push({
-               type: actionName + ' (' + countOfProjectActions + ')',
-               complete_cost: (countCompletedActions / countOfProjectActions) * 100,
-               component_count_complete: countCompletedActions,
-               component_count_total: countOfProjectActions,
-               estimated_cost: estimated_cost,
-               original_cost: original_Cost,
-               percen: Math.round((estimated_cost / totalCost) * 10000) / 100
-            });
-         }
-      })
-      return costs;
-}
+    }
+  });
+  return costs;
+};
 
 router.post('/components-by-entityid', async (req, res) => {
    logger.info(`Starting endpoint mapgallery.route/components-by-entityid with params ${JSON.stringify(req.params, null, 2)}`);
