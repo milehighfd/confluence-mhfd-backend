@@ -1196,24 +1196,25 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
   const CIVIL_CONTRACTOR_ID = 8;
   const LG_LEAD = 10;
   let where = {};
-  const offset = (page - 1) * limit;
+  const offset = (+page - 1) * +limit;
   const toRange = +offset + +limit;
   let project_ids_array = project_ids.map(project => project.project_id);
-  if (filters?.sortby) {
+  // if (filters?.sortby) {
     project_ids_array = project_ids_array.slice(offset, toRange);
-  }
+  // }
   console.log('projects to filter by id (sorted)', project_ids_array);
   where = {project_id: project_ids_array};
   let limitRange = filters?.sortby ? undefined : limit;
   let offsetRange = filters?.sortby ? undefined : offset;
+  console.log('Limit', limit, limitRange, offsetRange);
   try {
     if (cache) {
       return JSON.parse(JSON.stringify(cache));
     }
     let projects = await Project.findAll({
       where: where,
-      limit: limitRange,
-      offset: offsetRange,
+      // limit: limitRange,
+      // offset: offsetRange,
       separate: true,
       attributes: [
         "project_id",

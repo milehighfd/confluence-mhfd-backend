@@ -589,6 +589,7 @@ const getDataForGroupFilters = async (req, res) => {
       extraFilters.sortby = sortby;
       extraFilters.sortorder = sortorder;
     }
+    console.log('Extra filters ', extraFilters);
     logger.info(`page=${page} limit=${limit}`);
     logger.info(`Starting function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
     logger.info(`Filtering by lgmanager ${groupname, filtervalue, code_project_type_id}...`);
@@ -602,6 +603,7 @@ const getDataForGroupFilters = async (req, res) => {
       projects = await sortProjects(projects, body);
       logger.info(`Finished function sortProjects for endpoint project/`);
     }
+    // console.log('PROJECTS', projects);
     res.send(projects);
   } catch (error) {
     logger.error(`Error in endpoint pmtools/groups/:groupname/:filtervalue: ${error.message}`);
