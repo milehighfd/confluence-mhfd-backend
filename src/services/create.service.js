@@ -1,6 +1,6 @@
 import moment from 'moment';
 //Project
-class Project {
+class ProjectBuilder {
   constructor() {
     this.project_name = '';
     this.project_alias = '';
@@ -15,65 +15,64 @@ class Project {
     this.creator = '';
   }
 
-  setName(project_name) {
+  static setName(project_name) {
     this.project_name = project_name;
     return this;
   }
 
-  setAlias(project_alias) {
+  static setAlias(project_alias) {
     this.project_alias = project_alias;
     return this;
   }
 
-  setDescription(description) {
+  static setDescription(description) {
     this.description = description;
     return this;
   }
 
-  setOnBase(onbase_project_number) {
+  static setOnBase(onbase_project_number) {
     this.onbase_project_number = onbase_project_number;
     return this;
   }
 
-  setLocation(location) {
+  static setLocation(location) {
     this.location = location;
     return this;
   }
 
-  setCodeProjectTypeId(code_project_type_id) {
+  static setCodeProjectTypeId(code_project_type_id) {
     this.code_project_type_id = code_project_type_id;
     return this;
   }
 
-  setStartDate() {
+  static setStartDate() {
     this.start_date = moment().format();
     return this;
   }
 
-  setStaffLeadEmail(staff_lead_email) {
+  static setStaffLeadEmail(staff_lead_email) {
     this.staff_lead_email = staff_lead_email;
     return this;
   }
 
-  setCurrentProjectStatusId(current_project_status_id) {
+  static setCurrentProjectStatusId(current_project_status_id) {
     this.current_project_status_id = current_project_status_id;
     return this;
   }
 
-  setCodeMaintenanceEligibilityTypeId(code_maintenance_eligibility_type_id) {
-    this.code_maintenance_eligibility_type_id = code_maintenance_eligibility_type_id;
-    return this;
+  static setCodeMaintenanceEligibilityTypeId(code_maintenance_eligibility_type_id) {
+     this.code_maintenance_eligibility_type_id =
+      code_maintenance_eligibility_type_id;
+      return this;
   }
 
-  setCreator(creator) {
+  static setCreator(creator) {
     this.creator = creator;
     return this;
   }
 
-
-
-  build() {
-    return {
+  static build() {
+    return new ProjectBuilder({
       project_name: this.project_name,
       project_alias: this.project_alias,
       description: this.description,
@@ -83,13 +82,14 @@ class Project {
       start_date: this.start_date,
       staff_lead_email: this.staff_lead_email,
       current_project_status_id: this.current_project_status_id,
-      code_maintenance_eligibility_type_id: this.code_maintenance_eligibility_type_id,
+      code_maintenance_eligibility_type_id:
+        this.code_maintenance_eligibility_type_id,
       creator: this.creator,
-    };
+    });
   }
 }
 
-const project = new Project()
+console.log(ProjectBuilder
   .setName('test')
   .setAlias('test alias')
   .setDescription('test desc')
@@ -100,7 +100,4 @@ const project = new Project()
   .setStaffLeadEmail('some@some.com')
   .setCurrentProjectStatusId(123)
   .setCodeMaintenanceEligibilityTypeId(123)
-  .setCreator('test creator')
-  .build();
-
-console.log(project);
+  .setCreator('test creator'));
