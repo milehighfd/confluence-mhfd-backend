@@ -319,10 +319,11 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     contractor,
     consultant,
     problems,
-    code_project_type
+    code_project_type,
+    onbase_project_number
   } = data;
   
-  const URL_BASE = 'https://confdev.mhfd.org/';
+  const URL_BASE = 'https://confdev2.mhfd.org/'; //TODO: change 'https://confdev.mhfd.org/'
   const urlImage =
   code_project_type.project_type_name === 'CIP' ? `${URL_BASE}/detailed/capital.png` :
     code_project_type.project_type_name === 'Study' ? `${URL_BASE}/detailed/study.png` :
@@ -330,8 +331,9 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
         code_project_type.project_type_name === 'Vegetation Management' ? `${URL_BASE}/detailed/vegetation-management.png` :
           code_project_type.project_type_name === 'Sediment Removal' ? `${URL_BASE}/detailed/sediment-removal.png` :
             code_project_type.project_type_name === 'Restoration' ? `${URL_BASE}/detailed/restoration.png` :
-              code_project_type.project_type_name === 'General Maintenance' ? `${URL_BASE}/detailed/minor-repairs.png` :
-                code_project_type.project_type_name === 'Routine Trash and Debris' ?`${URL_BASE}/detailed/debris-management.png`: `${URL_BASE}/detailed/watershed-change.png`;
+              code_project_type.project_type_name === 'Acquisition' ? `${URL_BASE}/detailed/acquisition.png` :
+                code_project_type.project_type_name === 'General Maintenance' ? `${URL_BASE}/detailed/minor-repairs.png` :
+                  code_project_type.project_type_name === 'Routine Trash and Debris' ?`${URL_BASE}/detailed/debris-management.png`: `${URL_BASE}/detailed/watershed-change.png`;
   let mhfdManager = 'N/A'
   let lgManager = 'N/A'
   data.project_staffs.map((el) => {
@@ -343,12 +345,11 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     }
   })
   let projectId = data.project_id ? data.project_id : 'N/A'
-
   html = html.split('${projectname}').join(_data.project_name);
   html = html.split('${projecttype}').join(code_project_type.project_type_name + ' Project');
-  html = html.split('${onBaseId}').join(_data.onbase_project_number);
+  html = html.split('${onBaseId}').join(_data.onbase_project_number ? _data.onbase_project_number : 'N/A');
   html = html.split('${local_government}').join(local_government || 'N/A');
-  html = html.split('${county}').join(county || 'N/A');
+  html = html.split('${county}').join(county + ' County' || 'N/A');
   html = html.split('${servicearea}').join(servicearea || 'N/A');
   html = html
     .split('${cost}')
