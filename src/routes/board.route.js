@@ -430,15 +430,20 @@ router.post('/board-for-positions2', async (req, res) => {
     `rank${position}`,
     'origin'
   ];
+  const where = { board_id }
   if (`${position}` !== '0') {
     attributes.push(`req${position}`);
+    where[Op.or] = [
+        { [`rank${position}`]: { [Op.ne]: null } },
+        { [`req${position}`]: { [Op.ne]: null } },
+    ];
+  } else {
+    where[`rank${position}`] = { [Op.ne]: null }
   }
+
   const boardProjects = (await BoardProject.findAll({
     attributes,
-    where: {
-      board_id: board_id,
-      [`rank${position}`]: { [Op.ne]: null },
-    },
+    where,
     order: [[`rank${position}`, 'ASC']],
   })).map(d => d.dataValues);
   let boardProjectsWithData = await Promise.all(

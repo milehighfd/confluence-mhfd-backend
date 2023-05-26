@@ -700,13 +700,17 @@ const getLightDetails = async (project_id) => {
     ],
     include: [
       {
-        model: ProjectServiceArea,
+        model: ProjectLocalGovernment,
         required: false,
-        attributes: ['project_service_area_id'],			
+        attributes: [
+          'code_local_government_id'
+        ],
         include: {
-          model: CodeServiceArea,
+          model: CodeLocalGoverment,
           required: false,
-          attributes: ['service_area_name'],
+          attributes: [
+            'local_government_name'
+          ]
         }
       },
       {
@@ -714,14 +718,13 @@ const getLightDetails = async (project_id) => {
         required: false,
         separate: true,
         attributes: [
-          'project_county_id'
+          'state_county_id'
         ],
         include: {
           model: CodeStateCounty,
           required: false,
           attributes: [
             'county_name',
-            'state_county_id'
           ]
         }
       },
@@ -729,7 +732,6 @@ const getLightDetails = async (project_id) => {
         model: ProjectServiceArea,
         required: false,
         attributes: [
-          'project_service_area_id',
           'code_service_area_id'
         ],
         include: {
@@ -748,7 +750,7 @@ const getLightDetails = async (project_id) => {
           'project_type_name'
         ]
       },
-      {
+      /* TODO: Review Status Usage during Work Plan{
         model: ProjectStatus,
         required: false,
         separate: true,
@@ -785,7 +787,7 @@ const getLightDetails = async (project_id) => {
             ]
           }]
         }
-      }
+      }*/
     ]
   });
   if (!project) {
