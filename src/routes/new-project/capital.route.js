@@ -4,6 +4,7 @@ import needle from 'needle';
 import projectIndependentActionService from 'bc/services/projectIndependentAction.service.js';
 import projectProposedActionService from 'bc/services/projectProposedAction.service.js';
 import projectService from 'bc/services/project.service.js';
+import attachmentService from 'bc/services/attachment.service.js';
 import projectStatusService from 'bc/services/projectStatus.service.js';
 import cartoService from 'bc/services/carto.service.js';
 
@@ -360,7 +361,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       { where: { project_id: project_id } }
     );
     console.log(resres);
-    //await attachmentService.uploadFiles(user, req.files, project_id, cover);
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
     const projectsubtype = '';
     await addProjectToBoard(
       user,

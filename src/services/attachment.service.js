@@ -20,7 +20,7 @@ function getDestFile(filename) {
   let root = path.join(__dirname, `../../public/images`);
   if (filename.includes('/')) {
     let folders = filename.split('/');
-    for (var i = 0 ; i < folders.length - 1; i++) {
+    for (let i = 0 ; i < folders.length - 1; i++) {
       root = path.join(root, folders[i]);
       if (!fs.existsSync(root)) {
         console.log('creating', root)
@@ -46,14 +46,21 @@ const listAttachments = async (page, limit, sortByField, sortType, projectid) =>
       project_id: projectid
     }
   }
+  if (!json['where']) {
+    json['where'] = {
+      attachment_reference_key_type: 'FILENAME'
+    }
+  } else {
+    json['where']['attachment_reference_key_type'] = 'FILENAME';
+  }
   const attachments = await Attachment.findAll(json);
   return attachments.map((resp) => {
     return {
       'project_attachment_id': resp.project_attachment_id,
       'file_name': {
-        'file_name': resp.file_name,
+        'file_name': resp.attachment_reference_key,
         'mime_type': resp.mime_type,
-        'attachment_url': resp.attachment_url
+        'attachment_url': getPublicUrl(resp.attachment_url)
       },
       'mime_type': resp.mime_type,
       'created_by': resp.created_by,
@@ -102,7 +109,8 @@ const findByName = async (name) => {
   try {
     const attach = await Attachment.findAll({
       where: {
-        file_name: { [Op.like]: '%' + name + '%' }
+        attachment_reference_key: { [Op.like]: '%' + name + '%' },
+        attachment_reference_key_type: 'FILENAME'
       }
     });
 
@@ -116,7 +124,7 @@ const findByName = async (name) => {
     urlImage = null;
   }
 
-  return await urlImage;
+  return urlImage;
 }
 
 const findByFilename = async (name) => {
@@ -124,7 +132,8 @@ const findByFilename = async (name) => {
   try {
     const attach = await Attachment.findAll({
       where: {
-        file_name: { [Op.like]: '%' + name + '%' }
+        attachment_reference_key: { [Op.like]: '%' + name + '%' },
+        attachment_reference_key_type: 'FILENAME'
       }
     });
 
@@ -138,7 +147,7 @@ const findByFilename = async (name) => {
     urlImage = null;
   }
 
-  return await urlImage;
+  return urlImage;
 }
 
 const countAttachments = async () => {
@@ -183,21 +192,28 @@ const uploadFiles = async (user, files, projectid, cover) => {
     for (const file of files) {
       let name = file.originalname;
       const none = 'NONE';
+      const FILENAME = 'FILENAME';
       if (projectid) {
         name = `${projectid}/${name}`
       }
-      const insertQuery = `INSERT INTO project_attachment (attachment_url, file_name, attachment_reference_key, attachment_reference_key_type, created_by, created_date, last_modified_by, mime_type, project_id, last_modified_date, is_cover)
-      OUTPUT inserted . *
-      VALUES('${getPublicUrl(name)}', '${file.originalname}', '${none}', '${none}', '${user.email}', '${formatTime}', '${user.email}', '${file.mimetype}', '${projectid ? projectid : null}', '${formatTime}', '${cover ? file.originalname === cover : false}')`;
-      console.log(insertQuery)
-      const data = await db.sequelize.query(
-        insertQuery,
-        {
-          type: db.sequelize.QueryTypes.INSERT,
-        });
+      const attachmentObject = {
+        attachment_url: name,
+        attachment_reference_key: name,
+        attachment_reference_key_type: FILENAME,
+        created_by: user.email,
+        user_id: user.user_id,
+        created_date: formatTime,
+        last_modified_by: user.email,
+        last_modified_date: formatTime,
+        mime_type: file.mimetype,
+        project_id: projectid ? projectid : null,
+        is_cover: cover ? file.originalname === cover : false
+      };
+      const created = await Attachment.create(attachmentObject);
+    
   
       const complete = getDestFile(name);
-      logger.info(`Saved ${JSON.stringify(data[0][0])}`);
+      logger.info(`Saved ${JSON.stringify(created)}`);
       
       const prom = new Promise((resolve, reject) => {
         fs.writeFile(complete, file.buffer, (error) => {
