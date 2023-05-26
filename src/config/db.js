@@ -1,7 +1,6 @@
 import Sequelize from 'sequelize';
 import config from 'bc/config/config.js';
 import user from 'bc/models/user.model.js';
-import attachment from 'bc/models/attachment.model.js';
 import logActivity from 'bc/models/logActivity.model.js';
 import favorites from 'bc/models/favorites.model.js';
 import ProjectFavorite from 'bc/models/project_favorites.model.js';
@@ -108,7 +107,6 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.user = user(sequelize, Sequelize);
-db.attachment = attachment(sequelize, Sequelize);
 db.logActivity = logActivity(sequelize, Sequelize);
 db.ProjectFavorite = ProjectFavorite(sequelize, Sequelize);
 db.problemFavorite = ProblemFavorite(sequelize, Sequelize);
