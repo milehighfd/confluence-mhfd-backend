@@ -91,11 +91,12 @@ export const printProblem = async (data, components, map, problempart,teamsProbl
       </tr>
     `
     componentRows = componentRows + _components.map((c) => {
+      let completepercen =Math.round((c.component_count_complete/c.component_count_total)*100);
       return `
           <tr>
             <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type == null? 'N/A' : c.type}</td>
             <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${priceFormatter(c.estimated_cost)}</td>
-            <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.original_cost ? (Math.round(c.original_cost * 10) / 10) : 0}%</td>
+            <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${completepercen ? completepercen: 0}%</td>
             <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen == null? 'N/A' : `${Math.round(c.percen)}%` }</td>
           </tr>
         `
@@ -505,6 +506,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     `;
     componentRows = componentRows + _components
       .map((c, i) => {
+        console.log(c,'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCcccccccccccccc', c.original_cost, 'COSSSSSSSSSSSSt')
         let str = `
           <tr>
             <td width="30%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${
