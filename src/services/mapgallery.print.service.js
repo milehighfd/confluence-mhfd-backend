@@ -245,16 +245,27 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       (_data[k] !== void 0 || _data[k] !== []) &&
       _data[k]?.length > 0
     ) {
-      for (let i = 0; i < _data?.project_local_governments.length; i++) {
-        if (_data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT) {
-          data['local_government']
-            ? (data[
-                'local_government'
-              ] += `${_data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT.local_government_name}, `)
-            : (data['local_government'] =
-                _data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT.local_government_name);
-        }
-      }
+      // for (let i = 0; i < _data?.project_local_governments.length; i++) {
+      //   if (_data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT) {
+      //     data['local_government']
+      //       ? (data[
+      //           'local_government'
+      //         ] += `${_data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT.local_government_name}, `)
+      //       : (data['local_government'] =
+      //           _data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT.local_government_name);
+      //   }
+      // }
+      data['local_government'] = _data?.project_local_governments.reduce((accumulator, current) => {
+        const sa = current?.CODE_LOCAL_GOVERNMENT?.local_government_name || '';
+        let value = accumulator;
+        if (sa) {
+          if (value) {
+            value += ', ';
+          }
+          value += sa;
+        }  
+        return value;
+      }, '');
     }
 
     if (
@@ -366,14 +377,14 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   html = html.split('${projectname}').join(_data.project_name);
   html = html.split('${projecttype}').join(_data.code_project_type.project_type_name + ' Project');
   html = html.split('${onBaseId}').join(_data.onbase_project_number);
-  html = html.split('${local_government}').join(local_government);
-  html = html.split('${county}').join(county);
-  html = html.split('${servicearea}').join(servicearea);
+  html = html.split('${local_government}').join(local_government || 'N/A');
+  html = html.split('${county}').join(county || 'N/A');
+  html = html.split('${servicearea}').join(servicearea || 'N/A');
   html = html
     .split('${cost}')
     .join(cost ? priceFormatter(cost) : 'No Cost Data');
-  html = html.split('${status}').join(status);
-  html = html.split('${phase}').join(phase);
+  html = html.split('${status}').join(status ? status : 'N/A');
+  html = html.split('${phase}').join(phase ? phase : 'N/A');
   html = html.split('${streamname}').join(stream_name ? stream_name:'N/A' );
   html = html.split('${attachmentUrl}').join(urlImage);
   html = html.split('${projectId}').join(projectId);
