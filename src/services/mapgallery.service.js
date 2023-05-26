@@ -32,6 +32,71 @@ const Stream_improvement_measure = db.streamImprovementMeasure;
 const Maintenance_trails = db.maintenanceTrails;
 const ProjectStaff = db.projectStaff;
 
+export const getLayersProblemSql = async (whereP, typeid, id) => {
+  let where = '';
+  if (typeid === PROPSPROBLEMTABLES.problems[5]){
+    where = {problem_id: id}
+  }else{
+    where = {project_id: id}
+  }
+  try {
+    const [
+      gradeControlStructureData, 
+      pipeAppurtenancesData, 
+      specialItemPointData, 
+      specialItemLinearData, 
+      specialItemAreaData, 
+      channelImprovementsLinearData, 
+      channelImprovementsAreaData, 
+      removalLineData, 
+      removalAreaData, 
+      stormDrainData, 
+      detentionFacilitiesData, 
+      maintenanceTrailsData, 
+      landAcquisitionData, 
+      landscapingAreaData, 
+      streamImprovementMeasureData
+    ] = await Promise.all([
+      Grade_control_structure.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Pipe_appurtenances.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Special_item_point.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Special_item_linear.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Special_item_area.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Channel_improvements_linear.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Channel_improvements_area.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Removal_line.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Removal_area.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Storm_drain.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Detention_facilities.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Maintenance_trails.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Land_acquisition.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Landscaping_area.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
+      Stream_improvement_measure.findAll({ where: where, attributes: [['project_id', 'projectid'],['problem_id', 'problemid'],'status', 'estimated_cost_base', 'component_type'] })
+    ]);
+    const modelData = [
+      gradeControlStructureData.map(instance => instance.dataValues),
+      pipeAppurtenancesData.map(instance => instance.dataValues),
+      specialItemPointData.map(instance => instance.dataValues),
+      specialItemLinearData.map(instance => instance.dataValues),
+      specialItemAreaData.map(instance => instance.dataValues),
+      channelImprovementsLinearData.map(instance => instance.dataValues),
+      channelImprovementsAreaData.map(instance => instance.dataValues),
+      removalLineData.map(instance => instance.dataValues),
+      removalAreaData.map(instance => instance.dataValues),
+      stormDrainData.map(instance => instance.dataValues),
+      detentionFacilitiesData.map(instance => instance.dataValues),
+      maintenanceTrailsData.map(instance => instance.dataValues),
+      landAcquisitionData.map(instance => instance.dataValues),
+      landscapingAreaData.map(instance => instance.dataValues),
+      streamImprovementMeasureData.map(instance => instance.dataValues),
+    ].filter(arr => arr.length > 0);    
+    return modelData;
+  } catch (error) {
+    throw new Error(error);
+  }
+  
+}
+
 export const getCountForProblemId = async (problemId) => {
   try {
     const [
@@ -153,15 +218,15 @@ export const getDataProblemSql = async (problemIds,answer) => {
 
     const mergedData = answer.map(element => {
       const problemId = element.problemid;
-      const modelDatum = modelData.reduce((acc, curr) => {
-        const matchingDatum = curr.find(datum => datum.problemid === problemId);
-        if (matchingDatum) {
-          acc.push(matchingDatum);
+      const modelDataSent = modelData.reduce((acc, curr) => {
+        const matchData = curr.find(x => x.problemid === problemId);
+        if (matchData) {
+          acc.push(matchData);
         }
         return acc;
       }, []);
       const count = problemIdCounts[problemId] || 0;
-      return { ...element, modelData: modelDatum, count };
+      return { ...element, modelData: modelDataSent, count };
     });
     return mergedData;
   } catch (error) {

@@ -35,6 +35,7 @@ import {
    getCoordinatesOfComponents,
    getDataProblemSql,
    getCountForProblemId,
+   getLayersProblemSql,
 } from 'bc/services/mapgallery.service.js';
 import {
    statusList
@@ -1140,19 +1141,20 @@ router.post('/problem-by-id/:id/pdf', async (req, res) => {
    try {
       let data = await getDataByProblemId(id);
       let components = await componentsByEntityId(id, PROPSPROBLEMTABLES.problems[5], 'type', 'asc');
-      let problempart = await getProblemParts(id);
-      let teamsProblems = await teamsService.getTeamsByEntityId(id);
-      try {
-         let pdfObject = await printProblem(data, components, map, problempart, teamsProblems);
-         pdfObject.toBuffer(function (err, buffer) {
-            if (err) return res.send(err);
-            res.type('pdf');
-            res.end(buffer, 'binary');
-         })
-      } catch (e) {
-         logger.error(e);
-         res.status(500).send({ error: 'Not able to generated PDF.' });
-      }
+      // let problempart = await getProblemParts(id);
+      // let teamsProblems = await teamsService.getTeamsByEntityId(id);
+      // try {
+      //    let pdfObject = await printProblem(data, components, map, problempart, teamsProblems);
+      //    pdfObject.toBuffer(function (err, buffer) {
+      //       if (err) return res.send(err);
+      //       res.type('pdf');
+      //       res.end(buffer, 'binary');
+      //    })
+      // } catch (e) {
+      //    logger.error(e);
+      //    res.status(500).send({ error: 'Not able to generated PDF.' });
+      // }
+      res.send(components);
    } catch (error) {
       logger.error(error);
       res.status(500).send({ error: 'No there data with ID' });
@@ -1203,7 +1205,7 @@ let componentsByEntityId = async (id, typeid) => {
       projectid: id,
     };
   }
-  const projectLayers = await getLayersInfo(conditionalWhere, typeid, id);
+  const projectLayers = await getLayersProblemSql(conditionalWhere, typeid, id);
   let costs = [];
   let totalCost = 0;
   let original_Cost = 0;
