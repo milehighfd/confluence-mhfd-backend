@@ -349,7 +349,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   html = html.split('${projecttype}').join(code_project_type.project_type_name + ' Project');
   html = html.split('${onBaseId}').join(_data.onbase_project_number ? _data.onbase_project_number : 'N/A');
   html = html.split('${local_government}').join(local_government || 'N/A');
-  html = html.split('${county}').join(county + ' County' || 'N/A');
+  html = html.split('${county}').join(county ? (county + ' County') : 'N/A');
   html = html.split('${servicearea}').join(servicearea || 'N/A');
   html = html
     .split('${cost}')
