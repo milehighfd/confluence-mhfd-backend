@@ -506,7 +506,6 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     `;
     componentRows = componentRows + _components
       .map((c, i) => {
-        console.log(c,'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCcccccccccccccc', c.original_cost, 'COSSSSSSSSSSSSt')
         let str = `
           <tr>
             <td width="30%" style="color: #11093c; text-align: left; padding-left: 20px; padding-top: 4px; padding-right: 20px; padding-bottom: 0px; font-weight: 400;">${
