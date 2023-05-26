@@ -310,7 +310,6 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
 
   const {
     county,
-    project_type_name,
     local_government,
     servicearea,
     phase,
@@ -320,27 +319,19 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     contractor,
     consultant,
     problems,
+    code_project_type
   } = data;
   
   const URL_BASE = 'https://confdev.mhfd.org/';
   const urlImage =
-    project_type_name === 'CIP'
-      ? `${URL_BASE}detailed/capital.png`
-      : project_type_name === 'Study'
-      ? `${URL_BASE}projectImages/study.jpg`
-      : project_type_name === 'Vegetation Management'
-      ? `${URL_BASE}detailed/vegetation-management.png`
-      : project_type_name === 'Sediment Removal'
-      ? `${URL_BASE}detailed/sediment-removal.png`
-      : project_type_name === 'Maintenance Restoration'
-      ? `${URL_BASE}detailed/restoration.png`
-      : project_type_name === 'General Maintenance'
-      ? `${URL_BASE}detailed/minor-repairs.png`
-      :project_type_name === 'Restoration'
-      ? `${URL_BASE}detailed/restoration.png`
-      :project_type_name === 'Routine Trash and Debris'
-      ? `${URL_BASE}detailed/debris-management.png`
-      : `${URL_BASE}detailed/watershed-change.png`;
+  code_project_type.project_type_name === 'CIP' ? `${URL_BASE}/detailed/capital.png` :
+    code_project_type.project_type_name === 'Study' ? `${URL_BASE}/detailed/study.png` :
+      code_project_type.project_type_name === 'Special' ? `${URL_BASE}/detailed/special.png` :
+        code_project_type.project_type_name === 'Vegetation Management' ? `${URL_BASE}/detailed/vegetation-management.png` :
+          code_project_type.project_type_name === 'Sediment Removal' ? `${URL_BASE}/detailed/sediment-removal.png` :
+            code_project_type.project_type_name === 'Restoration' ? `${URL_BASE}/detailed/restoration.png` :
+              code_project_type.project_type_name === 'General Maintenance' ? `${URL_BASE}/detailed/minor-repairs.png` :
+                code_project_type.project_type_name === 'Routine Trash and Debris' ?`${URL_BASE}/detailed/debris-management.png`: `${URL_BASE}/detailed/watershed-change.png`;
   let mhfdManager = 'N/A'
   let lgManager = 'N/A'
   data.project_staffs.map((el) => {
@@ -354,7 +345,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   let projectId = data.project_id ? data.project_id : 'N/A'
 
   html = html.split('${projectname}').join(_data.project_name);
-  html = html.split('${projecttype}').join(_data.code_project_type.project_type_name + ' Project');
+  html = html.split('${projecttype}').join(code_project_type.project_type_name + ' Project');
   html = html.split('${onBaseId}').join(_data.onbase_project_number);
   html = html.split('${local_government}').join(local_government || 'N/A');
   html = html.split('${county}').join(county || 'N/A');
