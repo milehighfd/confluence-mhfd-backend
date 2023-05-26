@@ -245,16 +245,6 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       (_data[k] !== void 0 || _data[k] !== []) &&
       _data[k]?.length > 0
     ) {
-      // for (let i = 0; i < _data?.project_local_governments.length; i++) {
-      //   if (_data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT) {
-      //     data['local_government']
-      //       ? (data[
-      //           'local_government'
-      //         ] += `${_data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT.local_government_name}, `)
-      //       : (data['local_government'] =
-      //           _data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT.local_government_name);
-      //   }
-      // }
       data['local_government'] = _data?.project_local_governments.reduce((accumulator, current) => {
         const sa = current?.CODE_LOCAL_GOVERNMENT?.local_government_name || '';
         let value = accumulator;
@@ -319,7 +309,6 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   });
 
   const {
-    project_name,
     county,
     project_type_name,
     local_government,
@@ -327,22 +316,12 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     phase,
     cost,
     stream_name,
-    // projectsubtype,
-    // attachments,
     status,
-    // startyear,
-    // completedyear,
-    // frequency,
-    // mhfdmanager,
-    description,
     contractor,
     consultant,
     problems,
-    vendors,
-    typeVendor,
   } = data;
-  const mapHeight = 500;
-  const mapWidth = 750;
+  
   const URL_BASE = 'https://confdev.mhfd.org/';
   const urlImage =
     project_type_name === 'CIP'
