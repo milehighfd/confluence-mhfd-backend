@@ -199,7 +199,7 @@ const uploadFiles = async (user, files, projectid, cover) => {
       }
       const attachmentObject = {
         attachment_url: name,
-        attachment_reference_key: name,
+        attachment_reference_key: file.originalname,
         attachment_reference_key_type: FILENAME,
         created_by: user.email,
         user_id: user.user_id,
