@@ -750,10 +750,11 @@ const getLightDetails = async (project_id) => {
           'project_type_name'
         ]
       },
-      /* TODO: Review Status Usage during Work Plan{
+      {
         model: ProjectStatus,
         required: false,
         separate: true,
+        as: 'currentId',
         attributes: [
           'code_phase_type_id',
           'planned_start_date',
@@ -787,7 +788,7 @@ const getLightDetails = async (project_id) => {
             ]
           }]
         }
-      }*/
+      }
     ]
   });
   if (!project) {
