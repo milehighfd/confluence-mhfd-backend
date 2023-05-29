@@ -558,40 +558,35 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       cosponsor,
       project_id
     );
-    try {
 
       //update aditional cost
+    await costService.updateProjectOverhead(
+      {
+        project_id: project_id,
+        cost: Number(additionalcost),
+        code_cost_type_id: aditionalCostId,
+        cost_description: additionalcostdescription,
+        created_by: creator,
+        modified_by: creator,
+        is_active: true
+      },
+      project_id,
+      aditionalCostId
+    );
+    //update overhead cost
+    for (const element of filtered) {
       await costService.updateProjectOverhead(
         {
           project_id: project_id,
-          cost: Number(additionalcost),
-          code_cost_type_id: aditionalCostId,
-          cost_description: additionalcostdescription,
+          cost: Number(splitedOverheadcost[element]),
+          code_cost_type_id: element,
           created_by: creator,
           modified_by: creator,
           is_active: true
         },
         project_id,
-        aditionalCostId
+        element
       );
-      //update overhead cost
-      for (const element of filtered) {
-        await costService.updateProjectOverhead(
-          {
-            project_id: project_id,
-            cost: Number(splitedOverheadcost[element]),
-            code_cost_type_id: element,
-            created_by: creator,
-            modified_by: creator,
-            is_active: true
-          },
-          project_id,
-          element
-        );
-      }
-    } catch (error) {
-      logger.error('Error', error);
-      throw error;
     }
     if (splitedJurisdiction)
       await ProjectLocalGovernment.destroy({
@@ -649,7 +644,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     await projectIndependentActionService.deleteByProjectId(project_id);
 
     for (const independent of JSON.parse(independetComponent)) {
-      try {
         if (independent && name in independent) {
           await projectIndependentActionService.saveProjectIndependentAction({
             action_name: independent.name,
@@ -669,13 +663,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         }
 
         logger.info('create independent component');
-      } catch (error) {
-        logger.error('cannot create independent component ' + error);
-        throw error;
-      }
     }
     for (const component of JSON.parse(components)) {
-      try {
         const action = {
           project_id: project_id,
           object_id: component.objectid,
@@ -685,14 +674,11 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         };
         await projectProposedActionService.saveProjectAction(action);
         logger.info('create component');
-      } catch (error) {
-        logger.error('cannot create component ' + error);
-        throw error;
-      }
     }
    await projectService.updateProjectOnCache(project_id);
    res.send(result);
   } catch (error) {
+    console.log(error)
     logger.error(error);
   };
 });
