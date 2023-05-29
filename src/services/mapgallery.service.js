@@ -71,7 +71,7 @@ export const getLayersProblemSql = async (whereP, typeid, id) => {
       Maintenance_trails.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
       Land_acquisition.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
       Landscaping_area.findAll({ where: whereP, attributes: ['status', 'estimated_cost', 'original_cost', 'component_type', 'type'] }),
-      Stream_improvement_measure.findAll({ where: where, attributes: [['project_id', 'projectid'],['problem_id', 'problemid'],'status', 'estimated_cost_base', 'component_type'] })
+      Stream_improvement_measure.findAll({ where: where, attributes: [['project_id', 'projectid'],['problem_id', 'problemid'],'status', 'estimated_cost_base', ['component_type', 'type']] })
     ]);
     const modelData = [
       gradeControlStructureData.map(instance => instance.dataValues),

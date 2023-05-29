@@ -78,10 +78,12 @@ export const printProblem = async (data, components, map, problempart,teamsProbl
     original_cost: 0,
     percen: 0
   }]
-  let sum = _components.reduce((prev, curr) => curr.estimated_cost + prev, 0);
+  let sum = components.reduce((prev, next) => {
+    return prev + (next.estimated_cost ? next.estimated_cost : 0);
+  }, 0);
   let totalComponents = _components.reduce((prev, next) => prev + next.component_count_total, 0);
   let componentRows
-  if(_components.length > 0 && _components[0].type !== ''){
+  if(components.length > 0 && components[0].type !== ''){
     componentRows = `
       <tr>
         <th width="30%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Actions</th>
@@ -90,29 +92,24 @@ export const printProblem = async (data, components, map, problempart,teamsProbl
         <th width="30%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">% of Total Cost</th>
       </tr>
     `
-    componentRows = componentRows + _components.map((c) => {
+    componentRows = componentRows + components.map((c) => {
       let completepercen =Math.round((c.component_count_complete/c.component_count_total)*100);
       return `
           <tr>
             <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type == null? 'N/A' : c.type}</td>
-            <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${priceFormatter(c.estimated_cost)}</td>
+            <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${priceFormatter(c.estimated_cost ? c.estimated_cost : 0)}</td>
             <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${completepercen ? completepercen: 0}%</td>
-            <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen == null? 'N/A' : `${Math.round(c.percen)}%` }</td>
+            <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen  ? `${Math.round(c.percen)}%` : '0%' }</td>
           </tr>
         `
     }).join('');
-    if (sum >= 0) {
       html = html.split('${componentRows}').join(componentRows);
       html = html.split('${totalEstimatedCost}').join(`<tfoot>
         <tr>
           <th width="40%" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>Total Proposed Cost (${totalComponents? totalComponents: 0})</b></th>
-          <th width="60%" colspan="3" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>${priceFormatter(sum)}</b></th>
+          <th width="60%" colspan="3" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>${sum ? priceFormatter(sum): '$0'}</b></th>
         </tr>
       </tfoot>`);
-    } else {
-      html = html.split('${componentRows}').join(componentRows);
-      html = html.split('${totalEstimatedCost}').join('');
-    }
   } else{
     componentRows = `
       <tr>
@@ -350,7 +347,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   html = html.split('${onBaseId}').join(_data.onbase_project_number ? _data.onbase_project_number : 'N/A');
   html = html.split('${local_government}').join(local_government || 'N/A');
   html = html.split('${county}').join(county ? (county + ' County') : 'N/A');
-  html = html.split('${servicearea}').join(servicearea || 'N/A');
+  html = html.split('${servicearea}').join(servicearea ? (servicearea + ' Service Area'): 'N/A');
   html = html
     .split('${cost}')
     .join(cost ? priceFormatter(cost) : 'No Cost Data');
@@ -371,18 +368,18 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   if(_problems.length > 0 && (_problems[0].problemname != '' || _problems[0].problempriority != '') ){
     let problemRows = `<thead>
       <tr>
-        <th width="50%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Name</th>
-        <th width="50%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Priority</th>
+        <th width="80%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Name</th>
+        <th width="20%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Priority</th>
       </tr>
     </thead>`;
     problemRows = problemRows + _problems
       .map((p) => {
         return `
           <tr>
-            <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+            <td width="80%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
               p.problemname == null ? 'N/A' : p.problemname
             }</td>
-            <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+            <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
               p.problempriority == null ? 'N/A' : p.problempriority
             }</td>
           </tr>
@@ -630,8 +627,8 @@ export const printProject = async (_data, components, map) => {
   let problemRows = _problems.map((p) => {
     return `
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-          width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problemname}</td>
-          width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problempriority}</td>
+          width="80%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problemname}</td>
+          width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problempriority}</td>
         </tr>
       `
   }).join('')
