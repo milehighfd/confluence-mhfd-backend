@@ -350,7 +350,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   html = html.split('${onBaseId}').join(_data.onbase_project_number ? _data.onbase_project_number : 'N/A');
   html = html.split('${local_government}').join(local_government || 'N/A');
   html = html.split('${county}').join(county ? (county + ' County') : 'N/A');
-  html = html.split('${servicearea}').join(servicearea || 'N/A');
+  html = html.split('${servicearea}').join(servicearea ? (servicearea + ' Service Area'): 'N/A');
   html = html
     .split('${cost}')
     .join(cost ? priceFormatter(cost) : 'No Cost Data');
@@ -371,18 +371,18 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   if(_problems.length > 0 && (_problems[0].problemname != '' || _problems[0].problempriority != '') ){
     let problemRows = `<thead>
       <tr>
-        <th width="50%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Name</th>
-        <th width="50%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Priority</th>
+        <th width="80%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Name</th>
+        <th width="20%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Priority</th>
       </tr>
     </thead>`;
     problemRows = problemRows + _problems
       .map((p) => {
         return `
           <tr>
-            <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+            <td width="80%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
               p.problemname == null ? 'N/A' : p.problemname
             }</td>
-            <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+            <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
               p.problempriority == null ? 'N/A' : p.problempriority
             }</td>
           </tr>
@@ -630,8 +630,8 @@ export const printProject = async (_data, components, map) => {
   let problemRows = _problems.map((p) => {
     return `
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-          width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problemname}</td>
-          width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problempriority}</td>
+          width="80%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problemname}</td>
+          width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problempriority}</td>
         </tr>
       `
   }).join('')
