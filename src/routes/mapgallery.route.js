@@ -1141,20 +1141,19 @@ router.post('/problem-by-id/:id/pdf', async (req, res) => {
    try {
       let data = await getDataByProblemId(id);
       let components = await componentsByEntityId(id, PROPSPROBLEMTABLES.problems[5], 'type', 'asc');
-      // let problempart = await getProblemParts(id);
-      // let teamsProblems = await teamsService.getTeamsByEntityId(id);
-      // try {
-      //    let pdfObject = await printProblem(data, components, map, problempart, teamsProblems);
-      //    pdfObject.toBuffer(function (err, buffer) {
-      //       if (err) return res.send(err);
-      //       res.type('pdf');
-      //       res.end(buffer, 'binary');
-      //    })
-      // } catch (e) {
-      //    logger.error(e);
-      //    res.status(500).send({ error: 'Not able to generated PDF.' });
-      // }
-      res.send(components);
+      let problempart = await getProblemParts(id);
+      let teamsProblems = await teamsService.getTeamsByEntityId(id);
+      try {
+         let pdfObject = await printProblem(data, components, map, problempart, teamsProblems);
+         pdfObject.toBuffer(function (err, buffer) {
+            if (err) return res.send(err);
+            res.type('pdf');
+            res.end(buffer, 'binary');
+         })
+      } catch (e) {
+         logger.error(e);
+         res.status(500).send({ error: 'Not able to generated PDF.' });
+      }
    } catch (error) {
       logger.error(error);
       res.status(500).send({ error: 'No there data with ID' });
