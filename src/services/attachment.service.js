@@ -37,8 +37,7 @@ const getFileSize = async (filename) => {
   try {
     const stats = fs.statSync(getDestFile(filename));
     const fileSizeInBytes = stats.size;
-    // size on megabytes
-    return fileSizeInBytes / 1000000.0;
+    return fileSizeInBytes;
   } catch (err) {
     logger.error(err);
     return 0;
@@ -72,11 +71,7 @@ const listAttachments = async (page, limit, sortByField, sortType, projectid) =>
   return attachments.map((resp) => {
     return {
       'project_attachment_id': resp.project_attachment_id,
-      'file_name': {
-        'file_name': resp.attachment_reference_key,
-        'mime_type': resp.mime_type,
-        'attachment_url': getPublicUrl(resp.attachment_url)
-      },
+      'file_name': resp.attachment_reference_key,
       'mime_type': resp.mime_type,
       'created_by': resp.created_by,
       'attachment_url': resp.attachment_url,
