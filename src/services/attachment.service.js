@@ -33,6 +33,18 @@ function getDestFile(filename) {
   }
 }
 
+const getFileSize = async (filename) => {
+  try {
+    const stats = fs.statSync(getDestFile(filename));
+    const fileSizeInBytes = stats.size;
+    // size on megabytes
+    return fileSizeInBytes / 1000000.0;
+  } catch (err) {
+    logger.error(err);
+    return 0;
+  }
+}
+
 const listAttachments = async (page, limit, sortByField, sortType, projectid) => {
   const json = {
     offset: limit * (page - 1),
@@ -53,7 +65,10 @@ const listAttachments = async (page, limit, sortByField, sortType, projectid) =>
   } else {
     json['where']['attachment_reference_key_type'] = 'FILENAME';
   }
-  const attachments = await Attachment.findAll(json);
+  let attachments = await Attachment.findAll(json);
+  for (const attachment of attachments) {
+    attachment.size = await getFileSize(attachment.attachment_url);
+  }
   return attachments.map((resp) => {
     return {
       'project_attachment_id': resp.project_attachment_id,
@@ -68,6 +83,7 @@ const listAttachments = async (page, limit, sortByField, sortType, projectid) =>
       'register_date': resp.register_date,
       'created_date': resp.created_date,
       is_cover: resp.is_cover,
+      size: resp.size 
     }
   });
 }
