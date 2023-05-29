@@ -66,7 +66,8 @@ const listAttachments = async (page, limit, sortByField, sortType, projectid) =>
       'created_by': resp.created_by,
       'attachment_url': resp.attachment_url,
       'register_date': resp.register_date,
-      'created_date': resp.created_date
+      'created_date': resp.created_date,
+      is_cover: resp.is_cover,
     }
   });
 }
