@@ -74,7 +74,7 @@ const listAttachments = async (page, limit, sortByField, sortType, projectid) =>
       'file_name': resp.attachment_reference_key,
       'mime_type': resp.mime_type,
       'created_by': resp.created_by,
-      'attachment_url': resp.attachment_url,
+      'attachment_url': getPublicUrl(resp.attachment_url),
       'register_date': resp.register_date,
       'created_date': resp.created_date,
       is_cover: resp.is_cover,
