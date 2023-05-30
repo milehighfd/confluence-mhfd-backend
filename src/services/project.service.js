@@ -27,6 +27,7 @@ import sequelize from 'sequelize';
 import { CREATE_PROJECT_TABLE } from 'bc/config/config.js';
 
 const Project = db.project;
+const ProjectAttachment = db.projectAttachment;
 const ProjectPartner = db.projectPartner;
 const ProjectServiceArea = db.projectServiceArea;
 const CodeServiceArea = db.codeServiceArea;
@@ -1341,6 +1342,16 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
       ],  
       
       include: [
+        {
+          model: ProjectAttachment,
+          required: false,
+          where: {
+            is_cover: 1
+          },
+          attributes: [
+            'attachment_url'
+          ]
+        },
         {
           model: CodePhaseType,
           required: false,
