@@ -1,5 +1,6 @@
 import fs from 'fs';
 import pdf from 'html-pdf';
+import attachmentService from 'bc/services/attachment.service.js';
 
 var limit = 0;
 const priceFormatter = (value) => {
@@ -461,7 +462,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap, atta
     html = html.split('${vendorRows}').join(vendorRows);
   }
   let imageRow = attachments.map((element, index) => {
-    if (element.mime_type === 'image/png' || element.mime_type === 'image/jpg' || element.mime_type === 'image/jpeg' || element.mime_type === 'image/gif') {
+    if (attachmentService.isImage(element.mime_type)) {
       return `<tr >
         <td style="width: 50%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left; height: 250px; border-radius: 13px;">
         <img src=${'images/' + element.attachment_url} alt="" width="100%" height="252px">
@@ -470,7 +471,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap, atta
     }
   })
   let documentRpw = attachments.map((element, index) => {
-    if (element.mime_type !== 'image/png' && element.mime_type !== 'image/jpg' && element.mime_type !== 'image/jpeg' && element.mime_type !== 'image/gif') {
+    if (!attachmentService.isImage(element.mime_type)) {
        return `<tr>
         <td style="width: 2%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;"><img src="https://confluence.mhfd.org/Icons/icon-63.svg" alt="" height="18px" style="margin-right: 3px; margin-top: 6px; "></td>
         <td style="width: 98%; color: #11093c;">${element.file_name}</td>

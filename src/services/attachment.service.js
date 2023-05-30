@@ -313,5 +313,6 @@ export default {
   isImage,
   toggleValue,
   FilterUrl,
-  downloadZip
+  downloadZip,
+  getPublicUrl,
 };
