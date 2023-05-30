@@ -284,7 +284,7 @@ const getProjectCards = async (req, res) => {
   let projectsFilterId = await projectService.getProjects2(null, null, 1, null, {});
   try {
     const pr = [
-      projectService.getProjects(null, null, projectsFilterId, null, null),
+      projectService.getProjects(null, null, projectsFilterId,  1, 100000000),
       favoritesService.getFavorites(user.user_id),
     ];
     logger.info(`Starting function all for favorite/problem-cards`);
