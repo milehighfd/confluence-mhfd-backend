@@ -271,6 +271,7 @@ export default {
   findCoverImage,
   findByFilename,
   toggle,
+  isImage,
   toggleValue,
   FilterUrl
 };

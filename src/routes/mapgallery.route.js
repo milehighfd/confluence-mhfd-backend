@@ -1122,7 +1122,8 @@ router.post('/project-pdf/:id', async (req, res) => {
          'type',
          'asc'
       );
-      let pdfObject = await newPrintProject(data, components, mapImage, roadMap);
+      let attachments = await attachmentService.listAttachments(1, 10, 'created_date','asc', id);
+      let pdfObject = await newPrintProject(data, components, mapImage, roadMap,attachments);
       pdfObject.toBuffer(function (err, buffer) {
          if (err) return res.send(err);
          res.type('pdf');
