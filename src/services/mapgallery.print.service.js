@@ -470,7 +470,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap, atta
     }
   })
   let documentRpw = attachments.map((element, index) => {
-    if (element.mime_type !== 'image/png' || element.mime_type !== 'image/jpg' || element.mime_type !== 'image/jpeg' || element.mime_type !== 'image/gif') {
+    if (element.mime_type !== 'image/png' && element.mime_type !== 'image/jpg' && element.mime_type !== 'image/jpeg' && element.mime_type !== 'image/gif') {
        return `<tr>
         <td style="width: 2%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;"><img src="https://confluence.mhfd.org/Icons/icon-63.svg" alt="" height="18px" style="margin-right: 3px; margin-top: 6px; "></td>
         <td style="width: 98%; color: #11093c;">${element.file_name}</td>
