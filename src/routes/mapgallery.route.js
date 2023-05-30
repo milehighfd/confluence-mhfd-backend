@@ -1206,6 +1206,7 @@ let componentsByEntityId = async (id, typeid) => {
     };
   }
   const projectLayers = await getLayersProblemSql(conditionalWhere, typeid, id);
+  console.log('projectLayers', projectLayers);
   let costs = [];
   let totalCost = 0;
   let original_Cost = 0;
