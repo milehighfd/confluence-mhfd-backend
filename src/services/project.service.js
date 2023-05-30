@@ -1345,6 +1345,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
         {
           model: ProjectAttachment,
           required: false,
+          separate: true,
           where: {
             is_cover: 1
           },
