@@ -11,7 +11,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/echo', (_, res) => {
-  res.send({ echo: 'success', version: 'May 18 11:39' });
+  res.send({ echo: 'success', version: 'May 29 17:08' });
 });
 
 const server_style = function(req, res, next) {

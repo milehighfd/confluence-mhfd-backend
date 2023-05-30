@@ -122,4 +122,17 @@ router.delete('/remove/:id', auth, async (req, res) => {
    }
 });
 
+router.get('/download/:id', async (req, res) => {
+   try {
+      const id = +req.params.id;
+      const { images } = req.query;
+      logger.info(`Starting function download for attachment.rote/download/:id`);
+      const data = await attachmentService.downloadZip(id, images);
+      logger.info(`Finished function download for attachment.rote/download/:id`);
+      res.send(data).end();
+   } catch(error) {
+      res.status(500).send(error);
+   }
+});
+
 export default router;
