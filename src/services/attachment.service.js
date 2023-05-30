@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import JSZip from 'jszip';
 import sequelize from 'sequelize';
 import logger from 'bc/config/logger.js';
 import { BASE_SERVER_URL } from 'bc/config/config.js';
@@ -198,6 +199,44 @@ const isImage = (type) => {
   }
 }
 
+const downloadZip = async (projectid, images) => {
+  try{
+    console.log('le projectid', projectid);
+    let attachments = await Attachment.findAll({
+      where: {
+        project_id: projectid,
+        attachment_reference_key_type: 'FILENAME'
+      }
+    });
+    if (!attachments) {
+      throw new Error('No attachments found');
+    }
+    const zip = new JSZip();
+    console.log('le attachments', attachments);
+    for (const attachment of attachments) {
+      console.log('le attachments', attachment);
+      if (images) {
+        if (isImage(attachment.mime_type)) {
+          console.log(attachment.attachment_url.replace(`${BASE_SERVER_URL}/`, ''));
+          const data = fs.readFileSync(getDestFile(attachment.attachment_url.replace(`${BASE_SERVER_URL}/`, '')));
+          zip.file(attachment.attachment_reference_key, data);
+        }
+      } else {
+        if (!isImage(attachment.mime_type)) {
+          const data = fs.readFileSync(getDestFile(attachment.attachment_url.replace(`${BASE_SERVER_URL}/`, '')));
+          zip.file(attachment.attachment_reference_key, data);
+        }
+      }
+    }
+    const data = await zip.generateAsync({ type: 'nodebuffer' });
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.log('enter here', JSON.stringify(error, null, 2));
+    throw error;
+  }
+}
+
 const uploadFiles = async (user, files, projectid, cover) => {
   try {
     const formatTime = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -273,5 +312,6 @@ export default {
   toggle,
   isImage,
   toggleValue,
-  FilterUrl
+  FilterUrl,
+  downloadZip
 };
