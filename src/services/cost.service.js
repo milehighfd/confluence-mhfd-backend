@@ -17,6 +17,7 @@ const saveProjectCost = async (cost) => {
 
 const updateProjectOverhead = async (cost, project_id, code_cost_type_id) => {
   try {
+    console.log(cost, project_id, code_cost_type_id, "111111111111111111111111")
     await ProjectCost.update(
       {
         is_active: false,

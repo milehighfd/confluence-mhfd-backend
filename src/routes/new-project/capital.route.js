@@ -385,7 +385,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       //creating aditional cost
       await costService.saveProjectCost({
         project_id: project_id,
-        cost: Number(additionalcost),
+        cost: !isNaN(Number(additionalcost)) ? Number(additionalcost) : 0,
         code_cost_type_id: aditionalCostId,
         cost_description: additionalcostdescription,
         created_by: creator,
@@ -395,12 +395,9 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       //creating overhead cost
       console.log(filtered)
       for (const [index, element] of filtered.entries()) {
-        console.log(index, element)
-        console.log(filterFrontOverheadCosts)
-        console.log(filterFrontOverheadCosts[index])
         await costService.saveProjectCost({
           project_id: project_id,
-          cost: Number(filterFrontOverheadCosts[index]) ? Number(filterFrontOverheadCosts[index]) : 0,
+          cost: !isNaN(Number(filterFrontOverheadCosts[index])) ? Number(filterFrontOverheadCosts[index]) : 0,
           code_cost_type_id: element,
           created_by: creator,
           modified_by: creator,
@@ -444,7 +441,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         await projectIndependentActionService.saveProjectIndependentAction({
           action_name: independent.name,
           project_id: project_id,
-          cost: Number(independent.cost),
+          cost: !isNaN(Number(independent.cost)) ? Number(independent.cost): 0,
           action_status: independent.status,
           last_modified_by: creator,
           created_by: creator,
@@ -578,8 +575,9 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       await costService.updateProjectOverhead(
         {
           project_id: project_id,
-          cost: Number(splitedOverheadcost[element]),
-          code_cost_type_id: element,
+          cost: !isNaN(Number(additionalcost)) ? Number(additionalcost) : 0,
+          code_cost_type_id: aditionalCostId,
+          cost_description: additionalcostdescription,
           created_by: creator,
           modified_by: creator,
           is_active: true
@@ -587,6 +585,21 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         project_id,
         element
       );
+      //update overhead cost
+      for (const element of filtered) {
+        await costService.updateProjectOverhead(
+          {
+            project_id: project_id,
+            cost: !isNaN(Number(splitedOverheadcost[element])) ? Number(splitedOverheadcost[element]) : 0,
+            code_cost_type_id: element,
+            created_by: creator,
+            modified_by: creator,
+            is_active: true
+          },
+          project_id,
+          element
+        );
+      }
     }
     if (splitedJurisdiction)
       await ProjectLocalGovernment.destroy({
@@ -648,7 +661,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
           await projectIndependentActionService.saveProjectIndependentAction({
             action_name: independent.name,
             project_id: project_id,
-            cost: Number(independent.cost) ? Number(independent.cost) : 0,
+            cost: !isNaN(Number(independent.cost)) ? Number(independent.cost) : 0,
             action_status: independent.status,
             last_modified_by: creator,
           });
@@ -656,7 +669,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
           await projectIndependentActionService.saveProjectIndependentAction({
             action_name: independent.action_name,
             project_id: project_id,
-            cost: Number(independent.cost) ? Number(independent.cost) : 0,
+            cost: !isNaN(Number(independent.cost)) ? Number(independent.cost) : 0,
             action_status: independent.action_status,
             last_modified_by: creator,
           });
@@ -675,7 +688,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         await projectProposedActionService.saveProjectAction(action);
         logger.info('create component');
     }
-   await projectService.updateProjectOnCache(project_id);
    res.send(result);
   } catch (error) {
     console.log(error)
