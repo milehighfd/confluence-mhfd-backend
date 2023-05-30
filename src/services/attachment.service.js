@@ -228,7 +228,7 @@ const downloadZip = async (projectid, images) => {
         }
       }
     }
-    const data = await zip.generateAsync({ type: 'nodebuffer' });
+    const data = await zip.generateAsync({ type: 'base64' });
     console.log(data);
     return data;
   } catch (error) {
