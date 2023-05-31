@@ -15,9 +15,8 @@ const saveProjectCost = async (cost) => {
   }
 };
 
-const updateProjectOverhead = async (cost, project_id, code_cost_type_id) => {
+const setIsActiveToFalse = async (project_id) => {  
   try {
-    console.log(cost, project_id, code_cost_type_id, "111111111111111111111111")
     await ProjectCost.update(
       {
         is_active: false,
@@ -25,11 +24,21 @@ const updateProjectOverhead = async (cost, project_id, code_cost_type_id) => {
       {
         where: {
           project_id: project_id,
-          code_cost_type_id: code_cost_type_id,
           is_active: true,
         },
       }
     );
+    return;
+  } catch (error) {
+    logger.error('error creation cost');
+    throw error;
+  }
+};
+
+const updateProjectOverhead = async (cost, project_id, code_cost_type_id) => {
+  try {
+    console.log(cost, project_id, code_cost_type_id, "111111111111111111111111")
+    
     logger.info('older cost updated');
     const response = await ProjectCost.create(cost);
     logger.info('cost updated');
@@ -43,4 +52,5 @@ const updateProjectOverhead = async (cost, project_id, code_cost_type_id) => {
 export default {
   saveProjectCost,
   updateProjectOverhead,
+  setIsActiveToFalse
 };

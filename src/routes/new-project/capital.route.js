@@ -555,12 +555,12 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       cosponsor,
       project_id
     );
-
+    costService.setIsActiveToFalse(project_id);
       //update aditional cost
     await costService.updateProjectOverhead(
       {
         project_id: project_id,
-        cost: Number(additionalcost),
+        cost: !isNaN(Number(additionalcost)) ? Number(additionalcost) : 0,
         code_cost_type_id: aditionalCostId,
         cost_description: additionalcostdescription,
         created_by: creator,
@@ -575,9 +575,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       await costService.updateProjectOverhead(
         {
           project_id: project_id,
-          cost: !isNaN(Number(additionalcost)) ? Number(additionalcost) : 0,
-          code_cost_type_id: aditionalCostId,
-          cost_description: additionalcostdescription,
+          cost: !isNaN(Number(splitedOverheadcost[element])) ? Number(splitedOverheadcost[element]) : 0,
+          code_cost_type_id: element,
           created_by: creator,
           modified_by: creator,
           is_active: true
@@ -585,22 +584,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         project_id,
         element
       );
-      //update overhead cost
-      for (const element of filtered) {
-        await costService.updateProjectOverhead(
-          {
-            project_id: project_id,
-            cost: !isNaN(Number(splitedOverheadcost[element])) ? Number(splitedOverheadcost[element]) : 0,
-            code_cost_type_id: element,
-            created_by: creator,
-            modified_by: creator,
-            is_active: true
-          },
-          project_id,
-          element
-        );
-      }
     }
+    
     if (splitedJurisdiction)
       await ProjectLocalGovernment.destroy({
         where: {
