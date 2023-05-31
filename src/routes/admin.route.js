@@ -191,7 +191,7 @@ router.get('/list', [auth, isAdminAccount], async (req, res, next) => {
     search_obj['designation'] = String(designation);
   }
   if (name) {
-    search_obj[Op.or] = { firstName: { [Op.like]: '%'+name+'%' }, lastName: {[Op.like]: '%'+name+'%'}};
+    search_obj[Op.or] = { name: { [Op.like]: '%'+name+'%' }};
   }
   if (sort) {
     sortObject[sort] = 1;
