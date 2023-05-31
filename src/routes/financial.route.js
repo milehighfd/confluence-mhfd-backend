@@ -104,7 +104,8 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
                             required: true,
                         }
                     });
-                    projectCost.project_partner_name = projectPartnerName.business_associate.business_associate_name;
+                    console.log(projectPartnerName)
+                    projectCost.project_partner_name = projectPartnerName?.business_associate?.business_associate_name || 'N/A';
                 }
 
                 if (projectCost.code_phase_type_id !== null) {
@@ -116,7 +117,7 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
                         raw: true,
                         nest: true,
                     });
-                    projectCost.code_phase_type_name = codePhaseTypeName.phase_name;
+                    projectCost.code_phase_type_name = codePhaseTypeName?.phase_name || 'N/A';
                 }
                 return projectCost
             })
