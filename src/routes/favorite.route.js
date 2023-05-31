@@ -280,20 +280,11 @@ router.get("/problem-cards", auth, async (req, res) => {
 
 const getProjectCards = async (req, res) => {
   logger.info(`Starting endpoint favorite/project-cards with params`);
-  const user = req.user;
-  let projectsFilterId = await projectService.getProjects2(null, null, 1, null, {});
+  const user = req.user;  
   try {
-    const pr = [
-      
-      projectService.getProjects(null, null, projectsFilterId,  1, 100000000),
-      favoritesService.getFavorites(user.user_id),
-    ];
-    logger.info(`Starting function all for favorite/problem-cards`);
-    const [projects, favoritesObj] = await Promise.all(pr);
-    logger.info(`Finished function all for favorite/problem-cards`);
-    const favorites = favoritesObj
-      .map((f) => f.project_id);
-    res.send(projects.filter((p) => favorites.includes(p.project_id)));
+    let projectsFilterId = (await favoritesService.getFavorites(user.user_id))
+    let projects = await projectService.getProjects(null, null, projectsFilterId, 1, 1000);   
+    res.send(projects);
   } catch (error) {
     logger.error(error);
     res.status(500).send({ error: error });
