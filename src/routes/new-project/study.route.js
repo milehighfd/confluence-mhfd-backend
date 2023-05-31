@@ -194,7 +194,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         }).format(stream.drainage),
         code_local_government_id:
           stream.code_local_goverment.length > 0
-            ? stream.code_local_goverment[0].objectid
+            ? stream.code_local_goverment[0].code_local_government_id
             : 0,
       });
     }
@@ -345,14 +345,15 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         drainage_area_in_sq_miles: stream.drainage,
         code_local_government_id:
           stream.code_local_goverment.length > 0
-            ? stream.code_local_goverment[0].objectid
+            ? stream.code_local_goverment[0].code_local_government_id 
             : 0,
       });
     }
-    await studyService.updateStudy(project_id, creator, otherReason);
+    await studyService.updateStudy(project_id, studyreason, creator, otherReason);
     logger.info('updated study');
     res.send('updated study');
   } catch (error) {
+    console.log(error)
     logger.error('error', error);
     return res.status(500).send(error);
   };

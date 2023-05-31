@@ -465,14 +465,22 @@ const getDetails = async (project_id) => {
             model: ProjectStreams,
             required: false,
             separate: true,
-            include: {
+            include: [{
               model: Streams,
               required: false,
               attributes: [
                 'stream_id',
                 'stream_name'
-              ]
+              ],
             },
+            {
+              model: CodeLocalGoverment,
+              required: false,
+              attributes: [
+                'local_government_name',
+                'code_local_government_id'
+              ],
+            }],
           },
           {
             model: ProjectLocalGovernment,

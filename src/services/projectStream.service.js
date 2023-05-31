@@ -31,7 +31,7 @@ const getOneByStream = async(pk) => {
   try {
     const list = await CodeLocalGoverment.findAll({
       where: {
-        objectid: pk
+        code_local_government_id: pk
       }
     });
     return list;

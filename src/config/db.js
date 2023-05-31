@@ -405,6 +405,11 @@ db.streamstudy.belongsTo(db.stream, { foreignKey: 'stream_id' })
 db.study.hasMany(db.streamstudy, {foreignKey: 'study_id'});
 db.streamstudy.belongsTo(db.study, { foreignKey: 'study_id' });
 
+// relation projectStream codeLocalGoverment
+db.codeLocalGoverment.hasMany(db.project_stream, {foreignKey: 'code_local_government_id'});
+db.project_stream.belongsTo(db.codeLocalGoverment, { foreignKey: 'code_local_government_id' });
+
+
 // relation businessAssociates projectPartner
 db.businessAssociates.belongsTo(db.projectPartner, {foreignKey: 'business_associates_id'});
 db.projectPartner.hasMany(db.businessAssociates, { foreignKey: 'business_associates_id' });
