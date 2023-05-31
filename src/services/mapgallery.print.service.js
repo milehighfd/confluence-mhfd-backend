@@ -319,9 +319,17 @@ export const newPrintProject = async (_data, components, mapImage, roadMap, atta
     code_project_type,
     onbase_project_number
   } = data;
-  
+  let coverImage = '';
+  attachments?.filter(
+    (element) => (attachmentService.isImage(element.mime_type))
+  ).map((file) => {
+    if(file.is_cover){
+      coverImage = file.attachment_url;
+    }
+  })
   const URL_BASE = 'https://confdev2.mhfd.org/'; //TODO: change 'https://confdev.mhfd.org/'
   const urlImage =
+  coverImage !== '' ? coverImage:
   code_project_type.project_type_name === 'CIP' ? `${URL_BASE}/detailed/capital.png` :
     code_project_type.project_type_name === 'Study' ? `${URL_BASE}/detailed/study.png` :
       code_project_type.project_type_name === 'Special' ? `${URL_BASE}/detailed/special.png` :
