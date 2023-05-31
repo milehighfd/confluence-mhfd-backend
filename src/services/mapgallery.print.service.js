@@ -461,23 +461,143 @@ export const newPrintProject = async (_data, components, mapImage, roadMap, atta
       </tr>`;
     html = html.split('${vendorRows}').join(vendorRows);
   }
-  let imageRow = attachments.map((element, index) => {
-    if (attachmentService.isImage(element.mime_type)) {
-      return `<tr >
-        <td style="width: 50%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left; height: 250px; border-radius: 13px;">
-        <img src=${'images/' + element.attachment_url} alt="" width="100%" height="252px">
+  let listAttachments = attachments?.filter((element) => {
+    return attachmentService.isImage(element.mime_type);
+  });
+  let imageRow = '';
+  let imageRow1 = listAttachments.map((element, index) => {
+    if(((index + 1) % 10) === 0){
+      imageRow = imageRow +  `<td style="width: 50%; text-align: left; height: 250px; border-radius: 13px; padding-left: 16px; padding-right: 16px;">
+                <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+              </td>
+            </tr>
+          </table>
         </td>
       </tr>`
+      return imageRow
     }
+    if(((index + 1) % 9) === 0){
+      imageRow = imageRow +  `<td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+          <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+        </td>`
+        return imageRow
+    }
+    if(((index + 1) % 8) === 0){
+      imageRow = imageRow + `<tr >
+          <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+            <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+          </td>`
+        return imageRow
+    }
+    if(((index + 1) % 7) === 0){
+      imageRow = imageRow + `<td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+              <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+            </td></tr>`
+            return imageRow
+    }
+    if(((index + 1) % 6) === 0){
+      imageRow = imageRow +  `<tr >
+      <td style="width: 50%; text-align: left;">
+        <table style="border-spacing: 15px 17px; width:100%; margin: -16px 0px; height:100%;">
+          <tr >
+            <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+              <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+            </td>`
+      return imageRow
+    }
+    if(((index + 1) % 5) === 0){
+      imageRow = imageRow +  `<td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+                <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>`
+      return imageRow
+    }
+    if(((index + 1) % 4) === 0){
+      imageRow = imageRow + `<tr >
+        <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+          <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+        </td>`
+        return imageRow
+    }
+    if(((index + 1) % 3) === 0){
+      imageRow = imageRow +  `<td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+            <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+          </td>
+        </tr>`
+        return imageRow
+    }
+    if(((index + 1) % 2 )=== 0){
+      imageRow = imageRow + `<td style="width: 50%; text-align: left;">
+        <table style="border-spacing: 15px 17px; width:100%; margin: -16px 0px; height:100%;">
+          <tr >
+            <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+              <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+            </td>`
+            return imageRow
+    }
+    imageRow = imageRow +  `<tr >
+      <td style="width: 50%; text-align: left; height: 250px; padding-left: 16px;">
+        <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+      </td>`
+      return imageRow
   })
-  let documentRpw = attachments.map((element, index) => {
+
+
+  if(listAttachments.length > 0){
+    if(listAttachments.length % 9 === 0 || listAttachments.length % 8 === 0 || listAttachments.length % 7 === 0 || listAttachments.length % 4 === 0 || listAttachments.length % 3 === 0 || listAttachments.length % 2 === 0) {
+    imageRow = imageRow + `</tr>
+        </table>
+      </td></tr>`
+    }
+  }
+  else{
+    imageRow = imageRow + `<tr >
+    <td style="width: 50%; text-align: left; height: 250px; padding-left: 16px;">
+      <div style="height:100%; width:100%; background-color: #f5f7ff; border-radius: 13px;"></div>
+    </td>
+    <td style="width: 50%; text-align: left;">
+      <table style="border-spacing: 15px 17px; width:100%; margin: -16px 0px; height:100%;">
+        <tr >
+          <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+            <div style="height:100%; width:100%; background-color: #f5f7ff; border-radius: 13px;"></div>
+          </td>
+          <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+            <div style="height:100%; width:100%; background-color: #f5f7ff; border-radius: 13px;"></div>
+          </td>
+        </tr>
+        <tr >
+          <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+            <div style="height:100%; width:100%; background-color: #f5f7ff; border-radius: 13px;"></div>
+          </td>
+          <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+            <div style="height:100%; width:100%; background-color: #f5f7ff; border-radius: 13px;"></div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>`
+  }
+  let documentRpw = '';
+   attachments.map((element, index) => {
     if (!attachmentService.isImage(element.mime_type)) {
-       return `<tr>
-        <td style="width: 2%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;"><img src="https://confluence.mhfd.org/Icons/icon-63.svg" alt="" height="18px" style="margin-right: 3px; margin-top: 6px; "></td>
+      documentRpw = documentRpw + `<tr>
+        <td style="width: 2%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">
+        <img src="https://confluence.mhfd.org/Icons/icon-63.svg" alt="" height="18px" style="margin-right: 3px; margin-top: 6px; ">
+        </td>
         <td style="width: 98%; color: #11093c;">${element.file_name}</td>
       </tr>`
+      return documentRpw
     }
   })
+  if(!(documentRpw.length > 0)){
+    documentRpw = `
+    <tr>
+      <td style="text-align: center;">No data available</td>
+    </tr>`
+  }
   html = html.split('${imageRow}').join(imageRow);
   html = html.split('${documentsRow}').join(documentRpw);
   //END VENDORS
