@@ -207,7 +207,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const splitedCounty = county.split(',');
   const splitedServicearea = servicearea.split(',');
   try {
-    const data = await projectService.updateProject(
+   const data = await projectService.updateProject(
       project_id,
       cleanStringValue(projectname),
       cleanStringValue(description),
@@ -218,12 +218,12 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     await cartoService.checkIfExistGeomThenDelete(
       CREATE_PROJECT_TABLE,
       project_id
-    );
+    ); 
     await cartoService.insertToAcquistion(
       CREATE_PROJECT_TABLE,
       geom,
       project_id
-    );
+    ); 
     const projectsubtype = '';
     const projecttype = 'Acquisition';
     updateProjectsInBoard(
@@ -231,8 +231,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       cleanStringValue(projectname),
       projecttype,
       projectsubtype
-    );
-    await projectPartnerService.updateProjectPartner(
+    ); 
+     await projectPartnerService.updateProjectPartner(
       sponsor,
       cosponsor,
       project_id
@@ -245,65 +245,70 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       null,
       acquisitionanticipateddate,
       acquisitionprogress
-    );
-    if (splitedJurisdiction)
+    ); 
+    if (splitedJurisdiction !== ['']){
       await ProjectLocalGovernment.destroy({
         where: {
           project_id: project_id,
         },
       });
-    if (splitedServicearea)
+
+      for (const j of splitedJurisdiction) {
+        if (j && j !== '') {
+          await ProjectLocalGovernment.create({
+            code_local_government_id: parseInt(j),
+            project_id: project_id,
+            shape_length_ft: 0,
+            last_modified_by: user.name,
+            created_by: user.email,
+          });
+        }
+        logger.info('created jurisdiction');
+      }
+    }
+    if (splitedServicearea !== ['']){
       await ProjectServiceArea.destroy({
         where: {
           project_id: project_id,
         },
       });
-    if (splitedCounty)
+
+      for (const s of splitedServicearea) {
+        if (s && s !== '') {
+          await ProjectServiceArea.create({
+            project_id: project_id,
+            code_service_area_id: s,
+            shape_length_ft: 0,
+            last_modified_by: user.name,
+            created_by: user.email,
+          });
+        }
+        logger.info('created service area');
+      }
+    }
+    if (splitedCounty !== ['']){
       await ProjectCounty.destroy({
         where: {
           project_id: project_id,
         },
       });
-    for (const j of splitedJurisdiction) {
-      if (j) {
-        await ProjectLocalGovernment.create({
-          code_local_government_id: parseInt(j),
-          project_id: project_id,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email,
-        });
+      for (const c of splitedCounty) {
+        if (c && c !=='') {
+          await ProjectCounty.create({
+            state_county_id: c,
+            project_id: project_id,
+            shape_length_ft: 0,
+          });
+        }
+        logger.info('created county');
       }
-      logger.info('created jurisdiction');
     }
-    for (const s of splitedServicearea) {
-      if (s) {
-        await ProjectServiceArea.create({
-          project_id: project_id,
-          code_service_area_id: s,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email,
-        });
-      }
-      logger.info('created service area');
-    }
-    for (const c of splitedCounty) {
-      if (c) {
-        await ProjectCounty.create({
-          state_county_id: c,
-          project_id: project_id,
-          shape_length_ft: 0,
-        });
-      }
-      logger.info('created county');
-    }
-    res.send(result);
+    res.send([]);
   } catch (error) {
+    console.log(error)
     logger.error(error);
-    return res.status(500).send(error);
+    res.status(500).send(error);
   }
-  res.send(result);
 });
 
 export default router;
