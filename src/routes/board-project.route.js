@@ -54,12 +54,9 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
     lexo = LexoRank.parse(before).genNext().toString();
   } else {
     if (before === after) {
-      lexo = before; //TODO: change as this should not happen
+      lexo = before; //TODO: change asthis should not happen
     } else {
-      lexo = LexoRank.between(
-        LexoRank.parse(before),
-        LexoRank.parse(after)
-      ).toString();
+      lexo = LexoRank.parse(before).between(LexoRank.parse(after)).toString();
     }
   }
   const rankColumnName = `rank${columnNumber}`;
