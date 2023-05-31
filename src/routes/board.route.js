@@ -31,37 +31,6 @@ const ProjectCounty = db.projectCounty;
 const ProjectProposedAction = db.projectProposedAction;
 const CodeStateCounty = db.codeStateCounty;
 
-router.post('/swap-ranks', async (req, res) => {
-    logger.info(`Starting endpoint board/swap-ranks with params ${JSON.stringify(req.params, null, 2)}`);
-    const {
-        sourceBoardProjectId, sourceBoardProjectRank,
-        targetBoardProjectId, targetBoardProjectRank,
-        columnNumber
-    } = req.body;
-    logger.info(`Starting updates for board/swap-ranks`);
-    try {
-        await BoardProject.update({
-            [`rank${columnNumber}`]: targetBoardProjectRank
-        }, {
-            where: {
-                board_project_id: sourceBoardProjectId
-            }
-        });
-        await BoardProject.update({
-            [`rank${columnNumber}`]: sourceBoardProjectRank
-        }, {
-            where: {
-                board_project_id: targetBoardProjectId
-            }
-        });
-    } catch (e) {
-        logger.error(e);
-        return res.status(400).send({ error: e });
-    }
-    logger.info(`Finished function save for board/swap-ranks`);
-    res.send({ success: true });
-});
-
 router.get('/lexorank-update', async (req, res) => {
     const boards = await Board.findAll();
     const boardProjects = await BoardProject.findAll();
