@@ -41,8 +41,56 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
     columnNumber,
     beforeIndex,
     afterIndex,
+    targetPosition,
     otherFields
   } = req.body;
+  if (before === undefined) before = null;
+  if (after === undefined) after = null;
+  const rankColumnName = `rank${columnNumber}`;
+  if (before === null && after === null) {
+    const boardProject = await BoardProject.findOne({
+      attributes: [
+        'board_id',
+      ],
+      where: {
+        board_project_id
+      }
+    });
+    const board_id = boardProject.board_id;
+
+    const where = { board_id };
+    if (`${columnNumber}` !== '0') {
+      where[`req${columnNumber}`] = { [Op.ne]: null };
+    } else {
+      where[`rank${columnNumber}`] = { [Op.ne]: null }
+    }
+    /* This should fix all the projects in the column to have a rank */
+    const projects = await BoardProject.findAll({
+      where,
+      order: [[`rank${position}`, 'ASC']],
+    });
+    let lastLexo = null;
+    const proms = projects.map(async (project, index) => {
+      if (lastLexo === null) {
+        lastLexo = LexoRank.middle().toString();
+      } else {
+        lastLexo = LexoRank.parse(lastLexo).genNext().toString();
+      }
+      if (index === targetPosition) {
+        lastLexo = LexoRank.parse(lastLexo).genNext().toString();
+        await BoardProject.update(
+          { [rankColumnName]: lastLexo },
+          { where: { board_project_id: board_project_id } }
+        );
+      }
+      return await BoardProject.update(
+        { [rankColumnName]: lastLexo },
+        { where: { board_project_id: project.board_project_id } }
+      );
+    });
+    const results = await Promise.all(proms);
+    return res.status(200).send(results);
+  }
   if (before === null && beforeIndex !== -1) {
     logger.error('before is null but beforeIndex is not -1');
   } else if (after === null && afterIndex !== -1) {
@@ -60,7 +108,6 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
       lexo = LexoRank.parse(before).between(LexoRank.parse(after)).toString();
     }
   }
-  const rankColumnName = `rank${columnNumber}`;
   try {
     const x = await BoardProject.update(
       { [rankColumnName]: lexo, ...otherFields },
