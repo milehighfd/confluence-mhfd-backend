@@ -1,9 +1,11 @@
 import express from 'express';
 import { LexoRank } from 'lexorank';
+import sequelize from 'sequelize';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 const BoardProject = db.boardProject;
 
+const { Op } = sequelize;
 const router = express.Router();
 
 router.get('/:board_project_id/cost', async (req, res) => {
