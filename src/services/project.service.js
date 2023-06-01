@@ -803,7 +803,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
   const CONSULTANT_ID = 3;  
   const CIVIL_CONTRACTOR_ID = 8;
   const ESTIMATED_ID = 1;
-  const filterName = filter.name ? isNaN(filter.name) ? '%' + filter.name + ' %' : filter.name : '';
+  const filterName = filter.name ? isNaN(filter.name) ?  filter.name : filter.name : '';
   const filterBase = filter.name ? filter.name: -1;
   const contractor = filter.contractor ?  filter.contractor  : [];
   const consultant = filter.consultant ?  filter.consultant  : [];
@@ -925,7 +925,13 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
     let whereOr = [];
     if (filterName) {
       whereOr.push({
-        project_name: { [Op.like]: filterName }
+        project_name: { [Op.like]: `${filterName}` }
+      });
+      whereOr.push({
+        project_name: { [Op.like]: `% ${filterName}%` }
+      });
+      whereOr.push({
+        project_name: { [Op.like]: `%${filterName} %` }
       });
     }
     if (filterBase != -1) {
