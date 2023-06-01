@@ -129,17 +129,26 @@ router.put('/:board_project_id/cost', async (req, res) => {
   const beforeUpdate = await BoardProject.findOne({
     where: { board_project_id }
   });
+  const columnsChanged = []
   for (let pos = 1; pos <= 5; pos++) {
     const reqColumnName = `req${pos}`;
     const rankColumnName = `rank${pos}`;
+    const valueHasChanged = beforeUpdate[reqColumnName] !== req.body[reqColumnName];
+    if (valueHasChanged) {
+      columnsChanged.push(pos);
+    }
     if (beforeUpdate[reqColumnName] === null && req.body[reqColumnName] !== null) {
-      updateFields[rankColumnName] = LexoRank.middle().toString();
-      /* TODO: improve this based on the columns
-      // rank: LexoRank.middle() cuando esta vacio
-      // sacar el primero de esa columna LexoRank.parse(firstProject.rank0)
-      //.genPrev()
-      //.toString();
-      */
+      const where = {
+        board_id: beforeUpdate.board_id,
+        [`rank${pos}`]: { [Op.ne]: null }
+      };
+      const projects = await BoardProject.findAll({
+        where,
+        order: [[`rank${pos}`, 'DESC']],
+        limit: 1
+      });
+      const lastProject = projects[0];
+      updateFields[rankColumnName] = LexoRank.parse(lastProject[`rank${[pos]}`]).genNext().toString();
     } else if (beforeUpdate[reqColumnName] !== null && req.body[reqColumnName] === null) {
       updateFields[rankColumnName] = null;
     }
@@ -152,7 +161,7 @@ router.put('/:board_project_id/cost', async (req, res) => {
       },
       { where: { board_project_id } }
     );
-    return res.status(200).send(x);
+    return res.status(200).send({ newCost: x, columnsChanged });
   } catch (error) {
     logger.error(error);
     return res.status(500).send({ error: error });
