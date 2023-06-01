@@ -123,11 +123,10 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
             })
         );
 
-        let auxResProjecCost = resProjectCost;
-
-        auxResProjecCost.forEach(function callback(projectCost, index) {
+        // mhfd project cost creation 
+        resProjectCost.forEach(function callback(projectCost, index) {
             projectCost.sortValue = index;
-            if (projectCost?.cost_project_partner_contribution && projectCost?.cost > 0) {
+            if (projectCost?.cost_project_partner_contribution && projectCost?.cost > 0 && !projectCost?.code_cost_type?.cost_type_name.includes('Vendor')) {
                 resProjectCost.push({
                     "agreement_number": projectCost.agreement_number,
                     "amendment_number": projectCost.amendment_number,
@@ -142,11 +141,10 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
                     },
                     "project_partner_name": 'MHFD',
                     "code_phase_type_name": projectCost.code_phase_type_name,
-                    "sortValue": projectCost.sortValue,
+                    "sortValue": projectCost.sortValue - 1,
                 })
             }
         });
-
 
         await Promise.all(
             resProjectCost.map(e => {
