@@ -40,7 +40,8 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
     after,
     columnNumber,
     beforeIndex,
-    afterIndex
+    afterIndex,
+    otherFields
   } = req.body;
   if (before === null && beforeIndex !== -1) {
     logger.error('before is null but beforeIndex is not -1');
@@ -62,7 +63,7 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
   const rankColumnName = `rank${columnNumber}`;
   try {
     const x = await BoardProject.update(
-      { [rankColumnName]: lexo },
+      { [rankColumnName]: lexo, ...otherFields },
       { where: { board_project_id } }
     );
     return res.status(200).send(x);
