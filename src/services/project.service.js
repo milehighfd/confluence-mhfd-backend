@@ -766,34 +766,24 @@ const getLightDetails = async (project_id) => {
         as: 'currentId',
         attributes: [
           'code_phase_type_id',
-          'planned_start_date',
-          'actual_start_date',
-          'actual_end_date',
-          'planned_end_date',
-          'project_status_id',
-          'is_locked',
-          'is_done'
         ],
         include: {
           model: CodePhaseType,
           required: false,
           attributes: [
             'phase_name',
-            'phase_ordinal_position'
           ],
           include: [{
             model: CodeStatusType,
             required: false,
             attributes: [
               'code_status_type_id',
-              'status_name'
             ]
           }, {
             model: CodeProjectType,
             required: false,
             attributes: [
-              'code_project_type_id',
-              'project_type_name'
+              'code_project_type_id'
             ]
           }]
         }

@@ -486,6 +486,16 @@ router.post('/board-for-positions2', async (req, res) => {
               }
           );
         }
+        if (details.currentId && details.currentId.length > 0) {
+          details.currentId = details.currentId.map(
+            (current) => {
+              return ({
+                code_status_type_id: current?.code_phase_type?.code_status_type?.code_status_type_id,
+                code_project_type_id: current?.code_phase_type?.code_project_type?.code_project_type_id
+              });
+            }
+          )
+        }
       }
       boardProject.projectData = details;
       return boardProject;
