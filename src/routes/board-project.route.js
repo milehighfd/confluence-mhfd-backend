@@ -79,7 +79,7 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
       if (index === targetPosition) {
         lastLexo = LexoRank.parse(lastLexo).genNext().toString();
         await BoardProject.update(
-          { [rankColumnName]: lastLexo },
+          { ...otherFields, [rankColumnName]: lastLexo },
           { where: { board_project_id: board_project_id } }
         );
       }
@@ -103,7 +103,7 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
     lexo = LexoRank.parse(before).genNext().toString();
   } else {
     if (before === after) {
-      lexo = before; //TODO: change asthis should not happen
+      lexo = before; //TODO: change as this should not happen
     } else {
       lexo = LexoRank.parse(before).between(LexoRank.parse(after)).toString();
     }
