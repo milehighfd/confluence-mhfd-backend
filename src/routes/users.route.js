@@ -362,6 +362,7 @@ router.post('/generate-signup-url', async (req, res) => {
     logger.info(`Finished function sendEmail for users.route/generate-signup-url`);
     res.send(user);
   } catch(error) {
+    logger.info(`Error in endpoint users.route/generate-signup-url ${JSON.stringify(error, null, 2)}`);
     res.status(500).send(error);
   }
 });
