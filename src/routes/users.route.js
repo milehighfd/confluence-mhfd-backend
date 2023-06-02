@@ -358,7 +358,7 @@ router.post('/generate-signup-url', async (req, res) => {
     await user.generateSignupToken();
     logger.info(`Finished function generateSignupToken for users.route/generate-signup-url`);
     logger.info(`Beginning function sendEmail for users.route/generate-signup-url`);
-    // await UserService.sendSignupEmail(user, 'signup');
+    await UserService.sendSignupEmail(user, 'signup');
     logger.info(`Finished function sendEmail for users.route/generate-signup-url`);
     res.send(user);
   } catch(error) {
