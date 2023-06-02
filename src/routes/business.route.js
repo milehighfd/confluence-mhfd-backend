@@ -118,4 +118,20 @@ router.get('/', async (req, res) => {
   res.send(sa);
 });
 
+router.get('/sponsor-list', async (req, res) => {
+  logger.info(`Starting endpoint business.route/ with params ${JSON.stringify(req.params, null, 2)}`);
+  const LOCAL_GOVERNMENT = 3;
+  const associates = await BusinessAssociates.findAll({
+    attributes: ['business_associates_id', 'business_name'],
+    where: {
+      code_business_associates_type_id: LOCAL_GOVERNMENT
+    },
+    order: [['business_name', 'ASC']]
+  });
+  logger.info(`Finished function findAll for business.route/business-associates`);
+  res.send(associates);
+});
+
+
+
 export default router;
