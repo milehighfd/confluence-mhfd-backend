@@ -69,7 +69,7 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
     /* This should fix all the projects in the column to have a rank */
     const projects = await BoardProject.findAll({
       where,
-      order: [[`rank${position}`, 'ASC']],
+      order: [[`rank${columnNumber}`, 'ASC']],
     });
     let lastLexo = null;
     const proms = projects.map(async (project, index) => {
