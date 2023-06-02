@@ -428,7 +428,8 @@ router.post('/board-for-positions2', async (req, res) => {
     'project_id',
     'projectname',
     `rank${position}`,
-    'origin'
+    'origin',
+    `originPosition${position}`,
   ];
   const where = { board_id }
 
