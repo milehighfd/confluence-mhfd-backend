@@ -492,6 +492,7 @@ router.post('/board-for-positions2', async (req, res) => {
             (current) => {
               return ({
                 code_status_type_id: current?.code_phase_type?.code_status_type?.code_status_type_id,
+                status_name: current?.code_phase_type?.code_status_type?.status_name,
                 code_project_type_id: current?.code_phase_type?.code_project_type?.code_project_type_id
               });
             }

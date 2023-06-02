@@ -778,6 +778,7 @@ const getLightDetails = async (project_id) => {
             required: false,
             attributes: [
               'code_status_type_id',
+              'status_name'
             ]
           }, {
             model: CodeProjectType,
