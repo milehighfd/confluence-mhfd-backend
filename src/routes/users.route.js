@@ -326,7 +326,10 @@ router.post('/generate-signup-url', async (req, res) => {
     logger.info(`Beginning function findOne for users.route/generate-signup-url`);
     const countUser = await User.count({
       where: {
-        email: email
+        email: email,
+        status: {
+          [Op.notIn]: ['pending-signup']
+        }
       }
     });
     logger.info(`Finished function findOne for users.route/generate-signup-url`);
@@ -334,18 +337,28 @@ router.post('/generate-signup-url', async (req, res) => {
       return res.status(422).send({ error: 'Email already exists!' });
     }
     logger.info(`Beginning function generateSignupUrl for users.route/generate-signup-url`);
-    const newUser = {
-      email: email,
-      status: 'pending-signup',
-    };
-    logger.info(`Beginning function create fake user`);
-    const user = await User.create(newUser);
-    logger.info(`Finished function create fake user`);
+    let newUser = await User.findOne({
+      where: {
+        email: email,
+    }});
+    let user = null;
+    if (!newUser) {
+      newUser = {
+        email: email,
+        status: 'pending-signup',
+        is_sso: 0,
+      };
+      logger.info(`Beginning function create fake user`);
+      user = await User.create(newUser);
+      logger.info(`Finished function create fake user`);
+    } else {
+      user = newUser;
+    }
     logger.info(`Beginning function generateSignupToken for users.route/generate-signup-url`);
     await user.generateSignupToken();
     logger.info(`Finished function generateSignupToken for users.route/generate-signup-url`);
     logger.info(`Beginning function sendEmail for users.route/generate-signup-url`);
-    await UserService.sendSignupEmail(user, 'signup');
+    // await UserService.sendSignupEmail(user, 'signup');
     logger.info(`Finished function sendEmail for users.route/generate-signup-url`);
     res.send(user);
   } catch(error) {
