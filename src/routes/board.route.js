@@ -431,7 +431,10 @@ router.post('/board-for-positions2', async (req, res) => {
     'origin',
     `originPosition${position}`,
   ];
-  const where = { board_id }
+  const where = {
+    board_id,
+    [`rank${position}`]: { [Op.ne]: null }
+  };
 
   if (`${position}` !== '0') {
     attributes.push(`req${position}`);
