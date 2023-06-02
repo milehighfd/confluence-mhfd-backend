@@ -32,6 +32,31 @@ router.get('/', async (req, res, next) => {
   res.send(users);
 });
 
+router.get('/get-signup-email', async (req, res) => {
+  const { token } = req.query;
+  try {
+    logger.info(`Starting endpoint users.route/get-signup-email with params ${JSON.stringify(req.params, null, 2)}`);
+    const user = await User.findOne({
+      where: {
+        changePasswordId: token,
+        status: 'pending-signup',
+      }
+    });
+    if (!user) {
+      return res.status(422).send({ error: 'The token is invalid' });
+    }
+    const maximumDate = user.changePasswordExpiration.getTime();
+    const currentDate = new Date().getTime();
+    if (currentDate > maximumDate) {
+      return res.status(422).send({ error: 'The token has expired' });
+    }
+    res.send({ email: user.email });
+  } catch (error) {
+    logger.error(`Error in endpoint users.route/get-signup-email with params ${JSON.stringify(req.params, null, 2)} ERROR: ${error}`);
+    res.status(500).send({ error: error });
+  }
+});
+
 router.post('/signup', validator(UserService.requiredFields('signup')), async (req, res) => {
   logger.info(`Starting endpoint users.route/signup with params ${JSON.stringify(req.params, null, 2)}`);
   try {
