@@ -435,13 +435,6 @@ router.post('/board-for-positions2', async (req, res) => {
 
   if (`${position}` !== '0') {
     attributes.push(`req${position}`);
-    where[`req${position}`] = { [Op.ne]: null };
-    // where[Op.or] = [
-    //     { [`rank${position}`]: { [Op.ne]: null } },
-    //     { [`req${position}`]: { [Op.ne]: null } },
-    // ];
-  } else {
-    where[`rank${position}`] = { [Op.ne]: null }
   }
 
   const boardProjects = (await BoardProject.findAll({
