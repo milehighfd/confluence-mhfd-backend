@@ -52,6 +52,39 @@ const getAttachmentsCidList = (cids) => {
   })
 }
 
+const getEmailOptions = (email, subject, html) => {
+  return {
+    from: MHFD_EMAIL,
+    to: email,
+    subject: subject,
+    html: html,
+    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin'])
+  };
+};
+
+const sendEmail = async (options) => {
+  const transporter = getTransporter();
+  try {
+    const info = await transporter.sendMail(options);
+    logger.info(`Email for ${options.subject} sent to ${options.to} INFO: ${JSON.stringify(info, null, 2)}`);
+  } catch (error) {
+    throw error;
+  }
+}
+
+export const sendSignupEmail = async (user) => {
+  const email = user.email;
+  const signupToken = user.changePasswordId;
+  const redirectUrl = MHFD_FRONTEND + '/signup/?id=' + signupToken;
+  const template = fs.readFileSync(__dirname + '/templates/email_reset-pass-MHFD.html', 'utf8');
+  const options = getEmailOptions(email, "MHFD Confluence - Signup", template.split('{{url}}').join(redirectUrl));
+  try {
+    await sendEmail(options);
+  } catch(error) {
+    throw error;
+  }
+};
+
 export const sendRecoverPasswordEmail = async (user) => {
   const email = user.email;
   const changePasswordId = user.changePasswordId;
@@ -285,5 +318,6 @@ export default {
   sendConfirmAccount,
   findAllUsers,
   sendApprovedAccount,
-  deleteUser
+  deleteUser,
+  sendSignupEmail
 };

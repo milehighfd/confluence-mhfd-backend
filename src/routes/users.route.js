@@ -316,6 +316,43 @@ router.post('/upload-photo', [auth, multer.array('file')], async (req, res) => {
   }
 });
 
+router.post('/generate-signup-url', async (req, res) => {
+  logger.info(`Beginning endpoint users.route/generate-signup-url with params ${JSON.stringify(req.params, null, 2)}`);
+  try {
+    const { email } = req.body;
+    if (!EMAIL_VALIDATOR.test(email)) {
+      return res.status(400).send({ error: 'You entered an invalid email direction' });
+    }
+    logger.info(`Beginning function findOne for users.route/generate-signup-url`);
+    const countUser = await User.count({
+      where: {
+        email: email
+      }
+    });
+    logger.info(`Finished function findOne for users.route/generate-signup-url`);
+    if (countUser) {
+      return res.status(422).send({ error: 'Email already exists!' });
+    }
+    logger.info(`Beginning function generateSignupUrl for users.route/generate-signup-url`);
+    const newUser = {
+      email: email,
+      status: 'pending-signup',
+    };
+    logger.info(`Beginning function create fake user`);
+    const user = await User.create(newUser);
+    logger.info(`Finished function create fake user`);
+    logger.info(`Beginning function generateSignupToken for users.route/generate-signup-url`);
+    await user.generateSignupToken();
+    logger.info(`Finished function generateSignupToken for users.route/generate-signup-url`);
+    logger.info(`Beginning function sendEmail for users.route/generate-signup-url`);
+    await UserService.sendSignupEmail(user, 'signup');
+    logger.info(`Finished function sendEmail for users.route/generate-signup-url`);
+    res.send(user);
+  } catch(error) {
+    res.status(500).send(error);
+  }
+});
+
 router.post('/recovery-password', async (req, res) => {
   logger.info(`Starting endpoint users.route/recovery-password with params ${JSON.stringify(req.params, null, 2)}`);
   const email = req.body.email;

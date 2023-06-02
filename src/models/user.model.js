@@ -130,6 +130,14 @@ export default (sequelize, DataType) => {
 
     return user;
   }
+  User.prototype.generateSignupToken = async function () {
+    const user = this;
+    const random = crypto.randomBytes(16).toString('hex');
+    user.changePasswordId = random;
+    // ten minutes for signup
+    this.changePasswordExpiration = new Date(new Date().getTime() + 10 * 60 * 1000);
+    await this.save();
+  }
   // 
   User.prototype.generateChangePassword = async function () {
     const user = this;
