@@ -1,4 +1,5 @@
 import express from 'express';
+import sequelize from 'sequelize';
 import Multer from 'multer';
 import bcrypt from 'bcryptjs';
 import { parse } from 'wkt';
@@ -6,12 +7,10 @@ import https from 'https';
 import UserService from 'bc/services/user.service.js';
 import auth from 'bc/auth/auth.js';
 import { validator } from 'bc/utils/utils.js';
-import { EMAIL_VALIDATOR } from 'bc/lib/enumConstants.js';
+import { EMAIL_VALIDATOR, PROJECT_TYPES_AND_NAME } from 'bc/lib/enumConstants.js';
 import logger from 'bc/config/logger.js';
 import db from 'bc/config/db.js';
 import { CARTO_URL, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
-import { PROJECT_TYPES_AND_NAME } from 'bc/lib/enumConstants.js';
-import sequelize from 'sequelize';
 
 const Op = sequelize.Op;
 
@@ -36,7 +35,30 @@ router.get('/', async (req, res, next) => {
 router.post('/signup', validator(UserService.requiredFields('signup')), async (req, res) => {
   logger.info(`Starting endpoint users.route/signup with params ${JSON.stringify(req.params, null, 2)}`);
   try {
-    const user = req.body;
+    const { user, tokenId } = req.body;
+    const processed = await User.findOne({
+      where: {
+        changePasswordId: tokenId,
+        status: 'pending-signup',
+      }
+    });
+    if (!processed) {
+      return res.status(422).send({ error: 'The token is invalid' });
+    }
+    const maximumDate = processed.changePasswordExpiration.getTime();
+    const currentDate = new Date().getTime();
+    if (currentDate > maximumDate) {
+      return res.status(422).send({ error: 'The token has expired' });
+    }
+    if (user.email !== processed.email) {
+      return res.status(422).send({ error: 'The email does not match' });
+    }
+    // delete fake user
+    await User.destroy({
+      where: {
+        id: processed.id,
+        email: processed.email,
+      }});
     logger.info(`Starting function count for users.route/signup`);
     const foundUser = await User.count({
       where: {
