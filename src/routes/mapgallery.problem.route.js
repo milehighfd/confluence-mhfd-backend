@@ -483,7 +483,7 @@ export async function problemParamFilterRoute(req, res) {
       });
     }
 
-    let problemTypesConst = [ 'Flood Hazard', 'Stream Function', 'Watershed Change'];
+    let problemTypesConst = [ 'Flood Hazard', 'Stream Condition', 'Watershed Change'];
     requests.push(getCountByArrayColumnsProblemWithoutCounter(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], ['High', 'Medium', 'Low'], bounds, body)); //0
     requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body)); //1
     requests.push(groupService.getMhfdStaff()); //2
