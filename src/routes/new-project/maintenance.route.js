@@ -127,7 +127,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       creator,
       creator
     );
-    await attachmentService.uploadFiles(user, req.files, projectId, cover);
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
     await addProjectToBoard(
       user,
       servicearea,
