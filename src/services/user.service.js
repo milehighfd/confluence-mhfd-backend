@@ -58,7 +58,7 @@ const getEmailOptions = (email, subject, html) => {
     to: email,
     subject: subject,
     html: html,
-    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin'])
+    attachments: getAttachmentsCidList(['logo1', 'facebook', 'youtube','twitter', 'linkedin', 'banner1'])
   };
 };
 
@@ -76,7 +76,7 @@ export const sendSignupEmail = async (user) => {
   const email = user.email;
   const signupToken = user.changePasswordId;
   const redirectUrl = MHFD_FRONTEND + '/signup/?id=' + signupToken;
-  const template = fs.readFileSync(__dirname + '/templates/email_reset-pass-MHFD.html', 'utf8');
+  const template = fs.readFileSync(__dirname + '/templates/email_verify-email.html', 'utf8');
   const options = getEmailOptions(email, "MHFD Confluence - Signup", template.split('{{url}}').join(redirectUrl));
   try {
     await sendEmail(options);
