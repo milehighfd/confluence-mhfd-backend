@@ -149,15 +149,16 @@ router.post('/get-components-by-components-and-geom', auth,async (req, res) => {
   for (const project of result) {
     if (project.problemid == null) {
       groups['-1'].components.push(project);
-    } else {
+    } else if (groups[project.problemid]) {
       groups[project.problemid]?.components.push(project);
     }
   }
-  logger.info("RESULT IS => " + JSON.stringify(result, null, 2));
+  const filteredGroups = Object.values(groups).filter(group => group.components.length > 0);
+  logger.info("RESULT IS => " + JSON.stringify(groups, null, 2));
   res.send({
     result: result,
     problems: problems,
-    groups: groups
+    groups: filteredGroups
   });
    
 });
