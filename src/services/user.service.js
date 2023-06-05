@@ -98,7 +98,7 @@ export const sendRecoverPasswordEmail = async (user) => {
     to: email,
     subject: "MHFD Confluence - Reset your password",
     html: emailToSend,
-    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin'])
+    attachments: getAttachmentsCidList(['logo1', 'facebook1', 'banner1','twitter1', 'linkedin1'])
   };
   try {
     const info = await transporter.sendMail(options);
@@ -120,7 +120,7 @@ export const sendApprovedAccount = async (user) => {
     to: email,
     subject: "MHFD Confluence - Account approved",
     html: emailToSend,
-    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin'])
+    attachments: getAttachmentsCidList(['logo1', 'facebook1','twitter1', 'linkedin1', 'banner1'])
   };
   // const info = await transporter.sendMail(options);
   // logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
@@ -144,7 +144,7 @@ export const sendConfirmAccount = async (user) => {
     //to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'cesar@vizonomy.com' :'cesar@vizonomy.com'),
     subject: 'MHFD Confluence - New User Registered!',
     html: adminEmailToSend,
-    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
+    attachments: getAttachmentsCidList(['logo1', 'facebook1','twitter1', 'linkedin1', 'map', 'banner1'])
   };
   //end here
   const email = user.email; 
@@ -158,7 +158,7 @@ export const sendConfirmAccount = async (user) => {
     to: email,
     subject: "Welcome to MHFD Confluence!",
     html: emailToSend,
-    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
+    attachments: getAttachmentsCidList(['logo1', 'facebook1','twitter1', 'linkedin1', 'map'])
   };
   try {
     const adminInfo = await transporter.sendMail(adminOptions);
@@ -203,7 +203,7 @@ export const sendBoardNotification = async (email, type, locality, year, fullNam
     to: email,
     subject: `MHFD Confluence - ${bodyOptions.title}`,
     html: content,
-    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
+    attachments: getAttachmentsCidList(['logo1', 'facebook1','twitter1', 'linkedin1', 'map'])
   };
   const info = await transporter.sendMail(options);
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
