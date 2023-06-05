@@ -44,10 +44,10 @@ router.post('/get-components-by-components-and-geom', auth,async (req, res) => {
   }
   if (components) {
     for (const component of components) {
-      if (!usableComponents[component.table]) {
-        usableComponents[component.table] = [];
+      if (!usableComponents[component.source_table_name]) {
+        usableComponents[component.source_table_name] = [];
       }
-      usableComponents[component.table].push(component.objectid);
+      usableComponents[component.source_table_name].push(component.object_id);
     }
   }
   logger.info('my usable components ' + JSON.stringify(components, null, 2));
