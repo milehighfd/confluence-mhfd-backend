@@ -58,7 +58,7 @@ const getEmailOptions = (email, subject, html) => {
     to: email,
     subject: subject,
     html: html,
-    attachments: getAttachmentsCidList(['logo1', 'facebook', 'youtube','twitter', 'linkedin', 'banner1'])
+    attachments: getAttachmentsCidList(['logo1', 'facebook1','twitter1', 'linkedin1', 'banner1'])
   };
 };
 
