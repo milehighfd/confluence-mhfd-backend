@@ -9,6 +9,7 @@ import ProblemFavorite from 'bc/models/problem_favorites.model.js';
 import board from 'bc/models/board.model.js';
 import boardProject from 'bc/models/boardProject.model.js';
 import boardLocality from 'bc/models/boardLocality.model.js';
+import boardProjectCost from 'bc/models/boardProjectCost.model.js';
 import newnotes from 'bc/models/newnotes.model.js';
 import color from 'bc/models/color.model.js';
 import groupNotes from 'bc/models/groupNotes.model.js';
@@ -112,6 +113,7 @@ db.ProjectFavorite = ProjectFavorite(sequelize, Sequelize);
 db.problemFavorite = ProblemFavorite(sequelize, Sequelize);
 db.board = board(sequelize, Sequelize);
 db.boardProject = boardProject(sequelize, Sequelize);
+db.boardProjectCost = boardProjectCost(sequelize, Sequelize);
 db.boardLocality = boardLocality(sequelize, Sequelize);
 db.newnotes = newnotes(sequelize, Sequelize);
 db.color = color(sequelize, Sequelize);
@@ -197,6 +199,8 @@ db.landscapingArea.hasMany(db.projectStaff, {foreignKey: 'project_id', sourceKey
 db.streamImprovementMeasure.hasMany(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'project_id'});
 //Boards
 db.boardProject.hasOne(db.project, {foreignKey: 'project_id', sourceKey: 'project_id', as: 'projectData'});
+db.boardProjectCost.hasMany(db.boardProject, {foreignKey: 'board_project_id'});
+db.boardProjectCost.hasMany(db.boardProject, {foreignKey: 'project_cost_id'});
 //Notifications
 db.notifications.hasOne(db.user, {foreignKey: 'user_id', sourceKey: 'recipient_user_id'});
 db.notifications.hasOne(db.projectStatusNotification, {foreignKey: 'notification_id', sourceKey: 'notification_id'});
