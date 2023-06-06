@@ -442,6 +442,7 @@ router.post('/recovery-password', async (req, res) => {
 router.post('/change-password', validator(['email', 'password', 'newpassword']), async (req, res) =>{
   logger.info(`Starting endpoint users.route/change-password with params ${JSON.stringify(req.params, null, 2)}`);
   try {
+    const { confirmation } = req.query;
     const {email, password, newpassword} = req.body;
     logger.info(`Starting function findByCredentials for users.route/change-password`);
     const user = await User.findByCredentials(email, password);
@@ -455,6 +456,9 @@ router.post('/change-password', validator(['email', 'password', 'newpassword']),
     const newPwd = await bcrypt.hash(newpassword, 8);
     logger.info(`Finished function hash for users.route/change-password`);
     user.password = newPwd;
+    if (confirmation) {
+      user.status = 'approved';
+    }
     user.save();
     res.send(use);
   } catch (error) {
