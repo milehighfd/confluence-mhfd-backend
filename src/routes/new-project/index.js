@@ -1028,16 +1028,21 @@ router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
     const streams = await projectStreamService.getAll(projectid);
     const filtered = streams.map(d => d.dataValues);
     const ids = streams.map(res => res.stream.stream_name);
+    console.log(ids);
     const obj = {};
     for (const id of ids) {
       obj[id] = [];
     }
     for (const stream of filtered) {
-      console.log(stream.code_local_government_id, '2222222222222222222')
-      const local = await projectStreamService.getOneByStream(stream.code_local_government_id);
-      console.log(local)
-      const res = {stream, code_local_goverment: local, length: stream.length_in_mile, drainage: stream.drainage_area_in_sq_miles}
+      const local = await projectStreamService.getOneByStream(stream.code_local_government_id);      
+      const res = {stream, code_local_goverment: local, length: stream.length_in_mile, drainage: stream.drainage_area_in_sq_miles,jurisdiction: local[0]?.local_government_name,mhfd_code:stream.stream.MHFD_Code}
       obj[stream.stream.stream_name].push(res);
+    }
+    for (const id in obj) {
+      if (obj.hasOwnProperty('null')) {
+        obj['Unnamed Streams'] = obj['null'];
+        delete obj['null'];
+      }
     }
     return res.send(obj);
   } catch (error) {
