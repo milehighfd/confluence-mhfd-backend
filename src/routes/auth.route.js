@@ -4,13 +4,11 @@ import moment from 'moment';
 const User = db.user;
 const router = express.Router();
 import auth from 'bc/auth/auth.js';
-import crypto from 'crypto';
-import bcrypt from 'bcryptjs';
 import config from 'bc/config/config.js';
 import logActivityService from 'bc/services/logActivity.service.js';
-import LogActivity from 'bc/models/logActivity.model.js';
 import { ACTIVITY_TYPE } from 'bc/lib/enumConstants.js';
 import logger from 'bc/config/logger.js';
+import userService from 'bc/services/user.service.js';
 
 router.get('/guest', async (req, res) => {
   logger.info(`Starting endpoint auth.route/guest with params ${JSON.stringify(req.params, null, 2)}`);
@@ -72,7 +70,7 @@ router.get('/guest', async (req, res) => {
     res.status(500).send('Cannot log as guest')
   }
 })
-
+const NEED_RESET_AND_CONFIRM = 'need_reset_and_confirm';
 router.post('/login', async (req, res) => {
   logger.info(`Starting endpoint auth.route/login with params ${JSON.stringify(req.params, null, 2)}`);
   try {
@@ -91,6 +89,18 @@ router.post('/login', async (req, res) => {
     if (!user) {
       return res.status(401).send({
         error: 'Login failed! Check authentication credentials'
+      });
+    }
+    if (user.status === NEED_RESET_AND_CONFIRM) {
+      logger.info(`Starting function generateChangePassword for users.route/login`);
+      await user.generateChangePassword();
+      logger.info(`Finished function generateChangePassword for users.route/login`);
+      logger.info(`Starting function sendRecoverPasswordEmail for users.route/login`);
+      await userService.sendRecoverAndConfirm(user);  
+      logger.info(`Finished function sendRecoverPasswordEmail for users.route/login`);
+      return res.send({
+        email: user.email,
+        order: 'need_reset_and_confirm'
       });
     }
     logger.info(`Starting function generateAuthToken for auth.route/post`);
