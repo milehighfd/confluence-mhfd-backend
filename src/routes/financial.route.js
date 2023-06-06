@@ -20,7 +20,7 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
   const IS_INCOME = filters[2];
   const PROJECT_ACTIVE_STATE = 1;
   let resProjectCost;
-  let where = {
+  let whereConditions = {
     project_id: id,
     is_active: PROJECT_ACTIVE_STATE
   }
@@ -28,10 +28,19 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
   const MHFD_PARTNER_ID = -1
 
   if (PARTNER_FILTER && PARTNER_FILTER !== MHFD_PARTNER_ID) {
-    where.project_partner_id = PARTNER_FILTER
+    const partner_allowed = await ProjectPartner.findAll({
+      where: {
+        business_associates_id: PARTNER_FILTER
+      },
+      attributes: ['project_partner_id'],
+      raw: true,
+      nest: true,
+    });
+    const partner_allowed_ids = partner_allowed.map(a => a.project_partner_id);
+    whereConditions.project_partner_id = partner_allowed_ids
   }
   if (PHASE_FILTER) {
-    where.code_phase_type_id = PHASE_FILTER
+    whereConditions.code_phase_type_id = PHASE_FILTER
   }
   try {
     const code_cost_type_allowed = await CodeCostType.findAll({
@@ -46,11 +55,13 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
           'Vendor Agreement Encumbered',
           'Vendor Agreement Tyler Encumbered']
       },
+      raw: true,
+      nest: true,
       attributes: ['code_cost_type_id']
     })
 
     const code_cost_type_allowed_ids = code_cost_type_allowed.map(a => a.code_cost_type_id);
-    where.code_cost_type_id = code_cost_type_allowed_ids;
+    whereConditions.code_cost_type_id = code_cost_type_allowed_ids;
 
     if (IS_INCOME && (IS_INCOME?.income !== true || IS_INCOME?.expense !== true)) {
       let INCOME_STATE;
@@ -69,11 +80,11 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
         attributes: ['code_cost_type_id'],
       });
       let arrayValues = isIncomeState.map(a => a.code_cost_type_id);
-      where.code_cost_type_id = arrayValues;
+      whereConditions.code_cost_type_id = arrayValues;
     }
 
     resProjectCost = await ProjectCost.findAll({
-      where: where,
+      where: whereConditions,
       raw: true,
       nest: true,
       attributes: ['agreement_number', 'amendment_number', 'code_phase_type_id', 'project_partner_id', 'cost', 'cost_project_partner_contribution'],
@@ -103,10 +114,11 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
             nest: true,
             include: {
               model: BusinessAssociates,
-              attributes: ['business_associate_name'],
+              attributes: ['business_associate_name', 'business_associates_id'],
               required: true,
             }
           });
+          projectCost.business_associates_id = projectPartnerName?.business_associate?.business_associates_id;
           projectCost.project_partner_name = projectPartnerName?.business_associate?.business_associate_name || 'N/A';
         }
 
@@ -115,11 +127,12 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
             where: {
               code_phase_type_id: projectCost.code_phase_type_id
             },
-            attributes: ['phase_name'],
+            attributes: ['phase_name', 'phase_ordinal_position'],
             raw: true,
             nest: true,
           });
-          projectCost.code_phase_type_name = codePhaseTypeName?.phase_name || 'N/A';
+          projectCost.code_phase_type = { name: codePhaseTypeName?.phase_name || 'N/A' };
+          projectCost.code_phase_type.sort_value = codePhaseTypeName?.phase_ordinal_position
         }
         return projectCost
       })
@@ -141,7 +154,12 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
               "cost_type_name": projectCost.code_cost_type.cost_type_name,
               "is_income": projectCost.code_cost_type.is_income
             },
+            "business_associates_id": MHFD_PARTNER_ID,
             "project_partner_name": 'MHFD',
+            "code_phase_type": {
+              "name": projectCost.code_phase_type?.name || '',
+              "sort_value": projectCost.code_phase_type?.sort_value || '',
+            },
             "code_phase_type_name": projectCost.code_phase_type_name,
             "sortValue": projectCost.sortValue - 1,
           })
@@ -157,15 +175,19 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
             && e.project_partner_id === element.project_partner_id && element.code_cost_type?.cost_type_name?.includes(e?.code_cost_type?.cost_type_name.split(' ')[0])) {
 
             if (element?.code_cost_type?.cost_type_name?.includes('Projected')) {
-              e.projected = { 'cost': element.cost || 0 }
+              e.projected = {'is_income':element.code_cost_type.is_income ,'cost': element.cost || 0 }
             }
 
             if (element?.code_cost_type?.cost_type_name?.includes('Encumbered') && !element?.code_cost_type?.cost_type_name?.includes('Tyler Encumbered')) {
-              e.encumbered = { 'cost': element.cost || 0 }
+              if (element?.code_cost_type?.cost_type_name?.includes('LG Funds Encumbered') && element?.project_partner_name !== 'MHFD') {
+                e.encumbered = {'is_income':element.code_cost_type.is_income ,'cost': element.cost_project_partner_contribution || 0 }
+              }else{
+                e.encumbered = {'is_income':element.code_cost_type.is_income ,'cost': element.cost || 0 }
+              }
             }
 
             if (element?.code_cost_type?.cost_type_name?.includes('Tyler Encumbered')) {
-              e.tyler_encumbered = { 'cost': element.cost || 0 }
+              e.tyler_encumbered = {'is_income':element.code_cost_type.is_income ,'cost': element.cost || 0 }
             }
           }
         })
