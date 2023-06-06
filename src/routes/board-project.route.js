@@ -125,20 +125,16 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
   }
 });
 
-router.put('/:board_project_id/cost', async (req, res) => {
+router.put('/:board_project_id/cost',[auth], async (req, res) => {
   logger.info('get board project cost by id');
   const { board_project_id } = req.params;
-
+  const user = req.user;
   const { req1, req2, req3, req4, req5, year1, year2 } = req.body;
   let updateFields = {};
   const beforeUpdate = await BoardProject.findOne({
     where: { board_project_id }
   });
-  const columnsChanged = []
-  // IF reqX cambia de valor
-  // CREAR project_cost y poner en is_active false los anteriores
-  // Como identifico al anterior? 
-  // CREAR 
+  const columnsChanged = [];
   for (let pos = 1; pos <= 5; pos++) {
     const reqColumnName = `req${pos}`;
     const rankColumnName = `rank${pos}`;
@@ -178,30 +174,28 @@ router.put('/:board_project_id/cost', async (req, res) => {
         }
       });
       const projectsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
-      // const projectsUpdated = await ProjectCost.update({
-      //   is_active: 0
-      // }, {
-      //   where: {
-      //     project_cost_id: { [Op.in]: projectsIdsToUpdate }
-      //   }
-      // });
-      // console.log('Projects updated', projectsUpdated);
-      // const projectCostCreated = await ProjectCost.create({
-      //   cost: currentCost,
-      //   project_id: currentProjectId,
-      //   code_cost_type_id: CODE_COST_TYPE_ID,
-      //   created_by: 'testinguser',
-      //   modified_by: 'testinguser'
-      // });
-      // const project_cost_id = projectCostCreated.dataValues.project_cost_id;
-      // const createdBoardProjectCost = await BoardProjectCost.create({
-      //     board_project_id: board_project_id,
-      //     project_cost_id: project_cost_id,
-      //     req_position: currentColumn,
-      //     created_by: 'testinguser',
-      //     last_modified_by: 'testinguser'
-      // });
-      // console.log('HAS CREATED A BOARD PROEJCT', createdBoardProjectCost);
+      const projectsUpdated = await ProjectCost.update({
+        is_active: 0
+      }, {
+        where: {
+          project_cost_id: { [Op.in]: projectsIdsToUpdate }
+        }
+      });
+      const projectCostCreated = await ProjectCost.create({
+        cost: currentCost,
+        project_id: currentProjectId,
+        code_cost_type_id: CODE_COST_TYPE_ID,
+        created_by: user.email,
+        modified_by: user.email
+      });
+      const project_cost_id = projectCostCreated.dataValues.project_cost_id;
+      const createdBoardProjectCost = await BoardProjectCost.create({
+          board_project_id: board_project_id,
+          project_cost_id: project_cost_id,
+          req_position: currentColumn,
+          created_by: user.email,
+          last_modified_by: user.email
+      });
     }
   }
   try {
