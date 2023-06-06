@@ -87,7 +87,7 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
       where: whereConditions,
       raw: true,
       nest: true,
-      attributes: ['agreement_number', 'amendment_number', 'code_phase_type_id', 'project_partner_id', 'cost', 'cost_project_partner_contribution'],
+      attributes: ['agreement_number', 'amendment_number', 'code_phase_type_id', 'project_partner_id', 'cost', 'cost_project_partner_contribution', 'effective_date'],
       include: {
         model: CodeCostType,
         required: true,
@@ -149,6 +149,7 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
             "project_partner_id": MHFD_PARTNER_ID,
             "cost": projectCost.cost - projectCost.cost_project_partner_contribution,
             "cost_project_partner_contribution": projectCost.cost_project_partner_contribution,
+            "effective_date": projectCost.effective_date,
             "code_cost_type": {
               "code_cost_type_id": projectCost.code_cost_type.code_cost_type_id,
               "cost_type_name": projectCost.code_cost_type.cost_type_name,
@@ -167,7 +168,6 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
       });
     }
 
-
     await Promise.all(
       resProjectCost.map(e => {
         resProjectCost.map(element => {
@@ -175,19 +175,19 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
             && e.project_partner_id === element.project_partner_id && element.code_cost_type?.cost_type_name?.includes(e?.code_cost_type?.cost_type_name.split(' ')[0])) {
 
             if (element?.code_cost_type?.cost_type_name?.includes('Projected')) {
-              e.projected = {'is_income':element.code_cost_type.is_income ,'cost': element.cost || 0 }
+              e.projected = { 'is_income': element.code_cost_type.is_income, 'cost': element.cost || 0 }
             }
 
             if (element?.code_cost_type?.cost_type_name?.includes('Encumbered') && !element?.code_cost_type?.cost_type_name?.includes('Tyler Encumbered')) {
               if (element?.code_cost_type?.cost_type_name?.includes('LG Funds Encumbered') && element?.project_partner_name !== 'MHFD') {
-                e.encumbered = {'is_income':element.code_cost_type.is_income ,'cost': element.cost_project_partner_contribution || 0 }
-              }else{
-                e.encumbered = {'is_income':element.code_cost_type.is_income ,'cost': element.cost || 0 }
+                e.encumbered = { 'is_income': element.code_cost_type.is_income, 'cost': element.cost_project_partner_contribution || 0 }
+              } else {
+                e.encumbered = { 'is_income': element.code_cost_type.is_income, 'cost': element.cost || 0 }
               }
             }
 
             if (element?.code_cost_type?.cost_type_name?.includes('Tyler Encumbered')) {
-              e.tyler_encumbered = {'is_income':element.code_cost_type.is_income ,'cost': element.cost || 0 }
+              e.tyler_encumbered = { 'is_income': element.code_cost_type.is_income, 'cost': element.cost || 0 }
             }
           }
         })
