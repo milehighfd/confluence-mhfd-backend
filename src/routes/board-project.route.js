@@ -3,7 +3,10 @@ import { LexoRank } from 'lexorank';
 import sequelize from 'sequelize';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
+import auth from 'bc/auth/auth.js';
 const BoardProject = db.boardProject;
+const ProjectCost = db.projectCost;
+const BoardProjectCost = db.boardProjectCost;
 
 const { Op } = sequelize;
 const router = express.Router();
@@ -132,6 +135,10 @@ router.put('/:board_project_id/cost', async (req, res) => {
     where: { board_project_id }
   });
   const columnsChanged = []
+  // IF reqX cambia de valor
+  // CREAR project_cost y poner en is_active false los anteriores
+  // Como identifico al anterior? 
+  // CREAR 
   for (let pos = 1; pos <= 5; pos++) {
     const reqColumnName = `req${pos}`;
     const rankColumnName = `rank${pos}`;
@@ -155,7 +162,48 @@ router.put('/:board_project_id/cost', async (req, res) => {
       updateFields[rankColumnName] = null;
     }
   }
-
+  const currentProjectId = beforeUpdate.project_id;
+  for ( let pos = 0; pos < columnsChanged.length ; ++pos) {
+    const currentColumn = columnsChanged[pos];
+    const reqColumnName = `req${currentColumn}`;
+    const currentCost   = req.body[reqColumnName];
+    const CODE_COST_TYPE_ID = 22; // Work Request Code cost type // TODO: verify which code will be correct 
+    if (currentCost) {
+      // find Board Project Cost by board id and req position
+      // to update to is_active = false, all previous project costs before creation
+      const currentBoardProjectCosts = await BoardProjectCost.findAll({
+        where: {
+          board_project_id,
+          req_position: currentColumn
+        }
+      });
+      const projectsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
+      // const projectsUpdated = await ProjectCost.update({
+      //   is_active: 0
+      // }, {
+      //   where: {
+      //     project_cost_id: { [Op.in]: projectsIdsToUpdate }
+      //   }
+      // });
+      // console.log('Projects updated', projectsUpdated);
+      // const projectCostCreated = await ProjectCost.create({
+      //   cost: currentCost,
+      //   project_id: currentProjectId,
+      //   code_cost_type_id: CODE_COST_TYPE_ID,
+      //   created_by: 'testinguser',
+      //   modified_by: 'testinguser'
+      // });
+      // const project_cost_id = projectCostCreated.dataValues.project_cost_id;
+      // const createdBoardProjectCost = await BoardProjectCost.create({
+      //     board_project_id: board_project_id,
+      //     project_cost_id: project_cost_id,
+      //     req_position: currentColumn,
+      //     created_by: 'testinguser',
+      //     last_modified_by: 'testinguser'
+      // });
+      // console.log('HAS CREATED A BOARD PROEJCT', createdBoardProjectCost);
+    }
+  }
   try {
     let x = await BoardProject.update(
       {

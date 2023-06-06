@@ -28,6 +28,9 @@ export default (sequelize, DataType) => {
     created_by: {
       type: DataType.STRING
     }
+  }, {
+    freezeTableName: true,
+    tableName: 'board_project_cost'
   });
   return boardProjectCost
 }
