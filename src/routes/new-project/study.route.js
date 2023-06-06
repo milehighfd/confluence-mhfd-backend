@@ -130,7 +130,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       },
       { where: { project_id: project_id } }
     );
-
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
     await addProjectToBoard(
       user,
       servicearea,
@@ -336,6 +336,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     }
     await projectStreamService.deleteByProjectId(project_id);
     for (const stream of JSON.parse(streams)) {
+      console.log(stream)
       await projectStreamService.saveProjectStream({
         project_id: project_id,
         stream_id: stream.stream.stream_id

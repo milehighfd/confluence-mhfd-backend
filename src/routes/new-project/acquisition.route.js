@@ -109,6 +109,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       },
       { where: { project_id: project_id } }
     );
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
     const projectsubtype = '';
     await addProjectToBoard(
       user,
