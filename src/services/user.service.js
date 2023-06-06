@@ -85,6 +85,19 @@ export const sendSignupEmail = async (user) => {
   }
 };
 
+export const sendRecoverAndConfirm = async (user) => {
+  const email = user.email;
+  const signupToken = user.changePasswordId;
+  const redirectUrl = MHFD_FRONTEND + '/signup/' + signupToken;
+  const template = fs.readFileSync(__dirname + '/templates/email_verify_email.html', 'utf8');
+  const options = getEmailOptions(email, "MHFD Confluence - Signup", template.split('{{url}}').join(redirectUrl));
+  try {
+    await sendEmail(options);
+  } catch(error) {
+    throw error;
+  }
+};
+
 export const sendRecoverPasswordEmail = async (user) => {
   const email = user.email;
   const changePasswordId = user.changePasswordId;
@@ -319,5 +332,6 @@ export default {
   findAllUsers,
   sendApprovedAccount,
   deleteUser,
-  sendSignupEmail
+  sendSignupEmail,
+  sendRecoverAndConfirm
 };
