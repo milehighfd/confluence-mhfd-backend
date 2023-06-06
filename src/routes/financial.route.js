@@ -194,6 +194,7 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
       })
     );
 
+
     let uniquesProjectCost = resProjectCost.filter((value, index, self) =>
       index === self.findIndex((t) => (
         (t.agreement_number === value.agreement_number && t.amendment_number === value.amendment_number && t.code_phase_type_id === value.code_phase_type_id
@@ -203,6 +204,13 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
     if (PARTNER_FILTER === MHFD_PARTNER_ID) {
       uniquesProjectCost = uniquesProjectCost.filter(value => value.project_partner_id === MHFD_PARTNER_ID);
     }
+
+    uniquesProjectCost.map(element => {
+      if (element.agreement_number) {
+        element.agreement_number = element.agreement_number.slice(0, 2) + '-' + element.agreement_number.slice(2, 4) + '.' + element.agreement_number.slice(4, 6);
+      }
+    })
+
     res.status(200).send(uniquesProjectCost);
   } catch (error) {
     logger.error(error);
