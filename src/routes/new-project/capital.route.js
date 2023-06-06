@@ -544,6 +544,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
     const projectsubtype = '';
     const projecttype = 'Capital';
+    await attachmentService.deleteAttachmentsById(project_id);
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
     updateProjectsInBoard(
       project_id,
       cleanStringValue(projectname),
@@ -556,13 +558,13 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       project_id
     );
     costService.setIsActiveToFalse(project_id);
-      //update aditional cost
+    //update aditional cost
     await costService.updateProjectOverhead(
       {
         project_id: project_id,
         cost: !isNaN(Number(additionalcost)) ? Number(additionalcost) : 0,
         code_cost_type_id: aditionalCostId,
-        cost_description: additionalcostdescription,
+        cost_description: additionalcostdescription || null,
         created_by: creator,
         modified_by: creator,
         is_active: true
@@ -571,11 +573,11 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       aditionalCostId
     );
     //update overhead cost
-    for (const element of filtered) {
+    filtered.forEach(async (element, index) => {
       await costService.updateProjectOverhead(
         {
           project_id: project_id,
-          cost: !isNaN(Number(splitedOverheadcost[element])) ? Number(splitedOverheadcost[element]) : 0,
+          cost: !isNaN(Number(splitedOverheadcost[index+1])) ? Number(splitedOverheadcost[index+1]) : 0,
           code_cost_type_id: element,
           created_by: creator,
           modified_by: creator,
@@ -584,7 +586,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         project_id,
         element
       );
-    }
+    });
     
     if (splitedJurisdiction)
       await ProjectLocalGovernment.destroy({
