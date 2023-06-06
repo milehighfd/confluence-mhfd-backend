@@ -42,15 +42,21 @@ const getOneByStream = async(pk) => {
 }
 
 const deleteByProjectId= async (project_id) => {
-  const project = ProjectStream.destroy({
-    where: {
-      project_id: project_id 
-    }});
-  if (project) {
-    logger.info('ProjectStream destroyed ');
-    return true;
-  } else {
-    logger.info('ProjectStream not found');
+  try {
+    const project = await ProjectStream.destroy({
+      where: {
+        project_id: project_id 
+      }
+    });
+    if (project) {
+      logger.info('ProjectStream destroyed ');
+      return true;
+    } else {
+      logger.info('ProjectStream not found');
+      return false;
+    }
+  } catch (error) {
+    logger.error(`Error deleting project streams: ${error}`);
     return false;
   }
 }

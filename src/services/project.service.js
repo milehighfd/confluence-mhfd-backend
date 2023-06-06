@@ -521,6 +521,7 @@ const getDetails = async (project_id) => {
               'actual_start_date',
               'actual_end_date',
               'planned_end_date',
+              'modified_date',
               'project_status_id',
               'is_locked',
               'is_done'

@@ -301,6 +301,26 @@ const toggleValue = async (id, newIsCover) => {
   return attach;
 }
 
+const deleteAttachmentsById = async (project_id) => {
+  try {
+    const project = await Attachment.destroy({
+      where: {
+        project_id: project_id 
+      }
+    });
+    if (project) {
+      logger.info('Attachments destroyed ');
+      return true;
+    } else {
+      logger.info('Attachments not found');
+      return false;
+    }
+  } catch (error) {
+    logger.error(`Error deleting project streams: ${error}`);
+    return false;
+  }
+}
+
 export default {
   listAttachments,
   uploadFiles,
@@ -315,4 +335,5 @@ export default {
   FilterUrl,
   downloadZip,
   getPublicUrl,
+  deleteAttachmentsById
 };
