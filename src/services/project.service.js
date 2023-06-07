@@ -761,7 +761,19 @@ const getLocalityDetails = async (project_id) => {
   return project;
 };
 
-const getLightDetails = async (project_id) => {
+const getLightDetails = async (project_id, project_counties, project_local_governments, project_service_areas) => {
+  const countyWhere = {};
+  if (project_counties && project_counties.length > 0) {
+    countyWhere.state_county_id = { [Op.in]: project_counties };
+  }
+  const localGovernmentWhere = {};
+  if (project_local_governments && project_local_governments.length > 0) {
+    localGovernmentWhere.code_local_government_id = { [Op.in]: project_local_governments };
+  }
+  const serviceAreaWhere = {};
+  if (project_service_areas && project_service_areas.length > 0) {
+    serviceAreaWhere.code_service_area_id = { [Op.in]: project_service_areas };
+  }
   const project = await Project.findByPk(project_id, {
     attributes: [
       "project_id",
@@ -775,6 +787,7 @@ const getLightDetails = async (project_id) => {
         attributes: [
           'code_local_government_id'
         ],
+        where: localGovernmentWhere,
         include: {
           model: CodeLocalGoverment,
           required: false,
@@ -796,7 +809,8 @@ const getLightDetails = async (project_id) => {
           attributes: [
             'county_name',
           ]
-        }
+        },
+        where: countyWhere
       },
       {
         model: ProjectServiceArea,
@@ -810,7 +824,8 @@ const getLightDetails = async (project_id) => {
           attributes: [
             'service_area_name'
           ],
-        }
+        },
+        where: serviceAreaWhere
       },
       {
         model: CodeProjectType,

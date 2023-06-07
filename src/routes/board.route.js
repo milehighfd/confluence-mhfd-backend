@@ -506,7 +506,13 @@ router.post('/get-or-create', async (req, res) => {
 
 router.post('/board-for-positions2', async (req, res) => {
   logger.info(`Starting endpoint board/board-for-positions2 with params ${JSON.stringify(req.body, null, 2)}`)
-  let { board_id, position } = req.body;
+  let { board_id, position, filters } = req.body;
+  const {
+    project_priorities,
+    project_counties,
+    project_local_governments,
+    project_service_areas
+  } = filters || {};
   if (!board_id || position === undefined || position === null) {
     return res.sendStatus(400);
   }
@@ -526,6 +532,9 @@ router.post('/board-for-positions2', async (req, res) => {
   if (`${position}` !== '0') {
     attributes.push(`req${position}`);
   }
+  if (project_priorities && project_priorities.length > 0) {
+    where[`originPosition${position}`] = { [Op.in]: project_priorities };
+  }
 
   const boardProjects = (await BoardProject.findAll({
     attributes,
@@ -538,7 +547,10 @@ router.post('/board-for-positions2', async (req, res) => {
       let details;
       try {
         details = (await projectService.getLightDetails(
-          boardProject.project_id
+          boardProject.project_id,
+          project_counties,
+          project_local_governments,
+          project_service_areas
         )).dataValues;
       } catch (e) {
         logger.error(e);
