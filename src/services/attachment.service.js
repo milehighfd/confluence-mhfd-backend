@@ -300,6 +300,26 @@ const toggleValue = async (id, newIsCover) => {
   });
   return attach;
 }
+const toggleName = async (name) => {
+  await Attachment.update(
+    { 
+      is_cover: false 
+    },
+    {
+      where: {
+        [Op.not]: { attachment_reference_key: name }
+      }
+    }
+  );
+  await Attachment.update(
+    { 
+      is_cover: true 
+    },
+    {
+      where: { attachment_reference_key: name }      
+    }
+  );
+}
 
 const deleteAttachmentsById = async (project_id) => {
   try {
@@ -335,5 +355,6 @@ export default {
   FilterUrl,
   downloadZip,
   getPublicUrl,
-  deleteAttachmentsById
+  deleteAttachmentsById,
+  toggleName
 };

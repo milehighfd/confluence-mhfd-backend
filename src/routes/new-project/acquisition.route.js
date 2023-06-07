@@ -7,7 +7,7 @@ import {
 import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
 import { addProjectToBoard, cleanStringValue, updateProjectsInBoard } from 'bc/routes/new-project/helper.js';
-
+import attachmentService from 'bc/services/attachment.service.js';
 import db from 'bc/config/db.js';
 import cartoService from 'bc/services/carto.service.js';
 import projectStatusService from 'bc/services/projectStatus.service.js';
@@ -225,6 +225,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       geom,
       project_id
     ); 
+    await attachmentService.toggleName(cover);
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
     const projectsubtype = '';
     const projecttype = 'Acquisition';
     updateProjectsInBoard(

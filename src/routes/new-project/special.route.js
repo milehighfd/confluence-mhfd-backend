@@ -203,6 +203,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       project_id
     );
     await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
+    await attachmentService.toggleName(cover);
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
     const projectsubtype = '';
     const projecttype = 'Special';
     await updateProjectsInBoard(

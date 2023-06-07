@@ -233,6 +233,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     studyreason,
     otherReason,
     sendToWR,
+    cover,
   } = req.body;
   const creator = user.email;
   const splitedJurisdiction = jurisdiction.split(',');
@@ -267,6 +268,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         parsedIds
       );
     }
+    await attachmentService.toggleName(cover);
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
     const projecttype = 'Study';
     const projectsubtype = 'Master Plan';
     updateProjectsInBoard(
