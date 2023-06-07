@@ -87,6 +87,14 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
           { ...otherFields, [rankColumnName]: lastLexo },
           { where: { board_project_id: board_project_id } }
         );
+        for(const keys in otherFields) {
+          if(keys.includes('req')) {
+            const costToUpdate = otherFields[keys] ? otherFields[keys]: 0;
+            const columnToEdit = keys.match(/[0-9]+/);
+            console.log('Column to edit2  is', columnToEdit);
+            updateAndCreateProjectCosts(columnToEdit, costToUpdate, project.project_id, {email: 'test@test'}, board_project_id);
+          }
+        }
       }
       return await BoardProject.update(
         { [rankColumnName]: lastLexo },
@@ -114,10 +122,30 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
     }
   }
   try {
+    const boardProject = await BoardProject.findOne({
+      attributes: [
+        'board_id',
+        'project_id'
+      ],
+      where: {
+        board_project_id
+      }
+    });
     const x = await BoardProject.update(
       { [rankColumnName]: lexo, ...otherFields },
       { where: { board_project_id } }
     );
+    for(const key in otherFields) {
+      if(key.includes('req') && key!='req0' ) {
+        const costToUpdate = otherFields[key] ? otherFields[key]: 0;
+        const columnToEdit = key.match(/\d+/)[0];
+        console.log('Column to edit is', columnToEdit, key, otherFields);
+        updateAndCreateProjectCosts(columnToEdit, costToUpdate, boardProject.project_id, {email: 'test@test'}, board_project_id);
+      }
+    }
+    
+    
+    
     return res.status(200).send(x);
   } catch (error) {
     logger.error(error);
@@ -132,7 +160,9 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
       req_position: currentColumn
     }
   });
+  
   const projectsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
+  console.log('ZXCV this are going to change to 0', );
   await ProjectCost.update({
     is_active: 0
   }, {
@@ -140,6 +170,7 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
       project_cost_id: { [Op.in]: projectsIdsToUpdate }
     }
   });
+  console.log('ZXCV bout to create project cost with', currentColumn, currentCost, currentProjectId);
   const projectCostCreated = await ProjectCost.create({
     cost: currentCost,
     project_id: currentProjectId,
@@ -193,8 +224,8 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
   for ( let pos = 0; pos < columnsChanged.length ; ++pos) {
     const currentColumn = columnsChanged[pos];
     const reqColumnName = `req${currentColumn}`;
-    const currentCost   = req.body[reqColumnName];
-    if (currentCost) {
+    const currentCost   = req.body[reqColumnName] ? req.body[reqColumnName]: 0; // TODO: check if 0 is for null fine
+    // if (currentCost) {
       updateAndCreateProjectCosts(
         currentColumn,
         currentCost,
@@ -202,7 +233,7 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
         user,
         board_project_id
       );
-    }
+    // }
   }
   try {
     let x = await BoardProject.update(
