@@ -526,6 +526,10 @@ router.post('/reset-password', validator(['id', 'password']), async (req, res) =
     logger.info(`Starting function hash for users.route/reset-password`);
     const newPwd = await bcrypt.hash(req.body.password, 8);
     logger.info(`Finished function hash for users.route/reset-password`);
+    const { confirmation } = req.query;
+    if (confirmation) {
+      user.status = 'approved';
+    }
     user.password = newPwd;
     user.changePasswordId = '';
     user.changePasswordExpiration = null;
