@@ -4,6 +4,7 @@ import sequelize from 'sequelize';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import auth from 'bc/auth/auth.js';
+const Board = db.board;
 const BoardProject = db.boardProject;
 const ProjectCost = db.projectCost;
 const BoardProjectCost = db.boardProjectCost;
@@ -36,7 +37,27 @@ router.get('/:board_project_id/cost', async (req, res) => {
     return res.status(500).send({ error: error });
   }
 });
-
+router.put('/:board_id/update-target-cost', async(req,res) => {
+  const { board_id } = req.params;
+  const {
+    targetcost1,
+    targetcost2,
+    targetcost3,
+    targetcost4,
+    targetcost5
+  } = req.body;
+  try{
+    let boardUpdate = await Board.update(
+      { targetcost1, targetcost2, targetcost3, targetcost4, targetcost5 },
+      {where: { board_id}}
+    );
+    return res.status(200).send(boardUpdate);
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).send({ error: error });
+  }
+  
+});
 router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
   logger.info('get board project cost by id');
   const { board_project_id } = req.params;
@@ -63,7 +84,6 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
       }
     });
     const board_id = boardProject.board_id;
-
     const where = { board_id };
     if (`${columnNumber}` !== '0') {
       where[`req${columnNumber}`] = { [Op.ne]: null };
@@ -102,6 +122,7 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
       );
     });
     const results = await Promise.all(proms);
+    console.log(' ZXCVResylts ins here', results);
     return res.status(200).send(results);
   }
   if (before === null && beforeIndex !== -1) {
@@ -139,13 +160,11 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
       if(key.includes('req') && key!='req0' ) {
         const costToUpdate = otherFields[key] ? otherFields[key]: 0;
         const columnToEdit = key.match(/\d+/)[0];
-        console.log('Column to edit is', columnToEdit, key, otherFields);
+        console.log(' ZXCVColumn to edit is', columnToEdit, key, otherFields);
         updateAndCreateProjectCosts(columnToEdit, costToUpdate, boardProject.project_id, {email: 'test@test'}, board_project_id);
       }
     }
-    
-    
-    
+    console.log('WHAT ', x);
     return res.status(200).send(x);
   } catch (error) {
     logger.error(error);
