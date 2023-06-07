@@ -789,7 +789,7 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
         ],
         include: {
           model: CodeLocalGoverment,
-          required: false,
+          required: true,
           where: localGovernmentWhere,
           attributes: [
             'local_government_name'
@@ -805,7 +805,7 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
         ],
         include: {
           model: CodeStateCounty,
-          required: false,
+          required: true,
           where: countyWhere,
           attributes: [
             'county_name',
@@ -820,7 +820,7 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
         ],
         include: {
           model: CodeServiceArea,
-          required: false,
+          required: true,
           where: serviceAreaWhere,
           attributes: [
             'service_area_name'
