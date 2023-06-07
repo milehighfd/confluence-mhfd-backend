@@ -207,6 +207,7 @@ router.post('/get-costs-by-id/:id', [auth], async (req, res) => {
 
     uniquesProjectCost.map(element => {
       if (element.agreement_number) {
+        element.agreement_number = element.agreement_number.replace(/\D/g, '');
         element.agreement_number = element.agreement_number.slice(0, 2) + '-' + element.agreement_number.slice(2, 4) + '.' + element.agreement_number.slice(4, 6);
       }
     })
