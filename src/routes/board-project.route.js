@@ -37,7 +37,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
   }
 });
 
-router.put('/:board_project_id/update-rank', async (req, res) => {
+router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
   logger.info('get board project cost by id');
   const { board_project_id } = req.params;
   const {
@@ -49,6 +49,7 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
     targetPosition,
     otherFields
   } = req.body;
+  const user = req.user;
   if (before === undefined) before = null;
   if (after === undefined) after = null;
   const rankColumnName = `rank${columnNumber}`;
@@ -91,8 +92,7 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
           if(keys.includes('req')) {
             const costToUpdate = otherFields[keys] ? otherFields[keys]: 0;
             const columnToEdit = keys.match(/[0-9]+/);
-            console.log('Column to edit2  is', columnToEdit);
-            updateAndCreateProjectCosts(columnToEdit, costToUpdate, project.project_id, {email: 'test@test'}, board_project_id);
+            updateAndCreateProjectCosts(columnToEdit, costToUpdate, project.project_id, user, board_project_id);
           }
         }
       }
