@@ -414,6 +414,36 @@ router.post('/generate-signup-url', async (req, res) => {
   }
 });
 
+
+router.post('/generate-reset-confirm', async (req, res) => {
+  logger.info(`Beginning endpoint users.route/generate-signup-url with params ${JSON.stringify(req.params, null, 2)}`);
+  try {
+    const { email } = req.body;
+    if (!EMAIL_VALIDATOR.test(email)) {
+      return res.status(400).send({ error: 'You entered an invalid email direction' });
+    }
+    logger.info(`Beginning function findOne for users.route/generate-signup-url`);
+    let user = await User.findOne({
+      where: {
+        email: email,
+    }});
+    logger.info(`Finished function findOne for users.route/generate-signup-url`);
+    if (!user) {
+      return res.status(422).send({ error: 'Email not exists!' });
+    }
+    logger.info(`Beginning function generateChangePassword for users.route/generate-signup-url`);
+    await user.generateChangePassword();
+    logger.info(`Finished function generateChangePassword for users.route/generate-signup-url`);
+    logger.info(`Beginning function sendEmail for users.route/generate-signup-url`);
+    await UserService.sendRecoverAndConfirm(user);
+    logger.info(`Finished function sendEmail for users.route/generate-signup-url`);
+    res.send(user);
+  } catch(error) {
+    logger.info(`Error in endpoint users.route/generate-signup-url ${JSON.stringify(error, null, 2)}`);
+    res.status(500).send(error);
+  }
+});
+
 router.post('/recovery-password', async (req, res) => {
   logger.info(`Starting endpoint users.route/recovery-password with params ${JSON.stringify(req.params, null, 2)}`);
   const email = req.body.email;
