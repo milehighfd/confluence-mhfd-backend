@@ -124,7 +124,38 @@ router.put('/:board_project_id/update-rank', async (req, res) => {
     return res.status(500).send({ error: error });
   }
 });
-
+const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentProjectId, user, board_project_id) => {
+  const CODE_COST_TYPE_ID = 22; // Work Request Code cost type // TODO: verify which code will be correct 
+  const currentBoardProjectCosts = await BoardProjectCost.findAll({
+    where: {
+      board_project_id,
+      req_position: currentColumn
+    }
+  });
+  const projectsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
+  await ProjectCost.update({
+    is_active: 0
+  }, {
+    where: {
+      project_cost_id: { [Op.in]: projectsIdsToUpdate }
+    }
+  });
+  const projectCostCreated = await ProjectCost.create({
+    cost: currentCost,
+    project_id: currentProjectId,
+    code_cost_type_id: CODE_COST_TYPE_ID,
+    created_by: user.email,
+    modified_by: user.email
+  });
+  const project_cost_id = projectCostCreated.dataValues.project_cost_id;
+  await BoardProjectCost.create({
+      board_project_id: board_project_id,
+      project_cost_id: project_cost_id,
+      req_position: currentColumn,
+      created_by: user.email,
+      last_modified_by: user.email
+  });
+}
 router.put('/:board_project_id/cost',[auth], async (req, res) => {
   logger.info('get board project cost by id');
   const { board_project_id } = req.params;
@@ -163,39 +194,14 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
     const currentColumn = columnsChanged[pos];
     const reqColumnName = `req${currentColumn}`;
     const currentCost   = req.body[reqColumnName];
-    const CODE_COST_TYPE_ID = 22; // Work Request Code cost type // TODO: verify which code will be correct 
     if (currentCost) {
-      // find Board Project Cost by board id and req position
-      // to update to is_active = false, all previous project costs before creation
-      const currentBoardProjectCosts = await BoardProjectCost.findAll({
-        where: {
-          board_project_id,
-          req_position: currentColumn
-        }
-      });
-      const projectsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
-      const projectsUpdated = await ProjectCost.update({
-        is_active: 0
-      }, {
-        where: {
-          project_cost_id: { [Op.in]: projectsIdsToUpdate }
-        }
-      });
-      const projectCostCreated = await ProjectCost.create({
-        cost: currentCost,
-        project_id: currentProjectId,
-        code_cost_type_id: CODE_COST_TYPE_ID,
-        created_by: user.email,
-        modified_by: user.email
-      });
-      const project_cost_id = projectCostCreated.dataValues.project_cost_id;
-      const createdBoardProjectCost = await BoardProjectCost.create({
-          board_project_id: board_project_id,
-          project_cost_id: project_cost_id,
-          req_position: currentColumn,
-          created_by: user.email,
-          last_modified_by: user.email
-      });
+      updateAndCreateProjectCosts(
+        currentColumn,
+        currentCost,
+        currentProjectId,
+        user,
+        board_project_id
+      );
     }
   }
   try {
