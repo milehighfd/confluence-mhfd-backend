@@ -533,7 +533,7 @@ router.post('/board-for-positions2', async (req, res) => {
     attributes.push(`req${position}`);
   }
   if (project_priorities && project_priorities.length > 0) {
-    where[`originPosition${position}`] = { [Op.in]: project_priorities };
+    where[`originPosition${position - 1}`] = { [Op.in]: project_priorities };
   }
 
   const boardProjects = (await BoardProject.findAll({
