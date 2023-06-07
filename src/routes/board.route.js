@@ -31,6 +31,93 @@ const ProjectCounty = db.projectCounty;
 const ProjectProposedAction = db.projectProposedAction;
 const CodeStateCounty = db.codeStateCounty;
 
+const insertUniqueObject = (array, idPropertyName, groupPropertyKeyName, object) => {
+  const isDuplicate = array.some(item => {
+    return item[idPropertyName] === object[idPropertyName] && item[groupPropertyKeyName] === object[groupPropertyKeyName];
+  });
+
+  if (!isDuplicate) {
+    array.push(object);
+  }
+}
+
+router.get('/:id/filters', async (req, res) => {
+  logger.info(`Starting endpoint board/:id/filters with params ${JSON.stringify(req.params, null, 2)}`);
+  const { id } = req.params;
+  logger.info(`Starting function findByPk for board/:id/filters`);
+  const board = await Board.findByPk(id);
+  logger.info(`Finished function findByPk for board/:id/filters`);
+  if (!board) {
+    return res.status(404).send({ error: 'Not found' });
+  }
+  const boardProjects = (await BoardProject.findAll({
+    where: { board_id: id },
+    attributes: [
+      'project_id'
+    ],
+  })).map(d => d.dataValues);
+  let localitiesData = await Promise.all(
+    boardProjects.map(async (boardProject) => {
+      let details;
+      try {
+        details = (await projectService.getLocalityDetails(
+          boardProject.project_id
+        )).dataValues;
+      } catch (e) {
+        logger.error(e);
+      }
+      if (details) {
+        if (details.project_service_areas && details.project_service_areas.length > 0) {
+          details.project_service_areas = details.project_service_areas.map(
+            (psa) => ({
+              code_service_area_id: psa.code_service_area_id,
+              service_area_name: psa.CODE_SERVICE_AREA.service_area_name,
+            })
+          );
+        }
+        if (details.project_counties && details.project_counties.length > 0) {
+          details.project_counties = details.project_counties.map(
+            (pc) => ({
+              state_county_id: pc.state_county_id,
+              county_name: pc.CODE_STATE_COUNTY.county_name,
+            })
+          );
+        }
+        if (details.project_local_governments && details.project_local_governments.length > 0) {
+          details.project_local_governments = details.project_local_governments.map(
+            (plg) => {
+              return ({
+                code_local_government_id: plg.code_local_government_id,
+                local_government_name: plg.CODE_LOCAL_GOVERNMENT.local_government_name,
+              });
+            }
+          );
+        }
+      }
+      return details;
+    })
+  );
+  const groupingArray = [
+    ['project_counties', 'county_name', 'state_county_id'],
+    ['project_service_areas', 'service_area_name', 'code_service_area_id'],
+    ['project_local_governments', 'local_government_name', 'code_local_government_id'],
+  ];
+  const groupingArrayMap = {};
+  localitiesData.forEach((localityData) => {
+    if (!localityData) return;
+    groupingArray.forEach(([groupProperty, groupPropertyKeyName, idPropertyName]) => {
+      if (!groupingArrayMap[groupProperty]) groupingArrayMap[groupProperty] = [];
+      const groupPropertyValue = localityData[groupProperty];
+      if (groupPropertyValue == null) return;
+      groupPropertyValue.forEach((propertyValueElement) => {
+        insertUniqueObject(groupingArrayMap[groupProperty], idPropertyName, groupPropertyKeyName, propertyValueElement);
+      });
+    })
+  });
+  logger.info(`Finished endpoint for board/:id/filters`);
+  res.send(groupingArrayMap);
+});
+
 router.get('/lexorank-update', async (req, res) => {
     const boards = await Board.findAll();
     const boardProjects = await BoardProject.findAll();

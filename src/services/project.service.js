@@ -701,6 +701,66 @@ const getDetails = async (project_id) => {
   }
 }
 
+const getLocalityDetails = async (project_id) => {
+  const project = await Project.findByPk(project_id, {
+    attributes: [
+      "project_id"
+    ],
+    include: [
+      {
+        model: ProjectLocalGovernment,
+        required: false,
+        attributes: [
+          'code_local_government_id'
+        ],
+        include: {
+          model: CodeLocalGoverment,
+          required: false,
+          attributes: [
+            'local_government_name'
+          ]
+        }
+      },
+      {
+        model: ProjectCounty,
+        required: false,
+        separate: true,
+        attributes: [
+          'state_county_id'
+        ],
+        include: {
+          model: CodeStateCounty,
+          required: false,
+          attributes: [
+            'county_name',
+          ]
+        }
+      },
+      {
+        model: ProjectServiceArea,
+        required: false,
+        attributes: [
+          'code_service_area_id'
+        ],
+        include: {
+          model: CodeServiceArea,
+          required: false,
+          attributes: [
+            'service_area_name'
+          ],
+        }
+      },
+    ]
+  });
+  if (!project) {
+    return {
+      error: 404,
+      message: 'Project Not Found'
+    };
+  }
+  return project;
+};
+
 const getLightDetails = async (project_id) => {
   const project = await Project.findByPk(project_id, {
     attributes: [
@@ -2015,6 +2075,7 @@ export default {
   getCurrentProjectStatus,
   findProject,
   addProjectToCache,
-  updateProjectOnCache
+  updateProjectOnCache,
+  getLocalityDetails
 };
 //ALTER TABLE apr29.dbo.project_staff ADD CONSTRAINT project_staff_FK FOREIGN KEY (business_associate_contact_id) REFERENCES apr29.dbo.business_associate_contact(business_associate_contact_id) ON DELETE CASCADE ON UPDATE CASCADE;
