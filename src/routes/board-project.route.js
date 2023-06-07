@@ -162,7 +162,6 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
   });
   
   const projectsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
-  console.log('ZXCV this are going to change to 0', );
   await ProjectCost.update({
     is_active: 0
   }, {
@@ -196,6 +195,7 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
   const beforeUpdate = await BoardProject.findOne({
     where: { board_project_id }
   });
+  const currentProjectId = beforeUpdate.project_id;
   const columnsChanged = [];
   for (let pos = 1; pos <= 5; pos++) {
     const reqColumnName = `req${pos}`;
@@ -220,12 +220,10 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
       updateFields[rankColumnName] = null;
     }
   }
-  const currentProjectId = beforeUpdate.project_id;
   for ( let pos = 0; pos < columnsChanged.length ; ++pos) {
     const currentColumn = columnsChanged[pos];
     const reqColumnName = `req${currentColumn}`;
-    const currentCost   = req.body[reqColumnName] ? req.body[reqColumnName]: 0; // TODO: check if 0 is for null fine
-    // if (currentCost) {
+    const currentCost   = req.body[reqColumnName] ? req.body[reqColumnName]: 0; 
       updateAndCreateProjectCosts(
         currentColumn,
         currentCost,
@@ -233,7 +231,20 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
         user,
         board_project_id
       );
-    // }
+  }
+  for(let i = 1; i<=2; ++i){
+    const valueYearHasChanged = beforeUpdate[`year${i}`] !== req.body[`year${i}`];
+    if(valueYearHasChanged) {
+      const currentColumn = 0 ; // due to limit in req position this value is whatever. 
+      const currentCost = req.body[`year${i}`] ? req.body[`year${i}`] : 0;
+      updateAndCreateProjectCosts(
+        currentColumn, // year1 = 6, year2 = 7
+        currentCost,
+        currentProjectId,
+        user,
+        board_project_id
+      );
+    }
   }
   try {
     let x = await BoardProject.update(
