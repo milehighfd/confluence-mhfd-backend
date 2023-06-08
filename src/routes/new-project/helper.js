@@ -11,6 +11,9 @@ const Configuration = db.configuration;
 const Board = db.board;
 const BoardProject = db.boardProject;
 const Project = db.project;
+const CodeServiceArea = db.codeServiceArea;
+const CodeLocalGoverment = db.codeLocalGoverment;
+const CodeStateCounty = db.codeStateCounty;
 
 export const getBoard = async (type, locality, year, projecttype) => {
   let board = await Board.findOne({
@@ -137,24 +140,9 @@ export const addProjectToBoard = async (
   sendToWR,
   isWorkPlan,
   projectname,
-  projectsubtype
-) => {
-  const [dbLocs] = await db.sequelize.query(
-    `SELECT name, type FROM Localities WHERE name = '${locality}'`
-  );
-  let _dbLoc = null;
-  if (dbLocs.length > 0) {
-    _dbLoc = dbLocs[0];
-  }
-  const dbLoc = _dbLoc;
-  let type = 'WORK_REQUEST';
-  if (dbLoc) {
-    if (dbLoc.type === 'LOCAL_GOVERNMENT') {
-      type = 'WORK_REQUEST';
-    } else if (dbLoc.type === 'COUNTY' || dbLoc.type === 'SERVICE_AREA') {
-      type = 'WORK_PLAN';
-    }
-  }
+  projectsubtype,
+  type
+) => {  
   if (!year) {
     let configuration = await Configuration.findOne({
       where: {
@@ -306,3 +294,94 @@ export const cleanStringValue = (value) => {
   }
   return value;
 };
+
+export const getLocalitiesNames = async (localities) => {
+  const namesServiceArea = await CodeServiceArea.findAll({
+    attributes: ['service_area_name'],
+    where: {
+      code_service_area_id: localities
+    }
+  });
+  const namesStateCounty = await CodeStateCounty.findAll({
+    attributes: ['county_name'],
+    where: {
+      state_county_id: localities
+    }
+  });
+  const namesLocalGoverment = await CodeLocalGoverment.findAll({
+    attributes: ['local_government_name'],
+    where: {
+      code_local_government_id: localities
+    }
+  });
+  const names = [];
+  if (namesServiceArea && namesServiceArea.length > 0) {
+    names.push(...namesServiceArea.map(sa => sa.service_area_name+ ' Service Area'));
+  }
+  if (namesStateCounty && namesStateCounty.length > 0) {
+    names.push(...namesStateCounty.map(sc => sc.county_name + ' County'));
+  }
+  if (namesLocalGoverment && namesLocalGoverment.length > 0) {
+    names.push(...namesLocalGoverment.map(lg => lg.local_government_name));
+  }
+  return names;
+};
+
+export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, splitedJurisdiction, splitedCounty, splitedServicearea) => {
+  const localitiesBoard = [];
+  const typesList = [];
+  const YEAR_WORKPLAN = 2021;
+
+  if (isWorkPlan === 'false') {
+    for (const j of splitedJurisdiction) {
+      if (j) {
+        localitiesBoard.push(j);
+        typesList.push('WORK_REQUEST');
+      }
+    }
+  } else {
+    if (sendToWR === 'true') {
+      for (const j of splitedJurisdiction) {
+        if (j) {
+          localitiesBoard.push(j);
+          typesList.push('WORK_REQUEST');
+        }
+      }
+    }
+    if (year <= YEAR_WORKPLAN) {
+      if (PROJECT_TYPE === 'Capital' || PROJECT_TYPE === 'Maintenance') {
+        for (const c of splitedCounty) {
+          if (c) {
+            localitiesBoard.push(c);
+            typesList.push('WORK_PLAN');
+          }
+        }
+      } else {
+        for (const s of splitedServicearea) {
+          if (s) {
+            localitiesBoard.push(s);
+            typesList.push('WORK_PLAN');
+          }
+        }
+      }
+    } else {
+      if (PROJECT_TYPE === 'Study') {
+        for (const s of splitedServicearea) {
+          if (s) {
+            localitiesBoard.push(s);
+            typesList.push('WORK_PLAN');
+          }
+        }
+      } else {
+        for (const c of splitedCounty) {
+          if (c) {
+            localitiesBoard.push(c);
+            typesList.push('WORK_PLAN');
+          }
+        }
+      }
+    }
+  }
+
+  return { localitiesBoard, typesList };
+}

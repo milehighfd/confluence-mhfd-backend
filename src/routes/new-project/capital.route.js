@@ -18,7 +18,7 @@ import {
 import db from 'bc/config/db.js';
 import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
-import { addProjectToBoard, cleanStringValue, updateProjectsInBoard } from 'bc/routes/new-project/helper.js';
+import { addProjectToBoard, cleanStringValue, getLocalitiesNames, updateProjectsInBoard, createLocalitiesBoard } from 'bc/routes/new-project/helper.js';
 import moment from 'moment';
 import projectPartnerService from 'bc/services/projectPartner.service.js';
 import costService from 'bc/services/cost.service.js';
@@ -362,20 +362,42 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     );
     console.log(resres);
     await attachmentService.uploadFiles(user, req.files, project_id, cover);
-    const projectsubtype = '';
-    await addProjectToBoard(
-      user,
-      servicearea,
-      county,
-      locality,
-      defaultProjectType,
-      project_id,
-      year,
-      sendToWR,
-      isWorkPlan,
-      projectname,
-      projectsubtype
-    );
+    const projectsubtype = '';    
+
+    // Start of Add or Create Board
+    const PROJECT_TYPE = 'Capital';
+    const { localitiesBoard, typesList } = createLocalitiesBoard(isWorkPlan, sendToWR, year, PROJECT_TYPE, splitedJurisdiction, splitedCounty, splitedServicearea);
+    const localNames = await getLocalitiesNames(localitiesBoard);
+    const promisesLocal = [];
+    for (let i = 0; i < localNames.length; i++) {
+      const local = localNames[i];
+      const type = typesList[i];
+      if (local) {
+        promisesLocal.push(addProjectToBoard(
+          user,
+          servicearea,
+          county,
+          local,
+          defaultProjectType,
+          project_id,
+          year,
+          sendToWR,
+          isWorkPlan,
+          projectname,
+          projectsubtype,
+          type
+        ));
+      }
+    }
+    Promise.all(promisesLocal)
+      .then(() => {
+        logger.info('All projects added to board successfully');
+      })
+      .catch((error) => {
+        logger.error(`Error adding projects to board: ${error}`);        
+      });
+    // End of Add or Create Board
+
     await projectPartnerService.saveProjectPartner(
       sponsor,
       cosponsor,
@@ -477,7 +499,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   } catch (error) {
     logger.error('error at create capital'+ error);
   }
-  res.send(result);
+  res.send([1]);
 });
 
 router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
