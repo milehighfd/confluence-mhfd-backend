@@ -185,76 +185,79 @@
           <!-- PROJECT GRAPICAL VIEW -->
 
           <!-- PROJECT FINANCIALS -->
-          <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
-            <tr>
-              <td style="width:24%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">PROJECT
-                FINANCIALS</td>
-              <td style="width: 65%;">
-                <div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div>
-              </td>
-            </tr>
-          </table>
-          <table
-            style="border-spacing: 0px 10px; padding: 0px 40px 0px 40px; font-size: 14px; width :calc(100% - 13px); margin-left: 13px;">
-            <thead>
-              ${finacialRows}
-            </thead>
-          </table>
-          <table
-            style="border-spacing: 0px 10px; padding: 0px 40px 0px 40px; font-size: 14px; width :calc(100% - 13px); margin-left: 13px;">
-            <thead>
+          <p style="display: none;" id="validation-financial">${viewFinancials}</p>
+          <div id="financial-section">
+            <table style="border-spacing: 10px; padding: 20px 40px 0px 40px; font-size: 14px; width:100%;">
               <tr>
-                <th width="38%"
-                  style="color: #40cba5; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; border-top: 1px solid #eae8f0;">
-                  Subtotal Income</th>
-                <th width="15%"
-                  style="color: #40cba5; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; border-top: 1px solid #eae8f0;">
-                  ${incomeProjected}</th>
-                <th width="15%"
-                  style="color: #40cba5; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; border-top: 1px solid #eae8f0;">
-                  ${incomeEncumbered}</th>
-                <th width="15%"
-                  style="color: #40cba5; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; border-top: 1px solid #eae8f0;">
-                  ${incomeTyler}</th>
-                <th width="17%"
-                  style="color: #40cba5; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; border-top: 1px solid #eae8f0;">
-                </th>
+                <td style="width:24%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">PROJECT
+                  FINANCIALS</td>
+                <td style="width: 65%;">
+                  <div style="width: 100%; height: 1px; opacity: .1; background-color: #251863; margin: 12px 8px;"></div>
+                </td>
               </tr>
-              <tr>
-                <th width="38%"
-                  style="color: #FF0000; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400;">
-                  Subtotal Expense</th>
-                <th width="15%"
-                  style="color: #FF0000; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; ">
-                  ${expenseProjected}</th>
-                <th width="15%"
-                  style="color: #FF0000; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; ">
-                  ${expenseEncumbered}</th>
-                <th width="15%"
-                  style="color: #FF0000; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400;">
-                  ${expenseTyler}</th>
-                <th width="17%"
-                  style="color: #FF0000; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400;"></th>
-              </tr>
-              <tr>
-                <th width="38%"
-                  style="color: #11093C; text-align: left; padding: 12px 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid #eae8f0;">
-                  Total</th>
-                <th width="15%"
-                  style="color: #11093C; text-align: left; padding: 12px 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid #eae8f0;">
-                  ${totalProjected}</th>
-                <th width="15%"
-                  style="color: #11093C; text-align: left; padding: 12px 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid #eae8f0;">
-                  ${totalEncumbered}</th>
-                <th width="15%"
-                  style="color: #11093C; text-align: left; padding: 12px 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid #eae8f0;">
-                  ${totalTyler}</th>
-                <th width="17%"
-                  style="color: #11093C; text-align: left; padding: 12px 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid #eae8f0;">
-                </th>
-              </tr>
-            </thead>
-          </table>
+            </table>
+            <table
+              style="border-spacing: 0px 10px; padding: 0px 40px 0px 40px; font-size: 14px; width :calc(100% - 13px); margin-left: 13px;">
+              <thead>
+                ${finacialRows}
+              </thead>
+            </table>
+            <table
+              style="border-spacing: 0px 10px; padding: 0px 40px 0px 40px; font-size: 14px; width :calc(100% - 13px); margin-left: 13px;">
+              <thead>
+                <tr>
+                  <th width="38%"
+                    style="color: #40cba5; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; border-top: 1px solid #eae8f0;">
+                    Subtotal Income</th>
+                  <th width="15%"
+                    style="color: #40cba5; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; border-top: 1px solid #eae8f0;">
+                    ${incomeProjected}</th>
+                  <th width="15%"
+                    style="color: #40cba5; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; border-top: 1px solid #eae8f0;">
+                    ${incomeEncumbered}</th>
+                  <th width="15%"
+                    style="color: #40cba5; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; border-top: 1px solid #eae8f0;">
+                    ${incomeTyler}</th>
+                  <th width="17%"
+                    style="color: #40cba5; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; border-top: 1px solid #eae8f0;">
+                  </th>
+                </tr>
+                <tr>
+                  <th width="38%"
+                    style="color: #FF0000; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400;">
+                    Subtotal Expense</th>
+                  <th width="15%"
+                    style="color: #FF0000; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; ">
+                    ${expenseProjected}</th>
+                  <th width="15%"
+                    style="color: #FF0000; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400; ">
+                    ${expenseEncumbered}</th>
+                  <th width="15%"
+                    style="color: #FF0000; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400;">
+                    ${expenseTyler}</th>
+                  <th width="17%"
+                    style="color: #FF0000; text-align: left; padding: 4px 10px; font-size: 12px; font-weight: 400;"></th>
+                </tr>
+                <tr>
+                  <th width="38%"
+                    style="color: #11093C; text-align: left; padding: 12px 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid #eae8f0;">
+                    Total</th>
+                  <th width="15%"
+                    style="color: #11093C; text-align: left; padding: 12px 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid #eae8f0;">
+                    ${totalProjected}</th>
+                  <th width="15%"
+                    style="color: #11093C; text-align: left; padding: 12px 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid #eae8f0;">
+                    ${totalEncumbered}</th>
+                  <th width="15%"
+                    style="color: #11093C; text-align: left; padding: 12px 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid #eae8f0;">
+                    ${totalTyler}</th>
+                  <th width="17%"
+                    style="color: #11093C; text-align: left; padding: 12px 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid #eae8f0;">
+                  </th>
+                </tr>
+              </thead>
+            </table>
+          </div>
           <!-- PROJECT FINANCIALS -->
 
           <!-- PROJECT PROJECT MANAGEMENT -->
@@ -338,5 +341,10 @@
     </tbody>
   </table>
 </body>
+<script>
+  var viewFinancials = document.getElementById('validation-financial').textContent;
+  var divElement = document.getElementById("financial-section");
+  divElement.style.display = viewFinancials === 'no financial' ? 'none' : 'block';
+</script>
 
 </html>

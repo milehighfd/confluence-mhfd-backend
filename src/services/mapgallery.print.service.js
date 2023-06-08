@@ -210,7 +210,7 @@ const formatter = new Intl.NumberFormat('en-US', {
 });
 
 export const newPrintProject = async (_data, components, mapImage, roadMap, attachments, financialData, appUser) => {
-  console.log(appUser)
+
   let data = {};
   var html = fs.readFileSync('./pdf-templates/Projects2.html', 'utf8');
   Object.keys(_data).forEach((k) => {
@@ -424,6 +424,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap, atta
   html = html.split('${description}').join(_data.description ? _data.description : 'N/A');
   html = html.split('${contractor}').join(contractor ? contractor : 'N/A');
   html = html.split('${consultant}').join(consultant ? consultant : 'N/A');
+  html = html.split('${viewFinancials}').join(appUser && appUser.designation && (appUser.designation === 'admin' || appUser.designation === 'staff')  ? 'yes financial':'no financial');
   let _problems =
     (problems !== void 0 || problems !== []) && problems?.length > 0
       ? problems
