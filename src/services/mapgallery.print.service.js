@@ -202,8 +202,14 @@ export const printProblem = async (data, components, map, problempart,teamsProbl
 
   return pdf.create(html, options);
 }
+const formatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
 
-export const newPrintProject = async (_data, components, mapImage, roadMap, attachments) => {
+export const newPrintProject = async (_data, components, mapImage, roadMap, attachments, financialData) => {
   let data = {};
   var html = fs.readFileSync('./pdf-templates/Projects2.html', 'utf8');
   Object.keys(_data).forEach((k) => {
@@ -305,6 +311,54 @@ export const newPrintProject = async (_data, components, mapImage, roadMap, atta
     data[k] = _data[k] ? _data[k] : [];
   });
 
+  let income = [0,0,0]
+  let expense = [0,0,0]
+  financialData.sort((e1, e2) =>
+  e1.sortValue > e2.sortValue ? 1 : e1.sortValue < e2.sortValue ? -1 : 0,
+  );
+  const mappingDataForFinancial = financialData.map((element) => {
+    const agreement = element?.agreement_number || '';
+    const amendment =
+    element?.amendment_number && (element?.amendment_number.includes('ORIGINAL') || element?.amendment_number === null)
+        ? ''
+        : element?.amendment_number;
+    const partner = element?.project_partner_name || '';
+    const phase = element?.code_phase_type?.name || '';
+    const projected = [element?.projected ? formatter.format(element?.projected?.cost) : '$0', element?.projected && element?.projected.cost !== 0 ? element?.projected?.is_income ? '#40cba5' : '#FF0000' : '#11093c'];
+    const encumbered = [element?.encumbered ? formatter.format(element?.encumbered?.cost) : '$0', element?.encumbered && element?.encumbered.cost !== 0 ? element?.encumbered?.is_income ? '#40cba5' : '#FF0000' : '#11093c'];
+    const tyler = [element?.tyler_encumbered ? formatter.format(element?.tyler_encumbered?.cost) : '$0', element?.tyler_encumbered && element?.tyler_encumbered.cost !== 0 ? element?.tyler_encumbered?.is_income ? '#40cba5' : '#FF0000' : '#11093c'];
+    const date = element?.effective_date || '';
+   
+    if (element?.projected?.is_income) {
+      income[0] += element?.projected?.cost || 0;
+    } else {
+      expense[0] += element?.projected?.cost || 0;
+    }
+    if (element?.encumbered?.is_income) {
+      income[1] += element?.encumbered?.cost || 0;
+    } else {
+      expense[1] += element?.encumbered?.cost || 0;
+    }
+    if (element?.tyler_encumbered?.is_income) {
+      income[2] += element?.tyler_encumbered?.cost || 0;
+    } else {
+      expense[2] += element?.tyler_encumbered?.cost || 0;
+    }
+
+    return {agreement, amendment, partner, phase, projected, encumbered, tyler, date };
+  });
+  const INCOME_PROJECTED_COST=formatter.format(income[0]);
+  const INCOME_ENCUMBERED_COST=formatter.format(income[1]);
+  const INCOME_TYLER_COST=formatter.format(income[2]);
+
+  const EXPENSE_PROJECTED_COST=formatter.format(expense[0]);
+  const EXPENSE_ENCUMBERED_COST=formatter.format(expense[1]);
+  const EXPENSE_TYLER_COST=formatter.format(expense[2]);
+
+  const TOTAL_PROJECTED_COST=formatter.format(income[0] - expense[0]);
+  const TOTAL_ENCUMBERED_COST=formatter.format(income[1] - expense[1]);
+  const TOTAL_TYLER_COST=formatter.format(income[2] - expense[2]);
+  
   const {
     county,
     local_government,
@@ -609,6 +663,52 @@ export const newPrintProject = async (_data, components, mapImage, roadMap, atta
   html = html.split('${imageRow}').join(imageRow);
   html = html.split('${documentsRow}').join(documentRpw);
   //END VENDORS
+  //START PROJECT FINANCIALS
+  let finacialRows =`<tr>
+  <th width="8%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Agreement</th>
+  <th width="10%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Amendment</th>
+  <th width="10%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Partner</th>
+  <th width="10%" style="color: #251863; text-align: center; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Phase</th>
+  <th width="15%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Projected</th>
+  <th width="15%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Encumbered</th>
+  <th width="15%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Tyler Encumbered</th>
+  <th width="17%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Date</th>
+</tr>`
+  finacialRows = finacialRows +  mappingDataForFinancial.map((element) => {
+    let response = `<tr>
+    <th width="8%" style="color: #11093c; text-align: left; padding: 4px 5px; font-size: 12px; font-weight: 400;">${element.agreement || ''}</th>
+    <th width="10%" style="color: #11093c; text-align: left; padding: 4px 5px; font-size: 12px; font-weight: 400;">${element.amendment || ''}</th>
+    <th width="10%" style="color: #11093c; text-align: left; padding: 4px 5px; font-size: 9px; font-weight: 400;">${element.partner || ''}</th>`
+    if(element.phase){
+      response +=`<th width="10%" style="color: #11093c; text-align: center; padding: 4px 5px; font-size: 12px; font-weight: 400;">
+                  <span style="border-radius: 3px; color: #488abf; background: #e6eef4; padding: 2px 3px;">${element.phase}</span>
+                  </th>`
+    }else{
+      response +=`<th width="10%" style="text-align: center; padding: 4px 5px; font-size: 12px; font-weight: 400;"></th>`
+    }
+    response+=`
+    <th width="15%" style="color:${element.projected[1]}; text-align: left; padding: 4px 5px; font-size: 12px; font-weight: 400;">${element.projected[0] || '$0'}</th>
+    <th width="15%" style="color:${element.encumbered[1]}; text-align: left; padding: 4px 5px; font-size: 12px; font-weight: 400;">${element.encumbered[0] || '$0'}</th>
+    <th width="15%" style="color:${element.tyler[1]}; text-align: left; padding: 4px 5px; font-size: 12px; font-weight: 400;">${element.tyler[0] || '$0'}</th>
+    <th width="17%" style="color:#11093C; text-align: left; padding: 4px 5px; font-size: 12px; font-weight: 400;">${element.date || ''}</th>
+    </tr>`
+    return response;
+  }).join('');
+
+  html = html.split('${finacialRows}').join(finacialRows);
+
+  html = html.split('${incomeProjected}').join(INCOME_PROJECTED_COST);
+  html = html.split('${incomeEncumbered}').join(INCOME_ENCUMBERED_COST);
+  html = html.split('${incomeTyler}').join(INCOME_TYLER_COST);
+
+  html = html.split('${expenseProjected}').join(EXPENSE_PROJECTED_COST);
+  html = html.split('${expenseEncumbered}').join(EXPENSE_ENCUMBERED_COST);
+  html = html.split('${expenseTyler}').join(EXPENSE_TYLER_COST);
+
+  html = html.split('${totalProjected}').join(TOTAL_PROJECTED_COST);
+  html = html.split('${totalEncumbered}').join(TOTAL_ENCUMBERED_COST);
+  html = html.split('${totalTyler}').join(TOTAL_TYLER_COST);
+  //END PROJECT FINANCIALS
   let _components =
     (components !== void 0 || components !== []) && components?.length > 0
       ? components

@@ -44,7 +44,7 @@ import ProjectService from 'bc/services/project.service.js';
 import db from 'bc/config/db.js';
 import sequelize from 'sequelize';
 import teamsService from 'bc/services/teams.service.js';
-
+import financialService from 'bc/services/financial.service.js';
 
 
 const Op = sequelize.Op;
@@ -1116,14 +1116,15 @@ router.post('/project-pdf/:id', async (req, res) => {
 
    try {
       const data = await ProjectService.getDetails(id);
-      let components = await componentsByEntityId(
+      const components = await componentsByEntityId(
          id,
          'projectid',
          'type',
          'asc'
       );
-      let attachments = await attachmentService.listAttachments(1, 10, 'created_date','asc', id);
-      let pdfObject = await newPrintProject(data, components, mapImage, roadMap,attachments);
+      const financialData = await financialService.getFinancialInformation(id, []);
+      const attachments = await attachmentService.listAttachments(1, 10, 'created_date', 'asc', id);
+      let pdfObject = await newPrintProject(data, components, mapImage, roadMap, attachments, financialData);
       pdfObject.toBuffer(function (err, buffer) {
          if (err) return res.send(err);
          res.type('pdf');
