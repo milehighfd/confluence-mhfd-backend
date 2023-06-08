@@ -209,7 +209,8 @@ const formatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0,
 });
 
-export const newPrintProject = async (_data, components, mapImage, roadMap, attachments, financialData) => {
+export const newPrintProject = async (_data, components, mapImage, roadMap, attachments, financialData, appUser) => {
+  console.log(appUser)
   let data = {};
   var html = fs.readFileSync('./pdf-templates/Projects2.html', 'utf8');
   Object.keys(_data).forEach((k) => {

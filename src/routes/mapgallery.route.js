@@ -1125,7 +1125,7 @@ router.post('/project-pdf/:id', async (req, res) => {
       );
       const financialData = await financialService.getFinancialInformation(id, []);
       const attachments = await attachmentService.listAttachments(1, 10, 'created_date', 'asc', id);
-      let pdfObject = await newPrintProject(data, components, mapImage, roadMap, attachments, financialData);
+      let pdfObject = await newPrintProject(data, components, mapImage, roadMap, attachments, financialData, appUser);
       pdfObject.toBuffer(function (err, buffer) {
          if (err) return res.send(err);
          res.type('pdf');
