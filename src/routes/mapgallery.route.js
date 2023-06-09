@@ -403,14 +403,17 @@ function getFilters(params) {
       tipoid = 'problemid';      
       if (params.name) {
          let name = params.name;
-         if (!Number.isInteger(Number(name))) {
-            name += ' ';
-          }
          if (filters.length > 0) {
-            filters = filters = ` and (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${name}%' OR ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${name}%')`;
+            filters = filters = ` and (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${name} %' OR 
+            ${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '% ${name}%' OR
+            ${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '${name}' OR
+            ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${name}%')`;
          }
          else {
-            filters = ` (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${name}%' OR ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${name}%') `;
+            filters = ` (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${name} %' OR
+            ${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '% ${name}%' OR
+            ${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '${name}' OR
+            ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${name}%') `;
          }
       }
 
