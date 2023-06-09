@@ -56,42 +56,10 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     },
-    segment_id: {
-      type: DataType.STRING,
-      allowNull: false
-    },
-    Section_ID: {
-      type: DataType.STRING,
-      allowNull: false
-    },
     in_out_district: {
       type: DataType.STRING,
       allowNull: false
     },
-    from_elevation: {
-      type: DataType.INTEGER,
-      primaryKey: false
-    },
-    to_elevation: {
-      type: DataType.INTEGER,
-      primaryKey: false
-    },
-    Slope: {
-      type: DataType.INTEGER,
-      primaryKey: false
-    },
-    adjusted_slope: {
-      type: DataType.STRING,
-      allowNull: false
-    },
-    catchment_acres: {
-      type: DataType.INTEGER,
-      primaryKey: false
-    },
-    catchment_sum: {
-      type: DataType.INTEGER,
-      primaryKey: false
-    }, 
     CFS: {
       type: DataType.INTEGER,
       primaryKey: false
@@ -108,21 +76,9 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       primaryKey: false
     },
-    Catch_Count: {
-      type: DataType.INTEGER,
-      primaryKey: false
-    },
-    stream_length_feet: {
-      type: DataType.INTEGER,
-      primaryKey: false
-    },
     stream_length_miles: {
       type: DataType.INTEGER,
       primaryKey: false
-    },
-    Trace_Name: {
-      type: DataType.STRING,
-      allowNull: false
     },
     Enabled: {
       type: DataType.INTEGER,
