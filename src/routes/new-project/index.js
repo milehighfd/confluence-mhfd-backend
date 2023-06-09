@@ -25,7 +25,7 @@ const router = express.Router();
 const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'special_item_point',
 'special_item_linear', 'special_item_area', 'channel_improvements_linear',
 'channel_improvements_area', 'removal_line', 'removal_area', 'storm_drain',
-'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area', 'stream_improvement_measure'];
+'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area', 'stream_improvement_measure','stream_improvement_measure_copy'];
 
 router.use('/capital', capitalRouter);
 router.use('/maintenance', maintenanceRouter);
@@ -44,6 +44,9 @@ router.post('/get-components-by-components-and-geom', auth,async (req, res) => {
   }
   if (components) {
     for (const component of components) {
+      if (component.source_table_name === 'stream_improvement_measure_copy') {
+        component.source_table_name = 'stream_improvement_measure';
+      }
       if (!usableComponents[component.source_table_name]) {
         usableComponents[component.source_table_name] = [];
       }
@@ -53,6 +56,8 @@ router.post('/get-components-by-components-and-geom', auth,async (req, res) => {
   logger.info('my usable components ' + JSON.stringify(components, null, 2));
   let result = [];
   for (const component of COMPONENTS_TABLES) {
+    console.log(usableComponents[component])
+    console.log(component)
     if (!geom && !usableComponents[component]) {
       continue;
     }
@@ -74,6 +79,7 @@ router.post('/get-components-by-components-and-geom', auth,async (req, res) => {
     const projectid = component === 'stream_improvement_measure' ? 'project_id' : 'projectid';
     const sql = `SELECT objectid, cartodb_id, ${type}, ${jurisdiction}, status, ${cost}, ${problemid}  FROM ${component} 
     WHERE  ${queryWhere} AND ${projectid} is null AND status NOT LIKE '%Constructed%'`;
+    console.log(sql);
     const query = {
       q: sql
     };
