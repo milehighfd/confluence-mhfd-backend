@@ -148,10 +148,6 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     },
-    name_change: {
-      type: DataType.STRING,
-      allowNull: false
-    },
     GlobalID: {
       type: DataType.STRING,
       allowNull: false
