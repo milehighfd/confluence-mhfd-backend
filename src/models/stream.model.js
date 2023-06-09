@@ -176,10 +176,6 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     },
-    major_stream_id: {
-      type: DataType.STRING,
-      allowNull: false
-    },
     major_stream_name: {
       type: DataType.STRING,
       allowNull: false
