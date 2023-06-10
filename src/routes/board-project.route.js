@@ -74,21 +74,20 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
   if (before === undefined) before = null;
   if (after === undefined) after = null;
   const rankColumnName = `rank${columnNumber}`;
-  const where = {
+  const board_id = (await BoardProject.findOne({
+    attributes: [
+      'board_id',
+    ],
+    where: {
+      board_project_id
+    }
+  }) || {}).board_id;
+  const columnCountWhere = {
     board_id,
     [rankColumnName]: { [Op.ne]: null }
   };
-  const count = await BoardProject.count({ where });
+  const count = await BoardProject.count({ where: columnCountWhere });
   if (before === null && after === null && count > 0) {
-    const boardProject = await BoardProject.findOne({
-      attributes: [
-        'board_id',
-      ],
-      where: {
-        board_project_id
-      }
-    });
-    const board_id = boardProject.board_id;
     const where = { board_id };
     if (`${columnNumber}` !== '0') {
       where[`req${columnNumber}`] = { [Op.ne]: null };
