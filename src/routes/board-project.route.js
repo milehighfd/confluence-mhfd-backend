@@ -74,7 +74,12 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
   if (before === undefined) before = null;
   if (after === undefined) after = null;
   const rankColumnName = `rank${columnNumber}`;
-  if (before === null && after === null) {
+  const where = {
+    board_id,
+    [rankColumnName]: { [Op.ne]: null }
+  };
+  const count = await BoardProject.count({ where });
+  if (before === null && after === null && count > 0) {
     const boardProject = await BoardProject.findOne({
       attributes: [
         'board_id',
@@ -131,7 +136,9 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
     logger.error('after is null but afterIndex is not -1');
   }
   let lexo;
-  if (before === null) {
+  if (count === 0) {
+    lexo = LexoRank.middle().toString();
+  } else if (before === null) {
     lexo = LexoRank.parse(after).genPrev().toString();
   } else if (after === null) {
     lexo = LexoRank.parse(before).genNext().toString();
