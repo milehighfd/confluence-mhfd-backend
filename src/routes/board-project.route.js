@@ -221,13 +221,17 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
     where: { board_project_id }
   });
   const currentProjectId = beforeUpdate.project_id;
-  const columnsChanged = [];
+  const columnsChanged = [0];
+  const allCurrentAmounts = {};
   for (let pos = 1; pos <= 5; pos++) {
     const reqColumnName = `req${pos}`;
     const rankColumnName = `rank${pos}`;
     const valueHasChanged = beforeUpdate[reqColumnName] !== req.body[reqColumnName];
     if (valueHasChanged) {
       columnsChanged.push(pos);
+      allCurrentAmounts[reqColumnName] = req.body[reqColumnName];
+    } else {
+      allCurrentAmounts[reqColumnName] = beforeUpdate[reqColumnName];
     }
     if (beforeUpdate[reqColumnName] === null && req.body[reqColumnName] !== null) {
       const where = {
@@ -276,9 +280,33 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
     }
   }
   try {
+    let rank0 = null; 
+    let shouldMoveToWorkspace = true;
+    for(let currentRank in allCurrentAmounts) {
+      if(allCurrentAmounts[currentRank]){
+        shouldMoveToWorkspace = false;
+      }
+    }
+    if ( shouldMoveToWorkspace) {
+      const projects = await BoardProject.findAll({
+        where: {
+          board_id: beforeUpdate.board_id,
+          rank0: {[Op.ne]: null}
+        },
+        order: [[`rank${0}`, 'ASC']],
+        limit: 1
+      });
+      if (projects.length === 0) {
+        rank0 = LexoRank.middle().toString();
+      } else {
+        const firstProject = projects[0];
+        rank0 = LexoRank.parse(firstProject[`rank0`]).genPrev().toString();
+      }
+    }
+    console.log('Value of rank0', rank0, 'shpould move', shouldMoveToWorkspace);
     let x = await BoardProject.update(
       {
-        req1, req2, req3, req4, req5, year1, year2, ...updateFields
+        rank0, req1, req2, req3, req4, req5, year1, year2, ...updateFields
       },
       { where: { board_project_id } }
     );
