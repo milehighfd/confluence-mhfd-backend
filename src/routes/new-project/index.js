@@ -332,8 +332,9 @@ router.get('/components-by-problemid', auth, async (req, res) => {
                   ...row
                 });
                 result.push({
-                  table: component,
-                  ...row
+                  source_table_name: component,
+                  ...row,
+                  object_id: row.objectid
                 });
               });
               logger.info('DO SELECT FOR ' + component);
