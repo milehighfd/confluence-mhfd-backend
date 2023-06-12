@@ -96,6 +96,14 @@ router.post('/get-components-by-components-and-geom', auth,async (req, res) => {
         })
         logger.info(JSON.stringify(body.rows));
         result = result.concat(body.rows);
+        result = result.map(obj => {
+          return {
+            ...obj,
+            source_table_name: obj.table,
+            object_id: obj.objectid,
+          };
+        });
+        console.log(result);
         logger.info('length ' + result.length);
         //logger.info(JSON.stringify(body, null, 2));
       } else {
