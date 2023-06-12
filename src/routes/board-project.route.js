@@ -239,8 +239,12 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
         order: [[`rank${pos}`, 'DESC']],
         limit: 1
       });
-      const lastProject = projects[0];
-      updateFields[rankColumnName] = LexoRank.parse(lastProject[`rank${[pos]}`]).genNext().toString();
+      if (projects.length === 0) {
+        updateFields[rankColumnName] = LexoRank.middle().toString();
+      } else {
+        const lastProject = projects[0];
+        updateFields[rankColumnName] = LexoRank.parse(lastProject[`rank${[pos]}`]).genNext().toString();  
+      }
     } else if (beforeUpdate[reqColumnName] !== null && req.body[reqColumnName] === null) {
       updateFields[rankColumnName] = null;
     }
