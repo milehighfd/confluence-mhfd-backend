@@ -579,7 +579,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       cosponsor,
       project_id
     );
-    costService.setIsActiveToFalse(project_id);
+    await costService.setIsActiveToFalse(project_id);
     //update aditional cost
     await costService.updateProjectOverhead(
       {
