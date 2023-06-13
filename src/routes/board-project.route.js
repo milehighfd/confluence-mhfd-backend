@@ -223,6 +223,7 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
 }
 router.put('/:board_project_id/cost',[auth], async (req, res) => {
   logger.info('get board project cost by id');
+  try {
   const { board_project_id } = req.params;
   const user = req.user;
   const { req1, req2, req3, req4, req5, year1, year2 } = req.body;
@@ -289,7 +290,6 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
       );
     }
   }
-  try {
     let rank0 = null; 
     let shouldMoveToWorkspace = true;
     for(let currentRank in allCurrentAmounts) {
