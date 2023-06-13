@@ -81,7 +81,6 @@ router.post('/signup', validator(UserService.requiredFields('signup')), async (r
     // delete fake user
     await User.destroy({
       where: {
-        id: processed.id,
         email: processed.email,
       }});
     logger.info(`Starting function count for users.route/signup`);
