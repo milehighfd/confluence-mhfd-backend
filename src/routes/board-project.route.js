@@ -266,8 +266,9 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
   }
   for ( let pos = 0; pos < columnsChanged.length ; ++pos) {
     const currentColumn = columnsChanged[pos];
-    const reqColumnName = `req${currentColumn}`;
-    const currentCost   = req.body[reqColumnName] ? req.body[reqColumnName]: 0; 
+    if (currentColumn !== 0) {
+      const reqColumnName = `req${currentColumn}`;
+      const currentCost   = req.body[reqColumnName] ? req.body[reqColumnName]: 0; 
       updateAndCreateProjectCosts(
         currentColumn,
         currentCost,
@@ -275,6 +276,7 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
         user,
         board_project_id
       );
+    }
   }
   for(let i = 1; i<=2; ++i){
     const valueYearHasChanged = beforeUpdate[`year${i}`] !== req.body[`year${i}`];
