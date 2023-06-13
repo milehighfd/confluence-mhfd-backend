@@ -195,12 +195,15 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
     }
   }).then(async () => {
     logger.info('PROJECTS TO BE UPDATED'+ projectsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
+    logger.info("about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
     const projectCostCreated = await ProjectCost.create({
       cost: currentCost,
       project_id: currentProjectId,
       code_cost_type_id: CODE_COST_TYPE_ID,
       created_by: user.email,
-      modified_by: user.email
+      modified_by: user.email,
+      is_active: 1,
+      last_modified: new Date()
     });
     const project_cost_id = projectCostCreated.dataValues.project_cost_id;
     await BoardProjectCost.create({
