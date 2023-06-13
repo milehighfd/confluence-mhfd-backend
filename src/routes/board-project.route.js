@@ -187,33 +187,39 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
   });
   
   const projectsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
-  ProjectCost.update({
-    is_active: 0
-  }, {
-    where: {
-      project_cost_id: { [Op.in]: projectsIdsToUpdate }
-    }
-  }).then(async () => {
-    logger.info('PROJECTS TO BE UPDATED'+ projectsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
-    logger.info("about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
-    const projectCostCreated = await ProjectCost.create({
-      cost: currentCost,
-      project_id: currentProjectId,
-      code_cost_type_id: CODE_COST_TYPE_ID,
-      created_by: user.email,
-      modified_by: user.email,
-      is_active: 1,
-      last_modified: new Date()
-    });
-    const project_cost_id = projectCostCreated.dataValues.project_cost_id;
-    await BoardProjectCost.create({
-        board_project_id: board_project_id,
-        project_cost_id: project_cost_id,
-        req_position: currentColumn,
+  try {
+    ProjectCost.update({
+      is_active: 0
+    }, {
+      where: {
+        project_cost_id: { [Op.in]: projectsIdsToUpdate }
+      }
+    }).then(async () => {
+      logger.info('PROJECTS TO BE UPDATED'+ projectsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
+      logger.info("about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
+      const projectCostCreated = await ProjectCost.create({
+        cost: currentCost,
+        project_id: currentProjectId,
+        code_cost_type_id: CODE_COST_TYPE_ID,
         created_by: user.email,
-        last_modified_by: user.email
+        modified_by: user.email,
+        is_active: 1,
+        last_modified: new Date()
+      });
+      console.log('PROJECT COST IS CREATED', projectCostCreated);
+      const project_cost_id = projectCostCreated.dataValues.project_cost_id;
+      await BoardProjectCost.create({
+          board_project_id: board_project_id,
+          project_cost_id: project_cost_id,
+          req_position: currentColumn,
+          created_by: user.email,
+          last_modified_by: user.email
+      });
     });
-  });
+  } catch (error) {
+    logger.error("ERROR AT PROJECT COST is", error)
+  }
+  
 }
 router.put('/:board_project_id/cost',[auth], async (req, res) => {
   logger.info('get board project cost by id');
