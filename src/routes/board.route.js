@@ -506,100 +506,105 @@ router.post('/get-or-create', async (req, res) => {
 
 router.post('/board-for-positions2', async (req, res) => {
   logger.info(`Starting endpoint board/board-for-positions2 with params ${JSON.stringify(req.body, null, 2)}`)
-  let { board_id, position, filters } = req.body;
-  const {
-    project_priorities,
-    project_counties,
-    project_local_governments,
-    project_service_areas
-  } = filters || {};
-  if (!board_id || position === undefined || position === null) {
-    return res.sendStatus(400);
-  }
-  const attributes = [
-    'board_project_id',
-    'project_id',
-    'projectname',
-    `rank${position}`,
-    'origin',
-    `originPosition${position}`,
-  ];
-  const where = {
-    board_id,
-    [`rank${position}`]: { [Op.ne]: null }
-  };
-
-  if (`${position}` !== '0') {
-    attributes.push(`req${position}`);
-  }
-  if (project_priorities && project_priorities.length > 0) {
-    where[`originPosition${position}`] = { [Op.in]: project_priorities };
-  }
-
-  const boardProjects = (await BoardProject.findAll({
-    attributes,
-    where,
-    order: [[`rank${position}`, 'ASC']],
-  })).map(d => d.dataValues);
-  let boardProjectsWithData = await Promise.all(
-    boardProjects.map(async (boardProject) => {
-      console.log(JSON.stringify(boardProject, null, 2));
-      let details;
-      try {
-        details = (await projectService.getLightDetails(
-          boardProject.project_id,
-          project_counties,
-          project_local_governments,
-          project_service_areas
-        )).dataValues;
-      } catch (e) {
-        logger.error(e);
-      }
-      if (details) {
-        if (details.project_service_areas && details.project_service_areas.length > 0) {
-          details.project_service_areas = details.project_service_areas.map(
-              (psa) => ({
-                  code_service_area_id: psa.code_service_area_id,
-                  service_area_name: psa.CODE_SERVICE_AREA.service_area_name,
-              })
-          );
+  try {
+    let { board_id, position, filters } = req.body;
+    const {
+      project_priorities,
+      project_counties,
+      project_local_governments,
+      project_service_areas
+    } = filters || {};
+    if (!board_id || position === undefined || position === null) {
+      return res.sendStatus(400);
+    }
+    const attributes = [
+      'board_project_id',
+      'project_id',
+      'projectname',
+      `rank${position}`,
+      'origin',
+      `originPosition${position}`,
+    ];
+    const where = {
+      board_id,
+      [`rank${position}`]: { [Op.ne]: null }
+    };
+  
+    if (`${position}` !== '0') {
+      attributes.push(`req${position}`);
+    }
+    if (project_priorities && project_priorities.length > 0) {
+      where[`originPosition${position}`] = { [Op.in]: project_priorities };
+    }
+  
+    const boardProjects = (await BoardProject.findAll({
+      attributes,
+      where,
+      order: [[`rank${position}`, 'ASC']],
+    })).map(d => d.dataValues);
+    let boardProjectsWithData = await Promise.all(
+      boardProjects.map(async (boardProject) => {
+        console.log(JSON.stringify(boardProject, null, 2));
+        let details;
+        try {
+          details = (await projectService.getLightDetails(
+            boardProject.project_id,
+            project_counties,
+            project_local_governments,
+            project_service_areas
+          )).dataValues;
+        } catch (e) {
+          logger.error('ERROR AT GET LIGHT DETAILS ' + e);
         }
-        if (details.project_counties && details.project_counties.length > 0) {
-          details.project_counties = details.project_counties.map(
-              (pc) => ({
-                  state_county_id: pc.state_county_id,
-                  county_name: pc.CODE_STATE_COUNTY.county_name,
-              })
-          );
-        }
-        if (details.project_local_governments && details.project_local_governments.length > 0) {
-          details.project_local_governments = details.project_local_governments.map(
-              (plg) => {
+        if (details) {
+          if (details.project_service_areas && details.project_service_areas.length > 0) {
+            details.project_service_areas = details.project_service_areas.map(
+                (psa) => ({
+                    code_service_area_id: psa.code_service_area_id,
+                    service_area_name: psa.CODE_SERVICE_AREA.service_area_name,
+                })
+            );
+          }
+          if (details.project_counties && details.project_counties.length > 0) {
+            details.project_counties = details.project_counties.map(
+                (pc) => ({
+                    state_county_id: pc.state_county_id,
+                    county_name: pc.CODE_STATE_COUNTY.county_name,
+                })
+            );
+          }
+          if (details.project_local_governments && details.project_local_governments.length > 0) {
+            details.project_local_governments = details.project_local_governments.map(
+                (plg) => {
+                  return ({
+                    code_local_government_id: plg.code_local_government_id,
+                    local_government_name: plg.CODE_LOCAL_GOVERNMENT.local_government_name,
+                  });
+                }
+            );
+          }
+          if (details.currentId && details.currentId.length > 0) {
+            details.currentId = details.currentId.map(
+              (current) => {
                 return ({
-                  code_local_government_id: plg.code_local_government_id,
-                  local_government_name: plg.CODE_LOCAL_GOVERNMENT.local_government_name,
+                  code_status_type_id: current?.code_phase_type?.code_status_type?.code_status_type_id,
+                  status_name: current?.code_phase_type?.code_status_type?.status_name,
+                  code_project_type_id: current?.code_phase_type?.code_project_type?.code_project_type_id
                 });
               }
-          );
+            )
+          }
         }
-        if (details.currentId && details.currentId.length > 0) {
-          details.currentId = details.currentId.map(
-            (current) => {
-              return ({
-                code_status_type_id: current?.code_phase_type?.code_status_type?.code_status_type_id,
-                status_name: current?.code_phase_type?.code_status_type?.status_name,
-                code_project_type_id: current?.code_phase_type?.code_project_type?.code_project_type_id
-              });
-            }
-          )
-        }
-      }
-      boardProject.projectData = details;
-      return boardProject;
-    })
-  );
-  logger.info(`Finished endpoint for board/board-for-positions2`);
-  res.send(boardProjectsWithData);
+        boardProject.projectData = details;
+        return boardProject;
+      })
+    );
+    logger.info(`Finished endpoint for board/board-for-positions2`);
+    res.send(boardProjectsWithData);
+  } catch (error) {
+    logger.error('ERROR AT POSITIONS2 ' + error)
+  }
+  
 });
 
 router.post('/', async (req, res) => {

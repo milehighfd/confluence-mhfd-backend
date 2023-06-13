@@ -33,7 +33,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
     console.log(boardProject);
     return res.status(200).send(boardProject);
   } catch (error) {
-    logger.error(error);
+    logger.error('ERROR FROM GET COST ' + error);
     return res.status(500).send({ error: error });
   }
 });
