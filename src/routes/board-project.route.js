@@ -312,7 +312,7 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
     );
     return res.status(200).send({ newCost: x, columnsChanged });
   } catch (error) {
-    logger.error(error);
+    logger.error("ERROR At route cost" +error);
     return res.status(500).send({ error: error });
   }
 });
