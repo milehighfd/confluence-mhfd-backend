@@ -264,18 +264,19 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
       updateFields[rankColumnName] = null;
     }
   }
+  const allPromises = [];
   for ( let pos = 0; pos < columnsChanged.length ; ++pos) {
     const currentColumn = columnsChanged[pos];
     if (currentColumn !== 0) {
       const reqColumnName = `req${currentColumn}`;
       const currentCost   = req.body[reqColumnName] ? req.body[reqColumnName]: 0; 
-      updateAndCreateProjectCosts(
+      allPromises.push(updateAndCreateProjectCosts(
         currentColumn,
         currentCost,
         currentProjectId,
         user,
         board_project_id
-      );
+      ));
     }
   }
   for(let i = 1; i<=2; ++i){
@@ -283,15 +284,16 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
     if(valueYearHasChanged) {
       const currentColumn = 0 ; // due to limit in req position this value is whatever. 
       const currentCost = req.body[`year${i}`] ? req.body[`year${i}`] : 0;
-      updateAndCreateProjectCosts(
+      allPromises.push(updateAndCreateProjectCosts(
         currentColumn, // year1 = 6, year2 = 7
         currentCost,
         currentProjectId,
         user,
         board_project_id
-      );
+      ));
     }
   }
+  await Promise.all(allPromises);
     let rank0 = null; 
     let shouldMoveToWorkspace = true;
     for(let currentRank in allCurrentAmounts) {
