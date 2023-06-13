@@ -60,7 +60,7 @@ router.get('/get-signup-email', async (req, res) => {
 router.post('/signup', validator(UserService.requiredFields('signup')), async (req, res) => {
   logger.info(`Starting endpoint users.route/signup with params ${JSON.stringify(req.params, null, 2)}`);
   try {
-    const { user, tokenId } = req.body;
+    const { tokenId, ...user } = req.body;
     const processed = await User.findOne({
       where: {
         changePasswordId: tokenId,
