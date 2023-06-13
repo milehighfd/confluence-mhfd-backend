@@ -187,28 +187,29 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
   });
   
   const projectsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
-  await ProjectCost.update({
+  ProjectCost.update({
     is_active: 0
   }, {
     where: {
       project_cost_id: { [Op.in]: projectsIdsToUpdate }
     }
-  });
-  console.log('ZXCV bout to create project cost with', currentColumn, currentCost, currentProjectId);
-  const projectCostCreated = await ProjectCost.create({
-    cost: currentCost,
-    project_id: currentProjectId,
-    code_cost_type_id: CODE_COST_TYPE_ID,
-    created_by: user.email,
-    modified_by: user.email
-  });
-  const project_cost_id = projectCostCreated.dataValues.project_cost_id;
-  await BoardProjectCost.create({
-      board_project_id: board_project_id,
-      project_cost_id: project_cost_id,
-      req_position: currentColumn,
+  }).then(async () => {
+    logger.info('PROJECTS TO BE UPDATED'+ projectsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
+    const projectCostCreated = await ProjectCost.create({
+      cost: currentCost,
+      project_id: currentProjectId,
+      code_cost_type_id: CODE_COST_TYPE_ID,
       created_by: user.email,
-      last_modified_by: user.email
+      modified_by: user.email
+    });
+    const project_cost_id = projectCostCreated.dataValues.project_cost_id;
+    await BoardProjectCost.create({
+        board_project_id: board_project_id,
+        project_cost_id: project_cost_id,
+        req_position: currentColumn,
+        created_by: user.email,
+        last_modified_by: user.email
+    });
   });
 }
 router.put('/:board_project_id/cost',[auth], async (req, res) => {
