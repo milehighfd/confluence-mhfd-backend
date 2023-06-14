@@ -332,7 +332,7 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
 router.get('/:board_project_id/duplicate', async (req, res) => {
   const { board_project_id } = req.params;
   const board_id = 84;
-  boardService.duplicateBoardProject(board_project_id, board_id);
+  await boardService.duplicateBoardProject(board_project_id, board_id);
   res.send(200);
 })
 export default router;

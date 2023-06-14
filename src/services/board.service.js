@@ -179,8 +179,8 @@ const duplicateBoardProject = async (board_project_id, new_board_id) => {
     year2: bp.year2,
     origin: bp.origin,
   };
-  // const newProjectBoard = await saveProjectBoard(duplicatedData);
-  // const duplicatedBoardProjectId = newProjectBoard.board_project_id;
+  const newProjectBoard = await saveProjectBoard(duplicatedData);
+  const duplicatedBoardProjectId = newProjectBoard.board_project_id;
   console.log('Duplicated BoardProjectId', board_project_id);
   const allBoardProjectCostToDuplicate = await BoardProjectCost.findAll({
     where: {
@@ -194,16 +194,43 @@ const duplicateBoardProject = async (board_project_id, new_board_id) => {
     where: {
       is_active: 1,
       project_cost_id: {[Op.in]: projectCostIds}
-    }
+    },
+    attributes: {exclude: ['last_modified']}
   });
   const costsidsActive = allProjectCostsActive.map((costs) => costs.dataValues.project_cost_id);
   // los allboardprojectcosttoduplicate, filtrados por projectcostsactives
-  const projectcostswithCostActive = allBoardProjectCostToDuplicate.filter((boardcost) => costsidsActive.includes(boardcost.dataValues.project_cost_id));
-
-  console.log('This are the costs actives', costsidsActive, 'board project with costs actives are: ', projectcostswithCostActive.map((a)=> a.dataValues));
+  const boardProjectCostwithCostActive = allBoardProjectCostToDuplicate.filter((boardcost) => costsidsActive.includes(boardcost.dataValues.project_cost_id));
+  const offsetMillisecond = 20;
+  let mainModifiedDate = new Date();
+  // tengo que crear los duplicados de allProjectCostsActive con nuevo id y lastmodified which should be edited ( automatic? )
+  // con el nuevo id, insertar
+  allProjectCostsActive.forEach(async (projectCostToDup, index) => {
+    const {project_cost_id, ...newProjectCost} = projectCostToDup.dataValues;
+    const newPC = await ProjectCost.create({
+      last_modified: moment(mainModifiedDate).subtract( offsetMillisecond * index).toDate(),
+      ...newProjectCost
+    });
+    // tengo que sacar el board_project_cost que tenga el project_cost_id de projectCostToDup, 
+    const BPCToDuplicate = boardProjectCostwithCostActive.filter((boardprojectcost => boardprojectcost.project_cost_id === projectCostToDup.project_cost_id));
+    if (BPCToDuplicate.length > 0) {
+      const {
+        board_project_cost_id,
+        board_project_id,
+        project_cost_id,
+        updatedAt,
+        ...toDuplicate
+      } = BPCToDuplicate[0].dataValues;
+      const newBoardProjectCost = await BoardProjectCost.create({
+        board_project_id: duplicatedBoardProjectId,
+        project_cost_id: newPC.project_cost_id,
+        ...toDuplicate
+      });
+      console.log('Ya estaria creado este board project cost', newBoardProjectCost);
+    }
+    // insertar los boardprojectcost con los nuevos ids de projectcosts y el nuevo boardprojectid (newprojectboard)
+    
+  });
   
-  // tengo que crear los duplicados de projectcosts 
-  // insertar los boardprojectcost con los nuevos ids de projectcosts y el nuevo boardprojectid (newprojectboard)
 
 }
 export default {
