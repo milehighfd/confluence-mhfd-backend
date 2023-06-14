@@ -1,6 +1,7 @@
 import fs from 'fs';
 import pdf from 'html-pdf';
 import attachmentService from 'bc/services/attachment.service.js';
+import moment from 'moment';
 
 var limit = 0;
 const priceFormatter = (value) => {
@@ -314,9 +315,21 @@ export const newPrintProject = async (_data, components, mapImage, roadMap, atta
 
   let income = [0,0,0]
   let expense = [0,0,0]
-  financialData.sort((e1, e2) =>
-  e1.sortValue > e2.sortValue ? 1 : e1.sortValue < e2.sortValue ? -1 : 0,
-  );
+
+  financialData.sort((e1, e2) => {
+    let res = 0;
+    res = moment(e1.effective_date, "MM-DD-YYYY") < moment(e2.effective_date, "MM-DD-YYYY") ? 1 : moment(e1.effective_date, "MM-DD-YYYY") > moment(e2.effective_date, "MM-DD-YYYY") ? -1 : 0
+    if (res === 0) {
+      if (e1.project_partner_name === 'MHFD') {
+        return -1
+      } else {
+        return 1
+      }
+    } else {
+      return res
+    }
+  });
+
   const mappingDataForFinancial = financialData.map((element) => {
     const agreement = element?.agreement_number || '';
     const amendment =

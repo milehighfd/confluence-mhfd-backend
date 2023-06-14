@@ -132,8 +132,7 @@ const getFinancialInformation = async (id, filters) => {
     );
     if (!PARTNER_FILTER || PARTNER_FILTER === MHFD_PARTNER_ID) {
         // mhfd project cost creation 
-        resProjectCost.forEach(function callback(projectCost, index) {
-            projectCost.sortValue = index;
+        resProjectCost.forEach(function callback(projectCost) {
             if (projectCost?.cost_project_partner_contribution && projectCost?.cost > 0 && !projectCost?.code_cost_type?.cost_type_name.includes('Vendor')) {
                 resProjectCost.push({
                     "agreement_number": projectCost.agreement_number,
@@ -155,7 +154,6 @@ const getFinancialInformation = async (id, filters) => {
                         "sort_value": projectCost.code_phase_type?.sort_value || '',
                     },
                     "code_phase_type_name": projectCost.code_phase_type_name,
-                    "sortValue": projectCost.sortValue - 1,
                 })
             }
         });
