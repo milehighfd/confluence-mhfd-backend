@@ -187,7 +187,8 @@ const createCosts = async (req, res) => {
 };
 const deleteProject = async (req, res) => {
   try {
-    const deleteProject = await projectService.deleteByProjectId(req.params['project_id']);
+    const projectId = parseInt(req.params['project_id'], 10);
+    const deleteProject = await projectService.deleteByProjectId(projectId);
     if (deleteProject) {
       logger.info('project destroyed ');
       res.status(200).send('Deleted');

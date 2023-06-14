@@ -62,6 +62,8 @@ const BusinessAssociateContact = db.businessAssociateContact;
 const BusinessAddress = db.businessAdress;
 const CodeRuleActionItem = db.codeRuleActionItem;
 const BoardProject = db.boardProject;
+const ProjectSpatial = db.projectSpatial;
+const BoardProjectCost = db.boardProjectCost;
 
 async function getCentroidsOfAllProjects () {
   const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid, projectid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE}`;
@@ -1807,6 +1809,7 @@ const deleteByProjectId = async (Projectsid) => {
   try {
     try {
       const project = await Project.findByPk(Projectsid);
+      console.log(project)
       if (project) {
         await project.update({
           current_project_status_id: null
@@ -1818,6 +1821,19 @@ const deleteByProjectId = async (Projectsid) => {
       }
     } catch (error) {
       logger.info('Error removing project association with ProjectStatus:', error);
+      throw error;
+    }
+    try {
+      const project_project_id = await BoardProject.findOne({
+        attributes: ['board_project_id'],
+        where: { project_id: Projectsid }
+      });
+      await BoardProjectCost.destroy({
+        where: { board_project_id: project_project_id.board_project_id },
+        transaction: t
+      });
+    } catch (error) {
+      logger.info('Error removing board project cost:', error);
       throw error;
     }
     const models = [
@@ -1832,6 +1848,7 @@ const deleteByProjectId = async (Projectsid) => {
       ProjectProposedAction,
       ProjectCost,
       BoardProject,
+      ProjectSpatial,
     ];
     await Promise.all(models.map(model => {
       return model.destroy({
@@ -1839,11 +1856,14 @@ const deleteByProjectId = async (Projectsid) => {
         transaction: t
       });
     }));
-    const project = await Project.destroy({
+    const deletedProject = await Project.destroy({
       where: { project_id: Projectsid },
       transaction: t
     });
-    if (project) {
+    await t.commit();
+    console.log(deletedProject)
+    console.log(Projectsid)
+    if (deletedProject) {
       logger.info('project destroyed ');
       return true;
     } else {
