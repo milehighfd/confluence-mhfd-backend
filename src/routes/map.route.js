@@ -241,10 +241,10 @@ router.get('/search/:query', async (req, res) => {
           const filteredPlaces = places.map(ele => {
             return {
               text: ele.text,
-              place_name: ele.place_name,
+              place_name: ele.place_name.split(',')[1].trim(),
               center: ele.center,
               type: 'geocoder'
-          }});
+          }}).filter(ele => ele.text.toLowerCase().includes(query.toLowerCase()));
           resolve(filteredPlaces);
         });
       } else {
