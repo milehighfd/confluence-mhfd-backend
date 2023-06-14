@@ -4,6 +4,8 @@ import sequelize from 'sequelize';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import auth from 'bc/auth/auth.js';
+import boardService from 'bc/services/board.service.js';
+
 const Board = db.board;
 const BoardProject = db.boardProject;
 const ProjectCost = db.projectCost;
@@ -30,7 +32,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         board_project_id
       }
     });
-    console.log(boardProject);
+    console.log("BOARD PROJECT RETURN", boardProject);
     return res.status(200).send(boardProject);
   } catch (error) {
     logger.error('ERROR FROM GET COST ' + error);
@@ -126,7 +128,6 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
       );
     });
     const results = await Promise.all(proms);
-    console.log(' ZXCVResylts ins here', results);
     return res.status(200).send(results);
   }
   if (before === null && beforeIndex !== -1) {
@@ -166,11 +167,9 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
       if(key.includes('req') && key!='req0' ) {
         const costToUpdate = otherFields[key] ? otherFields[key]: 0;
         const columnToEdit = key.match(/\d+/)[0];
-        console.log(' ZXCVColumn to edit is', columnToEdit, key, otherFields);
         updateAndCreateProjectCosts(columnToEdit, costToUpdate, boardProject.project_id, {email: 'test@test'}, board_project_id);
       }
     }
-    console.log('WHAT ', x);
     return res.status(200).send(x);
   } catch (error) {
     logger.error(error);
@@ -330,5 +329,10 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
     return res.status(500).send({ error: error });
   }
 });
-
+router.get('/:board_project_id/duplicate', async (req, res) => {
+  const { board_project_id } = req.params;
+  const board_id = 84;
+  boardService.duplicateBoardProject(board_project_id, board_id);
+  res.send(200);
+})
 export default router;

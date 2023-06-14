@@ -5,6 +5,8 @@ import sequelize from 'sequelize';
 import { LexoRank } from 'lexorank';
 
 const BoardProject = db.boardProject;
+const ProjectCost = db.projectCost;
+const BoardProjectCost = db.boardProjectCost;
 const { Op } = sequelize;
 
 const saveBoard = async (
@@ -153,11 +155,63 @@ const countByGroup = async (group, board_id) => {
   }
 }
 
+const duplicateBoardProject = async (board_project_id, new_board_id) => {
+  const boardProjects = await BoardProject.findAll({
+    where: { board_project_id }
+  });
+  const bp = boardProjects[0];
+  console.log('BP', bp);
+  const duplicatedData = {
+    board_id: new_board_id,
+    project_id: bp.project_id,
+    rank0: bp.rank0,
+    rank1: bp.rank1,
+    rank2: bp.rank2,
+    rank3: bp.rank3,
+    rank4: bp.rank4,
+    rank5: bp.rank5,
+    req1: bp.req1,
+    req2: bp.req2,
+    req3: bp.req3,
+    req4: bp.req4,
+    req5: bp.req5,
+    year1: bp.year1,
+    year2: bp.year2,
+    origin: bp.origin,
+  };
+  // const newProjectBoard = await saveProjectBoard(duplicatedData);
+  // const duplicatedBoardProjectId = newProjectBoard.board_project_id;
+  console.log('Duplicated BoardProjectId', board_project_id);
+  const allBoardProjectCostToDuplicate = await BoardProjectCost.findAll({
+    where: {
+      board_project_id: board_project_id
+    }
+  });
+  console.log('This are all project cost to duplicate', allBoardProjectCostToDuplicate);
+  const projectCostIds = allBoardProjectCostToDuplicate.map((abpcd) => abpcd.dataValues.project_cost_id);
+  console.log('Project cost ids', projectCostIds);
+  const allProjectCostsActive = await ProjectCost.findAll({
+    where: {
+      is_active: 1,
+      project_cost_id: {[Op.in]: projectCostIds}
+    }
+  });
+  const costsidsActive = allProjectCostsActive.map((costs) => costs.dataValues.project_cost_id);
+  // los allboardprojectcosttoduplicate, filtrados por projectcostsactives
+  const projectcostswithCostActive = allBoardProjectCostToDuplicate.filter((boardcost) => costsidsActive.includes(boardcost.dataValues.project_cost_id));
+
+  console.log('This are the costs actives', costsidsActive, 'board project with costs actives are: ', projectcostswithCostActive.map((a)=> a.dataValues));
+  
+  // tengo que crear los duplicados de projectcosts 
+  // insertar los boardprojectcost con los nuevos ids de projectcosts y el nuevo boardprojectid (newprojectboard)
+
+}
 export default {
   saveBoard,
   createNewBoard,
   saveProjectBoard,
   specialCreationBoard,
   countByGroup,
-  reCalculateColumn
+  reCalculateColumn,
+  duplicateBoardProject
 };
