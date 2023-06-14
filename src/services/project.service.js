@@ -1871,11 +1871,11 @@ const deleteByProjectId = async (Projectsid) => {
       return true;
     } else {
       logger.info('project not found');
-      return false;
+      await t.rollback();
+      return false;      
     }
   }
-  catch (error) {
-    await t.rollback();
+  catch (error) {    
     throw error;
   }
 }
