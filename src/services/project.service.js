@@ -61,6 +61,7 @@ const Op = sequelize.Op;
 const BusinessAssociateContact = db.businessAssociateContact;
 const BusinessAddress = db.businessAdress;
 const CodeRuleActionItem = db.codeRuleActionItem;
+const BoardProject = db.boardProject;
 
 async function getCentroidsOfAllProjects () {
   const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid, projectid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE}`;
@@ -1801,11 +1802,43 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
   }
 }
 
-const deleteByProjectId= async (Projectsid) => {
-  const project = Project.destroy({
-    where: {
-      project_id: Projectsid 
-    }});
+const deleteByProjectId = async (Projectsid) => {
+  try {
+    const project = await Project.findByPk(Projectsid);
+    if (project) {
+      await project.update({
+        current_project_status_id: null
+      }, {
+        where: {
+          project_id: Projectsid
+        }
+      });
+    }
+    console.log('Project association with ProjectStatus removed.');
+  } catch (error) {
+    console.error('Error removing project association with ProjectStatus:', error);
+  }
+  const models = [
+    ProjectStatus,
+    ProjectPartner,
+    ProjectStaff,
+    ProjectCounty,
+    ProjectLocalGovernment,
+    ProjectServiceArea,
+    ProjectDetail,
+    ProjectAttachment,
+    ProjectProposedAction,
+    ProjectCost,
+    BoardProject,
+  ];  
+  await Promise.all(models.map(model => {
+    return model.destroy({
+      where: { project_id: Projectsid },
+    });
+  }));
+  const project =  await Project.destroy({
+    where: { project_id: Projectsid }
+  });
   if (project) {
     logger.info('project destroyed ');
     return true;
