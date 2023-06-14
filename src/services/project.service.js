@@ -1824,14 +1824,17 @@ const deleteByProjectId = async (Projectsid) => {
       throw error;
     }
     try {
-      const project_project_id = await BoardProject.findOne({
+      const board_project_id = await BoardProject.findOne({
         attributes: ['board_project_id'],
-        where: { project_id: Projectsid }
-      });
-      await BoardProjectCost.destroy({
-        where: { board_project_id: project_project_id.board_project_id },
+        where: { project_id: Projectsid },
         transaction: t
       });
+      if(board_project_id){
+        await BoardProjectCost.destroy({
+          where: { board_project_id: board_project_id.board_project_id },
+          transaction: t
+        });
+      }      
     } catch (error) {
       logger.info('Error removing board project cost:', error);
       throw error;

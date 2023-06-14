@@ -74,6 +74,7 @@ import streamImprovementMeasure from 'bc/models/stream_improvement_measure.model
 import codeNotificationType from 'bc/models/code_notification_type.model.js';
 import projectStatusNotification from 'bc/models/project_status_notification.model.js';
 import notifications from 'bc/models/notification.model.js';
+import projectSpatial from 'bc/models/project_spatial.model.js';
 
 Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
   date = this._applyTimezone(date, options);
@@ -164,6 +165,7 @@ db.projectServiceArea = projectServiceArea(sequelize, Sequelize);
 db.notifications = notifications(sequelize, Sequelize);
 db.codeNotificationType = codeNotificationType(sequelize, Sequelize);
 db.projectStatusNotification = projectStatusNotification(sequelize, Sequelize);
+db.projectSpatial = projectSpatial(sequelize, Sequelize);
 // 14 layers called
 db.gradeControlStructure = gradeControlStructure(sequelize, Sequelize);
 db.pipeAppurtenances = pipeAppurtenances(sequelize, Sequelize);
