@@ -69,11 +69,14 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const splitedServicearea = servicearea.split(',');
   let result = [];
   try {
-    const codePhaseForCapital = await CodePhaseType.findOne({
+    let codePhaseForCapital = await CodePhaseType.findOne({
       where: {
-        code_phase_type_id: defaultProjectId.code_project_type_id,
+        code_project_type_id: defaultProjectId.code_project_type_id,
       },
-    });
+    });    
+    if (!codePhaseForCapital) {
+      codePhaseForCapital = await CodePhaseType.findOne();
+    }
     const { duration, duration_type } = codePhaseForCapital;
     const formatDuration = duration_type[0].toUpperCase();
     const officialProjectName = projectname + (projectname === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '')
@@ -97,7 +100,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     );
     await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
     const response = await projectStatusService.saveProjectStatusFromCero(
-      defaultProjectId.code_project_type_id,
+      codePhaseForCapital.code_phase_type_id,
       project_id,
       moment().format('YYYY-MM-DD HH:mm:ss'),
       moment().format('YYYY-MM-DD HH:mm:ss'),
