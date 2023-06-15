@@ -107,12 +107,12 @@ const getFinancialInformation = async (id, filters) => {
                     nest: true,
                     include: {
                         model: BusinessAssociates,
-                        attributes: ['business_associate_name', 'business_associates_id'],
+                        attributes: ['business_name', 'business_associates_id'],
                         required: true,
                     }
                 });
                 projectCost.business_associates_id = projectPartnerName?.business_associate?.business_associates_id;
-                projectCost.project_partner_name = projectPartnerName?.business_associate?.business_associate_name || 'N/A';
+                projectCost.project_partner_name = projectPartnerName?.business_associate?.business_name || 'N/A';
             }
 
             if (projectCost.code_phase_type_id !== null) {
