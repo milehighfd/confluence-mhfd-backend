@@ -171,6 +171,9 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
         board_project_id
       }
     });
+    const offsetMillisecond = 20;
+    let mainModifiedDate = new Date();
+    let multiplicator = 0;
     const x = await BoardProject.update(
       { [rankColumnName]: lexo, ...otherFields },
       { where: { board_project_id } }
@@ -179,7 +182,15 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
       if(key.includes('req') && key!='req0' ) {
         const costToUpdate = otherFields[key] ? otherFields[key]: 0;
         const columnToEdit = key.match(/\d+/)[0];
-        updateAndCreateProjectCosts(columnToEdit, costToUpdate, boardProject.project_id, {email: 'test@test'}, board_project_id);
+        updateAndCreateProjectCosts(
+          columnToEdit,
+          costToUpdate,
+          boardProject.project_id,
+          user,
+          board_project_id,
+          moment(mainModifiedDate).subtract( offsetMillisecond * multiplicator).toDate()
+        );
+        multiplicator++;
       }
     }
     return res.status(200).send(x);
