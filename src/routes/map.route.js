@@ -254,15 +254,19 @@ router.get('/search/:query', async (req, res) => {
       resolve([]);
     })})
   );  
-  let sql = `SELECT ST_x(ST_LineInterpolatePoint(st_linemerge(St_union(the_geom)), 0.5)) as x, ST_y(ST_LineInterpolatePoint(st_linemerge(st_union(the_geom)), 0.5)) as y, str_name FROM streams WHERE  str_name ILIKE '%${query}%' AND ST_IsEmpty(the_geom) = false group by str_name`;
-  console.log('el query ' , sql);
+  let sql = `SELECT ST_x(ST_LineInterpolatePoint(st_linemerge(St_union(the_geom)), 0.5)) as x, 
+  ST_y(ST_LineInterpolatePoint(st_linemerge(st_union(the_geom)), 0.5)) as y, 
+  str_name FROM streams WHERE  str_name ILIKE '%${query}%' AND ST_IsEmpty(the_geom) = false group by str_name 
+  HAVING ST_GeometryType(st_linemerge(St_union(the_geom))) = 'ST_LineString'`;
+
   sql =  encodeURIComponent(sql);
+  console.log('el query ' , sql);
   const URL = `${CARTO_URL}&q=${sql}`;
   promises.push(new Promise((resolve, reject) => {
     https.get(URL, response => {   
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200) {        
         let str = '';
-        response.on('data', function (chunk) {
+        response.on('data', function (chunk) {          
           str += chunk;
         });
         response.on('end', function () {
