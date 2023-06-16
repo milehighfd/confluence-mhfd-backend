@@ -9,6 +9,7 @@ import boardService from 'bc/services/board.service.js';
 
 const Board = db.board;
 const BoardProject = db.boardProject;
+const Project = db.project;
 const ProjectCost = db.projectCost;
 const BoardProjectCost = db.boardProjectCost;
 
@@ -202,6 +203,11 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
   }
 });
 const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentProjectId, user, board_project_id, lastModifiedDate) => {
+  const countOriginalProject = await Project.count({ where: { project_id: currentProjectId } });
+  if (countOriginalProject === 0) {
+    logger.error(`Project with id = ${currentProjectId} does not exist`);
+    return;
+  }
   const CODE_COST_TYPE_ID = 22; // Work Request Code cost type // TODO: verify which code will be correct 
   const currentBoardProjectCosts = await BoardProjectCost.findAll({
     where: {
