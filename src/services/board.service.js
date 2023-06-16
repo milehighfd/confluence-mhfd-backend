@@ -198,7 +198,7 @@ const duplicateBoardProject = async (board_project_id, new_board_id) => {
     const costsidsActive = allProjectCostsActive.map((costs) => costs.dataValues.project_cost_id);
     // los allboardprojectcosttoduplicate, filtrados por projectcostsactives
     const boardProjectCostwithCostActive = allBoardProjectCostToDuplicate.filter((boardcost) => costsidsActive.includes(boardcost.dataValues.project_cost_id));
-    const offsetMillisecond = 20;
+    const offsetMillisecond = 120;
     let mainModifiedDate = new Date();
     // tengo que crear los duplicados de allProjectCostsActive con nuevo id y lastmodified which should be edited ( automatic? )
     // con el nuevo id, insertar
