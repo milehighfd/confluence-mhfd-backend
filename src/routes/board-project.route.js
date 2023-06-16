@@ -2,6 +2,7 @@ import express from 'express';
 import { LexoRank } from 'lexorank';
 import sequelize from 'sequelize';
 import db from 'bc/config/db.js';
+import moment from 'moment';
 import logger from 'bc/config/logger.js';
 import auth from 'bc/auth/auth.js';
 import boardService from 'bc/services/board.service.js';
@@ -114,11 +115,22 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
           { ...otherFields, [rankColumnName]: lastLexo },
           { where: { board_project_id: board_project_id } }
         );
+        const offsetMillisecond = 20;
+        let mainModifiedDate = new Date();
+        let multiplicator = 0;
         for(const keys in otherFields) {
           if(keys.includes('req')) {
             const costToUpdate = otherFields[keys] ? otherFields[keys]: 0;
             const columnToEdit = keys.match(/[0-9]+/);
-            updateAndCreateProjectCosts(columnToEdit, costToUpdate, project.project_id, user, board_project_id);
+            updateAndCreateProjectCosts(
+              columnToEdit,
+              costToUpdate,
+              project.project_id,
+              user,
+              board_project_id,
+              moment(mainModifiedDate).subtract( offsetMillisecond * multiplicator).toDate()
+            );
+            multiplicator++;
           }
         }
       }
@@ -176,7 +188,7 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
     return res.status(500).send({ error: error });
   }
 });
-const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentProjectId, user, board_project_id) => {
+const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentProjectId, user, board_project_id, lastModifiedDate) => {
   const CODE_COST_TYPE_ID = 22; // Work Request Code cost type // TODO: verify which code will be correct 
   const currentBoardProjectCosts = await BoardProjectCost.findAll({
     where: {
@@ -203,7 +215,7 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
         created_by: user.email,
         modified_by: user.email,
         is_active: 1,
-        last_modified: new Date()
+        last_modified: lastModifiedDate
       });
       console.log('PROJECT COST IS CREATED', projectCostCreated);
       const project_cost_id = projectCostCreated.dataValues.project_cost_id;
@@ -264,6 +276,8 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
     }
   }
   const allPromises = [];
+  const offsetMillisecond = 20;
+  let mainModifiedDate = new Date();
   for ( let pos = 0; pos < columnsChanged.length ; ++pos) {
     const currentColumn = columnsChanged[pos];
     if (currentColumn !== 0) {
@@ -274,10 +288,12 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
         currentCost,
         currentProjectId,
         user,
-        board_project_id
+        board_project_id,
+        moment(mainModifiedDate).subtract( offsetMillisecond * pos).toDate()
       ));
     }
   }
+  mainModifiedDate = new Date();
   for(let i = 1; i<=2; ++i){
     const valueYearHasChanged = beforeUpdate[`year${i}`] !== req.body[`year${i}`];
     if(valueYearHasChanged) {
@@ -288,7 +304,8 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
         currentCost,
         currentProjectId,
         user,
-        board_project_id
+        board_project_id,
+        moment(mainModifiedDate).subtract( offsetMillisecond * i).toDate()
       ));
     }
   }
