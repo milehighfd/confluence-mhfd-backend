@@ -163,7 +163,7 @@ async function getGeojsonCentroids(bounds, body) {
               "problem_severity": row.problem_severity,
               "problem_score": row.problem_score,
               "mhfd_scale": row.mhfd_scale,
-              "estimated_cost": row.estimated_cost,
+              "estimated_cost": row.estimated_cost ? row.estimated_cost : -1,
               "component_cost": row.component_cost,
               "component_status": row.component_status,
               "globalid": row.globalid,
