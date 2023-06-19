@@ -20,7 +20,13 @@ const getStatus = async () => {
   const codeStatusType = await CodeStatusType.findAll({
     order: [
       ['status_name', 'ASC']
-    ]
+    ],
+    where: {
+      [Op.or]: [
+        { code_status_type_id: { [Op.gt]: 3 } },
+        { code_status_type_id: -99 }
+      ]
+    }
   });
   const groups = codeStatusType.map((data) => {
     return { value: data.status_name, id: data.code_status_type_id };
