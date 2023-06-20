@@ -18,6 +18,7 @@ const saveBoard = async (
   projecttype,
   projectsubtype
 ) => {
+  const DRAFT_STATUS = 1;
   logger.info('create Board ' + JSON.stringify(
     board_id, 
     project_id,
@@ -36,6 +37,7 @@ const saveBoard = async (
       projectname: projectname,
       projecttype: projecttype,
       projectsubtype: projectsubtype,
+      code_status_type_id: DRAFT_STATUS,
       createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt: moment().format('YYYY-MM-DD HH:mm:ss')
     });
