@@ -30,6 +30,7 @@ const ProjectServiceArea = db.projectServiceArea;
 const ProjectCounty = db.projectCounty;
 const ProjectProposedAction = db.projectProposedAction;
 const CodeStateCounty = db.codeStateCounty;
+const CodeServiceArea = db.codeServiceArea;
 
 const insertUniqueObject = (array, idPropertyName, groupPropertyKeyName, object) => {
   const isDuplicate = array.some(item => {
@@ -855,6 +856,115 @@ const updateProjectStatus = async (boards, status, creator) => {
     }
 }
 
+const sendBoardProjectsToProp = async (boards, prop) => {
+  let include;
+  let relationshipProp;
+  let codeProp;
+  if (prop === 'servicearea') {
+    relationshipProp = 'project_service_areas';
+    codeProp = 'CODE_SERVICE_AREA';
+    include = {
+      model: ProjectServiceArea,
+      separate: true,
+      required: false,
+      include: {
+        model: CodeServiceArea,
+        required: false,
+        attributes: [
+          ['service_area_name', 'name']
+        ]
+      }
+    };
+  } else {
+    relationshipProp = 'project_counties';
+    codeProp = 'CODE_STATE_COUNTY';
+    include = {
+      model: ProjectCounty,
+      required: false,
+      separate: true,
+      include: {
+        model: CodeStateCounty,
+        required: false,
+        attributes: [
+          ['county_name', 'name']
+        ]
+      },
+    }
+  }
+  for (var i = 0 ; i < boards.length ; i++) {
+      let board = boards[i].dataValues;
+      let boardProjects = await BoardProject.findAll({ where: { board_id: board.board_id } });
+      let map = {};
+      [0, 1, 2, 3, 4, 5].forEach(index => {
+          let arr = [];
+          for (var j = 0 ; j < boardProjects.length ; j++) {
+              let bp = boardProjects[j];
+              if (bp[`rank${index}`] != null) {
+                  arr.push({
+                      bp,
+                      value: bp[`rank${index}`]
+                  });
+              }
+          };
+          arr.sort();
+          arr.forEach((r, i) => {
+                  if (!map[r.bp.project_id]) {
+                      map[r.bp.project_id] = {}
+                  }
+                  map[r.bp.project_id][index] = i;
+              });
+      });
+      for (var j = 0 ; j < boardProjects.length ; j++) {
+          let bp = boardProjects[j];
+          let p = (await Project.findOne({
+            where: { project_id: bp.project_id },
+            include
+          })).dataValues;
+          let propValues = p[relationshipProp];
+          for (let k = 0 ; k < propValues.length ; k++) {
+              let propVal = propValues[k][codeProp].dataValues.name;
+              if (prop === 'county' && !propVal.includes('County')) {
+                  propVal = propVal.trimEnd().concat(' County');
+              } else if (prop === 'servicearea' && !propVal.includes(' Service Area')) {
+                  propVal = propVal.trimEnd().concat(' Service Area');
+              }
+              let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype);
+              logger.info(`Destiny board by prop ${prop} id is ${destinyBoard !== null ? destinyBoard.board_id : destinyBoard}`);
+              if (destinyBoard === null || destinyBoard.board_id === null) {
+                logger.info('Destiny board not found');
+                continue;
+              }
+              let newBoardProject = new BoardProject({
+                  board_id: destinyBoard.board_id,
+                  project_id: bp.project_id,
+                  rank0: bp.rank0,
+                  rank1: bp.rank1,
+                  rank2: bp.rank2,
+                  rank3: bp.rank3,
+                  rank4: bp.rank4,
+                  rank5: bp.rank5,
+                  originPosition0: map[bp.project_id][0],
+                  originPosition1: map[bp.project_id][1],
+                  originPosition2: map[bp.project_id][2],
+                  originPosition3: map[bp.project_id][3],
+                  originPosition4: map[bp.project_id][4],
+                  originPosition5: map[bp.project_id][5],
+                  req1: bp.req1 == null ? null : (bp.req1 / propValues.length),
+                  req2: bp.req2 == null ? null : (bp.req2 / propValues.length),
+                  req3: bp.req3 == null ? null : (bp.req3 / propValues.length),
+                  req4: bp.req4 == null ? null : (bp.req4 / propValues.length),
+                  req5: bp.req5 == null ? null : (bp.req5 / propValues.length),
+                  year1: bp.year1,
+                  year2: bp.year2,
+                  origin: board.locality,
+              });
+              //TODO: Jorge create the relationship on cost table
+              console.log(newBoardProject);
+              await newBoardProject.save();
+          }
+      }
+  }
+}
 
 const sendBoardProjectsToDistrict = async (boards) => {
     try {
@@ -989,9 +1099,9 @@ const moveCardsToNextLevel = async (board, creator) => {
             });
         }
         logger.info(`Sending ${boardsToCounty.length} to county`);
-        //await sendBoardProjectsToProp(boardsToCounty, 'county');
+        await sendBoardProjectsToProp(boardsToCounty, 'county');
         logger.info(`Sending ${boardsToServiceArea.length} to service area`);
-        //await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea');
+        await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea');
         logger.info(`Sending ${boards.length} to district`);
         await sendBoardProjectsToDistrict(boards);
         logger.info(`Update ${boards.length} as Requested`);
