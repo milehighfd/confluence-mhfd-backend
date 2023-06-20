@@ -17,6 +17,7 @@ import {
    componentCounterRoute,
    componentParamFilterRoute,
    componentParamFilterCounter,
+   componentParamFilterCounterNoBounds,
    componentFilterIds
 } from 'bc/routes/mapgallery.component.route.js';
 import {
@@ -2328,6 +2329,7 @@ const getcountForProblem = async (req, res) => {
 
 router.post('/params-filter-components', componentParamFilterRoute)
 router.post('/params-filter-components-db', componentParamFilterCounter)
+router.post('/params-filter-components-db-nobounds',componentParamFilterCounterNoBounds)
 router.post('/params-filter-components-ids', componentFilterIds)
 router.post('/params-filter-projects', projectParamFilterRoute)
 router.post('/params-filter-problems', problemParamFilterRoute)

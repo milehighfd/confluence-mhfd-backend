@@ -499,6 +499,88 @@ export async function componentParamFilterCounter(req, res) {
     logger.error(error);
   } 
 }
+
+export async function componentParamFilterCounterNoBounds(req, res) {
+  try {
+    const body = req.body;
+    const data = {};
+    let dataPromises = [
+      groupService.getJurisdiction(),   //0
+      groupService.getCounty(),         //1
+      groupService.getServiceArea(),    //2
+      groupService.getMhfdStaff(),      //3
+    ];
+    //TODO: action type is the list of all actions
+
+    let resolvedPromises = await Promise.all(dataPromises);
+
+    data.status = actionStatuses;
+    data.jurisdiction = resolvedPromises[0];
+    data.county = resolvedPromises[1];
+    data.servicearea = resolvedPromises[2];
+    data.mhfdmanager = resolvedPromises[3];
+    data.estimatedCost = [];
+    data.yearofstudy = [];
+    data.actiontype = []; //TODO: list of actions
+    
+    const filters = {
+      ...body,
+      servicearea: body.servicearea ? body.servicearea.split(','): '',
+      county: body.county ? body.county.split(','): '',
+      component_type: body.component_type ? body.component_type.split(','): '',
+      status: body.status ? body.status.split(','): '',
+      jurisdiction: body.jurisdiction ? body.jurisdiction.split(','): '',
+      mhfdmanager: body.mhfdmanager ? body.mhfdmanager.split(','): '' 
+    };
+    console.log('filters', filters);
+    let allActions = await getActions(filters);
+    const result = {
+      "component_type": componentTypes,
+      "status":  actionStatuses,
+      "yearofstudy":  null,
+      "mhfdmanager":  data.mhfdmanager,
+      "estimatedcost":  null,
+      "jurisdiction":  data.jurisdiction,
+      "county":  data.county,
+      "servicearea":  data.servicearea
+    };
+
+    let allActionCounter = allActions.map((group) => group.actions);
+    let newAllactionCounter =[].concat.apply([], allActionCounter);
+    
+    result.county.forEach((d) => {
+        d.counter = newAllactionCounter.reduce((pre, current) => {
+          if (current?.county=== d.value) {
+            return pre + 1;
+          }
+          return pre;
+        }, 0);
+    });
+    result.servicearea.forEach((d) => {
+      d.counter = newAllactionCounter.reduce((pre, current) => {
+        if (current.servicearea && current?.servicearea === d.value) {
+          return pre + 1;
+        } 
+        if (current.service_area && current?.service_area === d.value) {
+          return pre + 1;
+        } 
+        return pre;
+      }, 0);
+    });
+    const actionsIds = allActions.map(value => ({
+      ...value,
+      actions: value.actions.map(act => act.component_id)
+    }));
+    res.status(200).send({
+      filtersData: result,
+      actionsIds: actionsIds,
+      counter: newAllactionCounter.length
+    });
+  } catch (error) {
+    logger.error(error);
+  } 
+}
+
 export async function componentParamFilterRoute(req, res) {
   logger.info(`Starting endpoint mapgallery.component.route/params-filter-components with params ${JSON.stringify(req.params, null, 2)}`);
   try {
