@@ -731,11 +731,12 @@ const updateProjectStatus = async (boards, status, creator) => {
             }
         }));
     }
-    const boardProjects = await Promise.all(prs);
+    let boardProjects = (await Promise.all(prs)).flat();
     const prs2 = [];
     for (const boardProject of boardProjects) {
         if (boardProject.position0 === null) {
-            prs2.push(ProjectStatus.findOne({
+            prs2.push(
+              ProjectStatus.findOne({
                 where: {
                     project_id: boardProject.project_id
                 },
@@ -746,7 +747,8 @@ const updateProjectStatus = async (boards, status, creator) => {
                 },
                 raw: true,
                 nest: true,
-            }));
+              })
+            );
         } else {
             prs2.push(Promise.resolve(null));
         }
@@ -756,19 +758,20 @@ const updateProjectStatus = async (boards, status, creator) => {
     const updatedProjectsStatuses = [];
     for (const projectStatus of projectStatuses) {
         if (projectStatus) {
-            prs3.push(CodePhaseType.findOne({
+            prs3.push(
+              CodePhaseType.findOne({
                 where: {
                     code_status_type_id: status,
                     code_project_type_id: projectStatus?.code_phase_type?.code_project_type_id,
                 },
-            }));
+              })
+            );
             updatedProjectsStatuses.push(ProjectStatus.update({            
                 actual_end_date: moment().format('YYYY-MM-DD HH:mm:ss')
             }, 
             {
                 where: {
-                    code_status_type_id: status,
-                    code_project_type_id: projectStatus?.code_phase_type?.code_project_type_id,
+                  project_status_id: projectStatus.project_status_id
                 }
             }));
         } else {
@@ -826,7 +829,8 @@ const updateProjectStatus = async (boards, status, creator) => {
     const DRAFT_STATUS = 1;
     const REQUESTED_STATUS = 2;
     const APPROVED_STATUS = 3;
-    if (status === APPROVED_STATUS) {
+    const addisFlag = false; /* TODO: ask addis about this code */
+    if (status === APPROVED_STATUS && addisFlag) {
         const notDoneStatuses = await CodePhaseType.findAll({
             where:{
                 code_project_type_id: currentProjectStatus?.code_phase_type?.code_project_type_id,
