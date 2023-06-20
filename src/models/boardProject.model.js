@@ -98,7 +98,10 @@ export default (sequelize, DataType) => {
     },
     projectsubtype: {
       type: DataType.STRING
-    }
+    },
+    code_status_type_id: {
+      type: DataType.INTEGER
+    },
   }, {
     freezeTableName: true,
     tableName: 'board_project'
