@@ -111,6 +111,10 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     const PROJECT_TYPE = 'Special';
     const { localitiesBoard, typesList } = createLocalitiesBoard(isWorkPlan, sendToWR, year, PROJECT_TYPE, splitedJurisdiction, splitedCounty, splitedServicearea);
     const localNames = await getLocalitiesNames(localitiesBoard);
+    if (isWorkPlan === 'true'){
+      typesList.push('WORK_PLAN');
+      localNames.push('MHFD District Work Plan');
+    }
     const promisesLocal = [];
     for (let i = 0; i < localNames.length; i++) {
       const local = localNames[i];
