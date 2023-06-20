@@ -880,7 +880,7 @@ const updateProjectStatus = async (boards, status, creator) => {
     }
 }
 
-const sendBoardProjectsToProp = async (boards, prop) => {
+const sendBoardProjectsToProp = async (boards, prop, creator) => {
   let include;
   let relationshipProp;
   let codeProp;
@@ -1001,7 +1001,7 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                     i,
                     newBoardProject[`req${i}`]? newBoardProject[`req${i}`] : 0,
                     bp.project_id,
-                    {email: 'test@test.com'},
+                    {email: creator},
                     newBoardProjectCreated.board_project_id,
                     moment(mainModifiedDate).subtract( offsetMillisecond * i).toDate()
                   );
@@ -1141,9 +1141,9 @@ const moveCardsToNextLevel = async (board, creator) => {
             });
         }
         logger.info(`Sending ${boardsToCounty.length} to county`);
-        await sendBoardProjectsToProp(boardsToCounty, 'county');
+        await sendBoardProjectsToProp(boardsToCounty, 'county', creator);
         logger.info(`Sending ${boardsToServiceArea.length} to service area`);
-        await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea');
+        await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea', creator);
         logger.info(`Sending ${boards.length} to district`);
         await sendBoardProjectsToDistrict(boards);
         logger.info(`Update ${boards.length} as Requested`);
