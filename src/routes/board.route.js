@@ -42,6 +42,10 @@ const insertUniqueObject = (array, idPropertyName, groupPropertyKeyName, object)
   }
 }
 
+const DRAFT_STATUS = 1;
+const REQUESTED_STATUS = 2;
+const APPROVED_STATUS = 3;
+
 router.get('/:id/filters', async (req, res) => {
   logger.info(`Starting endpoint board/:id/filters with params ${JSON.stringify(req.params, null, 2)}`);
   const { id } = req.params;
@@ -826,9 +830,6 @@ const updateProjectStatus = async (boards, status, creator) => {
     Promise.all(prs5).then(() => {
         logger.info('Projects are updated');
     });
-    const DRAFT_STATUS = 1;
-    const REQUESTED_STATUS = 2;
-    const APPROVED_STATUS = 3;
     const addisFlag = false;
     if (status === APPROVED_STATUS && addisFlag) {
         const currentProjectStatus = await ProjectStatus.findOne({
@@ -990,6 +991,7 @@ const sendBoardProjectsToProp = async (boards, prop, creator) => {
                     year1: bp.year1,
                     year2: bp.year2,
                     origin: board.locality,
+                    code_status_type_id: REQUESTED_STATUS
                 });
                 //TODO: Jorge create the relationship on cost table
                 const newBoardProjectCreated = await newBoardProject.save();
