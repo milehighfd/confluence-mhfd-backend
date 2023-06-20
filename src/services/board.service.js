@@ -72,11 +72,9 @@ const createNewBoard = async (
     projecttype,
     status ));
   try {
-    const id = await db.sequelize.query('SELECT MAX(board_id) FROM boards');
-    const lastID = Object.values(id[0][0]).length > 0 ? Object.values(id[0][0])[0] : -1;
-    const insertQuery = `INSERT INTO boards (board_id, locality, year, projecttype, type, status, createdAt, updatedAt)
+    const insertQuery = `INSERT INTO boards (locality, year, projecttype, type, status, createdAt, updatedAt)
     OUTPUT inserted . *
-    VALUES('${lastID + 1}', '${locality}', '${year}', '${projecttype}', '${type}', '${status}', '${moment().format('YYYY-MM-DD HH:mm:ss')}', '${moment().format('YYYY-MM-DD HH:mm:ss')}')`;
+    VALUES('${locality}', '${year}', '${projecttype}', '${type}', '${status}', '${moment().format('YYYY-MM-DD HH:mm:ss')}', '${moment().format('YYYY-MM-DD HH:mm:ss')}')`;
     const data = await db.sequelize.query(
       insertQuery,
       {
@@ -98,11 +96,9 @@ const specialCreationBoard = async (
   substatus
 ) => {
   try {
-    const id = await db.sequelize.query('SELECT MAX(board_id) FROM boards');
-    const lastID = Object.values(id[0][0]).length > 0 ? Object.values(id[0][0])[0] : -1;
-    const insertQuery = `INSERT INTO boards (board_id, locality, year, projecttype, type, status, createdAt, updatedAt, comment, substatus)
+    const insertQuery = `INSERT INTO boards (locality, year, projecttype, type, status, createdAt, updatedAt, comment, substatus)
     OUTPUT inserted . *
-    VALUES('${lastID + 1}', '${locality}', '${year}', '${projecttype}', '${type}', '${status}', '${moment().format('YYYY-MM-DD HH:mm:ss')}', '${moment().format('YYYY-MM-DD HH:mm:ss')}', '${comment}', '${substatus}')`;
+    VALUES('${locality}', '${year}', '${projecttype}', '${type}', '${status}', '${moment().format('YYYY-MM-DD HH:mm:ss')}', '${moment().format('YYYY-MM-DD HH:mm:ss')}', '${comment}', '${substatus}')`;
     const data = await db.sequelize.query(
       insertQuery,
       {
