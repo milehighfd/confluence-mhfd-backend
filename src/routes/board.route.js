@@ -829,8 +829,20 @@ const updateProjectStatus = async (boards, status, creator) => {
     const DRAFT_STATUS = 1;
     const REQUESTED_STATUS = 2;
     const APPROVED_STATUS = 3;
-    const addisFlag = false; /* TODO: ask addis about this code */
+    const addisFlag = false;
     if (status === APPROVED_STATUS && addisFlag) {
+        const currentProjectStatus = await ProjectStatus.findOne({
+          where: {
+            project_id: bp.project_id /* TODO: Addis should find which bp to use in this code */
+          },
+          include: {
+            model: CodePhaseType,
+            required: true,
+            attributes:['code_project_type_id', 'code_phase_type_id']
+          },
+          raw: true,
+          nest: true,
+        });
         const notDoneStatuses = await CodePhaseType.findAll({
             where:{
                 code_project_type_id: currentProjectStatus?.code_phase_type?.code_project_type_id,
@@ -979,9 +991,9 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                     year2: bp.year2,
                     origin: board.locality,
                 });
-                //TODO: Jorge create the relationship on cost table
                 console.log(newBoardProject);
                 await newBoardProject.save();
+                //TODO: Jorge create the relationship on cost table
               }
           }
       }
