@@ -353,12 +353,24 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
       }
     }
     console.log('Value of rank0', rank0, 'shpould move', shouldMoveToWorkspace);
-    let x = await BoardProject.update(
+    const [updateCount] = await BoardProject.update(
       {
         rank0, req1, req2, req3, req4, req5, year1, year2, ...updateFields
       },
       { where: { board_project_id } }
     );
+    let x;
+    if (updateCount > 0) {
+      x = await BoardProject.findOne({where: { board_project_id }, attributes: [
+        'req1',
+        'req2',
+        'req3',
+        'req4',
+        'req5',
+        'year1',
+        'year2'
+      ]})
+    }
     return res.status(200).send({ newCost: x, columnsChanged });
   } catch (error) {
     logger.error("ERROR At route cost" +error);
