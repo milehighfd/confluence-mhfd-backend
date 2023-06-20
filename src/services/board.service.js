@@ -7,6 +7,7 @@ import { LexoRank } from 'lexorank';
 const BoardProject = db.boardProject;
 const ProjectCost = db.projectCost;
 const BoardProjectCost = db.boardProjectCost;
+const Project = db.project;
 const { Op } = sequelize;
 
 const saveBoard = async (
@@ -229,6 +230,57 @@ const duplicateBoardProject = async (board_project_id, new_board_id) => {
     });
   }
 }
+
+const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentProjectId, user, board_project_id, lastModifiedDate) => {
+  console.log('Update And Create Cost ');
+  const countOriginalProject = await Project.count({ where: { project_id: currentProjectId } });
+  if (countOriginalProject === 0) {
+    logger.error(`Project with id = ${currentProjectId} does not exist`);
+    return;
+  }
+  const CODE_COST_TYPE_ID = 22; // Work Request Code cost type // TODO: verify which code will be correct 
+  const currentBoardProjectCosts = await BoardProjectCost.findAll({
+    where: {
+      board_project_id,
+      req_position: currentColumn
+    }
+  });
+  
+  const projectsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
+  try {
+    ProjectCost.update({
+      is_active: 0
+    }, {
+      where: {
+        project_cost_id: { [Op.in]: projectsIdsToUpdate }
+      }
+    }).then(async () => {
+      logger.info('PROJECTS TO BE UPDATED'+ projectsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
+      logger.info("about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
+      const projectCostCreated = await ProjectCost.create({
+        cost: currentCost,
+        project_id: currentProjectId,
+        code_cost_type_id: CODE_COST_TYPE_ID,
+        created_by: user.email,
+        modified_by: user.email,
+        is_active: 1,
+        last_modified: lastModifiedDate
+      });
+      console.log('PROJECT COST IS CREATED', projectCostCreated);
+      const project_cost_id = projectCostCreated.dataValues.project_cost_id;
+      await BoardProjectCost.create({
+          board_project_id: board_project_id,
+          project_cost_id: project_cost_id,
+          req_position: currentColumn,
+          created_by: user.email,
+          last_modified_by: user.email
+      });
+    });
+  } catch (error) {
+    logger.error("ERROR AT PROJECT COST is", error)
+  }
+  
+}
 export default {
   saveBoard,
   createNewBoard,
@@ -236,5 +288,6 @@ export default {
   specialCreationBoard,
   countByGroup,
   reCalculateColumn,
-  duplicateBoardProject
+  duplicateBoardProject,
+  updateAndCreateProjectCosts
 };

@@ -991,9 +991,21 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                     year2: bp.year2,
                     origin: board.locality,
                 });
-                console.log(newBoardProject);
-                await newBoardProject.save();
                 //TODO: Jorge create the relationship on cost table
+                const newBoardProjectCreated = await newBoardProject.save();
+                const offsetMillisecond = 220;
+                let mainModifiedDate = new Date();
+                console.log('New Board Proejct Created', newBoardProjectCreated, newBoardProjectCreated.board_project_id);
+                for (let i = 1 ; i <= 5 ; ++i) {
+                  await boardService.updateAndCreateProjectCosts(
+                    i,
+                    newBoardProject[`req${i}`]? newBoardProject[`req${i}`] : 0,
+                    bp.project_id,
+                    {email: 'test@test.com'},
+                    newBoardProjectCreated.board_project_id,
+                    moment(mainModifiedDate).subtract( offsetMillisecond * i).toDate()
+                  );
+                }
               }
           }
       }
@@ -1081,7 +1093,7 @@ const updateBoards = async (board, status, comment, substatus) => {
         logger.info(`Project type ${pjt}`);
         if (!b) {
             logger.info(`Creating new board for ${pjt}`);
-            boardService.specialCreationBoard(board.type, board.year, board.locality, pjt, status, comment, substatus)
+            await boardService.specialCreationBoard(board.type, board.year, board.locality, pjt, status, comment, substatus);
         } else {
             logger.info('Updating board');
             let newFields = {

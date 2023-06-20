@@ -9,9 +9,6 @@ import boardService from 'bc/services/board.service.js';
 
 const Board = db.board;
 const BoardProject = db.boardProject;
-const Project = db.project;
-const ProjectCost = db.projectCost;
-const BoardProjectCost = db.boardProjectCost;
 
 const { Op } = sequelize;
 const router = express.Router();
@@ -123,7 +120,7 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
           if(keys.includes('req')) {
             const costToUpdate = otherFields[keys] ? otherFields[keys]: 0;
             const columnToEdit = keys.match(/[0-9]+/);
-            updateAndCreateProjectCosts(
+            await boardService.updateAndCreateProjectCosts(
               columnToEdit,
               costToUpdate,
               project.project_id,
@@ -184,7 +181,7 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
       if(key.includes('req') && key!='req0' ) {
         const costToUpdate = otherFields[key] ? otherFields[key]: 0;
         const columnToEdit = key.match(/\d+/)[0];
-        updateAndCreateProjectCosts(
+        await boardService.updateAndCreateProjectCosts(
           columnToEdit,
           costToUpdate,
           boardProject.project_id,
@@ -192,7 +189,6 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
           board_project_id,
           moment(mainModifiedDate).subtract( offsetMillisecond * multiplicator).toDate()
         );
-        console.log('Multiplicating',moment(mainModifiedDate).subtract( offsetMillisecond * multiplicator).toDate(), multiplicator);
         multiplicator++;
       }
     }
@@ -202,55 +198,6 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
     return res.status(500).send({ error: error });
   }
 });
-const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentProjectId, user, board_project_id, lastModifiedDate) => {
-  const countOriginalProject = await Project.count({ where: { project_id: currentProjectId } });
-  if (countOriginalProject === 0) {
-    logger.error(`Project with id = ${currentProjectId} does not exist`);
-    return;
-  }
-  const CODE_COST_TYPE_ID = 22; // Work Request Code cost type // TODO: verify which code will be correct 
-  const currentBoardProjectCosts = await BoardProjectCost.findAll({
-    where: {
-      board_project_id,
-      req_position: currentColumn
-    }
-  });
-  
-  const projectsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
-  try {
-    ProjectCost.update({
-      is_active: 0
-    }, {
-      where: {
-        project_cost_id: { [Op.in]: projectsIdsToUpdate }
-      }
-    }).then(async () => {
-      logger.info('PROJECTS TO BE UPDATED'+ projectsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
-      logger.info("about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
-      const projectCostCreated = await ProjectCost.create({
-        cost: currentCost,
-        project_id: currentProjectId,
-        code_cost_type_id: CODE_COST_TYPE_ID,
-        created_by: user.email,
-        modified_by: user.email,
-        is_active: 1,
-        last_modified: lastModifiedDate
-      });
-      console.log('PROJECT COST IS CREATED', projectCostCreated);
-      const project_cost_id = projectCostCreated.dataValues.project_cost_id;
-      await BoardProjectCost.create({
-          board_project_id: board_project_id,
-          project_cost_id: project_cost_id,
-          req_position: currentColumn,
-          created_by: user.email,
-          last_modified_by: user.email
-      });
-    });
-  } catch (error) {
-    logger.error("ERROR AT PROJECT COST is", error)
-  }
-  
-}
 router.put('/:board_project_id/cost',[auth], async (req, res) => {
   logger.info('get board project cost by id');
   try {
@@ -302,7 +249,7 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
     if (currentColumn !== 0) {
       const reqColumnName = `req${currentColumn}`;
       const currentCost   = req.body[reqColumnName] ? req.body[reqColumnName]: 0; 
-      allPromises.push(updateAndCreateProjectCosts(
+      allPromises.push(boardService.updateAndCreateProjectCosts(
         currentColumn,
         currentCost,
         currentProjectId,
@@ -318,7 +265,7 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
     if(valueYearHasChanged) {
       const currentColumn = 0 ; // due to limit in req position this value is whatever. 
       const currentCost = req.body[`year${i}`] ? req.body[`year${i}`] : 0;
-      allPromises.push(updateAndCreateProjectCosts(
+      allPromises.push(boardService.updateAndCreateProjectCosts(
         currentColumn, // year1 = 6, year2 = 7
         currentCost,
         currentProjectId,
