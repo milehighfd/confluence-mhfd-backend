@@ -1045,6 +1045,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
                         year1: bp.year1,
                         year2: bp.year2,
                         origin: board.locality,
+                        code_status_type_id: REQUESTED_STATUS
                     }));
                 }
                 await Promise.all(prs).then((values) => {
