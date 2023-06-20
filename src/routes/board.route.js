@@ -782,7 +782,7 @@ const updateProjectStatus = async (boards, status, creator) => {
     const prs4 = [];
     for (let i = 0; i < boardProjects.length; i++) {
         const boardProject = boardProjects[i];
-        if (boardProject.position0 == null) {
+        if (boardProject.position0 == null && nextCodePhases[i] != null) {
             const { duration, duration_type } = nextCodePhases[i];
             const formatDuration = duration_type[0].toUpperCase();
             prs4.push(projectStatusService.saveProjectStatusFromCero(
@@ -807,9 +807,17 @@ const updateProjectStatus = async (boards, status, creator) => {
     const prs5 = [];
     for (let i = 0; i < boardProjects.length; i++) {
         if (boardProjects[i].position0 == null) {
-           prs5.push(Project.update({
-            current_project_status_id: newProjectStatuses[i].project_status_id
-           },{ where: { project_id: boardProjects[i].project_id }}));
+          let promise;
+          if (newProjectStatuses[i] !== null) {
+            promise = Project.update({
+              current_project_status_id: newProjectStatuses[i].project_status_id
+            },{
+              where: { project_id: boardProjects[i].project_id }
+            })
+          } else {
+            promise = Promise.resolve();
+          }
+          prs5.push(promise);
         }
     }
     Promise.all(prs5).then(() => {
@@ -934,33 +942,43 @@ const sendBoardProjectsToProp = async (boards, prop) => {
                 logger.info('Destiny board not found');
                 continue;
               }
-              let newBoardProject = new BoardProject({
+              const countIXConstraint = await BoardProject.count({
+                where: {
                   board_id: destinyBoard.board_id,
                   project_id: bp.project_id,
-                  rank0: bp.rank0,
-                  rank1: bp.rank1,
-                  rank2: bp.rank2,
-                  rank3: bp.rank3,
-                  rank4: bp.rank4,
-                  rank5: bp.rank5,
-                  originPosition0: map[bp.project_id][0],
-                  originPosition1: map[bp.project_id][1],
-                  originPosition2: map[bp.project_id][2],
-                  originPosition3: map[bp.project_id][3],
-                  originPosition4: map[bp.project_id][4],
-                  originPosition5: map[bp.project_id][5],
-                  req1: bp.req1 == null ? null : (bp.req1 / propValues.length),
-                  req2: bp.req2 == null ? null : (bp.req2 / propValues.length),
-                  req3: bp.req3 == null ? null : (bp.req3 / propValues.length),
-                  req4: bp.req4 == null ? null : (bp.req4 / propValues.length),
-                  req5: bp.req5 == null ? null : (bp.req5 / propValues.length),
-                  year1: bp.year1,
-                  year2: bp.year2,
-                  origin: board.locality,
+                  origin: board.locality
+                }
               });
-              //TODO: Jorge create the relationship on cost table
-              console.log(newBoardProject);
-              await newBoardProject.save();
+              console.log('countIXConstraint', countIXConstraint);
+              if (countIXConstraint === 0) {
+                let newBoardProject = new BoardProject({
+                    board_id: destinyBoard.board_id,
+                    project_id: bp.project_id,
+                    rank0: bp.rank0,
+                    rank1: bp.rank1,
+                    rank2: bp.rank2,
+                    rank3: bp.rank3,
+                    rank4: bp.rank4,
+                    rank5: bp.rank5,
+                    originPosition0: map[bp.project_id][0],
+                    originPosition1: map[bp.project_id][1],
+                    originPosition2: map[bp.project_id][2],
+                    originPosition3: map[bp.project_id][3],
+                    originPosition4: map[bp.project_id][4],
+                    originPosition5: map[bp.project_id][5],
+                    req1: bp.req1 == null ? null : (bp.req1 / propValues.length),
+                    req2: bp.req2 == null ? null : (bp.req2 / propValues.length),
+                    req3: bp.req3 == null ? null : (bp.req3 / propValues.length),
+                    req4: bp.req4 == null ? null : (bp.req4 / propValues.length),
+                    req5: bp.req5 == null ? null : (bp.req5 / propValues.length),
+                    year1: bp.year1,
+                    year2: bp.year2,
+                    origin: board.locality,
+                });
+                //TODO: Jorge create the relationship on cost table
+                console.log(newBoardProject);
+                await newBoardProject.save();
+              }
           }
       }
   }
@@ -1008,11 +1026,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
                 for (let i = 0; i < 6; i++) {
                     const rank = `rank${i}`;
                     logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
-                    const counter = await boardService.countProjectsByRank(destinyBoard.board_id, rank);
-                    logger.info(`Finish counter: ${JSON.stringify(counter)}}`);
-                    if (counter[1]) {
-                        updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank));
-                    }   
+                    updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank));
                 }
                 if (updatePromises.length) {
                     await Promise.all(updatePromises).then((values) => {
