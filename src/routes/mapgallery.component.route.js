@@ -454,12 +454,7 @@ export async function componentParamFilterCounter(req, res) {
     const allActions = await getActions(filters, bounds);
 
     const result = {
-      "component_type": componentTypes.map((type) => {
-        if (type.value === 'Channel Improvements Lin') {
-          return { ...type, value: 'Channel Improvements Linear' };
-        }
-        return type;
-      }),
+      "component_type": componentTypes,
       "status":  actionStatuses,
       "yearofstudy":  null,
       "mhfdmanager":  data.mhfdmanager,
