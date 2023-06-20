@@ -113,7 +113,7 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
           { ...otherFields, [rankColumnName]: lastLexo },
           { where: { board_project_id: board_project_id } }
         );
-        const offsetMillisecond = 220;
+        const offsetMillisecond = 35000;
         let mainModifiedDate = new Date();
         let multiplicator = 0;
         for(const keys in otherFields) {
@@ -170,7 +170,7 @@ router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
         board_project_id
       }
     });
-    const offsetMillisecond = 220;
+    const offsetMillisecond = 35000;
     let mainModifiedDate = new Date();
     let multiplicator = 0;
     const x = await BoardProject.update(
@@ -242,7 +242,7 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
     }
   }
   const allPromises = [];
-  const offsetMillisecond = 220;
+  const offsetMillisecond = 35007;
   let mainModifiedDate = new Date();
   for ( let pos = 0; pos < columnsChanged.length ; ++pos) {
     const currentColumn = columnsChanged[pos];
@@ -271,7 +271,7 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
         currentProjectId,
         user,
         board_project_id,
-        moment(mainModifiedDate).subtract( offsetMillisecond * i).toDate()
+        moment(mainModifiedDate).subtract( offsetMillisecond * (i + columnsChanged.length)).toDate()
       ));
     }
   }

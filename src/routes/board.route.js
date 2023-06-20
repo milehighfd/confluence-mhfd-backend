@@ -993,7 +993,7 @@ const sendBoardProjectsToProp = async (boards, prop, creator) => {
                 });
                 //TODO: Jorge create the relationship on cost table
                 const newBoardProjectCreated = await newBoardProject.save();
-                const offsetMillisecond = 220;
+                const offsetMillisecond = 35000;
                 let mainModifiedDate = new Date();
                 console.log('New Board Proejct Created', newBoardProjectCreated, newBoardProjectCreated.board_project_id);
                 for (let i = 1 ; i <= 5 ; ++i) {
