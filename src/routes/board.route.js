@@ -789,7 +789,7 @@ const updateProjectStatus = async (boards, status, creator) => {
       prs3.push(Promise.resolve(null));
     }
   }
-  Promise.all(updatedProjectsStatuses).then(() => {
+  await Promise.all(updatedProjectsStatuses).then(() => {
     logger.info("Project statuses are updated");
   });
   const nextCodePhases = await Promise.all(prs3);
@@ -841,7 +841,7 @@ const updateProjectStatus = async (boards, status, creator) => {
       prs5.push(promise);
     }
   }
-  Promise.all(prs5).then(() => {
+  await Promise.all(prs5).then(() => {
     logger.info("Projects are updated");
   });
   const DRAFT_STATUS = 1;
@@ -885,30 +885,34 @@ const updateProjectStatus = async (boards, status, creator) => {
     }
     const notDoneStatuses = await Promise.all(notDoneStatusesPromises);
     const prs6 = [];
-    for (const statusType of notDoneStatuses) {
-      try {
-        prs6.push(
-          projectStatusService.saveProjectStatusFromCero(
-            statusType.code_phase_type_id,
-            bp.project_id,
-            moment().format("YYYY-MM-DD HH:mm:ss"),
-            moment().format("YYYY-MM-DD HH:mm:ss"),
-            moment().format("YYYY-MM-DD HH:mm:ss"),
-            moment().format("YYYY-MM-DD HH:mm:ss"),
-            moment().format("YYYY-MM-DD HH:mm:ss"),
-            Number(duration),
-            moment().format("YYYY-MM-DD HH:mm:ss"),
-            moment().format("YYYY-MM-DD HH:mm:ss"),
-            creator,
-            creator
-          )
-        );
-        logger.info("status created", statusType.code_phase_type_id);
-      } catch (error) {
-        logger.info(error, "can not create status");
+    for (let i = 0; i < boardProjects.length; i++) {
+      const bp = boardProjects[i];
+      const dataValues = notDoneStatuses[i].map(status => status.dataValues);
+      for (const statusType of dataValues) {
+        try {
+          prs6.push(
+            projectStatusService.saveProjectStatusFromCero(
+              statusType.code_phase_type_id,
+              bp.project_id,
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              Number(statusType.duration),
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              creator,
+              creator
+            )
+          );
+          logger.info("status created", statusType.code_phase_type_id);
+        } catch (error) {
+          logger.info(error, "can not create status");
+        }
       }
     }
-    Promise.all(prs6).then(() => {
+    await Promise.all(prs6).then(() => {
       logger.info("new statuses  are created");
     });
     logger.info(`Ending function updateProjectStatus`);
