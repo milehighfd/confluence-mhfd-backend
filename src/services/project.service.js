@@ -866,6 +866,33 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
             ]
           }]
         }
+      },
+      {
+        model: ProjectPartner,
+        attributes: [
+          'project_partner_id',
+          'code_partner_type_id'
+        ],
+        required: false,
+        separate: true,
+        include: [{
+          model: CodeProjectPartnerType,
+          required: false,
+          where: {
+            code_partner_type_id: 11
+          },
+          attributes: [
+            'code_partner_type_id',
+            'partner_type'
+          ]
+        }, {
+          model: BusinessAssociate,
+          required: false,
+          attributes: [
+            'business_name',
+          ]
+        },
+    ],
       }
     ]
   });
