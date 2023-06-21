@@ -786,7 +786,7 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
     include: [
       {
         model: ProjectLocalGovernment,
-        required: false,
+        required: true,
         attributes: [
           'code_local_government_id'
         ],
