@@ -726,160 +726,194 @@ const getBoard = async (type, locality, year, projecttype) => {
 }
 
 const updateProjectStatus = async (boards, status, creator) => {
-    logger.info(`Starting function updateProjectStatus for board/`);
-    const prs = [];
-    for (const board of boards) {
-        prs.push(BoardProject.findAll({
-            where: {
-                board_id: board.board_id
-            }
-        }));
-    }
-    let boardProjects = (await Promise.all(prs)).flat();
-    const prs2 = [];
-    for (const boardProject of boardProjects) {
-        if (boardProject.position0 === null) {
-            prs2.push(
-              ProjectStatus.findOne({
-                where: {
-                    project_id: boardProject.project_id
-                },
-                include: {
-                    model: CodePhaseType,
-                    required: true,
-                    attributes:['code_project_type_id', 'code_phase_type_id']
-                },
-                raw: true,
-                nest: true,
-              })
-            );
-        } else {
-            prs2.push(Promise.resolve(null));
-        }
-    }
-    const projectStatuses = await Promise.all(prs2);
-    const prs3 = [];
-    const updatedProjectsStatuses = [];
-    for (const projectStatus of projectStatuses) {
-        if (projectStatus) {
-            prs3.push(
-              CodePhaseType.findOne({
-                where: {
-                    code_status_type_id: status,
-                    code_project_type_id: projectStatus?.code_phase_type?.code_project_type_id,
-                },
-              })
-            );
-            updatedProjectsStatuses.push(ProjectStatus.update({            
-                actual_end_date: moment().format('YYYY-MM-DD HH:mm:ss')
-            }, 
-            {
-                where: {
-                  project_status_id: projectStatus.project_status_id
-                }
-            }));
-        } else {
-            prs3.push(Promise.resolve(null));
-        }
-    }
-    Promise.all(updatedProjectsStatuses).then(() => {
-        logger.info('Project statuses are updated');
-    });
-    const nextCodePhases = await Promise.all(prs3);
-    const prs4 = [];
-    for (let i = 0; i < boardProjects.length; i++) {
-        const boardProject = boardProjects[i];
-        if (boardProject.position0 == null && nextCodePhases[i] != null) {
-            const { duration, duration_type } = nextCodePhases[i];
-            const formatDuration = duration_type[0].toUpperCase();
-            prs4.push(projectStatusService.saveProjectStatusFromCero(
-                nextCodePhases[i].code_phase_type_id, 
-                boardProject.project_id,
-                moment().format('YYYY-MM-DD HH:mm:ss'), 
-                moment().add(1, 'd').format('YYYY-MM-DD HH:mm:ss'),
-                moment().format('YYYY-MM-DD HH:mm:ss'), 
-                moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss'), 
-                moment().format('YYYY-MM-DD HH:mm:ss'), 
-                Number(duration), 
-                moment().format('YYYY-MM-DD HH:mm:ss'), 
-                moment().format('YYYY-MM-DD HH:mm:ss'), 
-                creator, 
-                creator
-            ));
-        } else {
-            prs4.push(Promise.resolve(null));
-        }
-    }
-    const newProjectStatuses = await Promise.all(prs4);
-    const prs5 = [];
-    for (let i = 0; i < boardProjects.length; i++) {
-        if (boardProjects[i].position0 == null) {
-          let promise;
-          if (newProjectStatuses[i] !== null) {
-            promise = Project.update({
-              current_project_status_id: newProjectStatuses[i].project_status_id
-            },{
-              where: { project_id: boardProjects[i].project_id }
-            })
-          } else {
-            promise = Promise.resolve();
-          }
-          prs5.push(promise);
-        }
-    }
-    Promise.all(prs5).then(() => {
-        logger.info('Projects are updated');
-    });
-    const addisFlag = false;
-    if (status === APPROVED_STATUS && addisFlag) {
-        const currentProjectStatus = await ProjectStatus.findOne({
+  logger.info(`Starting function updateProjectStatus for board/`);
+  const prs = [];
+  for (const board of boards) {
+    prs.push(
+      BoardProject.findAll({
+        where: {
+          board_id: board.board_id,
+        },
+      })
+    );
+  }
+  let boardProjects = (await Promise.all(prs)).flat();
+  const prs2 = [];
+  for (const boardProject of boardProjects) {
+    if (boardProject.position0 === null) {
+      prs2.push(
+        ProjectStatus.findOne({
           where: {
-            project_id: bp.project_id /* TODO: Addis should find which bp to use in this code */
+            project_id: boardProject.project_id,
           },
           include: {
             model: CodePhaseType,
             required: true,
-            attributes:['code_project_type_id', 'code_phase_type_id']
+            attributes: ["code_project_type_id", "code_phase_type_id"],
           },
           raw: true,
           nest: true,
-        });
-        const notDoneStatuses = await CodePhaseType.findAll({
-            where:{
-                code_project_type_id: currentProjectStatus?.code_phase_type?.code_project_type_id,
-                code_status_type_id: {
-                    [Op.not]: [DRAFT_STATUS, REQUESTED_STATUS, APPROVED_STATUS],
-                }
-            }
-        });
-        const prs6 = [];
-        for (const statusType of notDoneStatuses) {
-            try {
-                prs6.push(projectStatusService.saveProjectStatusFromCero(
-                    statusType.code_phase_type_id, 
-                    bp.project_id,
-                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                    moment().format('YYYY-MM-DD HH:mm:ss'),  
-                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                    Number(duration), 
-                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                    creator, 
-                    creator
-                ));   
-                logger.info ('status created', statusType.code_phase_type_id)
-            } catch (error) {
-                logger.info (error, 'can not create status')
-            }
-        }
-        Promise.all(prs6).then(() => {
-            logger.info('new statuses  are created');
-        });
-        logger.info(`Ending function updateProjectStatus`);
+        })
+      );
+    } else {
+      prs2.push(Promise.resolve(null));
     }
-}
+  }
+  const projectStatuses = await Promise.all(prs2);
+  const prs3 = [];
+  const updatedProjectsStatuses = [];
+  for (const projectStatus of projectStatuses) {
+    if (projectStatus) {
+      prs3.push(
+        CodePhaseType.findOne({
+          where: {
+            code_status_type_id: status,
+            code_project_type_id:
+              projectStatus?.code_phase_type?.code_project_type_id,
+          },
+        })
+      );
+      updatedProjectsStatuses.push(
+        ProjectStatus.update(
+          {
+            actual_end_date: moment().format("YYYY-MM-DD HH:mm:ss"),
+          },
+          {
+            where: {
+              project_status_id: projectStatus.project_status_id,
+            },
+          }
+        )
+      );
+    } else {
+      prs3.push(Promise.resolve(null));
+    }
+  }
+  Promise.all(updatedProjectsStatuses).then(() => {
+    logger.info("Project statuses are updated");
+  });
+  const nextCodePhases = await Promise.all(prs3);
+  const prs4 = [];
+  for (let i = 0; i < boardProjects.length; i++) {
+    const boardProject = boardProjects[i];
+    if (boardProject.position0 == null && nextCodePhases[i] != null) {
+      const { duration, duration_type } = nextCodePhases[i];
+      const formatDuration = duration_type[0].toUpperCase();
+      prs4.push(
+        projectStatusService.saveProjectStatusFromCero(
+          nextCodePhases[i].code_phase_type_id,
+          boardProject.project_id,
+          moment().format("YYYY-MM-DD HH:mm:ss"),
+          moment().add(1, "d").format("YYYY-MM-DD HH:mm:ss"),
+          moment().format("YYYY-MM-DD HH:mm:ss"),
+          moment()
+            .add(Number(duration), formatDuration)
+            .format("YYYY-MM-DD HH:mm:ss"),
+          moment().format("YYYY-MM-DD HH:mm:ss"),
+          Number(duration),
+          moment().format("YYYY-MM-DD HH:mm:ss"),
+          moment().format("YYYY-MM-DD HH:mm:ss"),
+          creator,
+          creator
+        )
+      );
+    } else {
+      prs4.push(Promise.resolve(null));
+    }
+  }
+  const newProjectStatuses = await Promise.all(prs4);
+  const prs5 = [];
+  for (let i = 0; i < boardProjects.length; i++) {
+    if (boardProjects[i].position0 == null) {
+      let promise;
+      if (newProjectStatuses[i] !== null) {
+        promise = Project.update(
+          {
+            current_project_status_id: newProjectStatuses[i].project_status_id,
+          },
+          {
+            where: { project_id: boardProjects[i].project_id },
+          }
+        );
+      } else {
+        promise = Promise.resolve();
+      }
+      prs5.push(promise);
+    }
+  }
+  Promise.all(prs5).then(() => {
+    logger.info("Projects are updated");
+  });
+  const DRAFT_STATUS = 1;
+  const REQUESTED_STATUS = 2;
+  const APPROVED_STATUS = 3;
+  if (status === APPROVED_STATUS) {
+    const currentProjectStatusesPromises = [];
+    for (const bp of boardProjects) {
+      currentProjectStatusesPromises.push(
+        ProjectStatus.findOne({
+          where: {
+            project_id:
+              bp.project_id /* TODO: Addis should find which bp to use in this code */,
+          },
+          include: {
+            model: CodePhaseType,
+            required: true,
+            attributes: ["code_project_type_id", "code_phase_type_id"],
+          },
+          raw: true,
+          nest: true,
+        })
+      );
+    }
+    const currentProjectStatuses = await Promise.all(
+      currentProjectStatusesPromises
+    );
+    const notDoneStatusesPromises = [];
+    for (const currentProjectStatus of currentProjectStatuses) {
+      notDoneStatusesPromises.push(
+        CodePhaseType.findAll({
+          where: {
+            code_project_type_id:
+              currentProjectStatus?.code_phase_type?.code_project_type_id,
+            code_status_type_id: {
+              [Op.not]: [DRAFT_STATUS, REQUESTED_STATUS, APPROVED_STATUS],
+            },
+          },
+        })
+      );
+    }
+    const notDoneStatuses = await Promise.all(notDoneStatusesPromises);
+    const prs6 = [];
+    for (const statusType of notDoneStatuses) {
+      try {
+        prs6.push(
+          projectStatusService.saveProjectStatusFromCero(
+            statusType.code_phase_type_id,
+            bp.project_id,
+            moment().format("YYYY-MM-DD HH:mm:ss"),
+            moment().format("YYYY-MM-DD HH:mm:ss"),
+            moment().format("YYYY-MM-DD HH:mm:ss"),
+            moment().format("YYYY-MM-DD HH:mm:ss"),
+            moment().format("YYYY-MM-DD HH:mm:ss"),
+            Number(duration),
+            moment().format("YYYY-MM-DD HH:mm:ss"),
+            moment().format("YYYY-MM-DD HH:mm:ss"),
+            creator,
+            creator
+          )
+        );
+        logger.info("status created", statusType.code_phase_type_id);
+      } catch (error) {
+        logger.info(error, "can not create status");
+      }
+    }
+    Promise.all(prs6).then(() => {
+      logger.info("new statuses  are created");
+    });
+    logger.info(`Ending function updateProjectStatus`);
+  }
+};
 
 const sendBoardProjectsToProp = async (boards, prop, creator) => {
   let include;
