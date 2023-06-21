@@ -877,7 +877,7 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
         separate: true,
         include: [{
           model: CodeProjectPartnerType,
-          required: false,
+          required: true,
           where: {
             code_partner_type_id: 11
           },
