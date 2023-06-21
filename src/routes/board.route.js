@@ -1155,6 +1155,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
                     board_id: board.board_id
                 }
             }).then((async (boardProjects) => {
+                const originPositionMap = getOriginPositionMap(boardProjects);
                 const prs = [];
                 for (const bp of boardProjects) {
                     prs.push(
@@ -1167,6 +1168,12 @@ const sendBoardProjectsToDistrict = async (boards) => {
                         rank3: bp.rank3,
                         rank4: bp.rank4,
                         rank5: bp.rank5,
+                        originPosition0: originPositionMap[bp.project_id][0],
+                        originPosition1: originPositionMap[bp.project_id][1],
+                        originPosition2: originPositionMap[bp.project_id][2],
+                        originPosition3: originPositionMap[bp.project_id][3],
+                        originPosition4: originPositionMap[bp.project_id][4],
+                        originPosition5: originPositionMap[bp.project_id][5],
                         req1: bp.req1,
                         req2: bp.req2,
                         req3: bp.req3,
