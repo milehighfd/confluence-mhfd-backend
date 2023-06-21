@@ -988,6 +988,47 @@ const updateProjectStatus = async (boards, status, creator) => {
   }
 };
 
+const getOriginPositionMap = (boardProjects) => {
+  const columns = [0, 1, 2, 3, 4, 5];
+  const originPositionMap = {};
+  columns.forEach(columnNumber => {
+    const rankName = `rank${columnNumber}`;
+    const reqName = `req${columnNumber}`;
+    let arr = [];
+    for (var j = 0 ; j < boardProjects.length ; j++) {
+      let bp = boardProjects[j];
+      if (columnNumber === 0) {
+        let isEmptyBoardProject = true;
+        columns.forEach(cNumber => {
+          if (cNumber === 0) return;
+          isEmptyBoardProject = isEmptyBoardProject && (!bp[`rank${cNumber}`] && !bp[`req${cNumber}`]);
+        })
+        if (isEmptyBoardProject) {
+          arr.push({
+            bp,
+            value: bp[rankName]
+          });
+        }
+      } else {
+        if (bp[rankName] || bp[reqName]) {
+          arr.push({
+              bp,
+              value: bp[rankName]
+          });
+        }
+      }
+    };
+    arr.sort();
+    arr.forEach((r, arrayIndex) => {
+      if (!originPositionMap[r.bp.project_id]) {
+          originPositionMap[r.bp.project_id] = {}
+      }
+      originPositionMap[r.bp.project_id][columnNumber] = arrayIndex;
+    });
+  });
+  return originPositionMap;
+}
+
 const sendBoardProjectsToProp = async (boards, prop, creator) => {
   let include;
   let relationshipProp;
@@ -1026,26 +1067,8 @@ const sendBoardProjectsToProp = async (boards, prop, creator) => {
   for (var i = 0 ; i < boards.length ; i++) {
       let board = boards[i].dataValues;
       let boardProjects = await BoardProject.findAll({ where: { board_id: board.board_id } });
-      let map = {};
-      [0, 1, 2, 3, 4, 5].forEach(index => {
-          let arr = [];
-          for (var j = 0 ; j < boardProjects.length ; j++) {
-              let bp = boardProjects[j];
-              if (bp[`rank${index}`] != null) {
-                  arr.push({
-                      bp,
-                      value: bp[`rank${index}`]
-                  });
-              }
-          };
-          arr.sort();
-          arr.forEach((r, i) => {
-                  if (!map[r.bp.project_id]) {
-                      map[r.bp.project_id] = {}
-                  }
-                  map[r.bp.project_id][index] = i;
-              });
-      });
+      const originPositionMap = getOriginPositionMap(boardProjects);
+      console.log('originPositionMap', originPositionMap);
       for (var j = 0 ; j < boardProjects.length ; j++) {
           let bp = boardProjects[j];
           let p = (await Project.findOne({
@@ -1084,12 +1107,12 @@ const sendBoardProjectsToProp = async (boards, prop, creator) => {
                     rank3: bp.rank3,
                     rank4: bp.rank4,
                     rank5: bp.rank5,
-                    originPosition0: map[bp.project_id][0],
-                    originPosition1: map[bp.project_id][1],
-                    originPosition2: map[bp.project_id][2],
-                    originPosition3: map[bp.project_id][3],
-                    originPosition4: map[bp.project_id][4],
-                    originPosition5: map[bp.project_id][5],
+                    originPosition0: originPositionMap[bp.project_id][0],
+                    originPosition1: originPositionMap[bp.project_id][1],
+                    originPosition2: originPositionMap[bp.project_id][2],
+                    originPosition3: originPositionMap[bp.project_id][3],
+                    originPosition4: originPositionMap[bp.project_id][4],
+                    originPosition5: originPositionMap[bp.project_id][5],
                     req1: bp.req1 == null ? null : (bp.req1 / propValues.length),
                     req2: bp.req2 == null ? null : (bp.req2 / propValues.length),
                     req3: bp.req3 == null ? null : (bp.req3 / propValues.length),
