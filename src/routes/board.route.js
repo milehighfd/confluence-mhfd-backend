@@ -46,6 +46,74 @@ const DRAFT_STATUS = 1;
 const REQUESTED_STATUS = 2;
 const APPROVED_STATUS = 3;
 
+router.get('/lexorank-update', async (req, res) => {
+    const boards = await Board.findAll();
+    const boardProjects = await BoardProject.findAll();
+    const updates = {
+        rank0: {},
+        rank1: {},
+        rank2: {},
+        rank3: {},
+        rank4: {},
+        rank5: {}
+    };
+    const originPositions = ['position0', 'position1', 'position2', 'position3', 'position4', 'position5'];
+    const positions =  ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+    
+    for (const board of boards) {
+        let lexoRanks = {
+            rank0: LexoRank.middle(),
+            rank1: LexoRank.middle(),
+            rank2: LexoRank.middle(),
+            rank3: LexoRank.middle(),
+            rank4: LexoRank.middle(),
+            rank5: LexoRank.middle()
+        };
+        for (const [index, position] of originPositions.entries()) {
+            boardProjects.sort((a, b) => {
+                if (a[position] == null) return -1;
+                if (b[position] == null) return 1;
+                return a[position] - b[position];
+            });
+            for (const bp of boardProjects) {
+                if (board.board_id === bp.board_id) {
+                    if (bp[position] != null) {
+                        const value = lexoRanks[positions[index]].toString();
+                        if (!updates[positions[index]][value]) {
+                            updates[positions[index]][value] = [];
+                        }
+                        updates[positions[index]][value].push(bp.board_project_id);
+                        lexoRanks[positions[index]] = lexoRanks[positions[index]].genNext();
+                    }
+                }
+            }
+        }
+    }
+    let c = 0;
+    console.log(updates);
+    const prs = [];
+    for (const position of positions) {
+        for (const value in updates[position]) {
+            c++;
+            logger.info(`Updating ${position} to ${value} for ${updates[position][value]}`);
+            prs.push(BoardProject.update(
+                {
+                    [position]: value
+                },
+                {
+                    where: {
+                        board_project_id: updates[position][value]
+                    }
+                }
+            ));
+        }
+    }
+    await Promise.all(prs);
+    res.send({
+        counter: c,
+    });
+});
+
 router.get('/:id/filters', async (req, res) => {
   logger.info(`Starting endpoint board/:id/filters with params ${JSON.stringify(req.params, null, 2)}`);
   const { id } = req.params;
