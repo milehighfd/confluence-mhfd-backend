@@ -801,15 +801,14 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
       },
       {
         model: ProjectCounty,
-        required: false,
-        separate: true,
+        required: true,
+        where: countyWhere,
         attributes: [
           'state_county_id'
         ],
         include: {
           model: CodeStateCounty,
           required: true,
-          where: countyWhere,
           attributes: [
             'county_name',
           ]
@@ -817,14 +816,14 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
       },
       {
         model: ProjectServiceArea,
-        required: false,
+        required: true,
+        where: serviceAreaWhere,
         attributes: [
           'code_service_area_id'
         ],
         include: {
           model: CodeServiceArea,
           required: true,
-          where: serviceAreaWhere,
           attributes: [
             'service_area_name'
           ],
