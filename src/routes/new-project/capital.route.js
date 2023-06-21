@@ -595,7 +595,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     const projecttype = 'Capital';
     await attachmentService.toggleName(cover);
     await attachmentService.uploadFiles(user, req.files, project_id, cover);
-    updateProjectsInBoard(
+    await updateProjectsInBoard(
       project_id,
       cleanStringValue(projectname),
       projecttype,
