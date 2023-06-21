@@ -295,8 +295,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const splitedServicearea = servicearea.split(',');
   const splitedOverheadcost = overheadcost.split(',');
   const filterFrontOverheadCosts = splitedOverheadcost.slice(1);
-
-  const aditionalCostId = 4;
+  const aditionalCostId = 4;  
   try {
     const overheadcostIds = await CodeCostType.findAll({
       attributes: [
@@ -372,6 +371,9 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       typesList.push('WORK_PLAN');
       localNames.push('MHFD District Work Plan');
     }
+    console.log('--------------------------------')
+    console.log(typesList);
+    console.log(localNames);
     const promisesLocal = [];
     for (let i = 0; i < localNames.length; i++) {
       const local = localNames[i];
@@ -393,7 +395,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         ));
       }
     }
-    Promise.all(promisesLocal)
+    await Promise.all(promisesLocal)
       .then(() => {
         logger.info('All projects added to board successfully');
       })
@@ -435,62 +437,82 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       throw error;
     }
     for (const j of splitedJurisdiction) {
-      await ProjectLocalGovernment.create({
-        code_local_government_id: parseInt(j),
-        project_id: project_id,
-        shape_length_ft: 0,
-        last_modified_by: user.name,
-        created_by: user.email,
-      });
+      try {
+        await ProjectLocalGovernment.create({
+          code_local_government_id: parseInt(j),
+          project_id: project_id,
+          shape_length_ft: 0,
+          last_modified_by: user.name,
+          created_by: user.email,
+        });
+      } catch (error) {
+        logger.error('cannot create jurisdiction ' + error);
+        throw error;
+      }
       logger.info('created jurisdiction');
     }
     for (const s of splitedServicearea) {
-      await ProjectServiceArea.create({
-        project_id: project_id,
-        code_service_area_id: s,
-        shape_length_ft: 0,
-        last_modified_by: user.name,
-        created_by: user.email,
-      });
+      try {
+        await ProjectServiceArea.create({
+          project_id: project_id,
+          code_service_area_id: s,
+          shape_length_ft: 0,
+          last_modified_by: user.name,
+          created_by: user.email,
+        });
+      } catch (error) {
+        logger.error('cannot create service area ' + error);
+        throw error;
+      }
       logger.info('created service area');
     }
     for (const c of splitedCounty) {
-      await ProjectCounty.create({
-        state_county_id: c,
-        project_id: project_id,
-        shape_length_ft: 0,
-      });
+      try {
+        await ProjectCounty.create({
+          state_county_id: c,
+          project_id: project_id,
+          shape_length_ft: 0,
+        });
+      } catch (error) {
+        logger.error('cannot create county ' + error);
+        throw error;
+      }
       logger.info('created county');
     }
-    for (const independent of JSON.parse(independetComponent)) {
-      try {
-        await projectIndependentActionService.saveProjectIndependentAction({
-          action_name: independent.name,
-          project_id: project_id,
-          cost: !isNaN(Number(independent.cost)) ? Number(independent.cost): 0,
-          action_status: independent.status,
-          last_modified_by: creator,
-          created_by: creator,
-        });
-        logger.info('create independent component');
-      } catch (error) {
-        logger.error('cannot create independent component ' + error);
+    if (independetComponent) {
+      for (const independent of JSON.parse(independetComponent)) {
+        try {
+          await projectIndependentActionService.saveProjectIndependentAction({
+            action_name: independent.name,
+            project_id: project_id,
+            cost: !isNaN(Number(independent.cost)) ? Number(independent.cost) : 0,
+            action_status: independent.status,
+            last_modified_by: creator,
+            created_by: creator,
+          });
+          logger.info('create independent component');
+        } catch (error) {
+          logger.error('cannot create independent component ' + error);
+          throw error;
+        }
       }
     }
-
-    for (const component of JSON.parse(components)) {
-      try {
-        const action = {
-          project_id: project_id,
-          object_id: component.objectid,
-          source_table_name: component.table,
-          last_modified_by: creator,
-          created_by: creator,
-        };
-        await projectProposedActionService.saveProjectAction(action);
-        logger.info('create component');
-      } catch (error) {
-        logger.error('cannot create component ' + error);
+    if (components) {
+      for (const component of JSON.parse(components)) {
+        try {
+          const action = {
+            project_id: project_id,
+            object_id: component.objectid,
+            source_table_name: component.table,
+            last_modified_by: creator,
+            created_by: creator,
+          };
+          await projectProposedActionService.saveProjectAction(action);
+          logger.info('create component');
+        } catch (error) {
+          logger.error('cannot create component ' + error);
+          throw error;
+        }
       }
     }
     const dataArcGis = await projectService.insertIntoArcGis(
@@ -500,10 +522,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     );
     // await projectService.addProjectToCache(project_id);
     result.push(dataArcGis);
+    res.send([1]);
   } catch (error) {
     logger.error('error at create capital'+ error);
-  }
-  res.send([1]);
+    res.status(500).send(error)
+  }  
 });
 
 router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {

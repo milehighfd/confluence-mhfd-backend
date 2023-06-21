@@ -161,7 +161,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         ));
       }
     }
-    Promise.all(promisesLocal)
+    await Promise.all(promisesLocal)
       .then(() => {
         logger.info('All projects added to board successfully');
       })
@@ -209,11 +209,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       cleanStringValue(projectname)
     );
     result.push(dataArcGis);
-  } catch (error) {
-    console.error('aaa:', error);
+    res.send(result);
+  } catch (error) {    
     logger.error(error);
-  }
-  res.send(result);
+    res.status(500).send(error);
+  }  
 });
 
 router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {

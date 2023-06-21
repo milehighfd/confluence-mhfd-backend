@@ -170,7 +170,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         ));
       }
     }
-    Promise.all(promisesLocal)
+    await Promise.all(promisesLocal)
       .then(() => {
         logger.info('All projects added to board successfully');
       })
@@ -256,11 +256,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       otherReason
     );
     logger.info('created study correctly');
+    res.send(result);
   } catch (error) {
     logger.error('ERROR ', error);
-    return res.status(500).send(error);
-  }
-  res.send(result);
+    res.status(500).send(error);
+  }  
 });
 
 router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
