@@ -336,6 +336,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     res.send(result);
   } catch (error) {
     logger.error(error);
+    res.status(500).send({ message: `Error creating project: ${error}` });
   };
 }); 
 
