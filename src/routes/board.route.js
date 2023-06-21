@@ -593,30 +593,43 @@ router.post('/board-for-positions2', async (req, res) => {
     if (!board_id || position === undefined || position === null) {
       return res.sendStatus(400);
     }
+    const rankColumnName = `rank${position}`;
+    const reqColumnName = `req${position}`;
+    const originPositionColumnName = `originPosition${position}`;
     const attributes = [
       'board_project_id',
       'project_id',
       'projectname',
-      `rank${position}`,
+      rankColumnName,
       'origin',
-      `originPosition${position}`,
+      originPositionColumnName,
     ];
     const where = {
       board_id,
-      [`rank${position}`]: { [Op.ne]: null }
+      [rankColumnName]: { [Op.ne]: null }
     };
   
     if (`${position}` !== '0') {
-      attributes.push(`req${position}`);
+      attributes.push(reqColumnName);
     }
     if (project_priorities && project_priorities.length > 0) {
-      where[`originPosition${position}`] = { [Op.in]: project_priorities };
+      const conditions = [];
+      const lessThan3Priorities = project_priorities.filter(r => r < 3);
+      if (lessThan3Priorities.length !== 0) {
+        conditions.push({ [originPositionColumnName]: {[Op.in]: lessThan3Priorities}})
+      }
+      if (project_priorities.includes(3)) {
+        conditions.push({ [originPositionColumnName]: {[Op.gte]: 3} })
+      }
+      if (project_priorities.includes(4)) {
+        conditions.push({[originPositionColumnName]: {[Op.eq]: null}})
+      }
+      where[Op.or] = conditions;
     }
-  
     const boardProjects = (await BoardProject.findAll({
       attributes,
       where,
-      order: [[`rank${position}`, 'ASC']],
+      order: [[rankColumnName, 'ASC']],
     })).map(d => d.dataValues);
     let boardProjectsWithData = await Promise.all(
       boardProjects.map(async (boardProject) => {
