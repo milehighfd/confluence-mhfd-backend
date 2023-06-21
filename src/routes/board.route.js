@@ -847,7 +847,8 @@ const updateProjectStatus = async (boards, status, creator) => {
   const DRAFT_STATUS = 1;
   const REQUESTED_STATUS = 2;
   const APPROVED_STATUS = 3;
-  if (status === APPROVED_STATUS) {
+  const dontUseThis = true;
+  if (status === APPROVED_STATUS && !dontUseThis) {
     const currentProjectStatusesPromises = [];
     for (const bp of boardProjects) {
       currentProjectStatusesPromises.push(
