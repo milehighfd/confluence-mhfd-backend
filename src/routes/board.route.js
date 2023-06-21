@@ -175,11 +175,14 @@ router.get('/:id/filters', async (req, res) => {
     ['project_service_areas', 'service_area_name', 'code_service_area_id'],
     ['project_local_governments', 'local_government_name', 'code_local_government_id'],
   ];
-  const groupingArrayMap = {};
+  const groupingArrayMap = {
+    project_counties: [],
+    project_service_areas: [],
+    project_local_governments: [],
+  };
   localitiesData.forEach((localityData) => {
     if (!localityData) return;
     groupingArray.forEach(([groupProperty, groupPropertyKeyName, idPropertyName]) => {
-      if (!groupingArrayMap[groupProperty]) groupingArrayMap[groupProperty] = [];
       const groupPropertyValue = localityData[groupProperty];
       if (groupPropertyValue == null) return;
       groupPropertyValue.forEach((propertyValueElement) => {
