@@ -160,14 +160,19 @@ export const addProjectToBoard = async (
     },
   });
   if (!board) {
-    const response = await boardService.createNewBoard(
-      type,
-      year,
-      locality,
-      projecttype,
-      'Under Review'
-    );
-    board = response;
+    try {
+      const response = await boardService.createNewBoard(
+        type,
+        year,
+        locality,
+        projecttype,
+        'Under Review'
+      );
+      board = response;
+    } catch (e) {
+      logger.error('error in create new board '+e);
+      throw e;
+    }    
     logger.info('BOARD CREATED');
   }
   let boardProjectObject = {
@@ -206,15 +211,20 @@ export const addProjectToBoard = async (
   let boardProject = new BoardProject(boardProjectObject);
   let boardProjectSaved = boardProject;
   if (sendToWR === 'true' || isWorkPlan) {
-    boardProjectSaved = await boardService.saveBoard(
-      boardProject.board_id,
-      boardProject.project_id,
-      boardProject.origin,
-      boardProject.rank0,
-      boardProject.projectname,
-      boardProject.projecttype,
-      boardProject.projectsubtype
-    );
+    try {
+      boardProjectSaved = await boardService.saveBoard(
+        boardProject.board_id,
+        boardProject.project_id,
+        boardProject.origin,
+        boardProject.rank0,
+        boardProject.projectname,
+        boardProject.projecttype,
+        boardProject.projectsubtype
+      );
+    } catch (error) {
+      logger.error('error in save board ' + error);
+      throw error;
+    }
   }
   if (['admin', 'staff'].includes(user.designation) && !isWorkPlan) {
     await sendBoardsToProp(
@@ -295,37 +305,40 @@ export const cleanStringValue = (value) => {
   return value;
 };
 
-export const getLocalitiesNames = async (localities) => {
+export const getLocalitiesNames = async (localities) => { 
+  localities = localities.map(l => parseInt(l));
+  const order = []
   const namesServiceArea = await CodeServiceArea.findAll({
-    attributes: ['service_area_name'],
+    attributes: ['service_area_name', 'code_service_area_id'],
     where: {
       code_service_area_id: localities
     }
   });
   const namesStateCounty = await CodeStateCounty.findAll({
-    attributes: ['county_name'],
+    attributes: ['county_name', 'state_county_id'],
     where: {
       state_county_id: localities
     }
   });
   const namesLocalGoverment = await CodeLocalGoverment.findAll({
-    attributes: ['local_government_name'],
+    attributes: ['local_government_name', 'code_local_government_id'],
     where: {
       code_local_government_id: localities
     }
   });
-  const names = [];
   if (namesServiceArea && namesServiceArea.length > 0) {
-    names.push(...namesServiceArea.map(sa => sa.service_area_name+ ' Service Area'));
+    order.push(...namesServiceArea.map(sa => ({id: sa.code_service_area_id, name: sa.service_area_name, realName: sa.service_area_name+ ' Service Area'})));
   }
   if (namesStateCounty && namesStateCounty.length > 0) {
-    names.push(...namesStateCounty.map(sc => sc.county_name + ' County'));
+    order.push(...namesStateCounty.map(sc => ({id: sc.state_county_id, name: sc.county_name, realName: sc.county_name + ' County'})));
   }
   if (namesLocalGoverment && namesLocalGoverment.length > 0) {
-    names.push(...namesLocalGoverment.map(lg => lg.local_government_name));
+    order.push(...namesLocalGoverment.map(lg => ({id: lg.code_local_government_id, name: lg.local_government_name, realName: lg.local_government_name})));
   }
-  return names;
+  order.sort((a, b) => localities.indexOf(a.id) - localities.indexOf(b.id)); 
+  return order.map(o => o.realName);
 };
+
 
 export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, splitedJurisdiction, splitedCounty, splitedServicearea) => {
   const localitiesBoard = [];
