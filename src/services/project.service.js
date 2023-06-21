@@ -790,10 +790,10 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
         attributes: [
           'code_local_government_id'
         ],
+        where: localGovernmentWhere,
         include: {
           model: CodeLocalGoverment,
           required: true,
-          where: localGovernmentWhere,
           attributes: [
             'local_government_name'
           ]
