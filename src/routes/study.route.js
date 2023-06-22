@@ -5,7 +5,10 @@ import db from 'bc/config/db.js';
 const CodeStudyReason = db.codeStudyReason;
 const router = express.Router();
 
-const childs = ['Changed watershed conditions (land-use, topo, regional, detention, etc.)','New Oppurtuinity Available','Not aligned with current stream management practices'];// lle na
+const childs = [
+  'Changed watershed conditions (land-use, topo, regional, detention, etc.)',
+  'New Opportunity Available',
+  'Not aligned with current stream management practices'];// lle na
 const isChild = name => childs.includes(name);
 const PARENT = 'Master plan recomendations are outdated';
 const getReason = (data) => {
