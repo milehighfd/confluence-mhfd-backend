@@ -1341,35 +1341,10 @@ router.get('/:boardId/boards/:type', async (req, res) => {
                 year: board.year
             }
         })
-        
-        if(boardFrom && 'status' in boardFrom && boardFrom.status !== 'Approved'){
-            try {
-                await Board.update({
-                    status : "Approved"
-                },{
-                    where : {
-                        board_id : boardFrom.board_id
-                    }
-                })
-                boardFrom = await Board.findOne({
-                    where: {
-                        locality,
-                        type,
-                        year: board.year,
-                        status: "Approved"
-                    }
-                })
-            } catch (error) {
-                logger.error('update error:', error);
-                throw error;
-            }
-            
-        }
-
         logger.info (`BOARD FROM: ${boardFrom}`);
         bids.push({
             locality,
-            status: boardFrom ? boardFrom.status : 'Approved',
+            status: boardFrom ? boardFrom.status : 'Under Review',
             submissionDate: boardFrom ? boardFrom.submissionDate : null,
             substatus: boardFrom ? boardFrom.substatus : ''
         });
