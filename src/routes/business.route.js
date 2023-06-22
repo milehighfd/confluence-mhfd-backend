@@ -61,7 +61,8 @@ router.get('/business-associates', async (_, res) => {
       ]
     });
     logger.info(`Finished function findAll for business.route/business-associates`);
-    res.send(associates);
+    res.send(associates.map(element => element.dataValues)
+      .filter(d => d.code_business_associates_type_id !== 8 && d.code_business_associates_type_id !== 9));
   } catch(error) {
     res.status(500).send(error);
   }
