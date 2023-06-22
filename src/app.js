@@ -42,6 +42,7 @@ import businessRouter from 'bc/routes/business.route.js';
 import notificationRouter from 'bc/routes/notifications.route.js';
 import { createNotifications,deleteNotifications } from 'bc/utils/functionsNotifications.js';
 import financial from 'bc/routes/financial.route.js';
+import studyRouter from 'bc/routes/study.route.js';
 
 seed();
 
@@ -119,5 +120,6 @@ app.use('/card-filters', cardFilterRouter);
 app.use('/business', businessRouter);
 app.use('/notifications', notificationRouter);
 app.use('/financial',financial)
+app.use('/study', studyRouter);
 
 export default server;
