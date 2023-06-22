@@ -74,18 +74,37 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
   const user = req.user;
   const { body } = req;
   try {
-    const businessAdress = {
-      business_associate_id: id,
-      business_address_line_1: body.business_address_line_1,
-      business_address_line_2: body.business_address_line_2,
-      full_address: body.business_address_line_1,
-      state: body.state,
-      city: body.city,
-      zip: body.zip
-    };
-    logger.info(`Starting function create for business.route/business-associates`);
-    const newBusinessAddress = await BusinessAdress.create(businessAdress);
-    logger.info(`Finished function create for business.route/business-associates`);
+    const existingBusinessAddress = await BusinessAdress.findOne({
+      where: { business_associate_id: +id }
+    });
+    let newBusinessAddress;
+    if (existingBusinessAddress) {
+      console.log('existingBusinessAddress', existingBusinessAddress)
+      await BusinessAdress.update({
+        business_address_line_1: body.business_address_line_1,
+        business_address_line_2: body.business_address_line_2,
+        full_address: body.business_address_line_1,
+        state: body.state,
+        city: body.city,
+        zip: body.zip
+      }, { where: { business_associate_id: +id } });
+      newBusinessAddress = await BusinessAdress.findOne({
+        where: { business_associate_id: +id }
+      });
+    } else {
+      const businessAdress = {
+        business_associate_id: id,
+        business_address_line_1: body.business_address_line_1,
+        business_address_line_2: body.business_address_line_2,
+        full_address: body.business_address_line_1,
+        state: body.state,
+        city: body.city,
+        zip: body.zip
+      };
+      logger.info(`Starting function create for business.route/business-associates`);
+      newBusinessAddress = await BusinessAdress.create(businessAdress);
+      logger.info(`Finished function create for business.route/business-associates`);
+    }
     const businessContact = {
       business_address_id: newBusinessAddress.business_address_id,
       contact_name: body.name,
