@@ -7,7 +7,7 @@ const router = express.Router();
 
 const childs = [
   'Changed watershed conditions (land-use, topo, regional, detention, etc.)',
-  'New Opportunity Available',
+  'New opportunity Available',
   'Not aligned with current stream management practices'];// lle na
 const isChild = name => childs.includes(name);
 const PARENT = 'Master plan recomendations are outdated';
