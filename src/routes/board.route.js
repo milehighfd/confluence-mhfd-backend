@@ -603,6 +603,7 @@ router.post('/board-for-positions2', async (req, res) => {
       rankColumnName,
       'origin',
       originPositionColumnName,
+      'code_status_type_id',
     ];
     const where = {
       board_id,
