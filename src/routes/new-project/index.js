@@ -684,7 +684,7 @@ router.post('/get-countyservicearea-for-point', auth, async (req, res) => {
     if (data.statusCode === 200) {
       const body = data.body;
       let answer = {
-        jurisdiction: [await getJurisdictionByGeom(JSON.stringify(geom))]
+        jurisdiction: await getAllJurisdictionByGeom(JSON.stringify(geom))
       };
 
       body.rows.forEach(row => {
@@ -1096,7 +1096,7 @@ const getJurisdictionByGeom = async (geom) => {
   return data.body.rows[0].jurisdiction;
 }
 
-const getAllJurisdictionByGeom = async (geom) => {
+const   getAllJurisdictionByGeom = async (geom) => {
   let sql = `SELECT jurisdiction FROM jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
   const query = { q: sql };
   const data = await needle('post', CARTO_URL, query, { json: true });
