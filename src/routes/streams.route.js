@@ -29,8 +29,15 @@ const getStreamDatabyID = async (req, res) => {
     logger.info(`Starting function findAll for streams.route/:OBJECTID`);
     let streamData = await streams.findAll({
       where: {
-        OBJECTID: objectid
-      }
+        mhfd_code: objectid
+      },
+      attributes: [
+        'stream_name',
+        'mhfd_code',
+        'catchment_area_sum_ac',
+        'stream_length_ft',
+        'slope_ft'
+      ],
     });
     logger.info(`Finished function findAll for streams.route/:OBJECTID`);
     if (streamData) {
