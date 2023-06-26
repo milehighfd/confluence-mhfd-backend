@@ -6,6 +6,7 @@ import auth from 'bc/auth/auth.js';
 const BusinessContact = db.businessAssociateContact;
 const BusinessAdress = db.businessAdress;
 const BusinessAssociates = db.businessAssociates;
+
 const router = express.Router();
 
 router.get('/business-contact/:id', async (req, res) => {
@@ -152,6 +153,21 @@ router.get('/sponsor-list', async (req, res) => {
   res.send(associates);
 });
 
+router.post('/create-contact', [auth], async (req, res) => {
+  const { business_address_id, contact_name, contact_email, contact_phone_number } = req.body;
+  try {
+    const contact = await BusinessContact.create({
+      business_address_id,
+      contact_name,
+      contact_email,
+      contact_phone_number
+    });
+    res.status(201).send(contact);
+  } catch(error) {
+    res.status(500).send(error);
+  }
+
+});
 
 
 export default router;
