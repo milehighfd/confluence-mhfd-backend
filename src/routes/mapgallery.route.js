@@ -17,6 +17,7 @@ import {
    componentCounterRoute,
    componentParamFilterRoute,
    componentParamFilterCounter,
+   componentParamFilterCounterNoBounds,
    componentFilterIds
 } from 'bc/routes/mapgallery.component.route.js';
 import {
@@ -35,6 +36,7 @@ import {
    getCoordinatesOfComponents,
    getDataProblemSql,
    getCountForProblemId,
+   getLayersProblemSql,
 } from 'bc/services/mapgallery.service.js';
 import {
    statusList
@@ -43,7 +45,7 @@ import ProjectService from 'bc/services/project.service.js';
 import db from 'bc/config/db.js';
 import sequelize from 'sequelize';
 import teamsService from 'bc/services/teams.service.js';
-
+import financialService from 'bc/services/financial.service.js';
 
 
 const Op = sequelize.Op;
@@ -402,14 +404,17 @@ function getFilters(params) {
       tipoid = 'problemid';      
       if (params.name) {
          let name = params.name;
-         if (!Number.isInteger(Number(name))) {
-            name += ' ';
-          }
          if (filters.length > 0) {
-            filters = filters = ` and (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${name}%' OR ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${name}%')`;
+            filters = filters = ` and (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${name} %' OR 
+            ${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '% ${name}%' OR
+            ${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '${name}' OR
+            ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${name}%')`;
          }
          else {
-            filters = ` (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${name}%' OR ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${name}%') `;
+            filters = ` (${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${name} %' OR
+            ${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '% ${name}%' OR
+            ${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '${name}' OR
+            ${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${name}%') `;
          }
       }
 
@@ -1110,18 +1115,21 @@ const getProblemParts = async (id) => {
 router.post('/project-pdf/:id', async (req, res) => {
    logger.info(`Starting endpoint mapgallery.route/project-pdf/:id with params ${JSON.stringify(req.params, null, 2)}`);
    const { id } = req.params
+   const { appUser } = req.body
    const mapImage = req.body.mapImage;
    const roadMap = req.body.roadMap;
 
    try {
       const data = await ProjectService.getDetails(id);
-      let components = await componentsByEntityId(
+      const components = await componentsByEntityId(
          id,
          'projectid',
          'type',
          'asc'
       );
-      let pdfObject = await newPrintProject(data, components, mapImage, roadMap);
+      const financialData = await financialService.getFinancialInformation(id, []);
+      const attachments = await attachmentService.listAttachments(1, 10, 'created_date', 'asc', id);
+      let pdfObject = await newPrintProject(data, components, mapImage, roadMap, attachments, financialData, appUser);
       pdfObject.toBuffer(function (err, buffer) {
          if (err) return res.send(err);
          res.type('pdf');
@@ -1203,7 +1211,8 @@ let componentsByEntityId = async (id, typeid) => {
       projectid: id,
     };
   }
-  const projectLayers = await getLayersInfo(conditionalWhere, typeid, id);
+  const projectLayers = await getLayersProblemSql(conditionalWhere, typeid, id);
+  console.log('projectLayers', projectLayers);
   let costs = [];
   let totalCost = 0;
   let original_Cost = 0;
@@ -2320,6 +2329,7 @@ const getcountForProblem = async (req, res) => {
 
 router.post('/params-filter-components', componentParamFilterRoute)
 router.post('/params-filter-components-db', componentParamFilterCounter)
+router.post('/params-filter-components-db-nobounds',componentParamFilterCounterNoBounds)
 router.post('/params-filter-components-ids', componentFilterIds)
 router.post('/params-filter-projects', projectParamFilterRoute)
 router.post('/params-filter-problems', problemParamFilterRoute)

@@ -1,5 +1,7 @@
 import fs from 'fs';
 import pdf from 'html-pdf';
+import attachmentService from 'bc/services/attachment.service.js';
+import moment from 'moment';
 
 var limit = 0;
 const priceFormatter = (value) => {
@@ -63,7 +65,7 @@ export const printProblem = async (data, components, map, problempart,teamsProbl
             <span style="font-size: 12px; color: #11093c; margin-bottom: 15px;margin-top: -3px; line-height: 10px;">${el.business_associate_contact.business_address.business_associate.business_name}</span>
           </td>
         </tr>
-    `
+      `
     }
     })
   .join('');
@@ -78,40 +80,73 @@ export const printProblem = async (data, components, map, problempart,teamsProbl
     original_cost: 0,
     percen: 0
   }]
-  let sum = _components.reduce((prev, curr) => curr.estimated_cost + prev, 0);
+  let sum = components.reduce((prev, next) => {
+    return prev + (next.estimated_cost ? next.estimated_cost : 0);
+  }, 0);
   let totalComponents = _components.reduce((prev, next) => prev + next.component_count_total, 0);
-  let componentRows = _components.map((c) => {
-    return `
-        <tr>
-          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type == null? 'N/A' : c.type}</td>
-          <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${priceFormatter(c.estimated_cost)}</td>
-          <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.original_cost ? (Math.round(c.original_cost * 10) / 10) : 0}%</td>
-          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen == null? 'N/A' : `${Math.round(c.percen)}%` }</td>
-        </tr>
-      `
-  }).join('')
-  let problempartRows = problempart.map((c) => {
-    return `
+  let componentRows
+  if(components.length > 0 && components[0].type !== ''){
+    componentRows = `
       <tr>
-        <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_type == null? 'N/A' : c.problem_type}</td>
-        <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${(c.problem_part_category == null? 'N/A' : c.problem_part_category)}</td>
-        <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_part_subcategory == null? 'N/A' : c.problem_part_subcategory}</td>
+        <th width="30%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Actions</th>
+        <th width="20%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Cost</th>
+        <th width="20%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">% Complete</th>
+        <th width="30%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">% of Total Cost</th>
       </tr>
     `
-  }).join('');
-  html = html.split('${problempartRows}').join(problempartRows);
-  if (sum >= 0) {
-    html = html.split('${componentRows}').join(componentRows);
-    html = html.split('${totalEstimatedCost}').join(`<tfoot>
+    componentRows = componentRows + components.map((c) => {
+      let completepercen =Math.round((c.component_count_complete/c.component_count_total)*100);
+      return `
+          <tr>
+            <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.type == null? 'N/A' : c.type}</td>
+            <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${priceFormatter(c.estimated_cost ? c.estimated_cost : 0)}</td>
+            <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${completepercen ? completepercen: 0}%</td>
+            <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.percen  ? `${Math.round(c.percen)}%` : '0%' }</td>
+          </tr>
+        `
+    }).join('');
+      html = html.split('${componentRows}').join(componentRows);
+      html = html.split('${totalEstimatedCost}').join(`<tfoot>
+        <tr>
+          <th width="40%" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>Total Proposed Cost (${totalComponents? totalComponents: 0})</b></th>
+          <th width="60%" colspan="3" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>${sum ? priceFormatter(sum): '$0'}</b></th>
+        </tr>
+      </tfoot>`);
+  } else{
+    componentRows = `
       <tr>
-        <th width="40%" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>Total Proposed Cost (${totalComponents? totalComponents: 0})</b></th>
-        <th width="60%" colspan="3" style="color: #11093C; padding: 17px 20px; text-align:left; font-weight: 600;  padding-top:0px"><b>${priceFormatter(sum)}</b></th>
+        <td style="text-align: center;">No data available</td>
       </tr>
-    </tfoot>`);
-  } else {
+    `;
     html = html.split('${componentRows}').join(componentRows);
     html = html.split('${totalEstimatedCost}').join('');
   }
+
+  if(problempart.length > 0){
+    let problempartRows = `<tr>
+      <th width="30%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Problem Type</th>
+      <th width="35%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Problem Part Category</th>
+      <th width="35%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Problem Part Subcategory</th>
+    </tr>`
+    problempartRows = problempartRows + problempart.map((c) => {
+      return `
+        <tr>
+          <td width="30%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_type == null? 'N/A' : c.problem_type}</td>
+          <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${(c.problem_part_category == null? 'N/A' : c.problem_part_category)}</td>
+          <td width="35%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${c.problem_part_subcategory == null? 'N/A' : c.problem_part_subcategory}</td>
+        </tr>
+      `
+    }).join('');
+    html = html.split('${problempartRows}').join(problempartRows);
+  }else{
+    let problempartRows = `
+      <tr>
+        <td style="text-align: center;">No data available</td>
+      </tr>
+    `;
+    html = html.split('${problempartRows}').join(problempartRows);
+  }
+
   let q = 0;
   let spaceBetween = '';
   switch (components.length) {
@@ -168,10 +203,16 @@ export const printProblem = async (data, components, map, problempart,teamsProbl
 
   return pdf.create(html, options);
 }
+const formatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
 
-export const newPrintProject = async (_data, components, mapImage, roadMap) => {
+export const newPrintProject = async (_data, components, mapImage, roadMap, attachments, financialData, appUser) => {
+
   let data = {};
-
   var html = fs.readFileSync('./pdf-templates/Projects2.html', 'utf8');
   Object.keys(_data).forEach((k) => {
     if (k === 'description') {
@@ -209,16 +250,17 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       (_data[k] !== void 0 || _data[k] !== []) &&
       _data[k]?.length > 0
     ) {
-      for (let i = 0; i < _data?.project_local_governments.length; i++) {
-        if (_data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT) {
-          data['local_government']
-            ? (data[
-                'local_government'
-              ] += `${_data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT.local_government_name}, `)
-            : (data['local_government'] =
-                _data?.project_local_governments[i]?.CODE_LOCAL_GOVERNMENT.local_government_name);
-        }
-      }
+      data['local_government'] = _data?.project_local_governments.reduce((accumulator, current) => {
+        const sa = current?.CODE_LOCAL_GOVERNMENT?.local_government_name || '';
+        let value = accumulator;
+        if (sa) {
+          if (value) {
+            value += ', ';
+          }
+          value += sa;
+        }  
+        return value;
+      }, '');
     }
 
     if (
@@ -271,50 +313,100 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     data[k] = _data[k] ? _data[k] : [];
   });
 
+  let income = [0,0,0]
+  let expense = [0,0,0]
+
+  financialData.sort((e1, e2) => {
+    let res = 0;
+    res = moment(e1.effective_date, "MM-DD-YYYY") < moment(e2.effective_date, "MM-DD-YYYY") ? 1 : moment(e1.effective_date, "MM-DD-YYYY") > moment(e2.effective_date, "MM-DD-YYYY") ? -1 : 0
+    if (res === 0) {
+      if (e1.project_partner_name === 'MHFD') {
+        return -1
+      } else {
+        return 1
+      }
+    } else {
+      return res
+    }
+  });
+
+  const mappingDataForFinancial = financialData.map((element) => {
+    const agreement = element?.agreement_number || '';
+    const amendment =
+    element?.amendment_number && (element?.amendment_number.includes('ORIGINAL') || element?.amendment_number === null)
+        ? ''
+        : element?.amendment_number;
+    const partner = element?.project_partner_name || '';
+    const phase = element?.code_phase_type?.name || '';
+    const projected = [element?.projected ? formatter.format(element?.projected?.cost) : '$0', element?.projected && element?.projected.cost !== 0 ? element?.projected?.is_income ? '#40cba5' : '#FF0000' : '#11093c'];
+    const encumbered = [element?.encumbered ? formatter.format(element?.encumbered?.cost) : '$0', element?.encumbered && element?.encumbered.cost !== 0 ? element?.encumbered?.is_income ? '#40cba5' : '#FF0000' : '#11093c'];
+    const tyler = [element?.tyler_encumbered ? formatter.format(element?.tyler_encumbered?.cost) : '$0', element?.tyler_encumbered && element?.tyler_encumbered.cost !== 0 ? element?.tyler_encumbered?.is_income ? '#40cba5' : '#FF0000' : '#11093c'];
+    const date = element?.effective_date || '';
+   
+    if (element?.projected?.is_income) {
+      income[0] += element?.projected?.cost || 0;
+    } else {
+      expense[0] += element?.projected?.cost || 0;
+    }
+    if (element?.encumbered?.is_income) {
+      income[1] += element?.encumbered?.cost || 0;
+    } else {
+      expense[1] += element?.encumbered?.cost || 0;
+    }
+    if (element?.tyler_encumbered?.is_income) {
+      income[2] += element?.tyler_encumbered?.cost || 0;
+    } else {
+      expense[2] += element?.tyler_encumbered?.cost || 0;
+    }
+
+    return {agreement, amendment, partner, phase, projected, encumbered, tyler, date };
+  });
+  const INCOME_PROJECTED_COST=formatter.format(income[0]);
+  const INCOME_ENCUMBERED_COST=formatter.format(income[1]);
+  const INCOME_TYLER_COST=formatter.format(income[2]);
+
+  const EXPENSE_PROJECTED_COST=formatter.format(expense[0]);
+  const EXPENSE_ENCUMBERED_COST=formatter.format(expense[1]);
+  const EXPENSE_TYLER_COST=formatter.format(expense[2]);
+
+  const TOTAL_PROJECTED_COST=formatter.format(income[0] - expense[0]);
+  const TOTAL_ENCUMBERED_COST=formatter.format(income[1] - expense[1]);
+  const TOTAL_TYLER_COST=formatter.format(income[2] - expense[2]);
+  
   const {
-    project_name,
     county,
-    project_type_name,
     local_government,
     servicearea,
     phase,
     cost,
     stream_name,
-    // projectsubtype,
-    // attachments,
     status,
-    // startyear,
-    // completedyear,
-    // frequency,
-    // mhfdmanager,
-    description,
     contractor,
     consultant,
     problems,
-    vendors,
-    typeVendor,
+    code_project_type,
+    onbase_project_number
   } = data;
-  const mapHeight = 500;
-  const mapWidth = 750;
-  const URL_BASE = 'https://confdev.mhfd.org/';
+  let coverImage = '';
+  attachments?.filter(
+    (element) => (attachmentService.isImage(element.mime_type))
+  ).map((file) => {
+    if(file.is_cover){
+      coverImage = file.attachment_url;
+    }
+  })
+  const URL_BASE = 'https://confdev2.mhfd.org/'; //TODO: change 'https://confdev.mhfd.org/'
   const urlImage =
-    project_type_name === 'CIP'
-      ? `${URL_BASE}detailed/capital.png`
-      : project_type_name === 'Study'
-      ? `${URL_BASE}projectImages/study.jpg`
-      : project_type_name === 'Vegetation Management'
-      ? `${URL_BASE}detailed/vegetation-management.png`
-      : project_type_name === 'Sediment Removal'
-      ? `${URL_BASE}detailed/sediment-removal.png`
-      : project_type_name === 'Maintenance Restoration'
-      ? `${URL_BASE}detailed/restoration.png`
-      : project_type_name === 'General Maintenance'
-      ? `${URL_BASE}detailed/minor-repairs.png`
-      :project_type_name === 'Restoration'
-      ? `${URL_BASE}detailed/restoration.png`
-      :project_type_name === 'Routine Trash and Debris'
-      ? `${URL_BASE}detailed/debris-management.png`
-      : `${URL_BASE}detailed/watershed-change.png`;
+  coverImage !== '' ? coverImage:
+  code_project_type.project_type_name === 'CIP' ? `${URL_BASE}/detailed/capital.png` :
+    code_project_type.project_type_name === 'Study' ? `${URL_BASE}/detailed/study.png` :
+      code_project_type.project_type_name === 'Special' ? `${URL_BASE}/detailed/special.png` :
+        code_project_type.project_type_name === 'Vegetation Management' ? `${URL_BASE}/detailed/vegetation-management.png` :
+          code_project_type.project_type_name === 'Sediment Removal' ? `${URL_BASE}/detailed/sediment-removal.png` :
+            code_project_type.project_type_name === 'Restoration' ? `${URL_BASE}/detailed/restoration.png` :
+              code_project_type.project_type_name === 'Acquisition' ? `${URL_BASE}/detailed/acquisition.png` :
+                code_project_type.project_type_name === 'General Maintenance' ? `${URL_BASE}/detailed/minor-repairs.png` :
+                  code_project_type.project_type_name === 'Routine Trash and Debris' ?`${URL_BASE}/detailed/debris-management.png`: `${URL_BASE}/detailed/watershed-change.png`;
   let mhfdManager = 'N/A'
   let lgManager = 'N/A'
   data.project_staffs.map((el) => {
@@ -326,18 +418,17 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
     }
   })
   let projectId = data.project_id ? data.project_id : 'N/A'
-
   html = html.split('${projectname}').join(_data.project_name);
-  html = html.split('${projecttype}').join(_data.code_project_type.project_type_name + ' Project');
-  html = html.split('${onBaseId}').join(_data.onbase_project_number);
-  html = html.split('${local_government}').join(local_government);
-  html = html.split('${county}').join(county);
-  html = html.split('${servicearea}').join(servicearea);
+  html = html.split('${projecttype}').join(code_project_type.project_type_name + ' Project');
+  html = html.split('${onBaseId}').join(_data.onbase_project_number ? _data.onbase_project_number : 'N/A');
+  html = html.split('${local_government}').join(local_government || 'N/A');
+  html = html.split('${county}').join(county ? (county + ' County') : 'N/A');
+  html = html.split('${servicearea}').join(servicearea ? (servicearea + ' Service Area'): 'N/A');
   html = html
     .split('${cost}')
     .join(cost ? priceFormatter(cost) : 'No Cost Data');
-  html = html.split('${status}').join(status);
-  html = html.split('${phase}').join(phase);
+  html = html.split('${status}').join(status ? status : 'N/A');
+  html = html.split('${phase}').join(phase ? phase : 'N/A');
   html = html.split('${streamname}').join(stream_name ? stream_name:'N/A' );
   html = html.split('${attachmentUrl}').join(urlImage);
   html = html.split('${projectId}').join(projectId);
@@ -346,6 +437,7 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   html = html.split('${description}').join(_data.description ? _data.description : 'N/A');
   html = html.split('${contractor}').join(contractor ? contractor : 'N/A');
   html = html.split('${consultant}').join(consultant ? consultant : 'N/A');
+  html = html.split('${viewFinancials}').join(appUser && appUser.designation && (appUser.designation === 'admin' || appUser.designation === 'staff')  ? 'yes financial':'no financial');
   let _problems =
     (problems !== void 0 || problems !== []) && problems?.length > 0
       ? problems
@@ -353,18 +445,18 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   if(_problems.length > 0 && (_problems[0].problemname != '' || _problems[0].problempriority != '') ){
     let problemRows = `<thead>
       <tr>
-        <th width="50%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Name</th>
-        <th width="50%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Priority</th>
+        <th width="80%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Name</th>
+        <th width="20%" style="color: #251863; text-align: left; padding: 12px 20px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Priority</th>
       </tr>
     </thead>`;
     problemRows = problemRows + _problems
       .map((p) => {
         return `
           <tr>
-            <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+            <td width="80%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
               p.problemname == null ? 'N/A' : p.problemname
             }</td>
-            <td width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
+            <td width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${
               p.problempriority == null ? 'N/A' : p.problempriority
             }</td>
           </tr>
@@ -446,7 +538,192 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
       </tr>`;
     html = html.split('${vendorRows}').join(vendorRows);
   }
+  let listAttachments = attachments?.filter((element) => {
+    return attachmentService.isImage(element.mime_type);
+  });
+  let imageRow = '';
+  let imageRow1 = listAttachments.map((element, index) => {
+    if(((index + 1) % 10) === 0){
+      imageRow = imageRow +  `<td style="width: 50%; text-align: left; height: 250px; border-radius: 13px; padding-left: 16px; padding-right: 16px;">
+                <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>`
+      return imageRow
+    }
+    if(((index + 1) % 9) === 0){
+      imageRow = imageRow +  `<td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+          <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+        </td>`
+        return imageRow
+    }
+    if(((index + 1) % 8) === 0){
+      imageRow = imageRow + `<tr >
+          <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+            <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+          </td>`
+        return imageRow
+    }
+    if(((index + 1) % 7) === 0){
+      imageRow = imageRow + `<td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+              <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+            </td></tr>`
+            return imageRow
+    }
+    if(((index + 1) % 6) === 0){
+      imageRow = imageRow +  `<tr >
+      <td style="width: 50%; text-align: left;">
+        <table style="border-spacing: 15px 17px; width:100%; margin: -16px 0px; height:100%;">
+          <tr >
+            <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+              <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+            </td>`
+      return imageRow
+    }
+    if(((index + 1) % 5) === 0){
+      imageRow = imageRow +  `<td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+                <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>`
+      return imageRow
+    }
+    if(((index + 1) % 4) === 0){
+      imageRow = imageRow + `<tr >
+        <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+          <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+        </td>`
+        return imageRow
+    }
+    if(((index + 1) % 3) === 0){
+      imageRow = imageRow +  `<td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+            <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+          </td>
+        </tr>`
+        return imageRow
+    }
+    if(((index + 1) % 2 )=== 0){
+      imageRow = imageRow + `<td style="width: 50%; text-align: left;">
+        <table style="border-spacing: 15px 17px; width:100%; margin: -16px 0px; height:100%;">
+          <tr >
+            <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+              <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+            </td>`
+            return imageRow
+    }
+    imageRow = imageRow +  `<tr >
+      <td style="width: 50%; text-align: left; height: 250px; padding-left: 16px;">
+        <img src=${element.attachment_url.replace(/ /g, '%20')} style="border-radius: 13px; height:100%; width:100%; object-fit: cover;">
+      </td>`
+      return imageRow
+  })
+
+
+  if(listAttachments.length > 0){
+    if(listAttachments.length % 9 === 0 || listAttachments.length % 8 === 0 || listAttachments.length % 7 === 0 || listAttachments.length % 4 === 0 || listAttachments.length % 3 === 0 || listAttachments.length % 2 === 0) {
+    imageRow = imageRow + `</tr>
+        </table>
+      </td></tr>`
+    }
+  }
+  else{
+    imageRow = imageRow + `<tr >
+    <td style="width: 50%; text-align: left; height: 250px; padding-left: 16px;">
+      <div style="height:100%; width:100%; background-color: #f5f7ff; border-radius: 13px;"></div>
+    </td>
+    <td style="width: 50%; text-align: left;">
+      <table style="border-spacing: 15px 17px; width:100%; margin: -16px 0px; height:100%;">
+        <tr >
+          <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+            <div style="height:100%; width:100%; background-color: #f5f7ff; border-radius: 13px;"></div>
+          </td>
+          <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+            <div style="height:100%; width:100%; background-color: #f5f7ff; border-radius: 13px;"></div>
+          </td>
+        </tr>
+        <tr >
+          <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+            <div style="height:100%; width:100%; background-color: #f5f7ff; border-radius: 13px;"></div>
+          </td>
+          <td style="width: 50%; text-align: left; height: 120px; border-radius: 13px;">
+            <div style="height:100%; width:100%; background-color: #f5f7ff; border-radius: 13px;"></div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>`
+  }
+  let documentRpw = '';
+   attachments.map((element, index) => {
+    if (!attachmentService.isImage(element.mime_type)) {
+      documentRpw = documentRpw + `<tr>
+        <td style="width: 2%; color: #11093c; font-size: 16px; font-weight: 700; text-align: left;">
+        <img src="https://confluence.mhfd.org/Icons/icon-63.svg" alt="" height="18px" style="margin-right: 3px; margin-top: 6px; ">
+        </td>
+        <td style="width: 98%; color: #11093c;">${element.file_name}</td>
+      </tr>`
+      return documentRpw
+    }
+  })
+  if(!(documentRpw.length > 0)){
+    documentRpw = `
+    <tr>
+      <td style="text-align: center;">No data available</td>
+    </tr>`
+  }
+  html = html.split('${imageRow}').join(imageRow);
+  html = html.split('${documentsRow}').join(documentRpw);
   //END VENDORS
+  //START PROJECT FINANCIALS
+  let finacialRows =`<tr>
+  <th width="8%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Agreement</th>
+  <th width="10%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Amendment</th>
+  <th width="10%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Partner</th>
+  <th width="10%" style="color: #251863; text-align: center; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Phase</th>
+  <th width="15%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Projected</th>
+  <th width="15%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Encumbered</th>
+  <th width="15%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Tyler Encumbered</th>
+  <th width="17%" style="color: #251863; text-align: left; padding: 12px 5px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #eae8f0;">Date</th>
+</tr>`
+  finacialRows = finacialRows +  mappingDataForFinancial.map((element) => {
+    let response = `<tr>
+    <th width="8%" style="color: #11093c; text-align: left; padding: 4px 5px; font-size: 12px; font-weight: 400;">${element.agreement || ''}</th>
+    <th width="10%" style="color: #11093c; text-align: left; padding: 4px 5px; font-size: 12px; font-weight: 400;">${element.amendment || ''}</th>
+    <th width="10%" style="color: #11093c; text-align: left; padding: 4px 5px; font-size: 9px; font-weight: 400;">${element.partner || ''}</th>`
+    if(element.phase){
+      response +=`<th width="10%" style="color: #11093c; text-align: center; padding: 4px 5px; font-size: 12px; font-weight: 400;">
+                  <span style="border-radius: 3px; color: #488abf; background: #e6eef4; padding: 2px 3px;">${element.phase}</span>
+                  </th>`
+    }else{
+      response +=`<th width="10%" style="text-align: center; padding: 4px 5px; font-size: 12px; font-weight: 400;"></th>`
+    }
+    response+=`
+    <th width="15%" style="color:${element.projected[1]}; text-align: left; padding: 4px 5px; font-size: 12px; font-weight: 400;">${element.projected[0] || '$0'}</th>
+    <th width="15%" style="color:${element.encumbered[1]}; text-align: left; padding: 4px 5px; font-size: 12px; font-weight: 400;">${element.encumbered[0] || '$0'}</th>
+    <th width="15%" style="color:${element.tyler[1]}; text-align: left; padding: 4px 5px; font-size: 12px; font-weight: 400;">${element.tyler[0] || '$0'}</th>
+    <th width="17%" style="color:#11093C; text-align: left; padding: 4px 5px; font-size: 12px; font-weight: 400;">${element.date || ''}</th>
+    </tr>`
+    return response;
+  }).join('');
+
+  html = html.split('${finacialRows}').join(finacialRows);
+
+  html = html.split('${incomeProjected}').join(INCOME_PROJECTED_COST);
+  html = html.split('${incomeEncumbered}').join(INCOME_ENCUMBERED_COST);
+  html = html.split('${incomeTyler}').join(INCOME_TYLER_COST);
+
+  html = html.split('${expenseProjected}').join(EXPENSE_PROJECTED_COST);
+  html = html.split('${expenseEncumbered}').join(EXPENSE_ENCUMBERED_COST);
+  html = html.split('${expenseTyler}').join(EXPENSE_TYLER_COST);
+
+  html = html.split('${totalProjected}').join(TOTAL_PROJECTED_COST);
+  html = html.split('${totalEncumbered}').join(TOTAL_ENCUMBERED_COST);
+  html = html.split('${totalTyler}').join(TOTAL_TYLER_COST);
+  //END PROJECT FINANCIALS
   let _components =
     (components !== void 0 || components !== []) && components?.length > 0
       ? components
@@ -521,43 +798,6 @@ export const newPrintProject = async (_data, components, mapImage, roadMap) => {
   html = html.split('${map}').join(mapImage);
   html = html.split('${roadMap}').join(roadMap);
 
-  // let q = 0;
-  // let spaceBetween = '';
-  // switch (components.length) {
-  //   case 0:
-  //     q = 0;
-  //     break;
-  //   case 1:
-  //     q = 25;
-  //     break;
-  //   case 2:
-  //     q = 20;
-  //     break;
-  //   case 3:
-  //     q = 17;
-  //     break;
-  //   case 4:
-  //     q = 13;
-  //     break;
-  //   case 5:
-  //     q = 8;
-  //     break;
-  //   case 6:
-  //     q = 5;
-  //     break;
-  //   case 7:
-  //     q = 3;
-  //     break;
-  // }
-  // for (var i = 0; i < q; i++) {
-  //   spaceBetween += '<br/>'
-  // }
-  // html = html.split('${spaceBetween}').join(components.length > limit ? `<br><div style="page-break-after:always;"></div>` : '');
-  // let width = 900;
-  // let height = 1150;
-  // if (!(problems.length + components.length)) {
-  //   height += 180
-  // }
   const width = 900;
   const height = 1150;
   var options = {
@@ -649,8 +889,8 @@ export const printProject = async (_data, components, map) => {
   let problemRows = _problems.map((p) => {
     return `
         <tr style="background: rgba(37,24,99,.03); color: #11093c; font-weight:bold;">
-          width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problemname}</td>
-          width="50%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problempriority}</td>
+          width="80%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problemname}</td>
+          width="20%" style="color: #11093c; text-align: left; padding: 4px 20px; font-weight: 400;">${p.problempriority}</td>
         </tr>
       `
   }).join('')

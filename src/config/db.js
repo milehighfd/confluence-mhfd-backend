@@ -1,7 +1,6 @@
 import Sequelize from 'sequelize';
 import config from 'bc/config/config.js';
 import user from 'bc/models/user.model.js';
-import attachment from 'bc/models/attachment.model.js';
 import logActivity from 'bc/models/logActivity.model.js';
 import favorites from 'bc/models/favorites.model.js';
 import ProjectFavorite from 'bc/models/project_favorites.model.js';
@@ -10,6 +9,7 @@ import ProblemFavorite from 'bc/models/problem_favorites.model.js';
 import board from 'bc/models/board.model.js';
 import boardProject from 'bc/models/boardProject.model.js';
 import boardLocality from 'bc/models/boardLocality.model.js';
+import boardProjectCost from 'bc/models/boardProjectCost.model.js';
 import newnotes from 'bc/models/newnotes.model.js';
 import color from 'bc/models/color.model.js';
 import groupNotes from 'bc/models/groupNotes.model.js';
@@ -74,6 +74,7 @@ import streamImprovementMeasure from 'bc/models/stream_improvement_measure.model
 import codeNotificationType from 'bc/models/code_notification_type.model.js';
 import projectStatusNotification from 'bc/models/project_status_notification.model.js';
 import notifications from 'bc/models/notification.model.js';
+import projectSpatial from 'bc/models/project_spatial.model.js';
 
 Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
   date = this._applyTimezone(date, options);
@@ -108,12 +109,12 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.user = user(sequelize, Sequelize);
-db.attachment = attachment(sequelize, Sequelize);
 db.logActivity = logActivity(sequelize, Sequelize);
 db.ProjectFavorite = ProjectFavorite(sequelize, Sequelize);
 db.problemFavorite = ProblemFavorite(sequelize, Sequelize);
 db.board = board(sequelize, Sequelize);
 db.boardProject = boardProject(sequelize, Sequelize);
+db.boardProjectCost = boardProjectCost(sequelize, Sequelize);
 db.boardLocality = boardLocality(sequelize, Sequelize);
 db.newnotes = newnotes(sequelize, Sequelize);
 db.color = color(sequelize, Sequelize);
@@ -164,6 +165,7 @@ db.projectServiceArea = projectServiceArea(sequelize, Sequelize);
 db.notifications = notifications(sequelize, Sequelize);
 db.codeNotificationType = codeNotificationType(sequelize, Sequelize);
 db.projectStatusNotification = projectStatusNotification(sequelize, Sequelize);
+db.projectSpatial = projectSpatial(sequelize, Sequelize);
 // 14 layers called
 db.gradeControlStructure = gradeControlStructure(sequelize, Sequelize);
 db.pipeAppurtenances = pipeAppurtenances(sequelize, Sequelize);
@@ -199,6 +201,8 @@ db.landscapingArea.hasMany(db.projectStaff, {foreignKey: 'project_id', sourceKey
 db.streamImprovementMeasure.hasMany(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'project_id'});
 //Boards
 db.boardProject.hasOne(db.project, {foreignKey: 'project_id', sourceKey: 'project_id', as: 'projectData'});
+db.boardProjectCost.hasMany(db.boardProject, {foreignKey: 'board_project_id'});
+db.boardProjectCost.hasMany(db.projectCost, {foreignKey: 'project_cost_id'});
 //Notifications
 db.notifications.hasOne(db.user, {foreignKey: 'user_id', sourceKey: 'recipient_user_id'});
 db.notifications.hasOne(db.projectStatusNotification, {foreignKey: 'notification_id', sourceKey: 'notification_id'});
@@ -252,6 +256,8 @@ db.codeMaintenanceElegibilityType.belongsTo(
 //     foreignKey: 'project_id'
 //   }
 // );
+// project attachment
+db.project.hasMany(db.projectAttachment, {foreignKey: 'project_id',sourceKey: "project_id" });
 // project partner 
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id'});
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'currentConsultant'});
@@ -311,7 +317,9 @@ db.projectCost.belongsTo(
   db.codeCostType,
    { foreignKey: 'code_cost_type_id' }
 );
-
+db.codeCostType.hasMany(
+  db.projectCost,{ foreignKey: 'code_cost_type_id' }
+);
 db.project.hasMany(db.projectCost, {foreignKey: 'project_id', as : 'currentCost'});
 
 // project partner
@@ -404,6 +412,11 @@ db.streamstudy.belongsTo(db.stream, { foreignKey: 'stream_id' })
 // relation study streamstudy
 db.study.hasMany(db.streamstudy, {foreignKey: 'study_id'});
 db.streamstudy.belongsTo(db.study, { foreignKey: 'study_id' });
+
+// relation projectStream codeLocalGoverment
+db.codeLocalGoverment.hasMany(db.project_stream, {foreignKey: 'code_local_government_id'});
+db.project_stream.belongsTo(db.codeLocalGoverment, { foreignKey: 'code_local_government_id' });
+
 
 // relation businessAssociates projectPartner
 db.businessAssociates.belongsTo(db.projectPartner, {foreignKey: 'business_associates_id'});

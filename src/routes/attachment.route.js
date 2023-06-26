@@ -122,4 +122,39 @@ router.delete('/remove/:id', auth, async (req, res) => {
    }
 });
 
+router.delete('/remove', auth, async (req, res) => {
+   logger.info(`Starting endpoint attachment.rote/remove/:id with params ${JSON.stringify(req.params, null, 2)}`);
+   try {
+      const ids = req.body.ids;
+      console.log(ids)
+      const promises = [];
+      for (const id of ids) {
+         promises.push(attachmentService.removeAttachment(id));
+      }
+      Promise.all(promises)
+         .then(() => {
+            res.send({ message: "Attachments removed successfully." });
+         })
+         .catch((error) => {
+            res.status(500).send({ message: `Error removing attachments: ${error}` });
+         });
+   } catch (error) {
+      logger.error(error);
+      res.status(500).send(error);
+   }
+});
+
+router.get('/download/:id', async (req, res) => {
+   try {
+      const id = +req.params.id;
+      const { images } = req.query;
+      logger.info(`Starting function download for attachment.rote/download/:id`);
+      const data = await attachmentService.downloadZip(id, images);
+      logger.info(`Finished function download for attachment.rote/download/:id`);
+      res.send(data).end();
+   } catch(error) {
+      res.status(500).send(error);
+   }
+});
+
 export default router;

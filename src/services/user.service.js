@@ -52,6 +52,52 @@ const getAttachmentsCidList = (cids) => {
   })
 }
 
+const getEmailOptions = (email, subject, html) => {
+  return {
+    from: MHFD_EMAIL,
+    to: email,
+    subject: subject,
+    html: html,
+    attachments: getAttachmentsCidList(['logo1', 'facebook1','twitter1', 'linkedin1', 'banner1'])
+  };
+};
+
+const sendEmail = async (options) => {
+  const transporter = getTransporter();
+  try {
+    const info = await transporter.sendMail(options);
+    logger.info(`Email for ${options.subject} sent to ${options.to} INFO: ${JSON.stringify(info, null, 2)}`);
+  } catch (error) {
+    throw error;
+  }
+}
+
+export const sendSignupEmail = async (user) => {
+  const email = user.email;
+  const signupToken = user.changePasswordId;
+  const redirectUrl = MHFD_FRONTEND + '/signup/' + signupToken;
+  const template = fs.readFileSync(__dirname + '/templates/email_verify_email.html', 'utf8');
+  const options = getEmailOptions(email, "MHFD Confluence - Signup", template.split('{{url}}').join(redirectUrl));
+  try {
+    await sendEmail(options);
+  } catch(error) {
+    throw error;
+  }
+};
+
+export const sendRecoverAndConfirm = async (user) => {
+  const email = user.email;
+  const signupToken = user.changePasswordId;
+  const redirectUrl = MHFD_FRONTEND + '/confirm-password/?id=' + signupToken + '&confirm=1';
+  const template = fs.readFileSync(__dirname + '/templates/email_send_recover-and_confirm.html', 'utf8');
+  const options = getEmailOptions(email, "MHFD Confluence - Signup", template.split('{{url}}').join(redirectUrl));
+  try {
+    await sendEmail(options);
+  } catch(error) {
+    throw error;
+  }
+};
+
 export const sendRecoverPasswordEmail = async (user) => {
   const email = user.email;
   const changePasswordId = user.changePasswordId;
@@ -65,7 +111,7 @@ export const sendRecoverPasswordEmail = async (user) => {
     to: email,
     subject: "MHFD Confluence - Reset your password",
     html: emailToSend,
-    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin'])
+    attachments: getAttachmentsCidList(['logo1', 'facebook1', 'banner1','twitter1', 'linkedin1'])
   };
   try {
     const info = await transporter.sendMail(options);
@@ -87,7 +133,7 @@ export const sendApprovedAccount = async (user) => {
     to: email,
     subject: "MHFD Confluence - Account approved",
     html: emailToSend,
-    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin'])
+    attachments: getAttachmentsCidList(['logo1', 'facebook1','twitter1', 'linkedin1', 'banner1'])
   };
   // const info = await transporter.sendMail(options);
   // logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
@@ -111,7 +157,7 @@ export const sendConfirmAccount = async (user) => {
     //to: (process.env.NODE_ENV === 'dev' || process.env.NODE_ENV === 'test' ? 'cesar@vizonomy.com' :'cesar@vizonomy.com'),
     subject: 'MHFD Confluence - New User Registered!',
     html: adminEmailToSend,
-    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
+    attachments: getAttachmentsCidList(['logo1', 'facebook1','twitter1', 'linkedin1', 'map', 'banner1'])
   };
   //end here
   const email = user.email; 
@@ -125,7 +171,7 @@ export const sendConfirmAccount = async (user) => {
     to: email,
     subject: "Welcome to MHFD Confluence!",
     html: emailToSend,
-    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
+    attachments: getAttachmentsCidList(['logo1', 'facebook1','twitter1', 'linkedin1', 'map'])
   };
   try {
     const adminInfo = await transporter.sendMail(adminOptions);
@@ -170,7 +216,7 @@ export const sendBoardNotification = async (email, type, locality, year, fullNam
     to: email,
     subject: `MHFD Confluence - ${bodyOptions.title}`,
     html: content,
-    attachments: getAttachmentsCidList(['logo', 'facebook', 'youtube','twitter', 'linkedin', 'map'])
+    attachments: getAttachmentsCidList(['logo1', 'facebook1','twitter1', 'linkedin1', 'map'])
   };
   const info = await transporter.sendMail(options);
   logger.info('Email sent INFO: ' + JSON.stringify(info, null, 2));
@@ -285,5 +331,7 @@ export default {
   sendConfirmAccount,
   findAllUsers,
   sendApprovedAccount,
-  deleteUser
+  deleteUser,
+  sendSignupEmail,
+  sendRecoverAndConfirm
 };

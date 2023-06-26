@@ -9,7 +9,7 @@ import {
 } from 'bc/config/config.js';
 import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
-import { addProjectToBoard, cleanStringValue, updateProjectsInBoard } from 'bc/routes/new-project/helper.js';
+import { addProjectToBoard, cleanStringValue, updateProjectsInBoard,createLocalitiesBoard,getLocalitiesNames } from 'bc/routes/new-project/helper.js';
 
 import cartoService from 'bc/services/carto.service.js';
 import db from 'bc/config/db.js';
@@ -55,6 +55,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     studyreason,
     otherReason,
     sendToWR,
+    cover
   } = req.body;
   const defaultProjectId = 1;
   const defaultProjectType = 'Study';
@@ -83,7 +84,15 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     const { duration, duration_type } = codePhaseForCapital;
     const formatDuration = duration_type[0].toUpperCase();
     const officialProjectName = projectname + (projectname === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '')
-
+    console.log(CREATE_PROJECT_TABLE_V2,
+      cleanStringValue(officialProjectName),
+      cleanStringValue(description),
+      defaultProjectId,
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      creator,
+      creator)
     const data = await projectService.saveProject(
       CREATE_PROJECT_TABLE_V2,
       cleanStringValue(officialProjectName),
@@ -130,20 +139,61 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       },
       { where: { project_id: project_id } }
     );
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
 
-    await addProjectToBoard(
-      user,
-      servicearea,
-      county,
-      locality,
-      defaultProjectType,
-      project_id,
-      year,
-      sendToWR,
-      isWorkPlan,
-      cleanStringValue(projectname),
-      projectsubtype
-    );
+    // Start of Add or Create Board
+    const PROJECT_TYPE = 'Study';
+    const { localitiesBoard, typesList } = createLocalitiesBoard(isWorkPlan, sendToWR, year, PROJECT_TYPE, splitedJurisdiction, splitedCounty, splitedServicearea);
+    const localNames = await getLocalitiesNames(localitiesBoard);
+    if (isWorkPlan === 'true'){
+      typesList.push('WORK_PLAN');
+      localNames.push('MHFD District Work Plan');
+    }
+    const promisesLocal = [];
+    for (let i = 0; i < localNames.length; i++) {
+      const local = localNames[i];
+      const type = typesList[i];
+      if (local) {
+        promisesLocal.push(addProjectToBoard(
+          user,
+          servicearea,
+          county,
+          local,
+          defaultProjectType,
+          project_id,
+          year,
+          sendToWR,
+          isWorkPlan,
+          projectname,
+          projectsubtype,
+          type
+        ));
+      }
+    }
+    await Promise.all(promisesLocal)
+      .then(() => {
+        logger.info('All projects added to board successfully');
+      })
+      .catch((error) => {
+        logger.error(`Error adding projects to board: ${error}`);        
+      });
+    // End of Add or Create Board
+
+    // DELETE after testing
+    // await addProjectToBoard(
+    //   user,
+    //   servicearea,
+    //   county,
+    //   locality,
+    //   defaultProjectType,
+    //   project_id,
+    //   year,
+    //   sendToWR,
+    //   isWorkPlan,
+    //   cleanStringValue(projectname),
+    //   projectsubtype
+    // );
+
     await projectPartnerService.saveProjectPartner(
       sponsor,
       cosponsor,
@@ -194,7 +244,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         }).format(stream.drainage),
         code_local_government_id:
           stream.code_local_goverment.length > 0
-            ? stream.code_local_goverment[0].objectid
+            ? stream.code_local_goverment[0].code_local_government_id
             : 0,
       });
     }
@@ -206,11 +256,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       otherReason
     );
     logger.info('created study correctly');
+    res.send(result);
   } catch (error) {
     logger.error('ERROR ', error);
-    return res.status(500).send(error);
-  }
-  res.send(result);
+    res.status(500).send(error);
+  }  
 });
 
 router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
@@ -233,6 +283,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     studyreason,
     otherReason,
     sendToWR,
+    cover,
   } = req.body;
   const creator = user.email;
   const splitedJurisdiction = jurisdiction.split(',');
@@ -267,6 +318,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         parsedIds
       );
     }
+    await attachmentService.toggleName(cover);
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
     const projecttype = 'Study';
     const projectsubtype = 'Master Plan';
     updateProjectsInBoard(
@@ -336,6 +389,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     }
     await projectStreamService.deleteByProjectId(project_id);
     for (const stream of JSON.parse(streams)) {
+      console.log(stream)
       await projectStreamService.saveProjectStream({
         project_id: project_id,
         stream_id: stream.stream.stream_id
@@ -345,14 +399,15 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         drainage_area_in_sq_miles: stream.drainage,
         code_local_government_id:
           stream.code_local_goverment.length > 0
-            ? stream.code_local_goverment[0].objectid
+            ? stream.code_local_goverment[0].code_local_government_id 
             : 0,
       });
     }
-    await studyService.updateStudy(project_id, creator, otherReason);
+    await studyService.updateStudy(project_id, studyreason, creator, otherReason);
     logger.info('updated study');
     res.send('updated study');
   } catch (error) {
+    console.log(error)
     logger.error('error', error);
     return res.status(500).send(error);
   };

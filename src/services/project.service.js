@@ -27,6 +27,7 @@ import sequelize from 'sequelize';
 import { CREATE_PROJECT_TABLE } from 'bc/config/config.js';
 
 const Project = db.project;
+const ProjectAttachment = db.projectAttachment;
 const ProjectPartner = db.projectPartner;
 const ProjectServiceArea = db.projectServiceArea;
 const CodeServiceArea = db.codeServiceArea;
@@ -60,6 +61,9 @@ const Op = sequelize.Op;
 const BusinessAssociateContact = db.businessAssociateContact;
 const BusinessAddress = db.businessAdress;
 const CodeRuleActionItem = db.codeRuleActionItem;
+const BoardProject = db.boardProject;
+const ProjectSpatial = db.projectSpatial;
+const BoardProjectCost = db.boardProjectCost;
 
 async function getCentroidsOfAllProjects () {
   const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid, projectid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE}`;
@@ -464,14 +468,22 @@ const getDetails = async (project_id) => {
             model: ProjectStreams,
             required: false,
             separate: true,
-            include: {
+            include: [{
               model: Streams,
               required: false,
               attributes: [
                 'stream_id',
                 'stream_name'
-              ]
+              ],
             },
+            {
+              model: CodeLocalGoverment,
+              required: false,
+              attributes: [
+                'local_government_name',
+                'code_local_government_id'
+              ],
+            }],
           },
           {
             model: ProjectLocalGovernment,
@@ -512,6 +524,7 @@ const getDetails = async (project_id) => {
               'actual_start_date',
               'actual_end_date',
               'planned_end_date',
+              'modified_date',
               'project_status_id',
               'is_locked',
               'is_done'
@@ -691,22 +704,24 @@ const getDetails = async (project_id) => {
   }
 }
 
-const getLightDetails = async (project_id) => {
+const getLocalityDetails = async (project_id) => {
   const project = await Project.findByPk(project_id, {
     attributes: [
-      "project_id",
-      "project_name",
-      'current_project_status_id',
+      "project_id"
     ],
     include: [
       {
-        model: ProjectServiceArea,
+        model: ProjectLocalGovernment,
         required: false,
-        attributes: ['project_service_area_id'],			
+        attributes: [
+          'code_local_government_id'
+        ],
         include: {
-          model: CodeServiceArea,
+          model: CodeLocalGoverment,
           required: false,
-          attributes: ['service_area_name'],
+          attributes: [
+            'local_government_name'
+          ]
         }
       },
       {
@@ -714,14 +729,13 @@ const getLightDetails = async (project_id) => {
         required: false,
         separate: true,
         attributes: [
-          'project_county_id'
+          'state_county_id'
         ],
         include: {
           model: CodeStateCounty,
           required: false,
           attributes: [
             'county_name',
-            'state_county_id'
           ]
         }
       },
@@ -729,7 +743,6 @@ const getLightDetails = async (project_id) => {
         model: ProjectServiceArea,
         required: false,
         attributes: [
-          'project_service_area_id',
           'code_service_area_id'
         ],
         include: {
@@ -739,6 +752,82 @@ const getLightDetails = async (project_id) => {
             'service_area_name'
           ],
         }
+      },
+    ]
+  });
+  if (!project) {
+    return {
+      error: 404,
+      message: 'Project Not Found'
+    };
+  }
+  return project;
+};
+
+const getLightDetails = async (project_id, project_counties, project_local_governments, project_service_areas) => {
+  const countyWhere = {};
+  if (project_counties && project_counties.length > 0) {
+    countyWhere.state_county_id = { [Op.in]: project_counties };
+  }
+  const localGovernmentWhere = {};
+  if (project_local_governments && project_local_governments.length > 0) {
+    localGovernmentWhere.code_local_government_id = { [Op.in]: project_local_governments };
+  }
+  const serviceAreaWhere = {};
+  if (project_service_areas && project_service_areas.length > 0) {
+    serviceAreaWhere.code_service_area_id = { [Op.in]: project_service_areas };
+  }
+  const project = await Project.findByPk(project_id, {
+    attributes: [
+      "project_id",
+      "project_name",
+      'current_project_status_id',
+    ],
+    include: [
+      {
+        model: ProjectLocalGovernment,
+        required: true,
+        attributes: [
+          'code_local_government_id'
+        ],
+        where: localGovernmentWhere,
+        include: {
+          model: CodeLocalGoverment,
+          required: true,
+          attributes: [
+            'local_government_name'
+          ]
+        }
+      },
+      {
+        model: ProjectCounty,
+        required: true,
+        where: countyWhere,
+        attributes: [
+          'state_county_id'
+        ],
+        include: {
+          model: CodeStateCounty,
+          required: true,
+          attributes: [
+            'county_name',
+          ]
+        }
+      },
+      {
+        model: ProjectServiceArea,
+        required: true,
+        where: serviceAreaWhere,
+        attributes: [
+          'code_service_area_id'
+        ],
+        include: {
+          model: CodeServiceArea,
+          required: true,
+          attributes: [
+            'service_area_name'
+          ],
+        },
       },
       {
         model: CodeProjectType,
@@ -752,22 +841,15 @@ const getLightDetails = async (project_id) => {
         model: ProjectStatus,
         required: false,
         separate: true,
+        as: 'currentId',
         attributes: [
           'code_phase_type_id',
-          'planned_start_date',
-          'actual_start_date',
-          'actual_end_date',
-          'planned_end_date',
-          'project_status_id',
-          'is_locked',
-          'is_done'
         ],
         include: {
           model: CodePhaseType,
           required: false,
           attributes: [
             'phase_name',
-            'phase_ordinal_position'
           ],
           include: [{
             model: CodeStatusType,
@@ -780,11 +862,37 @@ const getLightDetails = async (project_id) => {
             model: CodeProjectType,
             required: false,
             attributes: [
-              'code_project_type_id',
-              'project_type_name'
+              'code_project_type_id'
             ]
           }]
         }
+      },
+      {
+        model: ProjectPartner,
+        attributes: [
+          'project_partner_id',
+          'code_partner_type_id'
+        ],
+        required: false,
+        separate: true,
+        include: [{
+          model: CodeProjectPartnerType,
+          required: true,
+          where: {
+            code_partner_type_id: 11
+          },
+          attributes: [
+            'code_partner_type_id',
+            'partner_type'
+          ]
+        }, {
+          model: BusinessAssociate,
+          required: false,
+          attributes: [
+            'business_name',
+          ]
+        },
+    ],
       }
     ]
   });
@@ -801,7 +909,7 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
   const CONSULTANT_ID = 3;  
   const CIVIL_CONTRACTOR_ID = 8;
   const ESTIMATED_ID = 1;
-  const filterName = filter.name ? isNaN(filter.name) ? '%' + filter.name + ' %' : filter.name : '';
+  const filterName = filter.name ? isNaN(filter.name) ?  filter.name : filter.name : '';
   const filterBase = filter.name ? filter.name: -1;
   const contractor = filter.contractor ?  filter.contractor  : [];
   const consultant = filter.consultant ?  filter.consultant  : [];
@@ -923,7 +1031,13 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
     let whereOr = [];
     if (filterName) {
       whereOr.push({
-        project_name: { [Op.like]: filterName }
+        project_name: { [Op.like]: `${filterName}` }
+      });
+      whereOr.push({
+        project_name: { [Op.like]: `% ${filterName}%` }
+      });
+      whereOr.push({
+        project_name: { [Op.like]: `%${filterName} %` }
       });
     }
     if (filterBase != -1) {
@@ -1339,6 +1453,17 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
       
       include: [
         {
+          model: ProjectAttachment,
+          required: false,
+          separate: true,
+          where: {
+            is_cover: 1
+          },
+          attributes: [
+            'attachment_url'
+          ]
+        },
+        {
           model: CodePhaseType,
           required: false,
           include: {
@@ -1705,17 +1830,79 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
   }
 }
 
-const deleteByProjectId= async (Projectsid) => {
-  const project = Project.destroy({
-    where: {
-      project_id: Projectsid 
-    }});
-  if (project) {
-    logger.info('project destroyed ');
-    return true;
-  } else {
-    logger.info('project not found');
-    return false;
+const deleteByProjectId = async (Projectsid) => {
+  const t = await db.sequelize.transaction();
+  try {
+    try {
+      const project = await Project.findByPk(Projectsid);
+      console.log(project)
+      if (project) {
+        await project.update({
+          current_project_status_id: null
+        }, {
+          where: {
+            project_id: Projectsid
+          }, transaction: t 
+        });
+      }
+    } catch (error) {
+      logger.info('Error removing project association with ProjectStatus:', error);
+      throw error;
+    }
+    try {
+      const board_project_id = await BoardProject.findOne({
+        attributes: ['board_project_id'],
+        where: { project_id: Projectsid },
+        transaction: t
+      });
+      if(board_project_id){
+        await BoardProjectCost.destroy({
+          where: { board_project_id: board_project_id.board_project_id },
+          transaction: t
+        });
+      }      
+    } catch (error) {
+      logger.info('Error removing board project cost:', error);
+      throw error;
+    }
+    const models = [
+      ProjectStatus,
+      ProjectPartner,
+      ProjectStaff,
+      ProjectCounty,
+      ProjectLocalGovernment,
+      ProjectServiceArea,
+      ProjectDetail,
+      ProjectAttachment,
+      ProjectProposedAction,
+      ProjectCost,
+      BoardProject,
+      ProjectSpatial,
+    ];
+    await Promise.all(models.map(model => {
+      return model.destroy({
+        where: { project_id: Projectsid },
+        transaction: t
+      });
+    }));
+    const deletedProject = await Project.destroy({
+      where: { project_id: Projectsid },
+      transaction: t
+    });
+    await t.commit();
+    console.log(deletedProject)
+    console.log(Projectsid)
+    if (deletedProject) {
+      logger.info('project destroyed ');
+      return true;
+    } else {
+      logger.info('project not found');
+      await t.rollback();
+      return false;      
+    }
+  }
+  catch (error) {    
+    throw error;
   }
 }
 
@@ -1994,6 +2181,7 @@ export default {
   getCurrentProjectStatus,
   findProject,
   addProjectToCache,
-  updateProjectOnCache
+  updateProjectOnCache,
+  getLocalityDetails
 };
 //ALTER TABLE apr29.dbo.project_staff ADD CONSTRAINT project_staff_FK FOREIGN KEY (business_associate_contact_id) REFERENCES apr29.dbo.business_associate_contact(business_associate_contact_id) ON DELETE CASCADE ON UPDATE CASCADE;

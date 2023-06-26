@@ -6,11 +6,11 @@ import {
 } from 'bc/config/config.js';
 import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
-import { addProjectToBoard, cleanStringValue, updateProjectsInBoard } from 'bc/routes/new-project/helper.js';
+import { addProjectToBoard, cleanStringValue, updateProjectsInBoard,createLocalitiesBoard,getLocalitiesNames } from 'bc/routes/new-project/helper.js';
 import cartoService from 'bc/services/carto.service.js';
 import db from 'bc/config/db.js';
 
-
+import attachmentService from 'bc/services/attachment.service.js';
 import projectService from 'bc/services/project.service.js';
 import projectStatusService from 'bc/services/projectStatus.service.js';
 import projectDetailService from 'bc/services/projectDetail.service.js';
@@ -69,11 +69,14 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const splitedServicearea = servicearea.split(',');
   let result = [];
   try {
-    const codePhaseForCapital = await CodePhaseType.findOne({
+    let codePhaseForCapital = await CodePhaseType.findOne({
       where: {
-        code_phase_type_id: defaultProjectId.code_project_type_id,
+        code_project_type_id: defaultProjectId.code_project_type_id,
       },
-    });
+    });    
+    if (!codePhaseForCapital) {
+      codePhaseForCapital = await CodePhaseType.findOne();
+    }
     const { duration, duration_type } = codePhaseForCapital;
     const formatDuration = duration_type[0].toUpperCase();
     const officialProjectName = projectname + (projectname === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '')
@@ -97,7 +100,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     );
     await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
     const response = await projectStatusService.saveProjectStatusFromCero(
-      defaultProjectId.code_project_type_id,
+      codePhaseForCapital.code_phase_type_id,
       project_id,
       moment().format('YYYY-MM-DD HH:mm:ss'),
       moment().format('YYYY-MM-DD HH:mm:ss'),
@@ -127,20 +130,46 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       creator,
       creator
     );
-    //await attachmentService.uploadFiles(user, req.files, projectId, cover);
-    await addProjectToBoard(
-      user,
-      servicearea,
-      county,
-      locality,
-      defaultProjectType,
-      project_id,
-      year,
-      sendToWR,
-      isWorkPlan,
-      projectname,
-      projectsubtype
-    );
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
+
+    // Start of Add or Create Board
+    const PROJECT_TYPE = 'Maintenance';
+    const { localitiesBoard, typesList } = createLocalitiesBoard(isWorkPlan, sendToWR, year, PROJECT_TYPE, splitedJurisdiction, splitedCounty, splitedServicearea);
+    const localNames = await getLocalitiesNames(localitiesBoard);
+    if (isWorkPlan === 'true'){
+      typesList.push('WORK_PLAN');
+      localNames.push('MHFD District Work Plan');
+    }
+    const promisesLocal = [];
+    for (let i = 0; i < localNames.length; i++) {
+      const local = localNames[i];
+      const type = typesList[i];
+      if (local) {
+        promisesLocal.push(addProjectToBoard(
+          user,
+          servicearea,
+          county,
+          local,
+          defaultProjectType,
+          project_id,
+          year,
+          sendToWR,
+          isWorkPlan,
+          projectname,
+          projectsubtype,
+          type
+        ));
+      }
+    }
+    await Promise.all(promisesLocal)
+      .then(() => {
+        logger.info('All projects added to board successfully');
+      })
+      .catch((error) => {
+        logger.error(`Error adding projects to board: ${error}`);        
+      });
+    // End of Add or Create Board
+
     await projectPartnerService.saveProjectPartner(
       sponsor,
       cosponsor,
@@ -180,11 +209,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       cleanStringValue(projectname)
     );
     result.push(dataArcGis);
-  } catch (error) {
-    console.error('aaa:', error);
+    res.send(result);
+  } catch (error) {    
     logger.error(error);
-  }
-  res.send(result);
+    res.status(500).send(error);
+  }  
 });
 
 router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
@@ -230,6 +259,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     );
     await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
     const projecttype = 'Maintenance';
+    await attachmentService.toggleName(cover);
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
     updateProjectsInBoard(
       project_id,
       cleanStringValue(projectname),
@@ -305,6 +336,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     res.send(result);
   } catch (error) {
     logger.error(error);
+    res.status(500).send({ message: `Error creating project: ${error}` });
   };
 }); 
 

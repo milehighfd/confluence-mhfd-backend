@@ -185,7 +185,22 @@ const createCosts = async (req, res) => {
   }
   
 };
-
+const deleteProject = async (req, res) => {
+  try {
+    const projectId = parseInt(req.params['project_id'], 10);
+    const deleteProject = await projectService.deleteByProjectId(projectId);
+    if (deleteProject) {
+      logger.info('project destroyed ');
+      res.status(200).send('Deleted');
+    } else {
+      logger.info('project not found');
+      res.status(200).send('Not found');
+    }
+  } catch (error) {
+    logger.error(`Error deleting project: ${error}`);
+    res.status(500).send('Error deleting project');
+  }
+};
 
 router.get('/bbox/:project_id', getBboxProject);
 router.post('/', listProjects);
@@ -194,5 +209,6 @@ router.post('/ids', listProjectsForId);
 router.get('/:project_id', getProjectDetail);
 router.get('/projectCost/:project_id', listOfCosts);
 router.post('/projectCost/:project_id', [auth], createCosts);
+router.delete('/:project_id', [auth], deleteProject);
 
 export default router;

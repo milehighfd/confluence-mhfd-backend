@@ -10,7 +10,7 @@ const polygonParser = (coordinates) => {
   return parse(coordinates);
 }
 const getData = async (req, res, next) => {
-  const [localities] = await db.sequelize.query(`SELECT name, type FROM Localities ORDER BY name ASC;`);
+  const [localities] = await db.sequelize.query(`SELECT name, type FROM vw_geo_localities ORDER BY name ASC;`);
   res.locals.data = [];
   if (req.user) {
     if([ROLES.MFHD_STAFF, ROLES.GOVERNMENT_ADMIN, ROLES.MFHD_ADMIN].includes(req.user.designation)) {

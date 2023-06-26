@@ -11,6 +11,9 @@ const Configuration = db.configuration;
 const Board = db.board;
 const BoardProject = db.boardProject;
 const Project = db.project;
+const CodeServiceArea = db.codeServiceArea;
+const CodeLocalGoverment = db.codeLocalGoverment;
+const CodeStateCounty = db.codeStateCounty;
 
 export const getBoard = async (type, locality, year, projecttype) => {
   let board = await Board.findOne({
@@ -137,24 +140,9 @@ export const addProjectToBoard = async (
   sendToWR,
   isWorkPlan,
   projectname,
-  projectsubtype
-) => {
-  const [dbLocs] = await db.sequelize.query(
-    `SELECT name, type FROM Localities WHERE name = '${locality}'`
-  );
-  let _dbLoc = null;
-  if (dbLocs.length > 0) {
-    _dbLoc = dbLocs[0];
-  }
-  const dbLoc = _dbLoc;
-  let type = 'WORK_REQUEST';
-  if (dbLoc) {
-    if (dbLoc.type === 'LOCAL_GOVERNMENT') {
-      type = 'WORK_REQUEST';
-    } else if (dbLoc.type === 'COUNTY' || dbLoc.type === 'SERVICE_AREA') {
-      type = 'WORK_PLAN';
-    }
-  }
+  projectsubtype,
+  type
+) => {  
   if (!year) {
     let configuration = await Configuration.findOne({
       where: {
@@ -172,14 +160,19 @@ export const addProjectToBoard = async (
     },
   });
   if (!board) {
-    const response = await boardService.createNewBoard(
-      type,
-      year,
-      locality,
-      projecttype,
-      'Under Review'
-    );
-    board = response;
+    try {
+      const response = await boardService.createNewBoard(
+        type,
+        year,
+        locality,
+        projecttype,
+        'Under Review'
+      );
+      board = response;
+    } catch (e) {
+      logger.error('error in create new board '+e);
+      throw e;
+    }    
     logger.info('BOARD CREATED');
   }
   let boardProjectObject = {
@@ -218,15 +211,20 @@ export const addProjectToBoard = async (
   let boardProject = new BoardProject(boardProjectObject);
   let boardProjectSaved = boardProject;
   if (sendToWR === 'true' || isWorkPlan) {
-    boardProjectSaved = await boardService.saveBoard(
-      boardProject.board_id,
-      boardProject.project_id,
-      boardProject.origin,
-      boardProject.rank0,
-      boardProject.projectname,
-      boardProject.projecttype,
-      boardProject.projectsubtype
-    );
+    try {
+      boardProjectSaved = await boardService.saveBoard(
+        boardProject.board_id,
+        boardProject.project_id,
+        boardProject.origin,
+        boardProject.rank0,
+        boardProject.projectname,
+        boardProject.projecttype,
+        boardProject.projectsubtype
+      );
+    } catch (error) {
+      logger.error('error in save board ' + error);
+      throw error;
+    }
   }
   if (['admin', 'staff'].includes(user.designation) && !isWorkPlan) {
     await sendBoardsToProp(
@@ -306,3 +304,97 @@ export const cleanStringValue = (value) => {
   }
   return value;
 };
+
+export const getLocalitiesNames = async (localities) => { 
+  localities = localities.map(l => parseInt(l));
+  const order = []
+  const namesServiceArea = await CodeServiceArea.findAll({
+    attributes: ['service_area_name', 'code_service_area_id'],
+    where: {
+      code_service_area_id: localities
+    }
+  });
+  const namesStateCounty = await CodeStateCounty.findAll({
+    attributes: ['county_name', 'state_county_id'],
+    where: {
+      state_county_id: localities
+    }
+  });
+  const namesLocalGoverment = await CodeLocalGoverment.findAll({
+    attributes: ['local_government_name', 'code_local_government_id'],
+    where: {
+      code_local_government_id: localities
+    }
+  });
+  if (namesServiceArea && namesServiceArea.length > 0) {
+    order.push(...namesServiceArea.map(sa => ({id: sa.code_service_area_id, name: sa.service_area_name, realName: sa.service_area_name+ ' Service Area'})));
+  }
+  if (namesStateCounty && namesStateCounty.length > 0) {
+    order.push(...namesStateCounty.map(sc => ({id: sc.state_county_id, name: sc.county_name, realName: sc.county_name + ' County'})));
+  }
+  if (namesLocalGoverment && namesLocalGoverment.length > 0) {
+    order.push(...namesLocalGoverment.map(lg => ({id: lg.code_local_government_id, name: lg.local_government_name, realName: lg.local_government_name})));
+  }
+  order.sort((a, b) => localities.indexOf(a.id) - localities.indexOf(b.id)); 
+  return order.map(o => o.realName);
+};
+
+
+export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, splitedJurisdiction, splitedCounty, splitedServicearea) => {
+  const localitiesBoard = [];
+  const typesList = [];
+  const YEAR_WORKPLAN = 2021;
+
+  if (isWorkPlan === 'false') {
+    for (const j of splitedJurisdiction) {
+      if (j) {
+        localitiesBoard.push(j);
+        typesList.push('WORK_REQUEST');
+      }
+    }
+  } else {
+    if (sendToWR === 'true') {
+      for (const j of splitedJurisdiction) {
+        if (j) {
+          localitiesBoard.push(j);
+          typesList.push('WORK_REQUEST');
+        }
+      }
+    }
+    if (year <= YEAR_WORKPLAN) {
+      if (PROJECT_TYPE === 'Capital' || PROJECT_TYPE === 'Maintenance') {
+        for (const c of splitedCounty) {
+          if (c) {
+            localitiesBoard.push(c);
+            typesList.push('WORK_PLAN');
+          }
+        }
+      } else {
+        for (const s of splitedServicearea) {
+          if (s) {
+            localitiesBoard.push(s);
+            typesList.push('WORK_PLAN');
+          }
+        }
+      }
+    } else {
+      if (PROJECT_TYPE === 'Study') {
+        for (const s of splitedServicearea) {
+          if (s) {
+            localitiesBoard.push(s);
+            typesList.push('WORK_PLAN');
+          }
+        }
+      } else {
+        for (const c of splitedCounty) {
+          if (c) {
+            localitiesBoard.push(c);
+            typesList.push('WORK_PLAN');
+          }
+        }
+      }
+    }
+  }
+
+  return { localitiesBoard, typesList };
+}

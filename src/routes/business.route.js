@@ -61,7 +61,8 @@ router.get('/business-associates', async (_, res) => {
       ]
     });
     logger.info(`Finished function findAll for business.route/business-associates`);
-    res.send(associates);
+    res.send(associates.map(element => element.dataValues)
+      .filter(d => d.code_business_associates_type_id !== 8 && d.code_business_associates_type_id !== 9));
   } catch(error) {
     res.status(500).send(error);
   }
@@ -73,18 +74,37 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
   const user = req.user;
   const { body } = req;
   try {
-    const businessAdress = {
-      business_associate_id: id,
-      business_address_line_1: body.business_address_line_1,
-      business_address_line_2: body.business_address_line_2,
-      full_address: body.business_address_line_1,
-      state: body.state,
-      city: body.city,
-      zip: body.zip
-    };
-    logger.info(`Starting function create for business.route/business-associates`);
-    const newBusinessAddress = await BusinessAdress.create(businessAdress);
-    logger.info(`Finished function create for business.route/business-associates`);
+    const existingBusinessAddress = await BusinessAdress.findOne({
+      where: { business_associate_id: +id }
+    });
+    let newBusinessAddress;
+    if (existingBusinessAddress) {
+      console.log('existingBusinessAddress', existingBusinessAddress)
+      await BusinessAdress.update({
+        business_address_line_1: body.business_address_line_1,
+        business_address_line_2: body.business_address_line_2,
+        full_address: body.business_address_line_1,
+        state: body.state,
+        city: body.city,
+        zip: body.zip
+      }, { where: { business_associate_id: +id } });
+      newBusinessAddress = await BusinessAdress.findOne({
+        where: { business_associate_id: +id }
+      });
+    } else {
+      const businessAdress = {
+        business_associate_id: id,
+        business_address_line_1: body.business_address_line_1,
+        business_address_line_2: body.business_address_line_2,
+        full_address: body.business_address_line_1,
+        state: body.state,
+        city: body.city,
+        zip: body.zip
+      };
+      logger.info(`Starting function create for business.route/business-associates`);
+      newBusinessAddress = await BusinessAdress.create(businessAdress);
+      logger.info(`Finished function create for business.route/business-associates`);
+    }
     const businessContact = {
       business_address_id: newBusinessAddress.business_address_id,
       contact_name: body.name,
@@ -117,5 +137,21 @@ router.get('/', async (req, res) => {
   console.log(sa);
   res.send(sa);
 });
+
+router.get('/sponsor-list', async (req, res) => {
+  logger.info(`Starting endpoint business.route/ with params ${JSON.stringify(req.params, null, 2)}`);
+  const LOCAL_GOVERNMENT = 3;
+  const associates = await BusinessAssociates.findAll({
+    attributes: ['business_associates_id', 'business_name'],
+    where: {
+      code_business_associates_type_id: LOCAL_GOVERNMENT
+    },
+    order: [['business_name', 'ASC']]
+  });
+  logger.info(`Finished function findAll for business.route/business-associates`);
+  res.send(associates);
+});
+
+
 
 export default router;

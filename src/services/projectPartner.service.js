@@ -9,15 +9,17 @@ const saveProjectPartner = async (
   cosponsor,
   project_id
 ) => {
+  logger.info('start ProjectPartner saveProjectPartner ');
   try {
     if (cosponsor) {
       const splitedCosponsor = cosponsor.split(',');
       for (const splited of splitedCosponsor) {
         const extraId = await BusinessAssociates.findOne({
-          where: {
-            business_associate_name: splited.toUpperCase(),
-            business_name: splited.toUpperCase()
-          }
+          where: db.Sequelize.where(
+            db.Sequelize.fn('LOWER', db.Sequelize.col('business_name')),
+            'LIKE',
+            `${splited.toLowerCase()}`
+          )
         });
         if(extraId) await ProjectPartner.create({
           code_partner_type_id: 12,
@@ -28,10 +30,11 @@ const saveProjectPartner = async (
       }
     }    
     const id = await BusinessAssociates.findOne({
-      where: {
-        business_associate_name: sponsor.toUpperCase(),
-        business_name: sponsor.toUpperCase()
-      }
+      where: db.Sequelize.where(
+        db.Sequelize.fn('LOWER', db.Sequelize.col('business_name')),
+        'LIKE',
+        `${sponsor.toLowerCase()}`
+      )
     });
 
     if(id) await ProjectPartner.create({
@@ -51,8 +54,9 @@ const updateProjectPartner = async (
   cosponsor,
   project_id
 ) => {
+  logger.info('create ProjectPartner updateProjectPartner ');
   try {
-    if (cosponsor && sponsor && project_id) {
+    if (project_id) {
       await ProjectPartner.destroy({
         where: {
           project_id: project_id

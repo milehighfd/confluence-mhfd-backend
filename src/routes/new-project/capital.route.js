@@ -4,6 +4,7 @@ import needle from 'needle';
 import projectIndependentActionService from 'bc/services/projectIndependentAction.service.js';
 import projectProposedActionService from 'bc/services/projectProposedAction.service.js';
 import projectService from 'bc/services/project.service.js';
+import attachmentService from 'bc/services/attachment.service.js';
 import projectStatusService from 'bc/services/projectStatus.service.js';
 import cartoService from 'bc/services/carto.service.js';
 
@@ -17,7 +18,7 @@ import {
 import db from 'bc/config/db.js';
 import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
-import { addProjectToBoard, cleanStringValue, updateProjectsInBoard } from 'bc/routes/new-project/helper.js';
+import { addProjectToBoard, cleanStringValue, getLocalitiesNames, updateProjectsInBoard, createLocalitiesBoard } from 'bc/routes/new-project/helper.js';
 import moment from 'moment';
 import projectPartnerService from 'bc/services/projectPartner.service.js';
 import costService from 'bc/services/cost.service.js';
@@ -294,8 +295,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const splitedServicearea = servicearea.split(',');
   const splitedOverheadcost = overheadcost.split(',');
   const filterFrontOverheadCosts = splitedOverheadcost.slice(1);
-
-  const aditionalCostId = 4;
+  const aditionalCostId = 4;  
   try {
     const overheadcostIds = await CodeCostType.findAll({
       attributes: [
@@ -360,21 +360,50 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       { where: { project_id: project_id } }
     );
     console.log(resres);
-    //await attachmentService.uploadFiles(user, req.files, project_id, cover);
-    const projectsubtype = '';
-    await addProjectToBoard(
-      user,
-      servicearea,
-      county,
-      locality,
-      defaultProjectType,
-      project_id,
-      year,
-      sendToWR,
-      isWorkPlan,
-      projectname,
-      projectsubtype
-    );
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
+    const projectsubtype = '';    
+
+    // Start of Add or Create Board
+    const PROJECT_TYPE = 'Capital';
+    const { localitiesBoard, typesList } = createLocalitiesBoard(isWorkPlan, sendToWR, year, PROJECT_TYPE, splitedJurisdiction, splitedCounty, splitedServicearea);
+    const localNames = await getLocalitiesNames(localitiesBoard);
+    if (isWorkPlan === 'true'){
+      typesList.push('WORK_PLAN');
+      localNames.push('MHFD District Work Plan');
+    }
+    console.log('--------------------------------')
+    console.log(typesList);
+    console.log(localNames);
+    const promisesLocal = [];
+    for (let i = 0; i < localNames.length; i++) {
+      const local = localNames[i];
+      const type = typesList[i];
+      if (local) {
+        promisesLocal.push(addProjectToBoard(
+          user,
+          servicearea,
+          county,
+          local,
+          defaultProjectType,
+          project_id,
+          year,
+          sendToWR,
+          isWorkPlan,
+          projectname,
+          projectsubtype,
+          type
+        ));
+      }
+    }
+    await Promise.all(promisesLocal)
+      .then(() => {
+        logger.info('All projects added to board successfully');
+      })
+      .catch((error) => {
+        logger.error(`Error adding projects to board: ${error}`);        
+      });
+    // End of Add or Create Board
+
     await projectPartnerService.saveProjectPartner(
       sponsor,
       cosponsor,
@@ -384,7 +413,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       //creating aditional cost
       await costService.saveProjectCost({
         project_id: project_id,
-        cost: Number(additionalcost),
+        cost: !isNaN(Number(additionalcost)) ? Number(additionalcost) : 0,
         code_cost_type_id: aditionalCostId,
         cost_description: additionalcostdescription,
         created_by: creator,
@@ -394,12 +423,9 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       //creating overhead cost
       console.log(filtered)
       for (const [index, element] of filtered.entries()) {
-        console.log(index, element)
-        console.log(filterFrontOverheadCosts)
-        console.log(filterFrontOverheadCosts[index])
         await costService.saveProjectCost({
           project_id: project_id,
-          cost: Number(filterFrontOverheadCosts[index]) ? Number(filterFrontOverheadCosts[index]) : 0,
+          cost: !isNaN(Number(filterFrontOverheadCosts[index])) ? Number(filterFrontOverheadCosts[index]) : 0,
           code_cost_type_id: element,
           created_by: creator,
           modified_by: creator,
@@ -411,62 +437,82 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       throw error;
     }
     for (const j of splitedJurisdiction) {
-      await ProjectLocalGovernment.create({
-        code_local_government_id: parseInt(j),
-        project_id: project_id,
-        shape_length_ft: 0,
-        last_modified_by: user.name,
-        created_by: user.email,
-      });
+      try {
+        await ProjectLocalGovernment.create({
+          code_local_government_id: parseInt(j),
+          project_id: project_id,
+          shape_length_ft: 0,
+          last_modified_by: user.name,
+          created_by: user.email,
+        });
+      } catch (error) {
+        logger.error('cannot create jurisdiction ' + error);
+        throw error;
+      }
       logger.info('created jurisdiction');
     }
     for (const s of splitedServicearea) {
-      await ProjectServiceArea.create({
-        project_id: project_id,
-        code_service_area_id: s,
-        shape_length_ft: 0,
-        last_modified_by: user.name,
-        created_by: user.email,
-      });
+      try {
+        await ProjectServiceArea.create({
+          project_id: project_id,
+          code_service_area_id: s,
+          shape_length_ft: 0,
+          last_modified_by: user.name,
+          created_by: user.email,
+        });
+      } catch (error) {
+        logger.error('cannot create service area ' + error);
+        throw error;
+      }
       logger.info('created service area');
     }
     for (const c of splitedCounty) {
-      await ProjectCounty.create({
-        state_county_id: c,
-        project_id: project_id,
-        shape_length_ft: 0,
-      });
+      try {
+        await ProjectCounty.create({
+          state_county_id: c,
+          project_id: project_id,
+          shape_length_ft: 0,
+        });
+      } catch (error) {
+        logger.error('cannot create county ' + error);
+        throw error;
+      }
       logger.info('created county');
     }
-    for (const independent of JSON.parse(independetComponent)) {
-      try {
-        await projectIndependentActionService.saveProjectIndependentAction({
-          action_name: independent.name,
-          project_id: project_id,
-          cost: Number(independent.cost),
-          action_status: independent.status,
-          last_modified_by: creator,
-          created_by: creator,
-        });
-        logger.info('create independent component');
-      } catch (error) {
-        logger.error('cannot create independent component ' + error);
+    if (independetComponent) {
+      for (const independent of JSON.parse(independetComponent)) {
+        try {
+          await projectIndependentActionService.saveProjectIndependentAction({
+            action_name: independent.name,
+            project_id: project_id,
+            cost: !isNaN(Number(independent.cost)) ? Number(independent.cost) : 0,
+            action_status: independent.status,
+            last_modified_by: creator,
+            created_by: creator,
+          });
+          logger.info('create independent component');
+        } catch (error) {
+          logger.error('cannot create independent component ' + error);
+          throw error;
+        }
       }
     }
-
-    for (const component of JSON.parse(components)) {
-      try {
-        const action = {
-          project_id: project_id,
-          object_id: component.objectid,
-          source_table_name: component.table,
-          last_modified_by: creator,
-          created_by: creator,
-        };
-        await projectProposedActionService.saveProjectAction(action);
-        logger.info('create component');
-      } catch (error) {
-        logger.error('cannot create component ' + error);
+    if (components) {
+      for (const component of JSON.parse(components)) {
+        try {
+          const action = {
+            project_id: project_id,
+            object_id: component.objectid,
+            source_table_name: component.table,
+            last_modified_by: creator,
+            created_by: creator,
+          };
+          await projectProposedActionService.saveProjectAction(action);
+          logger.info('create component');
+        } catch (error) {
+          logger.error('cannot create component ' + error);
+          throw error;
+        }
       }
     }
     const dataArcGis = await projectService.insertIntoArcGis(
@@ -476,10 +522,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     );
     // await projectService.addProjectToCache(project_id);
     result.push(dataArcGis);
+    res.send([1]);
   } catch (error) {
     logger.error('error at create capital'+ error);
-  }
-  res.send(result);
+    res.status(500).send(error)
+  }  
 });
 
 router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
@@ -546,7 +593,9 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
     const projectsubtype = '';
     const projecttype = 'Capital';
-    updateProjectsInBoard(
+    await attachmentService.toggleName(cover);
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
+    await updateProjectsInBoard(
       project_id,
       cleanStringValue(projectname),
       projecttype,
@@ -557,41 +606,37 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       cosponsor,
       project_id
     );
-    try {
-
-      //update aditional cost
+    await costService.setIsActiveToFalse(project_id);
+    //update aditional cost
+    await costService.updateProjectOverhead(
+      {
+        project_id: project_id,
+        cost: !isNaN(Number(additionalcost)) ? Number(additionalcost) : 0,
+        code_cost_type_id: aditionalCostId,
+        cost_description: additionalcostdescription || null,
+        created_by: creator,
+        modified_by: creator,
+        is_active: true
+      },
+      project_id,
+      aditionalCostId
+    );
+    //update overhead cost
+    filtered.forEach(async (element, index) => {
       await costService.updateProjectOverhead(
         {
           project_id: project_id,
-          cost: Number(additionalcost),
-          code_cost_type_id: aditionalCostId,
-          cost_description: additionalcostdescription,
+          cost: !isNaN(Number(splitedOverheadcost[index+1])) ? Number(splitedOverheadcost[index+1]) : 0,
+          code_cost_type_id: element,
           created_by: creator,
           modified_by: creator,
           is_active: true
         },
         project_id,
-        aditionalCostId
+        element
       );
-      //update overhead cost
-      for (const element of filtered) {
-        await costService.updateProjectOverhead(
-          {
-            project_id: project_id,
-            cost: Number(splitedOverheadcost[element]),
-            code_cost_type_id: element,
-            created_by: creator,
-            modified_by: creator,
-            is_active: true
-          },
-          project_id,
-          element
-        );
-      }
-    } catch (error) {
-      logger.error('Error', error);
-      throw error;
-    }
+    });
+    
     if (splitedJurisdiction)
       await ProjectLocalGovernment.destroy({
         where: {
@@ -610,89 +655,120 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
           project_id: project_id,
         },
       });
-    for (const j of splitedJurisdiction) {
-      if (j) {
-        await ProjectLocalGovernment.create({
-          code_local_government_id: parseInt(j),
-          project_id: project_id,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email,
-        });
-      }
-      logger.info('created jurisdiction');
-    }
+    const promisesJur = splitedJurisdiction
+      .filter(j => j)
+      .map(j => ProjectLocalGovernment.create({
+        code_local_government_id: parseInt(j),
+        project_id: project_id,
+        shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email,
+      }));
+
+    Promise.all(promisesJur)
+      .then(() => {
+        logger.info('All jurisdictions created successfully');
+      })
+      .catch((error) => {
+        logger.error(`Error creating jurisdictions: ${error}`);
+        res.status(500).send({ message: `Error creating jurisdictions: ${error}` });
+      });
+
+    const promisesSA = [];
+
     for (const s of splitedServicearea) {
       if (s) {
-        await ProjectServiceArea.create({
+        promisesSA.push(ProjectServiceArea.create({
           project_id: project_id,
           code_service_area_id: s,
           shape_length_ft: 0,
           last_modified_by: user.name,
           created_by: user.email,
-        });
+        }));
       }
-      logger.info('created service area');
     }
+
+    Promise.all(promisesSA)
+      .then(() => {
+        logger.info('All service areas created successfully');
+      })
+      .catch((error) => {
+        logger.error(`Error creating service areas: ${error}`);
+        res.status(500).send({ message: `Error creating service areas: ${error}` });
+      });
+    const promisesCounty = [];
+
     for (const c of splitedCounty) {
       if (c) {
-        await ProjectCounty.create({
+        const projectCounty = {
           state_county_id: c,
           project_id: project_id,
           shape_length_ft: 0,
-        });
+        };
+        promisesCounty.push(ProjectCounty.create(projectCounty));
       }
-      logger.info('created county');
     }
+
+    await Promise.all(promisesCounty)
+      .then(() => {
+        logger.info('All counties created successfully');
+      })
+      .catch((error) => {
+        logger.error(`Error creating counties: ${error}`);
+        res.status(500).send({ message: `Error creating counties: ${error}` });
+      });
+
     await projectProposedActionService.deleteByProjectId(project_id);
     await projectIndependentActionService.deleteByProjectId(project_id);
 
     for (const independent of JSON.parse(independetComponent)) {
-      try {
-        if (independent && name in independent) {
-          await projectIndependentActionService.saveProjectIndependentAction({
-            action_name: independent.name,
-            project_id: project_id,
-            cost: Number(independent.cost) ? Number(independent.cost) : 0,
-            action_status: independent.status,
-            last_modified_by: creator,
-          });
-        } else {
-          await projectIndependentActionService.saveProjectIndependentAction({
-            action_name: independent.action_name,
-            project_id: project_id,
-            cost: Number(independent.cost) ? Number(independent.cost) : 0,
-            action_status: independent.action_status,
-            last_modified_by: creator,
-          });
-        }
-
-        logger.info('create independent component');
-      } catch (error) {
-        logger.error('cannot create independent component ' + error);
-        throw error;
-      }
-    }
-    for (const component of JSON.parse(components)) {
-      try {
-        const action = {
+      console.log(independent)
+      if (independent && independent.name) {
+        await projectIndependentActionService.saveProjectIndependentAction({
+          action_name: independent.name,
           project_id: project_id,
-          object_id: component.objectid,
-          source_table_name: component.table,
+          cost: !isNaN(Number(independent.cost)) ? Number(independent.cost) : 0,
+          action_status: independent.status,
           last_modified_by: creator,
           created_by: creator,
-        };
-        await projectProposedActionService.saveProjectAction(action);
-        logger.info('create component');
-      } catch (error) {
-        logger.error('cannot create component ' + error);
-        throw error;
+        });
+      } else {
+        await projectIndependentActionService.saveProjectIndependentAction({
+          action_name: independent.action_name,
+          project_id: project_id,
+          cost: !isNaN(Number(independent.cost)) ? Number(independent.cost) : 0,
+          action_status: independent.action_status,
+          last_modified_by: creator,
+          created_by: creator,
+        });
       }
+      logger.info('create independent component');
     }
-   await projectService.updateProjectOnCache(project_id);
-   res.send(result);
+    const promisesComponents = [];
+
+    for (const component of JSON.parse(components)) {
+      const action = {
+        project_id: project_id,
+        object_id: component.objectid,
+        source_table_name: component.table,
+        last_modified_by: creator,
+        created_by: creator,
+      };
+      promisesComponents.push(projectProposedActionService.saveProjectAction(action));
+    }
+    await Promise.all(promisesComponents)
+      .then(() => {
+        logger.info('All components saved successfully');
+      })
+      .catch((error) => {
+        logger.error(`Error saving components: ${error}`);
+        res.status(500).send({ message: `Error creating components: ${error}` });
+      });
+    res.send(result);
   } catch (error) {
+    console.log(error)
     logger.error(error);
+    res.status(500).send({ message: `Error creating project: ${error}` });
   };
 });
 

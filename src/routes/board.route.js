@@ -30,6 +30,169 @@ const ProjectServiceArea = db.projectServiceArea;
 const ProjectCounty = db.projectCounty;
 const ProjectProposedAction = db.projectProposedAction;
 const CodeStateCounty = db.codeStateCounty;
+const CodeServiceArea = db.codeServiceArea;
+
+const insertUniqueObject = (array, idPropertyName, groupPropertyKeyName, object) => {
+  const isDuplicate = array.some(item => {
+    return item[idPropertyName] === object[idPropertyName] && item[groupPropertyKeyName] === object[groupPropertyKeyName];
+  });
+
+  if (!isDuplicate) {
+    array.push(object);
+  }
+}
+
+const DRAFT_STATUS = 1;
+const REQUESTED_STATUS = 2;
+const APPROVED_STATUS = 3;
+
+router.get('/lexorank-update', async (req, res) => {
+    const boards = await Board.findAll();
+    const boardProjects = await BoardProject.findAll();
+    const updates = {
+        rank0: {},
+        rank1: {},
+        rank2: {},
+        rank3: {},
+        rank4: {},
+        rank5: {}
+    };
+    const originPositions = ['position0', 'position1', 'position2', 'position3', 'position4', 'position5'];
+    const positions =  ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+    
+    for (const board of boards) {
+        let lexoRanks = {
+            rank0: LexoRank.middle(),
+            rank1: LexoRank.middle(),
+            rank2: LexoRank.middle(),
+            rank3: LexoRank.middle(),
+            rank4: LexoRank.middle(),
+            rank5: LexoRank.middle()
+        };
+        for (const [index, position] of originPositions.entries()) {
+            boardProjects.sort((a, b) => {
+                if (a[position] == null) return -1;
+                if (b[position] == null) return 1;
+                return a[position] - b[position];
+            });
+            for (const bp of boardProjects) {
+                if (board.board_id === bp.board_id) {
+                    if (bp[position] != null) {
+                        const value = lexoRanks[positions[index]].toString();
+                        if (!updates[positions[index]][value]) {
+                            updates[positions[index]][value] = [];
+                        }
+                        updates[positions[index]][value].push(bp.board_project_id);
+                        lexoRanks[positions[index]] = lexoRanks[positions[index]].genNext();
+                    }
+                }
+            }
+        }
+    }
+    let c = 0;
+    console.log(updates);
+    const prs = [];
+    for (const position of positions) {
+        for (const value in updates[position]) {
+            c++;
+            logger.info(`Updating ${position} to ${value} for ${updates[position][value]}`);
+            prs.push(BoardProject.update(
+                {
+                    [position]: value
+                },
+                {
+                    where: {
+                        board_project_id: updates[position][value]
+                    }
+                }
+            ));
+        }
+    }
+    await Promise.all(prs);
+    res.send({
+        counter: c,
+    });
+});
+
+router.get('/:id/filters', async (req, res) => {
+  logger.info(`Starting endpoint board/:id/filters with params ${JSON.stringify(req.params, null, 2)}`);
+  const { id } = req.params;
+  logger.info(`Starting function findByPk for board/:id/filters`);
+  const board = await Board.findByPk(id);
+  logger.info(`Finished function findByPk for board/:id/filters`);
+  if (!board) {
+    return res.status(404).send({ error: 'Not found' });
+  }
+  const boardProjects = (await BoardProject.findAll({
+    where: { board_id: id },
+    attributes: [
+      'project_id'
+    ],
+  })).map(d => d.dataValues);
+  let localitiesData = await Promise.all(
+    boardProjects.map(async (boardProject) => {
+      let details;
+      try {
+        details = (await projectService.getLocalityDetails(
+          boardProject.project_id
+        )).dataValues;
+      } catch (e) {
+        logger.error(e);
+      }
+      if (details) {
+        if (details.project_service_areas && details.project_service_areas.length > 0) {
+          details.project_service_areas = details.project_service_areas.map(
+            (psa) => ({
+              code_service_area_id: psa.code_service_area_id,
+              service_area_name: psa.CODE_SERVICE_AREA.service_area_name,
+            })
+          );
+        }
+        if (details.project_counties && details.project_counties.length > 0) {
+          details.project_counties = details.project_counties.map(
+            (pc) => ({
+              state_county_id: pc.state_county_id,
+              county_name: pc.CODE_STATE_COUNTY.county_name,
+            })
+          );
+        }
+        if (details.project_local_governments && details.project_local_governments.length > 0) {
+          details.project_local_governments = details.project_local_governments.map(
+            (plg) => {
+              return ({
+                code_local_government_id: plg.code_local_government_id,
+                local_government_name: plg.CODE_LOCAL_GOVERNMENT.local_government_name,
+              });
+            }
+          );
+        }
+      }
+      return details;
+    })
+  );
+  const groupingArray = [
+    ['project_counties', 'county_name', 'state_county_id'],
+    ['project_service_areas', 'service_area_name', 'code_service_area_id'],
+    ['project_local_governments', 'local_government_name', 'code_local_government_id'],
+  ];
+  const groupingArrayMap = {
+    project_counties: [],
+    project_service_areas: [],
+    project_local_governments: [],
+  };
+  localitiesData.forEach((localityData) => {
+    if (!localityData) return;
+    groupingArray.forEach(([groupProperty, groupPropertyKeyName, idPropertyName]) => {
+      const groupPropertyValue = localityData[groupProperty];
+      if (groupPropertyValue == null) return;
+      groupPropertyValue.forEach((propertyValueElement) => {
+        insertUniqueObject(groupingArrayMap[groupProperty], idPropertyName, groupPropertyKeyName, propertyValueElement);
+      });
+    })
+  });
+  logger.info(`Finished endpoint for board/:id/filters`);
+  res.send(groupingArrayMap);
+});
 
 router.get('/lexorank-update', async (req, res) => {
     const boards = await Board.findAll();
@@ -419,56 +582,119 @@ router.post('/get-or-create', async (req, res) => {
 
 router.post('/board-for-positions2', async (req, res) => {
   logger.info(`Starting endpoint board/board-for-positions2 with params ${JSON.stringify(req.body, null, 2)}`)
-  let { board_id, position } = req.body;
-  if (!board_id || position === undefined || position === null) {
-    return res.sendStatus(400);
-  }
-  const attributes = [
-    'board_project_id',
-    'project_id',
-    'projectname',
-    `rank${position}`,
-    'origin'
-  ];
-  if (`${position}` !== '0') {
-    attributes.push(`req${position}`);
-  }
-  const boardProjects = (await BoardProject.findAll({
-    attributes,
-    where: {
-      board_id: board_id,
-      [`rank${position}`]: { [Op.ne]: null },
-    },
-    order: [[`rank${position}`, 'ASC']],
-  })).map(d => d.dataValues);
-  let boardProjectsWithData = await Promise.all(
-    boardProjects.map(async (boardProject) => {
-      console.log(JSON.stringify(boardProject, null, 2));
-      const details = (await projectService.getLightDetails(
-        boardProject.project_id
-      )).dataValues;
-      if (details.project_service_areas && details.project_service_areas.length > 0) {
-        details.project_service_areas = details.project_service_areas.map(
-            (psa) => ({
-                code_service_area_id: psa.code_service_area_id,
-                service_area_name: psa.CODE_SERVICE_AREA.service_area_name,
-            })
-        );
+  try {
+    let { board_id, position, filters } = req.body;
+    const {
+      project_priorities,
+      project_counties,
+      project_local_governments,
+      project_service_areas
+    } = filters || {};
+    if (!board_id || position === undefined || position === null) {
+      return res.sendStatus(400);
+    }
+    const rankColumnName = `rank${position}`;
+    const reqColumnName = `req${position}`;
+    const originPositionColumnName = `originPosition${position}`;
+    const attributes = [
+      'board_project_id',
+      'project_id',
+      'projectname',
+      rankColumnName,
+      'origin',
+      originPositionColumnName,
+      'code_status_type_id',
+    ];
+    const where = {
+      board_id,
+      [rankColumnName]: { [Op.ne]: null }
+    };
+  
+    if (`${position}` !== '0') {
+      attributes.push(reqColumnName);
+    }
+    if (project_priorities && project_priorities.length > 0) {
+      const conditions = [];
+      const lessThan3Priorities = project_priorities.filter(r => r < 3);
+      if (lessThan3Priorities.length !== 0) {
+        conditions.push({ [originPositionColumnName]: {[Op.in]: lessThan3Priorities}})
       }
-      if (details.project_counties && details.project_counties.length > 0) {
-        details.project_counties = details.project_counties.map(
-            (pc) => ({
-                project_county_id: pc.project_county_id,
-                county_name: pc.CODE_STATE_COUNTY.county_name,
-            })
-        );
+      if (project_priorities.includes(3)) {
+        conditions.push({ [originPositionColumnName]: {[Op.gte]: 3} })
       }
-      boardProject.projectData = details;
-      return boardProject;
-    })
-  );
-  logger.info(`Finished endpoint for board/board-for-positions2`);
-  res.send(boardProjectsWithData);
+      if (project_priorities.includes(4)) {
+        conditions.push({[originPositionColumnName]: {[Op.eq]: null}})
+      }
+      where[Op.or] = conditions;
+    }
+    const boardProjects = (await BoardProject.findAll({
+      attributes,
+      where,
+      order: [[rankColumnName, 'ASC']],
+    })).map(d => d.dataValues);
+    let boardProjectsWithData = await Promise.all(
+      boardProjects.map(async (boardProject) => {
+        console.log(JSON.stringify(boardProject, null, 2));
+        let details;
+        try {
+          details = (await projectService.getLightDetails(
+            boardProject.project_id,
+            project_counties,
+            project_local_governments,
+            project_service_areas
+          )).dataValues;
+        } catch (e) {
+          logger.error('ERROR AT GET LIGHT DETAILS ' + e);
+        }
+        if (details) {
+          if (details.project_service_areas && details.project_service_areas.length > 0) {
+            details.project_service_areas = details.project_service_areas.map(
+                (psa) => ({
+                    code_service_area_id: psa.code_service_area_id,
+                    service_area_name: psa.CODE_SERVICE_AREA.service_area_name,
+                })
+            );
+          }
+          if (details.project_counties && details.project_counties.length > 0) {
+            details.project_counties = details.project_counties.map(
+                (pc) => ({
+                    state_county_id: pc.state_county_id,
+                    county_name: pc.CODE_STATE_COUNTY.county_name,
+                })
+            );
+          }
+          if (details.project_local_governments && details.project_local_governments.length > 0) {
+            details.project_local_governments = details.project_local_governments.map(
+                (plg) => {
+                  return ({
+                    code_local_government_id: plg.code_local_government_id,
+                    local_government_name: plg.CODE_LOCAL_GOVERNMENT.local_government_name,
+                  });
+                }
+            );
+          }
+          if (details.currentId && details.currentId.length > 0) {
+            details.currentId = details.currentId.map(
+              (current) => {
+                return ({
+                  code_status_type_id: current?.code_phase_type?.code_status_type?.code_status_type_id,
+                  status_name: current?.code_phase_type?.code_status_type?.status_name,
+                  code_project_type_id: current?.code_phase_type?.code_project_type?.code_project_type_id
+                });
+              }
+            )
+          }
+        }
+        boardProject.projectData = details;
+        return boardProject;
+      })
+    );
+    logger.info(`Finished endpoint for board/board-for-positions2`);
+    res.send(boardProjectsWithData.filter(r => r.projectData));
+  } catch (error) {
+    logger.error('ERROR AT POSITIONS2 ' + error)
+  }
+  
 });
 
 router.post('/', async (req, res) => {
@@ -585,140 +811,355 @@ const getBoard = async (type, locality, year, projecttype) => {
 }
 
 const updateProjectStatus = async (boards, status, creator) => {
-    logger.info(`Starting function updateProjectStatus for board/`);
-    const prs = [];
-    for (const board of boards) {
-        prs.push(BoardProject.findAll({
+  logger.info(`Starting function updateProjectStatus for board/`);
+  const prs = [];
+  for (const board of boards) {
+    prs.push(
+      BoardProject.findAll({
+        where: {
+          board_id: board.board_id,
+        },
+      })
+    );
+  }
+  let boardProjects = (await Promise.all(prs)).flat();
+  const prs2 = [];
+  for (const boardProject of boardProjects) {
+    if (boardProject.position0 === null) {
+      prs2.push(
+        ProjectStatus.findOne({
+          where: {
+            project_id: boardProject.project_id,
+          },
+          include: {
+            model: CodePhaseType,
+            required: true,
+            attributes: ["code_project_type_id", "code_phase_type_id"],
+          },
+          raw: true,
+          nest: true,
+        })
+      );
+    } else {
+      prs2.push(Promise.resolve(null));
+    }
+  }
+  const projectStatuses = await Promise.all(prs2);
+  const prs3 = [];
+  const updatedProjectsStatuses = [];
+  for (const projectStatus of projectStatuses) {
+    if (projectStatus) {
+      prs3.push(
+        CodePhaseType.findOne({
+          where: {
+            code_status_type_id: status,
+            code_project_type_id:
+              projectStatus?.code_phase_type?.code_project_type_id,
+          },
+        })
+      );
+      updatedProjectsStatuses.push(
+        ProjectStatus.update(
+          {
+            actual_end_date: moment().format("YYYY-MM-DD HH:mm:ss"),
+          },
+          {
             where: {
-                board_id: board.board_id
-            }
-        }));
+              project_status_id: projectStatus.project_status_id,
+            },
+          }
+        )
+      );
+    } else {
+      prs3.push(Promise.resolve(null));
     }
-    const boardProjects = await Promise.all(prs);
-    const prs2 = [];
-    for (const boardProject of boardProjects) {
-        if (boardProject.position0 === null) {
-            prs2.push(ProjectStatus.findOne({
-                where: {
-                    project_id: boardProject.project_id
-                },
-                include: {
-                    model: CodePhaseType,
-                    required: true,
-                    attributes:['code_project_type_id', 'code_phase_type_id']
-                },
-                raw: true,
-                nest: true,
-            }));
-        } else {
-            prs2.push(Promise.resolve(null));
-        }
+  }
+  await Promise.all(updatedProjectsStatuses).then(() => {
+    logger.info("Project statuses are updated");
+  });
+  const nextCodePhases = await Promise.all(prs3);
+  const prs4 = [];
+  for (let i = 0; i < boardProjects.length; i++) {
+    const boardProject = boardProjects[i];
+    if (boardProject.position0 == null && nextCodePhases[i] != null) {
+      const { duration, duration_type } = nextCodePhases[i];
+      const formatDuration = duration_type[0].toUpperCase();
+      prs4.push(
+        projectStatusService.saveProjectStatusFromCero(
+          nextCodePhases[i].code_phase_type_id,
+          boardProject.project_id,
+          moment().format("YYYY-MM-DD HH:mm:ss"),
+          moment().add(1, "d").format("YYYY-MM-DD HH:mm:ss"),
+          moment().format("YYYY-MM-DD HH:mm:ss"),
+          moment()
+            .add(Number(duration), formatDuration)
+            .format("YYYY-MM-DD HH:mm:ss"),
+          moment().format("YYYY-MM-DD HH:mm:ss"),
+          Number(duration),
+          moment().format("YYYY-MM-DD HH:mm:ss"),
+          moment().format("YYYY-MM-DD HH:mm:ss"),
+          creator,
+          creator
+        )
+      );
+    } else {
+      prs4.push(Promise.resolve(null));
     }
-    const projectStatuses = await Promise.all(prs2);
-    const prs3 = [];
-    const updatedProjectsStatuses = [];
-    for (const projectStatus of projectStatuses) {
-        if (projectStatus) {
-            prs3.push(CodePhaseType.findOne({
-                where: {
-                    code_status_type_id: status,
-                    code_project_type_id: projectStatus?.code_phase_type?.code_project_type_id,
-                },
-            }));
-            updatedProjectsStatuses.push(ProjectStatus.update({            
-                actual_end_date: moment().format('YYYY-MM-DD HH:mm:ss')
-            }, 
-            {
-                where: {
-                    code_status_type_id: status,
-                    code_project_type_id: projectStatus?.code_phase_type?.code_project_type_id,
-                }
-            }));
-        } else {
-            prs3.push(Promise.resolve(null));
-        }
+  }
+  const newProjectStatuses = await Promise.all(prs4);
+  const prs5 = [];
+  for (let i = 0; i < boardProjects.length; i++) {
+    if (boardProjects[i].position0 == null) {
+      let promise;
+      if (newProjectStatuses[i] !== null) {
+        promise = Project.update(
+          {
+            current_project_status_id: newProjectStatuses[i].project_status_id,
+          },
+          {
+            where: { project_id: boardProjects[i].project_id },
+          }
+        );
+      } else {
+        promise = Promise.resolve();
+      }
+      prs5.push(promise);
     }
-    Promise.all(updatedProjectsStatuses).then(() => {
-        logger.info('Project statuses are updated');
-    });
-    const nextCodePhases = await Promise.all(prs3);
-    const prs4 = [];
+  }
+  await Promise.all(prs5).then(() => {
+    logger.info("Projects are updated");
+  });
+  const DRAFT_STATUS = 1;
+  const REQUESTED_STATUS = 2;
+  const APPROVED_STATUS = 3;
+  const dontUseThis = true;
+  if (status === APPROVED_STATUS && !dontUseThis) {
+    const currentProjectStatusesPromises = [];
+    for (const bp of boardProjects) {
+      currentProjectStatusesPromises.push(
+        ProjectStatus.findOne({
+          where: {
+            project_id:
+              bp.project_id /* TODO: Addis should find which bp to use in this code */,
+          },
+          include: {
+            model: CodePhaseType,
+            required: true,
+            attributes: ["code_project_type_id", "code_phase_type_id"],
+          },
+          raw: true,
+          nest: true,
+        })
+      );
+    }
+    const currentProjectStatuses = await Promise.all(
+      currentProjectStatusesPromises
+    );
+    const notDoneStatusesPromises = [];
+    for (const currentProjectStatus of currentProjectStatuses) {
+      notDoneStatusesPromises.push(
+        CodePhaseType.findAll({
+          where: {
+            code_project_type_id:
+              currentProjectStatus?.code_phase_type?.code_project_type_id,
+            code_status_type_id: {
+              [Op.not]: [DRAFT_STATUS, REQUESTED_STATUS, APPROVED_STATUS],
+            },
+          },
+        })
+      );
+    }
+    const notDoneStatuses = await Promise.all(notDoneStatusesPromises);
+    const prs6 = [];
     for (let i = 0; i < boardProjects.length; i++) {
-        const boardProject = boardProjects[i];
-        if (boardProject.position0 == null) {
-            const { duration, duration_type } = nextCodePhases[i];
-            const formatDuration = duration_type[0].toUpperCase();
-            prs4.push(projectStatusService.saveProjectStatusFromCero(
-                nextCodePhases[i].code_phase_type_id, 
-                boardProject.project_id,
-                moment().format('YYYY-MM-DD HH:mm:ss'), 
-                moment().add(1, 'd').format('YYYY-MM-DD HH:mm:ss'),
-                moment().format('YYYY-MM-DD HH:mm:ss'), 
-                moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss'), 
-                moment().format('YYYY-MM-DD HH:mm:ss'), 
-                Number(duration), 
-                moment().format('YYYY-MM-DD HH:mm:ss'), 
-                moment().format('YYYY-MM-DD HH:mm:ss'), 
-                creator, 
-                creator
-            ));
-        } else {
-            prs4.push(Promise.resolve(null));
+      const bp = boardProjects[i];
+      const dataValues = notDoneStatuses[i].map(status => status.dataValues);
+      for (const statusType of dataValues) {
+        try {
+          prs6.push(
+            projectStatusService.saveProjectStatusFromCero(
+              statusType.code_phase_type_id,
+              bp.project_id,
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              Number(statusType.duration),
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              moment().format("YYYY-MM-DD HH:mm:ss"),
+              creator,
+              creator
+            )
+          );
+          logger.info("status created", statusType.code_phase_type_id);
+        } catch (error) {
+          logger.info(error, "can not create status");
         }
+      }
     }
-    const newProjectStatuses = await Promise.all(prs4);
-    const prs5 = [];
-    for (let i = 0; i < boardProjects.length; i++) {
-        if (boardProjects[i].position0 == null) {
-           prs5.push(Project.update({
-            current_project_status_id: newProjectStatuses[i].project_status_id
-           },{ where: { project_id: boardProjects[i].project_id }}));
-        }
-    }
-    Promise.all(prs5).then(() => {
-        logger.info('Projects are updated');
+    await Promise.all(prs6).then(() => {
+      logger.info("new statuses  are created");
     });
-    const DRAFT_STATUS = 1;
-    const REQUESTED_STATUS = 2;
-    const APPROVED_STATUS = 3;
-    if (status === APPROVED_STATUS) {
-        const notDoneStatuses = await CodePhaseType.findAll({
-            where:{
-                code_project_type_id: currentProjectStatus?.code_phase_type?.code_project_type_id,
-                code_status_type_id: {
-                    [Op.not]: [DRAFT_STATUS, REQUESTED_STATUS, APPROVED_STATUS],
-                }
-            }
-        });
-        const prs6 = [];
-        for (const statusType of notDoneStatuses) {
-            try {
-                prs6.push(projectStatusService.saveProjectStatusFromCero(
-                    statusType.code_phase_type_id, 
-                    bp.project_id,
-                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                    moment().format('YYYY-MM-DD HH:mm:ss'),  
-                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                    Number(duration), 
-                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                    moment().format('YYYY-MM-DD HH:mm:ss'), 
-                    creator, 
-                    creator
-                ));   
-                logger.info ('status created', statusType.code_phase_type_id)
-            } catch (error) {
-                logger.info (error, 'can not create status')
-            }
+    logger.info(`Ending function updateProjectStatus`);
+  }
+};
+
+const getOriginPositionMap = (boardProjects) => {
+  const columns = [0, 1, 2, 3, 4, 5];
+  const originPositionMap = {};
+  columns.forEach(columnNumber => {
+    const rankName = `rank${columnNumber}`;
+    const reqName = `req${columnNumber}`;
+    let arr = [];
+    for (var j = 0 ; j < boardProjects.length ; j++) {
+      let bp = boardProjects[j];
+      if (columnNumber === 0) {
+        let isEmptyBoardProject = true;
+        columns.forEach(cNumber => {
+          if (cNumber === 0) return;
+          isEmptyBoardProject = isEmptyBoardProject && (!bp[`rank${cNumber}`] && !bp[`req${cNumber}`]);
+        })
+        if (isEmptyBoardProject) {
+          arr.push({
+            bp,
+            value: bp[rankName]
+          });
         }
-        Promise.all(prs6).then(() => {
-            logger.info('new statuses  are created');
-        });
-        logger.info(`Ending function updateProjectStatus`);
-    }
+      } else {
+        if (bp[rankName] || bp[reqName]) {
+          arr.push({
+              bp,
+              value: bp[rankName]
+          });
+        }
+      }
+    };
+    arr.sort();
+    arr.forEach((r, arrayIndex) => {
+      if (!originPositionMap[r.bp.project_id]) {
+          originPositionMap[r.bp.project_id] = {}
+      }
+      originPositionMap[r.bp.project_id][columnNumber] = arrayIndex;
+    });
+  });
+  return originPositionMap;
 }
 
+const sendBoardProjectsToProp = async (boards, prop, creator) => {
+  let include;
+  let relationshipProp;
+  let codeProp;
+  if (prop === 'servicearea') {
+    relationshipProp = 'project_service_areas';
+    codeProp = 'CODE_SERVICE_AREA';
+    include = {
+      model: ProjectServiceArea,
+      separate: true,
+      required: false,
+      include: {
+        model: CodeServiceArea,
+        required: false,
+        attributes: [
+          ['service_area_name', 'name']
+        ]
+      }
+    };
+  } else {
+    relationshipProp = 'project_counties';
+    codeProp = 'CODE_STATE_COUNTY';
+    include = {
+      model: ProjectCounty,
+      required: false,
+      separate: true,
+      include: {
+        model: CodeStateCounty,
+        required: false,
+        attributes: [
+          ['county_name', 'name']
+        ]
+      },
+    }
+  }
+  for (var i = 0 ; i < boards.length ; i++) {
+      let board = boards[i].dataValues;
+      let boardProjects = await BoardProject.findAll({ where: { board_id: board.board_id } });
+      const originPositionMap = getOriginPositionMap(boardProjects);
+      console.log('originPositionMap', originPositionMap);
+      for (var j = 0 ; j < boardProjects.length ; j++) {
+          let bp = boardProjects[j];
+          let p = (await Project.findOne({
+            where: { project_id: bp.project_id },
+            include
+          })).dataValues;
+          let propValues = p[relationshipProp];
+          for (let k = 0 ; k < propValues.length ; k++) {
+              let propVal = propValues[k][codeProp].dataValues.name;
+              if (prop === 'county' && !propVal.includes('County')) {
+                  propVal = propVal.trimEnd().concat(' County');
+              } else if (prop === 'servicearea' && !propVal.includes(' Service Area')) {
+                  propVal = propVal.trimEnd().concat(' Service Area');
+              }
+              let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype);
+              logger.info(`Destiny board by prop ${prop} id is ${destinyBoard !== null ? destinyBoard.board_id : destinyBoard}`);
+              if (destinyBoard === null || destinyBoard.board_id === null) {
+                logger.info('Destiny board not found');
+                continue;
+              }
+              const countIXConstraint = await BoardProject.count({
+                where: {
+                  board_id: destinyBoard.board_id,
+                  project_id: bp.project_id,
+                  origin: board.locality
+                }
+              });
+              console.log('countIXConstraint', countIXConstraint);
+              if (countIXConstraint === 0) {
+                let newBoardProject = new BoardProject({
+                    board_id: destinyBoard.board_id,
+                    project_id: bp.project_id,
+                    rank0: bp.rank0,
+                    rank1: bp.rank1,
+                    rank2: bp.rank2,
+                    rank3: bp.rank3,
+                    rank4: bp.rank4,
+                    rank5: bp.rank5,
+                    originPosition0: originPositionMap[bp.project_id][0],
+                    originPosition1: originPositionMap[bp.project_id][1],
+                    originPosition2: originPositionMap[bp.project_id][2],
+                    originPosition3: originPositionMap[bp.project_id][3],
+                    originPosition4: originPositionMap[bp.project_id][4],
+                    originPosition5: originPositionMap[bp.project_id][5],
+                    req1: bp.req1 == null ? null : (bp.req1 / propValues.length),
+                    req2: bp.req2 == null ? null : (bp.req2 / propValues.length),
+                    req3: bp.req3 == null ? null : (bp.req3 / propValues.length),
+                    req4: bp.req4 == null ? null : (bp.req4 / propValues.length),
+                    req5: bp.req5 == null ? null : (bp.req5 / propValues.length),
+                    year1: bp.year1,
+                    year2: bp.year2,
+                    origin: board.locality,
+                    code_status_type_id: REQUESTED_STATUS
+                });
+                //TODO: Jorge create the relationship on cost table
+                const newBoardProjectCreated = await newBoardProject.save();
+                const offsetMillisecond = 35000;
+                let mainModifiedDate = new Date();
+                console.log('New Board Proejct Created', newBoardProjectCreated, newBoardProjectCreated.board_project_id);
+                for (let i = 1 ; i <= 5 ; ++i) {
+                  await boardService.updateAndCreateProjectCosts(
+                    i,
+                    newBoardProject[`req${i}`]? newBoardProject[`req${i}`] : 0,
+                    bp.project_id,
+                    {email: creator},
+                    newBoardProjectCreated.board_project_id,
+                    moment(mainModifiedDate).subtract( offsetMillisecond * i).toDate()
+                  );
+                }
+              }
+          }
+      }
+  }
+}
 
 const sendBoardProjectsToDistrict = async (boards) => {
     try {
@@ -731,6 +1172,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
                     board_id: board.board_id
                 }
             }).then((async (boardProjects) => {
+                const originPositionMap = getOriginPositionMap(boardProjects);
                 const prs = [];
                 for (const bp of boardProjects) {
                     prs.push(
@@ -743,6 +1185,12 @@ const sendBoardProjectsToDistrict = async (boards) => {
                         rank3: bp.rank3,
                         rank4: bp.rank4,
                         rank5: bp.rank5,
+                        originPosition0: originPositionMap[bp.project_id][0],
+                        originPosition1: originPositionMap[bp.project_id][1],
+                        originPosition2: originPositionMap[bp.project_id][2],
+                        originPosition3: originPositionMap[bp.project_id][3],
+                        originPosition4: originPositionMap[bp.project_id][4],
+                        originPosition5: originPositionMap[bp.project_id][5],
                         req1: bp.req1,
                         req2: bp.req2,
                         req3: bp.req3,
@@ -751,6 +1199,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
                         year1: bp.year1,
                         year2: bp.year2,
                         origin: board.locality,
+                        code_status_type_id: REQUESTED_STATUS
                     }));
                 }
                 await Promise.all(prs).then((values) => {
@@ -762,11 +1211,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
                 for (let i = 0; i < 6; i++) {
                     const rank = `rank${i}`;
                     logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
-                    const counter = await boardService.countProjectsByRank(destinyBoard.board_id, rank);
-                    logger.info(`Finish counter: ${JSON.stringify(counter)}}`);
-                    if (counter[1]) {
-                        updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank));
-                    }   
+                    updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank));
                 }
                 if (updatePromises.length) {
                     await Promise.all(updatePromises).then((values) => {
@@ -805,7 +1250,7 @@ const updateBoards = async (board, status, comment, substatus) => {
         logger.info(`Project type ${pjt}`);
         if (!b) {
             logger.info(`Creating new board for ${pjt}`);
-            boardService.specialCreationBoard(board.type, board.year, board.locality, pjt, status, comment, substatus)
+            await boardService.specialCreationBoard(board.type, board.year, board.locality, pjt, status, comment, substatus);
         } else {
             logger.info('Updating board');
             let newFields = {
@@ -853,9 +1298,9 @@ const moveCardsToNextLevel = async (board, creator) => {
             });
         }
         logger.info(`Sending ${boardsToCounty.length} to county`);
-        //await sendBoardProjectsToProp(boardsToCounty, 'county');
+        await sendBoardProjectsToProp(boardsToCounty, 'county', creator);
         logger.info(`Sending ${boardsToServiceArea.length} to service area`);
-        //await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea');
+        await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea', creator);
         logger.info(`Sending ${boards.length} to district`);
         await sendBoardProjectsToDistrict(boards);
         logger.info(`Update ${boards.length} as Requested`);
@@ -897,35 +1342,10 @@ router.get('/:boardId/boards/:type', async (req, res) => {
                 year: board.year
             }
         })
-        
-        if(boardFrom && 'status' in boardFrom && boardFrom.status !== 'Approved'){
-            try {
-                await Board.update({
-                    status : "Approved"
-                },{
-                    where : {
-                        board_id : boardFrom.board_id
-                    }
-                })
-                boardFrom = await Board.findOne({
-                    where: {
-                        locality,
-                        type,
-                        year: board.year,
-                        status: "Approved"
-                    }
-                })
-            } catch (error) {
-                logger.error('update error:', error);
-                throw error;
-            }
-            
-        }
-
         logger.info (`BOARD FROM: ${boardFrom}`);
         bids.push({
             locality,
-            status: boardFrom ? boardFrom.status : 'Approved',
+            status: boardFrom ? boardFrom.status : 'Under Review',
             submissionDate: boardFrom ? boardFrom.submissionDate : null,
             substatus: boardFrom ? boardFrom.substatus : ''
         });

@@ -1,4 +1,5 @@
 import express from 'express';
+import sequelize from 'sequelize';
 import Multer from 'multer';
 import bcrypt from 'bcryptjs';
 import { parse } from 'wkt';
@@ -6,12 +7,10 @@ import https from 'https';
 import UserService from 'bc/services/user.service.js';
 import auth from 'bc/auth/auth.js';
 import { validator } from 'bc/utils/utils.js';
-import { EMAIL_VALIDATOR } from 'bc/lib/enumConstants.js';
+import { EMAIL_VALIDATOR, PROJECT_TYPES_AND_NAME } from 'bc/lib/enumConstants.js';
 import logger from 'bc/config/logger.js';
 import db from 'bc/config/db.js';
 import { CARTO_URL, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
-import { PROJECT_TYPES_AND_NAME } from 'bc/lib/enumConstants.js';
-import sequelize from 'sequelize';
 
 const Op = sequelize.Op;
 
@@ -33,10 +32,57 @@ router.get('/', async (req, res, next) => {
   res.send(users);
 });
 
+router.get('/get-signup-email', async (req, res) => {
+  const { token } = req.query;
+  try {
+    logger.info(`Starting endpoint users.route/get-signup-email with params ${JSON.stringify(req.params, null, 2)}`);
+    const user = await User.findOne({
+      where: {
+        changePasswordId: token,
+        status: 'pending-signup',
+      }
+    });
+    if (!user) {
+      return res.status(422).send({ error: 'The token is invalid' });
+    }
+    const maximumDate = user.changePasswordExpiration.getTime();
+    const currentDate = new Date().getTime();
+    if (currentDate > maximumDate) {
+      return res.status(422).send({ error: 'The token has expired' });
+    }
+    res.send({ email: user.email });
+  } catch (error) {
+    logger.error(`Error in endpoint users.route/get-signup-email with params ${JSON.stringify(req.params, null, 2)} ERROR: ${error}`);
+    res.status(500).send({ error: error });
+  }
+});
+
 router.post('/signup', validator(UserService.requiredFields('signup')), async (req, res) => {
   logger.info(`Starting endpoint users.route/signup with params ${JSON.stringify(req.params, null, 2)}`);
   try {
-    const user = req.body;
+    const { tokenId, ...user } = req.body;
+    const processed = await User.findOne({
+      where: {
+        changePasswordId: tokenId,
+        status: 'pending-signup',
+      }
+    });
+    if (!processed) {
+      return res.status(422).send({ error: 'The token is invalid' });
+    }
+    const maximumDate = processed.changePasswordExpiration.getTime();
+    const currentDate = new Date().getTime();
+    if (currentDate > maximumDate) {
+      return res.status(422).send({ error: 'The token has expired' });
+    }
+    if (user.email !== processed.email) {
+      return res.status(422).send({ error: 'The email does not match' });
+    }
+    // delete fake user
+    await User.destroy({
+      where: {
+        email: processed.email,
+      }});
     logger.info(`Starting function count for users.route/signup`);
     const foundUser = await User.count({
       where: {
@@ -316,6 +362,87 @@ router.post('/upload-photo', [auth, multer.array('file')], async (req, res) => {
   }
 });
 
+router.post('/generate-signup-url', async (req, res) => {
+  logger.info(`Beginning endpoint users.route/generate-signup-url with params ${JSON.stringify(req.params, null, 2)}`);
+  try {
+    const { email } = req.body;
+    if (!EMAIL_VALIDATOR.test(email)) {
+      return res.status(400).send({ error: 'You entered an invalid email direction' });
+    }
+    logger.info(`Beginning function findOne for users.route/generate-signup-url`);
+    const countUser = await User.count({
+      where: {
+        email: email,
+        status: {
+          [Op.notIn]: ['pending-signup']
+        }
+      }
+    });
+    logger.info(`Finished function findOne for users.route/generate-signup-url`);
+    if (countUser) {
+      return res.status(422).send({ error: 'Email already exists!' });
+    }
+    logger.info(`Beginning function generateSignupUrl for users.route/generate-signup-url`);
+    let newUser = await User.findOne({
+      where: {
+        email: email,
+    }});
+    let user = null;
+    if (!newUser) {
+      newUser = {
+        email: email,
+        status: 'pending-signup',
+        is_sso: 0,
+      };
+      logger.info(`Beginning function create fake user`);
+      user = await User.create(newUser);
+      logger.info(`Finished function create fake user`);
+    } else {
+      user = newUser;
+    }
+    logger.info(`Beginning function generateSignupToken for users.route/generate-signup-url`);
+    await user.generateSignupToken();
+    logger.info(`Finished function generateSignupToken for users.route/generate-signup-url`);
+    logger.info(`Beginning function sendEmail for users.route/generate-signup-url`);
+    await UserService.sendSignupEmail(user, 'signup');
+    logger.info(`Finished function sendEmail for users.route/generate-signup-url`);
+    res.send(user);
+  } catch(error) {
+    logger.info(`Error in endpoint users.route/generate-signup-url ${JSON.stringify(error, null, 2)}`);
+    res.status(500).send(error);
+  }
+});
+
+
+router.post('/generate-reset-confirm', async (req, res) => {
+  logger.info(`Beginning endpoint users.route/generate-signup-url with params ${JSON.stringify(req.params, null, 2)}`);
+  try {
+    const { email } = req.body;
+    if (!EMAIL_VALIDATOR.test(email)) {
+      return res.status(400).send({ error: 'You entered an invalid email direction' });
+    }
+    logger.info(`Beginning function findOne for users.route/generate-signup-url`);
+    let user = await User.findOne({
+      where: {
+        email: email,
+    }});
+    logger.info(`Finished function findOne for users.route/generate-signup-url`);
+    if (!user) {
+      return res.status(422).send({ error: 'Email not exists!' });
+    }
+    logger.info(`Beginning function generateChangePassword for users.route/generate-signup-url`);
+    await user.generateChangePassword();
+    logger.info(`Finished function generateChangePassword for users.route/generate-signup-url`);
+    logger.info(`Beginning function sendEmail for users.route/generate-signup-url`);
+    await UserService.sendRecoverAndConfirm(user);
+    logger.info(`Finished function sendEmail for users.route/generate-signup-url`);
+    res.send(user);
+  } catch(error) {
+    logger.info(`Error in endpoint users.route/generate-signup-url ${JSON.stringify(error, null, 2)}`);
+    res.status(500).send(error);
+  }
+});
+
 router.post('/recovery-password', async (req, res) => {
   logger.info(`Starting endpoint users.route/recovery-password with params ${JSON.stringify(req.params, null, 2)}`);
   const email = req.body.email;
@@ -344,6 +471,7 @@ router.post('/recovery-password', async (req, res) => {
 router.post('/change-password', validator(['email', 'password', 'newpassword']), async (req, res) =>{
   logger.info(`Starting endpoint users.route/change-password with params ${JSON.stringify(req.params, null, 2)}`);
   try {
+    const { confirmation } = req.query;
     const {email, password, newpassword} = req.body;
     logger.info(`Starting function findByCredentials for users.route/change-password`);
     const user = await User.findByCredentials(email, password);
@@ -357,6 +485,9 @@ router.post('/change-password', validator(['email', 'password', 'newpassword']),
     const newPwd = await bcrypt.hash(newpassword, 8);
     logger.info(`Finished function hash for users.route/change-password`);
     user.password = newPwd;
+    if (confirmation) {
+      user.status = 'approved';
+    }
     user.save();
     res.send(use);
   } catch (error) {
@@ -394,6 +525,10 @@ router.post('/reset-password', validator(['id', 'password']), async (req, res) =
     logger.info(`Starting function hash for users.route/reset-password`);
     const newPwd = await bcrypt.hash(req.body.password, 8);
     logger.info(`Finished function hash for users.route/reset-password`);
+    const { confirmation } = req.query;
+    if (confirmation) {
+      user.status = 'approved';
+    }
     user.password = newPwd;
     user.changePasswordId = '';
     user.changePasswordExpiration = null;

@@ -44,15 +44,20 @@ router.post('/get-components-by-components-and-geom', auth,async (req, res) => {
   }
   if (components) {
     for (const component of components) {
+      if (component.source_table_name === 'stream_improvement_measure_copy') {
+        component.source_table_name = 'stream_improvement_measure';
+      }
       if (!usableComponents[component.source_table_name]) {
         usableComponents[component.source_table_name] = [];
       }
       usableComponents[component.source_table_name].push(component.object_id);
     }
   }
-  logger.info('my usable components ' + JSON.stringify(usableComponents, null, 2));
+  logger.info('my usable components ' + JSON.stringify(components, null, 2));
   let result = [];
   for (const component of COMPONENTS_TABLES) {
+    console.log(usableComponents[component])
+    console.log(component)
     if (!geom && !usableComponents[component]) {
       continue;
     }
@@ -73,7 +78,8 @@ router.post('/get-components-by-components-and-geom', auth,async (req, res) => {
     const problemid = component === 'stream_improvement_measure' ? 'problem_id' : 'problemid';
     const projectid = component === 'stream_improvement_measure' ? 'project_id' : 'projectid';
     const sql = `SELECT objectid, cartodb_id, ${type}, ${jurisdiction}, status, ${cost}, ${problemid}  FROM ${component} 
-    WHERE  ${queryWhere} AND ${projectid} is null `;
+    WHERE  ${queryWhere} AND ${projectid} is null AND status NOT LIKE '%Constructed%'`;
+    console.log(sql);
     const query = {
       q: sql
     };
@@ -90,6 +96,14 @@ router.post('/get-components-by-components-and-geom', auth,async (req, res) => {
         })
         logger.info(JSON.stringify(body.rows));
         result = result.concat(body.rows);
+        result = result.map(obj => {
+          return {
+            ...obj,
+            source_table_name: obj.table,
+            object_id: obj.objectid,
+          };
+        });
+        console.log(result);
         logger.info('length ' + result.length);
         //logger.info(JSON.stringify(body, null, 2));
       } else {
@@ -149,15 +163,16 @@ router.post('/get-components-by-components-and-geom', auth,async (req, res) => {
   for (const project of result) {
     if (project.problemid == null) {
       groups['-1'].components.push(project);
-    } else {
+    } else if (groups[project.problemid]) {
       groups[project.problemid]?.components.push(project);
     }
   }
-  logger.info("RESULT IS => " + JSON.stringify(result, null, 2));
+  const filteredGroups = Object.values(groups).filter(group => group.components.length > 0);
+  logger.info("RESULT IS => " + JSON.stringify(groups, null, 2));
   res.send({
     result: result,
     problems: problems,
-    groups: groups
+    groups: filteredGroups
   });
    
 });
@@ -325,8 +340,9 @@ router.get('/components-by-problemid', auth, async (req, res) => {
                   ...row
                 });
                 result.push({
-                  table: component,
-                  ...row
+                  source_table_name: component,
+                  ...row,
+                  object_id: row.objectid
                 });
               });
               logger.info('DO SELECT FOR ' + component);
@@ -408,7 +424,7 @@ router.post('/problem-geom', async (req,res) => {
   };
 
 });
-router.post('/streams-data', auth, async (req, res) => {
+router.post('/streams-data', async (req, res) => {
   const geom = req.body.geom;
   const sql = `
     SELECT 
@@ -483,17 +499,18 @@ router.post('/streams-data', auth, async (req, res) => {
         const drainageSQL = `select st_area(ST_transform(st_intersection(j.the_geom, union_c.the_geom), 26986) ) as area , j.jurisdiction from jurisidictions j , (select st_union(the_geom) as the_geom from mhfd_catchments_simple_v1 c where 
          '${stream.reach_code}' is not distinct from c.reach_code 
           ${stream.trib_code1 != null ? `and ${stream.trib_code1} is not distinct from c.trib_code1` : ''} 
-          ${stream.trib_code2 != null ? `and ${stream.trib_code2} is not distinct from c.trib_code1` : ''} 
-          ${stream.trib_code3 != null ? `and ${stream.trib_code3} is not distinct from c.trib_code1` : ''} 
-          ${stream.trib_code4 != null ? `and ${stream.trib_code4} is not distinct from c.trib_code1` : ''} 
-          ${stream.trib_code5 != null ? `and ${stream.trib_code5} is not distinct from c.trib_code1` : ''} 
-          ${stream.trib_code6 != null ? `and ${stream.trib_code6} is not distinct from c.trib_code1` : ''} 
-          ${stream.trib_code7 != null ? `and ${stream.trib_code7} is not distinct from c.trib_code1` : ''} 
+          ${stream.trib_code2 != null ? `and ${stream.trib_code2} is not distinct from c.trib_code2` : ''} 
+          ${stream.trib_code3 != null ? `and ${stream.trib_code3} is not distinct from c.trib_code3` : ''} 
+          ${stream.trib_code4 != null ? `and ${stream.trib_code4} is not distinct from c.trib_code4` : ''} 
+          ${stream.trib_code5 != null ? `and ${stream.trib_code5} is not distinct from c.trib_code5` : ''} 
+          ${stream.trib_code6 != null ? `and ${stream.trib_code6} is not distinct from c.trib_code6` : ''} 
+          ${stream.trib_code7 != null ? `and ${stream.trib_code7} is not distinct from c.trib_code7` : ''} 
           ) union_c 
           where ST_INTERSECTS(ST_SimplifyPreserveTopology(j.the_geom, 0.1), ST_SimplifyPreserveTopology(union_c.the_geom, 0.1)) `;
           const drainageQuery = {
             q: drainageSQL
           };
+          console.log('**************\n\n\n\n DRAINAGE QUERY FOR ', stream.str_name, stream.cartodb_id, '\n', drainageSQL);
           const promise = new Promise((resolve, reject) => {
             needle('post', CARTO_URL, drainageQuery, { json: true })
             .then(response => {
@@ -668,7 +685,7 @@ router.post('/get-countyservicearea-for-point', auth, async (req, res) => {
     if (data.statusCode === 200) {
       const body = data.body;
       let answer = {
-        jurisdiction: [await getJurisdictionByGeom(JSON.stringify(geom))]
+        jurisdiction: await getAllJurisdictionByGeom(JSON.stringify(geom))
       };
 
       body.rows.forEach(row => {
@@ -1025,15 +1042,23 @@ router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
   const projectid = req.params.projectid;
   try {
     const streams = await projectStreamService.getAll(projectid);
+    const filtered = streams.map(d => d.dataValues);
     const ids = streams.map(res => res.stream.stream_name);
+    console.log(ids);
     const obj = {};
     for (const id of ids) {
       obj[id] = [];
     }
-    for (const stream of streams) {
-      const local = await projectStreamService.getOneByStream(stream.code_local_government_id);
-      const res = {stream, code_local_goverment: local, length: stream.length_in_mile, drainage: stream.drainage_area_in_sq_miles}
+    for (const stream of filtered) {
+      const local = await projectStreamService.getOneByStream(stream.code_local_government_id);      
+      const res = {stream, code_local_goverment: local, length: stream.length_in_mile, drainage: stream.drainage_area_in_sq_miles,jurisdiction: local[0]?.local_government_name,mhfd_code:stream.stream.MHFD_Code}
       obj[stream.stream.stream_name].push(res);
+    }
+    for (const id in obj) {
+      if (obj.hasOwnProperty('null')) {
+        obj['Unnamed Streams'] = obj['null'];
+        delete obj['null'];
+      }
     }
     return res.send(obj);
   } catch (error) {
@@ -1072,7 +1097,7 @@ const getJurisdictionByGeom = async (geom) => {
   return data.body.rows[0].jurisdiction;
 }
 
-const getAllJurisdictionByGeom = async (geom) => {
+const   getAllJurisdictionByGeom = async (geom) => {
   let sql = `SELECT jurisdiction FROM jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
   const query = { q: sql };
   const data = await needle('post', CARTO_URL, query, { json: true });

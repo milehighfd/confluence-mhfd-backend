@@ -6,8 +6,8 @@ import {
 } from 'bc/config/config.js';
 import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
-import { addProjectToBoard, cleanStringValue, updateProjectsInBoard } from 'bc/routes/new-project/helper.js';
-
+import { addProjectToBoard, cleanStringValue, updateProjectsInBoard,createLocalitiesBoard,getLocalitiesNames } from 'bc/routes/new-project/helper.js';
+import attachmentService from 'bc/services/attachment.service.js';
 import db from 'bc/config/db.js';
 import cartoService from 'bc/services/carto.service.js';
 import projectStatusService from 'bc/services/projectStatus.service.js';
@@ -109,20 +109,47 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       },
       { where: { project_id: project_id } }
     );
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
     const projectsubtype = '';
-    await addProjectToBoard(
-      user,
-      servicearea,
-      county,
-      locality,
-      defaultProjectType,
-      project_id,
-      year,
-      sendToWR,
-      isWorkPlan,
-      projectname,
-      projectsubtype
-    );
+
+    // Start of Add or Create Board
+    const PROJECT_TYPE = 'Acquisition';
+    const { localitiesBoard, typesList } = createLocalitiesBoard(isWorkPlan, sendToWR, year, PROJECT_TYPE, splitedJurisdiction, splitedCounty, splitedServicearea);
+    const localNames = await getLocalitiesNames(localitiesBoard);
+    if (isWorkPlan === 'true'){
+      typesList.push('WORK_PLAN');
+      localNames.push('MHFD District Work Plan');
+    }
+    const promisesLocal = [];
+    for (let i = 0; i < localNames.length; i++) {
+      const local = localNames[i];
+      const type = typesList[i];
+      if (local) {
+        promisesLocal.push(addProjectToBoard(
+          user,
+          servicearea,
+          county,
+          local,
+          defaultProjectType,
+          project_id,
+          year,
+          sendToWR,
+          isWorkPlan,
+          projectname,
+          projectsubtype,
+          type
+        ));
+      }
+    }
+    await Promise.all(promisesLocal)
+      .then(() => {
+        logger.info('All projects added to board successfully');
+      })
+      .catch((error) => {
+        logger.error(`Error adding projects to board: ${error}`);        
+      });
+    // End of Add or Create Board
+
     await projectPartnerService.saveProjectPartner(
       sponsor,
       cosponsor,
@@ -174,11 +201,11 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       cleanStringValue(projectname)
     );
     result.push(dataArcGis);
+    res.send(result);
   } catch (error) {
     logger.error(error);
-    return res.status(500).send(error);
-  }
-  res.send(result);
+    res.status(500).send(error);
+  }  
 });
 
 router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
@@ -207,7 +234,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const splitedCounty = county.split(',');
   const splitedServicearea = servicearea.split(',');
   try {
-    const data = await projectService.updateProject(
+   const data = await projectService.updateProject(
       project_id,
       cleanStringValue(projectname),
       cleanStringValue(description),
@@ -218,12 +245,14 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     await cartoService.checkIfExistGeomThenDelete(
       CREATE_PROJECT_TABLE,
       project_id
-    );
+    ); 
     await cartoService.insertToAcquistion(
       CREATE_PROJECT_TABLE,
       geom,
       project_id
-    );
+    ); 
+    await attachmentService.toggleName(cover);
+    await attachmentService.uploadFiles(user, req.files, project_id, cover);
     const projectsubtype = '';
     const projecttype = 'Acquisition';
     updateProjectsInBoard(
@@ -231,8 +260,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       cleanStringValue(projectname),
       projecttype,
       projectsubtype
-    );
-    await projectPartnerService.updateProjectPartner(
+    ); 
+     await projectPartnerService.updateProjectPartner(
       sponsor,
       cosponsor,
       project_id
@@ -245,65 +274,70 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       null,
       acquisitionanticipateddate,
       acquisitionprogress
-    );
-    if (splitedJurisdiction)
+    ); 
+    if (splitedJurisdiction !== ['']){
       await ProjectLocalGovernment.destroy({
         where: {
           project_id: project_id,
         },
       });
-    if (splitedServicearea)
+
+      for (const j of splitedJurisdiction) {
+        if (j && j !== '') {
+          await ProjectLocalGovernment.create({
+            code_local_government_id: parseInt(j),
+            project_id: project_id,
+            shape_length_ft: 0,
+            last_modified_by: user.name,
+            created_by: user.email,
+          });
+        }
+        logger.info('created jurisdiction');
+      }
+    }
+    if (splitedServicearea !== ['']){
       await ProjectServiceArea.destroy({
         where: {
           project_id: project_id,
         },
       });
-    if (splitedCounty)
+
+      for (const s of splitedServicearea) {
+        if (s && s !== '') {
+          await ProjectServiceArea.create({
+            project_id: project_id,
+            code_service_area_id: s,
+            shape_length_ft: 0,
+            last_modified_by: user.name,
+            created_by: user.email,
+          });
+        }
+        logger.info('created service area');
+      }
+    }
+    if (splitedCounty !== ['']){
       await ProjectCounty.destroy({
         where: {
           project_id: project_id,
         },
       });
-    for (const j of splitedJurisdiction) {
-      if (j) {
-        await ProjectLocalGovernment.create({
-          code_local_government_id: parseInt(j),
-          project_id: project_id,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email,
-        });
+      for (const c of splitedCounty) {
+        if (c && c !=='') {
+          await ProjectCounty.create({
+            state_county_id: c,
+            project_id: project_id,
+            shape_length_ft: 0,
+          });
+        }
+        logger.info('created county');
       }
-      logger.info('created jurisdiction');
     }
-    for (const s of splitedServicearea) {
-      if (s) {
-        await ProjectServiceArea.create({
-          project_id: project_id,
-          code_service_area_id: s,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email,
-        });
-      }
-      logger.info('created service area');
-    }
-    for (const c of splitedCounty) {
-      if (c) {
-        await ProjectCounty.create({
-          state_county_id: c,
-          project_id: project_id,
-          shape_length_ft: 0,
-        });
-      }
-      logger.info('created county');
-    }
-    res.send(result);
+    res.send([]);
   } catch (error) {
+    console.log(error)
     logger.error(error);
-    return res.status(500).send(error);
+    res.status(500).send(error);
   }
-  res.send(result);
 });
 
 export default router;

@@ -17,15 +17,28 @@ const CodeProjectStaffRole = db.codeProjectStaffRole;
 const Op = Sequelize.Op;
 
 const getStatus = async () => {
+  const LIMITSTATUS = 3;
+  const UNDER_REVIEW_CODE = 11;
   const codeStatusType = await CodeStatusType.findAll({
     order: [
       ['status_name', 'ASC']
-    ]
+    ],
+    where: {
+      [Op.and]: [
+        {
+          code_status_type_id: { [Op.gt]: LIMITSTATUS } 
+        },
+        {
+          code_status_type_id: {
+            [Op.not]: UNDER_REVIEW_CODE
+          }
+        }
+      ]
+    }
   });
   const groups = codeStatusType.map((data) => {
     return { value: data.status_name, id: data.code_status_type_id };
   });
-  groups.push( { value:'Unknown', id:-1 } );
   return groups;
 }
 

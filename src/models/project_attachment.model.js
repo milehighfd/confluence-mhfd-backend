@@ -9,9 +9,6 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     },
-    file_name: {
-      type: DataType.STRING
-    },
     attachment_reference_key: {
       type: DataType.STRING,
       allowNull: false
