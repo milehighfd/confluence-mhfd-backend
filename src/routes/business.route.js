@@ -7,6 +7,7 @@ const BusinessContact = db.businessAssociateContact;
 const BusinessAdress = db.businessAdress;
 const BusinessAssociates = db.businessAssociates;
 
+const User = db.user;
 const router = express.Router();
 
 router.get('/business-contact/:id', async (req, res) => {
@@ -74,50 +75,36 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
   const id = req.params['id'];
   const user = req.user;
   const { body } = req;
+  const t = await db.sequelize.transaction();
   try {
-    const existingBusinessAddress = await BusinessAdress.findOne({
-      where: { business_associate_id: +id }
-    });
     let newBusinessAddress;
-    if (existingBusinessAddress) {
-      console.log('existingBusinessAddress', existingBusinessAddress)
-      await BusinessAdress.update({
-        business_address_line_1: body.business_address_line_1,
-        business_address_line_2: body.business_address_line_2,
-        full_address: body.business_address_line_1,
-        state: body.state,
-        city: body.city,
-        zip: body.zip
-      }, { where: { business_associate_id: +id } });
-      newBusinessAddress = await BusinessAdress.findOne({
-        where: { business_associate_id: +id }
-      });
-    } else {
-      const businessAdress = {
-        business_associate_id: id,
-        business_address_line_1: body.business_address_line_1,
-        business_address_line_2: body.business_address_line_2,
-        full_address: body.business_address_line_1,
-        state: body.state,
-        city: body.city,
-        zip: body.zip
-      };
-      logger.info(`Starting function create for business.route/business-associates`);
-      newBusinessAddress = await BusinessAdress.create(businessAdress);
-      logger.info(`Finished function create for business.route/business-associates`);
-    }
+    const businessAdress = {
+      business_associate_id: id,
+      business_address_line_1: body.business_address_line_1,
+      business_address_line_2: body.business_address_line_2,
+      full_address: body.business_address_line_1,
+      state: body.state,
+      city: body.city,
+      zip: body.zip
+    };
+    logger.info(`Starting function create for business.route/business-associates`);
+    newBusinessAddress = await BusinessAdress.create(businessAdress, { transaction: t });
+    logger.info(`Finished function create for business.route/business-associates`);
+
     const businessContact = {
       business_address_id: newBusinessAddress.business_address_id,
       contact_name: body.name,
       contact_email: body.email,
       contact_phone_number: body.phone || 'No number provided'
     };
-    const newBusinessContact = await BusinessContact.create(businessContact);
+    const newBusinessContact = await BusinessContact.create(businessContact, { transaction: t });
+    await t.commit();
     res.status(201).send({
       businessAdress: newBusinessAddress,
-      businessContact: newBusinessContact
+      businessContact: newBusinessContact,
     })
   } catch (error) {
+    await t.rollback();
     logger.error(error);
     res.status(500).send(error);
   }
