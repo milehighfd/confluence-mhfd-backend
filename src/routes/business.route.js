@@ -70,6 +70,17 @@ router.get('/business-associates', async (_, res) => {
   }
 });
 
+router.put('/business-address/:id', [auth], async (req, res) => {
+  const id = req.params['id'];
+  const { body } = req;
+  try {
+    BusinessAdress.update(body, { where: { business_address_id: id } });
+    res.status(200).send({ message: 'Updated' });
+  } catch (error) {
+    res.status(500).send(error);
+  }
+})
+
 router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
   logger.info(`Starting endpoint business.route/business-address-and-contact/:id with params ${JSON.stringify(req.params, null, 2)}`);
   const id = req.params['id'];
@@ -86,16 +97,16 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
       state: body.state,
       city: body.city,
       zip: body.zip
-    };
+    };    
     logger.info(`Starting function create for business.route/business-associates`);
     newBusinessAddress = await BusinessAdress.create(businessAdress, { transaction: t });
     logger.info(`Finished function create for business.route/business-associates`);
 
     const businessContact = {
       business_address_id: newBusinessAddress.business_address_id,
-      contact_name: body.name,
-      contact_email: body.email,
-      contact_phone_number: body.phone || 'No number provided'
+      contact_name: body.contact_name,
+      contact_email: body.contact_email,
+      contact_phone_number: body.contact_phone_number || 'No number provided'
     };
     const newBusinessContact = await BusinessContact.create(businessContact, { transaction: t });
     await t.commit();
