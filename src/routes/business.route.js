@@ -88,6 +88,9 @@ router.post('/business-address/:idcontact', [auth], async (req, res) => {
     newBusinessAddress = await BusinessAdress.create(businessAdress, { transaction: t });
     const businessContact = {
       business_address_id : newBusinessAddress.business_address_id,
+      contact_name: body.contact_name,
+      contact_email: body.contact_email,
+      contact_phone_number: body.contact_phone_number,
     };
     const updateBusinessContact = await BusinessContact.update(businessContact, { where: { business_associate_contact_id: id }, transaction: t });
     await t.commit();
@@ -114,14 +117,22 @@ router.put('/business-address-and-contact/:idaddress/:idcontact', [auth], async 
       zip: body.zip
     };
     updateBusinessAddress = await BusinessAdress.update(businessAdress, { where: { business_address_id: idAddress }, transaction: t });
+    const contact_email = body.contact_email;
     const businessContact = {
       business_address_id : idAddress,
+      contact_name: body.contact_name,
+      contact_email: body.contact_email,
+      contact_phone_number: body.contact_phone_number,
     };
-    const updateBusinessContact = await BusinessContact.update(businessContact, { where: { business_associate_contact_id: idContact }, transaction: t });
+    let contact = await BusinessContact.findOne({ where: { contact_email }, transaction: t });
+    if (contact) {
+      contact = await contact.update({ business_address_id : idAddress, contact_name: body.contact_name, contact_phone_number: body.contact_phone_number }, { transaction: t });
+    } else {
+      const updateBusinessContact = await BusinessContact.update(businessContact, { where: { business_associate_contact_id: idContact }, transaction: t });
+    }    
     await t.commit();
     res.status(200).send({
       businessAdress: updateBusinessAddress,
-      businessContact: updateBusinessContact,
     })
   } catch (error) {
     await t.rollback();
@@ -151,9 +162,17 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
     const businessContact = {
       business_address_id: newBusinessAddress.business_address_id,
       contact_name: body.contact_name,
-      contact_email: body.contact_email,
       contact_phone_number: body.contact_phone_number || 'No number provided'
     };
+    let contact = await BusinessContact.findOne({ where: { contact_email }, transaction: t });
+    if (contact) {
+      contact = await contact.update(businessContact, { transaction: t });
+    } else {
+      contact = await BusinessContact.create({
+        ...businessContact,
+        contact_email: body.contact_email
+      }, { transaction: t });
+    }    
     const newBusinessContact = await BusinessContact.create(businessContact, { transaction: t });
     await t.commit();
     res.status(201).send({
