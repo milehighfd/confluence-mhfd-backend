@@ -212,13 +212,18 @@ router.post('/create-contact/:idaddress', [auth], async (req, res) => {
       zip,
     };
     updateBusinessAddress = await BusinessAdress.update(businessAdress, { where: { business_address_id: idAddress }, transaction: t });    
-    const contact = await BusinessContact.create({
-      idAddress,
-      contact_name,
-      contact_email,
-      contact_phone_number,
-      business_address_id: idAddress,
-    }, { transaction: t });
+    let contact = await BusinessContact.findOne({ where: { contact_email }, transaction: t });
+    if (contact) {
+      contact = await contact.update({ idAddress, contact_name, contact_phone_number }, { transaction: t });
+    } else {
+      contact = await BusinessContact.create({
+        idAddress,
+        contact_name,
+        contact_email,
+        contact_phone_number,
+        business_address_id: idAddress,
+      }, { transaction: t });
+    }
     await t.commit();
     res.status(200).send(contact);
   } catch(error) {
