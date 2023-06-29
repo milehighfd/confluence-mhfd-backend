@@ -152,7 +152,7 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
     const businessAdress = {
       business_associate_id: id,
       business_address_line_1: body.business_address_line_1,
-      business_address_line_2: body.business_address_line_2,
+      business_address_line_2: body.business_address_line_1,
       full_address: body.business_address_line_1,
       state: body.state,
       city: body.city.substring(0, 25),
@@ -164,20 +164,19 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
       contact_name: body.contact_name,
       contact_phone_number: body.contact_phone_number || 'No number provided'
     };
+    const contact_email = body.contact_email;
     let contact = await BusinessContact.findOne({ where: { contact_email }, transaction: t });
     if (contact) {
       contact = await contact.update(businessContact, { transaction: t });
     } else {
       contact = await BusinessContact.create({
         ...businessContact,
-        contact_email: body.contact_email
+        contact_email: contact_email
       }, { transaction: t });
     }    
-    const newBusinessContact = await BusinessContact.create(businessContact, { transaction: t });
     await t.commit();
     res.status(201).send({
       businessAdress: newBusinessAddress,
-      businessContact: newBusinessContact,
     })
   } catch (error) {
     await t.rollback();
