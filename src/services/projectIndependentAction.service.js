@@ -31,9 +31,9 @@ const deleteByProjectId= async (project_id) => {
   }
 }
 
-const saveProjectIndependentAction = async (component) => {
+const saveProjectIndependentAction = async (component, transaction = null) => {
   try {
-    const res = await ProjectIndependentAction.create(component);
+    const res = await ProjectIndependentAction.create(component, { transaction: transaction });
     return res;
   } catch(error) {
     console.log('the error ', error);

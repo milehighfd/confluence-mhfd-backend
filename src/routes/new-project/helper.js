@@ -15,11 +15,12 @@ const CodeServiceArea = db.codeServiceArea;
 const CodeLocalGoverment = db.codeLocalGoverment;
 const CodeStateCounty = db.codeStateCounty;
 
-export const getBoard = async (type, locality, year, projecttype) => {
+export const getBoard = async (type, locality, year, projecttype, transaction = null) => {
   let board = await Board.findOne({
     where: {
       type, year, locality, projecttype
-    }
+    },
+    transaction: transaction, // associate transaction with the database operation
   });
   if (board) {
     return board;
@@ -27,12 +28,13 @@ export const getBoard = async (type, locality, year, projecttype) => {
     let newBoard = new Board({
       type, year, locality, projecttype, status: 'Under Review'
     });
-    newBoard.save();
+    await newBoard.save({ transaction: t }); // associate transaction with the database operation
     return newBoard;
   }
 };
 
-export const sendBoardsToProp = async (bp, board, prop, propid) => {
+export const sendBoardsToProp = async (bp, board, prop, propid, transaction = null) => {
+  const t = transaction ? await transaction : null;
   let propValues = prop.split(',');
   for (let k = 0; k < propValues.length; k++) {
     let propVal = propValues[k];
@@ -45,7 +47,8 @@ export const sendBoardsToProp = async (bp, board, prop, propid) => {
       'WORK_PLAN',
       propVal,
       board.year,
-      board.projecttype
+      board.projecttype,
+      t // associate transaction with the database operation
     );
     //TODO: improve to avoid multiple queries to same board
     let newBoardProject = new BoardProject({
@@ -66,15 +69,15 @@ export const sendBoardsToProp = async (bp, board, prop, propid) => {
       year2: bp.year2,
       origin: board.locality,
     });
-    await newBoardProject.save();
+    await newBoardProject.save({ transaction: t }); // associate transaction with the database operation
     const updatePromises = [];
     for (let i = 0; i < 6; i++) {
       const rank = `rank${i}`;
       logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
-      const counter = await boardService.countProjectsByRank(destinyBoard.board_id, rank);
+      const {counter} = await boardService.countProjectsByRank(destinyBoard.board_id, rank, t); // associate transaction with the database operation
       logger.info(`Finish counter: ${JSON.stringify(counter)}}`);
-      if (counter[1]) {
-          updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank));
+      if (counter) {
+          updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank, t)); // associate transaction with the database operation
       }   
     }
     if (updatePromises.length) {
@@ -141,13 +144,16 @@ export const addProjectToBoard = async (
   isWorkPlan,
   projectname,
   projectsubtype,
-  type
+  type,
+  transaction = null
 ) => {  
+  const t = transaction ? await transaction : null;
   if (!year) {
     let configuration = await Configuration.findOne({
       where: {
         key: 'BOARD_YEAR',
       },
+      transaction: t,
     });
     year = +configuration.value;
   }
@@ -158,6 +164,7 @@ export const addProjectToBoard = async (
       locality,
       projecttype,
     },
+    transaction: t,
   });
   if (!board) {
     try {
@@ -166,7 +173,8 @@ export const addProjectToBoard = async (
         year,
         locality,
         projecttype,
-        'Under Review'
+        'Under Review',
+        transaction
       );
       board = response;
     } catch (e) {
@@ -187,7 +195,8 @@ export const addProjectToBoard = async (
         [Op.ne]: null,
       }
     }, 
-    order: [['rank0', 'ASC']]
+    order: [['rank0', 'ASC']],
+    transaction: t,
   });
   if (firstProject) {
     boardProjectObject.rank0 = LexoRank.parse(firstProject.rank0)
@@ -196,15 +205,6 @@ export const addProjectToBoard = async (
   } else { 
     boardProjectObject.rank0 = LexoRank.middle().toString();
   }
-  /*   if (type === 'WORK_PLAN') {
-    boardProjectObject.originPosition0 = -1;
-    boardProjectObject.originPosition1 = -1;
-    boardProjectObject.originPosition2 = -1;
-    boardProjectObject.originPosition3 = -1;
-    boardProjectObject.originPosition4 = -1;
-    boardProjectObject.originPosition5 = -1;
-  } */
-  // NEW ADITION
   boardProjectObject.projectname = projectname;
   boardProjectObject.projecttype = projecttype;
   boardProjectObject.projectsubtype = projectsubtype;
@@ -219,7 +219,8 @@ export const addProjectToBoard = async (
         boardProject.rank0,
         boardProject.projectname,
         boardProject.projecttype,
-        boardProject.projectsubtype
+        boardProject.projectsubtype,
+        transaction
       );
     } catch (error) {
       logger.error('error in save board ' + error);
@@ -305,26 +306,30 @@ export const cleanStringValue = (value) => {
   return value;
 };
 
-export const getLocalitiesNames = async (localities) => { 
+export const getLocalitiesNames = async (localities,transaction) => { 
+  const t = transaction ? await transaction : null;
   localities = localities.map(l => parseInt(l));
   const order = []
   const namesServiceArea = await CodeServiceArea.findAll({
     attributes: ['service_area_name', 'code_service_area_id'],
     where: {
       code_service_area_id: localities
-    }
+    },
+    transaction: t
   });
   const namesStateCounty = await CodeStateCounty.findAll({
     attributes: ['county_name', 'state_county_id'],
     where: {
       state_county_id: localities
-    }
+    },
+    transaction: t
   });
   const namesLocalGoverment = await CodeLocalGoverment.findAll({
     attributes: ['local_government_name', 'code_local_government_id'],
     where: {
       code_local_government_id: localities
-    }
+    },
+    transaction: t
   });
   if (namesServiceArea && namesServiceArea.length > 0) {
     order.push(...namesServiceArea.map(sa => ({id: sa.code_service_area_id, name: sa.service_area_name, realName: sa.service_area_name+ ' Service Area'})));

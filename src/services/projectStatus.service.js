@@ -43,7 +43,8 @@ const saveProjectStatusFromCero = async (
     created_date,
     modified_date,
     last_modified_by,
-    created_by
+    created_by,
+    transaction = null
 ) => {
   logger.info('create ProjectStatus ' + JSON.stringify(
     code_phase_type_id,
@@ -59,15 +60,21 @@ const saveProjectStatusFromCero = async (
     last_modified_by,
     created_by ));
   try {
-    const insertQuery = `INSERT INTO project_status (code_phase_type_id, project_id, phase_change_date, planned_start_date, actual_start_date, planned_end_date, actual_end_date, duration, created_date, modified_date, last_modified_by, created_by)
-    OUTPUT inserted . *
-    VALUES('${code_phase_type_id}', '${project_id}', '${phase_change_date}', '${planned_start_date}', '${actual_start_date}', '${planned_end_date}', '${actual_end_date}', '${duration}', '${created_date}', '${modified_date}', '${last_modified_by}', '${created_by}')`;
-    const data = await db.sequelize.query(
-      insertQuery,
-      {
-        type: db.sequelize.QueryTypes.INSERT,
-      });
-    return data[0][0];
+    const res = await ProjectStatus.create({
+      code_phase_type_id,
+      project_id,
+      phase_change_date,
+      planned_start_date,
+      actual_start_date,
+      planned_end_date,
+      actual_end_date,
+      duration,
+      created_date,
+      modified_date,
+      last_modified_by,
+      created_by
+    }, { transaction: transaction }); 
+    return res;
   } catch(error) {
     console.log('the error ', error);
     throw error;

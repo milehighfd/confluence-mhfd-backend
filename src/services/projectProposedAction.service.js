@@ -31,9 +31,9 @@ const deleteByProjectId = async (project_id) => {
   }
 }
 
-const saveProjectAction = async (action) => {
+const saveProjectAction = async (action, transaction = null) => {
   try {
-    const created = await ProjectProposedAction.create(action)
+    const created = await ProjectProposedAction.create(action, { transaction: transaction });
     return created;
   } catch(error) {
     console.log('error at: ', error);

@@ -237,9 +237,11 @@ const downloadZip = async (projectid, images) => {
   }
 }
 
-const uploadFiles = async (user, files, projectid, cover) => {
+const uploadFiles = async (user, files, projectid, cover, transaction) => {
+  const t = transaction ? transaction : null;
   try {
     const formatTime = moment().format('YYYY-MM-DD HH:mm:ss');
+    const attachments = [];
     for (const file of files) {
       let name = file.originalname;
       const none = 'NONE';
@@ -260,9 +262,7 @@ const uploadFiles = async (user, files, projectid, cover) => {
         project_id: projectid ? projectid : null,
         is_cover: cover ? file.originalname === cover : false
       };
-      const created = await Attachment.create(attachmentObject);
-    
-  
+      const created = await Attachment.create(attachmentObject, { transaction: t });  
       const complete = getDestFile(name);
       logger.info(`Saved ${JSON.stringify(created)}`);
       
@@ -280,11 +280,14 @@ const uploadFiles = async (user, files, projectid, cover) => {
       } catch (error) {
         throw error;
       }
+      attachments.push(created);
     }
+    return { success: true, attachments };
   } catch (error) {
-    console.log(error)
+    logger.error(error);
+    return { success: false, error };
   }
-}
+};
 
 const toggle = async (id) => {
   const attach = await Attachment.findByPk(id);

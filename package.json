@@ -68,6 +68,8 @@
     "./services/*.js": "./src/services/*.js",
     "./auth/*.js": "./src/auth/*.js",
     "./lib/*.js": "./src/lib/*.js",
-    "./utils/*.js": "./src/utils/*.js"
+    "./utils/*.js": "./src/utils/*.js",
+    "./utils/create/*": "./src/utils/create/*",
+    "./utils/create": "./src/utils/create/index.js"
   }
 }

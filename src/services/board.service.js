@@ -8,6 +8,7 @@ const BoardProject = db.boardProject;
 const ProjectCost = db.projectCost;
 const BoardProjectCost = db.boardProjectCost;
 const Project = db.project;
+const Board = db.board;
 const { Op } = sequelize;
 
 const saveBoard = async (
@@ -17,7 +18,8 @@ const saveBoard = async (
   rank0 ,
   projectname,
   projecttype,
-  projectsubtype
+  projectsubtype,
+  transaction = null
 ) => {
   const DRAFT_STATUS = 1;
   logger.info('create Board ' + JSON.stringify(
@@ -41,7 +43,7 @@ const saveBoard = async (
       code_status_type_id: DRAFT_STATUS,
       createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt: moment().format('YYYY-MM-DD HH:mm:ss')
-    });
+    }, { transaction: transaction });
     return response;
   } catch(error) {
     throw error;
@@ -57,14 +59,15 @@ const saveProjectBoard = async (ProjectBoard) => {
     throw error;
   }
 }
-
 const createNewBoard = async (
   type, 
   year,
   locality, 
   projecttype,
-  status 
+  status,
+  transaction = null
 ) => {
+  const t = transaction ? await transaction : null;
   logger.info('create New Board ' + JSON.stringify(
     type, 
     year,
@@ -72,15 +75,16 @@ const createNewBoard = async (
     projecttype,
     status ));
   try {
-    const insertQuery = `INSERT INTO boards (locality, year, projecttype, type, status, createdAt, updatedAt)
-    OUTPUT inserted . *
-    VALUES('${locality}', '${year}', '${projecttype}', '${type}', '${status}', '${moment().format('YYYY-MM-DD HH:mm:ss')}', '${moment().format('YYYY-MM-DD HH:mm:ss')}')`;
-    const data = await db.sequelize.query(
-      insertQuery,
-      {
-        type: db.sequelize.QueryTypes.INSERT,
-      });
-    return data[0][0];
+    const res = await Board.create({
+      type,
+      year,
+      locality,
+      projecttype,
+      status,
+      createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().format('YYYY-MM-DD HH:mm:ss')
+    }, { transaction: t }); // associate transaction with the database operation
+    return res;
   } catch(error) {
     throw error;
   }
@@ -227,6 +231,23 @@ const duplicateBoardProject = async (board_project_id, new_board_id) => {
   }
 }
 
+const countProjectsByRank = async (board_id, rank, transaction = null) => {
+  try {
+    const counter = await BoardProject.count({
+      where: {
+        board_id,
+        [rank]: {
+          [Op.ne]: null
+        }
+      },
+      transaction
+    });
+    return counter;
+  } catch(error) {
+    throw error;
+  }
+}
+
 const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentProjectId, user, board_project_id, lastModifiedDate) => {
   console.log('Update And Create Cost ');
   const countOriginalProject = await Project.count({ where: { project_id: currentProjectId } });
@@ -241,6 +262,7 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
       req_position: currentColumn
     }
   });
+  
   
   const projectsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
   try {
@@ -285,5 +307,6 @@ export default {
   countByGroup,
   reCalculateColumn,
   duplicateBoardProject,
-  updateAndCreateProjectCosts
+  updateAndCreateProjectCosts,
+  countProjectsByRank
 };

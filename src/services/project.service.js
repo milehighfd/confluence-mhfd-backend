@@ -1916,9 +1916,10 @@ const saveProject = async (
   start_date,
   last_modified_by,
   created_by,
-  code_maintenance_eligibility_type_id = null
+  code_maintenance_eligibility_type_id = null,
+  transaction = null
 ) => {
-  
+  const t = transaction ? await transaction : null;
   try {
     let insert;
     if (code_maintenance_eligibility_type_id) {
@@ -1934,7 +1935,7 @@ const saveProject = async (
         is_spatial_data_required: 0,
         created_by: created_by,
         code_maintenance_eligibility_type_id: code_maintenance_eligibility_type_id,
-      });
+      }, { transaction: t });
     } else {
       insert = Project.create({
         project_name: project_name,
@@ -1947,7 +1948,7 @@ const saveProject = async (
         last_modified_by: last_modified_by,
         is_spatial_data_required: 0,
         created_by: created_by
-      });
+      }, { transaction: t });
     }
     logger.info('create project ');
     return insert;

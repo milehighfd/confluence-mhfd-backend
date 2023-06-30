@@ -3,10 +3,10 @@ import logger from 'bc/config/logger.js';
 
 const ProjectCost = db.projectCost;
 
-const saveProjectCost = async (cost) => {
+const saveProjectCost = async (cost, transaction = null) => {
   try {
     console.log('Creating project cost with this data', cost);
-    const response = await ProjectCost.create(cost);
+    const response = await ProjectCost.create(cost, { transaction: transaction }); 
     logger.info('cost created');
     return response;
   } catch (error) {

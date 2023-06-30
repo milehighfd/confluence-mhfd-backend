@@ -7,8 +7,6 @@ import projectService from 'bc/services/project.service.js';
 import attachmentService from 'bc/services/attachment.service.js';
 import projectStatusService from 'bc/services/projectStatus.service.js';
 import cartoService from 'bc/services/carto.service.js';
-
-
 import {
   CARTO_URL,
   CREATE_PROJECT_TABLE,
@@ -18,10 +16,29 @@ import {
 import db from 'bc/config/db.js';
 import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
-import { addProjectToBoard, cleanStringValue, getLocalitiesNames, updateProjectsInBoard, createLocalitiesBoard } from 'bc/routes/new-project/helper.js';
+import { addProjectToBoard, cleanStringValue, updateProjectsInBoard } from 'bc/routes/new-project/helper.js';
 import moment from 'moment';
 import projectPartnerService from 'bc/services/projectPartner.service.js';
 import costService from 'bc/services/cost.service.js';
+import { 
+  saveProject, 
+  createLocalGovernments, 
+  createCounties, 
+  createServiceAreas,
+  checkCartoandDelete,
+  createCartoEntry,
+  createAndUpdateStatus,
+  uploadFiles,
+  getLocalitiesNames,
+  createLocalitiesBoard,
+  addProjectsToBoard,
+  saveProjectPartner,
+  saveCosts,
+  saveActions,
+  insertIntoArcGis,
+} from 'bc/utils/create';
+import boardService from 'bc/services/board.service.js';
+
 
 const ProjectLocalGovernment = db.projectLocalGovernment;
 const ProjectCounty = db.projectCounty;
@@ -260,9 +277,10 @@ router.get('/sync', async (req, res) => {
   }
 });
 
+
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   const user = req.user;
-  const {
+  const {    
     isWorkPlan,
     projectname,
     description,
@@ -295,31 +313,12 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   const splitedServicearea = servicearea.split(',');
   const splitedOverheadcost = overheadcost.split(',');
   const filterFrontOverheadCosts = splitedOverheadcost.slice(1);
-  const aditionalCostId = 4;  
-  try {
-    const overheadcostIds = await CodeCostType.findAll({
-      attributes: [
-        'code_cost_type_id'
-      ],
-      where: {
-        is_overhead: true
-      },
-    });
-    const filtered = overheadcostIds.map((element) => {
-      if (element.code_cost_type_id !== 2) {
-        return element.code_cost_type_id
-      }
-    }).filter(Number);
-
-    const codePhaseForCapital = await CodePhaseType.findOne({
-      where: {
-        code_phase_type_id: 5,
-      },
-    });
-    const { duration, duration_type } = codePhaseForCapital;
-    const formatDuration = duration_type[0].toUpperCase();
+  const aditionalCostId = 4;
+  const transaction = await db.sequelize.transaction();  
+  try {    
+    //Create entry in project table
     const officialProjectName = projectname + (projectname === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '')
-    const data = await projectService.saveProject(
+    const data = await saveProject(
       CREATE_PROJECT_TABLE_V2,
       cleanStringValue(officialProjectName),
       cleanStringValue(description),
@@ -328,202 +327,110 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       moment().format('YYYY-MM-DD HH:mm:ss'),
       moment().format('YYYY-MM-DD HH:mm:ss'),
       creator,
-      creator
+      creator,
+      null,
+      transaction
     );
     result.push(data);
+    //Delete geom from carto and insert new one
     const { project_id } = data;
-    await cartoService.checkIfExistGeomThenDelete(
+    await checkCartoandDelete(
       CREATE_PROJECT_TABLE,
-      project_id
-    );
-    await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
-    const response = await projectStatusService.saveProjectStatusFromCero(
-      5,
       project_id,
-      moment().format('YYYY-MM-DD HH:mm:ss'),
-      moment().format('YYYY-MM-DD HH:mm:ss'),
-      moment().format('YYYY-MM-DD HH:mm:ss'),
-      moment()
-        .add(Number(duration), formatDuration)
-        .format('YYYY-MM-DD HH:mm:ss'),
-      moment().format('YYYY-MM-DD HH:mm:ss'),
-      Number(duration),
-      moment().format('YYYY-MM-DD HH:mm:ss'),
-      moment().format('YYYY-MM-DD HH:mm:ss'),
-      creator,
-      creator
+      transaction
     );
-    const resres = await Project.update(
-      {
-        current_project_status_id: response.project_status_id,
-      },
-      { where: { project_id: project_id } }
-    );
-    console.log(resres);
-    await attachmentService.uploadFiles(user, req.files, project_id, cover);
-    const projectsubtype = '';    
-
+    await createCartoEntry(CREATE_PROJECT_TABLE, geom, project_id,transaction);
+    //Obtain first phase for type project, create entry in project status table and update project table
+    const CODE_PROJECT_TYPE = 5;
+    try {
+      const response = await createAndUpdateStatus(project_id, creator, transaction, CODE_PROJECT_TYPE);
+      console.log(response);
+    } catch (error) {
+      console.error(error);
+    } 
+    //Create Attachments entry
+    const attachmentResponse = await uploadFiles(user, req.files, project_id, cover, transaction);
+    result.push(attachmentResponse);
     // Start of Add or Create Board
+    const projectsubtype = '';      
     const PROJECT_TYPE = 'Capital';
     const { localitiesBoard, typesList } = createLocalitiesBoard(isWorkPlan, sendToWR, year, PROJECT_TYPE, splitedJurisdiction, splitedCounty, splitedServicearea);
-    const localNames = await getLocalitiesNames(localitiesBoard);
+    const localNames = await getLocalitiesNames(localitiesBoard, transaction);
     if (isWorkPlan === 'true'){
       typesList.push('WORK_PLAN');
       localNames.push('MHFD District Work Plan');
     }
-    console.log('--------------------------------')
-    console.log(typesList);
-    console.log(localNames);
-    const promisesLocal = [];
-    for (let i = 0; i < localNames.length; i++) {
-      const local = localNames[i];
-      const type = typesList[i];
-      if (local) {
-        promisesLocal.push(addProjectToBoard(
-          user,
-          servicearea,
-          county,
-          local,
-          defaultProjectType,
-          project_id,
-          year,
-          sendToWR,
-          isWorkPlan,
-          projectname,
-          projectsubtype,
-          type
-        ));
-      }
+    try {
+      await addProjectsToBoard(user, servicearea, county, localNames, typesList, defaultProjectType, project_id, year, sendToWR, isWorkPlan, projectname, projectsubtype, transaction);      
+    } catch (error) {      
+      console.error(error);
     }
-    await Promise.all(promisesLocal)
-      .then(() => {
-        logger.info('All projects added to board successfully');
-      })
-      .catch((error) => {
-        logger.error(`Error adding projects to board: ${error}`);        
-      });
-    // End of Add or Create Board
-
-    await projectPartnerService.saveProjectPartner(
+    //Create entry for project Partner
+    await saveProjectPartner(
       sponsor,
       cosponsor,
-      project_id
+      project_id,
+      transaction
     );
+    //Find Overhead cost and create entry in project cost table
+    const overheadcostIds = await CodeCostType.findAll({
+      attributes: [
+        'code_cost_type_id'
+      ],
+      where: {
+        is_overhead: true
+      },
+      transaction: transaction
+    });
+    const filtered = overheadcostIds.map((element) => {
+      if (element.code_cost_type_id !== 2) {
+        return element.code_cost_type_id
+      }
+    }).filter(Number);
+    //create Costs entries
     try {
-      //creating aditional cost
-      await costService.saveProjectCost({
-        project_id: project_id,
-        cost: !isNaN(Number(additionalcost)) ? Number(additionalcost) : 0,
-        code_cost_type_id: aditionalCostId,
-        cost_description: additionalcostdescription,
-        created_by: creator,
-        modified_by: creator,
-        is_active: true
-      });
-      //creating overhead cost
-      console.log(filtered)
-      for (const [index, element] of filtered.entries()) {
-        await costService.saveProjectCost({
-          project_id: project_id,
-          cost: !isNaN(Number(filterFrontOverheadCosts[index])) ? Number(filterFrontOverheadCosts[index]) : 0,
-          code_cost_type_id: element,
-          created_by: creator,
-          modified_by: creator,
-          is_active: true
-        });
-      }
+      await saveCosts(project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, filtered, filterFrontOverheadCosts, transaction);
     } catch (error) {
-      logger.error('Error', error);
-      throw error;
+      console.error(error);
     }
-    for (const j of splitedJurisdiction) {
-      try {
-        await ProjectLocalGovernment.create({
-          code_local_government_id: parseInt(j),
-          project_id: project_id,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email,
-        });
-      } catch (error) {
-        logger.error('cannot create jurisdiction ' + error);
-        throw error;
-      }
-      logger.info('created jurisdiction');
+    //Create entries for jurisdiction
+    try {
+      await createLocalGovernments(splitedJurisdiction, project_id, user, transaction);
+      console.log('Project local governments created successfully');
+    } catch (error) {
+      console.error('Error creating project local governments:', error);
     }
-    for (const s of splitedServicearea) {
-      try {
-        await ProjectServiceArea.create({
-          project_id: project_id,
-          code_service_area_id: s,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email,
-        });
-      } catch (error) {
-        logger.error('cannot create service area ' + error);
-        throw error;
-      }
-      logger.info('created service area');
+    //Create entries for service area
+    try {
+      await createServiceAreas(splitedServicearea, project_id, user, transaction);   
+      console.log('Service areas created successfully!');
+    } catch (error) {
+      console.error('Failed to create service areas:', error);
     }
-    for (const c of splitedCounty) {
-      try {
-        await ProjectCounty.create({
-          state_county_id: c,
-          project_id: project_id,
-          shape_length_ft: 0,
-        });
-      } catch (error) {
-        logger.error('cannot create county ' + error);
-        throw error;
-      }
-      logger.info('created county');
+    //Create entries for county
+    try {
+      await createCounties(splitedCounty, project_id, transaction); 
+      console.log('Counties created successfully!');
+    } catch (error) {
+      console.error('Failed to create counties:', error);
     }
-    if (independetComponent) {
-      for (const independent of JSON.parse(independetComponent)) {
-        try {
-          await projectIndependentActionService.saveProjectIndependentAction({
-            action_name: independent.name,
-            project_id: project_id,
-            cost: !isNaN(Number(independent.cost)) ? Number(independent.cost) : 0,
-            action_status: independent.status,
-            last_modified_by: creator,
-            created_by: creator,
-          });
-          logger.info('create independent component');
-        } catch (error) {
-          logger.error('cannot create independent component ' + error);
-          throw error;
-        }
-      }
+    //Insert actions and independent actions
+    try {
+      await saveActions(project_id, independetComponent, components, creator, transaction);
+    } catch (error) {
+      console.error(error);
     }
-    if (components) {
-      for (const component of JSON.parse(components)) {
-        try {
-          const action = {
-            project_id: project_id,
-            object_id: component.objectid,
-            source_table_name: component.table,
-            last_modified_by: creator,
-            created_by: creator,
-          };
-          await projectProposedActionService.saveProjectAction(action);
-          logger.info('create component');
-        } catch (error) {
-          logger.error('cannot create component ' + error);
-          throw error;
-        }
-      }
-    }
-    const dataArcGis = await projectService.insertIntoArcGis(
+    //InsertIntoArcGis
+    const dataArcGis = await insertIntoArcGis(
       geom,
       project_id,
       cleanStringValue(projectname)
     );
-    // await projectService.addProjectToCache(project_id);
+    await transaction.commit();
     result.push(dataArcGis);
     res.send([1]);
   } catch (error) {
+    await transaction.rollback();
     logger.error('error at create capital'+ error);
     res.status(500).send(error)
   }  
