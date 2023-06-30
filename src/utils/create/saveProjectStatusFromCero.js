@@ -1,36 +1,30 @@
 import db from 'bc/config/db.js';
-
+import moment from 'moment';
 
 const ProjectStatus = db.projectStatus;
 
 export const saveProjectStatusFromCero = async (
   code_phase_type_id,
   project_id,
-  phase_change_date,
-  planned_start_date,
-  actual_start_date,
-  planned_end_date,
-  actual_end_date,
   duration,
-  created_date,
-  modified_date,
-  last_modified_by,
   created_by,
   transaction = null
 ) => {
+  const createdDate = moment().format('YYYY-MM-DD HH:mm:ss');
+  const endDate = moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss');
   try {
     const res = await ProjectStatus.create({
       code_phase_type_id,
       project_id,
-      phase_change_date,
-      planned_start_date,
-      actual_start_date,
-      planned_end_date,
-      actual_end_date,
+      createdDate,
+      createdDate,
+      createdDate,
+      endDate,
+      endDate,
       duration,
-      created_date,
-      modified_date,
-      last_modified_by,
+      createdDate,
+      createdDate,
+      created_by,
       created_by
     }, { transaction: transaction });
     return res;

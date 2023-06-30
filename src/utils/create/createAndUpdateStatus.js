@@ -18,18 +18,8 @@ export const createAndUpdateStatus = async (project_id, creator, transaction, CO
   const formatDuration = duration_type[0].toUpperCase();
   const response = await saveProjectStatusFromCero(
     CODE_PROJECT_TYPE,
-    project_id,
-    moment().format('YYYY-MM-DD HH:mm:ss'),
-    moment().format('YYYY-MM-DD HH:mm:ss'),
-    moment().format('YYYY-MM-DD HH:mm:ss'),
-    moment()
-      .add(Number(duration), formatDuration)
-      .format('YYYY-MM-DD HH:mm:ss'),
-    moment().format('YYYY-MM-DD HH:mm:ss'),
+    project_id,    
     Number(duration),
-    moment().format('YYYY-MM-DD HH:mm:ss'),
-    moment().format('YYYY-MM-DD HH:mm:ss'),
-    creator,
     creator,
     transaction
   );
