@@ -18,6 +18,7 @@ import projectService from 'bc/services/project.service.js';
 import projectStatusService from 'bc/services/projectStatus.service.js';
 import projectPartnerService from 'bc/services/projectPartner.service.js';
 import studyService from 'bc/services/study.service.js';
+import {saveProjectStreams, insertToCartoStudy, saveStudy }from 'bc/utils/create';
 
 import moment from 'moment';
 
@@ -111,7 +112,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
         CREATE_PROJECT_TABLE,
         project_id
       );
-      await cartoService.insertToCartoStudy(
+      await insertToCartoStudy(
         CREATE_PROJECT_TABLE,
         project_id,
         parsedIds
@@ -228,27 +229,12 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       });
       logger.info('created county');
     }
-    for (const stream of JSON.parse(streams)) {
-      await projectStreamService.saveProjectStream({
-        project_id: project_id,
-        stream_id: stream.stream ? stream.stream[0].stream_id : 0,
-        length_in_mile: new Intl.NumberFormat('en-US', {
-          style: 'decimal',
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
-        }).format(stream.length * 0.000621371),
-        drainage_area_in_sq_miles: new Intl.NumberFormat('en-US', {
-          style: 'decimal',
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
-        }).format(stream.drainage),
-        code_local_government_id:
-          stream.code_local_goverment.length > 0
-            ? stream.code_local_goverment[0].code_local_government_id
-            : 0,
-      });
+    try {
+      await saveProjectStreams(project_id, streams);      
+    } catch (error) {
+      console.error(error);
     }
-    await studyService.saveStudy(
+    await saveStudy(
       project_id,
       studyreason,
       creator,

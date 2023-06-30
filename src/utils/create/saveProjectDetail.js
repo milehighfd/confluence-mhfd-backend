@@ -12,7 +12,8 @@ export const saveProjectDetail = async (
   code_study_reason_id = null,
   maintenanceeligibility = 0,
   acquisition_anticipated_year = null,
-  code_acquisition_progress_status_id = null
+  code_acquisition_progress_status_id = null,
+  transaction = null
 ) => {
   try {
     const response = await ProjectDetail.create({
@@ -24,7 +25,7 @@ export const saveProjectDetail = async (
       code_acquisition_progress_status_id: code_acquisition_progress_status_id && Number(code_acquisition_progress_status_id),
       last_modified_by: last_modified_by,
       created_by: created_by
-    });
+    }, { transaction: transaction });
     logger.info('create ProjectDetail ');
     return response;
   } catch(error) {

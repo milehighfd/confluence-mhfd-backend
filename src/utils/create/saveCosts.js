@@ -15,15 +15,6 @@ export const saveCosts = async (project_id, additionalcost, aditionalCostId, add
   }, transaction));
   //creating overhead cost
   for (const [index, element] of filtered.entries()) {
-    logger.info('Creating cost with this data', {
-      project_id: project_id,
-      cost: !isNaN(Number(filterFrontOverheadCosts[index])) ? Number(filterFrontOverheadCosts[index]) : 0,
-      code_cost_type_id: element,
-      created_by: creator,
-      modified_by: creator,
-      is_active: true,
-      transaction: transaction
-    });
     promises.push(saveProjectCost({
       project_id: project_id,
       cost: !isNaN(Number(filterFrontOverheadCosts[index])) ? Number(filterFrontOverheadCosts[index]) : 0,
