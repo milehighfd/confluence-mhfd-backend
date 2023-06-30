@@ -165,7 +165,8 @@ export default (sequelize, DataType) => {
         },
         status: {
           [Op.not]: 'deleted'
-        }
+        },
+        activated: 1
       }
     });
     if (!user) {
