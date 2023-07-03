@@ -1,5 +1,6 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
+import { ProjectServiceAreaError } from '../../errors/project.error';
 
 const ProjectServiceArea = db.projectServiceArea;
 
@@ -15,8 +16,7 @@ export const createServiceAreas = async (splitedServiceArea, project_id, user, t
         created_by: user.email,
       }, { transaction: t });
     } catch (error) {
-      logger.error('cannot create service area ' + error);
-      throw error;
+      throw ProjectServiceAreaError('Error creating service area', { cause: error });
     }
     logger.info('created service area');
   }
