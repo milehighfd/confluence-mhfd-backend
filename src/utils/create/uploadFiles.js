@@ -1,6 +1,7 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import moment from 'moment';
+import { ProjectAttachmentError } from '../../errors/project.error';
 
 const Attachment = db.attachment;
 
@@ -50,8 +51,7 @@ export const uploadFiles = async (user, files, projectid, cover, transaction) =>
     }
     return { success: true, attachments };
   } catch (error) {
-    logger.error(error);
-    return { success: false, error };
+    throw ProjectAttachmentError('Error uploading files', { cause: error });
   }
 };
 
