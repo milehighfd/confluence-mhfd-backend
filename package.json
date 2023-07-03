@@ -67,6 +67,7 @@
     "./routes/*.js": "./src/routes/*.js",
     "./services/*.js": "./src/services/*.js",
     "./auth/*.js": "./src/auth/*.js",
+    "./errors/*.js": "./src/errors/*.js",
     "./lib/*.js": "./src/lib/*.js",
     "./utils/*.js": "./src/utils/*.js",
     "./utils/create/*": "./src/utils/create/*",
