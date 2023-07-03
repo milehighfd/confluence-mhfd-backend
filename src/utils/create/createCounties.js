@@ -1,9 +1,10 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
+import { ProjectCountiesError } from '../../errors/project.error';
 
 const ProjectCounty = db.projectCounty;
 
-export const createCounties = async (splitedCounty, project_id, transaction = null) => {
+export const createCounties = async (splitedCounty, project_id, user, transaction = null) => {
   const t = transaction ? await transaction : null;
   for (const c of splitedCounty) {
     try {
@@ -11,10 +12,11 @@ export const createCounties = async (splitedCounty, project_id, transaction = nu
         state_county_id: c,
         project_id: project_id,
         shape_length_ft: 0,
+        last_modified_by: user.name,
+        created_by: user.email,
       }, { transaction: t });
     } catch (error) {
-      logger.error('cannot create county ' + error);
-      throw error;
+      throw ProjectCountiesError('Error creating county', { cause: error });
     }
     logger.info('created county');
   }
