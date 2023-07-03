@@ -1,5 +1,6 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
+import { ProjectSponsorsError, NotFoundError } from 'bc/errors/project.error.js';
 
 const ProjectPartner = db.projectPartner;
 const BusinessAssociates = db.businessAssociates;
@@ -40,14 +41,20 @@ export const saveProjectPartner = async (
       transaction: transaction
     });
 
-    if(id) await ProjectPartner.create({
-      code_partner_type_id: 11,
-      project_id: project_id,
-      business_associates_id: id.business_associates_id,
-    }, { transaction: transaction }); // associate transaction with the database operation
+    if(id) {
+      const projectPartner = await ProjectPartner.create({
+        code_partner_type_id: 11,
+        project_id: project_id,
+        business_associates_id: id.business_associates_id,
+      }, { transaction: transaction });
+      return projectPartner;
+    } else {
+      await transaction.rollback();
+      throw new NotFoundError('Business Associate not found');
+    }
     logger.info('create ProjectPartner Sponsor ');
   } catch(error) {
     logger.error('error ProjectPartner Sponsor ', error);
-    throw error;
+    throw new ProjectSponsorsError('Error creating ProjectPartner Sponsor', { cause: error});
   }
 }

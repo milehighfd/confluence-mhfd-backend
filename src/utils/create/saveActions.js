@@ -1,5 +1,6 @@
 import { saveProjectAction, saveProjectIndependentAction } from 'bc/utils/create';
 import logger from 'bc/config/logger.js';
+import { ProjectActionsError } from 'bc/errors/project.error.js';
 
 export const saveActions = async (project_id, independetComponent, components, creator, transaction) => {
   try {
@@ -33,7 +34,6 @@ export const saveActions = async (project_id, independetComponent, components, c
       }
     }
   } catch (error) {
-    logger.error('Error', error);
-    throw error;
+    throw ProjectActionsError('Error creating actions', { cause: error });
   }
 };
