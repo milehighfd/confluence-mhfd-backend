@@ -1,5 +1,6 @@
 import { saveProjectCost } from 'bc/utils/create';
 import logger from 'bc/config/logger.js';
+import { ProjectCostsError } from 'bc/errors/project.error.js';
 
 export const saveCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, filtered, filterFrontOverheadCosts, transaction) => {
   const promises = [];  
@@ -30,7 +31,7 @@ export const saveCosts = async (project_id, additionalcost, aditionalCostId, add
     })
     .catch((error) => {
       logger.error('Error saving costs:', error);
-      throw error;
+      throw ProjectCostsError('Error saving costs', { cause: error });
     });
   return result;
 };
