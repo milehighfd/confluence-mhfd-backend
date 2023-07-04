@@ -7,24 +7,26 @@ export const saveProjectStatusFromCero = async (
   code_phase_type_id,
   project_id,
   duration,
+  formatDuration,
   created_by,
   transaction = null
 ) => {
+  console.log('-------------------------------creating status')
   const createdDate = moment().format('YYYY-MM-DD HH:mm:ss');
   const endDate = moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss');
   try {
     const res = await ProjectStatus.create({
       code_phase_type_id,
       project_id,
-      createdDate,
-      createdDate,
-      createdDate,
-      endDate,
-      endDate,
+      phase_change_date: createdDate,
+      planned_start_date: createdDate,
+      actual_start_date: createdDate,
+      planned_end_date: endDate,
+      actual_end_date: endDate,
       duration,
-      createdDate,
-      createdDate,
-      created_by,
+      created_date: createdDate,
+      modified_date: createdDate,
+      last_modified_by: created_by,
       created_by
     }, { transaction: transaction });
     return res;
