@@ -63,11 +63,11 @@
   },
   "exports": {
     "./config/*.js": "./src/config/*.js",
+    "./errors/*.js": "./src/errors/*.js",
     "./models/*.js": "./src/models/*.js",
     "./routes/*.js": "./src/routes/*.js",
     "./services/*.js": "./src/services/*.js",
-    "./auth/*.js": "./src/auth/*.js",
-    "./errors/*.js": "./src/errors/*.js",
+    "./auth/*.js": "./src/auth/*.js",    
     "./lib/*.js": "./src/lib/*.js",
     "./utils/*.js": "./src/utils/*.js",
     "./utils/create/*": "./src/utils/create/*",

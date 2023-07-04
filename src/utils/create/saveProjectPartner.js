@@ -1,6 +1,6 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
-import { ProjectSponsorsError, NotFoundError } from 'bc/errors/project.error.js';
+import { ProjectSponsorsError, NotFoundError } from '../../errors/project.error.js';
 
 const ProjectPartner = db.projectPartner;
 const BusinessAssociates = db.businessAssociates;

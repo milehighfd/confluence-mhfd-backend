@@ -1,6 +1,6 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
-import { ProjectCountiesError } from '../../errors/project.error';
+import { ProjectCountiesError } from '../../errors/project.error.js';
 
 const ProjectCounty = db.projectCounty;
 

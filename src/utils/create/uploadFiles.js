@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import logger from 'bc/config/logger.js';
 import db from 'bc/config/db.js';
 import moment from 'moment';
-import { ProjectAttachmentError } from '../../errors/project.error';
+import { ProjectAttachmentError } from '../../errors/project.error.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

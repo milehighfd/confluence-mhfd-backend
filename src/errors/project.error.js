@@ -26,6 +26,13 @@ export class ProjectSponsorsError extends Error {
   }
 }
 
+export class NotFoundError extends Error {
+  constructor(message, options) {
+    super(message, options);
+    this.name = 'NotFoundError';
+  }
+}
+
 export class ProjectLocalGovernmentError extends Error {
   constructor(message, options) {
     super(message, options);
@@ -40,10 +47,10 @@ export class ProjectCountiesError extends Error {
   }
 }
 
-export class ProjectServiceAreaError extends Error {
+export class ProjectServiceAreasError extends Error {
   constructor(message, options) {
     super(message, options);
-    this.name = 'ProjectServiceAreaError';
+    this.name = 'ProjectServiceAreasError';
   }
 }
 export class ProjectActionsError extends Error {

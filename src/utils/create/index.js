@@ -1,6 +1,6 @@
 export * from 'bc/utils/create/saveProject.js'
 export * from 'bc/utils/create/createLocalGovernment.js'
-export * from 'bc/utils/create/createServiceArea.js'
+export * from 'bc/utils/create/createServiceAreas.js'
 export * from 'bc/utils/create/createCounties.js'
 export * from 'bc/utils/create/checkCartoandDelete.js'
 export * from 'bc/utils/create/createCartoEntry.js'
