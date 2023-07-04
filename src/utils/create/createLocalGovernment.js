@@ -1,6 +1,6 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
-import { ProjectLocalGovernmentError } from 'bc/errors/project.error.js';
+import { ProjectLocalGovernmentError } from '../../errors/project.error.js';
 
 const ProjectLocalGovernment = db.projectLocalGovernment;
 
@@ -15,7 +15,7 @@ export const createLocalGovernment = async (splitedJurisdiction, project_id, use
         created_by: user.email,
       }, { transaction: transaction });
     } catch (error) {
-      throw ProjectLocalGovernmentError('Error creating jurisdiction', { cause: error });
+      throw new ProjectLocalGovernmentError('Error creating jurisdiction', { cause: error });
     }
     logger.info('created jurisdiction');
   }

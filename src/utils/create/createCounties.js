@@ -11,11 +11,9 @@ export const createCounties = async (splitedCounty, project_id, user, transactio
         state_county_id: c,
         project_id: project_id,
         shape_length_ft: 0,
-        last_modified_by: user.name,
-        created_by: user.email,
       }, { transaction: transaction });
     } catch (error) {
-      throw ProjectCountiesError('Error creating county', { cause: error });
+      throw new ProjectCountiesError('Error creating county', { cause: error });
     }
     logger.info('created county');
   }

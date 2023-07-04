@@ -56,7 +56,7 @@ export const uploadFiles = async (user, files, projectid, cover, transaction) =>
     }
     return { success: true, attachments };
   } catch (error) {
-    throw ProjectAttachmentError('Error uploading files', { cause: error });
+    throw new ProjectAttachmentError('Error uploading files', { cause: error });
   }
 };
 

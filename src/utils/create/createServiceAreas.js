@@ -15,7 +15,7 @@ export const createServiceAreas = async (splitedServiceArea, project_id, user, t
         created_by: user.email,
       }, { transaction: transaction });
     } catch (error) {
-      throw ProjectServiceAreasError('Error creating service area', { cause: error });
+      throw new ProjectServiceAreasError('Error creating service area', { cause: error });
     }
     logger.info('created service area');
   }
