@@ -5,7 +5,7 @@ import {
 
 const ProjectCounty = db.projectCounty;
 
-export const updateCounties = async (project_id, splitedCounty, transaction) => {
+export const updateCounties = async (project_id, splitedCounty, user, transaction) => {
   await ProjectCounty.destroy({
     where: {
       project_id,
@@ -13,7 +13,7 @@ export const updateCounties = async (project_id, splitedCounty, transaction) => 
     transaction,
   });    
   try {
-    await createCounties(splitedCounty, project_id, transaction); 
+    await createCounties(splitedCounty, project_id, user, transaction); 
     console.log('Counties created successfully!');
   } catch (error) {
     console.error('Failed to create counties:', error);
