@@ -16,6 +16,7 @@ import specialRouter from 'bc/routes/new-project/special.route.js';
 import copyRouter from 'bc/routes/new-project/copy.route.js';
 import projectProposedAction from "bc/services/projectProposedAction.service.js";
 import projectIndependentAction from "bc/services/projectIndependentAction.service.js";
+import createProject from 'bc/routes/new-project/createproject.route.js';
 
 import db from 'bc/config/db.js';
 const CodeLocalGoverment = db.codeLocalGoverment;
@@ -33,6 +34,7 @@ router.use('/study', studyRouter);
 router.use('/acquisition', acquisitionRouter);
 router.use('/special', specialRouter);
 router.use('/copy', copyRouter);
+router.use('/createproject', createProject);
 
 router.post('/get-components-by-components-and-geom', auth,async (req, res) => {
   const geom = req.body.geom;
