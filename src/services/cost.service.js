@@ -35,10 +35,8 @@ const setIsActiveToFalse = async (project_id) => {
   }
 };
 
-const updateProjectOverhead = async (cost, project_id, code_cost_type_id) => {
+const updateProjectOverhead = async (cost) => {
   try {
-    console.log(cost, project_id, code_cost_type_id, "111111111111111111111111")
-    
     logger.info('older cost updated');
     const response = await ProjectCost.create(cost);
     logger.info('cost updated');
