@@ -4,8 +4,7 @@ import { ProjectLocalGovernmentError } from 'bc/errors/project.error.js';
 
 const ProjectLocalGovernment = db.projectLocalGovernment;
 
-export const createLocalGovernments = async (splitedJurisdiction, project_id, user, transaction = null) => {
-  const t = transaction ? await transaction : null;
+export const createLocalGovernment = async (splitedJurisdiction, project_id, user, transaction = null) => {
   for (const j of splitedJurisdiction) {
     try {
       await ProjectLocalGovernment.create({
@@ -14,7 +13,7 @@ export const createLocalGovernments = async (splitedJurisdiction, project_id, us
         shape_length_ft: 0,
         last_modified_by: user.name,
         created_by: user.email,
-      }, { transaction: t });
+      }, { transaction: transaction });
     } catch (error) {
       throw ProjectLocalGovernmentError('Error creating jurisdiction', { cause: error });
     }

@@ -5,7 +5,6 @@ import { ProjectServiceAreaError } from '../../errors/project.error';
 const ProjectServiceArea = db.projectServiceArea;
 
 export const createServiceAreas = async (splitedServiceArea, project_id, user, transaction = null) => {
-  const t = transaction ? await transaction : null;
   for (const s of splitedServiceArea) {
     try {
       await ProjectServiceArea.create({
@@ -14,7 +13,7 @@ export const createServiceAreas = async (splitedServiceArea, project_id, user, t
         shape_length_ft: 0,
         last_modified_by: user.name,
         created_by: user.email,
-      }, { transaction: t });
+      }, { transaction: transaction });
     } catch (error) {
       throw ProjectServiceAreaError('Error creating service area', { cause: error });
     }

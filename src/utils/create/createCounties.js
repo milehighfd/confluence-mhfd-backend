@@ -5,7 +5,6 @@ import { ProjectCountiesError } from '../../errors/project.error';
 const ProjectCounty = db.projectCounty;
 
 export const createCounties = async (splitedCounty, project_id, user, transaction = null) => {
-  const t = transaction ? await transaction : null;
   for (const c of splitedCounty) {
     try {
       await ProjectCounty.create({
@@ -14,7 +13,7 @@ export const createCounties = async (splitedCounty, project_id, user, transactio
         shape_length_ft: 0,
         last_modified_by: user.name,
         created_by: user.email,
-      }, { transaction: t });
+      }, { transaction: transaction });
     } catch (error) {
       throw ProjectCountiesError('Error creating county', { cause: error });
     }
