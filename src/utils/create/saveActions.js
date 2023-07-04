@@ -13,9 +13,8 @@ export const saveActions = async (project_id, independetComponent, components, c
           cost: !isNaN(Number(independent.cost)) ? Number(independent.cost) : 0,
           action_status: independent.status,
           last_modified_by: creator,
-          created_by: creator,
-          transaction
-        });
+          created_by: creator          
+        }, transaction);
         logger.info('create independent component');
       }
     }
