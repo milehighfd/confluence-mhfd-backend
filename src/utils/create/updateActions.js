@@ -1,8 +1,8 @@
 import { saveProjectAction, saveProjectIndependentAction } from 'bc/utils/create';
 import logger from 'bc/config/logger.js';
 
-export const updateActions = async (project_id, independetComponent, components, creator, transaction = null) => {
-  for (const independent of JSON.parse(independetComponent)) {
+export const updateActions = async (project_id, independentComponent, components, creator, transaction = null) => {
+  for (const independent of JSON.parse(independentComponent)) {
     console.log(independent);
     if (independent && independent.name) {
       await saveProjectIndependentAction({
