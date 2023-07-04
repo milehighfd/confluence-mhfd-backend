@@ -9,7 +9,7 @@ import {
   checkCartoandDelete,
   createCartoEntry,
   createAndUpdateStatus,
-  createLocalGovernments,
+  createLocalGovernment,
   createCounties,
   createServiceAreas,
   saveActions,
@@ -17,26 +17,40 @@ import {
   saveProjectPartner,
   saveCosts,
   insertIntoArcGis,
-  addProjectToBoard,
+  addProjectsToBoard,
+  createLocalitiesBoard,
+  getLocalitiesNames,
+  getOverheadCostIds,
+  saveProjectDetails,
+  saveAcquisition,
+  saveSpecial
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
-import { ProjectError, ProjectBoardsError} from 'bc/errors/project.error.js';
+import { ProjectError, ProjectBoardsError} from '../../errors/project.error.js';
 
 
 const CodeCostType = db.codeCostType
 
-const getOfficialProjectName = async (name) => name + (name === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '');
+const getOfficialProjectName = (name) => name + (name === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '');
 
-export const createProjects = async (body, transaction, type) => {
-  const { projectname, description, creator, maintenanceeligibility = null, geom } = body;
+export const createProjects = async (body, transaction, type, creator) => {
+  console.log(type, 'type')
+  const { projectname, description, maintenanceeligibility = null, geom } = body;
   let saveFn = saveProject;
-  let createCarto = createCartoEntry;
-  let createCartoInputs = [CREATE_PROJECT_TABLE, geom, project_id, transaction];
+  let createCarto = createCartoEntry;  
   let codeProjectTypeId = 0;
   switch(type) {
     case 'capital':
       saveFn = saveCapital;
       codeProjectTypeId = 5;
+      break;
+    case 'acquisition':
+      saveFn = saveAcquisition;
+      codeProjectTypeId = 13;
+      break;
+    case 'special':
+      saveFn = saveSpecial;
+      codeProjectTypeId = 15;
       break;
     default:
       saveFn = saveProject;
@@ -51,14 +65,15 @@ export const createProjects = async (body, transaction, type) => {
       transaction
     );
     const { project_id } = data;
+    let createCartoInputs = [CREATE_PROJECT_TABLE, geom, project_id, transaction];
     await checkCartoandDelete(
       CREATE_PROJECT_TABLE,
       project_id,
       transaction
     );
     await createCarto(...createCartoInputs);
-    const project_statuses = await createAndUpdateStatus(project_id, creator, transaction, codeProjectTypeId);
-    const projectData = { ...data, project_statuses };
+    const project_statuses = await createAndUpdateStatus(project_id, creator, codeProjectTypeId, transaction);
+    const projectData = { ...data, project_statuses, project_id: project_id };
     return projectData;
   } catch (error) {
     logger.error(error);
@@ -85,12 +100,12 @@ const addToBoard = async (body, user, type, subtype, transaction, project_id) =>
 
   try {
     const localNames = await getLocalitiesNames(localitiesBoard, transaction);
-    if (isWorkPlan) {
+    if (isWorkPlan === 'true') {
       typesList.push('WORK_PLAN');
       localNames.push('MHFD District Work Plan');
     }
     // TODO: Danilson, please return board data to the next function
-    await addProjectToBoard(user,
+    await addProjectsToBoard(user,
       servicearea,
       county,
       localNames,
@@ -108,14 +123,6 @@ const addToBoard = async (body, user, type, subtype, transaction, project_id) =>
     throw new ProjectBoardsError('Error adding project to board', { cause: error });
   }
 }; 
-
-try {
-  await createLocalGovernments(splitedJurisdiction, project_id, user, transaction);
-  console.log('Project local governments created successfully');
-} catch (error) {
-  console.error('Error creating project local governments:', error);
-}
-
 
 const createGeographicInfo = async (data, project_id, user, transaction, creatingFunction) => {
   try {
@@ -137,7 +144,7 @@ const parseGeographicInfoAndCreate = async (body, project_id, user, transaction)
       project_id,
       user,
       transaction,
-      createLocalGovernments
+      createLocalGovernment
     );
     const project_state_counties = await createGeographicInfo(
       splitedCounty,
@@ -169,7 +176,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
     additionalcost,
     additionalcostdescription,
     overheadcost,
-    independentComponents,
+    independentComponent,
     components,
     projectname,
     geom,
@@ -178,8 +185,8 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
     const answer = {};
     switch(type) {
       case 'capital':
-        // TODO: Danilson refactor the saveActions to get the list of actiosn and return that
-        await saveActions(project_id, independentComponents, components, creator, transaction);
+        const resActions = await saveActions(project_id, independentComponent, components, creator, transaction);
+        answer.resActions = resActions;
         const overhead = overheadcost.split(',').slice(1);
         const dataArcGis = await insertIntoArcGis(
           geom,
@@ -187,46 +194,36 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
           cleanStringValue(projectname)
         );
         answer.dataArcGis = dataArcGis;
-
-        // TODO: Danilson move this logic to his own funciton or functions
-        // also you will need to create a proper error handling and throwing
-        const overheadcostIds = await CodeCostType.findAll({
-          attributes: [
-            'code_cost_type_id'
-          ],
-          where: {
-            is_overhead: true
-          },
-          transaction: transaction
-        });
-        // TODO: Danilson check this, the old logic seems to not work 
-        const filtered = overheadcostIds.filter((element) => element.code_cost_type_id !== 2)
-          .map((element) => element.code_cost_type_id).filter(Number);
+        //get overheadCosts ids       
+        const overheadCostIds = await getOverheadCostIds(transaction);        
         //create Costs entries
         const COST_ID = 4;
-        // TODO: Danilson return the list of elements
-        await saveCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, filtered, overhead, transaction);
-        
+        const resCost = await saveCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, transaction);
+        answer.resCost = resCost;
         break;
+      case 'acquisition':
+        const resDetails = await saveProjectDetails(project_id, body, creator, transaction);
+        answer.resDetails = resDetails;
+      // case 'maintenance':
+      //   const resMaintenance = await saveProjectDetails(project_id, body, creator, transaction);
+      //   answer.resMaintenance = resMaintenance;
+      //   break;
+
+      break;
     };
+    return answer;
   } catch (error) {
+    logger.error('error saving extra fields');
     throw error;
   }
 };
 export const createProjectWorkflow = async (body, user, files, type, subtype) => {
   try {
     const transaction = await db.sequelize.transaction();
-    const data = await createProjects(body, transaction);
+    const data = await createProjects(body, transaction, type, user.email);
     const { project_id } = data;
-    const { cover } = body;
+    const { cover, sponsor, cosponsor } = body;
     const project_attachments = await uploadFiles(user, files, project_id, cover, transaction);
-    //Create entry for project Partner
-    await saveProjectPartner(
-      sponsor,
-      cosponsor,
-      project_id,
-      transaction
-    )
     await addToBoard(body, user, type, subtype, transaction, project_id);
     const geoInfo = await parseGeographicInfoAndCreate(body, project_id, user, transaction);
     const project_partner = await saveProjectPartner(
@@ -235,7 +232,8 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
       project_id,
       transaction
     );
-    const composeData = { ...data, project_attachments, project_partner, ...geoInfo };
+    const extra_fields = await extraFields(type, subtype, body, project_id, transaction, user.email);
+    const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields};
     await transaction.commit();
     return composeData;
   } catch (error) {
