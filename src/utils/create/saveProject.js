@@ -15,6 +15,8 @@ export const saveProject = async (
   code_maintenance_eligibility_type_id = null,
   transaction = null,
 ) => {
+  console.log('save project-------------------------')
+  console.log(code_project_type_id, project_name, description, creator, code_maintenance_eligibility_type_id)
   try {
     let insert;
     const currendDate = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -56,3 +58,7 @@ export const saveProject = async (
 
 const CAPITAL_CODE_PROJECT_TYPE_ID = 5;
 export const saveCapital = saveProject.bind(null, CAPITAL_CODE_PROJECT_TYPE_ID);
+const ACQUISITION_CODE_PROJECT_TYPE_ID = 13;
+export const saveAcquisition = saveProject.bind(null, ACQUISITION_CODE_PROJECT_TYPE_ID);
+const SPECIAL_CODE_PROJECT_TYPE_ID = 15;
+export const saveSpecial = saveProject.bind(null, SPECIAL_CODE_PROJECT_TYPE_ID);
