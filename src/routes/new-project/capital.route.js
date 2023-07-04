@@ -302,7 +302,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     overheadcostdescription,
     additionalcost,
     additionalcostdescription,
-    independetComponent,
+    independentComponent,
     locality,
     components,
     jurisdiction,
@@ -440,7 +440,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     }
     //Insert actions and independent actions
     try {
-      await saveActions(project_id, independetComponent, components, creator, transaction);
+      await saveActions(project_id, independentComponent, components, creator, transaction);
     } catch (error) {
       console.error(error);
       throw error;
@@ -475,7 +475,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     overheadcostdescription,
     additionalcost,
     additionalcostdescription,
-    independetComponent,
+    independentComponent,
     locality,
     components,
     jurisdiction,
@@ -580,7 +580,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       throw error;
     }     
     try {
-      await updateActions(project_id, independetComponent, components, creator, transaction);
+      await updateActions(project_id, independentComponent, components, creator, transaction);
       console.log('actions updated successfully!');
     } catch (error) {
       console.error('Failed to update actions:', error);
