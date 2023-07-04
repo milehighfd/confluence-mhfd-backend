@@ -16,13 +16,12 @@ import {
 import db from 'bc/config/db.js';
 import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
-import { addProjectToBoard, cleanStringValue, updateProjectsInBoard } from 'bc/routes/new-project/helper.js';
 import moment from 'moment';
 import projectPartnerService from 'bc/services/projectPartner.service.js';
 import costService from 'bc/services/cost.service.js';
 import { 
   saveProject, 
-  createLocalGovernments, 
+  createLocalGovernment, 
   createCounties, 
   createServiceAreas,
   checkCartoandDelete,
@@ -36,6 +35,18 @@ import {
   saveCosts,
   saveActions,
   insertIntoArcGis,
+  updateProject,
+  toggleName,
+  cleanStringValue,
+  updateProjectsInBoard,
+  updateProjectPartner,
+  updateCosts,
+  updateLocalGovernment,
+  updateServiceArea,
+  updateCounties,
+  deleteProposedAction,
+  deleteIndependentAction,
+  updateActions
 } from 'bc/utils/create';
 import boardService from 'bc/services/board.service.js';
 
@@ -343,13 +354,21 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     //Obtain first phase for type project, create entry in project status table and update project table
     const CODE_PROJECT_TYPE = 5;
     try {
-      const response = await createAndUpdateStatus(project_id, creator, transaction, CODE_PROJECT_TYPE);
+      const response = await createAndUpdateStatus(project_id, creator, CODE_PROJECT_TYPE, transaction);
       console.log(response);
-    } catch (error) {
+    } catch (error) {      
       console.error(error);
+      throw error;
     } 
     //Create Attachments entry
-    const attachmentResponse = await uploadFiles(user, req.files, project_id, cover, transaction);
+    let attachmentResponse = {};
+    try {
+      attachmentResponse = await uploadFiles(user, req.files, project_id, cover, transaction);
+      console.log('Attachment response:', attachmentResponse);
+    } catch (error) {
+      console.error('Failed to upload files:', error);
+      throw error;
+    }
     result.push(attachmentResponse);
     // Start of Add or Create Board
     const projectsubtype = '';      
@@ -364,6 +383,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       await addProjectsToBoard(user, servicearea, county, localNames, typesList, defaultProjectType, project_id, year, sendToWR, isWorkPlan, projectname, projectsubtype, transaction);      
     } catch (error) {      
       console.error(error);
+      throw error;
     }
     //Create entry for project Partner
     await saveProjectPartner(
@@ -392,13 +412,15 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       await saveCosts(project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, filtered, filterFrontOverheadCosts, transaction);
     } catch (error) {
       console.error(error);
+      throw error;
     }
     //Create entries for jurisdiction
     try {
-      await createLocalGovernments(splitedJurisdiction, project_id, user, transaction);
+      await createLocalGovernment(splitedJurisdiction, project_id, user, transaction);
       console.log('Project local governments created successfully');
     } catch (error) {
       console.error('Error creating project local governments:', error);
+      throw error;
     }
     //Create entries for service area
     try {
@@ -406,6 +428,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       console.log('Service areas created successfully!');
     } catch (error) {
       console.error('Failed to create service areas:', error);
+      throw error;
     }
     //Create entries for county
     try {
@@ -413,12 +436,14 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       console.log('Counties created successfully!');
     } catch (error) {
       console.error('Failed to create counties:', error);
+      throw error;
     }
     //Insert actions and independent actions
     try {
       await saveActions(project_id, independetComponent, components, creator, transaction);
     } catch (error) {
       console.error(error);
+      throw error;
     }
     //InsertIntoArcGis
     const dataArcGis = await insertIntoArcGis(
@@ -470,7 +495,42 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
   const splitedServicearea = servicearea.split(',');
   const splitedOverheadcost = overheadcost.split(',').filter((e) => e >= 0);
   const aditionalCostId = 4;
-  try {
+  const transaction = await db.sequelize.transaction(); 
+  try {  
+    const data = await updateProject(
+      project_id,
+      cleanStringValue(projectname),
+      cleanStringValue(description),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
+      creator,
+      null,
+      transaction
+    );
+    result.push(data);
+    await checkCartoandDelete(
+      CREATE_PROJECT_TABLE,
+      project_id,
+      transaction
+    );
+    await createCartoEntry(CREATE_PROJECT_TABLE, geom, project_id, transaction);
+    const projectsubtype = '';
+    const projecttype = 'Capital';
+    await toggleName(cover, transaction);
+    await uploadFiles(user, req.files, project_id, cover, transaction);
+    await updateProjectsInBoard(
+      project_id,
+      cleanStringValue(projectname),
+      projecttype,
+      projectsubtype,
+      transaction
+    );
+    await updateProjectPartner(
+      sponsor,
+      cosponsor,
+      project_id,
+      transaction
+    );
+
     const overheadcostIds = await CodeCostType.findAll({
       attributes: [
         'code_cost_type_id'
@@ -484,196 +544,52 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
         return element.code_cost_type_id
       }
     }).filter(Number);
-
-    const data = await projectService.updateProject(
-      project_id,
-      cleanStringValue(projectname),
-      cleanStringValue(description),
-      moment().format('YYYY-MM-DD HH:mm:ss'),
-      creator
-    );
-    result.push(data);
-    await cartoService.checkIfExistGeomThenDelete(
-      CREATE_PROJECT_TABLE,
-      project_id
-    );
-    await cartoService.insertToCarto(CREATE_PROJECT_TABLE, geom, project_id);
-    const projectsubtype = '';
-    const projecttype = 'Capital';
-    await attachmentService.toggleName(cover);
-    await attachmentService.uploadFiles(user, req.files, project_id, cover);
-    await updateProjectsInBoard(
-      project_id,
-      cleanStringValue(projectname),
-      projecttype,
-      projectsubtype
-    );
-    await projectPartnerService.updateProjectPartner(
-      sponsor,
-      cosponsor,
-      project_id
-    );
-    await costService.setIsActiveToFalse(project_id);
-    //update aditional cost
-    await costService.updateProjectOverhead(
-      {
-        project_id: project_id,
-        cost: !isNaN(Number(additionalcost)) ? Number(additionalcost) : 0,
-        code_cost_type_id: aditionalCostId,
-        cost_description: additionalcostdescription || null,
-        created_by: creator,
-        modified_by: creator,
-        is_active: true
-      },
-      project_id,
-      aditionalCostId
-    );
-    //update overhead cost
-    filtered.forEach(async (element, index) => {
-      await costService.updateProjectOverhead(
-        {
-          project_id: project_id,
-          cost: !isNaN(Number(splitedOverheadcost[index+1])) ? Number(splitedOverheadcost[index+1]) : 0,
-          code_cost_type_id: element,
-          created_by: creator,
-          modified_by: creator,
-          is_active: true
-        },
-        project_id,
-        element
-      );
-    });
-    
-    if (splitedJurisdiction)
-      await ProjectLocalGovernment.destroy({
-        where: {
-          project_id: project_id,
-        },
-      });
-    if (splitedServicearea)
-      await ProjectServiceArea.destroy({
-        where: {
-          project_id: project_id,
-        },
-      });
-    if (splitedCounty)
-      await ProjectCounty.destroy({
-        where: {
-          project_id: project_id,
-        },
-      });
-    const promisesJur = splitedJurisdiction
-      .filter(j => j)
-      .map(j => ProjectLocalGovernment.create({
-        code_local_government_id: parseInt(j),
-        project_id: project_id,
-        shape_length_ft: 0,
-        last_modified_by: user.name,
-        created_by: user.email,
-      }));
-
-    Promise.all(promisesJur)
-      .then(() => {
-        logger.info('All jurisdictions created successfully');
-      })
-      .catch((error) => {
-        logger.error(`Error creating jurisdictions: ${error}`);
-        res.status(500).send({ message: `Error creating jurisdictions: ${error}` });
-      });
-
-    const promisesSA = [];
-
-    for (const s of splitedServicearea) {
-      if (s) {
-        promisesSA.push(ProjectServiceArea.create({
-          project_id: project_id,
-          code_service_area_id: s,
-          shape_length_ft: 0,
-          last_modified_by: user.name,
-          created_by: user.email,
-        }));
-      }
+    try {
+      await updateCosts(project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, splitedOverheadcost, filtered, transaction);
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
-
-    Promise.all(promisesSA)
-      .then(() => {
-        logger.info('All service areas created successfully');
-      })
-      .catch((error) => {
-        logger.error(`Error creating service areas: ${error}`);
-        res.status(500).send({ message: `Error creating service areas: ${error}` });
-      });
-    const promisesCounty = [];
-
-    for (const c of splitedCounty) {
-      if (c) {
-        const projectCounty = {
-          state_county_id: c,
-          project_id: project_id,
-          shape_length_ft: 0,
-        };
-        promisesCounty.push(ProjectCounty.create(projectCounty));
-      }
+    try {
+      await updateLocalGovernment(project_id,splitedJurisdiction, user, transaction);
+      console.log('Project local governments created successfully');
+    } catch (error) {
+      console.error('Error updating project local governments:', error);
+      throw error;
+    }    
+    try {
+      await updateServiceArea(project_id, splitedServicearea, user, transaction);
+      console.log('Service areas created successfully!');
+    } catch (error) {
+      console.error('Failed to update service areas:', error);
+      throw error;
     }
-
-    await Promise.all(promisesCounty)
-      .then(() => {
-        logger.info('All counties created successfully');
-      })
-      .catch((error) => {
-        logger.error(`Error creating counties: ${error}`);
-        res.status(500).send({ message: `Error creating counties: ${error}` });
-      });
-
-    await projectProposedActionService.deleteByProjectId(project_id);
-    await projectIndependentActionService.deleteByProjectId(project_id);
-
-    for (const independent of JSON.parse(independetComponent)) {
-      console.log(independent)
-      if (independent && independent.name) {
-        await projectIndependentActionService.saveProjectIndependentAction({
-          action_name: independent.name,
-          project_id: project_id,
-          cost: !isNaN(Number(independent.cost)) ? Number(independent.cost) : 0,
-          action_status: independent.status,
-          last_modified_by: creator,
-          created_by: creator,
-        });
-      } else {
-        await projectIndependentActionService.saveProjectIndependentAction({
-          action_name: independent.action_name,
-          project_id: project_id,
-          cost: !isNaN(Number(independent.cost)) ? Number(independent.cost) : 0,
-          action_status: independent.action_status,
-          last_modified_by: creator,
-          created_by: creator,
-        });
-      }
-      logger.info('create independent component');
+    try {
+      await updateCounties(project_id, splitedCounty, transaction);
+      console.log('Counties created successfully!');
+    } catch (error) {
+      console.error('Failed to create counties:', error);
+      throw error;
     }
-    const promisesComponents = [];
-
-    for (const component of JSON.parse(components)) {
-      const action = {
-        project_id: project_id,
-        object_id: component.objectid,
-        source_table_name: component.table,
-        last_modified_by: creator,
-        created_by: creator,
-      };
-      promisesComponents.push(projectProposedActionService.saveProjectAction(action));
+    try {
+      await deleteProposedAction(project_id);
+      await deleteIndependentAction(project_id);    
+      console.log('Actions deleted successfully!');
+    } catch (error) {
+      console.error('Failed to delete actions:', error);
+      throw error;
+    }     
+    try {
+      await updateActions(project_id, independetComponent, components, creator, transaction);
+      console.log('actions updated successfully!');
+    } catch (error) {
+      console.error('Failed to update actions:', error);
+      throw error;
     }
-    await Promise.all(promisesComponents)
-      .then(() => {
-        logger.info('All components saved successfully');
-      })
-      .catch((error) => {
-        logger.error(`Error saving components: ${error}`);
-        res.status(500).send({ message: `Error creating components: ${error}` });
-      });
+    await transaction.commit();
     res.send(result);
   } catch (error) {
-    console.log(error)
+    await transaction.rollback();
     logger.error(error);
     res.status(500).send({ message: `Error creating project: ${error}` });
   };
