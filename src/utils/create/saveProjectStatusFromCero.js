@@ -11,7 +11,6 @@ export const saveProjectStatusFromCero = async (
   created_by,
   transaction = null
 ) => {
-  console.log('-------------------------------creating status')
   const createdDate = moment().format('YYYY-MM-DD HH:mm:ss');
   const endDate = moment().add(Number(duration), formatDuration).format('YYYY-MM-DD HH:mm:ss');
   try {
