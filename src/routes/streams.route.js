@@ -13,7 +13,6 @@ router.get('/', async (req, res) => {
       include: { all: true, nested: true }
     });
     logger.info(`Finished  function findAll for streams.route/`);
-    console.log('-------------------------------------')
     //console.log(sa);
     res.send(sa);
   } catch (error) {
