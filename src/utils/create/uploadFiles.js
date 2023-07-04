@@ -1,9 +1,14 @@
-import db from 'bc/config/db.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import logger from 'bc/config/logger.js';
+import db from 'bc/config/db.js';
 import moment from 'moment';
 import { ProjectAttachmentError } from '../../errors/project.error';
 
-const Attachment = db.attachment;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const Attachment = db.projectAttachment;
 
 export const uploadFiles = async (user, files, projectid, cover, transaction) => {
   try {
@@ -56,7 +61,7 @@ export const uploadFiles = async (user, files, projectid, cover, transaction) =>
 };
 
 function getDestFile(filename) {
-  let root = path.join(__dirname, `../../public/images`);
+  let root = path.join(__dirname, `../../../public/images`);
   if (filename.includes('/')) {
     let folders = filename.split('/');
     for (let i = 0 ; i < folders.length - 1; i++) {
