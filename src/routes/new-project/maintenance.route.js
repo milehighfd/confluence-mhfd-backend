@@ -16,7 +16,7 @@ import projectStatusService from 'bc/services/projectStatus.service.js';
 import projectDetailService from 'bc/services/projectDetail.service.js';
 import projectPartnerService from 'bc/services/projectPartner.service.js';
 import { 
-  saveProjectDetail
+  saveProjectDetails
 } from 'bc/utils/create';
 import moment from 'moment';
 
@@ -125,7 +125,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     );
     console.log(resres);
 
-    await saveProjectDetail(
+    await projectDetailService.saveProjectDetail(
       frequency,
       ownership,
       project_id,

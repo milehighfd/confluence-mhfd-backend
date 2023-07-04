@@ -16,7 +16,7 @@ import projectDetailService from 'bc/services/projectDetail.service.js';
 import projectService from 'bc/services/project.service.js';
 import moment from 'moment';
 import { 
-  saveProjectDetail
+  saveProjectDetails
 } from 'bc/utils/create';
 
 const ProjectLocalGovernment = db.projectLocalGovernment;
@@ -158,7 +158,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
       cosponsor,
       project_id
     );
-    await saveProjectDetail(
+    await projectDetailService.saveProjectDetail(
       0,
       0,
       project_id,
