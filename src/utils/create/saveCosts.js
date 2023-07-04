@@ -1,6 +1,6 @@
 import { saveProjectCost } from 'bc/utils/create';
 import logger from 'bc/config/logger.js';
-import { ProjectCostsError } from 'bc/errors/project.error.js';
+import { ProjectCostsError } from '../../errors/project.error.js';
 
 export const saveCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, filtered, filterFrontOverheadCosts, transaction) => {
   const promises = [];  
@@ -26,12 +26,13 @@ export const saveCosts = async (project_id, additionalcost, aditionalCostId, add
     }, transaction));
   }
   const result = await Promise.all(promises)
-    .then(() => {
+    .then((results) => {
       logger.info('All costs saved successfully');
+      return results;
     })
     .catch((error) => {
       logger.error('Error saving costs:', error);
-      throw ProjectCostsError('Error saving costs', { cause: error });
+      throw new ProjectCostsError('Error saving costs', { cause: error });
     });
   return result;
 };
