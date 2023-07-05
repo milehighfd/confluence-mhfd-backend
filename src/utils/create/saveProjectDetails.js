@@ -10,12 +10,12 @@ export const saveProjectDetails = async (
   transaction = null
 ) => {
   try {
-    const { maintenance_frequency, is_public_ownership, code_study_reason_id, acquisition_anticipated_year, code_acquisition_progress_status_id } = body;
-    const maintenanceFrequency = maintenance_frequency || 0;
-    const isPublicOwnership = is_public_ownership || 0;
-    const codeStudyReasonId = code_study_reason_id || null;
-    const acquisitionAnticipatedYear = acquisition_anticipated_year || null;
-    const codeAcquisitionProgressStatusId = code_acquisition_progress_status_id || null;
+    const { frequency, ownership, studyreason, acquisitionanticipateddate, acquisitionprogress } = body;
+    const maintenanceFrequency = frequency || 0;
+    const isPublicOwnership = ownership || 0;
+    const codeStudyReasonId = studyreason || null;
+    const acquisitionAnticipatedYear = acquisitionanticipateddate || null;
+    const codeAcquisitionProgressStatusId = acquisitionprogress || null;
     const response = await ProjectDetail.create({
       maintenance_frequency: maintenanceFrequency,
       is_public_ownership: isPublicOwnership,
