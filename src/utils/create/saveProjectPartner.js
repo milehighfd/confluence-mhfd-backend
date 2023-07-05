@@ -49,10 +49,8 @@ export const saveProjectPartner = async (
       }, { transaction: transaction });
       return projectPartner;
     } else {
-      await transaction.rollback();
-      throw new NotFoundError('Business Associate not found');
+      return ({ message: 'Sponsor not found' })
     }
-    logger.info('create ProjectPartner Sponsor ');
   } catch(error) {
     logger.error('error ProjectPartner Sponsor ', error);
     throw new ProjectSponsorsError('Error creating ProjectPartner Sponsor', { cause: error});
