@@ -8,17 +8,20 @@ import {
 } from 'bc/utils/create';
 
 export const createAndUpdateStatus = async (project_id, creator, CODE_PROJECT_TYPE, transaction = null) => {
-  const codePhaseForCapital = await CodePhaseType.findOne({
+  let codePhaseType = await CodePhaseType.findOne({
     where: {
-      code_phase_type_id: CODE_PROJECT_TYPE,
+      code_project_type_id: CODE_PROJECT_TYPE,
     },
     transaction: transaction,
   });
-  console.log(codePhaseForCapital)
-  const { duration, duration_type } = codePhaseForCapital;
+  if (!codePhaseType) {
+    codePhaseType = await CodePhaseType.findOne();
+  }
+  console.log(codePhaseType)
+  const { duration, duration_type } = codePhaseType;
   const formatDuration = duration_type[0].toUpperCase();
   const response = await saveProjectStatusFromCero(
-    CODE_PROJECT_TYPE,
+    codePhaseType.code_phase_type_id,
     project_id,    
     Number(duration),
     formatDuration,
