@@ -20,7 +20,7 @@ export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, 
       }
     }
     if (year <= YEAR_WORKPLAN) {
-      if (PROJECT_TYPE === 'capital' || PROJECT_TYPE === 'Maintenance') {
+      if (PROJECT_TYPE === 'capital' || PROJECT_TYPE === 'maintenance') {
         for (const c of splitedCounty) {
           if (c) {
             localitiesBoard.push(c);
@@ -36,7 +36,7 @@ export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, 
         }
       }
     } else {
-      if (PROJECT_TYPE === 'Study') {
+      if (PROJECT_TYPE === 'study') {
         for (const s of splitedServicearea) {
           if (s) {
             localitiesBoard.push(s);
