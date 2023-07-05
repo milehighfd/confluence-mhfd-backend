@@ -23,7 +23,16 @@ import {
   getOverheadCostIds,
   saveProjectDetails,
   saveAcquisition,
-  saveSpecial
+  saveSpecial,
+  saveProjectStreams,
+  saveStudy,
+  createCartoStudy,
+  saveStudyP,
+  saveRestoration,
+  saveRoutineTrash,
+  saveSedimentRemoval,
+  saveMinorRepairs,
+  saveVegetationManagement,
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
 import { ProjectError, ProjectBoardsError} from '../../errors/project.error.js';
@@ -33,11 +42,10 @@ const CodeCostType = db.codeCostType
 
 const getOfficialProjectName = (name) => name + (name === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '');
 
-export const createProjects = async (body, transaction, type, creator) => {
-  console.log(type, 'type')
+export const createProjects = async (body, transaction, type, creator, subtype) => {
+  console.log(subtype, 'type')
   const { projectname, description, maintenanceeligibility = null, geom } = body;
-  let saveFn = saveProject;
-  let createCarto = createCartoEntry;  
+  let saveFn = saveProject;  
   let codeProjectTypeId = 0;
   switch(type) {
     case 'capital':
@@ -52,6 +60,34 @@ export const createProjects = async (body, transaction, type, creator) => {
       saveFn = saveSpecial;
       codeProjectTypeId = 15;
       break;
+    case 'study':
+      saveFn = saveStudyP;
+      codeProjectTypeId = 1;
+      break;
+    case 'maintenance':
+      switch (subtype){
+        case 'Restoration':
+          saveFn = saveRestoration;
+          codeProjectTypeId = 7;
+          break;
+        case 'Routine Trash and Debris':
+          saveFn = saveRoutineTrash;
+          codeProjectTypeId = 8;
+          break;
+        case 'Sediment Removal':
+          saveFn = saveSedimentRemoval;
+          codeProjectTypeId = 9;
+          break;
+        case 'Minor Repairs':
+          saveFn = saveMinorRepairs;
+          codeProjectTypeId = 17;
+          break;
+        case 'Vegetation Management':
+          saveFn = saveVegetationManagement;
+          codeProjectTypeId = 11;
+          break;
+      }
+      break;
     default:
       saveFn = saveProject;
       break;
@@ -64,14 +100,12 @@ export const createProjects = async (body, transaction, type, creator) => {
       maintenanceeligibility,
       transaction
     );
-    const { project_id } = data;
-    let createCartoInputs = [CREATE_PROJECT_TABLE, geom, project_id, transaction];
+    const { project_id } = data;    
     await checkCartoandDelete(
       CREATE_PROJECT_TABLE,
       project_id,
       transaction
-    );
-    await createCarto(...createCartoInputs);
+    );    
     const project_statuses = await createAndUpdateStatus(project_id, creator, codeProjectTypeId, transaction);
     const projectData = { ...data, project_statuses, project_id: project_id };
     return projectData;
@@ -180,11 +214,18 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
     components,
     projectname,
     geom,
+    ids,
+    streams,
+    studyreason,
+    otherReason,
   } = body;
   try {
     const answer = {};
+    let createCartoInputs = [CREATE_PROJECT_TABLE, geom, project_id, transaction];
+    let createCarto = createCartoEntry;
     switch(type) {
-      case 'capital':
+      case 'capital':                
+        await createCarto(...createCartoInputs);
         const resActions = await saveActions(project_id, independentComponent, components, creator, transaction);
         answer.resActions = resActions;
         const overhead = overheadcost.split(',').slice(1);
@@ -194,22 +235,32 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
           cleanStringValue(projectname)
         );
         answer.dataArcGis = dataArcGis;
-        //get overheadCosts ids       
-        const overheadCostIds = await getOverheadCostIds(transaction);        
-        //create Costs entries
+        const overheadCostIds = await getOverheadCostIds(transaction);  
         const COST_ID = 4;
         const resCost = await saveCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, transaction);
         answer.resCost = resCost;
         break;
-      case 'acquisition':
+      case 'acquisition':        
+        await createCarto(...createCartoInputs);
         const resDetails = await saveProjectDetails(project_id, body, creator, transaction);
         answer.resDetails = resDetails;
-      // case 'maintenance':
-      //   const resMaintenance = await saveProjectDetails(project_id, body, creator, transaction);
-      //   answer.resMaintenance = resMaintenance;
-      //   break;
-
-      break;
+        break;
+      case 'special':
+        await createCarto(...createCartoInputs);
+        const resSpecial = await saveProjectDetails(project_id, body, creator, transaction);
+        answer.resSpecial = resSpecial;
+        break;
+      case 'study':
+        await createCartoStudy(project_id, ids)
+        const resStreams = await saveProjectStreams(project_id, streams, transaction); 
+        answer.resStreams = resStreams;
+        const resStudy = await saveStudy(project_id, studyreason, creator, otherReason || null, transaction);
+        answer.resStudy = resStudy;
+        break;
+      case 'maintenance':
+        const resMaintenance = await saveProjectDetails(project_id, body, creator, transaction);
+        answer.resMaintenance = resMaintenance;
+        break;      
     };
     return answer;
   } catch (error) {
@@ -220,7 +271,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
 export const createProjectWorkflow = async (body, user, files, type, subtype) => {
   try {
     const transaction = await db.sequelize.transaction();
-    const data = await createProjects(body, transaction, type, user.email);
+    const data = await createProjects(body, transaction, type, user.email, subtype);
     const { project_id } = data;
     const { cover, sponsor, cosponsor } = body;
     const project_attachments = await uploadFiles(user, files, project_id, cover, transaction);
