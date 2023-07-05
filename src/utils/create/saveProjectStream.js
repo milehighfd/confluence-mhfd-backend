@@ -1,7 +1,7 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 
-const ProjectStream = db.projectStream;
+const ProjectStream = db.project_stream;
 
 export const saveProjectStream = async (projectStream, transaction = null) => {
   logger.info('create ProjectStream ' + JSON.stringify(projectStream));
