@@ -16,7 +16,8 @@ const multer = Multer({
 router.post('/', [auth, multer.array('files')], async (req, res) => {
   try {
     const type = req.body.type;
-    const project = await createProjectWorkflow(req.body, req.user, req.files, type, req.projectsubtype);
+    const subtype = req.body.projectsubtype;
+    const project = await createProjectWorkflow(req.body, req.user, req.files, type, subtype);
     res.send(project);
   } catch (error) {
     console.error('ERRORRRR',error);
