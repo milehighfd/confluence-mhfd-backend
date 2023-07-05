@@ -234,7 +234,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     } catch (error) {
       console.error(error);
     }
-    await saveStudy(
+    await studyService.saveStudy(
       project_id,
       studyreason,
       creator,
