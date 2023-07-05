@@ -107,7 +107,7 @@ export const createProjects = async (body, transaction, type, creator, subtype) 
       transaction
     );    
     const project_statuses = await createAndUpdateStatus(project_id, creator, codeProjectTypeId, transaction);
-    const projectData = { ...data, project_statuses, project_id: project_id };
+    const projectData = { project_data: data, project_statuses, project_id: project_id };
     return projectData;
   } catch (error) {
     logger.error(error);
