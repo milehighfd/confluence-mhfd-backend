@@ -565,7 +565,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       throw error;
     }
     try {
-      await updateCounties(project_id, splitedCounty, transaction);
+      await updateCounties(project_id, splitedCounty, user, transaction);
       console.log('Counties created successfully!');
     } catch (error) {
       console.error('Failed to create counties:', error);
