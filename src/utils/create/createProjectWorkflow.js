@@ -2,7 +2,6 @@ import {
   CREATE_PROJECT_TABLE,
 } from 'bc/config/config.js';
 import logger from 'bc/config/logger.js';
-import { cleanStringValue } from 'bc/routes/new-project/helper.js';
 import { 
   saveProject,
   saveCapital,
@@ -33,6 +32,7 @@ import {
   saveSedimentRemoval,
   saveMinorRepairs,
   saveVegetationManagement,
+  cleanStringValue
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
 import { ProjectError, ProjectBoardsError} from '../../errors/project.error.js';
