@@ -258,6 +258,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         answer.resStudy = resStudy;
         break;
       case 'maintenance':
+        await createCarto(...createCartoInputs);
         const resMaintenance = await saveProjectDetails(project_id, body, creator, transaction);
         answer.resMaintenance = resMaintenance;
         break;      

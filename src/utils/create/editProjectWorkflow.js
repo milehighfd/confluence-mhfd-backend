@@ -22,10 +22,9 @@ import {
   updateProjectDetail,
   updateStudy,
   createCartoStudy,
-  saveProjectStreams,
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
-import { EditProjectError, ProjectBoardsError} from '../../errors/project.error.js';
+import { EditProjectError} from '../../errors/project.error.js';
 import { deleteStreams } from './deleteStreams.js';
 import { updateStreams } from './updateStreams.js';
 
@@ -154,6 +153,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         answer.resStudy = resStudy;
         break;
       case 'maintenance':
+        await createCarto(...createCartoInputs);
         const resMaintenance = await updateProjectDetail(project_id, body, creator, transaction);
         answer.resMaintenance = resMaintenance;
         break;      
