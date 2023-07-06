@@ -1,4 +1,7 @@
 import { insertToCartoStudy } from 'bc/utils/create';
+import {
+  CREATE_PROJECT_TABLE,
+} from 'bc/config/config.js';
 
 export const createCartoStudy = async (project_id, ids) => {
   let parsedIds = '';
@@ -10,6 +13,6 @@ export const createCartoStudy = async (project_id, ids) => {
     parsedIds += "'" + id + "'";
   }
   if (idsArray.length) {
-    await insertToCartoStudy('CREATE_PROJECT_TABLE', project_id, parsedIds);
+    await insertToCartoStudy(CREATE_PROJECT_TABLE, project_id, parsedIds);
   }
 };
