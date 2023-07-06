@@ -5,6 +5,20 @@ export class ProjectError extends Error {
   }
 }
 
+export class EditProjectError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'EditProjectError';
+  }
+}
+
+export class EditCostProjectError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'EditCostProjectError';
+  }
+}
+
 export class ProjectAttachmentError extends Error {
   constructor(message) {
     super(message);
