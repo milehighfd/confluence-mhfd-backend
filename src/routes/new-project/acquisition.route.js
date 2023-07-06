@@ -15,9 +15,6 @@ import projectPartnerService from 'bc/services/projectPartner.service.js';
 import projectDetailService from 'bc/services/projectDetail.service.js';
 import projectService from 'bc/services/project.service.js';
 import moment from 'moment';
-import { 
-  saveProjectDetails
-} from 'bc/utils/create';
 
 const ProjectLocalGovernment = db.projectLocalGovernment;
 const ProjectCounty = db.projectCounty;
