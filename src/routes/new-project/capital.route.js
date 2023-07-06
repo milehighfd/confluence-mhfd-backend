@@ -501,7 +501,6 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       project_id,
       cleanStringValue(projectname),
       cleanStringValue(description),
-      moment().format('YYYY-MM-DD HH:mm:ss'),
       creator,
       null,
       transaction
@@ -572,8 +571,8 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
       throw error;
     }
     try {
-      await deleteProposedAction(project_id);
-      await deleteIndependentAction(project_id);    
+      await deleteProposedAction(project_id, transaction);
+      await deleteIndependentAction(project_id, transaction);    
       console.log('Actions deleted successfully!');
     } catch (error) {
       console.error('Failed to delete actions:', error);
