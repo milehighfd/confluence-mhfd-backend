@@ -15,9 +15,6 @@ import projectService from 'bc/services/project.service.js';
 import projectStatusService from 'bc/services/projectStatus.service.js';
 import projectDetailService from 'bc/services/projectDetail.service.js';
 import projectPartnerService from 'bc/services/projectPartner.service.js';
-import { 
-  saveProjectDetails
-} from 'bc/utils/create';
 import moment from 'moment';
 
 const CodeProjectType = db.codeProjectType;
