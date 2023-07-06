@@ -6,7 +6,7 @@ export const saveProjectStreams = async (project_id, streams, transaction = null
     for (const stream of JSON.parse(streams)) {
       const promise = saveProjectStream({
         project_id: project_id,
-        stream_id: stream.stream ? stream.stream[0].stream_id : 0,
+        stream_id: stream.stream ? stream.stream[0]?.stream_id : 0,
         length_in_mile: new Intl.NumberFormat('en-US', {
           style: 'decimal',
           minimumFractionDigits: 1,
