@@ -2,7 +2,8 @@ export default (sequelize, DataType) => {
   const BusinessAssociates = sequelize.define('business_associates', {
     business_associates_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     business_associate_name: {
       type: DataType.STRING,
@@ -42,6 +43,10 @@ export default (sequelize, DataType) => {
       allowNull: false
     },
     */
+    code_business_associates_type_id: {
+      type: DataType.INTEGER,
+      allowNull: false
+    },
     primary_business_associate_contact_id: {
       type: DataType.INTEGER,
     },

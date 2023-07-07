@@ -2,6 +2,7 @@ import express from 'express';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import auth from 'bc/auth/auth.js';
+import moment from 'moment';
 
 const BusinessContact = db.businessAssociateContact;
 const BusinessAdress = db.businessAdress;
@@ -70,6 +71,27 @@ router.get('/business-associates', async (_, res) => {
   }
 });
 
+router.post('/business-associates', [auth], async (req, res) => {
+  try {
+    //consultant code
+    const BUSINESS_ASSOCIATES_TYPE_ID = 2;
+    const { body } = req;
+    const businessAssociate = await BusinessAssociates.create({
+      business_associate_name: body.name,
+      business_name: body.name,
+      code_business_associates_type_id: BUSINESS_ASSOCIATES_TYPE_ID,
+      created_by: req.user.user_id,
+      last_modified_by: req.user.user_id,
+      created_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+      last_modified_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+    });
+    res.status(201).json(businessAssociate);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 router.post('/business-address/:idcontact', [auth], async (req, res) => {
   const id = req.params['idcontact'];
   const { body } = req;
@@ -96,7 +118,6 @@ router.post('/business-address/:idcontact', [auth], async (req, res) => {
     await t.commit();
     res.status(200).send({ message: 'Updated' });
   } catch (error) {
-    await t.rollback();
     res.status(500).send(error);
   }
 });
@@ -128,14 +149,13 @@ router.put('/business-address-and-contact/:idaddress/:idcontact', [auth], async 
     if (contact) {
       contact = await contact.update({ business_address_id : idAddress, contact_name: body.contact_name, contact_phone_number: body.contact_phone_number }, { transaction: t });
     } else {
-      const updateBusinessContact = await BusinessContact.update(businessContact, { where: { business_associate_contact_id: idContact }, transaction: t });
+      contact = await BusinessContact.update(businessContact, { where: { business_associate_contact_id: idContact }, transaction: t });
     }    
     await t.commit();
     res.status(200).send({
       businessAdress: updateBusinessAddress,
     })
   } catch (error) {
-    await t.rollback();
     logger.error(error);
     res.status(500).send(error);
   }
@@ -167,7 +187,8 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
     const contact_email = body.contact_email;
     let contact = await BusinessContact.findOne({ where: { contact_email }, transaction: t });
     if (contact) {
-      contact = await contact.update(businessContact, { transaction: t });
+      contact = await contact.update(businessContact, { transaction: t, returning: true });
+      return contact.toJSON();
     } else {
       contact = await BusinessContact.create({
         ...businessContact,
@@ -177,9 +198,9 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
     await t.commit();
     res.status(201).send({
       businessAdress: newBusinessAddress,
+      businessContact: contact
     })
   } catch (error) {
-    await t.rollback();
     logger.error(error);
     res.status(500).send(error);
   }
@@ -245,7 +266,6 @@ router.post('/create-contact/:idaddress', [auth], async (req, res) => {
     await t.commit();
     res.status(200).send(contact);
   } catch(error) {
-    await t.rollback();
     res.status(500).send(error);
   }
 });
