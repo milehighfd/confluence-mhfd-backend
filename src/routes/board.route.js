@@ -190,6 +190,8 @@ router.get('/:id/filters', async (req, res) => {
       });
     })
   });
+  groupingArrayMap.project_service_areas.sort((a,b) => (a.code_service_area_id > b.code_service_area_id) ? 1 : ((b.code_service_area_id > a.code_service_area_id) ? -1 : 0))
+  groupingArrayMap.project_counties.sort((a,b) => (a.state_county_id > b.state_county_id) ? 1 : ((b.state_county_id > a.state_county_id) ? -1 : 0))
   logger.info(`Finished endpoint for board/:id/filters`);
   res.send(groupingArrayMap);
 });
@@ -1282,25 +1284,27 @@ const moveCardsToNextLevel = async (board, creator) => {
     if (board.type === 'WORK_REQUEST') {
         let boardsToCounty;
         let boardsToServiceArea
-        if (+board.year < 2022) {
+        if  (+board.year < 2024) {
+          if (+board.year < 2022) { 
             boardsToCounty = boards.filter((board) => {
                 return ['Capital', 'Maintenance'].includes(board.projecttype)
             });
             boardsToServiceArea = boards.filter((board) => {
                 return ['Study', 'Acquisition', 'Special'].includes(board.projecttype)
             });
-        } else {
+          } else {
             boardsToCounty = boards.filter((board) => {
                 return ['Capital', 'Maintenance', 'Acquisition', 'Special'].includes(board.projecttype)
             });
             boardsToServiceArea = boards.filter((board) => {
                 return ['Study'].includes(board.projecttype)
             });
+          }
+          logger.info(`Sending ${boardsToCounty.length} to county`);
+          await sendBoardProjectsToProp(boardsToCounty, 'county', creator);
+          logger.info(`Sending ${boardsToServiceArea.length} to service area`);
+          await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea', creator);
         }
-        logger.info(`Sending ${boardsToCounty.length} to county`);
-        await sendBoardProjectsToProp(boardsToCounty, 'county', creator);
-        logger.info(`Sending ${boardsToServiceArea.length} to service area`);
-        await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea', creator);
         logger.info(`Sending ${boards.length} to district`);
         await sendBoardProjectsToDistrict(boards);
         logger.info(`Update ${boards.length} as Requested`);
