@@ -238,13 +238,14 @@ router.get('/search/:query', async (req, res) => {
         });
         response.on('end', function () {          
           const places = JSON.parse(str).features;
+          console.log(JSON.parse(str))
           const filteredPlaces = places.map(ele => {
             return {
               text: ele.text,
-              place_name: ele.place_name.split(',')[1].trim(),
+              place_name: ele.place_name,
               center: ele.center,
               type: 'geocoder'
-          }}).filter(ele => ele.text.toLowerCase().includes(query.toLowerCase()));
+          }});
           resolve(filteredPlaces);
         });
       } else {
