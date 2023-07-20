@@ -11,13 +11,13 @@ export const updateStreams = async (project_id, streams, transaction) => {
         stream_id: streamId,
         length_in_mile: new Intl.NumberFormat('en-US', {
           style: 'decimal',
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
-        }).format(stream.length * 0.000621371),
+          minimumFractionDigits: 3,
+          maximumFractionDigits: 3,
+        }).format(stream.length),
         drainage_area_in_sq_miles: new Intl.NumberFormat('en-US', {
           style: 'decimal',
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
         }).format(stream.drainage),
         code_local_government_id:
           stream.code_local_goverment.length > 0
