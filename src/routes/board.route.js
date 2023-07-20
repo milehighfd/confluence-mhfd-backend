@@ -193,6 +193,22 @@ router.get('/:id/filters', async (req, res) => {
   groupingArrayMap.project_service_areas.sort((a,b) => (a.code_service_area_id > b.code_service_area_id) ? 1 : ((b.code_service_area_id > a.code_service_area_id) ? -1 : 0))
   groupingArrayMap.project_counties.sort((a,b) => (a.state_county_id > b.state_county_id) ? 1 : ((b.state_county_id > a.state_county_id) ? -1 : 0))
   logger.info(`Finished endpoint for board/:id/filters`);
+  if (board.locality === 'MHFD District Work Plan') {
+    const serviceAreas = await CodeServiceArea.findAll({
+      attributes: [
+        'code_service_area_id',
+        'service_area_name',
+      ],
+    });
+    const counties = await CodeStateCounty.findAll({
+      attributes: [
+        'state_county_id',
+        'county_name',
+      ],
+    });
+    groupingArrayMap.project_service_areas = serviceAreas.map(d => d.dataValues);
+    groupingArrayMap.project_counties = counties.map(d => d.dataValues);
+  }
   res.send(groupingArrayMap);
 });
 
