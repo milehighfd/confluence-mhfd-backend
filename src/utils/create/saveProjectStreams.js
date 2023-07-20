@@ -9,9 +9,9 @@ export const saveProjectStreams = async (project_id, streams, transaction = null
         stream_id: stream.stream ? stream.stream[0]?.stream_id : 0,
         length_in_mile: new Intl.NumberFormat('en-US', {
           style: 'decimal',
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
-        }).format(stream.length * 0.000621371),
+          minimumFractionDigits: 3,
+          maximumFractionDigits: 3,
+        }).format(stream.length),
         drainage_area_in_sq_miles: new Intl.NumberFormat('en-US', {
           style: 'decimal',
           minimumFractionDigits: 1,
