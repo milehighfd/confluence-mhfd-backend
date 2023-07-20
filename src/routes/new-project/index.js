@@ -488,7 +488,7 @@ router.post('/streams-data', async (req, res) => {
           });
           answer[str_name].push({
             jurisdiction: row.jurisdiction,
-            length: row.length,
+            length: row.length * 0.000621371,
             cartodb_id: row.cartodb_id,
             mhfd_code: row.mhfd_code,
             str_name: str_name,
