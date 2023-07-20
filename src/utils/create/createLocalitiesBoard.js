@@ -1,7 +1,8 @@
 export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, splitedJurisdiction, splitedCounty, splitedServicearea) => {
   const localitiesBoard = [];
   const typesList = [];
-  const YEAR_WORKPLAN = 2021;
+  const YEAR_WORKPLAN_V1 = 2021;
+  const YEAR_WORKPLAN_V2 = 2024;
 
   if (isWorkPlan === 'false') {
     for (const j of splitedJurisdiction) {
@@ -19,7 +20,7 @@ export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, 
         }
       }
     }
-    if (year <= YEAR_WORKPLAN) {
+    if (year <= YEAR_WORKPLAN_V1) {
       if (PROJECT_TYPE === 'capital' || PROJECT_TYPE === 'maintenance') {
         for (const c of splitedCounty) {
           if (c) {
@@ -35,7 +36,7 @@ export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, 
           }
         }
       }
-    } else {
+    } else if (year < YEAR_WORKPLAN_V2) {
       if (PROJECT_TYPE === 'study') {
         for (const s of splitedServicearea) {
           if (s) {

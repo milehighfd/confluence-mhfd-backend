@@ -1,12 +1,7 @@
 import express from 'express';
 import Multer from 'multer';
 import needle from 'needle';
-import projectIndependentActionService from 'bc/services/projectIndependentAction.service.js';
-import projectProposedActionService from 'bc/services/projectProposedAction.service.js';
 import projectService from 'bc/services/project.service.js';
-import attachmentService from 'bc/services/attachment.service.js';
-import projectStatusService from 'bc/services/projectStatus.service.js';
-import cartoService from 'bc/services/carto.service.js';
 import {
   CARTO_URL,
   CREATE_PROJECT_TABLE,
@@ -17,8 +12,6 @@ import db from 'bc/config/db.js';
 import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
 import moment from 'moment';
-import projectPartnerService from 'bc/services/projectPartner.service.js';
-import costService from 'bc/services/cost.service.js';
 import { 
   saveProject, 
   createLocalGovernment, 
@@ -48,14 +41,7 @@ import {
   deleteIndependentAction,
   updateActions
 } from 'bc/utils/create';
-import boardService from 'bc/services/board.service.js';
 
-
-const ProjectLocalGovernment = db.projectLocalGovernment;
-const ProjectCounty = db.projectCounty;
-const ProjectServiceArea = db.projectServiceArea;
-const Project = db.project;
-const CodePhaseType = db.codePhaseType;
 const CodeCostType = db.codeCostType
 
 const router = express.Router();
@@ -66,7 +52,6 @@ const multer = Multer({
   }
 });
 
-
 const getTokenArcGis = async () => {
   const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
   const fd = projectService.getAuthenticationFormData();
@@ -74,6 +59,7 @@ const getTokenArcGis = async () => {
   const TOKEN = JSON.parse(token_data.body).token;
   return TOKEN;
 }
+
 const getGeomsToUpdate = async (TOKEN) => {
   try {
     const LIST_ARCGIS = `${ARCGIS_SERVICE}/query?where=update_flag%3D1&objectIds=&time=&geometry=&geometryType=esriGeometryPolyline&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=projectname%2C+update_flag%2C+projectid%2C+OBJECTID&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&gdbVersion=&historicMoment=&returnDistinctValues=false&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&multipatchOption=xyFootprint&resultOffset=&resultRecordCount=&returnTrueCurves=false&returnExceededLimitFeatures=false&quantizationParameters=&returnCentroid=false&sqlFormat=none&resultType=&featureEncoding=esriDefault&datumTransformation=&f=geojson`;

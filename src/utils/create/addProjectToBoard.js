@@ -86,7 +86,7 @@ export const addProjectToBoard = async (
   boardProjectObject.projectsubtype = projectsubtype;
   let boardProject = new BoardProject(boardProjectObject);
   let boardProjectSaved = boardProject;
-  if (sendToWR === 'true' || isWorkPlan) {
+  if ((sendToWR === 'true' && board.status === 'Under Review') || isWorkPlan) {
     try {
       boardProjectSaved = await saveBoard(
         boardProject.board_id,
@@ -103,7 +103,7 @@ export const addProjectToBoard = async (
       throw error;
     }
   }
-  if (['admin', 'staff'].includes(user.designation) && !isWorkPlan) {
+  if (['admin', 'staff'].includes(user.designation) && !isWorkPlan && year <= 2024) {
     await sendBoardsToProp(
       boardProjectSaved,
       board,
