@@ -10,17 +10,15 @@ export const saveProjectDetails = async (
   transaction = null
 ) => {
   try {
-    const { frequency, ownership, studyreason, acquisitionanticipateddate, acquisitionprogress } = body;
+    const { frequency, ownership, acquisitionanticipateddate, acquisitionprogress } = body;
     const maintenanceFrequency = frequency || 0;
     const isPublicOwnership = ownership || 0;
-    const codeStudyReasonId = studyreason || null;
     const acquisitionAnticipatedYear = acquisitionanticipateddate || null;
     const codeAcquisitionProgressStatusId = acquisitionprogress || null;
     const response = await ProjectDetail.create({
       maintenance_frequency: maintenanceFrequency,
       is_public_ownership: isPublicOwnership,
       project_id: project_id,
-      code_study_reason_id: codeStudyReasonId,
       acquisition_anticipated_year: acquisitionAnticipatedYear && Number(acquisitionAnticipatedYear),
       code_acquisition_progress_status_id: codeAcquisitionProgressStatusId && Number(codeAcquisitionProgressStatusId),
       last_modified_by: creator,
