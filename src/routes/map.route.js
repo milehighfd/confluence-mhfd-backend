@@ -234,7 +234,7 @@ router.get('/search/:query', async (req, res) => {
   const query = req.params.query;
   const to_url = encodeURIComponent(query);
   const map = `https://api.mapbox.com/geocoding/v5/mapbox.places/${to_url}.json?bbox=-105.39820822776036,39.38595107828999,-104.46244596259402,40.16671105031628&access_token=pk.eyJ1IjoibWlsZWhpZ2hmZCIsImEiOiJjazRqZjg1YWQwZTN2M2RudmhuNXZtdWFyIn0.oU_jVFAr808WPbcVOFnzbg`;
-                                                              
+  console.log('query url', map);
   const promises = [];
   promises.push(new Promise((resolve, reject) => {
     console.log(map);
@@ -246,7 +246,6 @@ router.get('/search/:query', async (req, res) => {
         });
         response.on('end', function () {          
           const places = JSON.parse(str).features;
-          console.log(JSON.parse(str))
           const filteredPlaces = places.map(ele => {
             return {
               text: ele.text,
