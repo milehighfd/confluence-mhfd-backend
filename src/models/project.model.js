@@ -55,6 +55,12 @@ export default (sequelize, DataType) => {
     },
     created_by: {
       type: DataType.STRING,
+    },
+    is_county_wide:{
+      type: DataType.BOOLEAN,
+    },
+    is_located_on_south_plate_river:{
+      type: DataType.BOOLEAN,
     }
   }, {
     tableName: 'project',
