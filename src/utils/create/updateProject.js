@@ -9,6 +9,8 @@ export const updateProject = async (
   project_name, 
   description,
   last_modified_by,
+  countyWide,
+  southPlate,
   code_maintenance_eligibility_type_id = null,
   transaction = null
 ) => {
@@ -21,6 +23,8 @@ export const updateProject = async (
         modified_date: moment().format('YYYY-MM-DD HH:mm:ss'),
         last_modified_by: last_modified_by,
         code_maintenance_eligibility_type_id: code_maintenance_eligibility_type_id,
+        is_county_wide: countyWide,
+        is_located_on_south_plate_river: southPlate
       }, { where: { project_id: project_id }, transaction, returning: true });
     } else {
       updatedProject = await Project.update({
@@ -28,6 +32,8 @@ export const updateProject = async (
         description: description,
         modified_date: moment().format('YYYY-MM-DD HH:mm:ss'),
         last_modified_by: last_modified_by,
+        is_county_wide: countyWide,
+        is_located_on_south_plate_river: southPlate
       }, { where: { project_id: project_id }, transaction, returning: true });
     }
     logger.info('update project ');
