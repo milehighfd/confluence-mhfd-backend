@@ -99,9 +99,9 @@ export const createProjects = async (body, transaction, type, creator, subtype) 
       cleanStringValue(getOfficialProjectName(projectname)),
       cleanStringValue(description),
       creator,
-      maintenanceeligibility,
       countyWide,
       southPlate,
+      maintenanceeligibility,      
       transaction
     );
     const { project_id } = data;    

@@ -30,13 +30,17 @@ import { updateStreams } from './updateStreams.js';
 
 export const editProjects = async (body, transaction, type, creator, subtype, project_id) => {
   try {
-    const { projectname, description, maintenanceeligibility = null, geom } = body;
+    const { projectname, description, maintenanceeligibility = null, geom, isCountyWide, isSouthPlate } = body;
+    const southPlate = isSouthPlate === 'true';
+    const countyWide = isCountyWide === 'true';
     let updateFn = updateProject;
     const data = await updateFn(
       project_id,
       cleanStringValue(projectname),
       cleanStringValue(description),
-      creator,
+      creator,      
+      countyWide,
+      southPlate,
       maintenanceeligibility,
       transaction
     );
