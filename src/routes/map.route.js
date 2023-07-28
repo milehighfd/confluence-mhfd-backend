@@ -251,6 +251,7 @@ router.get('/search/:query', async (req, res) => {
               text: ele.text,
               place_name: ele.place_name,
               center: ele.center,
+              relevance: ele.relevance,
               type: 'geocoder'
           }});
           resolve(filteredPlaces);
