@@ -463,101 +463,110 @@ router.post('/streams-data', async (req, res) => {
       const body = data.body;
       streamsInfo = body.rows;
       const answer = {};
-      body.rows.forEach(async row => {
+      for(let i = 0; i < body.rows.length ; ++i) {
+        const row = body.rows[i];
         let str_name = row.str_name ? row.str_name : 'Unnamed Streams';
         
-          if (!answer[str_name]) {
-            answer[str_name] = [];
-          }
-          console.log(row.jurisdiction);
-          const locality = await CodeLocalGoverment.findOne({
-            where: {
-              local_government_name: row.jurisdiction,
-            }
-          });
-          const whereStatement = {};
-          const ids = row.mhfd_code.split('.')
-          if (row.str_name) whereStatement.stream_name = row.str_name;
-          ids.forEach((element, index) => {
-            if(index === 0) whereStatement.Reach_Code = parseInt(element);
-            else whereStatement[`Trib_Code${index}`] = parseInt(element);
-          });
-          const stream = await Stream.findOne({
-            where: whereStatement,
-            attributes: ['stream_id', 'stream_name']
-          });
-          answer[str_name].push({
-            jurisdiction: row.jurisdiction,
-            length: row.length * 0.000621371,
-            cartodb_id: row.cartodb_id,
-            mhfd_code: row.mhfd_code,
-            str_name: str_name,
-            drainage: 0,
-            code_local_goverment: [locality],
-            stream: stream ? [stream] : []
-          });
-        
-      });
-      const promises = [];
-      for (const stream of streamsInfo) {
-        const drainageSQL = `select st_area(ST_transform(st_intersection(j.the_geom, union_c.the_geom), 26986) ) as area , j.jurisdiction from jurisidictions j , (select st_union(the_geom) as the_geom from mhfd_catchments_simple_v1 c where 
-         '${stream.reach_code}' is not distinct from c.reach_code 
-          ${stream.trib_code1 != null ? `and ${stream.trib_code1} is not distinct from c.trib_code1` : ''} 
-          ${stream.trib_code2 != null ? `and ${stream.trib_code2} is not distinct from c.trib_code2` : ''} 
-          ${stream.trib_code3 != null ? `and ${stream.trib_code3} is not distinct from c.trib_code3` : ''} 
-          ${stream.trib_code4 != null ? `and ${stream.trib_code4} is not distinct from c.trib_code4` : ''} 
-          ${stream.trib_code5 != null ? `and ${stream.trib_code5} is not distinct from c.trib_code5` : ''} 
-          ${stream.trib_code6 != null ? `and ${stream.trib_code6} is not distinct from c.trib_code6` : ''} 
-          ${stream.trib_code7 != null ? `and ${stream.trib_code7} is not distinct from c.trib_code7` : ''} 
-          ) union_c 
-          where ST_INTERSECTS(ST_SimplifyPreserveTopology(j.the_geom, 0.1), ST_SimplifyPreserveTopology(union_c.the_geom, 0.1)) `;
-          const drainageQuery = {
-            q: drainageSQL
-          };
-          console.log('**************\n\n\n\n DRAINAGE QUERY FOR ', stream.str_name, stream.cartodb_id, '\n', drainageSQL);
-          const promise = new Promise((resolve, reject) => {
-            needle('post', CARTO_URL, drainageQuery, { json: true })
-            .then(response => {
-              if (response.statusCode === 200) {
-                logger.info('I reached ', JSON.stringify(response.body.rows));
-                resolve({
-                  str_name: stream.str_name,
-                  drainage: response.body.rows 
-                });
-              } else {
-                logger.info('for query '+ drainageSQL);
-                logger.error(response.statusCode + ' ' + JSON.stringify(response.body));
-                resolve({
-                  str_name: stream.str_name,
-                  drainage: []
-                });
-              }
-            })
-            .catch(error => {
-              logger.info('crashed');
-              reject({
-                str_name: stream.str_name,
-                drainage: []
-              });
-            });
-          });
-          promises.push(promise);
-      }
-      Promise.all(promises).then(async (promiseData) => {
-        logger.info('my values '+ JSON.stringify(promiseData));
-        promiseData.forEach(async bucket => {
-          const str_name = bucket.str_name? bucket.str_name : 'Unnamed Streams';
-          for (const array of answer[str_name]) {
-            logger.info('array '+ JSON.stringify(array));
-            for (const info of bucket.drainage) {
-              if (array.jurisdiction === info.jurisdiction) {
-                array.drainage += (info.area * 3.86102e-7);
-              }
-            }
+        if (!answer[str_name]) {
+          answer[str_name] = [];
+        }
+        console.log(row.jurisdiction);
+        const locality = await CodeLocalGoverment.findOne({
+          where: {
+            local_government_name: row.jurisdiction,
           }
         });
-        res.send(answer);
-      });
+        const whereStatement = {};
+        const ids = row.mhfd_code.split('.')
+        if (row.str_name) whereStatement.stream_name = row.str_name;
+        ids.forEach((element, index) => {
+          if(index === 0) whereStatement.Reach_Code = parseInt(element);
+          else whereStatement[`Trib_Code${index}`] = parseInt(element);
+        });
+        const stream = await Stream.findOne({
+          where: whereStatement,
+          attributes: ['stream_id', 'stream_name']
+        });
+        console.log('Should push this to answer',{
+          jurisdiction: row.jurisdiction,
+          length: row.length,
+          cartodb_id: row.cartodb_id,
+          mhfd_code: row.mhfd_code,
+          str_name: str_name} );
+        answer[str_name].push({
+          jurisdiction: row.jurisdiction,
+          length: row.length,
+          cartodb_id: row.cartodb_id,
+          mhfd_code: row.mhfd_code,
+          str_name: str_name,
+          drainage: 0,
+          code_local_goverment: [locality],
+          stream: stream ? [stream] : []
+        });
+      
+      }
+      // Uncomment when stream calculation is returned 
+      // for (const stream of streamsInfo) {
+      //   const drainageSQL = `select st_area(ST_transform(st_intersection(j.the_geom, union_c.the_geom), 26986) ) as area , j.jurisdiction from jurisidictions j , (select st_union(the_geom) as the_geom from mhfd_catchments_simple_v1 c where 
+      //    '${stream.reach_code}' is not distinct from c.reach_code 
+      //     ${stream.trib_code1 != null ? `and ${stream.trib_code1} is not distinct from c.trib_code1` : ''} 
+      //     ${stream.trib_code2 != null ? `and ${stream.trib_code2} is not distinct from c.trib_code2` : ''} 
+      //     ${stream.trib_code3 != null ? `and ${stream.trib_code3} is not distinct from c.trib_code3` : ''} 
+      //     ${stream.trib_code4 != null ? `and ${stream.trib_code4} is not distinct from c.trib_code4` : ''} 
+      //     ${stream.trib_code5 != null ? `and ${stream.trib_code5} is not distinct from c.trib_code5` : ''} 
+      //     ${stream.trib_code6 != null ? `and ${stream.trib_code6} is not distinct from c.trib_code6` : ''} 
+      //     ${stream.trib_code7 != null ? `and ${stream.trib_code7} is not distinct from c.trib_code7` : ''} 
+      //     ) union_c 
+      //     where ST_INTERSECTS(ST_SimplifyPreserveTopology(j.the_geom, 0.1), ST_SimplifyPreserveTopology(union_c.the_geom, 0.1)) `;
+      //     const drainageQuery = {
+      //       q: drainageSQL
+      //     };
+      //     console.log('**************\n\n\n\n DRAINAGE QUERY FOR ', stream.str_name, stream.cartodb_id, '\n', drainageSQL);
+      //     const promise = new Promise((resolve, reject) => {
+      //       needle('post', CARTO_URL, drainageQuery, { json: true })
+      //       .then(response => {
+      //         if (response.statusCode === 200) {
+      //           logger.info('I reached ', JSON.stringify(response.body.rows));
+      //           resolve({
+      //             str_name: stream.str_name,
+      //             drainage: response.body.rows 
+      //           });
+      //         } else {
+      //           logger.info('for query '+ drainageSQL);
+      //           logger.error(response.statusCode + ' ' + JSON.stringify(response.body));
+      //           resolve({
+      //             str_name: stream.str_name,
+      //             drainage: []
+      //           });
+      //         }
+      //       })
+      //       .catch(error => {
+      //         logger.info('crashed');
+      //         reject({
+      //           str_name: stream.str_name,
+      //           drainage: []
+      //         });
+      //       });
+      //     });
+      //     promises.push(promise);
+      // }
+      // Promise.all(promises).then(async (promiseData) => {
+      //   logger.info('my values '+ JSON.stringify(promiseData));
+      //   promiseData.forEach(async bucket => {
+      //     const str_name = bucket.str_name? bucket.str_name : 'Unnamed Streams';
+      //     for (const array of answer[str_name]) {
+      //       logger.info('array '+ JSON.stringify(array));
+      //       for (const info of bucket.drainage) {
+      //         if (array.jurisdiction === info.jurisdiction) {
+      //           array.drainage += (info.area * 3.86102e-7);
+      //         }
+      //       }
+      //     }
+      //   });
+      //   console.log('Answer pre', answer);
+      //   res.send(answer);
+      // });
+      res.send(answer);
     } else {
       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data);
