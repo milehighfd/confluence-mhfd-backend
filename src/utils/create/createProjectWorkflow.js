@@ -44,7 +44,7 @@ const getOfficialProjectName = (name) => name + (name === 'Ex: Stream Name @ Loc
 
 export const createProjects = async (body, transaction, type, creator, subtype) => {
   console.log(subtype, 'type')
-  const { projectname, description, maintenanceeligibility = null, geom } = body;
+  const { projectname, description, maintenanceeligibility = null, geom, isCountyWide, isSouthPlate } = body;
   let saveFn = saveProject;  
   let codeProjectTypeId = 0;
   switch(type) {
@@ -93,11 +93,15 @@ export const createProjects = async (body, transaction, type, creator, subtype) 
       break;
   };
   try {
+    const southPlate = isSouthPlate === 'true';
+    const countyWide = isCountyWide === 'true';
     const data = await saveFn(
       cleanStringValue(getOfficialProjectName(projectname)),
       cleanStringValue(description),
       creator,
       maintenanceeligibility,
+      countyWide,
+      southPlate,
       transaction
     );
     const { project_id } = data;    
