@@ -12,9 +12,9 @@ export const saveProject = async (
   project_name,
   description,
   creator,
-  code_maintenance_eligibility_type_id = null,
   isCountyWide,
   isSouthPlate,
+  code_maintenance_eligibility_type_id = null,  
   transaction = null,
 ) => {
   console.log('save project-------------------------')
