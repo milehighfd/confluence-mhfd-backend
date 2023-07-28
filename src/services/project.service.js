@@ -318,6 +318,8 @@ const getDetails = async (project_id) => {
           'code_project_type_id',
           'code_maintenance_eligibility_type_id',
           'current_project_status_id',
+          'is_county_wide',
+          'is_located_on_south_plate_river',
           [
             sequelize.literal(`(
               SELECT COUNT([GRADE_CONTROL_STRUCTURE].[projectid])
