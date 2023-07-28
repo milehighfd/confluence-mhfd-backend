@@ -4,6 +4,11 @@ import {
   createProjectWorkflow
 } from 'bc/utils/create';
 import auth from 'bc/auth/auth.js';
+import db from 'bc/config/db.js';
+
+const ServiceArea = db.codeServiceArea;
+const LocalGovernment = db.codeLocalGoverment;
+const StateCounty = db.codeStateCounty;
 
 const router = express.Router();
 const multer = Multer({
@@ -20,7 +25,32 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     const project = await createProjectWorkflow(req.body, req.user, req.files, type, subtype);
     res.send(project);
   } catch (error) {
-    console.error('ERRORRRR',error);
+    console.error('ERROR',error);
+    res.status(500).send(error);
+  }
+});
+
+router.post('/countydata', auth, async (req, res) => {
+  const { state } = req.body;
+  const stateString = Array.isArray(state) ? state.join(',') : state;
+  try {
+    const sqlQuery1 = `
+    SELECT DISTINCT lg.code_service_area_id, lg.service_area_name
+    FROM CODE_SERVICE_AREA_4326 lg
+    JOIN CODE_STATE_COUNTY_CLIP_4326 c ON lg.Shape.STIntersects(c.Shape) = 1
+    WHERE c.state_county_id IN (${stateString})
+    `;
+    const sqlQuery2 = `
+    SELECT DISTINCT lg.code_local_government_id, lg.local_government_name 
+    FROM CODE_LOCAL_GOVERNMENT_4326 lg
+    JOIN CODE_STATE_COUNTY_CLIP_4326 c ON lg.Shape.STIntersects(c.Shape) = 1
+    WHERE c.state_county_id IN (${stateString})
+    `;
+    const result1 = await db.sequelize.query(sqlQuery1, { type: db.sequelize.QueryTypes.SELECT});
+    const result2 = await db.sequelize.query(sqlQuery2, { type: db.sequelize.QueryTypes.SELECT});    
+    res.send({ serviceArea: result1, localGovernment: result2 });
+  } catch (error) {
+    console.error('ERROR', error);
     res.status(500).send(error);
   }
 });

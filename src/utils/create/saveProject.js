@@ -13,10 +13,12 @@ export const saveProject = async (
   description,
   creator,
   code_maintenance_eligibility_type_id = null,
+  isCountyWide,
+  isSouthPlate,
   transaction = null,
 ) => {
   console.log('save project-------------------------')
-  console.log(code_project_type_id, project_name, description, creator, code_maintenance_eligibility_type_id)
+  console.log(code_project_type_id, project_name, description, creator, code_maintenance_eligibility_type_id, isCountyWide, isSouthPlate)
   try {
     let insert;
     const currendDate = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -33,6 +35,8 @@ export const saveProject = async (
         is_spatial_data_required: 0,
         created_by: creator,
         code_maintenance_eligibility_type_id: code_maintenance_eligibility_type_id,
+        is_county_wide: isCountyWide,
+        is_located_on_south_plate_river: isSouthPlate
       }, { transaction: transaction });
     } else {
       insert = await Project.create({
@@ -45,7 +49,9 @@ export const saveProject = async (
         start_date: currendDate,
         last_modified_by: creator,
         is_spatial_data_required: 0,
-        created_by: creator
+        created_by: creator,
+        is_county_wide: isCountyWide,
+        is_located_on_south_plate_river: isSouthPlate
       }, { transaction: transaction });
     }
     logger.info('create project ');
