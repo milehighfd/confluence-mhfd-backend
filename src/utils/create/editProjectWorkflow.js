@@ -31,8 +31,18 @@ import { updateStreams } from './updateStreams.js';
 export const editProjects = async (body, transaction, type, creator, subtype, project_id) => {
   try {
     const { projectname, description, maintenanceeligibility = null, geom, isCountyWide, isSouthPlate } = body;
-    const southPlate = isSouthPlate === 'true';
-    const countyWide = isCountyWide === 'true';
+    let southPlate = 0;
+    let countyWide = 0;
+    if (southPlate === 'true'){
+      southPlate = 1;
+    }else{
+      southPlate = 0;
+    }
+    if (countyWide === 'true'){
+      countyWide = 1;
+    }else{
+      countyWide = 0;
+    }
     let updateFn = updateProject;
     const data = await updateFn(
       project_id,
