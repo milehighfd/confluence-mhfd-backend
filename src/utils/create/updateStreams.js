@@ -9,16 +9,8 @@ export const updateStreams = async (project_id, streams, transaction) => {
       return saveProjectStream({
         project_id: project_id,
         stream_id: streamId,
-        length_in_mile: new Intl.NumberFormat('en-US', {
-          style: 'decimal',
-          minimumFractionDigits: 3,
-          maximumFractionDigits: 3,
-        }).format(stream.length),
-        drainage_area_in_sq_miles: new Intl.NumberFormat('en-US', {
-          style: 'decimal',
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(stream.drainage),
+        length_in_mile: stream.length ? stream.length : 0,
+        drainage_area_in_sq_miles: stream.drainage ? stream.drainage : 0,
         code_local_government_id:
           stream.code_local_goverment.length > 0
             ? stream.code_local_goverment[0].code_local_government_id
