@@ -5,11 +5,15 @@ export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, 
   const YEAR_WORKPLAN_V2 = 2024;
 
   if (isWorkPlan === 'false') {
-    for (const j of splitedJurisdiction) {
-      if (j) {
-        localitiesBoard.push(j);
-        typesList.push('WORK_REQUEST');
-      }
+    // for (const j of splitedJurisdiction) {
+    //   if (j) {
+    //     localitiesBoard.push(j);
+    //     typesList.push('WORK_REQUEST');
+    //   }
+    // }
+    if (sponsorId) {
+      localitiesBoard.push(sponsorId);
+      typesList.push('WORK_REQUEST');
     }
   } else {
     if (sendToWR === 'true') {
