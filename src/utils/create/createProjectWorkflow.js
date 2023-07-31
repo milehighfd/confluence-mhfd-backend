@@ -223,8 +223,6 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
     otherReason,
   } = body;
   try {
-    console.log('----------------------------------')
-    console.log(streams)
     const answer = {};
     let createCartoInputs = [CREATE_PROJECT_TABLE, geom, project_id, transaction];
     let createCarto = createCartoEntry;
