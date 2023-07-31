@@ -93,14 +93,12 @@ export const createProjects = async (body, transaction, type, creator, subtype) 
       break;
   };
   try {
-    const southPlate = isSouthPlate === 'true';
-    const countyWide = isCountyWide === 'true';
     const data = await saveFn(
       cleanStringValue(getOfficialProjectName(projectname)),
       cleanStringValue(description),
       creator,
-      countyWide,
-      southPlate,
+      isCountyWide,
+      isSouthPlate,
       maintenanceeligibility,      
       transaction
     );

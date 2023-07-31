@@ -20,6 +20,18 @@ export const saveProject = async (
   console.log('save project-------------------------')
   console.log(code_project_type_id, project_name, description, creator, code_maintenance_eligibility_type_id, isCountyWide, isSouthPlate)
   try {
+    let southPlate = 0;
+    let countyWide = 0;
+    if (southPlate === 'true'){
+      southPlate = 1;
+    }else{
+      southPlate = 0;
+    }
+    if (countyWide === 'true'){
+      countyWide = 1;
+    }else{
+      countyWide = 0;
+    }
     let insert;
     const currendDate = moment().format('YYYY-MM-DD HH:mm:ss');
     if (code_maintenance_eligibility_type_id) {
@@ -35,8 +47,8 @@ export const saveProject = async (
         is_spatial_data_required: 0,
         created_by: creator,
         code_maintenance_eligibility_type_id: code_maintenance_eligibility_type_id,
-        is_county_wide: isCountyWide,
-        is_located_on_south_plate_river: isSouthPlate
+        is_county_wide: countyWide,
+        is_located_on_south_plate_river: southPlate
       }, { transaction: transaction });
     } else {
       insert = await Project.create({
@@ -50,8 +62,8 @@ export const saveProject = async (
         last_modified_by: creator,
         is_spatial_data_required: 0,
         created_by: creator,
-        is_county_wide: isCountyWide,
-        is_located_on_south_plate_river: isSouthPlate
+        is_county_wide: countyWide,
+        is_located_on_south_plate_river: southPlate
       }, { transaction: transaction });
     }
     logger.info('create project ');
