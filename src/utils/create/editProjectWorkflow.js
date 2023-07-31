@@ -33,12 +33,12 @@ export const editProjects = async (body, transaction, type, creator, subtype, pr
     const { projectname, description, maintenanceeligibility = null, geom, isCountyWide, isSouthPlate } = body;
     let southPlate = 0;
     let countyWide = 0;
-    if (southPlate === 'true'){
+    if (isSouthPlate === 'true'){
       southPlate = 1;
     }else{
       southPlate = 0;
     }
-    if (countyWide === 'true'){
+    if (isCountyWide === 'true'){
       countyWide = 1;
     }else{
       countyWide = 0;
