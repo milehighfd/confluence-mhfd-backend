@@ -120,7 +120,7 @@ export const createProjects = async (body, transaction, type, creator, subtype) 
 
 const splitToArray = (string) => string ? string.split(',').map((item) => item.trim()) : [];
 const addToBoard = async (body, user, type, subtype, transaction, project_id) => {
-  const { jurisdiction, county, servicearea, year, sendToWR, isWorkPlan = null, projectname } = body;
+  const { jurisdiction, county, servicearea, year, sendToWR, isWorkPlan = null, projectname, sponsorId } = body;
   const splitedJurisdiction = splitToArray(jurisdiction);
   const splitedCounty = splitToArray(county);
   const splitedServicearea = splitToArray(servicearea);
@@ -131,9 +131,10 @@ const addToBoard = async (body, user, type, subtype, transaction, project_id) =>
     type,
     splitedJurisdiction,
     splitedCounty,
-    splitedServicearea
+    splitedServicearea,
+    sponsorId
   );
-
+  console.log('localitiesBoard', localitiesBoard, typesList)
   try {
     const localNames = await getLocalitiesNames(localitiesBoard, transaction);
     if (isWorkPlan === 'true') {
@@ -222,6 +223,8 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
     otherReason,
   } = body;
   try {
+    console.log('----------------------------------')
+    console.log(streams)
     const answer = {};
     let createCartoInputs = [CREATE_PROJECT_TABLE, geom, project_id, transaction];
     let createCarto = createCartoEntry;
@@ -262,8 +265,9 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         answer.resStudy = resStudy;
         break;
       case 'maintenance':
+        console.log('streams before saveProjectStreams: ' + streams);
         await createCarto(...createCartoInputs);
-        const resMaintenance = await saveProjectDetails(project_id, body, creator, transaction);
+        const resMaintenance = await saveProjectDetails(project_id, body, creator, transaction);        
         const resStreamsMain = await saveProjectStreams(project_id, streams, transaction); 
         answer.resStreams = resStreamsMain;
         answer.resMaintenance = resMaintenance;
@@ -289,7 +293,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
       cosponsor,
       project_id,
       transaction
-    );
+    );    
     const extra_fields = await extraFields(type, subtype, body, project_id, transaction, user.email);
     const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields};
     await transaction.commit();
