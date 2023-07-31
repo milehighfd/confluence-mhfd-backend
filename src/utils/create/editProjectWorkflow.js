@@ -145,8 +145,11 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         answer.deletePARes = deletePARes;
         const deleteIARes = await deleteIndependentAction(project_id, transaction);
         answer.deleteIARes = deleteIARes;
-        const actionRes = await updateActions(project_id, independentComponent, components, creator, transaction);
+        const actionRes = await updateActions(project_id, independentComponent, components, creator, transaction);        
         answer.actionRes = actionRes;
+        await deleteStreams(project_id, transaction);
+        const resStreamsCap = await updateStreams(project_id, streams, transaction); 
+        answer.resStreams = resStreamsCap;
         break;
       case 'acquisition':        
         await createCarto(...createCartoInputs);
@@ -170,6 +173,9 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         await createCarto(...createCartoInputs);
         const resMaintenance = await updateProjectDetail(project_id, body, creator, transaction);
         answer.resMaintenance = resMaintenance;
+        await deleteStreams(project_id, transaction);
+        const resStreamsMain = await updateStreams(project_id, streams, transaction); 
+        answer.resStreams = resStreamsMain;
         break;      
     };
     return answer;

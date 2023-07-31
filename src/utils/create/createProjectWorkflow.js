@@ -238,6 +238,8 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         );
         answer.dataArcGis = dataArcGis;
         const overheadCostIds = await getOverheadCostIds(transaction);  
+        const resStreamsCap = await saveProjectStreams(project_id, streams, transaction); 
+        answer.resStreams = resStreamsCap;
         const COST_ID = 4;
         const resCost = await saveCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, transaction);
         answer.resCost = resCost;
@@ -262,6 +264,8 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
       case 'maintenance':
         await createCarto(...createCartoInputs);
         const resMaintenance = await saveProjectDetails(project_id, body, creator, transaction);
+        const resStreamsMain = await saveProjectStreams(project_id, streams, transaction); 
+        answer.resStreams = resStreamsMain;
         answer.resMaintenance = resMaintenance;
         break;      
     };
