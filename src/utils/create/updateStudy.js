@@ -10,6 +10,7 @@ export const updateStudy = async (
   otherReason = null,
   transaction
 ) => {
+  console.log(project_id, code_study_reason_id, creator, otherReason)
   try {
     let updatedProjectDetail;
     if (otherReason) {
@@ -24,8 +25,13 @@ export const updateStudy = async (
         last_modified_by: creator,
       },{where:{ project_id: project_id}, transaction, returning: true});
     }
-    logger.info('updated Study ');
-    return updatedProjectDetail[1][0].dataValues;
+    if (updatedProjectDetail[1].length > 0) {
+      logger.info('updated Study ');
+      return updatedProjectDetail[1][0].dataValues;
+    } else {
+      logger.warn(`No rows updated for project_id ${project_id}`);
+      return null;
+    }
   } catch(error) {
     logger.error('error Study update ', error);
     throw error;
