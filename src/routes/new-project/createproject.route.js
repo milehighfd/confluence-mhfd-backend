@@ -9,6 +9,12 @@ import db from 'bc/config/db.js';
 const ServiceArea = db.codeServiceArea;
 const LocalGovernment = db.codeLocalGoverment;
 const StateCounty = db.codeStateCounty;
+const Project = db.project;
+const User = db.user;
+const BusinessAssociateContact = db.businessAssociateContact;
+const BusinessAssociates = db.businessAssociates;
+const BusinessAdress = db.businessAdress;
+
 
 const router = express.Router();
 const multer = Multer({
@@ -49,6 +55,39 @@ router.post('/countydata', auth, async (req, res) => {
     const result1 = await db.sequelize.query(sqlQuery1, { type: db.sequelize.QueryTypes.SELECT});
     const result2 = await db.sequelize.query(sqlQuery2, { type: db.sequelize.QueryTypes.SELECT});    
     res.send({ serviceArea: result1, localGovernment: result2 });
+  } catch (error) {
+    console.error('ERROR', error);
+    res.status(500).send(error);
+  }
+});
+
+router.get('/createdata', auth, async (req, res) => {
+  const {project_id} = req.query;
+  try {
+    const project = await Project.findOne({
+      attributes: ['created_by', 'created_date'],
+      where: { project_id }
+    });
+    const user = await User.findOne({
+      attributes: ['name'],
+      where: { email: project.created_by },
+      include: {
+        attributes: ['business_associate_contact_id'],
+        model: BusinessAssociateContact,
+        include: {
+          attributes: ['business_address_id'],
+          model: BusinessAdress,
+          include: {
+            attributes: ['business_name'],
+            model: BusinessAssociates,
+            required: false
+          },
+          required: false
+        },
+        required: false
+      },
+    });
+    res.send({ user, created_date: project.created_date });
   } catch (error) {
     console.error('ERROR', error);
     res.status(500).send(error);
