@@ -613,7 +613,7 @@ router.post('/get-or-create', async (req, res) => {
 router.post('/board-for-positions2', async (req, res) => { 
   logger.info(`Starting endpoint board/board-for-positions2 with params ${JSON.stringify(req.body, null, 2)}`)
   try {
-    let { board_id, position, filters } = req.body;
+    let { board_id, position, filters, year } = req.body;
     const {
       project_priorities,
       project_counties,
@@ -722,7 +722,12 @@ router.post('/board-for-positions2', async (req, res) => {
       })
     );
     logger.info(`Finished endpoint for board/board-for-positions2`);
-    res.send(boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0));
+    if(year > 2024 ){
+      res.send(boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0));
+    }else{
+      res.send(boardProjectsWithData.filter(r => r.projectData));
+    }
+
   } catch (error) {
     logger.error('ERROR AT POSITIONS2 ' + error)
   }
