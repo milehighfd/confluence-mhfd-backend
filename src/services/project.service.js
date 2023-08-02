@@ -755,6 +755,30 @@ const getLocalityDetails = async (project_id) => {
           ],
         }
       },
+      {
+        model: ProjectStatus,
+        required: false,
+        separate: true,
+        as: 'project_statuses',
+        attributes: [
+          'code_phase_type_id',
+        ],
+        include: {
+          model: CodePhaseType,
+          required: false,
+          attributes: [
+            'phase_name',
+          ],
+          include: {
+            model: CodeStatusType,
+            required: false,
+            attributes: [
+              'code_status_type_id',
+              'status_name'
+            ]
+          }
+        }
+      },
     ]
   });
   if (!project) {
@@ -766,7 +790,7 @@ const getLocalityDetails = async (project_id) => {
   return project;
 };
 
-const getLightDetails = async (project_id, project_counties, project_local_governments, project_service_areas) => {
+const getLightDetails = async (project_id, project_counties, project_local_governments, project_service_areas, project_statuses) => {
   const countyWhere = {};
   if (project_counties && project_counties.length > 0) {
     countyWhere.state_county_id = { [Op.in]: project_counties };
@@ -778,6 +802,10 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
   const serviceAreaWhere = {};
   if (project_service_areas && project_service_areas.length > 0) {
     serviceAreaWhere.code_service_area_id = { [Op.in]: project_service_areas };
+  }
+  const projectStatusWhere = {};
+  if (project_statuses && project_statuses.length > 0) {
+    projectStatusWhere.code_status_type_id = { [Op.in]: project_statuses };
   }
   const project = await Project.findByPk(project_id, {
     attributes: [
@@ -841,7 +869,7 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
       },
       {
         model: ProjectStatus,
-        required: false,
+        required: true,
         separate: true,
         as: 'currentId',
         attributes: [
@@ -849,20 +877,21 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
         ],
         include: {
           model: CodePhaseType,
-          required: false,
+          required: true,
           attributes: [
             'phase_name',
           ],
           include: [{
             model: CodeStatusType,
-            required: false,
+            required: true,
+            where: projectStatusWhere,
             attributes: [
               'code_status_type_id',
               'status_name'
             ]
           }, {
             model: CodeProjectType,
-            required: false,
+            required: true,
             attributes: [
               'code_project_type_id'
             ]

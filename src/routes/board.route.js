@@ -166,6 +166,16 @@ router.get('/:id/filters', async (req, res) => {
             }
           );
         }
+        if (details.project_statuses && details.project_statuses.length > 0) {
+          details.project_statuses = details.project_statuses.map(
+            (plg) => {
+              return ({
+                code_status_type_id: plg.code_phase_type.code_status_type.code_status_type_id,
+                status_name: plg.code_phase_type.code_status_type.status_name,
+              });
+            }
+          );
+        }
       }
       return details;
     })
@@ -174,11 +184,13 @@ router.get('/:id/filters', async (req, res) => {
     ['project_counties', 'county_name', 'state_county_id'],
     ['project_service_areas', 'service_area_name', 'code_service_area_id'],
     ['project_local_governments', 'local_government_name', 'code_local_government_id'],
+    ['project_statuses', 'status_name', 'code_status_type_id'],
   ];
   const groupingArrayMap = {
     project_counties: [],
     project_service_areas: [],
     project_local_governments: [],
+    project_statuses: [],
   };
   localitiesData.forEach((localityData) => {
     if (!localityData) return;
@@ -598,7 +610,7 @@ router.post('/get-or-create', async (req, res) => {
   res.send(board);
 });
 
-router.post('/board-for-positions2', async (req, res) => {
+router.post('/board-for-positions2', async (req, res) => { 
   logger.info(`Starting endpoint board/board-for-positions2 with params ${JSON.stringify(req.body, null, 2)}`)
   try {
     let { board_id, position, filters } = req.body;
@@ -606,7 +618,8 @@ router.post('/board-for-positions2', async (req, res) => {
       project_priorities,
       project_counties,
       project_local_governments,
-      project_service_areas
+      project_service_areas,
+      project_statuses,
     } = filters || {};
     if (!board_id || position === undefined || position === null) {
       return res.sendStatus(400);
@@ -659,7 +672,8 @@ router.post('/board-for-positions2', async (req, res) => {
             boardProject.project_id,
             project_counties,
             project_local_governments,
-            project_service_areas
+            project_service_areas,
+            project_statuses,
           )).dataValues;
         } catch (e) {
           logger.error('ERROR AT GET LIGHT DETAILS ' + e);
@@ -708,7 +722,7 @@ router.post('/board-for-positions2', async (req, res) => {
       })
     );
     logger.info(`Finished endpoint for board/board-for-positions2`);
-    res.send(boardProjectsWithData.filter(r => r.projectData));
+    res.send(boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0));
   } catch (error) {
     logger.error('ERROR AT POSITIONS2 ' + error)
   }
