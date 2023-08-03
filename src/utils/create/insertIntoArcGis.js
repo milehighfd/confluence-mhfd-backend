@@ -5,6 +5,29 @@ import {
 } from 'bc/config/config.js';
 
 export const insertIntoArcGis = async (geom, projectid, projectname) => {
+  const getAuthenticationFormData = () => {
+    const formData = {
+      'username': 'ricardo_confluence',
+      'password': 'M!l3H!gh$m$',
+      'client': 'referer',
+      'ip': '181.188.178.182',
+      'expiration': '60',
+      'f': 'pjson',
+      'referer': 'localhost'
+    };
+    return formData;
+  }
+  const createGeomDataForARCGIS = (coordinates, token, projectid) => {  
+    const newGEOM = [{"geometry":{"paths":[ ] ,"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0, "project_id": projectid}}];
+    newGEOM[0].geometry.paths = coordinates;
+    const formData = {
+      'f': 'pjson',
+      'token': token,
+      'adds': JSON.stringify(newGEOM)
+    };
+    console.log('DATA TO SEND', JSON.stringify(newGEOM));
+    return formData;
+  };
   try {
     const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
     const fd = getAuthenticationFormData();
