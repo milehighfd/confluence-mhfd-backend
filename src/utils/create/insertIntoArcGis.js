@@ -25,7 +25,7 @@ export const insertIntoArcGis = async (geom, projectid, projectname) => {
       'token': token,
       'adds': JSON.stringify(newGEOM)
     };
-    console.log('DATA TO SEND', JSON.stringify(newGEOM));
+    console.log('DATA TO SEND', JSON.stringify(newGEOM), '\n\n', 'formData arcgis', JSON.stringify(formData));
     return formData;
   };
   try {
@@ -34,6 +34,7 @@ export const insertIntoArcGis = async (geom, projectid, projectname) => {
     const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
     const TOKEN = JSON.parse(token_data.body).token;
     const bodyFD = createGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, projectid);
+    console.log('About to call endpoint: ', `${ARCGIS_SERVICE}/applyEdits`);
     const createOnArcGis = await needle('post',`${ARCGIS_SERVICE}/applyEdits`, bodyFD, { multipart: true });
     console.log('create on arc gis at ', ARCGIS_SERVICE, createOnArcGis.statusCode, JSON.stringify(createOnArcGis.body));
     if (createOnArcGis.statusCode == 200) {
