@@ -231,13 +231,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         await createCarto(...createCartoInputs);
         const resActions = await saveActions(project_id, independentComponent, components, creator, transaction);
         answer.resActions = resActions;
-        const overhead = overheadcost.split(',').slice(1);
-        const dataArcGis = await insertIntoArcGis(
-          geom,
-          project_id,
-          cleanStringValue(projectname)
-        );
-        answer.dataArcGis = dataArcGis;
+        const overhead = overheadcost.split(',').slice(1);        
         const overheadCostIds = await getOverheadCostIds(transaction);  
         const resStreamsCap = await saveProjectStreams(project_id, streams, transaction); 
         answer.resStreams = resStreamsCap;
@@ -282,7 +276,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
     const transaction = await db.sequelize.transaction();
     const data = await createProjects(body, transaction, type, user.email, subtype);
     const { project_id } = data;
-    const { cover, sponsor, cosponsor } = body;
+    const { cover, sponsor, cosponsor, geom, projectname } = body;
     const project_attachments = await uploadFiles(user, files, project_id, cover, transaction);
     await addToBoard(body, user, type, subtype, transaction, project_id);
     const geoInfo = await parseGeographicInfoAndCreate(body, project_id, user, transaction);
@@ -291,7 +285,13 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
       cosponsor,
       project_id,
       transaction
-    );    
+    );
+    const dataArcGis = await insertIntoArcGis(
+      geom,
+      project_id,
+      cleanStringValue(projectname)
+    );
+    answer.dataArcGis = dataArcGis;
     const extra_fields = await extraFields(type, subtype, body, project_id, transaction, user.email);
     const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields};
     await transaction.commit();
