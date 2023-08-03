@@ -291,9 +291,8 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
       project_id,
       cleanStringValue(projectname)
     );
-    answer.dataArcGis = dataArcGis;
     const extra_fields = await extraFields(type, subtype, body, project_id, transaction, user.email);
-    const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields};
+    const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, dataArcGis};
     await transaction.commit();
     return composeData;
   } catch (error) {
