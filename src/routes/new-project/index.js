@@ -430,6 +430,7 @@ router.post('/problem-geom', async (req,res) => {
 });
 router.post('/streams-data', async (req, res) => {
   const geom = req.body.geom;
+  const geometrySegment = req.body.projecttype === 'STUDY' ? `the_geom` : `st_intersection(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) as the_geom`
   const sql = `
     SELECT 
       j.jurisdiction, 
@@ -446,8 +447,26 @@ router.post('/streams-data', async (req, res) => {
       streamsIntersected.trib_code7,
       ST_length(ST_intersection(streamsIntersected.the_geom, j.the_geom)::geography) as length
       FROM 
-      ( SELECT unique_mhfd_code as mhfd_code, reach_code, trib_code1, trib_code2, trib_code3, trib_code4, trib_code5, trib_code6, trib_code7, 
-        cartodb_id, str_name, the_geom FROM mhfd_stream_reaches WHERE ST_DWithin(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0) ) streamsIntersected ,
+      ( 
+        SELECT
+        unique_mhfd_code as mhfd_code,
+        reach_code,
+        trib_code1,
+        trib_code2,
+        trib_code3,
+        trib_code4,
+        trib_code5,
+        trib_code6,
+        trib_code7, 
+        cartodb_id, str_name,
+        ${geometrySegment}
+        FROM
+        mhfd_stream_reaches
+        WHERE
+          ST_DWithin(
+            ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0
+          )
+      ) streamsIntersected ,
       jurisidictions j 
       WHERE
       ST_DWithin(streamsIntersected.the_geom, j.the_geom, 0)
@@ -507,17 +526,17 @@ router.post('/streams-data', async (req, res) => {
       }
       // Uncomment when stream calculation is returned 
       // for (const stream of streamsInfo) {
-      //   const drainageSQL = `select st_area(ST_transform(st_intersection(j.the_geom, union_c.the_geom), 26986) ) as area , j.jurisdiction from jurisidictions j , (select st_union(the_geom) as the_geom from mhfd_catchments_simple_v1 c where 
-      //    '${stream.reach_code}' is not distinct from c.reach_code 
-      //     ${stream.trib_code1 != null ? `and ${stream.trib_code1} is not distinct from c.trib_code1` : ''} 
-      //     ${stream.trib_code2 != null ? `and ${stream.trib_code2} is not distinct from c.trib_code2` : ''} 
-      //     ${stream.trib_code3 != null ? `and ${stream.trib_code3} is not distinct from c.trib_code3` : ''} 
-      //     ${stream.trib_code4 != null ? `and ${stream.trib_code4} is not distinct from c.trib_code4` : ''} 
-      //     ${stream.trib_code5 != null ? `and ${stream.trib_code5} is not distinct from c.trib_code5` : ''} 
-      //     ${stream.trib_code6 != null ? `and ${stream.trib_code6} is not distinct from c.trib_code6` : ''} 
-      //     ${stream.trib_code7 != null ? `and ${stream.trib_code7} is not distinct from c.trib_code7` : ''} 
-      //     ) union_c 
-      //     where ST_INTERSECTS(ST_SimplifyPreserveTopology(j.the_geom, 0.1), ST_SimplifyPreserveTopology(union_c.the_geom, 0.1)) `;
+        // const drainageSQL = `select st_area(ST_transform(st_intersection(j.the_geom, union_c.the_geom), 26986) ) as area , j.jurisdiction from jurisidictions j , (select st_union(the_geom) as the_geom from mhfd_catchments_simple_v1 c where 
+        //  '${stream.reach_code}' is not distinct from c.reach_code 
+        //   ${stream.trib_code1 != null ? `and ${stream.trib_code1} is not distinct from c.trib_code1` : ''} 
+        //   ${stream.trib_code2 != null ? `and ${stream.trib_code2} is not distinct from c.trib_code2` : ''} 
+        //   ${stream.trib_code3 != null ? `and ${stream.trib_code3} is not distinct from c.trib_code3` : ''} 
+        //   ${stream.trib_code4 != null ? `and ${stream.trib_code4} is not distinct from c.trib_code4` : ''} 
+        //   ${stream.trib_code5 != null ? `and ${stream.trib_code5} is not distinct from c.trib_code5` : ''} 
+        //   ${stream.trib_code6 != null ? `and ${stream.trib_code6} is not distinct from c.trib_code6` : ''} 
+        //   ${stream.trib_code7 != null ? `and ${stream.trib_code7} is not distinct from c.trib_code7` : ''} 
+        //   ) union_c 
+        //   where ST_INTERSECTS(ST_SimplifyPreserveTopology(j.the_geom, 0.1), ST_SimplifyPreserveTopology(union_c.the_geom, 0.1)) `;
       //     const drainageQuery = {
       //       q: drainageSQL
       //     };
