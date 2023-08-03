@@ -613,7 +613,7 @@ router.post('/get-or-create', async (req, res) => {
 router.post('/board-for-positions2', async (req, res) => { 
   logger.info(`Starting endpoint board/board-for-positions2 with params ${JSON.stringify(req.body, null, 2)}`)
   try {
-    let { board_id, position, filters, year } = req.body;
+    let { board_id, position, filters, year, tabActiveNavbar } = req.body;
     const {
       project_priorities,
       project_counties,
@@ -725,10 +725,14 @@ router.post('/board-for-positions2', async (req, res) => {
     logger.info(`Finished endpoint for board/board-for-positions2`);
     if(year >= 2024 ){
       let response={};
-      if(isSouthPlatteRiver && isSouthPlatteRiver.length > 0){
-        response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0 && r.projectData.is_located_on_south_plate_river === true)
+      if(tabActiveNavbar === 'WORK_PLAN'){
+        if(isSouthPlatteRiver && isSouthPlatteRiver.length > 0){
+          response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0 && r.projectData.is_located_on_south_plate_river === true)
+        }else{
+          response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0)
+        }
       }else{
-        response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0)
+        response = boardProjectsWithData.filter(r => r.projectData)
       }
       res.send(response);
     }else{
