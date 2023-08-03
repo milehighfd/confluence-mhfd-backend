@@ -39,6 +39,7 @@ import { ProjectError, ProjectBoardsError} from '../../errors/project.error.js';
 
 
 const CodeCostType = db.codeCostType
+const Project = db.project;
 
 const getOfficialProjectName = (name) => name + (name === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '');
 
@@ -288,12 +289,17 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
     );    
     const extra_fields = await extraFields(type, subtype, body, project_id, transaction, user.email);    
     await transaction.commit();
+    const lastProject = Project.findOne({
+      where : {
+        project_id: project_id
+      },
+    })
     const dataArcGis = await insertIntoArcGis(
       geom,
       project_id,
       cleanStringValue(projectname)
     );
-    const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, dataArcGis};
+    const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, dataArcGis,lastProject};
     return composeData;
   } catch (error) {
     logger.error(error);
