@@ -285,15 +285,15 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
       cosponsor,
       project_id,
       transaction
-    );
+    );    
+    const extra_fields = await extraFields(type, subtype, body, project_id, transaction, user.email);    
+    await transaction.commit();
     const dataArcGis = await insertIntoArcGis(
       geom,
       project_id,
       cleanStringValue(projectname)
     );
-    const extra_fields = await extraFields(type, subtype, body, project_id, transaction, user.email);
     const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, dataArcGis};
-    await transaction.commit();
     return composeData;
   } catch (error) {
     logger.error(error);
