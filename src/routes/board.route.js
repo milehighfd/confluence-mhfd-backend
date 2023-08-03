@@ -620,6 +620,7 @@ router.post('/board-for-positions2', async (req, res) => {
       project_local_governments,
       project_service_areas,
       project_statuses,
+      isSouthPlatteRiver,
     } = filters || {};
     if (!board_id || position === undefined || position === null) {
       return res.sendStatus(400);
@@ -722,8 +723,14 @@ router.post('/board-for-positions2', async (req, res) => {
       })
     );
     logger.info(`Finished endpoint for board/board-for-positions2`);
-    if(year > 2024 ){
-      res.send(boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0));
+    if(year >= 2024 ){
+      let response={};
+      if(isSouthPlatteRiver && isSouthPlatteRiver.length > 0){
+        response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0 && r.projectData.is_located_on_south_plate_river === true)
+      }else{
+        response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0)
+      }
+      res.send(response);
     }else{
       res.send(boardProjectsWithData.filter(r => r.projectData));
     }

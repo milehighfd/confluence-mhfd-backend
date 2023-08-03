@@ -790,21 +790,21 @@ const getLocalityDetails = async (project_id) => {
   return project;
 };
 
-const getLightDetails = async (project_id, project_counties, project_local_governments, project_service_areas, project_statuses) => {
+const getLightDetails = async (project_id, project_counties, project_local_governments, project_service_areas, project_statuses, isSouthPlatteRiver) => {
   const countyWhere = {};
-  if (project_counties && project_counties.length > 0) {
+  if (project_counties) {
     countyWhere.state_county_id = { [Op.in]: project_counties };
   }
   const localGovernmentWhere = {};
-  if (project_local_governments && project_local_governments.length > 0) {
+  if (project_local_governments) {
     localGovernmentWhere.code_local_government_id = { [Op.in]: project_local_governments };
   }
   const serviceAreaWhere = {};
-  if (project_service_areas && project_service_areas.length > 0) {
+  if (project_service_areas) {
     serviceAreaWhere.code_service_area_id = { [Op.in]: project_service_areas };
   }
   const projectStatusWhere = {};
-  if (project_statuses && project_statuses.length > 0) {
+  if (project_statuses) {
     projectStatusWhere.code_status_type_id = { [Op.in]: project_statuses };
   }
   const project = await Project.findByPk(project_id, {
@@ -812,6 +812,7 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
       "project_id",
       "project_name",
       'current_project_status_id',
+      'is_located_on_south_plate_river',
     ],
     include: [
       {
