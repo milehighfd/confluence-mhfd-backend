@@ -382,7 +382,7 @@ router.get('/components-by-problemid', auth, async (req, res) => {
 router.post('/component-geom', async (req,res) => {
   let table = req.body.table; 
   let objectid = req.body.objectid;
-  let sql = `SELECT ST_ASGEOJSON(the_geom) as the_geom from ${table} where objectid=${objectid}`;
+  let sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom from ${table} where objectid=${objectid}`;
   const query = {
     q: sql
   };
