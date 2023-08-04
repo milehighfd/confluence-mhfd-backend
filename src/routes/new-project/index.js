@@ -445,7 +445,7 @@ router.post('/streams-data', async (req, res) => {
       streamsIntersected.trib_code5,
       streamsIntersected.trib_code6,
       streamsIntersected.trib_code7,
-      ST_length(ST_intersection(streamsIntersected.the_geom, j.the_geom)::geography) as length
+      ST_length(ST_intersection(streamsIntersected.the_geom, j.the_geom)::geography) * 3.28084 as length 
       FROM 
       ( 
         SELECT
