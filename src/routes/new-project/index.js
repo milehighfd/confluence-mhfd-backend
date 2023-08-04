@@ -834,7 +834,7 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
 
 router.post('/get-all-streams', auth, async (req, res) => {
   const geom = req.body.geom;
-  const sql = `SELECT cartodb_id, unique_mhfd_code as mhfd_code FROM mhfd_stream_reaches WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom)`;
+  const sql = `SELECT cartodb_id, unique_mhfd_code as mhfd_code, str_name FROM mhfd_stream_reaches WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom)`;
   const query = {
     q: sql
   };
@@ -846,7 +846,7 @@ router.post('/get-all-streams', auth, async (req, res) => {
       body = data.body;
       logger.info(JSON.stringify(body.rows));
       body.rows = body.rows.map(data => { 
-        return {cartodb_id: data.cartodb_id, mhfd_code: data.mhfd_code}
+        return {cartodb_id: data.cartodb_id, mhfd_code: data.mhfd_code, str_name: data.str_name}
       });
       res.send(body.rows);
       //logger.info(JSON.stringify(body, null, 2));
