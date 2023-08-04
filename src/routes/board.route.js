@@ -166,8 +166,8 @@ router.get('/:id/filters', async (req, res) => {
             }
           );
         }
-        if (details.project_statuses && details.project_statuses.length > 0) {
-          details.project_statuses = details.project_statuses.map(
+        if (details.currentId && details.currentId.length > 0) {
+          details.currentId = details.currentId.map(
             (plg) => {
               return ({
                 code_status_type_id: plg.code_phase_type.code_status_type.code_status_type_id,
@@ -184,13 +184,13 @@ router.get('/:id/filters', async (req, res) => {
     ['project_counties', 'county_name', 'state_county_id'],
     ['project_service_areas', 'service_area_name', 'code_service_area_id'],
     ['project_local_governments', 'local_government_name', 'code_local_government_id'],
-    ['project_statuses', 'status_name', 'code_status_type_id'],
+    ['currentId', 'status_name', 'code_status_type_id'],
   ];
   const groupingArrayMap = {
     project_counties: [],
     project_service_areas: [],
     project_local_governments: [],
-    project_statuses: [],
+    currentId: [],
   };
   localitiesData.forEach((localityData) => {
     if (!localityData) return;
@@ -205,22 +205,6 @@ router.get('/:id/filters', async (req, res) => {
   groupingArrayMap.project_service_areas.sort((a,b) => (a.code_service_area_id > b.code_service_area_id) ? 1 : ((b.code_service_area_id > a.code_service_area_id) ? -1 : 0))
   groupingArrayMap.project_counties.sort((a,b) => (a.state_county_id > b.state_county_id) ? 1 : ((b.state_county_id > a.state_county_id) ? -1 : 0))
   logger.info(`Finished endpoint for board/:id/filters`);
-  if (board.locality === 'MHFD District Work Plan') {
-    const serviceAreas = await CodeServiceArea.findAll({
-      attributes: [
-        'code_service_area_id',
-        'service_area_name',
-      ],
-    });
-    const counties = await CodeStateCounty.findAll({
-      attributes: [
-        'state_county_id',
-        'county_name',
-      ],
-    });
-    groupingArrayMap.project_service_areas = serviceAreas.map(d => d.dataValues);
-    groupingArrayMap.project_counties = counties.map(d => d.dataValues);
-  }
   res.send(groupingArrayMap);
 });
 
@@ -613,7 +597,7 @@ router.post('/get-or-create', async (req, res) => {
 router.post('/board-for-positions2', async (req, res) => { 
   logger.info(`Starting endpoint board/board-for-positions2 with params ${JSON.stringify(req.body, null, 2)}`)
   try {
-    let { board_id, position, filters, year, tabActiveNavbar } = req.body;
+    let { board_id, position, filters, year, tabActiveNavbar, localityType } = req.body;
     const {
       project_priorities,
       project_counties,
@@ -675,6 +659,8 @@ router.post('/board-for-positions2', async (req, res) => {
             project_local_governments,
             project_service_areas,
             project_statuses,
+            localityType,
+            tabActiveNavbar,
           )).dataValues;
         } catch (e) {
           logger.error('ERROR AT GET LIGHT DETAILS ' + e);
@@ -732,7 +718,7 @@ router.post('/board-for-positions2', async (req, res) => {
           response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0)
         }
       }else{
-        response = boardProjectsWithData.filter(r => r.projectData)
+        response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0)
       }
       res.send(response);
     }else{

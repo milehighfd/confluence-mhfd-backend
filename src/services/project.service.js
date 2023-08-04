@@ -709,7 +709,8 @@ const getDetails = async (project_id) => {
 const getLocalityDetails = async (project_id) => {
   const project = await Project.findByPk(project_id, {
     attributes: [
-      "project_id"
+      "project_id",
+      "current_project_status_id",
     ],
     include: [
       {
@@ -758,8 +759,7 @@ const getLocalityDetails = async (project_id) => {
       {
         model: ProjectStatus,
         required: false,
-        separate: true,
-        as: 'project_statuses',
+        as: 'currentId',
         attributes: [
           'code_phase_type_id',
         ],
@@ -769,14 +769,20 @@ const getLocalityDetails = async (project_id) => {
           attributes: [
             'phase_name',
           ],
-          include: {
+          include: [{
             model: CodeStatusType,
             required: false,
             attributes: [
               'code_status_type_id',
               'status_name'
             ]
-          }
+          }, {
+            model: CodeProjectType,
+            required: false,
+            attributes: [
+              'code_project_type_id'
+            ]
+          }]
         }
       },
     ]
@@ -790,23 +796,35 @@ const getLocalityDetails = async (project_id) => {
   return project;
 };
 
-const getLightDetails = async (project_id, project_counties, project_local_governments, project_service_areas, project_statuses, isSouthPlatteRiver) => {
-  const countyWhere = {};
-  if (project_counties && project_counties.length > 0) {
-    countyWhere.state_county_id = { [Op.in]: project_counties };
-  }
+const getLightDetails = async (project_id, project_counties, project_local_governments, project_service_areas, project_statuses, localityType, tabActiveNavbar) => {
+  
   const localGovernmentWhere = {};
-  if (project_local_governments && project_local_governments.length > 0) {
-    localGovernmentWhere.code_local_government_id = { [Op.in]: project_local_governments };
-  }
   const serviceAreaWhere = {};
-  if (project_service_areas && project_service_areas.length > 0) {
-    serviceAreaWhere.code_service_area_id = { [Op.in]: project_service_areas };
-  }
+  const countyWhere = {};
+
   const projectStatusWhere = {};
-  if (project_statuses && project_statuses.length > 0) {
+  if (project_statuses) {
     projectStatusWhere.code_status_type_id = { [Op.in]: project_statuses };
   }
+  if(tabActiveNavbar === 'WORK_REQUEST'){
+    if (project_counties) {
+      countyWhere.state_county_id = { [Op.in]: project_counties };
+    }
+  }else{
+    if(localityType && localityType === 'CODE_STATE_COUNTY'){
+      if (project_counties) {
+        countyWhere.state_county_id = { [Op.in]: project_counties };
+      }
+    }else{
+      if (project_service_areas) {
+        serviceAreaWhere.code_service_area_id = { [Op.in]: project_service_areas };
+      }
+    }
+    if (project_local_governments) {
+      localGovernmentWhere.code_local_government_id = { [Op.in]: project_local_governments };
+    }
+  }
+
   const project = await Project.findByPk(project_id, {
     attributes: [
       "project_id",
