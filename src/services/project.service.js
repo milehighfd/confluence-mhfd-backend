@@ -801,29 +801,29 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
   const localGovernmentWhere = {};
   const serviceAreaWhere = {};
   const countyWhere = {};
-
   const projectStatusWhere = {};
-  if (project_statuses) {
-    projectStatusWhere.code_status_type_id = { [Op.in]: project_statuses };
-  }
-  if(tabActiveNavbar === 'WORK_REQUEST'){
-    if (project_counties) {
-      countyWhere.state_county_id = { [Op.in]: project_counties };
-    }
-  }else{
-    if(localityType && localityType === 'CODE_STATE_COUNTY'){
-      if (project_counties) {
-        countyWhere.state_county_id = { [Op.in]: project_counties };
-      }
-    }else{
-      if (project_service_areas) {
-        serviceAreaWhere.code_service_area_id = { [Op.in]: project_service_areas };
-      }
-    }
-    if (project_local_governments) {
-      localGovernmentWhere.code_local_government_id = { [Op.in]: project_local_governments };
-    }
-  }
+  
+  // if (project_statuses) {
+  //   projectStatusWhere.code_status_type_id = { [Op.in]: project_statuses };
+  // }
+  // if(tabActiveNavbar === 'WORK_REQUEST'){
+  //   if (project_counties) {
+  //     countyWhere.state_county_id = { [Op.in]: project_counties };
+  //   }
+  // }else{
+  //   if(localityType && localityType === 'CODE_STATE_COUNTY'){
+  //     if (project_counties) {
+  //       countyWhere.state_county_id = { [Op.in]: project_counties };
+  //     }
+  //   }else{
+  //     if (project_service_areas) {
+  //       serviceAreaWhere.code_service_area_id = { [Op.in]: project_service_areas };
+  //     }
+  //   }
+  //   if (project_local_governments) {
+  //     localGovernmentWhere.code_local_government_id = { [Op.in]: project_local_governments };
+  //   }
+  // }
 
   const project = await Project.findByPk(project_id, {
     attributes: [

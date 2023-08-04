@@ -709,22 +709,22 @@ router.post('/board-for-positions2', async (req, res) => {
       })
     );
     logger.info(`Finished endpoint for board/board-for-positions2`);
-    if(year >= 2024 ){
-      let response={};
-      if(tabActiveNavbar === 'WORK_PLAN'){
-        if(isSouthPlatteRiver && isSouthPlatteRiver.length > 0){
-          response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0 && r.projectData.is_located_on_south_plate_river === true)
-        }else{
-          response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0)
-        }
-      }else{
-        response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0)
-      }
-      res.send(response);
-    }else{
-      res.send(boardProjectsWithData.filter(r => r.projectData));
-    }
-
+    // if(year >= 2024 ){
+    //   let response={};
+    //   if(tabActiveNavbar === 'WORK_PLAN'){
+    //     if(isSouthPlatteRiver && isSouthPlatteRiver.length > 0){
+    //       response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0 && r.projectData.is_located_on_south_plate_river === true)
+    //     }else{
+    //       response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0)
+    //     }
+    //   }else{
+    //     response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0)
+    //   }
+    //   res.send(response);
+    // }else{
+    //   res.send(boardProjectsWithData.filter(r => r.projectData));
+    // }
+    res.send(boardProjectsWithData.filter(r => r.projectData));
   } catch (error) {
     logger.error('ERROR AT POSITIONS2 ' + error)
   }
