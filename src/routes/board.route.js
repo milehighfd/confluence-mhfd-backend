@@ -851,6 +851,9 @@ const getBoard = async (type, locality, year, projecttype) => {
 
 const updateProjectStatus = async (boards, status, creator) => {
   logger.info(`Starting function updateProjectStatus for board/`);
+  const DRAFT_STATUS = 1;
+  const REQUESTED_STATUS = 2;
+  const APPROVED_STATUS = 3;
   const prs = [];
   for (const board of boards) {
     prs.push(
@@ -862,6 +865,12 @@ const updateProjectStatus = async (boards, status, creator) => {
     );
   }
   let boardProjects = (await Promise.all(prs)).flat();
+  if (status === APPROVED_STATUS) {
+    for (const boardProject of boardProjects) {
+      boardProject.code_status_type_id = APPROVED_STATUS;
+      boardProject.save();
+    }
+  }
   const prs2 = [];
   for (const boardProject of boardProjects) {
     if (boardProject.position0 === null) {
@@ -968,9 +977,6 @@ const updateProjectStatus = async (boards, status, creator) => {
   await Promise.all(prs5).then(() => {
     logger.info("Projects are updated");
   });
-  const DRAFT_STATUS = 1;
-  const REQUESTED_STATUS = 2;
-  const APPROVED_STATUS = 3;
   const dontUseThis = true;
   if (status === APPROVED_STATUS && !dontUseThis) {
     const currentProjectStatusesPromises = [];
