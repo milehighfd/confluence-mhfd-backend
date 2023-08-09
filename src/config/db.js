@@ -201,6 +201,8 @@ db.landscapingArea.hasMany(db.projectStaff, {foreignKey: 'project_id', sourceKey
 db.streamImprovementMeasure.hasMany(db.projectStaff, {foreignKey: 'project_id', sourceKey: 'project_id'});
 //Boards
 db.boardProject.hasOne(db.project, {foreignKey: 'project_id', sourceKey: 'project_id', as: 'projectData'});
+db.project.hasMany(db.boardProject, {foreignKey: 'project_id', sourceKey: 'project_id'});
+db.boardProject.hasOne(db.codeStatusType, {foreignKey: 'code_status_type_id', sourceKey: 'code_status_type_id'});
 db.boardProjectCost.hasMany(db.boardProject, {foreignKey: 'board_project_id'});
 db.boardProjectCost.hasMany(db.projectCost, {foreignKey: 'project_cost_id'});
 //Notifications
