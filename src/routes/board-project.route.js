@@ -203,7 +203,7 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
   try {
   const { board_project_id } = req.params;
   const user = req.user;
-  const { req1, req2, req3, req4, req5, year1, year2 } = req.body;
+  const { req1, req2, req3, req4, req5, year1, year2, isMaintenance } = req.body;
   let updateFields = {};
   const beforeUpdate = await BoardProject.findOne({
     where: { board_project_id }
@@ -237,7 +237,7 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
         const lastProject = projects[0];
         updateFields[rankColumnName] = LexoRank.parse(lastProject[`rank${[pos]}`]).genNext().toString();  
       }
-    } else if (beforeUpdate[reqColumnName] !== null && req.body[reqColumnName] === null) {
+    } else if (beforeUpdate[reqColumnName] !== null && req.body[reqColumnName] === null && !isMaintenance) {
       updateFields[rankColumnName] = null;
     }
   }
@@ -283,7 +283,7 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
         shouldMoveToWorkspace = false;
       }
     }
-    if ( shouldMoveToWorkspace) {
+    if ( shouldMoveToWorkspace && !isMaintenance) {
       const projects = await BoardProject.findAll({
         where: {
           board_id: beforeUpdate.board_id,
