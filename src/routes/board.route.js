@@ -176,6 +176,15 @@ router.get('/:id/filters', async (req, res) => {
             }
           );
         }
+        if (details.project_partners && details.project_partners.length > 0) {
+          details.project_partners = details.project_partners.map(
+            (plg) => {
+              return ({
+                partner_name: plg.project_partner_id,
+              });
+            }
+          );
+        }
       }
       return details;
     })
@@ -600,10 +609,10 @@ router.post('/board-for-positions2', async (req, res) => {
     let { board_id, position, filters, year, tabActiveNavbar, localityType } = req.body;
     const {
       project_priorities,
-      project_counties,
-      project_local_governments,
-      project_service_areas,
-      project_statuses,
+      county,
+      jurisdiction,
+      servicearea,
+      status,
       isSouthPlatteRiver,
     } = filters || {};
     if (!board_id || position === undefined || position === null) {
@@ -648,19 +657,15 @@ router.post('/board-for-positions2', async (req, res) => {
       where,
       order: [[rankColumnName, 'ASC']],
     })).map(d => d.dataValues);
+    const projects_filtered = await projectService.getProjects2(null, null, 1, null, filters);
+    const projectIds = boardProjects.filter(boardProject => projects_filtered.map(p => p.project_id).includes(boardProject.project_id));
     let boardProjectsWithData = await Promise.all(
-      boardProjects.map(async (boardProject) => {
+      projectIds.map(async (boardProject) => {
         console.log(JSON.stringify(boardProject, null, 2));
         let details;
         try {
           details = (await projectService.getLightDetails(
             boardProject.project_id,
-            project_counties,
-            project_local_governments,
-            project_service_areas,
-            project_statuses,
-            localityType,
-            tabActiveNavbar,
           )).dataValues;
         } catch (e) {
           logger.error('ERROR AT GET LIGHT DETAILS ' + e);

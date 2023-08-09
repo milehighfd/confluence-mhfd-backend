@@ -785,6 +785,33 @@ const getLocalityDetails = async (project_id) => {
           }]
         }
       },
+      {
+        model: ProjectPartner,
+        attributes: [
+          'project_partner_id',
+          'code_partner_type_id'
+        ],
+        required: false,
+        separate: true,
+        include: [{
+          model: CodeProjectPartnerType,
+          required: true,
+          where: {
+            code_partner_type_id: 11
+          },
+          attributes: [
+            'code_partner_type_id',
+            'partner_type'
+          ]
+        }, {
+          model: BusinessAssociate,
+          required: false,
+          attributes: [
+            'business_name',
+          ]
+        },
+        ],
+      }
     ]
   });
   if (!project) {
@@ -796,7 +823,7 @@ const getLocalityDetails = async (project_id) => {
   return project;
 };
 
-const getLightDetails = async (project_id, project_counties, project_local_governments, project_service_areas, project_statuses, localityType, tabActiveNavbar) => {
+const getLightDetails = async (project_id) => {
   
   const localGovernmentWhere = {};
   const serviceAreaWhere = {};
@@ -942,7 +969,7 @@ const getLightDetails = async (project_id, project_counties, project_local_gover
             'business_name',
           ]
         },
-    ],
+        ],
       }
     ]
   });
