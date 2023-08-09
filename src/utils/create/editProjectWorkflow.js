@@ -190,7 +190,9 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
     const transaction = await db.sequelize.transaction();
     const data = await editProjects(body, transaction, type, user.email, subtype, project_id);
     const { cover, sponsor, cosponsor, projectname } = body;
-    await toggleName(cover, transaction);
+    if (cover !== ''){
+      await toggleName(cover, project_id, transaction);
+    }    
     const project_attachments = await uploadFiles(user, files, project_id, cover, transaction);
     const boardData = await updateProjectsInBoard(project_id, projectname, type, subtype, transaction);
     const geoInfo = await parseGeographicInfoAndUpdate(body, project_id, user, transaction);

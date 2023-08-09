@@ -4,7 +4,7 @@ import db from 'bc/config/db.js';
 const { Op } = sequelize;
 const Attachment = db.projectAttachment;
 
-export const toggleName = async (name, transaction = null) => {
+export const toggleName = async (name, project_id, transaction = null) => {
   try {
     await Attachment.update(
       { 
@@ -12,7 +12,8 @@ export const toggleName = async (name, transaction = null) => {
       },
       {
         where: {
-          [Op.not]: { attachment_reference_key: name }
+          [Op.not]: { attachment_reference_key: name },
+          [Op.and]: { project_id: project_id }
         },
         transaction: transaction
       }
@@ -22,7 +23,10 @@ export const toggleName = async (name, transaction = null) => {
         is_cover: true 
       },
       {
-        where: { attachment_reference_key: name },
+        where: { 
+          project_id: project_id ,
+          attachment_reference_key: name
+        },
         transaction: transaction
       }
     );
