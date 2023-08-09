@@ -792,7 +792,6 @@ const getLocalityDetails = async (project_id) => {
           'code_partner_type_id'
         ],
         required: false,
-        separate: true,
         include: [{
           model: CodeProjectPartnerType,
           required: true,
@@ -808,6 +807,7 @@ const getLocalityDetails = async (project_id) => {
           required: false,
           attributes: [
             'business_name',
+            'business_associates_id'
           ]
         },
         ],
@@ -824,35 +824,11 @@ const getLocalityDetails = async (project_id) => {
 };
 
 const getLightDetails = async (project_id) => {
-  
-  const localGovernmentWhere = {};
-  const serviceAreaWhere = {};
-  const countyWhere = {};
-  const projectStatusWhere = {};
-  
-  // if (project_statuses) {
-  //   projectStatusWhere.code_status_type_id = { [Op.in]: project_statuses };
-  // }
-  // if(tabActiveNavbar === 'WORK_REQUEST'){
-  //   if (project_counties) {
-  //     countyWhere.state_county_id = { [Op.in]: project_counties };
-  //   }
-  // }else{
-  //   if(localityType && localityType === 'CODE_STATE_COUNTY'){
-  //     if (project_counties) {
-  //       countyWhere.state_county_id = { [Op.in]: project_counties };
-  //     }
-  //   }else{
-  //     if (project_service_areas) {
-  //       serviceAreaWhere.code_service_area_id = { [Op.in]: project_service_areas };
-  //     }
-  //   }
-  //   if (project_local_governments) {
-  //     localGovernmentWhere.code_local_government_id = { [Op.in]: project_local_governments };
-  //   }
-  // }
 
-  const project = await Project.findByPk(project_id, {
+  const project = await Project.findAll( {
+    where: {
+      project_id: project_id
+    },
     attributes: [
       "project_id",
       "project_name",
@@ -865,8 +841,7 @@ const getLightDetails = async (project_id) => {
         required: true,
         attributes: [
           'code_local_government_id'
-        ],
-        where: localGovernmentWhere,
+        ],        
         include: {
           model: CodeLocalGoverment,
           required: true,
@@ -877,8 +852,7 @@ const getLightDetails = async (project_id) => {
       },
       {
         model: ProjectCounty,
-        required: true,
-        where: countyWhere,
+        required: true,        
         attributes: [
           'state_county_id'
         ],
@@ -892,8 +866,7 @@ const getLightDetails = async (project_id) => {
       },
       {
         model: ProjectServiceArea,
-        required: true,
-        where: serviceAreaWhere,
+        required: true,        
         attributes: [
           'code_service_area_id'
         ],
@@ -929,8 +902,7 @@ const getLightDetails = async (project_id) => {
           ],
           include: [{
             model: CodeStatusType,
-            required: true,
-            where: projectStatusWhere,
+            required: true,            
             attributes: [
               'code_status_type_id',
               'status_name'
@@ -993,9 +965,10 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
   const code_project_type_id = filter.projecttype ? filter.projecttype : [];
   const service_area = filter.servicearea ? filter.servicearea : [];
   const state_county_id = filter.county ? filter.county : [];
+  const sponsor_board = filter.sponsor_board ? filter.sponsor_board : [];
   const lgmanager = filter.lgmanager ? filter.lgmanager : '';
   const favorites = filter.favorites ? filter.favorites : '';
-  const teams = filter.teams ? filter.teams : '';
+  const teams = filter.teams ? filter.teams : '';  
   let stream_id = filter.streamname ? filter.streamname : [];
   if (stream_id.length){
     stream_id = stream_id[0].split(',');    
@@ -1326,6 +1299,22 @@ const getProjects2 = async (include, bounds, offset = 0, limit = 120000, filter,
 		  }]
 	  }));
 	}
+  if (sponsor_board.length) {
+    logger.info(`Filtering by sponsor board ${sponsor_board}...`);
+    conditions.push(//SPONSOR BOARD
+      Project.findAll({
+        attributes: ["project_id", "code_project_type_id"],
+        include: [{
+          model: ProjectPartner,
+          attributes: [],
+          include: {
+            model: BusinessAssociate,
+            attributes: [],
+          },
+          where: { business_associates_id: sponsor_board }
+        }],
+      }));
+  }
   if (conditions.length === 0) {
     conditions.push(Project.findAll({
       attributes: ["project_id","code_project_type_id"],

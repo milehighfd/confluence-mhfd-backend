@@ -31,6 +31,7 @@ const ProjectCounty = db.projectCounty;
 const ProjectProposedAction = db.projectProposedAction;
 const CodeStateCounty = db.codeStateCounty;
 const CodeServiceArea = db.codeServiceArea;
+const CodeStatusType = db.codeStatusType;
 
 const insertUniqueObject = (array, idPropertyName, groupPropertyKeyName, object) => {
   const isDuplicate = array.some(item => {
@@ -126,8 +127,15 @@ router.get('/:id/filters', async (req, res) => {
   const boardProjects = (await BoardProject.findAll({
     where: { board_id: id },
     attributes: [
-      'project_id'
+      'project_id',
+      'code_status_type_id'
     ],
+    include: [
+      {
+        attributes: ['status_name'],
+        model: CodeStatusType,
+      }
+    ]
   })).map(d => d.dataValues);
   let localitiesData = await Promise.all(
     boardProjects.map(async (boardProject) => {
@@ -140,6 +148,12 @@ router.get('/:id/filters', async (req, res) => {
         logger.error(e);
       }
       if (details) {
+        details.status = boardProjects.map(
+          (psa) => ({
+            status_id: psa.code_status_type_id,
+            status_name: psa.code_status_type.status_name,
+          })
+        );
         if (details.project_service_areas && details.project_service_areas.length > 0) {
           details.project_service_areas = details.project_service_areas.map(
             (psa) => ({
@@ -175,12 +189,13 @@ router.get('/:id/filters', async (req, res) => {
               });
             }
           );
-        }
+        }        
         if (details.project_partners && details.project_partners.length > 0) {
           details.project_partners = details.project_partners.map(
             (plg) => {
               return ({
-                partner_name: plg.project_partner_id,
+                partner_id: plg.business_associate.business_associates_id,      
+                partner_name: plg.business_associate.business_name,          
               });
             }
           );
@@ -194,12 +209,16 @@ router.get('/:id/filters', async (req, res) => {
     ['project_service_areas', 'service_area_name', 'code_service_area_id'],
     ['project_local_governments', 'local_government_name', 'code_local_government_id'],
     ['currentId', 'status_name', 'code_status_type_id'],
+    ['project_partners', 'partner_name', 'partner_id'],
+    ['status', 'status_name', 'status_id']
   ];
   const groupingArrayMap = {
     project_counties: [],
     project_service_areas: [],
     project_local_governments: [],
     currentId: [],
+    project_partners: [],
+    status: []
   };
   localitiesData.forEach((localityData) => {
     if (!localityData) return;
@@ -609,11 +628,7 @@ router.post('/board-for-positions2', async (req, res) => {
     let { board_id, position, filters, year, tabActiveNavbar, localityType } = req.body;
     const {
       project_priorities,
-      county,
-      jurisdiction,
-      servicearea,
-      status,
-      isSouthPlatteRiver,
+      status_board
     } = filters || {};
     if (!board_id || position === undefined || position === null) {
       return res.sendStatus(400);
@@ -652,6 +667,9 @@ router.post('/board-for-positions2', async (req, res) => {
       }
       where[Op.or] = conditions;
     }
+    if (status_board && status_board.length > 0) {
+      where.code_status_type_id = status_board;
+    }
     const boardProjects = (await BoardProject.findAll({
       attributes,
       where,
@@ -659,76 +677,52 @@ router.post('/board-for-positions2', async (req, res) => {
     })).map(d => d.dataValues);
     const projects_filtered = await projectService.getProjects2(null, null, 1, null, filters);
     const projectIds = boardProjects.filter(boardProject => projects_filtered.map(p => p.project_id).includes(boardProject.project_id));
-    let boardProjectsWithData = await Promise.all(
-      projectIds.map(async (boardProject) => {
-        console.log(JSON.stringify(boardProject, null, 2));
-        let details;
-        try {
-          details = (await projectService.getLightDetails(
-            boardProject.project_id,
-          )).dataValues;
-        } catch (e) {
-          logger.error('ERROR AT GET LIGHT DETAILS ' + e);
+    const lightDetails = await projectService.getLightDetails(projectIds.map(p => p.project_id));
+    let boardProjectsWithData = projectIds.map((boardProject) => {
+      const details = lightDetails.find(d => d.project_id === boardProject.project_id);
+      if (details) {
+        if (details.project_service_areas && details.project_service_areas.length > 0) {
+          details.project_service_areas = details.project_service_areas.map(
+            (psa) => ({
+              code_service_area_id: psa.code_service_area_id,
+              service_area_name: psa.CODE_SERVICE_AREA.service_area_name,
+            })
+          );
         }
-        if (details) {
-          if (details.project_service_areas && details.project_service_areas.length > 0) {
-            details.project_service_areas = details.project_service_areas.map(
-                (psa) => ({
-                    code_service_area_id: psa.code_service_area_id,
-                    service_area_name: psa.CODE_SERVICE_AREA.service_area_name,
-                })
-            );
-          }
-          if (details.project_counties && details.project_counties.length > 0) {
-            details.project_counties = details.project_counties.map(
-                (pc) => ({
-                    state_county_id: pc.state_county_id,
-                    county_name: pc.CODE_STATE_COUNTY.county_name,
-                })
-            );
-          }
-          if (details.project_local_governments && details.project_local_governments.length > 0) {
-            details.project_local_governments = details.project_local_governments.map(
-                (plg) => {
-                  return ({
-                    code_local_government_id: plg.code_local_government_id,
-                    local_government_name: plg.CODE_LOCAL_GOVERNMENT.local_government_name,
-                  });
-                }
-            );
-          }
-          if (details.currentId && details.currentId.length > 0) {
-            details.currentId = details.currentId.map(
-              (current) => {
-                return ({
-                  code_status_type_id: current?.code_phase_type?.code_status_type?.code_status_type_id,
-                  status_name: current?.code_phase_type?.code_status_type?.status_name,
-                  code_project_type_id: current?.code_phase_type?.code_project_type?.code_project_type_id
-                });
-              }
-            )
-          }
+        if (details.project_counties && details.project_counties.length > 0) {
+          details.project_counties = details.project_counties.map(
+            (pc) => ({
+              state_county_id: pc.state_county_id,
+              county_name: pc.CODE_STATE_COUNTY.county_name,
+            })
+          );
         }
-        boardProject.projectData = details;
-        return boardProject;
-      })
-    );
+        if (details.project_local_governments && details.project_local_governments.length > 0) {
+          details.project_local_governments = details.project_local_governments.map(
+            (plg) => {
+              return ({
+                code_local_government_id: plg.code_local_government_id,
+                local_government_name: plg.CODE_LOCAL_GOVERNMENT.local_government_name,
+              });
+            }
+          );
+        }
+        if (details.currentId && details.currentId.length > 0) {
+          details.currentId = details.currentId.map(
+            (current) => {
+              return ({
+                code_status_type_id: current?.code_phase_type?.code_status_type?.code_status_type_id,
+                status_name: current?.code_phase_type?.code_status_type?.status_name,
+                code_project_type_id: current?.code_phase_type?.code_project_type?.code_project_type_id
+              });
+            }
+          )
+        }
+      }
+      boardProject.projectData = details;
+      return boardProject;
+    })
     logger.info(`Finished endpoint for board/board-for-positions2`);
-    // if(year >= 2024 ){
-    //   let response={};
-    //   if(tabActiveNavbar === 'WORK_PLAN'){
-    //     if(isSouthPlatteRiver && isSouthPlatteRiver.length > 0){
-    //       response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0 && r.projectData.is_located_on_south_plate_river === true)
-    //     }else{
-    //       response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0)
-    //     }
-    //   }else{
-    //     response = boardProjectsWithData.filter(r => r.projectData && r.projectData.currentId && r.projectData.currentId.length > 0)
-    //   }
-    //   res.send(response);
-    // }else{
-    //   res.send(boardProjectsWithData.filter(r => r.projectData));
-    // }
     res.send(boardProjectsWithData.filter(r => r.projectData));
   } catch (error) {
     logger.error('ERROR AT POSITIONS2 ' + error)
