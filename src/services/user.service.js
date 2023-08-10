@@ -68,6 +68,7 @@ const sendEmail = async (options) => {
     const info = await transporter.sendMail(options);
     logger.info(`Email for ${options.subject} sent to ${options.to} INFO: ${JSON.stringify(info, null, 2)}`);
   } catch (error) {
+    console.log('transport Error email' + error)
     throw error;
   }
 }
