@@ -838,13 +838,13 @@ const getLightDetails = async (project_id) => {
     include: [
       {
         model: ProjectLocalGovernment,
-        required: true,
+        required: false,
         attributes: [
           'code_local_government_id'
         ],        
         include: {
           model: CodeLocalGoverment,
-          required: true,
+          required: false,
           attributes: [
             'local_government_name'
           ]
@@ -852,13 +852,13 @@ const getLightDetails = async (project_id) => {
       },
       {
         model: ProjectCounty,
-        required: true,        
+        required: false,        
         attributes: [
           'state_county_id'
         ],
         include: {
           model: CodeStateCounty,
-          required: true,
+          required: false,
           attributes: [
             'county_name',
           ]
@@ -866,13 +866,13 @@ const getLightDetails = async (project_id) => {
       },
       {
         model: ProjectServiceArea,
-        required: true,        
+        required: false,        
         attributes: [
           'code_service_area_id'
         ],
         include: {
           model: CodeServiceArea,
-          required: true,
+          required: false,
           attributes: [
             'service_area_name'
           ],
@@ -888,7 +888,7 @@ const getLightDetails = async (project_id) => {
       },
       {
         model: ProjectStatus,
-        required: true,
+        required: false,
         separate: true,
         as: 'currentId',
         attributes: [
@@ -896,20 +896,20 @@ const getLightDetails = async (project_id) => {
         ],
         include: {
           model: CodePhaseType,
-          required: true,
+          required: false,
           attributes: [
             'phase_name',
           ],
           include: [{
             model: CodeStatusType,
-            required: true,            
+            required: false,            
             attributes: [
               'code_status_type_id',
               'status_name'
             ]
           }, {
             model: CodeProjectType,
-            required: true,
+            required: false,
             attributes: [
               'code_project_type_id'
             ]
@@ -926,7 +926,7 @@ const getLightDetails = async (project_id) => {
         separate: true,
         include: [{
           model: CodeProjectPartnerType,
-          required: true,
+          required: false,
           where: {
             code_partner_type_id: 11
           },

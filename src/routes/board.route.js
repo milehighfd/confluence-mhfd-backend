@@ -683,38 +683,63 @@ router.post('/board-for-positions2', async (req, res) => {
       if (details) {
         if (details.project_service_areas && details.project_service_areas.length > 0) {
           details.project_service_areas = details.project_service_areas.map(
-            (psa) => ({
-              code_service_area_id: psa.code_service_area_id,
-              service_area_name: psa.CODE_SERVICE_AREA.service_area_name,
-            })
+            (psa) => {
+              if (psa.CODE_SERVICE_AREA) {
+                return {
+                  code_service_area_id: psa.code_service_area_id,
+                  service_area_name: psa.CODE_SERVICE_AREA.service_area_name,
+                };
+              } else {
+                return {
+                  code_service_area_id: psa.code_service_area_id,
+                  service_area_name: psa.service_area_name,
+                };
+              }
+            }
           );
         }
         if (details.project_counties && details.project_counties.length > 0) {
           details.project_counties = details.project_counties.map(
-            (pc) => ({
-              state_county_id: pc.state_county_id,
-              county_name: pc.CODE_STATE_COUNTY.county_name,
-            })
+            (pc) => {
+              if (pc.CODE_STATE_COUNTY) {
+                return {
+                  state_county_id: pc.state_county_id,
+                  county_name: pc.CODE_STATE_COUNTY.county_name,
+                };
+              } else {
+                return {
+                  state_county_id: pc.state_county_id,
+                  county_name: pc.county_name,
+                };
+              }
+            }
           );
         }
         if (details.project_local_governments && details.project_local_governments.length > 0) {
           details.project_local_governments = details.project_local_governments.map(
             (plg) => {
-              return ({
-                code_local_government_id: plg.code_local_government_id,
-                local_government_name: plg.CODE_LOCAL_GOVERNMENT.local_government_name,
-              });
+              if (plg.CODE_LOCAL_GOVERNMENT) {
+                return {
+                  code_local_government_id: plg.code_local_government_id,
+                  local_government_name: plg.CODE_LOCAL_GOVERNMENT.local_government_name,
+                };
+              } else {
+                return {
+                  code_local_government_id: plg.code_local_government_id,
+                  local_government_name: plg.local_government_name,
+                };
+              }
             }
           );
         }
         if (details.currentId && details.currentId.length > 0) {
           details.currentId = details.currentId.map(
             (current) => {
-              return ({
+              return {
                 code_status_type_id: current?.code_phase_type?.code_status_type?.code_status_type_id,
                 status_name: current?.code_phase_type?.code_status_type?.status_name,
                 code_project_type_id: current?.code_phase_type?.code_project_type?.code_project_type_id
-              });
+              };
             }
           )
         }
