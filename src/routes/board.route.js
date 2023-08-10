@@ -675,7 +675,7 @@ router.post('/board-for-positions2', async (req, res) => {
       where,
       order: [[rankColumnName, 'ASC']],
     })).map(d => d.dataValues);
-    const projects_filtered = await projectService.getProjects2(null, null, 1, null, filters);
+    const projects_filtered = await projectService.filterProjectsBy(filters);
     const projectIds = boardProjects.filter(boardProject => projects_filtered.map(p => p.project_id).includes(boardProject.project_id));
     const lightDetails = await projectService.getLightDetails(projectIds.map(p => p.project_id));
     let boardProjectsWithData = projectIds.map((boardProject) => {

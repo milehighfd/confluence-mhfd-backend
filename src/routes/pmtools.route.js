@@ -593,7 +593,7 @@ const getDataForGroupFilters = async (req, res) => {
     logger.info(`page=${page} limit=${limit}`);
     logger.info(`Starting function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
     logger.info(`Filtering by lgmanager ${groupname, filtervalue, code_project_type_id}...`);
-    const group = await projectService.getProjects2(null, null, page, +limit, body, groupname, filtervalue, code_project_type_id);
+    const group = await projectService.filterProjectsBy(body, groupname, filtervalue, code_project_type_id);
     logger.info(`Finished function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
     logger.info(`Starting function getProjects for endpoint project/`);
     let projects = await projectService.getProjects(null, null, group, page, limit, body);
@@ -621,7 +621,7 @@ const countDataForGroupFilters = async (req, res) => {
     logger.info(`page=${page} limit=${limit}`);
     logger.info(`Starting function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
     logger.info(`Filtering by lgmanager ${JSON.stringify(filtervalue2)}...`);
-    const group = await projectService.getProjects2(null, null, page, +limit, body, groupname, filtervalue2, code_project_type_id);
+    const group = await projectService.filterProjectsBy(body, groupname, filtervalue2, code_project_type_id);
     logger.info(`Finished function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
     logger.info(`Starting function getProjects for endpoint project/`);    
     const set = new Set(group.map((p) => p?.project_id));

@@ -56,9 +56,9 @@ const listProjects = async (req, res) => {
     let defaultBounds = `${-105.3236683149282},${39.274174328991904},${-104.48895750946532},${40.26156304805423}`;
     ids = await getIdsInBbox(defaultBounds);
   }
-  logger.info(`Starting function getProjects2 for endpoint project/`);
-  let projectsFilterId = await projectService.getProjects2(null, null, 1, null, body);
-  logger.info(`Finished function getProjects2 for endpoint project/`);
+  logger.info(`Starting function filterProjectsBy for endpoint project/`);
+  let projectsFilterId = await projectService.filterProjectsBy(body);
+  logger.info(`Finished function filterProjectsBy for endpoint project/`);
   projectsFilterId = projectsFilterId.map(pf => ({ project_id: pf.project_id})).filter(pid => {
     return (ids.some(boundsids => pid.project_id === boundsids.project_id));
   });
@@ -83,9 +83,9 @@ const listProjectsDBFilter = async (req, res) => {
   const { offset = 1, limit = 10000 } = req.query;
   const { body } = req;
   const bounds = body?.bounds;
-  logger.info(`Starting function getProjects2 for endpoint project/test`);
-  let projects = await projectService.getProjects2(null, bounds, offset, limit, body);
-  logger.info(`Finished function getProjects2 for endpoint project/test`);
+  logger.info(`Starting function filterProjectsBy for endpoint project/test`);
+  let projects = await projectService.filterProjectsBy(body);
+  logger.info(`Finished function filterProjectsBy for endpoint project/test`);
   logger.info('projects being called', projects.length);
   if (bounds) {
     logger.info(`Starting function getIdsInBbox for endpoint project/test`);
