@@ -150,23 +150,23 @@ router.get('/:id/filters', async (req, res) => {
       if (details) {
         details.status = boardProjects.map(
           (psa) => ({
-            status_id: psa.code_status_type_id,
-            status_name: psa.code_status_type.status_name,
+            status_id: psa?.code_status_type_id,
+            status_name: psa?.code_status_type?.status_name,
           })
-        );
+        );                
         if (details.project_service_areas && details.project_service_areas.length > 0) {
           details.project_service_areas = details.project_service_areas.map(
             (psa) => ({
-              code_service_area_id: psa.code_service_area_id,
-              service_area_name: psa.CODE_SERVICE_AREA.service_area_name,
+              code_service_area_id: psa?.code_service_area_id,
+              service_area_name: psa?.CODE_SERVICE_AREA?.service_area_name,
             })
           );
         }
         if (details.project_counties && details.project_counties.length > 0) {
           details.project_counties = details.project_counties.map(
             (pc) => ({
-              state_county_id: pc.state_county_id,
-              county_name: pc.CODE_STATE_COUNTY.county_name,
+              state_county_id: pc?.state_county_id,
+              county_name: pc?.CODE_STATE_COUNTY?.county_name,
             })
           );
         }
@@ -174,8 +174,8 @@ router.get('/:id/filters', async (req, res) => {
           details.project_local_governments = details.project_local_governments.map(
             (plg) => {
               return ({
-                code_local_government_id: plg.code_local_government_id,
-                local_government_name: plg.CODE_LOCAL_GOVERNMENT.local_government_name,
+                code_local_government_id: plg?.code_local_government_id,
+                local_government_name: plg?.CODE_LOCAL_GOVERNMENT?.local_government_name,
               });
             }
           );
@@ -184,8 +184,8 @@ router.get('/:id/filters', async (req, res) => {
           details.currentId = details.currentId.map(
             (plg) => {
               return ({
-                code_status_type_id: plg.code_phase_type.code_status_type.code_status_type_id,
-                status_name: plg.code_phase_type.code_status_type.status_name,
+                code_status_type_id: plg?.code_phase_type.code_status_type?.code_status_type_id,
+                status_name: plg?.code_phase_type?.code_status_type?.status_name,
               });
             }
           );
@@ -194,8 +194,8 @@ router.get('/:id/filters', async (req, res) => {
           details.project_partners = details.project_partners.map(
             (plg) => {
               return ({
-                partner_id: plg.business_associate.business_associates_id,      
-                partner_name: plg.business_associate.business_name,          
+                partner_id: plg?.business_associate?.business_associates_id,      
+                partner_name: plg?.business_associate?.business_name,          
               });
             }
           );
