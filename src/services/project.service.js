@@ -922,11 +922,11 @@ const getLightDetails = async (project_id) => {
           'project_partner_id',
           'code_partner_type_id'
         ],
-        required: false,
+        required: true,
         separate: true,
         include: [{
           model: CodeProjectPartnerType,
-          required: false,
+          required: true,
           where: {
             code_partner_type_id: 11
           },
@@ -936,7 +936,7 @@ const getLightDetails = async (project_id) => {
           ]
         }, {
           model: BusinessAssociate,
-          required: false,
+          required: true,
           attributes: [
             'business_name',
           ]
