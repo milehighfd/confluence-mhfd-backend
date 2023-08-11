@@ -679,8 +679,9 @@ router.post('/board-for-positions2', async (req, res) => {
     const projectIds = boardProjects.filter(boardProject => projects_filtered.map(p => p.project_id).includes(boardProject.project_id));
     const lightDetails = await projectService.getLightDetails(projectIds.map(p => p.project_id));
     let boardProjectsWithData = projectIds.map((boardProject) => {
-      const details = lightDetails.find(d => d.project_id === boardProject.project_id);
+      let details = lightDetails.find(d => d.project_id === boardProject.project_id);
       if (details) {
+        details = details.dataValues;
         if (details.project_service_areas && details.project_service_areas.length > 0) {
           details.project_service_areas = details.project_service_areas.map(
             (psa) => {
