@@ -428,6 +428,27 @@ router.post('/problem-geom', async (req,res) => {
   };
 
 });
+router.post('/makevalid', async (req, res) => {
+  const queryvalid = 'UPDATE mhfd_catchments_simple_v1_valid SET the_geom = ST_MakeValid(the_geom)';
+  const query = {
+    q: queryvalid
+  };
+  try {
+    const data = await needle('post', CARTO_URL, query, { json: true });
+    if (data.statusCode === 200) {
+      const body = data.body;
+      streamsInfo = body.rows;
+      const answer = streamsInfo;
+      res.send(answer);
+    } else {
+      logger.error('bad status ' + data.statusCode + '  -- '+ queryvalid +  JSON.stringify(data.body, null, 2));
+      res.status(data.statusCode).send(data);
+    }
+  } catch (error) {
+    logger.error(error, 'at', queryvalid);
+    res.status(500).send(error);
+  };
+});
 router.post('/streams-data', async (req, res) => {
   const geom = req.body.geom;
   const geometrySegment = req.body.projecttype === 'STUDY' ? `the_geom` : `st_intersection(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) as the_geom`
@@ -445,6 +466,7 @@ router.post('/streams-data', async (req, res) => {
       streamsIntersected.trib_code5,
       streamsIntersected.trib_code6,
       streamsIntersected.trib_code7,
+      streamsIntersected.sum_catch_acre,
       ST_length(ST_intersection(streamsIntersected.the_geom, j.the_geom)::geography) * 3.28084 as length 
       FROM 
       ( 
@@ -458,7 +480,9 @@ router.post('/streams-data', async (req, res) => {
         trib_code5,
         trib_code6,
         trib_code7, 
-        cartodb_id, str_name,
+        cartodb_id,
+        str_name,
+        sum_catch_acre,
         ${geometrySegment}
         FROM
         mhfd_stream_reaches
@@ -506,12 +530,6 @@ router.post('/streams-data', async (req, res) => {
           where: whereStatement,
           attributes: ['stream_id', 'stream_name']
         });
-        console.log('Should push this to answer',{
-          jurisdiction: row.jurisdiction,
-          length: row.length,
-          cartodb_id: row.cartodb_id,
-          mhfd_code: row.mhfd_code,
-          str_name: str_name} );
         answer[str_name].push({
           jurisdiction: row.jurisdiction,
           length: row.length,
@@ -520,23 +538,90 @@ router.post('/streams-data', async (req, res) => {
           str_name: str_name,
           drainage: 0,
           code_local_goverment: [locality],
-          stream: stream ? [stream] : []
+          stream: stream ? [stream] : [],
+          sum_catch_acre: row.sum_catch_acre,
+          stream_data: row
         });
-      
       }
+      // for each stream: 
+      // get the maxsumcatchacre 
+      // if (row.sum_catch_acre > max_sum_catch_acre) {
+      //   max_sum_catch_acre = row.sum_catch_acre;
+      //   data_max = row;
+      // }
+      if ( req.body.projecttype === 'STUDY' ) {
+        
+        for ( const str_name in answer) { /// each stream name which has jurisdiction segment of stream
+          let max_sum_catch_acre = 0;
+          let data_max = {};
+          for (const array of answer[str_name]) {
+            if (array.sum_catch_acre > max_sum_catch_acre) { // get the max for the current stream
+              max_sum_catch_acre = array.sum_catch_acre;
+              data_max = array.stream_data;
+            }
+          }
+          
+        console.log('\n\n\n\n\n', 'REACH', data_max,' \n\n\n\n\n');
+          const newDrainageQuery = `
+          SELECT
+            j.jurisdiction, 
+            ST_area(ST_intersection(j.the_geom, c.the_geom))/ST_area(c.the_geom) as percentage,
+            c.catch_acre
+          FROM jurisidictions j, mhfd_catchments_simple_v1_valid c
+          WHERE ST_intersects(j.the_geom, c.the_geom) AND '${data_max.reach_code}' is not distinct from c.reach_code
+          ${data_max.trib_code1 != null ? `and ${data_max.trib_code1} is not distinct from c.trib_code1` : ''} 
+          ${data_max.trib_code2 != null ? `and ${data_max.trib_code2} is not distinct from c.trib_code2` : ''} 
+          ${data_max.trib_code3 != null ? `and ${data_max.trib_code3} is not distinct from c.trib_code3` : ''} 
+          ${data_max.trib_code4 != null ? `and ${data_max.trib_code4} is not distinct from c.trib_code4` : ''} 
+          ${data_max.trib_code5 != null ? `and ${data_max.trib_code5} is not distinct from c.trib_code5` : ''} 
+          ${data_max.trib_code6 != null ? `and ${data_max.trib_code6} is not distinct from c.trib_code6` : ''} 
+          ${data_max.trib_code7 != null ? `and ${data_max.trib_code7} is not distinct from c.trib_code7` : ''} 
+          `;
+          const query = {
+            q: newDrainageQuery
+          }
+          logger.info('DRAINAGE QUERY' + newDrainageQuery);
+          const drainageData = await needle('post', CARTO_URL, query, { json: true });
+          const jurisdictionDrainages = {};
+          if (drainageData.statusCode === 200) {
+            const drainageBody = drainageData.body;
+            for(let i = 0; i < drainageBody.rows.length ; ++i) {
+              const row = drainageBody.rows[i];
+              if (!jurisdictionDrainages[row.jurisdiction]) {
+                jurisdictionDrainages[row.jurisdiction] = row.percentage * row.catch_acre;
+              } else {
+                jurisdictionDrainages[row.jurisdiction] += (row.percentage * row.catch_acre);
+              }
+            }
+          }
+          console.log('Jurisdiction Drainages', jurisdictionDrainages);
+          for (const array of answer[str_name]) {
+            array.tributary = jurisdictionDrainages[array.jurisdiction]
+          }
+
+
+        }
+      }
+     
       // Uncomment when stream calculation is returned 
       // for (const stream of streamsInfo) {
-        // const drainageSQL = `select st_area(ST_transform(st_intersection(j.the_geom, union_c.the_geom), 26986) ) as area , j.jurisdiction from jurisidictions j , (select st_union(the_geom) as the_geom from mhfd_catchments_simple_v1 c where 
-        //  '${stream.reach_code}' is not distinct from c.reach_code 
-        //   ${stream.trib_code1 != null ? `and ${stream.trib_code1} is not distinct from c.trib_code1` : ''} 
-        //   ${stream.trib_code2 != null ? `and ${stream.trib_code2} is not distinct from c.trib_code2` : ''} 
-        //   ${stream.trib_code3 != null ? `and ${stream.trib_code3} is not distinct from c.trib_code3` : ''} 
-        //   ${stream.trib_code4 != null ? `and ${stream.trib_code4} is not distinct from c.trib_code4` : ''} 
-        //   ${stream.trib_code5 != null ? `and ${stream.trib_code5} is not distinct from c.trib_code5` : ''} 
-        //   ${stream.trib_code6 != null ? `and ${stream.trib_code6} is not distinct from c.trib_code6` : ''} 
-        //   ${stream.trib_code7 != null ? `and ${stream.trib_code7} is not distinct from c.trib_code7` : ''} 
-        //   ) union_c 
-        //   where ST_INTERSECTS(ST_SimplifyPreserveTopology(j.the_geom, 0.1), ST_SimplifyPreserveTopology(union_c.the_geom, 0.1)) `;
+      //   const drainageSQL = `
+      //     SELECT
+      //       st_area(ST_transform(st_intersection(j.the_geom, union_c.the_geom), 26986) ) as area ,
+      //       j.jurisdiction from jurisidictions j ,
+      //       (
+      //         select st_union(the_geom) as the_geom from mhfd_catchments_simple_v1 c
+      //         where 
+      //     '${stream.reach_code}' is not distinct from c.reach_code 
+      //       ${stream.trib_code1 != null ? `and ${stream.trib_code1} is not distinct from c.trib_code1` : ''} 
+      //       ${stream.trib_code2 != null ? `and ${stream.trib_code2} is not distinct from c.trib_code2` : ''} 
+      //       ${stream.trib_code3 != null ? `and ${stream.trib_code3} is not distinct from c.trib_code3` : ''} 
+      //       ${stream.trib_code4 != null ? `and ${stream.trib_code4} is not distinct from c.trib_code4` : ''} 
+      //       ${stream.trib_code5 != null ? `and ${stream.trib_code5} is not distinct from c.trib_code5` : ''} 
+      //       ${stream.trib_code6 != null ? `and ${stream.trib_code6} is not distinct from c.trib_code6` : ''} 
+      //       ${stream.trib_code7 != null ? `and ${stream.trib_code7} is not distinct from c.trib_code7` : ''} 
+      //       ) union_c 
+      //     where ST_INTERSECTS(ST_SimplifyPreserveTopology(j.the_geom, 0.1), ST_SimplifyPreserveTopology(union_c.the_geom, 0.1)) `;
       //     const drainageQuery = {
       //       q: drainageSQL
       //     };
@@ -569,6 +654,8 @@ router.post('/streams-data', async (req, res) => {
       //     });
       //     promises.push(promise);
       // }
+      // iterate trough answer values 
+      
       // Promise.all(promises).then(async (promiseData) => {
       //   logger.info('my values '+ JSON.stringify(promiseData));
       //   promiseData.forEach(async bucket => {
