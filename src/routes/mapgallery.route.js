@@ -862,6 +862,26 @@ function getFilters(params) {
          sortby = ` (coalesce(${params.sortby}::real, 0)) `;
       }
 
+      if (params.sortby === 'component_cost') {
+         sortby = ` (coalesce(${params.sortby}::real, 0)) `;
+      }
+
+      if (params.sortby === 'problem_severity') {
+         sortby = ` coalesce(problem_severity, '')`;
+      }
+      
+      if (params.sortby === 'local_government') {
+         sortby = ` coalesce(local_government, '')`;
+      }
+
+      if (params.sortby === 'component_count') {
+         sortby =` (coalesce(${params.sortby}::real, 0)) `;
+      }
+
+      if (params.sortby === 'component_status') {
+         sortby =` (coalesce(${params.sortby}::real, 0)) `;
+      }
+
       if (params.sortby === 'projectname') {
          sortby = ` coalesce(projectname, '')`;
       }
