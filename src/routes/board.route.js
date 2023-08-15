@@ -1421,18 +1421,26 @@ const sendMails = async (board, fullName) => {
     });
 }
 
-router.put('/:boardId', [auth], async (req, res) => {
+router.put('/', [auth], async (req, res) => {
     logger.info(`Starting endpoint /board/:boardId params ${JSON.stringify(req.params, null, 2)}`)
-    const { boardId } = req.params;
     const user = req.user;
     const creator = user.email;
+    const { status, comment, substatus, boardId } = req.body;
     logger.info(`Attempting to update board ${boardId}`);
-    const { status, comment, substatus } = req.body;
-    logger.info(`Starting function findOne for board/`);
-    let board = await Board.findOne({
-        where: {
-            board_id: boardId
-        }
+    const {
+      locality,
+      projecttype,
+      type,
+      year,
+    } = boardId;
+    const board = await Board.findOne({
+      where: {
+        locality,
+        projecttype,
+        type,
+        year
+      },
+      sort: [['createdAt', 'DESC']]
     });
     logger.info(`Finished function findOne for board/`);    
     if (board) {
