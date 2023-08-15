@@ -38,19 +38,35 @@ router.get('/:board_project_id/cost', async (req, res) => {
     return res.status(500).send({ error: error });
   }
 });
-router.put('/:board_id/update-target-cost', async(req,res) => {
-  const { board_id } = req.params;
+router.put('/update-target-cost', async(req,res) => {
   const {
+    boardId,
     targetcost1,
     targetcost2,
     targetcost3,
     targetcost4,
     targetcost5
   } = req.body;
+  const {
+    locality,
+    projecttype,
+    type,
+    year,
+  } = boardId;
+  const board = await Board.findOne({
+    where: {
+      locality,
+      projecttype,
+      type,
+      year
+    },
+    sort: [['createdAt', 'DESC']]
+  });
+
   try{
     let boardUpdate = await Board.update(
       { targetcost1, targetcost2, targetcost3, targetcost4, targetcost5 },
-      {where: { board_id}}
+      {where: { board_id: board.board_id}}
     );
     return res.status(200).send(boardUpdate);
   } catch (error) {
