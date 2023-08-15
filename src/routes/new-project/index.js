@@ -552,7 +552,7 @@ router.post('/streams-data', async (req, res) => {
       if ( req.body.projecttype === 'STUDY' ) {
         
         for ( const str_name in answer) { /// each stream name which has jurisdiction segment of stream
-          let max_sum_catch_acre = 0;
+          let max_sum_catch_acre = -1;
           let data_max = {};
           for (const array of answer[str_name]) {
             if (array.sum_catch_acre > max_sum_catch_acre) { // get the max for the current stream
@@ -593,7 +593,8 @@ router.post('/streams-data', async (req, res) => {
             }
           }
           for (const array of answer[str_name]) {
-            array.tributary = jurisdictionDrainages[array.jurisdiction]
+            const tributaryValue = jurisdictionDrainages[array.jurisdiction] ?? 0;
+            array.tributary = tributaryValue;
           }
 
 
