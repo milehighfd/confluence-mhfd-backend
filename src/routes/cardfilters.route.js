@@ -23,6 +23,7 @@ const getFilters = async (req, res) => {
     groupService.getProjectType(),
     groupService.getMhfdStaff(),
     groupService.getLGManager(),
+    groupService.getPhaseName(),
   ];
   logger.info(`Starting function all for cardfilters.route/`);
   let resolvedPromises = await Promise.all(dataPromises);
@@ -45,10 +46,11 @@ const getFilters = async (req, res) => {
   data.problemtype = [];
   data.lgmanager = resolvedPromises[9];
   data.estimatedCost = [];
+  data.phaseName = resolvedPromises[10];
   logger.info(`Starting function filterProjectsBy for cardfilters.route/`);
   let projectsFilterId = await projectService.filterProjectsBy(body);
   let projects = await projectService.getProjects(null, null, projectsFilterId, 1, 10000000);
-
+  
   // projects = await projectsByFilters(projects, body);
 
   if (bounds) {
@@ -75,14 +77,21 @@ const getFilters = async (req, res) => {
       finalProjects.push(key);
     }
   }
-  data.status.forEach((d) => {
-    d.counter = projects.reduce((pre, current) => {
-      if (current?.project_status?.code_phase_type?.code_status_type?.code_status_type_id === d.id) {
-        return pre + 1;
-      }
-      return pre;
-    }, 0);
+  // data.status.forEach((d) => {
+  //   d.counter = projects.reduce((pre, current) => {
+  //     if (current?.project_status?.code_phase_type?.code_status_type?.code_status_type_id === d.id) {
+  //       return pre + 1;
+  //     }
+  //     return pre;
+  //   }, 0);
+  // });
+  const matchingStatus = data.status.filter(status => {
+    return projects.some(project => {
+      return project.currentId[0]?.code_phase_type?.code_status_type?.code_status_type_id === status.id;
+    });
   });
+  data.status = matchingStatus;
+
   data.jurisdiction.forEach((d) => {
     d.counter = projects.reduce((pre, current) => {
       if (current?.project_local_governments?.some( pc => pc?.CODE_LOCAL_GOVERNMENT?.code_local_government_id === +d.id)) {
@@ -120,8 +129,12 @@ const getFilters = async (req, res) => {
       return pre;
     }, 0);
   });
-  
-  
+  const matchingPhaseNames = data.phaseName.filter(phase => {
+    return projects.some(project => {
+      return project.currentId[0]?.code_phase_type?.phase_name === phase.value;
+    });
+  });
+  data.phaseName = matchingPhaseNames;   
   res.send({'all': 'too well', data});
 }
 const getProjectsComplete = async (req, res) => {

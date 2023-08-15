@@ -14,6 +14,7 @@ const User = db.user;
 const Streams = db.stream;
 const ProjectType = db.codeProjectType;
 const CodeProjectStaffRole = db.codeProjectStaffRole;
+const CodePhaseType = db.codePhaseType;
 const Op = Sequelize.Op;
 
 const getStatus = async () => {
@@ -241,6 +242,21 @@ const getLGManager = async () => {
   return uniqueGroups;
 }
 
+const getPhaseName = async () => {
+  const types = await CodePhaseType.findAll({
+    attributes: [
+      'code_phase_type_id',
+      'phase_name'
+    ],
+  });
+  const groups = types.map((data) => {
+    return { value: data?.phase_name, id: data?.code_phase_type_id };
+  });
+  let uniqueGroups = [...new Map(groups.map(item => [item['value'], item])).values()];
+  uniqueGroups= uniqueGroups.filter(obj => Object.keys(obj).length !== 0);
+  return uniqueGroups;
+}
+
 export default {
   getStatus,
   getJurisdiction,
@@ -251,5 +267,6 @@ export default {
   getStreams,
   getProjectType,
   getMhfdStaff,
-  getLGManager
+  getLGManager,
+  getPhaseName
 };

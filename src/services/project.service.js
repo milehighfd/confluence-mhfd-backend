@@ -1729,7 +1729,8 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
               model: CodeStatusType,
               required: false,
               attributes: [
-                'status_name'
+                'status_name',
+                'code_status_type_id'
               ]
             }]
           }
