@@ -250,7 +250,7 @@ const getPhaseName = async () => {
     ],
   });
   const groups = types.map((data) => {
-    return { value: data?.phase_name, id: data?.code_phase_type_id };
+    return { value: data?.phase_name, id: data?.phase_name };
   });
   let uniqueGroups = [...new Map(groups.map(item => [item['value'], item])).values()];
   uniqueGroups= uniqueGroups.filter(obj => Object.keys(obj).length !== 0);

@@ -976,6 +976,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
   const code_local_government_id = filter.jurisdiction ? filter.jurisdiction : [];
   const cost = filter.totalcost && filter.totalcost.length>0 ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : null;
   const status = filter.status ? filter.status : [];
+  const phase = filter.phase ? filter.phase : [];
   const conditions = [];
   const mhfd_lead = filter.mhfdmanager && filter.mhfdmanager!=='' ? filter.mhfdmanager : [];  
   const sortby = filter.sortby && filter.sortby !== '' ? filter.sortby : '';
@@ -1295,6 +1296,23 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
 			  model: CodePhaseType,
 			  required:true ,
 			  where: where
+			},
+		  }]
+	  }));
+	}
+  if (phase.length) {	  
+	  conditions.push(//PHASE
+		Project.findAll({
+		  attributes: ["project_id","code_project_type_id"],
+		  include: [{
+			model: ProjectStatus,
+			attributes: [],
+			as: 'currentId',
+			required:true ,
+			include: {
+			  model: CodePhaseType,
+			  required:true ,
+			  where: { phase_name: phase }
 			},
 		  }]
 	  }));
