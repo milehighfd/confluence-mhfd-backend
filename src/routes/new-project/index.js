@@ -561,7 +561,6 @@ router.post('/streams-data', async (req, res) => {
             }
           }
           
-        console.log('\n\n\n\n\n', 'REACH', data_max,' \n\n\n\n\n');
           const newDrainageQuery = `
           SELECT
             j.jurisdiction, 
@@ -579,8 +578,7 @@ router.post('/streams-data', async (req, res) => {
           `;
           const query = {
             q: newDrainageQuery
-          }
-          logger.info('DRAINAGE QUERY' + newDrainageQuery);
+          };
           const drainageData = await needle('post', CARTO_URL, query, { json: true });
           const jurisdictionDrainages = {};
           if (drainageData.statusCode === 200) {
@@ -594,7 +592,6 @@ router.post('/streams-data', async (req, res) => {
               }
             }
           }
-          console.log('Jurisdiction Drainages', jurisdictionDrainages);
           for (const array of answer[str_name]) {
             array.tributary = jurisdictionDrainages[array.jurisdiction]
           }
