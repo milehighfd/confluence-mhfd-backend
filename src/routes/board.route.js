@@ -503,6 +503,32 @@ router.post('/projectdata', async (req, res) => {
   res.send(project);
 });
 
+router.post('/get-status', async (req, res) => {
+    const { type, year, locality } = req.body;
+    const boards = await Board.findAll({
+      attributes: ['status'],
+      where: {
+        type,
+        year,
+        locality,
+      },
+    });
+    const boardStatus = boards.map(b => b.dataValues.status);
+    let isApproved = false;
+    boardStatus.forEach((status) => {
+      isApproved = isApproved || (status === 'Approved');
+    });
+    if (isApproved) {
+      res.send({
+        status: 'Approved',
+      });
+    } else {
+      res.send({
+        status: 'Under Review',
+      });
+    }
+});
+
 router.post('/get-or-create', async (req, res) => {
   logger.info(`Starting endpoint board/get-or-create`)
   let body = req.body;
@@ -517,16 +543,14 @@ router.post('/get-or-create', async (req, res) => {
     order: [['createdAt', 'ASC']]
   });
   if (!board) {
-    board = await boardService.createNewBoard(
-      type,
-      year,
-      locality,
-      projecttype,
-      'Under Review'
-    );
+    logger.info(`Finished endpoint for board/get-or-create`);
+    res.status(404).send({
+      error: 'Board Not Found'
+    });
+  } else {
+    logger.info(`Finished endpoint for board/get-or-create`);
+    res.send(board);
   }
-  logger.info(`Finished endpoint for board/get-or-create`);
-  res.send(board);
 });
 
 router.post('/board-for-positions2', async (req, res) => { 
@@ -691,7 +715,8 @@ router.post('/', async (req, res) => {
   }
   logger.info('SEARCHING IN BOARD');
   logger.info(`Starting function findOne for board/`);
-  let board = await Board.findOne({
+  const boards = await Board.findAll({
+    attributes: ['board_id'],
     where: {
       type,
       year,
@@ -699,48 +724,48 @@ router.post('/', async (req, res) => {
       projecttype,
     },
   });
+  const boardIds = boards.map(b => b.dataValues.board_id);
   logger.info(`Finished function findOne for board/`);
-  if (board) {
-    logger.info(`Starting function findAll for board/`);
-    let boardProjects = await BoardProject.findAll({
-      where: {
-        board_id: board.board_id,
-      },
+  logger.info(`Starting function findAll for board/`);
+  let boardProjects = await BoardProject.findAll({
+    where: {
+      board_id: { [Op.in]: boardIds },
+    },
+  });
+  logger.info(`Finished function findAll for board/`);
+  let projectsPromises = boardProjects
+    .filter((bp) => !!bp.project_id)
+    .map(async (bp) => {
+      let project = null;
+      try {
+        project = projectService.findProject(+bp.project_id);
+        if (!project) {
+          logger.info(`${bp.project_id} not found`);
+          logger.info(`Starting function getDetails for board/`);
+          //project = await projectService.getDetails(bp.project_id);
+          logger.info(`Finished function getDetails for board/`);
+        }
+      } catch (error) {
+        console.log('Error in project Promises ', error);
+      }
+      let newObject = {
+        id: bp.id,
+        project_id: bp.project_id,
+        origin: bp.origin,
+        projectData: {},
+      };
+      for (let i = 0; i <= 5; i++) {
+        newObject[`position${i}`] = bp[`position${i}`];
+        newObject[`originPosition${i}`] = bp[`originPosition${i}`];
+        if (i > 0) {
+          newObject[`req${i}`] = bp[`req${i}`];
+        }
+        if (1 <= i && i <= 2) {
+          newObject[`year${i}`] = bp[`year${i}`];
+        }
+      }
+      return !project?.error && newObject;
     });
-    logger.info(`Finished function findAll for board/`);
-    let projectsPromises = boardProjects
-      .filter((bp) => !!bp.project_id)
-      .map(async (bp) => {
-        let project = null;
-        try {
-          project = projectService.findProject(+bp.project_id);
-          if (!project) {
-            logger.info(`${bp.project_id} not found`);
-            logger.info(`Starting function getDetails for board/`);
-            //project = await projectService.getDetails(bp.project_id);
-            logger.info(`Finished function getDetails for board/`);
-          }
-        } catch (error) {
-          console.log('Error in project Promises ', error);
-        }
-        let newObject = {
-          id: bp.id,
-          project_id: bp.project_id,
-          origin: bp.origin,
-          projectData: {},
-        };
-        for (let i = 0; i <= 5; i++) {
-          newObject[`position${i}`] = bp[`position${i}`];
-          newObject[`originPosition${i}`] = bp[`originPosition${i}`];
-          if (i > 0) {
-            newObject[`req${i}`] = bp[`req${i}`];
-          }
-          if (1 <= i && i <= 2) {
-            newObject[`year${i}`] = bp[`year${i}`];
-          }
-        }
-        return !project?.error && newObject;
-      });
     logger.info(`Starting function all for board/`);
     let resolvedProjects = await Promise.all(projectsPromises);
     logger.info(`Finished function all for board/`);
@@ -750,25 +775,8 @@ router.post('/', async (req, res) => {
     let projects = resolvedProjects || [];
     logger.info('FINISHING BOARD REQUEST');
     res.send({
-      board,
       projects,
     });
-  } else {
-    logger.info('CREATING NEW BOARD');
-    logger.info(`Starting function createNewBoard for board/`);
-    const response = await boardService.createNewBoard(
-      type,
-      year,
-      locality,
-      projecttype,
-      'Under Review'
-    );
-    logger.info(`Finished function createNewBoard for board/`);
-    res.send({
-      board: response,
-      projects: [],
-    });
-  }
 });
 
 const getBoard = async (type, locality, year, projecttype) => {
