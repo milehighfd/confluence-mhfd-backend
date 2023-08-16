@@ -293,7 +293,8 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
       where : {
         project_id: project_id
       },
-    })
+    });
+    console.log('\n-*******************- \n Last Project created should be: ', project_id, lastProject);
     const dataArcGis = await insertIntoArcGis(
       geom,
       project_id,
