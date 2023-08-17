@@ -25,7 +25,7 @@ export const insertIntoArcGis = async (geom, projectid, projectname) => {
       'token': token,
       'adds': JSON.stringify(newGEOM)
     };
-    // console.log('DATA TO SEND', JSON.stringify(newGEOM), '\n\n', 'formData arcgis', JSON.stringify(formData));
+    console.log('DATA TO SEND\n\n', 'formData arcgis', JSON.stringify(formData));
     return formData;
   };
   try {
