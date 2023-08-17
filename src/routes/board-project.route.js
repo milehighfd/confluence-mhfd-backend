@@ -240,18 +240,18 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
     if (beforeUpdate[reqColumnName] === null && req.body[reqColumnName] !== null) {
       const where = {
         board_id: beforeUpdate.board_id,
-        [`rank${pos}`]: { [Op.ne]: null }
+        [rankColumnName]: { [Op.ne]: null }
       };
       const projects = await BoardProject.findAll({
         where,
-        order: [[`rank${pos}`, 'DESC']],
+        order: [[rankColumnName, 'DESC']],
         limit: 1
       });
       if (projects.length === 0) {
         updateFields[rankColumnName] = LexoRank.middle().toString();
       } else {
         const lastProject = projects[0];
-        updateFields[rankColumnName] = LexoRank.parse(lastProject[`rank${[pos]}`]).genNext().toString();  
+        updateFields[rankColumnName] = LexoRank.parse(lastProject[rankColumnName]).genNext().toString();  
       }
     } else if (beforeUpdate[reqColumnName] !== null && req.body[reqColumnName] === null && !isMaintenance) {
       updateFields[rankColumnName] = null;
@@ -322,6 +322,22 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
       },
       { where: { board_project_id } }
     );
+    const updatedRanks = await BoardProject.findOne({
+      attributes: ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'],
+      where: { board_project_id }
+    });
+    let hasSomeRank = false;
+    Object.keys(updatedRanks.dataValues).forEach(key => {
+      if (updatedRanks.dataValues[key] !== null) {
+        hasSomeRank = true;
+      }
+    });
+    if (!hasSomeRank) {
+      await BoardProject.update(
+        { rank0: LexoRank.middle().toString() },
+        { where: { board_project_id } }
+      );
+    }
     let x;
     if (updateCount > 0) {
       x = await BoardProject.findOne({where: { board_project_id }, attributes: [
@@ -332,7 +348,7 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
         'req5',
         'year1',
         'year2'
-      ]})
+      ]});
     }
     return res.status(200).send({ newCost: x, columnsChanged });
   } catch (error) {
