@@ -17,9 +17,11 @@ export const insertIntoArcGis = async (geom, projectid, projectname) => {
     };
     return formData;
   }
+  const depth = (arr) => arr.reduce((count, v) => (!Array.isArray(v) ? count : 1 + depth(v)), 1);
   const createGeomDataForARCGIS = (coordinates, token, projectid) => {  
     const newGEOM = [{"geometry":{"paths":[ ] ,"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0, "project_id": projectid}}];
-    newGEOM[0].geometry.paths = [coordinates];
+    const depthGeom = depth(coordinates);
+    newGEOM[0].geometry.paths = depthGeom == 3 ? coordinates : [coordinates];
     const formData = {
       'f': 'pjson',
       'token': token,
@@ -33,9 +35,7 @@ export const insertIntoArcGis = async (geom, projectid, projectname) => {
       const URL_TOKEN = 'https://gis.mhfd.org/portal/sharing/rest/generateToken';
       const fd = getAuthenticationFormData();
       const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
-      console.log('ERROR AT PARSING JSON1', token_data.body);
       const TOKEN = JSON.parse(token_data.body).token;
-      console.log('ERROR AT PARSING JSON2', geom);
       const bodyFD = createGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, projectid);
       console.log('About to call endpoint: ', `${ARCGIS_SERVICE}/applyEdits`);
       const createOnArcGis = await needle('post',`${ARCGIS_SERVICE}/applyEdits`, bodyFD, { multipart: true });
