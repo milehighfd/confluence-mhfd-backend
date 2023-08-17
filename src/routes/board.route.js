@@ -1497,7 +1497,7 @@ router.delete('/project/:projectid/:namespaceId', [auth], async (req, res) => {
 });
 
 router.get('/bbox/:projectid', async (req, res) => {
-    logger.info(`Starting endpoint board/bbox/:projectid with params ${JSON.stringify(req.params, null, 2)}`)
+    logger.info(`Starting endpoint board/bbox/:projectid with params ${JSON.stringify(req.params, null, 2)}, ${CREATE_PROJECT_TABLE}`)
     const { projectid } = req.params;
     const sql = `SELECT ST_AsGeoJSON(ST_Envelope(the_geom)) as bbox FROM ${CREATE_PROJECT_TABLE} WHERE projectid = ${projectid}`;
     const query = {
@@ -1505,9 +1505,9 @@ router.get('/bbox/:projectid', async (req, res) => {
     };
     logger.info(sql);
     try {
-        logger.info(`Starting function needle for board/bbox/:projectid`);
+        logger.info(`Starting function needle for board/bbox/:projectid ${sql}`);
         const data = await needle('post', CARTO_URL, query, { json: true });
-        logger.info(`Finished function needle for board/bbox/:projectid`);
+        logger.info(`Finished function needle for board/bbox/:projectid`, data.statusCode, data.body);
         if (data.statusCode === 200) {
           const result = data.body;
           res.send(result.rows[0]);
