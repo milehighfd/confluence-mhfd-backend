@@ -10,10 +10,11 @@ const CodeCostType = db.codeCostType
 const MHFD_NAME = 'MHFD';
 
 const getFinancialInformation = async (id, filters) => {
-    const PARTNER_FILTER = parseInt(filters[0]);
-    const PHASE_FILTER = filters[1];
-    const IS_INCOME = filters[2];
-    const NAME_FILTER_SEARCH = filters[3];
+    
+    const PARTNER_FILTER = filters.partner? parseInt(filters.partner) : null;
+    const PHASE_FILTER = filters.phase? filters.phase : null;
+    const IS_INCOME = filters.incomeExpense? filters.incomeExpense : null;
+    const NAME_FILTER_SEARCH = filters.name? filters.name : '';
     const PROJECT_ACTIVE_STATE = 1;
     let resProjectCost;
     let whereConditions = {
