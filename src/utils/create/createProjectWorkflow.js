@@ -16,6 +16,7 @@ import {
   saveProjectPartner,
   saveCosts,
   insertIntoArcGis,
+  getGeoJSON,
   addProjectsToBoard,
   createLocalitiesBoard,
   getLocalitiesNames,
@@ -295,8 +296,12 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
       },
     });
     console.log('\n-*******************- \n Last Project created should be: ', project_id, lastProject);
+    let geomtoArcgis = geom;
+    if (type === 'study') {
+      geomtoArcgis = await getGeoJSON(CREATE_PROJECT_TABLE, project_id);
+    } 
     const dataArcGis = await insertIntoArcGis(
-      geom,
+      geomtoArcgis, 
       project_id,
       cleanStringValue(projectname)
     );

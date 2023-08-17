@@ -1,9 +1,30 @@
 import needle from 'needle';
 
 import {
-  ARCGIS_SERVICE
+  ARCGIS_SERVICE,
+  CARTO_URL
 } from 'bc/config/config.js';
 
+
+export const getGeoJSON = async (table, projectid) => {
+  const getQuery = ` SELECT
+  ST_AsGeoJSON(st_union(the_geom)) as the_geom 
+    FROM ${table} where projectid = ${projectid}`;
+  const query = {
+    q: getQuery
+  };
+  try {
+    const data = await needle('post', CARTO_URL, query, { json: true });
+    if (data.statusCode === 200) {
+      console.log(data.body);
+    } else {
+      console.error('bad status ' + data.statusCode + '  -- ' + getQuery + JSON.stringify(data.body, null, 2));
+    }
+    return data.body.rows[0].the_geom;
+  } catch (error) {
+    console.error(error, 'at', getQuery);
+  }
+}
 export const insertIntoArcGis = async (geom, projectid, projectname) => {
   const getAuthenticationFormData = () => {
     const formData = {
