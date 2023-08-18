@@ -553,6 +553,51 @@ router.post('/get-or-create', async (req, res) => {
   }
 });
 
+router.post('/get-past-data', async (req, res) => {
+  try {
+    let { boardId, projectIds } = req.body;
+    const {
+      locality,
+      projecttype,
+      type,
+      year,
+    } = boardId;
+    const boards = await Board.findAll({
+      attributes: ['board_id'],
+      where: {
+        type,
+        year: {
+          [Op.lt]: year,
+        },
+        locality,
+        projecttype,
+      },
+    });
+    const boardIds = boards.map(b => b.dataValues.board_id);
+    const boardProjects = await BoardProject.findAll({
+      attributes: ['project_id', 'req1', 'board_id'],
+      where: {
+        board_id: {
+          [Op.in]: boardIds,
+        },
+      },
+    });
+    const result = [];
+    boardProjects.forEach(item => {
+      const existingProject = result.find(proj => proj.project_id === item.project_id);
+      if (existingProject) {
+        existingProject.totalreq += item.req1;
+      } else {
+        result.push({ "project_id": item.project_id, "totalreq": item.req1 });
+      }
+    });
+    return res.send(result);
+  } catch (error) {
+    logger.error('ERROR AT GET-PAST-DATA ' + error)
+    return res.status(500).send('Internal server error');
+  }
+})
+
 router.post('/board-for-positions2', async (req, res) => { 
   logger.info(`Starting endpoint board/board-for-positions2 with params ${JSON.stringify(req.body, null, 2)}`)
   try {
