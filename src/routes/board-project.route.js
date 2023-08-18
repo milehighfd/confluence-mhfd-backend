@@ -38,6 +38,32 @@ router.get('/:board_project_id/cost', async (req, res) => {
     return res.status(500).send({ error: error });
   }
 });
+
+router.post('/getCostsMaintenance', async (req, res) => {
+  const { board_project_id } = req.body;
+  try {
+    const boardProject = await BoardProject.findAll({
+      attributes: [
+        'board_project_id',
+        'req1',
+        'req2',
+        'req3',
+        'req4',
+        'req5',
+        'year1',
+        'year2'
+      ],
+      where: {
+        board_project_id
+      }
+    });
+    return res.status(200).send(boardProject);
+  } catch (error) {
+    logger.error('ERROR FROM GET COST ' + error);
+    return res.status(500).send({ error: error });
+  }
+});
+
 router.put('/update-target-cost', async(req,res) => {
   const {
     boardId,
