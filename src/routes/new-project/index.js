@@ -528,7 +528,7 @@ router.post('/streams-data', async (req, res) => {
         });
         const stream = await Stream.findOne({
           where: whereStatement,
-          attributes: ['stream_id', 'stream_name']
+          attributes: ['stream_id', 'stream_name', 'mhfd_code']
         });
         answer[str_name].push({
           jurisdiction: row.jurisdiction,
