@@ -1168,7 +1168,7 @@ router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
     }
     for (const stream of filtered) {
       const local = await projectStreamService.getOneByStream(stream.code_local_government_id);      
-      const res = {stream, code_local_goverment: local, length: stream.length_in_mile, drainage: stream.drainage_area_in_sq_miles,jurisdiction: local[0]?.local_government_name,mhfd_code:stream.stream.MHFD_Code}
+      const res = {stream, code_local_goverment: local, length: stream.length_in_mile, tributary: stream.drainage_area_in_sq_miles,jurisdiction: local[0]?.local_government_name,mhfd_code:stream.stream.MHFD_Code}
       obj[stream.stream.stream_name].push(res);
     }
     for (const id in obj) {
