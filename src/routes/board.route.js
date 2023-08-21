@@ -746,7 +746,9 @@ router.post('/board-for-positions2', async (req, res) => {
             }
           )
         }else{
-          details.project_partners_for_total = []
+          details.project_partners_for_total = [{
+            business_name: 'No Sponsor'
+          }]
         }
       }
       boardProject.projectData = details;
