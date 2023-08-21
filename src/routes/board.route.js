@@ -736,6 +736,18 @@ router.post('/board-for-positions2', async (req, res) => {
             }
           )
         }
+        if (details.project_partners && details.project_partners.length > 0) {
+          details.project_partners_for_total = details.project_partners.map(
+            (current) => {
+              return {
+                project_partner_id: current?.project_partner_id,
+                business_name: current?.business_associate?.business_name,
+              };
+            }
+          )
+        }else{
+          details.project_partners_for_total = []
+        }
       }
       boardProject.projectData = details;
       return boardProject;
