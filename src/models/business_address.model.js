@@ -15,23 +15,23 @@ export default (sequelize, DataType) => {
     },
     business_address_line_1: {
       type: DataType.INTEGER,
-      allowNull: false
+      allowNull: true
     },
     business_address_line_2: {
       type: DataType.INTEGER,
-      allowNull: false
+      allowNull: true
     },
     state: {
       type: DataType.STRING,
-      allowNull: false
+      allowNull: true
     },
     city: {
       type: DataType.STRING,
-      allowNull: false
+      allowNull: true
     },
     zip: {
       type: DataType.STRING,
-      allowNull: false
+      allowNull: true
     }
   }, {
     freezeTableName: true,
