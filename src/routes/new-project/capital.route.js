@@ -62,7 +62,8 @@ const getTokenArcGis = async () => {
 
 const getGeomsToUpdate = async (TOKEN) => {
   try {
-    const LIST_ARCGIS = `${ARCGIS_SERVICE}/query?where=update_flag%3D1&objectIds=&time=&geometry=&geometryType=esriGeometryPolyline&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=projectname%2C+update_flag%2C+projectid%2C+OBJECTID&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&gdbVersion=&historicMoment=&returnDistinctValues=false&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&multipatchOption=xyFootprint&resultOffset=&resultRecordCount=&returnTrueCurves=false&returnExceededLimitFeatures=false&quantizationParameters=&returnCentroid=false&sqlFormat=none&resultType=&featureEncoding=esriDefault&datumTransformation=&f=geojson`;
+    const LIST_ARCGIS = `${ARCGIS_SERVICE}/query?where=update_flag%3D1&objectIds=&time=&geometry=&geometryType=esriGeometryPolyline&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=update_flag%2C+project_id%2C+OBJECTID&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&gdbVersion=&historicMoment=&returnDistinctValues=false&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&multipatchOption=xyFootprint&resultOffset=&resultRecordCount=&returnTrueCurves=false&returnExceededLimitFeatures=false&quantizationParameters=&returnCentroid=false&sqlFormat=none&resultType=&featureEncoding=esriDefault&datumTransformation=&f=geojson`;
+    
     var header = {
       headers: {
           'Authorization': `Bearer ${TOKEN}`
@@ -92,12 +93,12 @@ const getGeomsToUpdate = async (TOKEN) => {
 
 const sleep = m => new Promise(r => setTimeout(r, m))
 
-const insertGeojsonToCarto = async (geojson, projectId, projectname) => {
+const insertGeojsonToCarto = async (geojson, projectId) => {
   let deleteAttemp = 0;
   let tries = 3;
   while(true) {
     try {
-      const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectid, projectname) VALUES(ST_GeomFromGeoJSON('${geojson}'), ${projectId}, '${projectname}')`;
+      const insertQuery = `INSERT INTO ${CREATE_PROJECT_TABLE} (the_geom, projectid) VALUES(ST_GeomFromGeoJSON('${geojson}'), ${projectId})`;
       const query = {
         q: insertQuery
       };
@@ -210,7 +211,8 @@ router.get('/sync', async (req, res) => {
   console.log(
     'SYNC ******* \n\n Get Geometries from ArcGis',
     geoms.success,
-    geoms.geoms.length
+    geoms?.geoms?.length,
+    geoms
   );
   try {
     if (geoms.success) {
@@ -218,17 +220,14 @@ router.get('/sync', async (req, res) => {
       for (let i = 0; i < geoms.geoms.length; ++i) {
         // if (i > 2) break;
         let currentGeojsonToUpdate = geoms.geoms[i];
-        const currentProjectId = currentGeojsonToUpdate.properties.projectId;
+        const currentProjectId = currentGeojsonToUpdate.properties.project_id;
         const currentObjectId = currentGeojsonToUpdate.properties.OBJECTID;
-        const currentProjectName =
-          currentGeojsonToUpdate.properties.projectName;
         const deleteFC = await deleteFromCarto(currentProjectId); // its working, is deleting indeed
         console.log('Delete from Carto ', deleteFC);
         if (deleteFC.success) {
           const inserted = await insertGeojsonToCarto(
             JSON.stringify(currentGeojsonToUpdate.geometry),
-            currentProjectId,
-            currentProjectName
+            currentProjectId
           );
           console.log('SYNC ******* \n\n Inserted into Carto', inserted);
           if (inserted.success) {
