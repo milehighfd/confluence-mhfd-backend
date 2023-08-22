@@ -104,7 +104,7 @@ router.post('/business-address/:idcontact', [auth], async (req, res) => {
       business_address_line_2: body.business_address_line_1,
       full_address: body.business_address_line_1,
       state: body.state,
-      city: body.city.substring(0, 25),
+      city: body.city ? body.city.substring(0, 25) : null,
       zip: body.zip
     };    
     newBusinessAddress = await BusinessAdress.create(businessAdress, { transaction: t });
@@ -115,8 +115,9 @@ router.post('/business-address/:idcontact', [auth], async (req, res) => {
       contact_phone_number: body.contact_phone_number,
     };
     const updateBusinessContact = await BusinessContact.update(businessContact, { where: { business_associate_contact_id: id }, transaction: t });
+    const updatedUser = await updateUserBusinessContact(body.user_id, id, t);
     await t.commit();
-    res.status(200).send({ message: 'Updated' });
+    res.status(200).send({ message: 'SUCCESS' , updatedUser});
   } catch (error) {
     res.status(500).send(error);
   }
@@ -134,7 +135,7 @@ router.put('/business-address-and-contact/:idaddress/:idcontact', [auth], async 
     const businessAdress = {
       full_address: body.business_address_line_1,
       state: body.state,
-      city: body.city.substring(0, 25),
+      city: body.city ? body.city.substring(0, 25) : null,
       zip: body.zip
     };
     updateBusinessAddress = await BusinessAdress.update(businessAdress, { where: { business_address_id: idAddress }, transaction: t });
@@ -150,10 +151,13 @@ router.put('/business-address-and-contact/:idaddress/:idcontact', [auth], async 
       contact = await contact.update({ business_address_id : idAddress, contact_name: body.contact_name, contact_phone_number: body.contact_phone_number }, { transaction: t });
     } else {
       contact = await BusinessContact.update(businessContact, { where: { business_associate_contact_id: idContact }, transaction: t });
-    }    
+    }
+    const updatedUser = await updateUserBusinessContact(body.user_id,+idContact, t);
     await t.commit();
     res.status(200).send({
+      message : 'SUCCESS',
       businessAdress: updateBusinessAddress,
+      updatedUser
     })
   } catch (error) {
     logger.error(error);
@@ -175,7 +179,7 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
       business_address_line_2: body.business_address_line_1,
       full_address: body.business_address_line_1,
       state: body.state,
-      city: body.city.substring(0, 25),
+      city: body.city ? body.city.substring(0, 25) : null,
       zip: body.zip
     };    
     newBusinessAddress = await BusinessAdress.create(businessAdress, { transaction: t });
@@ -195,10 +199,13 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
         contact_email: contact_email
       }, { transaction: t });
     }    
+    const updatedUser = await updateUserBusinessContact(body.user_id, contact.business_associate_contact_id, t);
     await t.commit();
     res.status(201).send({
+      message : 'SUCCESS',
       businessAdress: newBusinessAddress,
-      businessContact: contact
+      businessContact: contact,
+      updatedUser
     })
   } catch (error) {
     logger.error(error);
@@ -207,14 +214,6 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
 });
 router.get('/', async (req, res) => {
   logger.info(`Starting endpoint business.route/ with params ${JSON.stringify(req.params, null, 2)}`);
-  /*const sa = await ServiceArea.findAll({
-    include: { all: true, nested: true }
-  }).map(result => result.dataValues).map(res => {
-    return {
-      ...res,
-      Shape:  res.Shape.toString()
-    }
-  });*/ 
   logger.info(`Starting function query for business.route/`);
   const [sa] = await db.sequelize.query(`SELECT Shape.STEnvelope( ).STAsText() as bbox FROM CODE_SERVICE_AREA`);
   logger.info(`Finished function query for business.route/`);
@@ -237,7 +236,7 @@ router.get('/sponsor-list', async (req, res) => {
 });
 
 router.post('/create-contact/:idaddress', [auth], async (req, res) => {
-  const { business_address_id, contact_name, contact_email, contact_phone_number } = req.body;
+  const { business_address_id, contact_name, contact_email, contact_phone_number, user_id } = req.body;
   const { full_address, state, city, zip } = req.body;
   const idAddress = req.params['idaddress'];
   console.log(idAddress)
@@ -247,7 +246,7 @@ router.post('/create-contact/:idaddress', [auth], async (req, res) => {
     const businessAdress = {
       full_address,
       state,
-      city: city.substring(0, 25),
+      city: city ? city.substring(0, 25) : null,
       zip,
     };
     updateBusinessAddress = await BusinessAdress.update(businessAdress, { where: { business_address_id: idAddress }, transaction: t });    
@@ -263,12 +262,35 @@ router.post('/create-contact/:idaddress', [auth], async (req, res) => {
         business_address_id: idAddress,
       }, { transaction: t });
     }
+    const updatedUser =  await updateUserBusinessContact(user_id, contact.business_associate_contact_id, t);
     await t.commit();
-    res.status(200).send(contact);
+    res.status(200).send({ message: 'SUCCESS', contact, updatedUser });
   } catch(error) {
     res.status(500).send(error);
   }
 });
+
+async function updateUserBusinessContact(user_id, business_contact_id, transaction) {
+  try {
+    const user = await User.findByPk(user_id, { raw: true, transaction });
+    if (!user) {
+      return { status: 404, message: 'User not found' };
+    }
+    user.business_associate_contact_id = business_contact_id;
+    await User.update(user, {
+      where: {
+        user_id: user_id
+      },
+      transaction,
+    });
+    const updatedUser = await User.findByPk(user_id, { raw: true, transaction });
+    return { status: 200, message: 'SUCCESS', user: updatedUser };
+  } catch (error) {
+    logger.error(error);
+    await transaction.rollback();
+    return { status: 500, message: 'Internal server error' };
+  }
+}
 
 
 export default router;
