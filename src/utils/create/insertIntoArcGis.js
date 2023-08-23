@@ -123,6 +123,7 @@ const getDataFromArcGis = async (projectid, TOKEN) => {
 };
 const updateGeomDataForARCGIS = (coordinates, token, OBJECTID) => {  
   const newGEOM = [{"geometry":{"paths":[] ,"spatialReference" : {"wkid" : 4326}}, "attributes":{"OBJECTID": OBJECTID}}];
+  console.log('NEW GEOM', newGEOM);
   const depthGeom = depth(coordinates);
   newGEOM[0].geometry.paths = depthGeom == 3 ? coordinates : [coordinates];
   const formData = {
@@ -151,7 +152,7 @@ export const updateIntoArcGis = async (geom, projectid) => {
           console.log('Error at ARGIS creation', createOnArcGis.body.error);
           return { successArcGis: false, error: createOnArcGis.body.error };  
         }
-        return { successArcGis: createOnArcGis.body.addResults[0].success };
+        return { successArcGis: createOnArcGis.body.updateResults[0].success };
       } else {
         console.log('Error at ARGIS creation', createOnArcGis.body);
         return { successArcGis: false, error:createOnArcGis.body};
