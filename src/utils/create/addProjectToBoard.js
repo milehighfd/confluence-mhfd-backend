@@ -33,12 +33,13 @@ export const addProjectToBoard = async (
     });
     year = +configuration.value;
   }
+  const _projecttype = projecttype.charAt(0).toUpperCase() + projecttype.slice(1);
   let board = await Board.findOne({
     where: {
       type,
       year,
       locality,
-      projecttype,
+      projecttype: _projecttype,
     },
     transaction: transaction,
   });
@@ -48,8 +49,7 @@ export const addProjectToBoard = async (
         type,
         year,
         locality,
-        projecttype,
-        'Under Review',
+        _projecttype,
         transaction
       );
       board = response;

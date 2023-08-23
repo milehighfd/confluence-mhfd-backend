@@ -1,16 +1,20 @@
 import db from 'bc/config/db.js';
 import moment from 'moment';
+import { Op } from 'sequelize';
 
 const ProjectCost = db.projectCost;
 const ProjectPartner = db.projectPartner;
 const BusinessAssociates = db.businessAssociates;
 const codePhaseType = db.codePhaseType;
 const CodeCostType = db.codeCostType
+const MHFD_NAME = 'MHFD';
 
 const getFinancialInformation = async (id, filters) => {
-    const PARTNER_FILTER = parseInt(filters[0]);
-    const PHASE_FILTER = filters[1];
-    const IS_INCOME = filters[2];
+    
+    const PARTNER_FILTER = filters.partner? parseInt(filters.partner) : null;
+    const PHASE_FILTER = filters.phase? filters.phase : null;
+    const IS_INCOME = filters.incomeExpense? filters.incomeExpense : null;
+    const NAME_FILTER_SEARCH = filters.name? filters.name : '';
     const PROJECT_ACTIVE_STATE = 1;
     let resProjectCost;
     let whereConditions = {
@@ -19,6 +23,31 @@ const getFinancialInformation = async (id, filters) => {
     }
     // todo update -1 state to mhfd partner id 
     const MHFD_PARTNER_ID = -1
+    let project_partner_ids_filter_name = [];
+    let project_partner_ids_filter_id = [];
+    let project_partner_filter = [];
+    if (NAME_FILTER_SEARCH && !MHFD_NAME.includes(NAME_FILTER_SEARCH.toUpperCase())) {
+        const business_name_allowed = await BusinessAssociates.findAll({
+            where: {
+                business_name: { [Op.like]: `%${NAME_FILTER_SEARCH}%` }
+            },
+            attributes: ['business_associates_id', 'business_name'],
+            raw: true,
+            nest: true,
+        });
+        const business_name_allowed_by_name_ids = business_name_allowed.map(a => a.business_associates_id);
+        const partner_allowed_by_name = await ProjectPartner.findAll({
+            where: {
+                business_associates_id: { [Op.in]: business_name_allowed_by_name_ids }
+            },
+            attributes: ['project_partner_id'],
+            raw: true,
+            nest: true,
+        });
+        const partner_allowed_by_name_ids = partner_allowed_by_name.map(a => a.project_partner_id);
+        project_partner_ids_filter_name = partner_allowed_by_name_ids
+        whereConditions.project_partner_id = project_partner_ids_filter_name
+    }
 
     if (PARTNER_FILTER && PARTNER_FILTER !== MHFD_PARTNER_ID) {
         const partner_allowed = await ProjectPartner.findAll({
@@ -29,8 +58,15 @@ const getFinancialInformation = async (id, filters) => {
             raw: true,
             nest: true,
         });
-        const partner_allowed_ids = partner_allowed.map(a => a.project_partner_id);
-        whereConditions.project_partner_id = partner_allowed_ids
+        project_partner_ids_filter_id = partner_allowed.map(a => a.project_partner_id);
+        whereConditions.project_partner_id = project_partner_ids_filter_id
+    }
+
+    if (PARTNER_FILTER && PARTNER_FILTER !== MHFD_PARTNER_ID && NAME_FILTER_SEARCH && !MHFD_NAME.includes(NAME_FILTER_SEARCH.toUpperCase())) {
+        project_partner_filter = project_partner_ids_filter_name.filter((val) => {
+            return project_partner_ids_filter_id.includes(val)
+        })
+        whereConditions.project_partner_id = project_partner_filter
     }
     if (PHASE_FILTER) {
         whereConditions.code_phase_type_id = PHASE_FILTER
@@ -194,6 +230,10 @@ const getFinancialInformation = async (id, filters) => {
     )
     if (PARTNER_FILTER === MHFD_PARTNER_ID) {
         uniquesProjectCost = uniquesProjectCost.filter(value => value.project_partner_id === MHFD_PARTNER_ID);
+    }
+
+    if (NAME_FILTER_SEARCH) {
+        uniquesProjectCost = uniquesProjectCost.filter(value => value.project_partner_name.toUpperCase().includes(NAME_FILTER_SEARCH.toUpperCase()));
     }
 
     uniquesProjectCost.map(element => {

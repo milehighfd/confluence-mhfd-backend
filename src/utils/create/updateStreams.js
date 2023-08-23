@@ -6,11 +6,12 @@ export const updateStreams = async (project_id, streams, transaction) => {
       const streamId = stream.stream && stream.stream.stream_id
         ? stream.stream.stream_id
         : stream.stream[0].stream_id;
+        console.log('Stream at update', stream);
       return saveProjectStream({
         project_id: project_id,
         stream_id: streamId,
         length_in_mile: stream.length ? stream.length : 0,
-        drainage_area_in_sq_miles: stream.drainage ? stream.drainage : 0,
+        drainage_area_in_sq_miles: stream.tributary ? stream.tributary : 0,
         code_local_government_id:
           stream.code_local_goverment.length > 0
             ? stream.code_local_goverment[0].code_local_government_id
