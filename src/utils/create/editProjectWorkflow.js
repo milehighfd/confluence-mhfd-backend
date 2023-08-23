@@ -184,6 +184,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
     if (type !== 'study') {
       answer.arcgis = await updateIntoArcGis(geom, project_id);
     } else {
+      console.log('about to call getGeomGeojson with this ids', ids);
       const geomGeojson = await getGeomGeojson(parseIds(ids));
       console.log('This is the geom for study', geomGeojson);
       answer.arcgis = await updateIntoArcGis(geomGeojson, project_id);
