@@ -241,14 +241,14 @@ export const getFilters = (params) => {
   }
 
   //TODO here is the filter that needs to be related to DB
- //  if (params.mhfdmanager) {
- //     const query = createQueryForIn(params.mhfdmanager.split(','));
- //     if (filters.length > 0) {
- //        filters = filters + ` and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[3] : PROPSPROBLEMTABLES.problems[3]} in (${query})`;
- //     } else {
- //        filters = `${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[3] : PROPSPROBLEMTABLES.problems[3]} in (${query})`;
- //     }
- //  }
+  if (params.mhfdmanager) {
+     const query = createQueryForIn(params.mhfdmanager);
+     if (filters.length > 0) {
+        filters = filters + ` and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[3] : PROPSPROBLEMTABLES.problems[3]} in (${query})`;
+     } else {
+        filters = `${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[3] : PROPSPROBLEMTABLES.problems[3]} in (${query})`;
+     }
+  }
 
   if (params.source) {
      const query = createQueryForIn(params.source.split(','));
@@ -495,5 +495,6 @@ export const getFilters = (params) => {
   if (params.limit && params.page) {
      filters = ` limit= ${limit} offset=${params.page * params.limit}`
   }
+  console.log('\n\n\n FiLTERS AT FUNCTIONS', filters, '\n\n\n\n\n\n');
   return filters;
 }

@@ -64,6 +64,7 @@ const CodeRuleActionItem = db.codeRuleActionItem;
 const BoardProject = db.boardProject;
 const ProjectSpatial = db.projectSpatial;
 const BoardProjectCost = db.boardProjectCost;
+const Board = db.board;
 
 async function getCentroidsOfAllProjects () {
   const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid, projectid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE}`;
@@ -976,6 +977,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
   const code_local_government_id = filter.jurisdiction ? filter.jurisdiction : [];
   const cost = filter.totalcost && filter.totalcost.length>0 ? { [Op.between]: [+filter.totalcost[0], +filter.totalcost[1]] } : null;
   const status = filter.status ? filter.status : [];
+  const phase = filter.phase ? filter.phase : [];
   const conditions = [];
   const mhfd_lead = filter.mhfdmanager && filter.mhfdmanager!=='' ? filter.mhfdmanager : [];  
   const sortby = filter.sortby && filter.sortby !== '' ? filter.sortby : '';
@@ -983,6 +985,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
   const groupN = groupname ? groupname : '';
 	const filterN = filtervalue ? filtervalue : '';
   const type_idF = type_id ? type_id : [];
+  const work_plan_year = filter.workplanyear ? filter.workplanyear : '';
   let projectsSorted = [];
   if (sortby) { 
     projectsSorted = await getSortedProjectsByAttrib(sortby, sorttype);
@@ -1299,6 +1302,23 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
 		  }]
 	  }));
 	}
+  if (phase.length) {	  
+	  conditions.push(//PHASE
+		Project.findAll({
+		  attributes: ["project_id","code_project_type_id"],
+		  include: [{
+			model: ProjectStatus,
+			attributes: [],
+			as: 'currentId',
+			required:true ,
+			include: {
+			  model: CodePhaseType,
+			  required:true ,
+			  where: { phase_name: phase }
+			},
+		  }]
+	  }));
+	}
   if (sponsor_board.length) {
     logger.info(`Filtering by sponsor board ${sponsor_board}...`);
     conditions.push(//SPONSOR BOARD
@@ -1314,6 +1334,27 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
           where: { business_associates_id: sponsor_board }
         }],
       }));
+  }
+  if (work_plan_year) {
+    logger.info(`Filtering by work plan year board ${work_plan_year}...`);
+    conditions.push(
+    Project.findAll({
+      attributes: ["project_id", "code_project_type_id"],
+      include: [{
+        model: BoardProject,
+        attributes: [],
+        required: true,
+        include: {
+          model: Board,
+          required: true,
+          attributes: [],
+          where: {
+            type: 'WORK_PLAN',
+            year: work_plan_year
+          }
+        }
+      }]
+    }))
   }
   if (conditions.length === 0) {
     conditions.push(Project.findAll({
@@ -1729,7 +1770,8 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
               model: CodeStatusType,
               required: false,
               attributes: [
-                'status_name'
+                'status_name',
+                'code_status_type_id'
               ]
             }]
           }
