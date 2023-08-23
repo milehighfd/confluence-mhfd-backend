@@ -757,9 +757,9 @@ router.post('/board-for-positions2', async (req, res) => {
     logger.info(`Finished endpoint for board/board-for-positions2`);
     res.send(boardProjectsWithData.filter(r => r.projectData));
   } catch (error) {
-    logger.error('ERROR AT POSITIONS2 ' + error)
+    logger.error('ERROR AT POSITIONS2 ' + error);
+    return res.status(500).send({ error });
   }
-  
 });
 
 router.post('/', async (req, res) => {
