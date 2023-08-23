@@ -24,7 +24,7 @@ export const insertToCartoStudy = async (table, project_id, parsedIds) => {
 }
 
 export const getGeomGeojson = async (parsedIds) => {
-  const queryGeom = `SELECT ST_AsGeoJSON(ST_Collect(the_geom)) as the_geom FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds})`;
+  const queryGeom = `SELECT ST_AsGeoJSON(ST_union(the_geom)) as the_geom FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds})`;
   const query = {
     q: queryGeom
   };
@@ -35,8 +35,7 @@ export const getGeomGeojson = async (parsedIds) => {
     } else {
       logger.error('bad status ' + data.statusCode + '  -- ' + insertQuery + JSON.stringify(data.body, null, 2));
     }
-    console.log('data.body?.rows[0].the_geom?.geometries', data.body?.rows[0].the_geom, 'geometries', data.body?.rows[0].the_geom?.geometries, queryGeom);
-    return data.body?.rows[0].the_geom?.geometries[0] ?? 'no data';
+    return data.body?.rows[0].the_geom ?? 'nodata';
   } catch(error) {
     logger.error(error, 'at', queryGeom);
   }
