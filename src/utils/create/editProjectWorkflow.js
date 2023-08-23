@@ -22,6 +22,8 @@ import {
   updateProjectDetail,
   updateStudy,
   createCartoStudy,
+  updateIntoArcGis,
+  parseIds
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
 import { EditProjectError} from '../../errors/project.error.js';
@@ -178,6 +180,14 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         answer.resStreams = resStreamsMain;
         break;      
     };
+    if (type !== 'study') {
+      answer.arcgis = await updateIntoArcGis(geom, project_id);
+    } else {
+      const geomGeojson = parseIds(ids);
+      console.log('This is the geom for study', geomGeojson);
+      answer.arcgis = await updateIntoArcGis(geomGeojson, project_id);
+    }
+    
     return answer;
   } catch (error) {
     logger.error('error saving extra fields');

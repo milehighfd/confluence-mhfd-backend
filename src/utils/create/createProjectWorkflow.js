@@ -302,8 +302,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
     } 
     const dataArcGis = await insertIntoArcGis(
       geomtoArcgis, 
-      project_id,
-      cleanStringValue(projectname)
+      project_id
     );
     const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, dataArcGis,lastProject};
     return composeData;
