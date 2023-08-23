@@ -146,9 +146,9 @@ export const updateIntoArcGis = async (geom, projectid) => {
       console.log('FEatures', features);
       let bodyFD;
       if (features.data.OBJECTID) {
-        bodyFD = createGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, projectid);
-      } else {
         bodyFD = updateGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, features.data.OBJECTID);
+      } else {
+        bodyFD = createGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, projectid);
       }
       const createOnArcGis = await needle('post',`${ARCGIS_SERVICE}/applyEdits`, bodyFD, { multipart: true });
       console.log('create on arc gis at ', ARCGIS_SERVICE, createOnArcGis.statusCode, JSON.stringify(createOnArcGis.body));
