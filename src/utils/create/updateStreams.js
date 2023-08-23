@@ -6,6 +6,7 @@ export const updateStreams = async (project_id, streams, transaction) => {
       const streamId = stream.stream && stream.stream.stream_id
         ? stream.stream.stream_id
         : stream.stream[0].stream_id;
+        console.log('Stream at update', stream);
       return saveProjectStream({
         project_id: project_id,
         stream_id: streamId,
