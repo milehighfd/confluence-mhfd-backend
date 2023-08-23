@@ -456,8 +456,8 @@ export async function problemParamFilterRoute(req, res) {
 
      let filtersBody = {...req.body, isproblem: true};
      const coords = bounds.split(',');
-     let filters;
- 
+     let filters = '';
+      console.log('aBOUT TO GET FILTERS ', filtersBody);
      filters += getFilters(filtersBody);
     filters += `${filters.includes('where')? ' AND ' : ' WHERE '} (ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
