@@ -122,8 +122,7 @@ const getDataFromArcGis = async (projectid, TOKEN) => {
   }
 };
 const updateGeomDataForARCGIS = (coordinates, token, OBJECTID) => {  
-  const newGEOM = [{"geometry":{"paths":[ ] ,"spatialReference" : {"wkid" : 4326}},"attributes":{"update_flag":0, "project_id": projectid}}];
-  [{"geometry":{"paths":[] ,"spatialReference" : {"wkid" : 4326}}, "attributes":{"OBJECTID": OBJECTID}}]
+  const newGEOM = [{"geometry":{"paths":[] ,"spatialReference" : {"wkid" : 4326}}, "attributes":{"OBJECTID": OBJECTID}}];
   const depthGeom = depth(coordinates);
   newGEOM[0].geometry.paths = depthGeom == 3 ? coordinates : [coordinates];
   const formData = {
