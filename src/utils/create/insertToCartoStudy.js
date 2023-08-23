@@ -23,8 +23,8 @@ export const insertToCartoStudy = async (table, project_id, parsedIds) => {
   }
 }
 
-export const getGeomGeojson = async (project_id) => {
-  const queryGeom = `SELECT ST_AsGeoJSON(ST_Collect(the_geom)) as the_geom, ${project_id} as projectid FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds})`;
+export const getGeomGeojson = async (parsedIds) => {
+  const queryGeom = `SELECT ST_AsGeoJSON(ST_Collect(the_geom)) as the_geom FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds})`;
   const query = {
     q: queryGeom
   };

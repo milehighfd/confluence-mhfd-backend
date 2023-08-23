@@ -23,7 +23,8 @@ import {
   updateStudy,
   createCartoStudy,
   updateIntoArcGis,
-  parseIds
+  parseIds,
+  getGeomGeojson
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
 import { EditProjectError} from '../../errors/project.error.js';
@@ -183,7 +184,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
     if (type !== 'study') {
       answer.arcgis = await updateIntoArcGis(geom, project_id);
     } else {
-      const geomGeojson = parseIds(ids);
+      const geomGeojson = await getGeomGeojson(parseIds(ids));
       console.log('This is the geom for study', geomGeojson);
       answer.arcgis = await updateIntoArcGis(geomGeojson, project_id);
     }
