@@ -35,7 +35,8 @@ export const getGeomGeojson = async (parsedIds) => {
     } else {
       logger.error('bad status ' + data.statusCode + '  -- ' + insertQuery + JSON.stringify(data.body, null, 2));
     }
-    return data.body;
+    console.log('data.body?.rows[0].the_geom?.geometries', data.body?.rows[0].the_geom?.geometries.length);
+    return data.body?.rows[0].the_geom?.geometries[0];
   } catch(error) {
     logger.error(error, 'at', queryGeom);
   }
