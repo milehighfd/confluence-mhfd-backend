@@ -119,7 +119,7 @@ router.post('/business-address/:idcontact', [auth], async (req, res) => {
     await t.commit();
     res.status(200).send({ message: 'SUCCESS' , updatedUser});
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send({ message: 'ERROR', error });
   }
 });
 
@@ -161,7 +161,7 @@ router.put('/business-address-and-contact/:idaddress/:idcontact', [auth], async 
     })
   } catch (error) {
     logger.error(error);
-    res.status(500).send(error);
+    res.status(500).send({message: 'ERROR' ,error});
   }
 });
 
@@ -209,7 +209,7 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
     })
   } catch (error) {
     logger.error(error);
-    res.status(500).send(error);
+    res.status(500).send({message: 'ERROR' , error});
   }
 });
 router.get('/', async (req, res) => {
@@ -266,7 +266,7 @@ router.post('/create-contact/:idaddress', [auth], async (req, res) => {
     await t.commit();
     res.status(200).send({ message: 'SUCCESS', contact, updatedUser });
   } catch(error) {
-    res.status(500).send(error);
+    res.status(500).send({message: 'ERROR' , error});
   }
 });
 
