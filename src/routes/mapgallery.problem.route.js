@@ -177,6 +177,29 @@ export async function getCountByArrayColumnsProblemWithoutCounter(table, column,
   return result;
 }
 
+export async function getMHFDManager(table, column, bounds, body) {
+  let result = [];
+  try {
+      const query = {
+        q: `select distinct ${column} as value, ROW_NUMBER() OVER (ORDER BY ${column}) AS id from ${table} group by ${column} order by ${column} `
+      };
+      console.log('query at array count by', query);
+      logger.info(`Starting function needle for getCountByColumnProblem`);
+      const data = await needle('post', CARTO_URL, query, { json: true });
+      logger.info(`Finished function needle for getCountByColumnProblem`);
+      if (data.statusCode === 200) {
+        if (data.body.rows.length > 0) {
+          result = result.concat(data.body.rows)
+        }
+      }
+  } catch (error) {
+    logger.error(error);
+    logger.error(`getCountByColumnProblem Table: ${table}, Column: ${column} Connection error`);
+  }
+
+  return result;
+}
+
 export async function getJurisdiction(table, column, bounds, body) {
   let result = [];
   try {
@@ -442,6 +465,8 @@ export async function problemParamFilterRoute(req, res) {
      let answer = [];
      const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${PROPSPROBLEMTABLES.problem_boundary[9]} FROM ${PROBLEM_TABLE} `;
      const query = { q: `${PROBLEM_SQL} ${filters}` };
+     console.log('query finalllllll', PROBLEM_SQL)
+     console.log( 'wwwwwwwwwwww',query)
      try {
       const data = await needle('post', CARTO_URL, query, { json: true });
       if (data.statusCode === 200) {
@@ -486,7 +511,8 @@ export async function problemParamFilterRoute(req, res) {
     let problemTypesConst = [ 'Flood Hazard', 'Stream Condition', 'Watershed Change'];
     requests.push(getCountByArrayColumnsProblemWithoutCounter(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], ['High', 'Medium', 'Low'], bounds, body)); //0
     requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body)); //1
-    requests.push(groupService.getMhfdStaff()); //2
+    // requests.push(groupService.getMhfdStaff()); //2
+    requests.push(getMHFDManager(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[3], bounds, body)); //3
     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[14], bounds, body)); //3
     requests.push(getSubtotalsByComponentProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[5], PROPSPROBLEMTABLES.problems[5], bounds, body)); //4
     requests.push(getValuesByRangeProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[0], rangeSolution, bounds, body)); //5
