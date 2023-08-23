@@ -143,9 +143,9 @@ export const updateIntoArcGis = async (geom, projectid) => {
       const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
       const TOKEN = JSON.parse(token_data.body).token;
       const features = await getDataFromArcGis(projectid,TOKEN);
-      console.log('FEatures', features);
+      console.log('FEatures ARCGIS', features, features.data.length);
       let bodyFD;
-      if (features.data.OBJECTID) {
+      if (features.data.length) {
         bodyFD = updateGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, features.data.OBJECTID);
       } else {
         bodyFD = createGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, projectid);
