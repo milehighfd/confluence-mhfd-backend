@@ -234,6 +234,7 @@ router.post('/', async (req, res) => {
       filters = getFilters(req.body);
       console.log('filters', filters);
       const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, ${PROPSPROBLEMTABLES.problem_boundary[17]},  ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCountersProblems(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[5], PROPSPROBLEMTABLES.problem_boundary[5])}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEM_TABLE} `;
+      console.log(' \n\n\n\n\n\ ******************************* \n\n\n\n\n QUERY AT GALLERY', `${PROBLEM_SQL} ${filters}`, '*************************\n\n\n');
       const query = { q: `${PROBLEM_SQL} ${filters}` };
       let answer = [];
       try {
@@ -266,23 +267,23 @@ router.post('/', async (req, res) => {
       }
       const problemIds = answer.map(element => element.problemid);      
       let queryProblem = await getDataProblemSql(problemIds,answer);
-      if (req.body?.mhfdmanager?.length > 0) {
-        queryProblem = queryProblem.filter((qp) => { 
-          let booleanCheck = qp.modelData.some((md) => {
-            const managerstotest = req.body?.mhfdmanager;
-            let booleantest = false;
-            for(let i = 0 ; i < managerstotest.length; ++i) {
-              if (md?.project_staffs && !booleantest) {
-                booleantest = md.project_staffs.some((ps) => {
-                  return ps.business_associate_contact_id == managerstotest[i]
-                });
-              }
-            }
-            return booleantest;
-          });
-          return booleanCheck;
-        });
-      }
+      // if (req.body?.mhfdmanager?.length > 0) {
+      //   queryProblem = queryProblem.filter((qp) => { 
+      //     let booleanCheck = qp.modelData.some((md) => {
+      //       const managerstotest = req.body?.mhfdmanager;
+      //       let booleantest = false;
+      //       for(let i = 0 ; i < managerstotest.length; ++i) {
+      //         if (md?.project_staffs && !booleantest) {
+      //           booleantest = md.project_staffs.some((ps) => {
+      //             return ps.business_associate_contact_id == managerstotest[i]
+      //           });
+      //         }
+      //       }
+      //       return booleantest;
+      //     });
+      //     return booleanCheck;
+      //   });
+      // }
       res.send(queryProblem);
     } else {
       let filters = '';
