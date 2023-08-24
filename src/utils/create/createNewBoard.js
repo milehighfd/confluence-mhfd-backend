@@ -60,7 +60,7 @@ export const createNewBoard = async (
       submissionDate,
       createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt: moment().format('YYYY-MM-DD HH:mm:ss')
-    }, { transaction: t }); // associate transaction with the database operation
+    }, { transaction: t }); 
     return res;
   } catch(error) {
     throw error;

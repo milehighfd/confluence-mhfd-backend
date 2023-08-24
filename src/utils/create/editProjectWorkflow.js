@@ -24,12 +24,19 @@ import {
   createCartoStudy,
   updateIntoArcGis,
   parseIds,
-  getGeomGeojson
+  getGeomGeojson,
+  createLocalitiesBoard,
+  getLocalitiesNames,
+  addProjectsToBoard
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
-import { EditProjectError} from '../../errors/project.error.js';
+import { EditProjectError, ProjectBoardsError} from '../../errors/project.error.js';
 import { deleteStreams } from './deleteStreams.js';
 import { updateStreams } from './updateStreams.js';
+
+const BoardProject = db.boardProject;
+const Board = db.board;
+const BoardProjectCost = db.boardProjectCost;
 
 export const editProjects = async (body, transaction, type, creator, subtype, project_id) => {
   try {
@@ -198,15 +205,79 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
   }
 };
 
-export const editProjectWorkflow = async (body, user, files, type, subtype, project_id) => {
+const editWRBoard = async (body, user, type, subtype, transaction, project_id) => {
+  const { county, servicearea, year, sendToWR, isWorkPlan = null, projectname, sponsorId } = body;
+  const { localitiesBoard, typesList } = createLocalitiesBoard(
+    isWorkPlan,
+    sendToWR,
+    year,
+    type,
+    [],
+    [],
+    [],
+    sponsorId
+  );
+  console.log('localitiesBoard', localitiesBoard, typesList)
   try {
-    const transaction = await db.sequelize.transaction();
+    const localNames = await getLocalitiesNames(localitiesBoard, transaction);
+    const board_project = await BoardProject.findOne({
+      where: {
+        project_id: project_id
+      },
+      include: [
+        {
+          model: Board,
+          attributes: ['locality'],
+          where: {
+            type: 'WORK_REQUEST',
+            year: year,
+            projecttype: type,
+          }
+        }
+      ],      
+      transaction
+    });
+    if (!isWorkPlan && board_project && !localNames.includes(board_project?.board?.locality)) {      
+      await addProjectsToBoard(user,
+        servicearea,
+        county,
+        localNames,
+        typesList,
+        type,
+        project_id,
+        year,
+        sendToWR,
+        isWorkPlan,
+        projectname,
+        subtype,
+        transaction);
+      await BoardProjectCost.destroy({
+        where: {
+          board_project_id : board_project.board_project_id
+        },
+        transaction
+      });
+      await board_project.destroy({ transaction });
+      return 'Board updated successfully';
+    }else{
+      return 'Board not updated';
+    }
+  } catch (error) {      
+    logger.error(error);
+    throw new ProjectBoardsError('Error adding project to board', { cause: error });
+  }
+}; 
+
+export const editProjectWorkflow = async (body, user, files, type, subtype, project_id) => {
+  const transaction = await db.sequelize.transaction();
+  try {    
     const data = await editProjects(body, transaction, type, user.email, subtype, project_id);
     const { cover, sponsor, cosponsor, projectname } = body;
     if (cover !== ''){
       await toggleName(cover, project_id, transaction);
     }    
     const project_attachments = await uploadFiles(user, files, project_id, cover, transaction);
+    const updateBoardWR = await editWRBoard(body, user, type, subtype, transaction, project_id);
     const boardData = await updateProjectsInBoard(project_id, projectname, type, subtype, transaction);
     const geoInfo = await parseGeographicInfoAndUpdate(body, project_id, user, transaction);
     const project_partner = await updateProjectPartner(
@@ -217,10 +288,11 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
     );
     console.log('************* \n\n\n about to call extra fields');
     const extra_fields = await updateExtraFields(type, subtype, body, project_id, transaction, user.email);
-    const composeData = { project_update: data, project_attachments, project_partner, boardData, ...geoInfo, ...extra_fields};   
+    const composeData = { project_update: data, project_attachments, project_partner, boardData, ...geoInfo, ...extra_fields, updateBoardWR};   
     await transaction.commit();
     return composeData;
-  } catch (error) {
+  } catch (error) {    
+    await transaction.rollback();
     logger.error(error);
     throw error;
   };
