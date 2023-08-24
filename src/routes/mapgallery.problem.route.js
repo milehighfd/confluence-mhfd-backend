@@ -490,29 +490,29 @@ export async function problemParamFilterRoute(req, res) {
     }
     const problemIds = answer.map(element => element.problemid);      
     let queryProblem = await getDataProblemSql(problemIds,answer);
-    if (req.body?.mhfdmanager?.length > 0) {
-      queryProblem = queryProblem.filter((qp) => { 
-        let booleanCheck = qp.modelData.some((md) => {
-          const managerstotest = req.body?.mhfdmanager;
-          let booleantest = false;
-          for(let i = 0 ; i < managerstotest.length; ++i) {
-            if (md?.project_staffs && !booleantest) {
-              booleantest = md.project_staffs.some((ps) => {
-                return ps.business_associate_contact_id == managerstotest[i]
-              });
-            }
-          }
-          return booleantest;
-        });
-        return booleanCheck;
-      });
-    }
+    // if (req.body?.mhfdmanager?.length > 0) {
+    //   queryProblem = queryProblem.filter((qp) => { 
+    //     let booleanCheck = qp.modelData.some((md) => {
+    //       const managerstotest = req.body?.mhfdmanager;
+    //       let booleantest = false;
+    //       for(let i = 0 ; i < managerstotest.length; ++i) {
+    //         if (md?.project_staffs && !booleantest) {
+    //           booleantest = md.project_staffs.some((ps) => {
+    //             return ps.business_associate_contact_id == managerstotest[i]
+    //           });
+    //         }
+    //       }
+    //       return booleantest;
+    //     });
+    //     return booleanCheck;
+    //   });
+    // }
 
     let problemTypesConst = [ 'Flood Hazard', 'Stream Condition', 'Watershed Change'];
     requests.push(getCountByArrayColumnsProblemWithoutCounter(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[7], ['High', 'Medium', 'Low'], bounds, body)); //0
     requests.push(getCountSolutionStatusProblem([0, 25, 50, 75], bounds, body)); //1
     // requests.push(groupService.getMhfdStaff()); //2
-    requests.push(getMHFDManager(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[3], bounds, body)); //3
+    requests.push(getMHFDManager(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[3], bounds, body)); //2
     requests.push(getCountByColumnProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[14], bounds, body)); //3
     requests.push(getSubtotalsByComponentProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[5], PROPSPROBLEMTABLES.problems[5], bounds, body)); //4
     requests.push(getValuesByRangeProblem(PROBLEM_TABLE, PROPSPROBLEMTABLES.problem_boundary[0], rangeSolution, bounds, body)); //5
