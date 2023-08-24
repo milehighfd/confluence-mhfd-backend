@@ -46,6 +46,7 @@ import db from 'bc/config/db.js';
 import sequelize from 'sequelize';
 import teamsService from 'bc/services/teams.service.js';
 import financialService from 'bc/services/financial.service.js';
+import favoritesService from "bc/services/favorites.service.js";
 
 
 const Op = sequelize.Op;
@@ -231,7 +232,7 @@ router.post('/', async (req, res) => {
     console.log('enter here', req.body.isproblem);
     if (req.body.isproblem) {
       let filters = '';
-      filters = getFilters(req.body);
+      filters = await getFilters(req.body);
       console.log('filters', filters);
       const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, ${PROPSPROBLEMTABLES.problem_boundary[17]},  ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCountersProblems(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[5], PROPSPROBLEMTABLES.problem_boundary[5])}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEM_TABLE} `;
       console.log(' \n\n\n\n\n\ ******************************* \n\n\n\n\n QUERY AT GALLERY', `${PROBLEM_SQL} ${filters}`, '*************************\n\n\n');
@@ -390,7 +391,7 @@ function getCountersProblems(table, column, newcolumn) {
      (select count(*) from landscaping_area where ${column} = cast(${table}.${newcolumn} as integer) ) as count_la1 `;
 }
 
-function getFilters(params) {
+async function getFilters(params) {
    //console.log('PARAMS', params);
    let filters = '';
    let tipoid = '';
@@ -625,13 +626,26 @@ function getFilters(params) {
    //TODO here is the filter that needs to be related to DB
    if (params.mhfdmanager) {
       const query = createQueryForIn(params.mhfdmanager);
-      console.log('qqqqqqq',query)
       if (filters.length > 0) {
          filters = filters + ` and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[3] : PROPSPROBLEMTABLES.problems[3]} in (${query})`;
       } else {
          filters = `${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[3] : PROPSPROBLEMTABLES.problems[3]} in (${query})`;
       }
-      console.log('aaaaaaa',filters)
+   }
+
+   
+  if (params.favorites) {
+      const favoriteObj = await favoritesService.getFavorites(params.favorites, true);
+      const favorite = favoriteObj;
+      const ids = favorite
+      .map((fav) => fav.problem_id);
+      const stringArray = ids.map(num => num.toString());
+      const query = createQueryForIn(stringArray);
+      if (filters.length > 0) {
+         filters = filters + ` and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[5] : PROPSPROBLEMTABLES.problems[5]} in (${query})`;
+      } else {
+         filters = `${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[5] : PROPSPROBLEMTABLES.problems[5]} in (${query})`;
+      }
    }
 
    if (params.source) {
