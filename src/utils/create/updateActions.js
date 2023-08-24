@@ -25,16 +25,17 @@ export const updateActions = async (project_id, independentComponent, components
     }
     logger.info('create independent component');
   }
-
-  for (const component of JSON.parse(components)) {
-    const action = {
-      project_id,
-      object_id: component.objectid,
-      source_table_name: component.table,
-      last_modified_by: creator,
-      created_by: creator,      
-    };
-    await saveProjectAction(action,transaction);
-  }
-  logger.info('All components saved successfully');
+  if (components){
+    for (const component of JSON.parse(components)) {
+      const action = {
+        project_id,
+        object_id: component.objectid,
+        source_table_name: component.table,
+        last_modified_by: creator,
+        created_by: creator,      
+      };
+      await saveProjectAction(action,transaction);
+    }
+    logger.info('All components saved successfully');
+  }  
 };
