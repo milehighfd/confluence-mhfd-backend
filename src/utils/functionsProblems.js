@@ -1,6 +1,7 @@
 import {
   PROPSPROBLEMTABLES
 } from 'bc/config/config.js';
+import favoritesService from "bc/services/favorites.service.js";
 
 export const createQueryForIn = (data) => {
   let query = '';
@@ -11,7 +12,7 @@ export const createQueryForIn = (data) => {
   }
   return query;
 }
-export const getFilters = (params) => {
+export const getFilters = async (params) => {
   //console.log('PARAMS', params);
   let filters = '';
   let tipoid = '';
@@ -249,6 +250,19 @@ export const getFilters = (params) => {
         filters = `${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[3] : PROPSPROBLEMTABLES.problems[3]} in (${query})`;
      }
   }
+  if (params.favorites) {
+      const favoriteObj = await favoritesService.getFavorites(params.favorites, true);
+      const favorite = favoriteObj;
+      const ids = favorite
+      .map((fav) => fav.problem_id);
+      const stringArray = ids.map(num => num.toString());
+      const query = createQueryForIn(stringArray);
+      if (filters.length > 0) {
+         filters = filters + ` and ${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[5] : PROPSPROBLEMTABLES.problems[5]} in (${query})`;
+      } else {
+         filters = `${params.isproblem ? PROPSPROBLEMTABLES.problem_boundary[5] : PROPSPROBLEMTABLES.problems[5]} in (${query})`;
+      }
+   }
 
   if (params.source) {
      const query = createQueryForIn(params.source.split(','));
