@@ -1,5 +1,6 @@
 import { addProjectToBoard } from 'bc/utils/create';
 import logger from 'bc/config/logger.js';
+import {  ProjectBoardsError} from '../../errors/project.error.js';
 
 export const addProjectsToBoard = async (user, servicearea, county, localNames, typesList, defaultProjectType, project_id, year, sendToWR, isWorkPlan, projectname, projectsubtype, transaction) => {
   const promisesLocal = [];
@@ -29,5 +30,6 @@ export const addProjectsToBoard = async (user, servicearea, county, localNames, 
     logger.info('All projects added to board successfully');
   } catch (error) {
     logger.error(`Error adding projects to board: ${error}`);
+    throw new ProjectBoardsError('Error adding projects to board', { cause: error });    
   }
 };

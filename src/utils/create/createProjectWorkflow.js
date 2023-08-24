@@ -143,7 +143,6 @@ const addToBoard = async (body, user, type, subtype, transaction, project_id) =>
       typesList.push('WORK_PLAN');
       localNames.push('MHFD District Work Plan');
     }
-    // TODO: Danilson, please return board data to the next function
     await addProjectsToBoard(user,
       servicearea,
       county,
@@ -274,8 +273,8 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
   }
 };
 export const createProjectWorkflow = async (body, user, files, type, subtype) => {
-  try {
-    const transaction = await db.sequelize.transaction();
+  const transaction = await db.sequelize.transaction();
+  try {    
     const data = await createProjects(body, transaction, type, user.email, subtype);
     const { project_id } = data;
     const { cover, sponsor, cosponsor, geom, projectname } = body;
@@ -307,6 +306,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
     const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, dataArcGis,lastProject};
     return composeData;
   } catch (error) {
+    await transaction.rollback();
     logger.error(error);
     throw error;
   };
