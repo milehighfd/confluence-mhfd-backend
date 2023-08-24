@@ -222,9 +222,9 @@ export const getFilters = async (params) => {
      }
 
      if (filters.length > 0) {
-        filters = filters + ` and ${query} `;
+        filters = filters + ` and (${query}) `;
      } else {
-        filters = ` ${query} `;
+        filters = `( ${query} )`;
      }
   }
 

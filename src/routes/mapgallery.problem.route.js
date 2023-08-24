@@ -204,7 +204,7 @@ export async function getJurisdiction(table, column, bounds, body) {
   let result = [];
   try {
       const query = {
-        q: `select distinct ${column} as value from ${table} group by ${column} order by ${column} `
+        q: `select distinct ${column} as value from ${table} where ${column} is not null group by ${column} order by ${column} `
       };
       console.log('query at array count by', query);
       logger.info(`Starting function needle for getCountByColumnProblem`);
