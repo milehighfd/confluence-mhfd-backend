@@ -204,7 +204,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
     throw error;
   }
 };
-
+// commented until next release
 const editWRBoard = async (body, user, type, subtype, transaction, project_id) => {
   const { county, servicearea, year, sendToWR, isWorkPlan = null, projectname, sponsorId } = body;
   const { localitiesBoard, typesList } = createLocalitiesBoard(
@@ -217,7 +217,6 @@ const editWRBoard = async (body, user, type, subtype, transaction, project_id) =
     [],
     sponsorId
   );
-  console.log('localitiesBoard', localitiesBoard, typesList)
   try {
     const localNames = await getLocalitiesNames(localitiesBoard, transaction);
     const board_project = await BoardProject.findOne({
@@ -277,7 +276,7 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
       await toggleName(cover, project_id, transaction);
     }    
     const project_attachments = await uploadFiles(user, files, project_id, cover, transaction);
-    const updateBoardWR = await editWRBoard(body, user, type, subtype, transaction, project_id);
+    // const updateBoardWR = await editWRBoard(body, user, type, subtype, transaction, project_id);
     const boardData = await updateProjectsInBoard(project_id, projectname, type, subtype, transaction);
     const geoInfo = await parseGeographicInfoAndUpdate(body, project_id, user, transaction);
     const project_partner = await updateProjectPartner(
@@ -288,7 +287,7 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
     );
     console.log('************* \n\n\n about to call extra fields');
     const extra_fields = await updateExtraFields(type, subtype, body, project_id, transaction, user.email);
-    const composeData = { project_update: data, project_attachments, project_partner, boardData, ...geoInfo, ...extra_fields, updateBoardWR};   
+    const composeData = { project_update: data, project_attachments, project_partner, boardData, ...geoInfo, ...extra_fields};   
     await transaction.commit();
     return composeData;
   } catch (error) {    
