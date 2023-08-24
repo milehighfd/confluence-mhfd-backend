@@ -19,6 +19,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     const project_id = req.params.projectid;
     const type = req.body.type;
     const subtype = req.body.projectsubtype;
+    console.log(' ************* \n\n START EDIT PROJECT ');
     const project = await editProjectWorkflow(req.body, req.user, req.files, type, subtype, project_id);
     res.send(project);
   } catch (error) {

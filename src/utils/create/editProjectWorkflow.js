@@ -181,6 +181,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         answer.resStreams = resStreamsMain;
         break;      
     };
+    console.log('************* \n\n\n finish carto create and about to call updateIntoArcGis', type);
     if (type !== 'study') {
       answer.arcgis = await updateIntoArcGis(geom, project_id);
     } else {
@@ -214,6 +215,7 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
       project_id,
       transaction
     );
+    console.log('************* \n\n\n about to call extra fields');
     const extra_fields = await updateExtraFields(type, subtype, body, project_id, transaction, user.email);
     const composeData = { project_update: data, project_attachments, project_partner, boardData, ...geoInfo, ...extra_fields};   
     await transaction.commit();

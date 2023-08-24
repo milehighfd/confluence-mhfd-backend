@@ -104,7 +104,7 @@ const getDataFromArcGis = async (projectid, TOKEN) => {
       } else {
         return {
           success: false,
-          data: []
+          data: {}
         };
       }
       
@@ -150,6 +150,7 @@ export const updateIntoArcGis = async (geom, projectid) => {
       } else {
         bodyFD = createGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, projectid);
       }
+      console.log(' ********** \n\n This is going to send to arcgis', bodyFD);
       const createOnArcGis = await needle('post',`${ARCGIS_SERVICE}/applyEdits`, bodyFD, { multipart: true });
       console.log('create on arc gis at ', ARCGIS_SERVICE, createOnArcGis.statusCode, JSON.stringify(createOnArcGis.body));
       if (createOnArcGis.statusCode == 200) {
