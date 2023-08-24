@@ -47,7 +47,7 @@ const createGeomDataForARCGIS = (coordinates, token, projectid) => {
     'token': token,
     'adds': JSON.stringify(newGEOM)
   };
-  console.log('DATA TO SEND\n\n', 'formData arcgis', JSON.stringify(formData));
+  console.log('DATA TO SEND\n\n', projectid, {"update_flag":0, "project_id": projectid}, 'formData arcgis', JSON.stringify(formData));
   return formData;
 };
 export const insertIntoArcGis = async (geom, projectid) => {
@@ -146,8 +146,10 @@ export const updateIntoArcGis = async (geom, projectid) => {
       console.log('FEatures ARCGIS', features, features.data.length);
       let bodyFD;
       if (features.data.length) {
+        console.log('Update ARCGIS');
         bodyFD = updateGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, features.data.OBJECTID);
       } else {
+        console.log('create ARCGIS');
         bodyFD = createGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, projectid);
       }
       console.log(' ********** \n\n This is going to send to arcgis', bodyFD);
@@ -165,7 +167,7 @@ export const updateIntoArcGis = async (geom, projectid) => {
       }
     }
   } catch(e) {
-    console.log('error at update into arcgis', e);
+    console.error('error at update into arcgis', e);
     return {
       successArcGis: false,
       error: e
