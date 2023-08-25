@@ -986,6 +986,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
 	const filterN = filtervalue ? filtervalue : '';
   const type_idF = type_id ? type_id : [];
   const work_plan_year = filter.workplanyear ? filter.workplanyear : '';
+  const show_archived = false;
   let projectsSorted = [];
   if (sortby) { 
     projectsSorted = await getSortedProjectsByAttrib(sortby, sorttype);
@@ -1356,6 +1357,16 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
       }]
     }))
   }
+  if (!show_archived) {
+    conditions.push(Project.findAll({
+      attributes: ["project_id","code_project_type_id"],
+      where: {
+        is_archived: {
+          [Op.ne]: 1
+        }
+      }
+    }));
+  }
   if (conditions.length === 0) {
     conditions.push(Project.findAll({
       attributes: ["project_id","code_project_type_id"],
@@ -1363,7 +1374,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
   }
   let projects = await Promise.all(conditions);
   projects = projects.map(project => project.map(p => p.toJSON()));
-  // console.log(projects);
+  console.log(projects);
   // projects = projects?.filter(project => project.length > 0);
   const counterObject = {};
   projects?.forEach(project => {
