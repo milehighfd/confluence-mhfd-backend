@@ -2015,6 +2015,27 @@ const deleteByProjectId = async (Projectsid) => {
   }
 }
 
+const archiveByProjectId = async (Projectsid) => {
+  try {
+    const project = await Project.findByPk(Projectsid);
+    if (project) {
+      await project.update({
+        is_archived: 1
+      }, {
+        where: {
+          project_id: Projectsid
+        }
+      });
+    }
+    logger.info('project archived ');
+    return true;
+  } catch (error) {
+    logger.info('Error archiving project:', error);
+    throw error;
+  }
+}
+
+
 const saveProject = async (
   CREATE_PROJECT_TABLE,
   project_name, 
@@ -2276,6 +2297,7 @@ export default {
   getAll,
   deleteProjectFromCache,
   deleteByProjectId,
+  archiveByProjectId,
   saveProject,
   getProjects,
   filterProjectsBy,

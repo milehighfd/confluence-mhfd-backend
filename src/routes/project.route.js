@@ -202,7 +202,25 @@ const deleteProject = async (req, res) => {
   }
 };
 
+const archiveProject = async (req, res) => {
+  try {
+    const projectId = parseInt(req.params['project_id'], 10);
+    const archiveProject = await projectService.archiveByProjectId(projectId);
+    if (archiveProject) {
+      logger.info('project archived ');
+      res.status(200).send('Archived');
+    } else {
+      logger.info('project not found');
+      res.status(200).send('Not found');
+    }
+  } catch (error) {
+    logger.error(`Error archiving project: ${error}`);
+    res.status(500).send('Error archiving project');
+  }
+};
+
 router.get('/bbox/:project_id', getBboxProject);
+router.put('/archive/:project_id', [auth], archiveProject);
 router.post('/', listProjects);
 router.post('/test', listProjectsDBFilter);
 router.post('/ids', listProjectsForId);
