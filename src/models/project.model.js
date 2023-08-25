@@ -61,7 +61,10 @@ export default (sequelize, DataType) => {
     },
     is_located_on_south_plate_river:{
       type: DataType.BOOLEAN,
-    }
+    },
+    is_archived:{
+      type: DataType.BOOLEAN,
+    },
   }, {
     tableName: 'project',
     timestamps: false,

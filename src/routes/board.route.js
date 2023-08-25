@@ -134,7 +134,7 @@ router.post('/filters', async (req, res) => {
   });
   const boardIds = boards.map(b => b.dataValues.board_id);
 
-  logger.info(`Starting endpoint board/:id/filters with params ${JSON.stringify(req.params, null, 2)}`);
+  logger.info(`Starting endpoint board/:id/filters with params ${JSON.stringify(boardIds, null, 2)}`);
   const boardProjects = (await BoardProject.findAll({
     where: { board_id: { [Op.in]: boardIds } },
     attributes: [
