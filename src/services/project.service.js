@@ -1361,9 +1361,10 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
     conditions.push(Project.findAll({
       attributes: ["project_id","code_project_type_id"],
       where: {
-        is_archived: {
-          [Op.ne]: 1
-        }
+        [Op.or]: [
+          { is_archived: { [Op.ne]: 1 } },
+          { is_archived: null }
+        ]
       }
     }));
   }

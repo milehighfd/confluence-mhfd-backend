@@ -208,14 +208,14 @@ const archiveProject = async (req, res) => {
     const archiveProject = await projectService.archiveByProjectId(projectId);
     if (archiveProject) {
       logger.info('project archived ');
-      res.status(200).send('Archived');
+      res.status(200).send({ message: 'archived' });
     } else {
       logger.info('project not found');
-      res.status(200).send('Not found');
+      res.status(200).send({ message: 'not found' });
     }
   } catch (error) {
     logger.error(`Error archiving project: ${error}`);
-    res.status(500).send('Error archiving project');
+    res.status(500).send({ message:'Error archiving project'});
   }
 };
 
