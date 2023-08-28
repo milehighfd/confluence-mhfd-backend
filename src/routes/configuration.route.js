@@ -33,9 +33,14 @@ router.put('/:key', async (req, res) => {
     const value = req.body.value;
     configuration.value = value;
     logger.info(`Starting function save for configuration.route/:key`);
-    await configuration.save();
+    configuration = await configuration.save();
+    const config = await Configuration.findOne({
+      where: {
+        key
+      }
+    });
     logger.info(`Finished function save for configuration.route/:key`);
-    res.send(configuration);
+    res.send(config);
   } else {
     res.status(404).send({
       error: 'Configuration not found'
