@@ -269,7 +269,8 @@ router.get('/sync', async (req, res) => {
     }
     return res.send(syncGeoms);
   } catch (error) {
-    return res.send('Failed At Syncronization');
+    console.error('error at Syncronization', error);
+    return res.send('Failed At Syncronization', error);
   }
 });
 
