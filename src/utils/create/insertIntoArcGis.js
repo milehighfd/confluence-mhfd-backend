@@ -151,7 +151,7 @@ export const updateIntoArcGis = async (geom, projectid) => {
         bodyFD = updateGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, features.data.OBJECTID);
       } else {
         console.log('DATA IN CREATE GEOM in update', JSON.parse(geom).coordinates, TOKEN, projectid);
-        bodyFD = createGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, projectid);
+        bodyFD = createGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, +projectid);
       }
       console.log(' ********** \n This is the FORMDATA in updateIntoArcGis', bodyFD);
       const createOnArcGis = await needle('post',`${ARCGIS_SERVICE}/applyEdits`, bodyFD, { multipart: true });
