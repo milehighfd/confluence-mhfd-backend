@@ -47,7 +47,7 @@ const createGeomDataForARCGIS = (coordinates, token, projectid) => {
     'token': token,
     'adds': JSON.stringify(newGEOM)
   };
-  console.log('DATA TO SEND\n\n', projectid, {"update_flag":0, "project_id": projectid}, 'formData arcgis', JSON.stringify(formData));
+  console.log('DATA TO SEND IN CREATE GEOM DATA FOR ARCGIS\n', projectid, {"update_flag":0, "project_id": projectid}, 'FORMDATA: ', JSON.stringify(formData));
   return formData;
 };
 export const insertIntoArcGis = async (geom, projectid) => {
@@ -57,6 +57,7 @@ export const insertIntoArcGis = async (geom, projectid) => {
       const fd = getAuthenticationFormData();
       const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
       const TOKEN = JSON.parse(token_data.body).token;
+      console.log('DATA IN CREATE GEOM in insert', JSON.parse(geom).coordinates, TOKEN, projectid);
       const bodyFD = createGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, projectid);
       console.log('About to call endpoint: ', `${ARCGIS_SERVICE}/applyEdits`);
       const createOnArcGis = await needle('post',`${ARCGIS_SERVICE}/applyEdits`, bodyFD, { multipart: true });
@@ -131,7 +132,7 @@ const updateGeomDataForARCGIS = (coordinates, token, OBJECTID) => {
     'token': token,
     'updates': JSON.stringify(newGEOM)
   };
-  console.log('DATA TO SEND\n\n', 'formData arcgis', JSON.stringify(formData));
+  console.log('DATA TO SEND UPDATE\n\n', 'formData arcgis', JSON.stringify(formData));
   return formData;
 };
 export const updateIntoArcGis = async (geom, projectid) => {
@@ -143,16 +144,16 @@ export const updateIntoArcGis = async (geom, projectid) => {
       const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
       const TOKEN = JSON.parse(token_data.body).token;
       const features = await getDataFromArcGis(projectid,TOKEN);
-      console.log('FEatures ARCGIS', features, features.data);
+      console.log('Features ARCGIS', features, features.data);
       let bodyFD;
       if ('OBJECTID' in features.data) {
-        console.log('Update ARCGIS');
+        console.log('Update ARCGIS coordinates', JSON.parse(geom).coordinates, TOKEN, features.data.OBJECTID);
         bodyFD = updateGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, features.data.OBJECTID);
       } else {
-        console.log('create ARCGIS');
+        console.log('DATA IN CREATE GEOM in update', JSON.parse(geom).coordinates, TOKEN, projectid);
         bodyFD = createGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, projectid);
       }
-      console.log(' ********** \n\n This is going to send to arcgis', bodyFD);
+      console.log(' ********** \n This is the FORMDATA in updateIntoArcGis', bodyFD);
       const createOnArcGis = await needle('post',`${ARCGIS_SERVICE}/applyEdits`, bodyFD, { multipart: true });
       console.log('create on arc gis at ', ARCGIS_SERVICE, createOnArcGis.statusCode, JSON.stringify(createOnArcGis.body));
       if (createOnArcGis.statusCode == 200) {
