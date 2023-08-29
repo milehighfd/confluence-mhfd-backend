@@ -2272,7 +2272,21 @@ const deleteProjectFromCache = async (project_id) => {
   }
 }
 
+const checkProjectName = async (project_name) => {
+  const project = await Project.findOne({
+    where: {
+      project_name: project_name,      
+    }
+  });
+  if (project) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 export default {
+  checkProjectName,
   getAll,
   deleteProjectFromCache,
   deleteByProjectId,
@@ -2295,4 +2309,3 @@ export default {
   updateProjectOnCache,
   getLocalityDetails
 };
-//ALTER TABLE apr29.dbo.project_staff ADD CONSTRAINT project_staff_FK FOREIGN KEY (business_associate_contact_id) REFERENCES apr29.dbo.business_associate_contact(business_associate_contact_id) ON DELETE CASCADE ON UPDATE CASCADE;

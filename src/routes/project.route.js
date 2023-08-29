@@ -202,7 +202,25 @@ const deleteProject = async (req, res) => {
   }
 };
 
+const checkProjectName = async (req, res) => {
+  try {
+    const { project_name } = req.body;
+    const checkProjectName = await projectService.checkProjectName(project_name);
+    if (checkProjectName) {
+      logger.info('project name already exists');
+      res.status(200).send({exists: true});
+    } else {
+      logger.info('project name not found');
+      res.status(200).send({exists: false});
+    }
+  } catch (error) {
+    logger.error(`Error checking project name: ${error}`);
+    res.status(500).send('Error checking project name');
+  }
+};
+
 router.get('/bbox/:project_id', getBboxProject);
+router.post('/check_project_name', checkProjectName)
 router.post('/', listProjects);
 router.post('/test', listProjectsDBFilter);
 router.post('/ids', listProjectsForId);
