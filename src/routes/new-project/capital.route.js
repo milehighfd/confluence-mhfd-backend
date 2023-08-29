@@ -238,13 +238,11 @@ router.get('/sync', async (req, res) => {
               isCorrectSync = true;
               syncGeoms.push({
                 projectid: currentProjectId,
-                projectname: currentProjectName,
                 sync: isCorrectSync,
               });
             } else {
               syncGeoms.push({
                 projectid: currentProjectId,
-                projectname: currentProjectName,
                 sync: false,
                 error: upflag.error ? upflag.error : 'failed at update flag',
               });
@@ -253,7 +251,6 @@ router.get('/sync', async (req, res) => {
             console.error('failed at insert into Carto');
             syncGeoms.push({
               projectid: currentProjectId,
-              projectname: currentProjectName,
               sync: false,
             });
           }
@@ -261,7 +258,6 @@ router.get('/sync', async (req, res) => {
           console.error('failed in delete Geom from Carto');
           syncGeoms.push({
             projectid: currentProjectId,
-            projectname: currentProjectName,
             sync: false,
           });
         }
