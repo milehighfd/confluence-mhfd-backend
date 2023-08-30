@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "create-date": "node ./src/generateDate.js",
     "start": "node --max-old-space-size=2048 ./src/bin/www",
     "transpile": "babel ./src --out-dir dist",
     "clean": "rimraf dist",
     "dev": "npm-run-all build server",
-    "build": "npm-run-all clean transpile",
+    "build": "npm run create-date && npm-run-all clean transpile",
     "server": "node ./src/bin/www"
   },
   "dependencies": {

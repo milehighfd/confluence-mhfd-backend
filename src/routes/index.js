@@ -1,7 +1,8 @@
 import express from 'express';
 import https from 'https';
+// read sync file and get the first line
 import logger from 'bc/config/logger.js';
-
+import fs from 'fs';
 const router = express.Router();
 
 /* GET home page. */
@@ -11,7 +12,8 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/echo', (_, res) => {
-  res.send({ echo: 'success', version: 'Aug 14 17:17' });
+  const date = fs.readFileSync('./src/DATEFILE', 'utf8').split('\n')[0];
+  res.send({ echo: 'success', version: date });
 });
 
 const server_style = function(req, res, next) {
