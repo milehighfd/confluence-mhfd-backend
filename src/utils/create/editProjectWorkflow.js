@@ -206,7 +206,8 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
 };
 // commented until next release
 const editWRBoard = async (body, user, type, subtype, transaction, project_id) => {
-  const { county, servicearea, year, sendToWR, isWorkPlan = null, projectname, sponsorId } = body;
+  const { county, servicearea, year, sendToWR, isWorkPlan = null, projectname, sponsorId, sponsor } = body;
+  const YEAR_WORKPLAN_V2 = 2024;
   const { localitiesBoard, typesList } = createLocalitiesBoard(
     isWorkPlan,
     sendToWR,
@@ -219,6 +220,28 @@ const editWRBoard = async (body, user, type, subtype, transaction, project_id) =
   );
   try {
     const localNames = await getLocalitiesNames(localitiesBoard, transaction);
+    if (sponsor === 'MHFD' && year >= YEAR_WORKPLAN_V2) {
+      typesList.push('WORK_PLAN');
+      localNames.push('MHFD District Work Plan');
+    }
+    const board_project_mhfd = await BoardProject.findOne({
+      where: {
+        project_id: project_id
+      },
+      include: [
+        {
+          model: Board,
+          attributes: ['locality'],
+          where: {
+            locality: 'MHFD District Work Plan',
+            type: 'WORK_PLAN',
+            year: year,
+            projecttype: type,
+          }
+        }
+      ],
+      transaction
+    });    
     const board_project = await BoardProject.findOne({
       where: {
         project_id: project_id
@@ -236,7 +259,11 @@ const editWRBoard = async (body, user, type, subtype, transaction, project_id) =
       ],      
       transaction
     });
-    if (!isWorkPlan && board_project && !localNames.includes(board_project?.board?.locality)) {      
+    if ((board_project || board_project_mhfd) 
+    && !localNames.includes(board_project?.board?.locality) 
+    && !localNames.includes(board_project_mhfd?.board?.locality) 
+    && year >= YEAR_WORKPLAN_V2) 
+    {      
       await addProjectsToBoard(user,
         servicearea,
         county,
@@ -250,13 +277,24 @@ const editWRBoard = async (body, user, type, subtype, transaction, project_id) =
         projectname,
         subtype,
         transaction);
-      await BoardProjectCost.destroy({
-        where: {
-          board_project_id : board_project.board_project_id
-        },
-        transaction
-      });
-      await board_project.destroy({ transaction });
+      if (board_project){
+        await BoardProjectCost.destroy({
+          where: {
+            board_project_id : board_project.board_project_id
+          },
+          transaction
+        });
+        await board_project.destroy({ transaction });
+      }
+      if (year >= YEAR_WORKPLAN_V2 && sponsor !== 'MHFD' && board_project_mhfd) {
+        await BoardProjectCost.destroy({
+          where: {
+            board_project_id: board_project_mhfd.board_project_id
+          },
+          transaction
+        });
+        await board_project_mhfd.destroy({ transaction });
+      }
       return 'Board updated successfully';
     }else{
       return 'Board not updated';
@@ -276,7 +314,7 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
       await toggleName(cover, project_id, transaction);
     }    
     const project_attachments = await uploadFiles(user, files, project_id, cover, transaction);
-    // const updateBoardWR = await editWRBoard(body, user, type, subtype, transaction, project_id);
+    const updateBoardWR = await editWRBoard(body, user, type, subtype, transaction, project_id);
     const boardData = await updateProjectsInBoard(project_id, projectname, type, subtype, transaction);
     const geoInfo = await parseGeographicInfoAndUpdate(body, project_id, user, transaction);
     const project_partner = await updateProjectPartner(
@@ -287,7 +325,7 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
     );
     console.log('************* \n\n\n about to call extra fields');
     const extra_fields = await updateExtraFields(type, subtype, body, project_id, transaction, user.email);
-    const composeData = { project_update: data, project_attachments, project_partner, boardData, ...geoInfo, ...extra_fields};   
+    const composeData = { project_update: data, project_attachments, project_partner, boardData, ...geoInfo, ...extra_fields, updateBoardWR};   
     await transaction.commit();
     return composeData;
   } catch (error) {    
