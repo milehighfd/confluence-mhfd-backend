@@ -299,6 +299,18 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
       },
     });
     console.log('\n-*******************- \n Last Project created should be: ', project_id, lastProject);
+
+    const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, lastProject};
+    return composeData;
+  } catch (error) {
+    await transaction.rollback();
+    logger.error(error);
+    throw error;
+  };
+}
+export const createProjectArcgis = async (body) => {
+  try {
+    const { project_id, geom, type } = body;
     let geomtoArcgis = geom;
     if (type === 'study') {
       geomtoArcgis = await getGeoJSON(CREATE_PROJECT_TABLE, project_id);
@@ -307,11 +319,9 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
       geomtoArcgis, 
       project_id
     );
-    const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, dataArcGis,lastProject};
-    return composeData;
-  } catch (error) {
-    await transaction.rollback();
+    return dataArcGis;
+  } catch(error) {
     logger.error(error);
     throw error;
-  };
+  }
 }

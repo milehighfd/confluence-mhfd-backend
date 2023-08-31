@@ -1,6 +1,7 @@
 import express from 'express';
 import Multer from 'multer';
 import { 
+  createProjectArcgis,
   createProjectWorkflow
 } from 'bc/utils/create';
 import auth from 'bc/auth/auth.js';
@@ -36,6 +37,24 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   }
 });
 
+router.post('/arcgis', auth, async (req, res) => {
+  try {
+    const createArcgis = await createProjectArcgis(req.body);
+    res.send(createArcgis);
+  } catch (error) {
+    console.error('ERROR at create ARCGIS',error);
+    res.status(500).send(error);
+  }
+});
+
+router.post('/arcgis-update', auth, async (req, res) => {
+  try {
+    const updateArcGis = await updateProjectArcgis(req.body);
+    res.send(updateArcGis);
+  } catch (error) {
+    console.error('ERROR at update ARCGIS',error);
+  }
+});
 router.post('/countydata', auth, async (req, res) => {
   const { state } = req.body;
   const stateString = Array.isArray(state) ? state.join(',') : state;
