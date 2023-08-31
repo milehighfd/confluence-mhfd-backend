@@ -161,7 +161,7 @@ export const updateIntoArcGis = async (geom, projectid) => {
           console.log('Error at ARGIS creation', createOnArcGis.body.error);
           return { successArcGis: false, error: createOnArcGis.body.error };  
         }
-        return { successArcGis: createOnArcGis.body.updateResults[0].success };
+        return { successArcGis: createOnArcGis.body.updateResults ? createOnArcGis.body.updateResults[0]?.success : createOnArcGis.body.addResults[0]?.success };
       } else {
         console.log('Error at ARGIS creation', createOnArcGis.body);
         return { successArcGis: false, error:createOnArcGis.body};
