@@ -189,14 +189,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         break;      
     };
     console.log('************* \n\n\n finish carto create and about to call updateIntoArcGis', type);
-    if (type !== 'study') {
-      answer.arcgis = await updateIntoArcGis(geom, project_id);
-    } else {
-      console.log('about to call getGeomGeojson with this ids', ids);
-      const geomGeojson = await getGeomGeojson(parseIds(ids));
-      console.log('This is the geom for study', geomGeojson);
-      answer.arcgis = await updateIntoArcGis(geomGeojson, project_id);
-    }
+
     
     return answer;
   } catch (error) {
@@ -333,4 +326,22 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
     logger.error(error);
     throw error;
   };
+}
+
+export const updateProjectArcgis = async( body ) => {
+  try {
+    const { geom, project_id, ids, type} = body;
+    if (type !== 'study') {
+      answer.arcgis = await updateIntoArcGis(geom, project_id);
+    } else {
+      console.log('about to call getGeomGeojson with this ids', ids);
+      const geomGeojson = await getGeomGeojson(parseIds(ids));
+      console.log('This is the geom for study', geomGeojson);
+      answer.arcgis = await updateIntoArcGis(geomGeojson, project_id);
+    }
+    return arcgis;
+  } catch(error){
+    logger.error(error);
+    throw error;
+  }
 }
