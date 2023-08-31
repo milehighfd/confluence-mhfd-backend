@@ -1,5 +1,5 @@
 import {
-  CARTO_URL
+  CARTO_URL, CREATE_PROJECT_TABLE
 } from 'bc/config/config.js';
 import needle from 'needle';
 import logger from 'bc/config/logger.js';
@@ -40,4 +40,22 @@ export const getGeomGeojson = async (parsedIds) => {
     logger.error(error, 'at', queryGeom);
   }
 
+}
+
+export const getGeomProject = async (project_id) => {
+  const queryGeom = `SELECT ST_AsGeoJSON(ST_union(the_geom)) as the_geom FROM ${CREATE_PROJECT_TABLE} where projectid = ${project_id}`;
+  const query = {
+    q: queryGeom
+  };
+  try {
+    const data = await needle('post', CARTO_URL, query, { json: true });
+    if (data.statusCode === 200) {
+      console.log(data.body);
+    } else {
+      logger.error('bad status ' + data.statusCode + '  -- ' + insertQuery + JSON.stringify(data.body, null, 2));
+    }
+    return data.body?.rows[0].the_geom ?? 'nodata';
+  } catch(error) {
+    logger.error(error, 'at', queryGeom);
+  }
 }
