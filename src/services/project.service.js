@@ -959,7 +959,6 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
   const CONSULTANT_ID = 3;  
   const CIVIL_CONTRACTOR_ID = 8;
   const ESTIMATED_ID = 1;
-  const  defaultStatus = [5,7,8,9,10];
   const filterName = filter.name ? isNaN(filter.name) ?  filter.name : filter.name : '';
   const filterBase = filter.name ? filter.name: -1;
   const contractor = filter.contractor ?  filter.contractor  : [];
@@ -1304,25 +1303,6 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
 		  }]
 	  }));
 	}
-  else{
-    let where = {};
-    where = { code_status_type_id: defaultStatus };
-    conditions.push(//STATUS
-      Project.findAll({
-        attributes: ["project_id","code_project_type_id"],
-        include: [{
-        model: ProjectStatus,
-        attributes: [],
-        as: 'currentId',
-        required:true ,
-        include: {
-          model: CodePhaseType,
-          required:true ,
-          where: where
-        },
-		    }]
-	  }));
-  }
   if (phase.length) {	  
 	  conditions.push(//PHASE
 		Project.findAll({
