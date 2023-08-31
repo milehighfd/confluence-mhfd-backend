@@ -48,7 +48,7 @@ router.post('/arcgis', auth, async (req, res) => {
   }
 });
 
-router.post('/arcgis-update', auth, async (req, res) => {
+router.post('/arcgis-update', async (req, res) => {
   try {
     const updateArcGis = await updateProjectArcgis(req.body);
     res.send(updateArcGis);

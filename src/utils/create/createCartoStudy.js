@@ -19,6 +19,7 @@ export const createCartoStudy = async (project_id, ids) => {
 
 export const parseIds = (ids) => {
   let parsedIds = '';
+  console.log('Isd', ids);
   let idsArray = JSON.parse(ids).filter((e) => !!e);
   for (const id of idsArray) {
     if (parsedIds) {

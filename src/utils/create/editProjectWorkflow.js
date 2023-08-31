@@ -336,7 +336,7 @@ export const updateProjectArcgis = async( body ) => {
       arcgis = await updateIntoArcGis(geom, project_id);
     } else {
       console.log('about to call getGeomGeojson with this ids', ids);
-      const geomGeojson = await getGeomGeojson(parseIds(ids));
+      const geomGeojson = await getGeomGeojson(ids);
       console.log('This is the geom for study', geomGeojson);
       arcgis = await updateIntoArcGis(geomGeojson, project_id);
     }
