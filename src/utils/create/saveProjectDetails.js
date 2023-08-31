@@ -10,9 +10,10 @@ export const saveProjectDetails = async (
   transaction = null
 ) => {
   try {
-    const { frequency, ownership, acquisitionanticipateddate, acquisitionprogress } = body;
+    const { frequency, ownership, acquisitionanticipateddate, acquisitionprogress, is_routine } = body;
     const maintenanceFrequency = frequency || 0;
     const isPublicOwnership = ownership || 0;
+    const isRoutine = is_routine ? (is_routine === 'true' ? 1 : 0) : 0;
     const acquisitionAnticipatedYear = acquisitionanticipateddate || null;
     const codeAcquisitionProgressStatusId = acquisitionprogress || null;
     const response = await ProjectDetail.create({
@@ -22,7 +23,8 @@ export const saveProjectDetails = async (
       acquisition_anticipated_year: acquisitionAnticipatedYear && Number(acquisitionAnticipatedYear),
       code_acquisition_progress_status_id: codeAcquisitionProgressStatusId && Number(codeAcquisitionProgressStatusId),
       last_modified_by: creator,
-      created_by: creator
+      created_by: creator,
+      is_routine: isRoutine
     }, { transaction: transaction });
     logger.info('create ProjectDetail ');
     return response;

@@ -258,7 +258,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         await createCartoStudy(project_id, ids)
         const resStreams = await saveProjectStreams(project_id, streams, transaction); 
         answer.resStreams = resStreams;
-        const resStudy = await saveStudy(project_id, studyreason, creator, otherReason || null, transaction);
+        const resStudy = await saveStudy(project_id, studyreason, creator, otherReason || null, body, transaction);
         answer.resStudy = resStudy;
         break;
       case 'maintenance':

@@ -13,6 +13,10 @@ export default (sequelize, DataType) => {
       type: DataType.BOOLEAN,
       allowNull: false
     },
+    is_routine: {
+      type: DataType.BOOLEAN,
+      allowNull: false
+    },
     project_id: {
       type: DataType.INTEGER,
       allowNull: false
