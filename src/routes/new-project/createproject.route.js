@@ -2,7 +2,8 @@ import express from 'express';
 import Multer from 'multer';
 import { 
   createProjectArcgis,
-  createProjectWorkflow
+  createProjectWorkflow,
+  updateProjectArcgis
 } from 'bc/utils/create';
 import auth from 'bc/auth/auth.js';
 import db from 'bc/config/db.js';
