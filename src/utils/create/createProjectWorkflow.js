@@ -122,9 +122,10 @@ export const createProjects = async (body, transaction, type, creator, subtype) 
 
 const splitToArray = (string) => string ? string.split(',').map((item) => item.trim()) : [];
 const addToBoard = async (body, user, type, subtype, transaction, project_id) => {
-  const { jurisdiction, county, servicearea, year, sendToWR, isWorkPlan = null, projectname, sponsorId } = body;
+  const { jurisdiction, county, servicearea, year, sendToWR, isWorkPlan = null, projectname, sponsorId, sponsor } = body;
   const splitedJurisdiction = splitToArray(jurisdiction);
   const splitedCounty = splitToArray(county);
+  const YEAR_WORKPLAN_V2 = 2024;
   const splitedServicearea = splitToArray(servicearea);
   const { localitiesBoard, typesList } = createLocalitiesBoard(
     isWorkPlan,
@@ -139,7 +140,10 @@ const addToBoard = async (body, user, type, subtype, transaction, project_id) =>
   console.log('localitiesBoard', localitiesBoard, typesList)
   try {
     const localNames = await getLocalitiesNames(localitiesBoard, transaction);
-    if (isWorkPlan === 'true') {
+    if (isWorkPlan === 'true' && year < YEAR_WORKPLAN_V2) {
+      typesList.push('WORK_PLAN');
+      localNames.push('MHFD District Work Plan');
+    }else if (sponsor === 'MHFD' && year >= YEAR_WORKPLAN_V2){
       typesList.push('WORK_PLAN');
       localNames.push('MHFD District Work Plan');
     }

@@ -5,6 +5,7 @@ import http from  'http';
 import cors from  'cors';
 import needle from 'needle';
 import cron from 'node-cron';
+import compression from 'compression';
 import logger from 'bc/config/logger.js';
 import indexRouter from 'bc/routes/index.js';
 import usersRouter from 'bc/routes/users.route.js';
@@ -73,6 +74,7 @@ app.use(morgan('dev', {stream: logger.stream}));
 app.use(express.json({limit: '20mb'}));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(compression());
 
 app.use(cors());
 // add CORS headers

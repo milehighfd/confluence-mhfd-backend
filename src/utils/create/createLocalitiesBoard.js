@@ -3,15 +3,15 @@ export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, 
   const typesList = [];
   const YEAR_WORKPLAN_V1 = 2021;
   const YEAR_WORKPLAN_V2 = 2024;
-
+  const sponsorIdChech = sponsorId !== 'null' ? sponsorId : null;
   if (isWorkPlan === 'false') {
-    if (sponsorId) {
+    if (sponsorIdChech) {
       localitiesBoard.push(sponsorId);
       typesList.push('WORK_REQUEST');
     }
   } else {
     if (sendToWR === 'true') {
-      if (sponsorId) {
+      if (sponsorIdChech) {
         localitiesBoard.push(sponsorId);
         typesList.push('WORK_REQUEST');
       }

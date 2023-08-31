@@ -4,16 +4,18 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "create-date": "node ./src/generateDate.js",
     "start": "node --max-old-space-size=2048 ./src/bin/www",
     "transpile": "babel ./src --out-dir dist",
     "clean": "rimraf dist",
     "dev": "npm-run-all build server",
-    "build": "npm-run-all clean transpile",
+    "build": "npm run create-date && npm-run-all clean transpile",
     "server": "node ./src/bin/www"
   },
   "dependencies": {
     "@google-cloud/storage": "^4.6.0",
     "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
     "debug": "~2.6.9",
@@ -67,7 +69,7 @@
     "./models/*.js": "./src/models/*.js",
     "./routes/*.js": "./src/routes/*.js",
     "./services/*.js": "./src/services/*.js",
-    "./auth/*.js": "./src/auth/*.js",    
+    "./auth/*.js": "./src/auth/*.js",
     "./lib/*.js": "./src/lib/*.js",
     "./utils/*.js": "./src/utils/*.js",
     "./utils/create/*": "./src/utils/create/*",

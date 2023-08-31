@@ -119,6 +119,7 @@ router.post('/business-address/:idcontact', [auth], async (req, res) => {
     await t.commit();
     res.status(200).send({ message: 'SUCCESS' , updatedUser});
   } catch (error) {
+    await t.rollback();
     res.status(500).send({ message: 'ERROR', error });
   }
 });
@@ -160,6 +161,7 @@ router.put('/business-address-and-contact/:idaddress/:idcontact', [auth], async 
       updatedUser
     })
   } catch (error) {
+    await t.rollback();
     logger.error(error);
     res.status(500).send({message: 'ERROR' ,error});
   }
@@ -208,6 +210,7 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
       updatedUser
     })
   } catch (error) {
+    await t.rollback();
     logger.error(error);
     res.status(500).send({message: 'ERROR' , error});
   }
@@ -223,11 +226,11 @@ router.get('/', async (req, res) => {
 
 router.get('/sponsor-list', async (req, res) => {
   logger.info(`Starting endpoint business.route/ with params ${JSON.stringify(req.params, null, 2)}`);
-  const LOCAL_GOVERNMENT = 3;
+  const SPONSOR_CODES = [3, 6];
   const associates = await BusinessAssociates.findAll({
     attributes: ['business_associates_id', 'business_name'],
     where: {
-      code_business_associates_type_id: LOCAL_GOVERNMENT
+      code_business_associates_type_id: SPONSOR_CODES
     },
     order: [['business_name', 'ASC']]
   });
@@ -266,6 +269,7 @@ router.post('/create-contact/:idaddress', [auth], async (req, res) => {
     await t.commit();
     res.status(200).send({ message: 'SUCCESS', contact, updatedUser });
   } catch(error) {
+    await t.rollback();
     res.status(500).send({message: 'ERROR' , error});
   }
 });
