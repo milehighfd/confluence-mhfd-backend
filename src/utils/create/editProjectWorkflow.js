@@ -27,8 +27,7 @@ import {
   getGeomGeojson,
   createLocalitiesBoard,
   getLocalitiesNames,
-  addProjectsToBoard,
-  updateProjectArcgis
+  addProjectsToBoard
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
 import { EditProjectError, ProjectBoardsError} from '../../errors/project.error.js';
