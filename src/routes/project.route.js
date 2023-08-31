@@ -57,7 +57,7 @@ const listProjects = async (req, res) => {
     ids = await getIdsInBbox(defaultBounds);
   }
   logger.info(`Starting function filterProjectsBy for endpoint project/`);
-  let projectsFilterId = await projectService.filterProjectsBy(body);
+  let projectsFilterId = await projectService.filterProjectsBy(body, null, null, null, 'listProjects');
   logger.info(`Finished function filterProjectsBy for endpoint project/`);
   projectsFilterId = projectsFilterId.map(pf => ({ project_id: pf.project_id})).filter(pid => {
     return (ids.some(boundsids => pid.project_id === boundsids.project_id));

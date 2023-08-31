@@ -955,10 +955,11 @@ const getLightDetails = async (project_id) => {
   return project;
 }
 
-const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {  
+const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) => {  
   const CONSULTANT_ID = 3;  
   const CIVIL_CONTRACTOR_ID = 8;
   const ESTIMATED_ID = 1;
+  const  defaultStatus = [5,7,8,9,10];
   const filterName = filter.name ? isNaN(filter.name) ?  filter.name : filter.name : '';
   const filterBase = filter.name ? filter.name: -1;
   const contractor = filter.contractor ?  filter.contractor  : [];
@@ -983,6 +984,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
   const sortby = filter.sortby && filter.sortby !== '' ? filter.sortby : '';
   const sorttype = filter.sorttype && filter.sorttype !== '' ? filter.sorttype : 'asc';
   const groupN = groupname ? groupname : '';
+  const originFunction = origin ? origin : '';
 	const filterN = filtervalue ? filtervalue : '';
   const type_idF = type_id ? type_id : [];
   const work_plan_year = filter.workplanyear ? filter.workplanyear : '';
@@ -1302,7 +1304,27 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id) => {
 			},
 		  }]
 	  }));
-	}
+	} else {
+    if(status.length===0 && originFunction === 'listProjects') {
+      let where = {};
+      where = { code_status_type_id: defaultStatus };
+      conditions.push(//STATUS
+        Project.findAll({
+          attributes: ["project_id","code_project_type_id"],
+          include: [{
+          model: ProjectStatus,
+          attributes: [],
+          as: 'currentId',
+          required:true ,
+          include: {
+            model: CodePhaseType,
+            required:true ,
+            where: where
+          },
+  		    }]
+  	  }));
+    }
+  }
   if (phase.length) {	  
 	  conditions.push(//PHASE
 		Project.findAll({
