@@ -9,6 +9,10 @@ import boardService from 'bc/services/board.service.js';
 
 const Board = db.board;
 const BoardProject = db.boardProject;
+const Project = db.project;
+const ProjectCost = db.projectCost;
+const ProjectProposedAction = db.projectProposedAction;
+const ProjectIndependentAction = db.projectIndependentAction;
 
 const { Op } = sequelize;
 const router = express.Router();
@@ -26,6 +30,40 @@ router.get('/:board_project_id/cost', async (req, res) => {
         'req5',
         'year1',
         'year2'
+      ],
+      include: [{
+        model: Project,
+        attributes: ['project_id'],
+        as: 'projectData',
+        include: {
+          model: ProjectCost,
+          as: 'currentCost',
+          where: {
+            is_active: true
+          },
+        }
+      },
+      {
+        model: ProjectProposedAction,
+        required: false,
+        separate: true,
+        attributes: [
+          'object_id',
+          'source_table_name',
+          'project_proposed_action_id'
+        ]
+      },
+      {
+        model: ProjectIndependentAction,
+        required: false,
+        separate: true,
+        attributes: [
+          'action_name',
+          'project_id',
+          'cost',
+          'action_status'
+        ]
+      }
       ],
       where: {
         board_project_id
