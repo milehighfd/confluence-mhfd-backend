@@ -35,36 +35,26 @@ router.get('/:board_project_id/cost', async (req, res) => {
         model: Project,
         attributes: ['project_id'],
         as: 'projectData',
-        include: {
+        include: [{
           model: ProjectCost,
+          attributes: ['cost'],
           as: 'currentCost',
           where: {
             is_active: true
           },
-        }
-      },
-      {
-        model: ProjectProposedAction,
-        required: false,
-        separate: true,
-        attributes: [
-          'object_id',
-          'source_table_name',
-          'project_proposed_action_id'
-        ]
-      },
-      {
-        model: ProjectIndependentAction,
-        required: false,
-        separate: true,
-        attributes: [
-          'action_name',
-          'project_id',
-          'cost',
-          'action_status'
-        ]
-      }
-      ],
+        },
+        {
+          model: ProjectIndependentAction,
+          required: false,
+          separate: true,
+          attributes: [
+            'action_name',
+            'project_id',
+            'cost',
+            'action_status'
+          ]
+        }]
+      }],
       where: {
         board_project_id
       }
