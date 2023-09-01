@@ -248,6 +248,9 @@ const getPhaseName = async () => {
       'code_phase_type_id',
       'phase_name'
     ],
+    where: {
+      phase_name: {[Op.notIn]: ['Draft', 'Work Request(WR)', 'Work Plan (WP)', 'Work Request (WR)']}
+    }
   });
   const groups = types.map((data) => {
     return { value: data?.phase_name, id: data?.phase_name };
