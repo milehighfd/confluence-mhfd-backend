@@ -615,14 +615,18 @@ router.post('/board-for-positions2', async (req, res) => {
     if (position === undefined || position === null) {
       return res.sendStatus(400);
     }
+    let boardWhere = {
+      type,
+      year,
+      locality,
+      projecttype,
+    };
+    if (locality === 'Highlands Ranch Metro District') {
+      boardWhere.locality = 'Highlands Ranch';
+    }
     const boards = await Board.findAll({
       attributes: ['board_id'],
-      where: {
-        type,
-        year,
-        locality,
-        projecttype,
-      },
+      where: boardWhere,
     });
     const boardIds = boards.map(b => b.dataValues.board_id);
     const rankColumnName = `rank${position}`;
