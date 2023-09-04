@@ -1678,6 +1678,11 @@ router.get('/sync', async (req,res) => {
 });
 
 const applyLocalityCondition = (where) => {
+  if (where.locality.startsWith('South Platte River')) {
+    where.locality = {
+      [Op.like]: 'South Platte River%'
+    }
+  }
   if (where.locality === 'Highlands Ranch Metro District') {
     where.locality = {
       [Op.in]: ['Highlands Ranch', 'Highlands Ranch Metro District']
