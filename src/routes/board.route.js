@@ -510,9 +510,7 @@ router.post('/get-status', async (req, res) => {
       year,
       locality,
     };
-    if (locality === 'Highlands Ranch Metro District') {
-      boardWhere.locality = 'Highlands Ranch';
-    }
+    boardWhere = applyLocalityCondition(boardWhere);
     const boards = await Board.findAll({
       attributes: ['status'],
       where: boardWhere,
@@ -543,9 +541,7 @@ router.post('/get-or-create', async (req, res) => {
     locality,
     projecttype,
   }
-  if (locality === 'Highlands Ranch Metro District') {
-    boardWhere.locality = 'Highlands Ranch';
-  }
+  boardWhere = applyLocalityCondition(boardWhere);
   let board = await Board.findOne({
     where: boardWhere,
     order: [['createdAt', 'ASC']]
@@ -629,9 +625,7 @@ router.post('/board-for-positions2', async (req, res) => {
       locality,
       projecttype,
     };
-    if (locality === 'Highlands Ranch Metro District') {
-      boardWhere.locality = 'Highlands Ranch';
-    }
+    boardWhere = applyLocalityCondition(boardWhere);
     const boards = await Board.findAll({
       attributes: ['board_id'],
       where: boardWhere,
@@ -1682,5 +1676,13 @@ router.get('/sync', async (req,res) => {
   };
 
 });
+
+const applyLocalityCondition = (where) => {
+  if (where.locality === 'Highlands Ranch Metro District') {
+    where.locality = {
+      [Op.like]: `Highlands Ranch%`
+    }
+  }
+}
 
 export default router;
