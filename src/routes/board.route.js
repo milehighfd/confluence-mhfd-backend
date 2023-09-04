@@ -511,7 +511,7 @@ router.post('/get-status', async (req, res) => {
       locality,
     };
     if (locality === 'Highlands Ranch Metro District') {
-      boardWhere.locality = 'Highlands Ranch';code_local_government_id
+      boardWhere.locality = 'Highlands Ranch';
     }
     const boards = await Board.findAll({
       attributes: ['status'],
