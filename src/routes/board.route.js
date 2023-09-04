@@ -533,6 +533,15 @@ router.post('/get-or-create', async (req, res) => {
   logger.info(`Starting endpoint board/get-or-create`)
   let body = req.body;
   let { type, year, locality, projecttype } = body;
+  let boardWhere = {
+    type,
+    year,
+    locality,
+    projecttype,
+  }
+  if (locality === 'Highlands Ranch Metro District') {
+    boardWhere.locality = 'Highlands Ranch';
+  }
   let board = await Board.findOne({
     where: {
       type,
