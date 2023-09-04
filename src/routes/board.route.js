@@ -505,13 +505,17 @@ router.post('/projectdata', async (req, res) => {
 
 router.post('/get-status', async (req, res) => {
     const { type, year, locality } = req.body;
+    let boardWhere = {
+      type,
+      year,
+      locality,
+    };
+    if (locality === 'Highlands Ranch Metro District') {
+      boardWhere.locality = 'Highlands Ranch';code_local_government_id
+    }
     const boards = await Board.findAll({
       attributes: ['status'],
-      where: {
-        type,
-        year,
-        locality,
-      },
+      where: boardWhere,
     });
     const boardStatus = boards.map(b => b.dataValues.status);
     let isApproved = false;
@@ -543,12 +547,7 @@ router.post('/get-or-create', async (req, res) => {
     boardWhere.locality = 'Highlands Ranch';
   }
   let board = await Board.findOne({
-    where: {
-      type,
-      year,
-      locality,
-      projecttype,
-    },
+    where: boardWhere,
     order: [['createdAt', 'ASC']]
   });
   if (!board) {
