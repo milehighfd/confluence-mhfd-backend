@@ -1680,9 +1680,10 @@ router.get('/sync', async (req,res) => {
 const applyLocalityCondition = (where) => {
   if (where.locality === 'Highlands Ranch Metro District') {
     where.locality = {
-      [Op.like]: `Highlands Ranch%`
+      [Op.in]: ['Highlands Ranch', 'Highlands Ranch Metro District']
     }
   }
+  return where;
 }
 
 export default router;
