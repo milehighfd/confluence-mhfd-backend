@@ -73,4 +73,4 @@ services/tmp/
 
 # dist files
 dist/
-src/DATEFILE
+scripts/DATEFILE

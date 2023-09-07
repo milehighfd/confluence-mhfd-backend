@@ -3,6 +3,10 @@ import https from 'https';
 // read sync file and get the first line
 import logger from 'bc/config/logger.js';
 import fs from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const router = express.Router();
 
 /* GET home page. */
@@ -12,7 +16,8 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/echo', (_, res) => {
-  const date = fs.readFileSync('./src/DATEFILE', 'utf8').split('\n')[0];
+  const filePath = join(__dirname, '../../scripts/DATEFILE');
+  const date = fs.readFileSync(filePath, 'utf8').split('\n')[0];
   res.send({ echo: 'success', version: date });
 });
 
