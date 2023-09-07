@@ -6,12 +6,12 @@ import moment from 'moment';
 import logger from 'bc/config/logger.js';
 import auth from 'bc/auth/auth.js';
 import boardService from 'bc/services/board.service.js';
+import updateRank from 'bc/routes/board-project/update-rank.js'
 
 const Board = db.board;
 const BoardProject = db.boardProject;
 const Project = db.project;
 const ProjectCost = db.projectCost;
-const ProjectProposedAction = db.projectProposedAction;
 const ProjectIndependentAction = db.projectIndependentAction;
 
 const { Op } = sequelize;
@@ -129,145 +129,7 @@ router.put('/update-target-cost', async(req,res) => {
   }
   
 });
-router.put('/:board_project_id/update-rank', [auth], async (req, res) => {
-  logger.info('get board project cost by id');
-  const { board_project_id } = req.params;
-  const {
-    before,
-    after,
-    columnNumber,
-    beforeIndex,
-    afterIndex,
-    targetPosition,
-    otherFields
-  } = req.body;
-  const user = req.user;
-  if (before === undefined) before = null;
-  if (after === undefined) after = null;
-  const rankColumnName = `rank${columnNumber}`;
-  const board_id = (await BoardProject.findOne({
-    attributes: [
-      'board_id',
-    ],
-    where: {
-      board_project_id
-    }
-  }) || {}).board_id;
-  const columnCountWhere = {
-    board_id,
-    [rankColumnName]: { [Op.ne]: null }
-  };
-  const count = await BoardProject.count({ where: columnCountWhere });
-  if (before === null && after === null && count > 0) {
-    const where = { board_id };
-    if (`${columnNumber}` !== '0') {
-      where[`req${columnNumber}`] = { [Op.ne]: null };
-    } else {
-      where[`rank${columnNumber}`] = { [Op.ne]: null }
-    }
-    /* This should fix all the projects in the column to have a rank */
-    const projects = await BoardProject.findAll({
-      where,
-      order: [[`rank${columnNumber}`, 'ASC']],
-    });
-    let lastLexo = null;
-    const proms = projects.map(async (project, index) => {
-      if (lastLexo === null) {
-        lastLexo = LexoRank.middle().toString();
-      } else {
-        lastLexo = LexoRank.parse(lastLexo).genNext().toString();
-      }
-      if (index === targetPosition) {
-        lastLexo = LexoRank.parse(lastLexo).genNext().toString();
-        await BoardProject.update(
-          { ...otherFields, [rankColumnName]: lastLexo },
-          { where: { board_project_id: board_project_id } }
-        );
-        const offsetMillisecond = 35000;
-        let mainModifiedDate = new Date();
-        let multiplicator = 0;
-        for(const keys in otherFields) {
-          if(keys.includes('req')) {
-            const costToUpdate = otherFields[keys] ? otherFields[keys]: 0;
-            const columnToEdit = keys.match(/[0-9]+/);
-            await boardService.updateAndCreateProjectCosts(
-              columnToEdit,
-              costToUpdate,
-              project.project_id,
-              user,
-              board_project_id,
-              moment(mainModifiedDate).subtract( offsetMillisecond * multiplicator).toDate()
-            );
-            console.log('Multiplicating 000',moment(mainModifiedDate).subtract( offsetMillisecond * multiplicator).toDate(), multiplicator);
-            multiplicator++;
-          }
-        }
-      }
-      return await BoardProject.update(
-        { [rankColumnName]: lastLexo },
-        { where: { board_project_id: project.board_project_id } }
-      );
-    });
-    const results = await Promise.all(proms);
-    return res.status(200).send(results);
-  }
-  if (before === null && beforeIndex !== -1) {
-    logger.error('before is null but beforeIndex is not -1');
-  } else if (after === null && afterIndex !== -1) {
-    logger.error('after is null but afterIndex is not -1');
-  }
-  let lexo;
-  if (count === 0) {
-    lexo = LexoRank.middle().toString();
-  } else if (before === null) {
-    lexo = LexoRank.parse(after).genPrev().toString();
-  } else if (after === null) {
-    lexo = LexoRank.parse(before).genNext().toString();
-  } else {
-    if (before === after) {
-      lexo = before; //TODO: change as this should not happen
-    } else {
-      lexo = LexoRank.parse(before).between(LexoRank.parse(after)).toString();
-    }
-  }
-  try {
-    const boardProject = await BoardProject.findOne({
-      attributes: [
-        'board_id',
-        'project_id'
-      ],
-      where: {
-        board_project_id
-      }
-    });
-    const offsetMillisecond = 35000;
-    let mainModifiedDate = new Date();
-    let multiplicator = 0;
-    const x = await BoardProject.update(
-      { [rankColumnName]: lexo, ...otherFields },
-      { where: { board_project_id } }
-    );
-    for(const key in otherFields) {
-      if(key.includes('req') && key!='req0' ) {
-        const costToUpdate = otherFields[key] ? otherFields[key]: 0;
-        const columnToEdit = key.match(/\d+/)[0];
-        await boardService.updateAndCreateProjectCosts(
-          columnToEdit,
-          costToUpdate,
-          boardProject.project_id,
-          user,
-          board_project_id,
-          moment(mainModifiedDate).subtract( offsetMillisecond * multiplicator).toDate()
-        );
-        multiplicator++;
-      }
-    }
-    return res.status(200).send(x);
-  } catch (error) {
-    logger.error(error);
-    return res.status(500).send({ error: error });
-  }
-});
+router.put('/:board_project_id/update-rank', [auth], updateRank);
 router.put('/:board_project_id/cost',[auth], async (req, res) => {
   logger.info('get board project cost by id');
   try {

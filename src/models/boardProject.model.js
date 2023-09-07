@@ -102,6 +102,9 @@ export default (sequelize, DataType) => {
     code_status_type_id: {
       type: DataType.INTEGER
     },
+    parent_board_project_id: {
+      type: DataType.INTEGER
+    }
   }, {
     freezeTableName: true,
     tableName: 'board_project'
