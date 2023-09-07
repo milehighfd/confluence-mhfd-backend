@@ -1428,6 +1428,26 @@ router.get('/:type/:year/', async (req, res) => {
     res.send(boards);
 });
 
+router.post('/status-colors', async (req, res) => {
+  const { type, year, localities, projecttype } = req.body;
+  logger.info(`Starting endpoint board/colors with params ${JSON.stringify(req.params, null, 2)}`)
+  logger.info(`Starting function findAll for board/colors`);
+  let boards = await Board.findAll({
+    attributes: ['locality', 'status'],
+    where: {
+      type,
+      year,
+      locality: {
+        [Op.in]: localities
+      },
+      projecttype
+    }
+  });
+  console.log(boards);
+  logger.info(`Finished function findAll for board/colors`);
+  res.send(boards);
+});
+
 router.post('/projects-bbox', async (req, res) => {
     logger.info(`Starting endpoint board/projects-bbox with params ${JSON.stringify(req.params, null, 2)}`)
     const { projects } = req.body;
