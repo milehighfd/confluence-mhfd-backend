@@ -1,6 +1,7 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import boardService from 'bc/services/board.service.js';
+import { isOnWorkspace } from 'bc/services/board-project.service.js';
 import sequelize from 'sequelize';
 import { LexoRank } from 'lexorank';
 import moment from 'moment';
@@ -8,18 +9,6 @@ import moment from 'moment';
 const BoardProject = db.boardProject;
 const Board = db.board;
 const { Op } = sequelize;
-
-const isOnWorkspace = (board) => {
-  let allNull = true;
-  const indexes = [1, 2, 3, 4, 5];
-  indexes.forEach((index) => {
-    const rankColumnName = `rank${index}`;
-    if (board[rankColumnName] !== null) {
-      allNull = false;
-    }
-  });
-  return allNull;
-};
 
 const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition, otherFields, board_project_id, user) => {
   console.log('here');

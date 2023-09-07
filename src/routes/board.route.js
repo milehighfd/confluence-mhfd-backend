@@ -14,7 +14,7 @@ import { sendBoardNotification } from 'bc/services/user.service.js';
 import boardService from 'bc/services/board.service.js';
 import projectService from 'bc/services/project.service.js';
 import moment from 'moment';
-import projectStatusService from 'bc/services/projectStatus.service.js';
+import { isOnWorkspace } from 'bc/services/board-project.service.js';
 import sequelize from 'sequelize';
 
 const { Op } = sequelize;
@@ -23,15 +23,15 @@ const Board = db.board;
 const User = db.user;
 const BoardProject = db.boardProject;
 const BoardLocality = db.boardLocality;
-const ProjectStatus = db.projectStatus;
-const CodePhaseType = db.codePhaseType;
+const ProjectPartner = db.projectPartner;
 const Project = db.project;
 const ProjectServiceArea = db.projectServiceArea;
 const ProjectCounty = db.projectCounty;
-const ProjectProposedAction = db.projectProposedAction;
 const CodeStateCounty = db.codeStateCounty;
 const CodeServiceArea = db.codeServiceArea;
 const CodeStatusType = db.codeStatusType;
+const BusinessAssociate = db.businessAssociates;
+const Configuration = db.configuration;
 
 const insertUniqueObject = (array, idPropertyName, groupPropertyKeyName, object) => {
   const isDuplicate = array.some(item => {
@@ -867,11 +867,98 @@ const getBoard = async (type, locality, year, projecttype) => {
     }
 }
 
-const updateProjectStatus = async (boards, status, creator) => {
+const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
+  console.log('moveBoardProjectsToNewYear')
+  console.log(newYear)
+  await Configuration.update({
+    value: newYear,
+  }, {
+    where: {
+      key: 'BOARD_YEAR',
+    }
+  });
+  boardProjects.forEach(async (boardProject) => {
+    console.log('boardProject');
+    console.log(boardProject);
+    const partner = await ProjectPartner.findOne({
+      attributes: ['business_associates_id'],
+      where: {
+        project_id: boardProject.project_id,
+        code_partner_type_id: 11
+      }
+    });
+    const businessAssociate = await BusinessAssociate.findOne({
+      attributes: ['business_name'],
+      where: {
+        business_associates_id: partner.business_associates_id
+      }
+    });
+    const sponsor = businessAssociate.business_name;
+    const previousBoard = await Board.findOne({
+      attributes: ['projecttype'],
+      where: { board_id: boardProject.board_id }
+    })
+    const newBoardParams = {
+      year: newYear,
+      locality: sponsor,
+      type: 'WORK_REQUEST',
+      projecttype: previousBoard.projecttype,
+    };
+    let newBoard;
+    try {
+      newBoard = await Board.findOne({
+        where: newBoardParams,
+      });
+    } catch (error) {
+      console.log('Error in project Promises ', error);
+    }
+    if (newBoard === null) {
+      const newBoardInstance = new Board(newBoardParams);
+      newBoard = await newBoardInstance.save();  
+    }
+    const onWorkspace = isOnWorkspace(boardProject);
+
+    let newBoardProjectParams = {
+      board_id: newBoard.board_id,
+      project_id: boardProject.project_id,
+      year1: boardProject.year1,
+      year2: boardProject.year2,
+      origin: sponsor,
+      code_status_type_id: REQUESTED_STATUS
+    }
+    if (onWorkspace) {
+      newBoardProjectParams = {
+        ...newBoardProjectParams,
+        rank0: boardProject.rank0,
+      }
+    } else {
+      newBoardProjectParams = {
+        ...newBoardProjectParams,
+
+        rank1: boardProject.rank2,
+        req1: boardProject.req2,
+  
+        rank2: boardProject.rank3,
+        req2: boardProject.req3,
+  
+        rank3: boardProject.rank4,
+        req3: boardProject.req4,
+  
+        rank4: boardProject.rank5,
+        req4: boardProject.req5,
+        rank5: null,
+        req5: null,
+      }
+    }
+
+    const newBoardProjectInstance = new BoardProject(newBoardProjectParams);
+    await newBoardProjectInstance.save();
+  })
+  
+};
+
+const updateProjectStatus = async (boards) => {
   logger.info(`Starting function updateProjectStatus for board/`);
-  const DRAFT_STATUS = 1;
-  const REQUESTED_STATUS = 2;
-  const APPROVED_STATUS = 3;
   const prs = [];
   for (const board of boards) {
     prs.push(
@@ -883,12 +970,13 @@ const updateProjectStatus = async (boards, status, creator) => {
     );
   }
   let boardProjects = (await Promise.all(prs)).flat();
-  if (status === APPROVED_STATUS) {
-    for (const boardProject of boardProjects) {
+  return boardProjects.map((boardProject) => {
+    if (!isOnWorkspace(boardProject) && boardProject.code_status_type_id !== APPROVED_STATUS) {
       boardProject.code_status_type_id = APPROVED_STATUS;
       boardProject.save();
     }
-  }  
+    return boardProject;
+  })
 };
 
 const getOriginPositionMap = (boardProjects) => {
@@ -1195,10 +1283,10 @@ const moveCardsToNextLevel = async (board, creator) => {
         logger.info(`Sending ${boards.length} to district`);
         await sendBoardProjectsToDistrict(boards);
         logger.info(`Update ${boards.length} as Requested`);
-        await updateProjectStatus(boards, 2, creator);
         return {}
     } else if (board.type === 'WORK_PLAN') {
-        await updateProjectStatus(boards, 3, creator);
+        const boardProjectsUpdated = await updateProjectStatus(boards);
+        await moveBoardProjectsToNewYear(boardProjectsUpdated, +board.year + 1);
         return {}
     }
 }
@@ -1411,7 +1499,7 @@ router.get('/bbox/:projectid', async (req, res) => {
      } catch (error) {
         logger.error(error);
         res.status(500).send(error);
-     };
+     }
 });
 
 router.get('/:type/:year/', async (req, res) => {
