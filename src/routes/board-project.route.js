@@ -153,7 +153,10 @@ router.put('/:board_project_id/cost',[auth], async (req, res) => {
     } else {
       allCurrentAmounts[reqColumnName] = beforeUpdate[reqColumnName];
     }
-    if (beforeUpdate[reqColumnName] === null && req.body[reqColumnName] !== null) {
+    if (
+      (beforeUpdate[reqColumnName] === null && req.body[reqColumnName] !== null) ||
+      (beforeUpdate[rankColumnName] === null && req.body[reqColumnName] !== null && beforeUpdate[reqColumnName] !== req.body[reqColumnName])
+    ) {
       const where = {
         board_id: beforeUpdate.board_id,
         [rankColumnName]: { [Op.ne]: null }
