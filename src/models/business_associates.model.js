@@ -52,9 +52,6 @@ export default (sequelize, DataType) => {
     },
     ba_tyler_id: {
       type: DataType.STRING,
-    },
-    code_business_associates_type_id: {
-      type: DataType.INTEGER,
     }
   }, {
     freezeTableName: true,
