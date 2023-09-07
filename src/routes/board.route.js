@@ -1097,7 +1097,7 @@ const getOriginPositionMap = (boardProjects) => {
           });
         }
       }
-    };
+    }
     arr.sort();
     arr.forEach((r, arrayIndex) => {
       if (!originPositionMap[r.bp.project_id]) {
@@ -1262,14 +1262,16 @@ const sendBoardProjectsToDistrict = async (boards) => {
                         year1: bp.year1,
                         year2: bp.year2,
                         origin: board.locality,
-                        code_status_type_id: REQUESTED_STATUS
+                        code_status_type_id: bp.code_status_type_id,
+                        parent_board_project_id: bp.board_project_id
                     }));
                 }
-                await Promise.all(prs).then((values) => {
-                    logger.info('success on sendBoardProjectsToDistrict');
-                }).catch((error) => {
-                    logger.error(`error on sendBoardProjectsToDistrict ${error}`);
-                });
+                try {
+                  await Promise.all(prs);
+                } catch(error) {
+                  logger.error(`error on sendBoardProjectsToDistrict ${error}`);
+                }
+                logger.info('success on sendBoardProjectsToDistrict');
                 const updatePromises = [];
                 for (let i = 0; i < 6; i++) {
                     const rank = `rank${i}`;
@@ -1277,11 +1279,12 @@ const sendBoardProjectsToDistrict = async (boards) => {
                     updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank));
                 }
                 if (updatePromises.length) {
-                    await Promise.all(updatePromises).then((values) => {
-                        logger.info('success on recalculate Columns');
-                    }).catch((error) => {
-                        logger.error(`error on recalculate columns ${error}`);
-                    });
+                  try {
+                    await Promise.all(updatePromises)
+                  } catch(error) {
+                    logger.error(`error on recalculate columns ${error}`);
+                  }
+                  logger.info('success on recalculate Columns');
                 }
             }));
         }
@@ -1623,7 +1626,7 @@ router.post('/projects-bbox', async (req, res) => {
         const data = await needle('post', CARTO_URL, query, { json: true });
         logger.info(`Finished function needle for board/projects-bbox`);
         if (data.statusCode === 200) {
-          result = data.body;
+          const result = data.body;
           res.send(result.rows[0]);
         } else {
           logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
@@ -1632,7 +1635,7 @@ router.post('/projects-bbox', async (req, res) => {
      } catch (error) {
         logger.error(error);
         res.status(500).send(error);
-     };
+     }
 });
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -1651,7 +1654,6 @@ router.get('/sync', async (req,res) => {
     logger.info(`Finished function needle for board/sync`);
     if (data.statusCode === 200) {
       result = data.body;
-      let allPromises = [];
       for(let i = 0 ; i < result.rows.length ; ++i){
         let projectData = result.rows[i];
         if(projectData.projectid){
@@ -1673,8 +1675,7 @@ router.get('/sync', async (req,res) => {
   } catch (error) {
       logger.error('Error at sync projectname, type, subtype', error);
       res.status(500).send(error);
-  };
-
+  }
 });
 
 const applyLocalityCondition = (where) => {
