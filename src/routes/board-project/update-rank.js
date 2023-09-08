@@ -1,13 +1,12 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import boardService from 'bc/services/board.service.js';
-import { isOnWorkspace } from 'bc/services/board-project.service.js';
+import { isOnWorkspace, determineStatusChange } from 'bc/services/board-project.service.js';
 import sequelize from 'sequelize';
 import { LexoRank } from 'lexorank';
 import moment from 'moment';
 
 const BoardProject = db.boardProject;
-const Board = db.board;
 const { Op } = sequelize;
 
 const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition, otherFields, board_project_id, user) => {
@@ -65,64 +64,6 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
   });
   return Promise.all(proms);
 };
-
-const determineStatusChange = async (wasOnWorkspace, boardProject, board_id) => {
-  logger.info('determineStatusChange');
-  const board = await Board.findOne({
-    attributes: ['type'],
-    where: { board_id }
-  });
-
-  const boardType = board.type;
-  logger.info(`boardProject.parent_board_project_id=${boardProject.parent_board_project_id}`);
-  const hasParentProject = boardProject.parent_board_project_id !== null;
-  logger.info(`hasParentProject=${hasParentProject}`);
-  const onWorkspace = isOnWorkspace(boardProject);
-  if (wasOnWorkspace && !onWorkspace) {
-    let code_status_type;
-    if (boardType === 'WORK_REQUEST') {
-      code_status_type = 2;
-    } else if (boardType === 'WORK_PLAN') {
-      if (hasParentProject) {
-        code_status_type = 2;
-      } else {
-        code_status_type = 3;
-      }
-    }
-    boardProject.code_status_type_id = code_status_type;
-    logger.info('determineStatusChange wasOnWorkspace && !onWorkspace');
-  } else if (!wasOnWorkspace && onWorkspace) {
-    let code_status_type;
-    if (boardType === 'WORK_REQUEST') {
-      code_status_type = 1;
-    } else if (boardType === 'WORK_PLAN') {
-      if (hasParentProject) {
-        const parentBoardProject = await BoardProject.findByPk(boardProject.parent_board_project_id);
-        const parentIsOnWorkspace = isOnWorkspace(parentBoardProject);
-        if (parentIsOnWorkspace) {
-          code_status_type = 1;
-        } else {
-          code_status_type = 2;
-        }
-      } else {
-        code_status_type = 1;
-      }
-    }
-    boardProject.code_status_type_id = code_status_type;
-    logger.info('determineStatusChange !wasOnWorkspace && onWorkspace');
-  }
-  if (onWorkspace) {
-    boardProject.rank1 = null;
-    boardProject.rank2 = null;
-    boardProject.rank3 = null;
-    boardProject.rank4 = null;
-    boardProject.rank5 = null;
-  } else {
-    boardProject.rank0 = null;
-  }
-  boardProject = await boardProject.save();
-  return boardProject;
-}
 
 const updateRank = async (req, res) => {
   logger.info('get board project cost by id');
@@ -223,7 +164,7 @@ const updateRank = async (req, res) => {
       }
     }
 
-    boardProjectUpdated = await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id);
+    [boardProjectUpdated, ] = await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id);
     return res.status(200).send(boardProjectUpdatedStatus);
   } catch (error) {
     logger.error(error);

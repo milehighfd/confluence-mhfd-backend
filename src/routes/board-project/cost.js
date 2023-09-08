@@ -4,6 +4,7 @@ import db from 'bc/config/db.js';
 import moment from 'moment';
 import logger from 'bc/config/logger.js';
 import boardService from 'bc/services/board.service.js';
+import { isOnWorkspace, determineStatusChange } from 'bc/services/board-project.service.js';
 
 const BoardProject = db.boardProject;
 
@@ -18,6 +19,8 @@ const updateCost = async (req, res) => {
     const beforeUpdate = await BoardProject.findOne({
       where: { board_project_id }
     });
+    const wasOnWorkspace = isOnWorkspace(beforeUpdate);
+    const board_id = beforeUpdate.board_id;
     const currentProjectId = beforeUpdate.project_id;
     const columnsChanged = [0];
     const allCurrentAmounts = {};
@@ -113,7 +116,7 @@ const updateCost = async (req, res) => {
       }
     }
     console.log('Value of rank0', rank0, 'shpould move', shouldMoveToWorkspace);
-    const [updateCount] = await BoardProject.update(
+    await BoardProject.update(
       {
         rank0, req1, req2, req3, req4, req5, year1, year2, ...updateFields
       },
@@ -135,21 +138,23 @@ const updateCost = async (req, res) => {
         { where: { board_project_id } }
       );
     }
-    let x;
-    if (updateCount > 0) {
-      x = await BoardProject.findOne({
-        where: { board_project_id }, attributes: [
-          'req1',
-          'req2',
-          'req3',
-          'req4',
-          'req5',
-          'year1',
-          'year2'
-        ]
-      });
-    }
-    return res.status(200).send({ newCost: x, columnsChanged });
+    let boardProjectUpdated = await BoardProject.findOne({
+      where: { board_project_id }
+    });
+    let statusHasChanged;
+    [boardProjectUpdated, statusHasChanged] = await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id);
+    return res.status(200).send({
+      newCost: {
+        req1: boardProjectUpdated.req1,
+        req2: boardProjectUpdated.req2,
+        req3: boardProjectUpdated.req3,
+        req4: boardProjectUpdated.req4,
+        req5: boardProjectUpdated.req5,
+        year1: boardProjectUpdated.year1,
+        year2: boardProjectUpdated.year2
+      },
+      columnsChanged: statusHasChanged ? [0, 1, 2, 3, 4, 5] : columnsChanged,
+    });
   } catch (error) {
     logger.error("ERROR At route cost" + error);
     return res.status(500).send({ error: error });
