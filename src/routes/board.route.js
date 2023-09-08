@@ -898,12 +898,24 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
       attributes: ['projecttype'],
       where: { board_id: boardProject.board_id }
     })
-    const newBoardParams = {
+    let newBoardParams = {
       year: newYear,
-      locality: sponsor,
-      type: 'WORK_REQUEST',
       projecttype: previousBoard.projecttype,
     };
+    if (sponsor === 'MHFD') {
+      newBoardParams = {
+        ...newBoardParams,
+        locality: 'MHFD District Work Plan',
+        type: 'WORK_PLAN',
+      }
+    } else {
+      newBoardParams = {
+        ...newBoardParams,
+        locality: sponsor,
+        type: 'WORK_REQUEST',
+      }
+    }
+
     let newBoard;
     try {
       newBoard = await Board.findOne({
