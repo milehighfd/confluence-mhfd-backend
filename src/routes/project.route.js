@@ -236,6 +236,45 @@ const checkProjectName = async (req, res) => {
   }
 };
 
+const globalSearch = async (req, res) => {
+  try {
+    const { keyword, type } = req.body;
+    const projects = await projectService.globalSearch(keyword);
+    const projectsIds = projects.map(p => p.project_id);
+    if (projectsIds && (type === 'WORK_REQUEST' || type === 'WORK_PLAN')) {
+      const boardProjects = await projectService.getBoardProjectData(projectsIds, type);
+      const nameProjects = boardProjects.map(p => {
+        const project = projects.find(pr => pr.project_id === p.project_id);
+        return {
+          board_project_id: p.board_project_id,
+          project_id: p.project_id,          
+          board : p.board,
+          project_name: project?.project_name,
+          code_status_type: p.code_status_type,
+        }
+      });
+      logger.info('project name already exists');
+      res.status(200).send({projects : nameProjects});
+    } else {
+      const pmtoolsProjects = await projectService.getPmtoolsProjectData(projectsIds);
+      const nameProjects = pmtoolsProjects.map(p => {
+        const project = projects.find(pr => pr.project_id === p.project_id);
+        return {
+          project_id: p.project_id,
+          project_name: project?.project_name,
+          currentId: p.currentId,
+          code_project_type: p.code_project_type,
+        }
+      });
+      logger.info('project name not found');
+      res.status(200).send({projects : nameProjects});
+    }
+  } catch (error) {
+    logger.error(`Error checking project name: ${error}`);
+    res.status(500).send('Error checking project name');
+  }
+};
+
 router.get('/bbox/:project_id', getBboxProject);
 router.put('/archive/:project_id', [auth], archiveProject);
 router.post('/check_project_name', checkProjectName)
@@ -245,6 +284,7 @@ router.post('/ids', listProjectsForId);
 router.get('/:project_id', getProjectDetail);
 router.get('/projectCost/:project_id', listOfCosts);
 router.post('/projectCost/:project_id', [auth], createCosts);
-router.delete('/:project_id', [auth], deleteProject);
+router.post('/search', globalSearch);
+
 
 export default router;

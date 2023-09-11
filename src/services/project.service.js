@@ -2340,6 +2340,112 @@ const checkProjectName = async (project_name) => {
   }
 }
 
+const globalSearch = async (keyword) => {
+  console.log('keyword', keyword)
+  const projects = await Project.findAll({
+    where: {
+      project_name: {
+        [Op.like]: `%${keyword}%`
+      }
+    },
+    attributes: [
+      'project_id',
+      'project_name',
+    ],
+  });
+  return projects;
+};
+
+const getBoardProjectData = async (project_id, type) => {
+  const boardProject = await BoardProject.findAll({
+    where: {
+      project_id: project_id,
+      [Op.or]: [
+        { rank0: { [Op.not]: null } },
+        { rank1: { [Op.not]: null } },
+        { rank2: { [Op.not]: null } },
+        { rank3: { [Op.not]: null } },
+        { rank4: { [Op.not]: null } },
+        { rank5: { [Op.not]: null } },
+      ]
+    },
+    attributes: [
+      'board_project_id',
+      'project_id',
+    ],
+    include: [{
+      model: Board,
+      required: true,
+      attributes: [
+        'board_id',
+        'projecttype',
+        'locality',
+        'year'
+      ],
+      where: {
+        type: type
+      }
+    },
+    {
+      attributes: ['status_name'],
+      model: CodeStatusType,
+    }
+    ]
+  })
+  return boardProject;
+}
+
+const getPmtoolsProjectData = async (project_id) => {
+  const pmtoolsProject = await Project.findAll({
+    where: {
+      project_id: project_id
+    },
+    attributes: [
+      'project_id',
+    ],
+    include: [
+      {
+        model: CodeProjectType,
+        required: false,
+        attributes: [
+          'code_project_type_id',
+          'project_type_name'
+        ]
+      }, {
+        model: ProjectStatus,
+        required: true,
+        as: 'currentId',
+        attributes: [
+          'code_phase_type_id',
+        ],
+        include: [{
+          model: CodePhaseType,
+          required: true,
+          attributes: [
+            'code_status_type_id',
+            'phase_name'
+          ],
+          where: {
+            code_status_type_id: {
+              [Op.gte]: 5
+            }
+          },
+          include: {
+            model: CodeStatusType,
+            required: true,
+            attributes: [
+              'code_status_type_id',
+              'status_name'
+            ]
+          }
+        }]
+      }],
+  })
+  return pmtoolsProject;
+}
+    
+
+
 export default {
   checkProjectName,
   getAll,
@@ -2363,5 +2469,8 @@ export default {
   findProject,
   addProjectToCache,
   updateProjectOnCache,
-  getLocalityDetails
+  getLocalityDetails,
+  globalSearch,
+  getBoardProjectData,
+  getPmtoolsProjectData
 };
