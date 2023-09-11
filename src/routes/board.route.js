@@ -1357,7 +1357,7 @@ const getEmailsForWR = async (board) => {
     });
     logger.info(`Finished function findAll for board/`);
     boardLocalities.forEach((bl) => {
-        //emails.push(bl.email)
+        emails.push(bl.email)
     });
     logger.info(`Starting function findAll for board/`);
     let users = await User.findAll({
@@ -1367,9 +1367,8 @@ const getEmailsForWR = async (board) => {
     })
     logger.info(`Finished function findAll for board/`);
     users.forEach((u) => {
-        //emails.push(u.email)        
+        emails.push(u.email)        
     })
-    emails.push(...['addis@vizonomy.com', 'danilson@vizonomy.com'] )
     return emails;
 }
 
