@@ -275,6 +275,21 @@ const globalSearch = async (req, res) => {
   }
 };
 
+const getPagePMTools = async (req, res) => {
+  try {
+    const { status, pageSize, project_id } = req.body;
+    const filter = { status: [status] }
+    //const projects = await projectService.getProjectsByStatus(status);
+    const projectsBy = await projectService.filterProjectsBy(filter);
+    const index = projectsBy.findIndex(p => p.project_id === project_id);
+    const pageNumber = Math.floor(index / pageSize) + 1;    
+    res.status(200).send({pageNumber : pageNumber});
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error getting page PM tools');
+  }
+};
+
 router.get('/bbox/:project_id', getBboxProject);
 router.put('/archive/:project_id', [auth], archiveProject);
 router.post('/check_project_name', checkProjectName)
@@ -285,6 +300,7 @@ router.get('/:project_id', getProjectDetail);
 router.get('/projectCost/:project_id', listOfCosts);
 router.post('/projectCost/:project_id', [auth], createCosts);
 router.post('/search', globalSearch);
+router.post('/page', getPagePMTools);
 
 
 export default router;

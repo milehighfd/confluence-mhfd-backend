@@ -2443,6 +2443,42 @@ const getPmtoolsProjectData = async (project_id) => {
   })
   return pmtoolsProject;
 }
+
+const getProjectsByStatus = async (status_id) => {
+  try {
+    const projects = await Project.findAll({
+      attributes: [
+        'project_id',
+        'project_name',
+      ],
+      include: [{
+        model: ProjectStatus,
+        required: true,
+        as: 'currentId',
+        attributes: [],
+        include: {
+          model: CodePhaseType,
+          required: true,
+          attributes: [],
+          include: [{
+            model: CodeStatusType,
+            required: true,            
+            attributes: [
+              'code_status_type_id',
+            ],
+            where: {
+              code_status_type_id: status_id
+            }
+          }]
+        }
+      }],
+    });
+    return projects;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Error getting projects by status');
+  }
+};
     
 
 
@@ -2472,5 +2508,6 @@ export default {
   getLocalityDetails,
   globalSearch,
   getBoardProjectData,
-  getPmtoolsProjectData
+  getPmtoolsProjectData,
+  getProjectsByStatus
 };
