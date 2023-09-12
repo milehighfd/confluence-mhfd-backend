@@ -16,7 +16,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/echo', (_, res) => {
-  const filePath = join(__dirname, '../../scripts/DATEFILE');
+  const filePath = join(__dirname, '../../src/DATEFILE');
   const date = fs.readFileSync(filePath, 'utf8').split('\n')[0];
   res.send({ echo: 'success', version: date });
 });
