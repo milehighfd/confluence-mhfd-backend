@@ -16,6 +16,18 @@ export const isOnWorkspace = (boardProject) => {
   return allNull;
 };
 
+export const isOnFirstYear = (boardProject) => {
+  let allNull = true;
+  const indexes = [0, 2, 3, 4, 5];
+  indexes.forEach((index) => {
+    const rankColumnName = `rank${index}`;
+    if (boardProject[rankColumnName] !== null) {
+      allNull = false;
+    }
+  });
+  return allNull;
+};
+
 export const determineStatusChange = async (wasOnWorkspace, boardProject, board_id) => {
   logger.info('determineStatusChange');
   let statusHasChanged = false;

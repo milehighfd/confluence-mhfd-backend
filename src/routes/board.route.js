@@ -14,7 +14,7 @@ import { sendBoardNotification } from 'bc/services/user.service.js';
 import boardService from 'bc/services/board.service.js';
 import projectService from 'bc/services/project.service.js';
 import moment from 'moment';
-import { isOnWorkspace } from 'bc/services/board-project.service.js';
+import { isOnWorkspace, isOnFirstYear } from 'bc/services/board-project.service.js';
 import sequelize from 'sequelize';
 
 const { Op } = sequelize;
@@ -929,6 +929,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
       newBoard = await newBoardInstance.save();  
     }
     const onWorkspace = isOnWorkspace(boardProject);
+    const onFirstYear = isOnFirstYear(boardProject);
 
     let newBoardProjectParams = {
       board_id: newBoard.board_id,
@@ -938,10 +939,10 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
       origin: sponsor,
       code_status_type_id: REQUESTED_STATUS
     }
-    if (onWorkspace) {
+    if (onWorkspace || onFirstYear) {
       newBoardProjectParams = {
         ...newBoardProjectParams,
-        rank0: boardProject.rank0,
+        rank0: boardProject.rank0 || LexoRank.middle(),
       }
     } else {
       newBoardProjectParams = {
