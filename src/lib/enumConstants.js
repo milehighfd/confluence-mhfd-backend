@@ -9,14 +9,6 @@ export const PROJECT_STATUS = Object.freeze({
    FINAL_DESIGN: 'finalDesign'
 });
 
-export const PROJECT_TYPE = Object.freeze({ 
-   CAPITAL: 'capital',
-   MAINTENANCE: 'maintenance',
-   STUDY: 'study',
-   PROPERTY_ACQUISITION: 'propertyAcquisition',
-   SPECIAL: 'special'
-});
-
 export const PROJECT_SUBTYPE = Object.freeze({
    DEBRIS_MANAGEMENT: 'debrisManagement',
    VEGETATION_MANAGEMENT: 'vegetationManagement',

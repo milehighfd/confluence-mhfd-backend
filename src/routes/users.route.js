@@ -293,7 +293,6 @@ router.get('/me', auth, async (req, res) => {
   }
   const mapProjects = {};
   const counters = {};
-  console.log(PROJECT_TYPES_AND_NAME);
   for (const element of PROJECT_TYPES_AND_NAME) {
     mapProjects[element.name] = element.id;
     counters[element.id] = 0;

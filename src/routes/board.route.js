@@ -324,56 +324,6 @@ router.get('/coordinates/:pid', async (req, res) => {
     res.send(r);
 });
 
-router.get('/fix', async (req, res) => {
-    logger.info(`Starting endpoint board/fix with params ${JSON.stringify(req.params, null, 2)}`);
-    logger.info(`Starting function findAll for board/fix`);
-    let boards = await Board.findAll(
-        {
-        where: {
-            year: ['2018', '2019', '2020', '2021'],
-            type: 'WORK_REQUEST',
-            status: 'Approved'
-        }
-    });
-    logger.info(`Finished function findAll for board/fix`);
-    logger.info(`Starting function upDate for board/fix`);
-    let updateBoards = await Board.update(
-        {
-            "status": "Approved",
-            "substatus": "Capital,Study,Maintenance,Acquisition,Special",
-        },{
-        where: {
-            year: ['2018', '2019', '2020', '2021'],
-            type: 'WORK_REQUEST'
-        }
-    });
-    logger.info(`Finished function upDate for board/fix`);
-    console.log('UPDATED ' + updateBoards);
-    let c = 0;
-    if (boards) {
-        for (const board of boards) { 
-            logger.info(`Starting function moveCardsToNextLevel for board/fix`);
-            moveCardsToNextLevel(board);
-            logger.info(`Finished function moveCardsToNextLevel for board/fix`);
-            c++;
-        }
-    }
-    // let c = 0;
-    logger.info(`Starting function update for board/fix`);
-    let updateBoardsPlan = await Board.update(
-        {
-            "status": "Approved"
-        },{
-        where: {
-            year: ['2018', '2019', '2020', '2021'],
-            type: 'WORK_PLAN'
-        }
-    });
-    logger.info(`Finished function update for board/fix`);
-    console.log(updateBoardsPlan);
-    console.log('boards', boards, boards.length);
-    res.send({boards: boards, count: c});
-});
 router.get('/', async (req, res) => {
     logger.info(`Starting endpoint board/ with params ${JSON.stringify(req.params, null, 2)}`);
     logger.info(`Starting function findAll for board/`);
@@ -877,7 +827,8 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
       key: 'BOARD_YEAR',
     }
   });
-  boardProjects.forEach(async (boardProject) => {
+  for (let i = 0 ; i < boardProjects.length ; i++) {
+    const boardProject = boardProjects[i];
     console.log('boardProject');
     console.log(boardProject);
     const partner = await ProjectPartner.findOne({
@@ -966,8 +917,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
 
     const newBoardProjectInstance = new BoardProject(newBoardProjectParams);
     await newBoardProjectInstance.save();
-  })
-  
+  }
 };
 
 const updateProjectStatus = async (boards) => {
@@ -1221,40 +1171,49 @@ const sendBoardProjectsToDistrict = async (boards) => {
 }
 
 const updateBoards = async (board, status, comment, substatus) => {
-    logger.info('Updating all boards different project type');
-    let pjts = ['Capital', 'Maintenance', 'Study', 'Acquisition', 'Special'];
-    logger.info(`Starting function findOne for board/`);
-    for (const pjt of pjts) {
-        let body = {
-            type: board.type,
-            year: board.year,
-            locality: board.locality,
-            projecttype: pjt
-        };
-        let b = await Board.findOne({
-            where: body
-        });
+  logger.info('Updating all boards different project type');
+  let projectTypes = [
+    'Capital',
+    'Maintenance',
+    'Study',
+    'Acquisition',
+    board.year < 2024 ? 'Special' : 'R&D'
+  ];
+  logger.info(`Starting function findOne for board/`);
+  for (const projectType of projectTypes) {
+    logger.info(`Project type ${projectType}`);
+    let body = {
+      type: board.type,
+      year: board.year,
+      locality: board.locality,
+      projecttype: projectType
+    };
+    let boards = await Board.findAll({
+      where: body
+    });
+    if (boards.length === 0) {
+      logger.info(`Creating new board for ${projectType}`);
+      await boardService.specialCreationBoard(board.type, board.year, board.locality, projectType, status, comment, substatus);
+    } else {
+      for (let i = 0 ; i < boards.length ; i++) {
+        let board = boards[i];
         if (status === 'Approved' && board.status !== status) {
-            body['submissionDate'] = new Date();
+          body['submissionDate'] = new Date();
         }
-        logger.info(`Project type ${pjt}`);
-        if (!b) {
-            logger.info(`Creating new board for ${pjt}`);
-            await boardService.specialCreationBoard(board.type, board.year, board.locality, pjt, status, comment, substatus);
-        } else {
-            logger.info('Updating board');
-            let newFields = {
-                status,
-                comment,
-                substatus
-            };
-            if (status === 'Approved' && board.status !== status) {
-                newFields['submissionDate'] = new Date();
-            }
-            b.update(newFields)
+        logger.info('Updating board');
+        let newFields = {
+          status,
+          comment,
+          substatus
+        };
+        if (status === 'Approved' && board.status !== status) {
+            newFields['submissionDate'] = new Date();
         }
+        await board.update(newFields)
+      }
     }
-    logger.info(`Finished function findOne for board/`);
+  }
+  logger.info(`Finished function findOne for board/`);
 }
 
 const moveCardsToNextLevel = async (board, creator) => {
@@ -1425,7 +1384,7 @@ const sendMails = async (board, fullName) => {
 }
 
 router.put('/', [auth], async (req, res) => {
-    logger.info(`Starting endpoint /board/:boardId params ${JSON.stringify(req.params, null, 2)}`)
+    logger.info(`Starting endpoint /board/:boardId params ${JSON.stringify(req.body, null, 2)}`)
     const user = req.user;
     const creator = user.email;
     const { status, comment, substatus, boardId } = req.body;
