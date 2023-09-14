@@ -1370,7 +1370,8 @@ const getEmailsForWR = async (board) => {
     users.forEach((u) => {
         emails.push(u.email)        
     })
-    return emails;
+    const finalEmailList = process.env.NODE_ENV === 'prod' ? emails : ['ricardo@vizonomy.com', 'katie@mhfd.org']
+    return finalEmailList;
 }
 
 const getEmailsForWP = async (board) => {
