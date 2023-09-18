@@ -41,6 +41,8 @@ import { ProjectError, ProjectBoardsError} from '../../errors/project.error.js';
 
 const CodeCostType = db.codeCostType
 const Project = db.project;
+const BoardProject = db.boardProject;
+
 
 const getOfficialProjectName = (name) => name + (name === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '');
 
@@ -298,9 +300,17 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
         project_id: project_id
       },
     });
+    const boardProjectId = await BoardProject.findOne({
+      attributes: [
+        'board_project_id'
+      ],
+      where : {
+        project_id: project_id
+      },
+    });
     console.log('\n-*******************- \n Last Project created should be: ', project_id, lastProject);
 
-    const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, lastProject};
+    const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, lastProject, boardProjectId};
     return composeData;
   } catch (error) {
     await transaction.rollback();
