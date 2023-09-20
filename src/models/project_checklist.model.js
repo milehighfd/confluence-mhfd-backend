@@ -1,6 +1,6 @@
 export default (sequelize, DataTypes) => {
   const ProjectChecklist = sequelize.define('project_checklist', {
-    id: {
+    project_checklist_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
@@ -8,32 +8,35 @@ export default (sequelize, DataTypes) => {
     project_id: {
       type: DataTypes.INTEGER,
     },
-    phase_type_id: {
+    code_phase_type_id: {
       type: DataTypes.INTEGER,
     },
     checklist_todo_name: {
       type: DataTypes.STRING,
     },
-    is_completed: {
-      type: DataTypes.BOOLEAN,
+    completed_date: {
+      type: DataTypes.DATE,
+    },
+    completed_user_id: {
+      type: DataTypes.INTEGER,
     },
     created_by: {
       type: DataTypes.STRING,
     },
-    updated_by: {
+    last_modified_by: {
       type: DataTypes.STRING,
     },
-    created_at: {
+    created_date: {
       type: DataTypes.DATE,
     },
-    updated_at: {
+    modified_date: {
       type: DataTypes.DATE,
     },
   }, {
     freezeTableName: true,
     tableName: 'project_checklist',
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    createdAt: 'created_date',
+    updatedAt: 'modified_date',
     underscored: true,
   });
 
