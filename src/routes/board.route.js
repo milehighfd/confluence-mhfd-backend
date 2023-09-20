@@ -598,6 +598,29 @@ router.post('/board-for-positions2', async (req, res) => {
       [rankColumnName]: { [Op.ne]: null }
     };
   
+    if(projecttype === 'Maintenance') {
+      let maintenanceSubtype = 8;
+      switch (position) {
+        case 1:
+          maintenanceSubtype = 8;
+          break;
+        case 2:
+          maintenanceSubtype = 11;
+          break;
+        case 3:
+          maintenanceSubtype = 9;
+          break;
+        case 4:
+          maintenanceSubtype = 17;
+          break;
+        case 5:
+          maintenanceSubtype = 7;
+          break;
+        default:
+          break;
+      } 
+      filters.projecttype = [maintenanceSubtype];
+    }
     if (`${position}` !== '0') {
       attributes.push(reqColumnName);
     }

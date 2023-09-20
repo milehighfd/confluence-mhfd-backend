@@ -129,12 +129,13 @@ const reCalculateColumn = async (board_id, column) => {
       ]
     });
     const pr = [];
-    boardProjects.forEach((project) => {
-      const rank = startValue.genNext();
+    let rank = startValue;
+    boardProjects.forEach((project) => {      
       pr.push(BoardProject.update(
         { [column]: rank.toString() },
         { where: { board_project_id: project.board_project_id } }
       ));
+      rank = rank.genNext();
     });
     const solve = await Promise.all(pr);
     return solve;
