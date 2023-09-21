@@ -51,6 +51,7 @@ export const createProjects = async (body, transaction, type, creator, subtype) 
   const { projectname, description, maintenanceeligibility = null, geom, isCountyWide, isSouthPlate } = body;
   let saveFn = saveProject;  
   let codeProjectTypeId = 0;
+  console.log('Is accesing here?', type);
   switch(type) {
     case 'capital':
       saveFn = saveCapital;
@@ -61,6 +62,8 @@ export const createProjects = async (body, transaction, type, creator, subtype) 
       codeProjectTypeId = 13;
       break;
     case 'special':
+    case 'r&d':
+      console.log('special RYD', type);
       saveFn = saveSpecial;
       codeProjectTypeId = 15;
       break;
@@ -97,6 +100,15 @@ export const createProjects = async (body, transaction, type, creator, subtype) 
       break;
   };
   try {
+    // console all the data to saveFn
+    console.log(
+      '\n\n\n\n *********** \n\n ',
+      cleanStringValue(getOfficialProjectName(projectname)),
+      cleanStringValue(description),
+      creator,
+      isCountyWide,
+      isSouthPlate,
+      maintenanceeligibility);
     const data = await saveFn(
       cleanStringValue(getOfficialProjectName(projectname)),
       cleanStringValue(description),

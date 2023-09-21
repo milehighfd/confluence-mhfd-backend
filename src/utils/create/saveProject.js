@@ -69,7 +69,7 @@ export const saveProject = async (
     logger.info('create project ');
     return insert;
   } catch (error) {
-    console.log('the error ', error);
+    console.error('the error at save Project', error);
     throw error;
   }
 }
