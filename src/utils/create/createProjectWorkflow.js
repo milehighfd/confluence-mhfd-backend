@@ -48,7 +48,7 @@ const getOfficialProjectName = (name) => name + (name === 'Ex: Stream Name @ Loc
 
 export const createProjects = async (body, transaction, type, creator, subtype) => {
   console.log(subtype, 'type')
-  const { projectname, description, maintenanceeligibility = null, geom, isCountyWide, isSouthPlate } = body;
+  const { projectname, description, maintenanceeligibility = null, isCountyWide, isSouthPlate } = body;
   let saveFn = saveProject;  
   let codeProjectTypeId = 0;
   console.log('Is accesing here?', type);
@@ -264,6 +264,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         answer.resDetails = resDetails;
         break;
       case 'special':
+      case 'r&d':
         await createCarto(...createCartoInputs);
         const resSpecial = await saveProjectDetails(project_id, body, creator, transaction);
         answer.resSpecial = resSpecial;
