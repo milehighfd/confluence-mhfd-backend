@@ -151,7 +151,7 @@ router.get('/download/:id', auth, async (req, res) => {
       logger.info(`Starting function download for attachment.rote/download/:id`);
       const data = await attachmentService.downloadZip(id, images);
       logger.info(`Finished function download for attachment.rote/download/:id`);
-      res.send(data);
+      res.json({ zipData: data });
    } catch(error) {
       res.status(500).send(error);
    }
