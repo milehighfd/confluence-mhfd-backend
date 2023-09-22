@@ -306,6 +306,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
       project_id,
       transaction
     );    
+    console.log('\n\n ******* \n Geom \n ', body.geom, '******* \n');
     const extra_fields = await extraFields(type, subtype, body, project_id, transaction, user.email);    
     await transaction.commit();
     const lastProject = Project.findOne({

@@ -10,6 +10,7 @@ export const createCartoEntry = async (table, geom, project_id, transaction) => 
   const query = {
     q: insertQuery
   };
+  console.log('Insert query', insertQuery);
   try {
     const data = await needle('post', CARTO_URL, query, { json: true, headers: { 'Carto-Transaction-Id': transaction.id } });
     if (data.statusCode === 200) {
