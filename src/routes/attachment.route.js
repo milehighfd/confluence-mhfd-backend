@@ -144,7 +144,7 @@ router.delete('/remove', auth, async (req, res) => {
    }
 });
 
-router.get('/download/:id', async (req, res) => {
+router.get('/download/:id', auth, async (req, res) => {
    try {
       const id = +req.params.id;
       const { images } = req.query;
