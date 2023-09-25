@@ -20,8 +20,6 @@ export const updateProjectsInBoard = async (
       let currentProj = projectToUpdate[i];
       await currentProj.update({
         projectname: projectname,
-        projecttype: projecttype,
-        projectsubtype: projectsubtype,
       }, { transaction: transaction });
     }
   }

@@ -105,8 +105,6 @@ export const updateProjectsInBoard = async (
       let currentProj = projectToUpdate[i];
       await currentProj.update({
         projectname: projectname,
-        projecttype: projecttype,
-        projectsubtype: projectsubtype,
       });
     }
   }
@@ -127,8 +125,6 @@ export const updateProjectInBoard = async (
   console.log('project about to be updated');
   await projectToUpdate.update({
     projectname: projectname,
-    projecttype: projecttype,
-    projectsubtype: projectsubtype,
   });
   console.log('project updated in projectboard');
 };

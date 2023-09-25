@@ -21,8 +21,6 @@ export const saveBoard = async (
       origin: origin,
       rank0: rank0,
       projectname: projectname,
-      projecttype: projecttype,
-      projectsubtype: projectsubtype,
       code_status_type_id: DRAFT_STATUS,
       createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt: moment().format('YYYY-MM-DD HH:mm:ss')
