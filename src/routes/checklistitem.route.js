@@ -84,7 +84,7 @@ router.post('/create', auth, async (req, res) => {
       project_id,
       code_phase_type_id,
       created_by: req.user.email,
-      checklist_todo_name: 'New Checklist Item',
+      checklist_todo_name: '',
       last_modified_by: req.user.email,
     });
     res.send(projectChecklist);
