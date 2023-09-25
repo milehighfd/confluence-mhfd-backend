@@ -93,12 +93,6 @@ export default (sequelize, DataType) => {
     projectname: {
       type: DataType.STRING
     },
-    projecttype: {
-      type: DataType.STRING
-    },
-    projectsubtype: {
-      type: DataType.STRING
-    },
     code_status_type_id: {
       type: DataType.INTEGER
     },
