@@ -11,7 +11,6 @@ import projectStreamService from 'bc/services/projectStream.service.js';
 import capitalRouter from 'bc/routes/new-project/capital.route.js';
 import maintenanceRouter from 'bc/routes/new-project/maintenance.route.js';
 import studyRouter from 'bc/routes/new-project/study.route.js';
-import acquisitionRouter from 'bc/routes/new-project/acquisition.route.js';
 import specialRouter from 'bc/routes/new-project/special.route.js';
 import copyRouter from 'bc/routes/new-project/copy.route.js';
 import projectProposedAction from "bc/services/projectProposedAction.service.js";
@@ -32,7 +31,6 @@ const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'spe
 router.use('/capital', capitalRouter);
 router.use('/maintenance', maintenanceRouter);
 router.use('/study', studyRouter);
-router.use('/acquisition', acquisitionRouter);
 router.use('/special', specialRouter);
 router.use('/copy', copyRouter);
 router.use('/createproject', createProject);
