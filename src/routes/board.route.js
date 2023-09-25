@@ -599,7 +599,7 @@ router.post('/board-for-positions2', async (req, res) => {
     };
   
     if(projecttype === 'Maintenance') {
-      let maintenanceSubtype = 8;
+      let maintenanceSubtype = 0;
       switch (position) {
         case 1:
           maintenanceSubtype = 8;
@@ -619,7 +619,9 @@ router.post('/board-for-positions2', async (req, res) => {
         default:
           break;
       } 
-      filters.projecttype = [maintenanceSubtype];
+      if (maintenanceSubtype !== 0) {
+        filters.projecttype = [maintenanceSubtype];
+      }
     }
     if (`${position}` !== '0') {
       attributes.push(reqColumnName);
@@ -646,6 +648,7 @@ router.post('/board-for-positions2', async (req, res) => {
       where,
       order: [[rankColumnName, 'ASC']],
     })).map(d => d.dataValues);
+    console.log('boardProjects', boardProjects, boardProjects.length)
     const projects_filtered = await projectService.filterProjectsBy(filters);
     const projectIds = boardProjects.filter(boardProject => projects_filtered.map(p => p.project_id).includes(boardProject.project_id));
     const lightDetails = await projectService.getLightDetails(projectIds.map(p => p.project_id));
