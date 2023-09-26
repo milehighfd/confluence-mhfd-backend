@@ -243,14 +243,18 @@ const globalSearch = async (req, res) => {
     const projectsIds = projects.map(p => p.project_id);
     if (projectsIds && (type === 'WORK_REQUEST' || type === 'WORK_PLAN')) {
       const boardProjects = await projectService.getBoardProjectData(projectsIds, type);
+      const projectPartner = await projectService.getProjectPartner(projectsIds);
       const nameProjects = boardProjects.map(p => {
         const project = projects.find(pr => pr.project_id === p.project_id);
+        const partner = projectPartner.find(pp => pp.project_id === p.project_id);
         return {
           board_project_id: p.board_project_id,
           project_id: p.project_id,          
           board : p.board,
           project_name: project?.project_name,
           code_status_type: p.code_status_type,
+          project_data: p.projectData,
+          partner: partner,
         }
       });
       logger.info('project name already exists');

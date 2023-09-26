@@ -2356,7 +2356,7 @@ const globalSearch = async (keyword) => {
   return projects;
 };
 
-const getBoardProjectData = async (project_id, type) => {
+const getBoardProjectData = async (project_id, type) => {  
   const boardProject = await BoardProject.findAll({
     where: {
       project_id: project_id,
@@ -2389,6 +2389,18 @@ const getBoardProjectData = async (project_id, type) => {
     {
       attributes: ['status_name'],
       model: CodeStatusType,
+    },
+    {
+      model: Project,
+      attributes: ['project_id','is_archived'],
+      as: 'projectData', 
+      required: true,
+      where: {
+        [Op.or]: [
+          { is_archived: { [Op.ne]: 1 } },
+          { is_archived: null }
+        ]
+      }
     }
     ]
   })
@@ -2479,8 +2491,25 @@ const getProjectsByStatus = async (status_id) => {
     throw new Error('Error getting projects by status');
   }
 };
-    
 
+const getProjectPartner = async (project_id) =>{
+  const SPONSOR_TYPE = 11;
+  const project_partners = await ProjectPartner.findAll({
+    where: {
+      project_id: project_id,
+      code_partner_type_id: SPONSOR_TYPE,
+    },
+    include: { 
+      model : BusinessAssociate,
+      required: true,
+      attributes: [
+        'business_name',
+        'business_associates_id'
+      ],
+    }
+  });
+  return project_partners;
+}
 
 export default {
   checkProjectName,
@@ -2509,5 +2538,6 @@ export default {
   globalSearch,
   getBoardProjectData,
   getPmtoolsProjectData,
-  getProjectsByStatus
+  getProjectsByStatus,
+  getProjectPartner
 };
