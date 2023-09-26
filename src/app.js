@@ -38,7 +38,7 @@ import projectServiceArea from 'bc/routes/projectservicearea.route.js';
 import streamsRouter from 'bc/routes/streams.route.js';
 import phasetypeRouter from 'bc/routes/phasetype.route.js';
 import projectactionitemRouter from 'bc/routes/projectactionitem.route.js'
-import projectchecklistitemRouter from 'bc/routes/checklistitem.route.js'
+//import projectchecklistitemRouter from 'bc/routes/checklistitem.route.js'
 import projectStatusRouter from 'bc/routes/projectStatus.route.js';
 import businessRouter from 'bc/routes/business.route.js';
 import notificationRouter from 'bc/routes/notifications.route.js';
@@ -112,7 +112,7 @@ app.use('/newnotes', newnoteRouter);
 app.use('/consultants', consultantsRouter);
 app.use('/phasetype', phasetypeRouter);
 app.use('/actionitem', projectactionitemRouter);
-app.use('/checklistitem', projectchecklistitemRouter);
+//app.use('/checklistitem', projectchecklistitemRouter);
 app.use('/status', projectStatusRouter);
 app.use('/organizations', organizationRouter);
 app.use('/configuration', configurationRouter);
