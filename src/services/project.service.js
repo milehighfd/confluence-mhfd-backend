@@ -2341,12 +2341,15 @@ const checkProjectName = async (project_name) => {
 }
 
 const globalSearch = async (keyword) => {
-  console.log('keyword', keyword)
+  const words = keyword.split(' ').filter(word => word.trim() !== '');
+  const conditions = words.map(word => ({
+    project_name: {
+      [Op.like]: `%${word}%`
+    }
+  }));
   const projects = await Project.findAll({
     where: {
-      project_name: {
-        [Op.like]: `%${keyword}%`
-      }
+      [Op.and]: conditions
     },
     attributes: [
       'project_id',

@@ -201,7 +201,14 @@ const globalSearch = async (req, res) => {
   try {
     const { keyword, type } = req.body;
     const projects = await projectService.globalSearch(keyword);
-    const projectsIds = projects.map(p => p.project_id);
+    const words = keyword.split(' ').filter(word => word.trim() !== '');
+    const filteredProjects = projects.filter(project => {
+      return words.every(keyword => {
+        const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+        return regex.test(project.project_name);
+      });
+    });
+    const projectsIds = filteredProjects.map(p => p.project_id);
     if (projectsIds && (type === 'WORK_REQUEST' || type === 'WORK_PLAN')) {
       const boardProjects = await projectService.getBoardProjectData(projectsIds, type);
       const projectPartner = await projectService.getProjectPartner(projectsIds);
