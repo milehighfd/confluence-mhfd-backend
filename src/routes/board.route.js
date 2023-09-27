@@ -295,36 +295,6 @@ router.put('/update-budget', [authOnlyEmail], async (req, res) => {
     }
 });
 
-router.get('/board-localities', async (req, res) => {
-    logger.info(`Starting endpoint board/board-localities with params ${JSON.stringify(req.params, null, 2)}`);
-    logger.info(`Starting function findAll for board/board-localities`);
-    let boardLocalities = await BoardLocality.findAll();
-    logger.info(`Finished function findAll for board/board-localities`);
-    res.send(boardLocalities);
-});
-
-router.put('/board-localities/:id', async (req, res) => {
-    logger.info(`Starting endpoint /board/board-localities/:id with params ${JSON.stringify(req.params, null, 2)}`);
-    let { id } = req.params;
-    const email = req.body.email;
-    logger.info(`Starting function findOne for board/board-localities/:id`);
-    let boardLocalities = await BoardLocality.findOne({
-        where: {
-            id
-        }
-    });
-    logger.info(`Finished function findOne for board/board-localities/:id`);
-    if (boardLocalities) {
-        boardLocalities.email = email;
-        logger.info(`Starting function save for board/board-localities/:id`);
-        await boardLocalities.save();
-        logger.info(`Finished function save for board/board-localities/:id`);
-        res.send(boardLocalities);
-    } else {
-        res.status(404).send({error: 'Not found'});
-    }
-});
-
 router.get('/projects/:bid', async (req, res) => {
     logger.info(`Starting endpoint board/projects/:bid with params ${JSON.stringify(req.params, null, 2)}`)
     let { bid } = req.params;
@@ -1253,50 +1223,6 @@ const moveCardsToNextLevel = async (board, creator) => {
         return {}
     }
 }
-
-router.get('/:boardId/boards/:type', async (req, res) => {
-    logger.info(`Starting endpoint /board/:boardId/boards/:type with params ${JSON.stringify(req.params, null, 2)}`)
-    const { boardId, type } = req.params;
-    logger.info(`Starting function findOne for board/`);
-    let board = await Board.findOne({
-        where: {
-            board_id: boardId
-        }
-    })
-    logger.info(`Finished function findOne for board/`);
-    logger.info(`Starting function findAll for board/`);
-    let boardLocalities = await BoardLocality.findAll({
-        where: {
-            toLocality: board.locality
-        }
-    });
-    logger.info(`Finished function findOne for board/`);
-    let bids = []
-    logger.info(`Starting function findOne for board/`);
-    for (var i = 0 ; i < boardLocalities.length ; i++) {
-        let bl = boardLocalities[i];
-        let locality = bl.fromLocality;
-        logger.info(`BOARDS INFO locality: ${locality} type: ${type} year: ${board.year} status: Approved`);
-        let boardFrom = await Board.findOne({
-            where: {
-                locality,
-                type,
-                year: board.year
-            }
-        })
-        logger.info (`BOARD FROM: ${boardFrom}`);
-        bids.push({
-            locality,
-            status: boardFrom ? boardFrom.status : 'Under Review',
-            submissionDate: boardFrom ? boardFrom.submissionDate : null,
-            substatus: boardFrom ? boardFrom.substatus : ''
-        });
-    }
-    logger.info(`Finished function findOne for board/`);
-    res.status(200).send({
-        boards: bids
-    });
-})
 
 const getEmailsForWR = async (board) => {
     let emails = [];
