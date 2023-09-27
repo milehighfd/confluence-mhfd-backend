@@ -296,7 +296,7 @@ const getPagePMTools = async (req, res) => {
 
 router.get('/bbox/:project_id', getBboxProject);
 router.put('/archive/:project_id', [auth], archiveProject);
-router.post('/check_project_name', checkProjectName)
+router.post('/check-project-name', checkProjectName)
 router.post('/', listProjects);
 router.post('/test', listProjectsDBFilter);
 router.post('/ids', listProjectsForId);
