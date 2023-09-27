@@ -18,6 +18,7 @@ export const sendBoardsToProp = async (bp, board, prop, propid, creator, transac
       propVal,
       board.year,
       board.projecttype,
+      creator,
       transaction
     );
     //TODO: improve to avoid multiple queries to same board

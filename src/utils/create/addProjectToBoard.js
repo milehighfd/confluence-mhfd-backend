@@ -50,6 +50,7 @@ export const addProjectToBoard = async (
         year,
         locality,
         _projecttype,
+        user.email,
         transaction
       );
       board = response;

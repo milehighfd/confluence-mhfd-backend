@@ -2,9 +2,9 @@ import express from 'express';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import auth from 'bc/auth/auth.js';
-import boardService from 'bc/services/board.service.js';
-import updateRank from 'bc/routes/board-project/update-rank.js'
-import updateCost from 'bc/routes/board-project/cost.js'
+import updateRank from 'bc/routes/board-project/update-rank.js';
+import updateCost from 'bc/routes/board-project/cost.js';
+import authOnlyEmail from 'bc/auth/auth-only-email.js';
 
 const Board = db.board;
 const BoardProject = db.boardProject;
@@ -89,7 +89,7 @@ router.post('/getCostsMaintenance', async (req, res) => {
   }
 });
 
-router.put('/update-target-cost', async(req,res) => {
+router.put('/update-target-cost', [authOnlyEmail], async(req,res) => {
   const {
     boardId,
     targetcost1,
@@ -105,6 +105,7 @@ router.put('/update-target-cost', async(req,res) => {
     year,
   } = boardId;
   const board = await Board.findOne({
+    attributes: ['board_id'],
     where: {
       locality,
       projecttype,
@@ -116,23 +117,28 @@ router.put('/update-target-cost', async(req,res) => {
 
   try{
     let boardUpdate = await Board.update(
-      { targetcost1, targetcost2, targetcost3, targetcost4, targetcost5 },
-      {where: { board_id: board.board_id}}
+      {
+        targetcost1,
+        targetcost2,
+        targetcost3,
+        targetcost4,
+        targetcost5,
+        last_modified_by: req.user.email
+      },
+      {
+        where: {
+          board_id: board.board_id
+        }
+      }
     );
     return res.status(200).send(boardUpdate);
   } catch (error) {
     logger.error(error);
     return res.status(500).send({ error: error });
   }
-  
 });
+
 router.put('/:board_project_id/update-rank', [auth], updateRank);
 router.put('/:board_project_id/cost',[auth], updateCost);
-router.get('/:board_project_id/duplicate', [auth], async (req, res) => {
-  const { board_project_id } = req.params;
-  const user = req.user;
-  const board_id = 84;
-  await boardService.duplicateBoardProject(board_project_id, board_id, user.email);
-  res.send(200);
-})
+
 export default router;

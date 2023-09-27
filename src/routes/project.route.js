@@ -1,29 +1,15 @@
 import express from 'express';
+import moment from 'moment';
+import needle from 'needle';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import projectService from 'bc/services/project.service.js';
-import {
-  getStreamsDataByProjectIds,
-  sortProjects,
-  projectsByFilters,
-  projectsByFiltersForIds,
-  getIdsInBbox
-} from 'bc/utils/functionsProjects.js';
+import { projectsByFiltersForIds, getIdsInBbox } from 'bc/utils/functionsProjects.js';
 import auth from 'bc/auth/auth.js';
-
+import { CARTO_URL, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
 
 const ProjectCost = db.projectCost;
-
-
 const router = express.Router();
-import {
-  CARTO_URL,
-  MAIN_PROJECT_TABLE
-} from 'bc/config/config.js';
-import needle from 'needle';
-import moment from 'moment';
-
-
 
 const listProjectsForId = async (req, res) => {
   logger.info(`Starting endpoint project/ids with params ${JSON.stringify(req, null, 2)}`);
@@ -32,7 +18,6 @@ const listProjectsForId = async (req, res) => {
   logger.info(`Starting function getProjects for endpoint project/ids`);
   let projects = await projectService.getProjects(null, null, offset, limit);
   logger.info(`Finished function getProjects for endpoint project/ids`);
-
   logger.info(`Starting function projectsByfiltersForIds for endpoint project/ids`);
   projects = await projectsByFiltersForIds(projects, body);
   logger.info(`Finished function projectsByfiltersForIds for endpoint project/ids`);
@@ -68,19 +53,12 @@ const listProjects = async (req, res) => {
   const set = new Set(projectsFilterId.map((p) => p?.project_id));
   const count = set.size;
   logger.info(projects.length);
-  // if (body?.sortby?.trim()?.length || 0) {
-  //   logger.info(`Starting function sortProjects for endpoint project/`);
-  //   projects = await sortProjects(projects, body);
-  //   logger.info(`Finished function sortProjects for endpoint project/`);
-  // }
-
   logger.info('projects being called', projects.length);
   res.send({ projects, count: count });
 };
 
 const listProjectsDBFilter = async (req, res) => {
   logger.info(`Starting endpoint project/test with params`);
-  const { offset = 1, limit = 10000 } = req.query;
   const { body } = req;
   const bounds = body?.bounds;
   logger.info(`Starting function filterProjectsBy for endpoint project/test`);
@@ -182,23 +160,6 @@ const createCosts = async (req, res) => {
   } catch (error) {
     logger.info('error on createCosts', error);
     res.status(500).send(error);
-  }
-  
-};
-const deleteProject = async (req, res) => {
-  try {
-    const projectId = parseInt(req.params['project_id'], 10);
-    const deleteProject = await projectService.deleteByProjectId(projectId);
-    if (deleteProject) {
-      logger.info('project destroyed ');
-      res.status(200).send('Deleted');
-    } else {
-      logger.info('project not found');
-      res.status(200).send('Not found');
-    }
-  } catch (error) {
-    logger.error(`Error deleting project: ${error}`);
-    res.status(500).send('Error deleting project');
   }
 };
 
@@ -305,6 +266,5 @@ router.get('/projectCost/:project_id', listOfCosts);
 router.post('/projectCost/:project_id', [auth], createCosts);
 router.post('/search', globalSearch);
 router.post('/page', getPagePMTools);
-
 
 export default router;
