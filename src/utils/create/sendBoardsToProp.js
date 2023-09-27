@@ -4,7 +4,7 @@ import { getBoard, countProjectsByRank, reCalculateColumn } from 'bc/utils/creat
 
 const BoardProject = db.boardProject;
 
-export const sendBoardsToProp = async (bp, board, prop, propid, transaction = null) => {
+export const sendBoardsToProp = async (bp, board, prop, propid, creator, transaction = null) => {
   let propValues = prop.split(',');
   for (let k = 0; k < propValues.length; k++) {
     let propVal = propValues[k];
@@ -38,6 +38,8 @@ export const sendBoardsToProp = async (bp, board, prop, propid, transaction = nu
       year1: bp.year1,
       year2: bp.year2,
       origin: board.locality,
+      created_by: creator,
+      last_modified_by: creator,
     });
     await newBoardProject.save({ transaction: transaction }); // associate transaction with the database operation
     const updatePromises = [];
@@ -47,7 +49,7 @@ export const sendBoardsToProp = async (bp, board, prop, propid, transaction = nu
       const {counter} = await countProjectsByRank(destinyBoard.board_id, rank, transaction); // associate transaction with the database operation
       logger.info(`Finish counter: ${JSON.stringify(counter)}}`);
       if (counter) {
-          updatePromises.push(reCalculateColumn(destinyBoard.board_id, rank, transaction)); // associate transaction with the database operation
+          updatePromises.push(reCalculateColumn(destinyBoard.board_id, rank, transaction, creator)); // associate transaction with the database operation
       }   
     }
     if (updatePromises.length) {

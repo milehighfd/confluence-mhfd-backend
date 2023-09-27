@@ -1,238 +1,11 @@
 import needle from 'needle';
-import { LexoRank } from 'lexorank';
-import sequelize from 'sequelize';
 import db from 'bc/config/db.js';
 import { CREATE_PROJECT_TABLE, CARTO_URL } from 'bc/config/config.js';
 import logger from 'bc/config/logger.js';
-import boardService from 'bc/services/board.service.js';
 
-const { Op } = sequelize;
-const Configuration = db.configuration;
-const Board = db.board;
-const BoardProject = db.boardProject;
-const Project = db.project;
 const CodeServiceArea = db.codeServiceArea;
 const CodeLocalGoverment = db.codeLocalGoverment;
 const CodeStateCounty = db.codeStateCounty;
-
-export const getBoard = async (type, locality, year, projecttype, transaction = null) => {
-  let board = await Board.findOne({
-    where: {
-      type, year, locality, projecttype
-    },
-    transaction: transaction, // associate transaction with the database operation
-  });
-  if (board) {
-    return board;
-  } else {
-    let newBoard = new Board({
-      type, year, locality, projecttype, status: 'Under Review'
-    });
-    await newBoard.save({ transaction: t }); // associate transaction with the database operation
-    return newBoard;
-  }
-};
-
-export const sendBoardsToProp = async (bp, board, prop, propid, transaction = null) => {
-  const t = transaction ? await transaction : null;
-  let propValues = prop.split(',');
-  for (let k = 0; k < propValues.length; k++) {
-    let propVal = propValues[k];
-    if (propid === 'county' && !prop.includes('County')) {
-      propVal = propVal.trimEnd().concat(' County');
-    } else if (propid === 'servicearea' && !prop.includes(' Service Area')) {
-      propVal = propVal.trimEnd().concat(' Service Area');
-    }
-    let destinyBoard = await getBoard(
-      'WORK_PLAN',
-      propVal,
-      board.year,
-      board.projecttype,
-      t // associate transaction with the database operation
-    );
-    //TODO: improve to avoid multiple queries to same board
-    let newBoardProject = new BoardProject({
-      board_id: destinyBoard.board_id,
-      project_id: bp.project_id,
-      rank0: bp.rank0,
-      rank1: bp.rank1,
-      rank2: bp.rank2,
-      rank3: bp.rank3,
-      rank4: bp.rank4,
-      rank5: bp.rank5,
-      req1: bp.req1 == null ? null : bp.req1 / propValues.length,
-      req2: bp.req2 == null ? null : bp.req2 / propValues.length,
-      req3: bp.req3 == null ? null : bp.req3 / propValues.length,
-      req4: bp.req4 == null ? null : bp.req4 / propValues.length,
-      req5: bp.req5 == null ? null : bp.req5 / propValues.length,
-      year1: bp.year1,
-      year2: bp.year2,
-      origin: board.locality,
-    });
-    await newBoardProject.save({ transaction: t }); // associate transaction with the database operation
-    const updatePromises = [];
-    for (let i = 0; i < 6; i++) {
-      const rank = `rank${i}`;
-      logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
-      const {counter} = await boardService.countProjectsByRank(destinyBoard.board_id, rank, t); // associate transaction with the database operation
-      logger.info(`Finish counter: ${JSON.stringify(counter)}}`);
-      if (counter) {
-          updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank, t)); // associate transaction with the database operation
-      }   
-    }
-    if (updatePromises.length) {
-      await Promise.all(updatePromises).then((values) => {
-          logger.info('success on recalculate Columns');
-      }).catch((error) => {
-          logger.error(`error on recalculate columns ${error}`);
-      });
-    }
-  }
-};
-export const updateProjectsInBoard = async (
-  project_id,
-  projectname,
-  projecttype,
-  projectsubtype
-) => {
-  let projectToUpdate = await BoardProject.findAll({
-    where: {
-      project_id: project_id,
-    },
-  });
-  if (projectToUpdate.length) {
-    for (let i = 0; i < projectToUpdate.length; ++i) {
-      let currentProj = projectToUpdate[i];
-      await currentProj.update({
-        projectname: projectname,
-      });
-    }
-  }
-  return true;
-};
-
-export const updateProjectInBoard = async (
-  project_id,
-  projectname,
-  projecttype,
-  projectsubtype
-) => {
-  let projectToUpdate = await BoardProject.findOne({
-    where: {
-      project_id: project_id,
-    },
-  });
-  console.log('project about to be updated');
-  await projectToUpdate.update({
-    projectname: projectname,
-  });
-  console.log('project updated in projectboard');
-};
-export const addProjectToBoard = async (
-  user,
-  servicearea,
-  county,
-  locality,
-  projecttype,
-  project_id,
-  year,
-  sendToWR,
-  isWorkPlan,
-  projectname,
-  projectsubtype,
-  type,
-  transaction = null
-) => {  
-  const t = transaction ? await transaction : null;
-  if (!year) {
-    let configuration = await Configuration.findOne({
-      where: {
-        key: 'BOARD_YEAR',
-      },
-      transaction: t,
-    });
-    year = +configuration.value;
-  }
-  let board = await Board.findOne({
-    where: {
-      type,
-      year,
-      locality,
-      projecttype,
-    },
-    transaction: t,
-  });
-  if (!board) {
-    try {
-      const response = await boardService.createNewBoard(
-        type,
-        year,
-        locality,
-        projecttype,
-        'Under Review',
-        transaction
-      );
-      board = response;
-    } catch (e) {
-      logger.error('error in create new board '+e);
-      throw e;
-    }    
-    logger.info('BOARD CREATED');
-  }
-  let boardProjectObject = {
-    board_id: board.board_id,
-    project_id: project_id,
-    origin: locality,
-  };
-  const firstProject = await BoardProject.findOne({
-    where: {
-      board_id: board.board_id,
-      rank0: {
-        [Op.ne]: null,
-      }
-    }, 
-    order: [['rank0', 'ASC']],
-    transaction: t,
-  });
-  if (firstProject) {
-    boardProjectObject.rank0 = LexoRank.parse(firstProject.rank0)
-      .genPrev()
-      .toString();
-  } else { 
-    boardProjectObject.rank0 = LexoRank.middle().toString();
-  }
-  boardProjectObject.projectname = projectname;
-  boardProjectObject.projecttype = projecttype;
-  boardProjectObject.projectsubtype = projectsubtype;
-  let boardProject = new BoardProject(boardProjectObject);
-  let boardProjectSaved = boardProject;
-  if (sendToWR === 'true' || isWorkPlan) {
-    try {
-      boardProjectSaved = await boardService.saveBoard(
-        boardProject.board_id,
-        boardProject.project_id,
-        boardProject.origin,
-        boardProject.rank0,
-        boardProject.projectname,
-        boardProject.projecttype,
-        boardProject.projectsubtype,
-        transaction
-      );
-    } catch (error) {
-      logger.error('error in save board ' + error);
-      throw error;
-    }
-  }
-  if (['admin', 'staff'].includes(user.designation) && !isWorkPlan) {
-    await sendBoardsToProp(
-      boardProjectSaved,
-      board,
-      servicearea,
-      'servicearea'
-    );
-    await sendBoardsToProp(boardProjectSaved, board, county, 'county');
-  }
-};
 
 export const getNewProjectId = async () => {
   const query = {
@@ -263,7 +36,7 @@ export const copyProject = async (newProjectId, projectid) => {
       console.error('bad status ' + data.statusCode + ' ' + JSON.stringify(data.body, null, 2));
     }
   } catch (e) {
-
+    console.error(e);
   }
   return result;
 };
@@ -287,8 +60,8 @@ export const setProjectID = async (res, projectId) => {
       return false;
     }
   } catch (error) {
-    logger.error(error, 'at', sql);
-  };
+    logger.error(error, 'at', update);
+  }
   return true;
 };
 

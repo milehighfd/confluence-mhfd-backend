@@ -118,7 +118,8 @@ const updateCost = async (req, res) => {
     console.log('Value of rank0', rank0, 'shpould move', shouldMoveToWorkspace);
     await BoardProject.update(
       {
-        rank0, req1, req2, req3, req4, req5, year1, year2, ...updateFields
+        rank0, req1, req2, req3, req4, req5, year1, year2, ...updateFields,
+        last_modified_by: user.email
       },
       { where: { board_project_id } }
     );
@@ -134,7 +135,8 @@ const updateCost = async (req, res) => {
     });
     if (!hasSomeRank) {
       await BoardProject.update(
-        { rank0: LexoRank.middle().toString() },
+        { rank0: LexoRank.middle().toString(),
+          last_modified_by: user.email },
         { where: { board_project_id } }
       );
     }
@@ -142,7 +144,7 @@ const updateCost = async (req, res) => {
       where: { board_project_id }
     });
     let statusHasChanged;
-    [boardProjectUpdated, statusHasChanged] = await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id);
+    [boardProjectUpdated, statusHasChanged] = await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id, user.email);
     return res.status(200).send({
       newCost: {
         req1: boardProjectUpdated.req1,

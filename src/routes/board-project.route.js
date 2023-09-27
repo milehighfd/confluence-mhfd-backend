@@ -128,10 +128,11 @@ router.put('/update-target-cost', async(req,res) => {
 });
 router.put('/:board_project_id/update-rank', [auth], updateRank);
 router.put('/:board_project_id/cost',[auth], updateCost);
-router.get('/:board_project_id/duplicate', async (req, res) => {
+router.get('/:board_project_id/duplicate', [auth], async (req, res) => {
   const { board_project_id } = req.params;
+  const user = req.user;
   const board_id = 84;
-  await boardService.duplicateBoardProject(board_project_id, board_id);
+  await boardService.duplicateBoardProject(board_project_id, board_id, user.email);
   res.send(200);
 })
 export default router;

@@ -283,7 +283,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
   try {    
     const data = await createProjects(body, transaction, type, user.email, subtype);
     const { project_id } = data;
-    const { cover, sponsor, cosponsor, geom, projectname } = body;
+    const { cover, sponsor, cosponsor } = body;
     const project_attachments = await uploadFiles(user, files, project_id, cover, transaction);
     await addToBoard(body, user, type, subtype, transaction, project_id);
     const geoInfo = await parseGeographicInfoAndCreate(body, project_id, user, transaction);
@@ -316,7 +316,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
     await transaction.rollback();
     logger.error(error);
     throw error;
-  };
+  }
 }
 export const createProjectArcgis = async (body) => {
   try {

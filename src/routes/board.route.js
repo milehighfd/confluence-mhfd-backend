@@ -3,7 +3,6 @@ import needle from 'needle';
 import { LexoRank } from 'lexorank';
 import auth from 'bc/auth/auth.js';
 import { CREATE_PROJECT_TABLE, CARTO_URL } from 'bc/config/config.js';
-import { updateProjectsInBoard }  from 'bc/routes/new-project/helper.js';
 import logger from 'bc/config/logger.js';
 import db from 'bc/config/db.js';
 import {
@@ -99,7 +98,8 @@ router.get('/lexorank-update', async (req, res) => {
             logger.info(`Updating ${position} to ${value} for ${updates[position][value]}`);
             prs.push(BoardProject.update(
                 {
-                    [position]: value
+                    [position]: value,
+                    last_modified_by: 'system'
                 },
                 {
                     where: {
@@ -299,7 +299,8 @@ router.get('/lexorank-update', async (req, res) => {
             logger.info(`Updating ${position} to ${value} for ${updates[position][value]}`);
             prs.push(BoardProject.update(
                 {
-                    [position]: value
+                    [position]: value,
+                    last_modified_by: 'system'
                 },
                 {
                     where: {
@@ -405,7 +406,7 @@ router.get('/projects/:bid', async (req, res) => {
     res.send(boardProjects);
 });
 
-router.put('/project/:id', async (req, res) => {
+router.put('/project/:id', [auth], async (req, res) => {
     logger.info(`Starting endpoint board/project/:id with params ${JSON.stringify(req.params, null, 2)}`)
     let { id } = req.params;
     let { 
@@ -429,6 +430,7 @@ router.put('/project/:id', async (req, res) => {
     boardProject.originPosition3 = originPosition3;
     boardProject.originPosition4 = originPosition4;
     boardProject.originPosition5 = originPosition5;
+    boardProject.last_modified_by = req.user.email;
     logger.info(`Starting function save for board/projects/:id`);
     await boardProject.save();
     logger.info(`Finished function save for board/projects/:id`);
@@ -843,7 +845,7 @@ const getBoard = async (type, locality, year, projecttype) => {
     }
 }
 
-const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
+const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
   console.log('moveBoardProjectsToNewYear')
   console.log(newYear)
   await Configuration.update({
@@ -914,8 +916,10 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
       year1: boardProject.year1,
       year2: boardProject.year2,
       origin: sponsor,
-      code_status_type_id: REQUESTED_STATUS
-    }
+      code_status_type_id: REQUESTED_STATUS,
+      created_by: creator,
+      last_modified_by: creator,
+    };
     if (onWorkspace || onFirstYear) {
       newBoardProjectParams = {
         ...newBoardProjectParams,
@@ -946,7 +950,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
   }
 };
 
-const updateProjectStatus = async (boards) => {
+const updateProjectStatus = async (boards, creator) => {
   logger.info(`Starting function updateProjectStatus for board/`);
   const prs = [];
   for (const board of boards) {
@@ -962,6 +966,7 @@ const updateProjectStatus = async (boards) => {
   return boardProjects.map((boardProject) => {
     if (!isOnWorkspace(boardProject) && boardProject.code_status_type_id !== APPROVED_STATUS) {
       boardProject.code_status_type_id = APPROVED_STATUS;
+      boardProject.last_modified_by = creator;
       boardProject.save();
     }
     return boardProject;
@@ -1101,7 +1106,9 @@ const sendBoardProjectsToProp = async (boards, prop, creator) => {
                     year1: bp.year1,
                     year2: bp.year2,
                     origin: board.locality,
-                    code_status_type_id: REQUESTED_STATUS
+                    code_status_type_id: REQUESTED_STATUS,
+                    created_by: creator,
+                    last_modified_by: creator,
                 });
                 //TODO: Jorge create the relationship on cost table
                 const newBoardProjectCreated = await newBoardProject.save();
@@ -1124,7 +1131,7 @@ const sendBoardProjectsToProp = async (boards, prop, creator) => {
   }
 }
 
-const sendBoardProjectsToDistrict = async (boards) => {
+const sendBoardProjectsToDistrict = async (boards, creator) => {
     try {
         logger.info(`Starting function findAll for board/`);
         for (let board of boards) {
@@ -1163,7 +1170,9 @@ const sendBoardProjectsToDistrict = async (boards) => {
                         year2: bp.year2,
                         origin: board.locality,
                         code_status_type_id: bp.code_status_type_id,
-                        parent_board_project_id: bp.board_project_id
+                        parent_board_project_id: bp.board_project_id,
+                        created_by: creator,
+                        last_modified_by: creator,
                     }));
                 }
                 try {
@@ -1176,7 +1185,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
                 for (let i = 0; i < 6; i++) {
                     const rank = `rank${i}`;
                     logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
-                    updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank));
+                    updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank, creator));
                 }
                 if (updatePromises.length) {
                   try {
@@ -1279,12 +1288,12 @@ const moveCardsToNextLevel = async (board, creator) => {
           await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea', creator);
         }
         logger.info(`Sending ${boards.length} to district`);
-        await sendBoardProjectsToDistrict(boards);
+        await sendBoardProjectsToDistrict(boards, creator);
         logger.info(`Update ${boards.length} as Requested`);
         return {}
     } else if (board.type === 'WORK_PLAN') {
-        const boardProjectsUpdated = await updateProjectStatus(boards);
-        await moveBoardProjectsToNewYear(boardProjectsUpdated, +board.year + 1);
+        const boardProjectsUpdated = await updateProjectStatus(boards, creator);
+        await moveBoardProjectsToNewYear(boardProjectsUpdated, +board.year + 1, creator);
         return {}
     }
 }
@@ -1566,46 +1575,6 @@ router.post('/projects-bbox', async (req, res) => {
         logger.error(error);
         res.status(500).send(error);
      }
-});
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-router.get('/sync', async (req,res) => {
-    logger.info(`Starting endpoint board/sync with params ${JSON.stringify(req.params, null, 2)}`);
-  const sql = `SELECT projectid, projectname, projecttype, projectsubtype FROM ${CREATE_PROJECT_TABLE}`;
-  const query = {
-    q: sql
-  };
-  logger.info(sql);
-  try {
-    let result;
-    logger.info(`Starting function needle for board/sync`);
-    const data = await needle('post', CARTO_URL, query, { json: true });
-    logger.info(`Finished function needle for board/sync`);
-    if (data.statusCode === 200) {
-      result = data.body;
-      for(let i = 0 ; i < result.rows.length ; ++i){
-        let projectData = result.rows[i];
-        if(projectData.projectid){
-          console.log('About to update in board', projectData.projectid, projectData.projectname);
-          logger.info(`Starting function updateProjectsinBoard for board/sync`);
-          await updateProjectsInBoard(projectData.projectid, projectData.projectname, projectData.projecttype, projectData.projectsubtype);
-          logger.info(`Finished function updateProjectsinBoard for board/sync`);
-          // updateProject
-          logger.info(`Starting function sleep for board/sync`);
-          await sleep(30);
-          logger.info(`Starting function sleep for board/sync`);
-        }
-      }
-      res.send(result.rows);
-    } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
-      return res.status(data.statusCode).send(data.body);
-    }
-  } catch (error) {
-      logger.error('Error at sync projectname, type, subtype', error);
-      res.status(500).send(error);
-  }
 });
 
 const applyLocalityCondition = (where) => {

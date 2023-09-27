@@ -28,7 +28,7 @@ export const isOnFirstYear = (boardProject) => {
   return allNull;
 };
 
-export const determineStatusChange = async (wasOnWorkspace, boardProject, board_id) => {
+export const determineStatusChange = async (wasOnWorkspace, boardProject, board_id, creator) => {
   logger.info('determineStatusChange');
   let statusHasChanged = false;
   const board = await Board.findOne({
@@ -84,6 +84,7 @@ export const determineStatusChange = async (wasOnWorkspace, boardProject, board_
   } else {
     boardProject.rank0 = null;
   }
+  boardProject.last_modified_by = creator;
   boardProject = await boardProject.save();
   return [boardProject, statusHasChanged];
 };

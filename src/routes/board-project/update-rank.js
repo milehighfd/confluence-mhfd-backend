@@ -164,7 +164,7 @@ const updateRank = async (req, res) => {
       }
     }
 
-    [boardProjectUpdated, ] = await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id);
+    [boardProjectUpdated, ] = await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id, user.email);
     return res.status(200).send(boardProjectUpdatedStatus);
   } catch (error) {
     logger.error(error);

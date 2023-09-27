@@ -11,52 +11,6 @@ const Project = db.project;
 const Board = db.board;
 const { Op } = sequelize;
 
-const saveBoard = async (
-  board_id, 
-  project_id,
-  origin, 
-  rank0 ,
-  projectname,
-  projecttype,
-  projectsubtype,
-  transaction = null
-) => {
-  const DRAFT_STATUS = 1;
-  logger.info('create Board ' + JSON.stringify(
-    board_id, 
-    project_id,
-    origin, 
-    rank0,
-    projectname,
-    projecttype,
-    projectsubtype
-  ));
-  try {
-    const response = await BoardProject.create({
-      board_id: board_id,
-      project_id: project_id,
-      origin: origin,
-      rank0: rank0,
-      projectname: projectname,
-      code_status_type_id: DRAFT_STATUS,
-      createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-      updatedAt: moment().format('YYYY-MM-DD HH:mm:ss')
-    }, { transaction: transaction });
-    return response;
-  } catch(error) {
-    throw error;
-  }
-}
-
-const saveProjectBoard = async (ProjectBoard) => {
-  try {
-    const response = await BoardProject.create(ProjectBoard);
-    logger.info('saved ProjectBoard');
-    return response;
-  } catch(error) {
-    throw error;
-  }
-}
 const createNewBoard = async (
   type, 
   year,
@@ -112,7 +66,7 @@ const specialCreationBoard = async (
   }
 }
 
-const reCalculateColumn = async (board_id, column) => {
+const reCalculateColumn = async (board_id, column, creator) => {
   const startValue = LexoRank.middle();
   try {
     const boardProjects = await BoardProject.findAll({
@@ -130,7 +84,7 @@ const reCalculateColumn = async (board_id, column) => {
     let rank = startValue;
     boardProjects.forEach((project) => {      
       pr.push(BoardProject.update(
-        { [column]: rank.toString() },
+        { [column]: rank.toString(), last_modified_by: creator },
         { where: { board_project_id: project.board_project_id } }
       ));
       rank = rank.genNext();
@@ -157,7 +111,7 @@ const countByGroup = async (group, board_id) => {
   }
 }
 
-const duplicateBoardProject = async (board_project_id, new_board_id) => {
+const duplicateBoardProject = async (board_project_id, new_board_id, creator) => {
   const boardProjects = await BoardProject.findAll({
     where: { board_project_id }
   });
@@ -181,8 +135,10 @@ const duplicateBoardProject = async (board_project_id, new_board_id) => {
       year1: bp.year1,
       year2: bp.year2,
       origin: bp.origin,
+      created_by: creator,
+      last_modified_by: creator,
     };
-    const newProjectBoard = await saveProjectBoard(duplicatedData);
+    const newProjectBoard = await BoardProject.create(duplicatedData);
     const duplicatedBoardProjectId = newProjectBoard.board_project_id;
     const allBoardProjectCostToDuplicate = await BoardProjectCost.findAll({
       where: {
@@ -299,9 +255,7 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
   
 }
 export default {
-  saveBoard,
   createNewBoard,
-  saveProjectBoard,
   specialCreationBoard,
   countByGroup,
   reCalculateColumn,
