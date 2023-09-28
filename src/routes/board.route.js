@@ -1062,7 +1062,7 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                 const prs = [];
                 for (const bp of boardProjects) {
                     prs.push(
-                    boardService.saveProjectBoard({
+                      Board.create({
                         board_id: destinyBoard.board_id,
                         project_id: bp.project_id,
                         rank0: bp.rank0,
