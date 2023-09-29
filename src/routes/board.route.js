@@ -1427,113 +1427,24 @@ router.post('/status-colors', async (req, res) => {
   }
 });
 
-function computeNextLexoRank(lastRank) {
-  return LexoRank.parse(lastRank).genNext().toString();
-}
-
-function initialLexoRankValue() {
-  return LexoRank.middle().toString();
-}
-
-const getRelevantBoards = async (type, year, extraYears, locality, project_type) => {
-  return await Board.findAll({
-    where: {
-      type,
-      year: {
-        [Op.or]: [year + 1, ...extraYears]
-      },
-      locality,
-      projecttype: project_type
-    }
-  });
-};
-
-const determineMissingYears = (allRelevantBoards, year, extraYears) => {
-  const boardYears = allRelevantBoards.map(board => parseInt(board.year));
-  const allYears = [year + 1, ...extraYears];
-  return allYears.filter(y => !boardYears.includes(y));
-};
-
-const createBoardProjects = async (allYears, year, type, locality, project_type, project_id) => {
-  const createdBoardProjects = [];
-  let rankCounter = 1;
-  for (let boardYear of allYears) {
-      const board = await Board.findOne({
-          where: {
-              type,
-              year: boardYear,
-              locality,
-              projecttype: project_type
-          }
-      });
-      if (board) {
-          let rank = {};
-
-          if (boardYear === year + 1) {
-              const lastBoardProject = await BoardProject.findOne({
-                  where: {
-                      board_id: board.board_id
-                  },
-                  order: [['createdAt', 'DESC']]
-              });
-              rank[`rank0`] = lastBoardProject && lastBoardProject.rank0 ? computeNextLexoRank(lastBoardProject.rank0) : initialLexoRankValue();
-          } else {
-              for (let i = 0; i < rankCounter; i++) {
-                  const lastBoardProject = await BoardProject.findOne({
-                      where: {
-                          board_id: board.board_id
-                      },
-                      order: [[`rank${i}`, 'DESC']]
-                  });
-                  rank[`rank${i}`] = lastBoardProject && lastBoardProject[`rank${i}`] ? computeNextLexoRank(lastBoardProject[`rank${i}`]) : initialLexoRankValue();
-              }
-              rankCounter++;
-          }
-          // Create the BoardProject entry
-          // const boardProject = await BoardProject.create({
-          //     boardId: board.id,
-          //     projectId: project_id,
-          //     ...rank
-          // });
-          createdBoardProjects.push({
-              year: boardYear,
-              board_id: board.board_id,
-              ...rank
-          });
-      }
-  }
-
-  return createdBoardProjects;
-};
-
-
-const createMissingBoards = async (missingYears, type, locality, project_type) => {
-  const createdYears = [];
-  for (let missingYear of missingYears) {
-    // await Board.create({
-    //   type,
-    //   year: missingYear,
-    //   locality,
-    //   projecttype: project_type
-    // });
-    createdYears.push(missingYear);
-  }
-  return createdYears;
-};
-
 router.post('/update-boards-approved', async (req, res) => {
   try {
     let { project_type, year, extraYears, sponsor, project_id } = req.body;
     year = parseInt(year);
     const type = sponsor === 'MHFD' ? 'WORK_PLAN' : 'WORK_REQUEST';
     const locality = sponsor === 'MHFD' ? 'MHFD District Work Plan' : sponsor;
-    const allRelevantBoards = await getRelevantBoards(type, year, extraYears, locality, project_type);
-    const missingYears = determineMissingYears(allRelevantBoards, year, extraYears);
-    const createdYears = await createMissingBoards(missingYears, type, locality, project_type);
-    const message = createdYears.length > 0 ? `Boards created for the following years: ${createdYears.join(', ')}` : 'All years have a board';
-    const createdBoardProjects = await createBoardProjects([year + 1, ...extraYears], year, type, locality, project_type, project_id);
+    const allRelevantBoards = await boardService.getRelevantBoards(type, year, extraYears, locality, project_type);
+    const missingYears = boardService.determineMissingYears(allRelevantBoards, year, extraYears);
+    await boardService.createMissingBoards(missingYears, type, locality, project_type);
+    let allYears = [];
+    if (extraYears.length === 1 && extraYears[0] !== year) {
+      allYears = [extraYears[0]];
+    } else {
+      allYears = Array.from(new Set([year + 1, ...extraYears]));
+    }
+    const createdBoardProjects = await boardService.createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears);    
     res.send({
-      message,
+      message: 'All years have a board',
       createdBoardProjects  
     });
   } catch (error) {
@@ -1544,10 +1455,6 @@ router.post('/update-boards-approved', async (req, res) => {
     });
   }
 });
-
-
-
-
 
 router.post('/projects-bbox', async (req, res) => {
     logger.info(`Starting endpoint board/projects-bbox with params ${JSON.stringify(req.params, null, 2)}`)

@@ -120,11 +120,131 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
     });
   } catch (error) {
     logger.error("ERROR AT PROJECT COST is", error)
-  }
-  
+  }  
 }
+
+function computeNextLexoRank(lastRank) {
+  return LexoRank.parse(lastRank).genNext().toString();
+}
+
+function initialLexoRankValue() {
+  return LexoRank.middle().toString();
+}
+
+const getRelevantBoards = async (type, year, extraYears, locality, project_type) => {
+  return await Board.findAll({
+    where: {
+      type,
+      year: {
+        [Op.or]: [year + 1, ...extraYears]
+      },
+      locality,
+      projecttype: project_type
+    }
+  });
+};
+
+const determineMissingYears = (allRelevantBoards, year, extraYears) => {
+  const boardYears = allRelevantBoards.map(board => parseInt(board.year));
+  const allYears = [year + 1, ...extraYears];
+  return allYears.filter(y => !boardYears.includes(y));
+};
+
+async function createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears) {
+  const createdBoardProjects = [];
+  if (extraYears.length === 0 || (extraYears.length === 1 && extraYears[0] === year)) {
+    const board = await getBoardForYear(year + 1, type, locality, project_type);
+    if (board) {
+      const rank = { rank0: await getNextLexoRankValue(board.board_id, 'rank0') };
+      createdBoardProjects.push(createBoardProjectEntry(board, rank));
+    }
+  } else {
+    for (let boardYear of allYears) {
+      if (boardYear !== year) {
+        const board = await getBoardForYear(boardYear, type, locality, project_type);
+        if (board) {
+          let ranks = {};
+          let rankNumber = 1;
+          for (let extraYear of extraYears) {
+            if (extraYear >= boardYear) {
+              const rankColumnName = `rank${rankNumber}`;
+              ranks[rankColumnName] = await getNextLexoRankValue(board.board_id, rankColumnName);
+              rankNumber++;
+            }
+          }
+          createdBoardProjects.push(createBoardProjectEntry(board, ranks));
+        }
+      }
+    }
+  }
+  return createdBoardProjects;
+}
+
+async function getNextLexoRankValue(boardId, rankColumnName) {
+  const existingBoardProject = await getBoardProjectByBoardId(boardId);
+  if (existingBoardProject && existingBoardProject[rankColumnName]) {
+    return computeNextLexoRank(existingBoardProject[rankColumnName]);
+  } else {
+    return initialLexoRankValue();
+  }
+}
+
+function createBoardProjectEntry(board, rank) {
+  return {
+      year: board.year,
+      board_id: board.board_id,
+      ...rank
+  };
+}
+
+async function getBoardProjectByBoardId(board_id) {
+  return await BoardProject.findOne({
+    where: {
+      board_id: board_id
+    },
+    order: [['board_project_id', 'DESC']],
+    limit: 1
+  });
+}
+
+async function getBoardForYear(year, type, locality, project_type) {
+  return await Board.findOne({
+      where: {
+          type,
+          year: year,
+          locality,
+          projecttype: project_type
+      }
+  });
+}
+
+
+const createMissingBoards = async (missingYears, type, locality, project_type) => {
+  const createdYears = [];
+  for (let missingYear of missingYears) {
+    // await Board.create({
+    //   type,
+    //   year: missingYear,
+    //   locality,
+    //   projecttype: project_type
+    // });
+    createdYears.push(missingYear);
+  }
+  return createdYears;
+};
+
 export default {
   createNewBoard,
   reCalculateColumn,
   updateAndCreateProjectCosts,
+  createMissingBoards,
+  getBoardForYear,
+  getBoardProjectByBoardId,
+  createBoardProjectEntry,
+  getNextLexoRankValue,
+  createBoardProjects,
+  determineMissingYears,
+  getRelevantBoards,
+  initialLexoRankValue,
+  computeNextLexoRank
 };
