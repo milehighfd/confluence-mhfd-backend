@@ -1435,16 +1435,17 @@ router.post('/update-boards-approved', async (req, res) => {
     const locality = sponsor === 'MHFD' ? 'MHFD District Work Plan' : sponsor;
     const allRelevantBoards = await boardService.getRelevantBoards(type, year, extraYears, locality, project_type);
     const missingYears = boardService.determineMissingYears(allRelevantBoards, year, extraYears);
-    await boardService.createMissingBoards(missingYears, type, locality, project_type);
-    let allYears = [];
-    if (extraYears.length === 1 && extraYears[0] !== year) {
-      allYears = [extraYears[0]];
-    } else {
-      allYears = Array.from(new Set([year + 1, ...extraYears]));
+    const createdBoards = await boardService.createMissingBoards(missingYears, type, locality, project_type);
+    let allYears = new Set();
+    if (extraYears.includes(year + 1)) {
+      allYears.add(year + 1);
     }
+    extraYears.forEach(y => allYears.add(y));
+    allYears = [...allYears];
     const createdBoardProjects = await boardService.createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears);    
+    let message = createdBoards.length > 0 ? `Boards Created for years: ${createdBoards.join(', ')}` : 'All years have a board';
     res.send({
-      message: 'All years have a board',
+      message,
       createdBoardProjects  
     });
   } catch (error) {

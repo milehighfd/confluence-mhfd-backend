@@ -152,7 +152,23 @@ const determineMissingYears = (allRelevantBoards, year, extraYears) => {
 
 async function createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears) {
   const createdBoardProjects = [];
-  if (extraYears.length === 0 || (extraYears.length === 1 && extraYears[0] === year)) {
+  // Handle the gap logic
+  if (extraYears.length > 0 && Math.min(...extraYears) - year > 1) {
+    for (let extraYear of extraYears) {
+        for (let y = year + 1; y <= extraYear; y++) {
+            const board = await getBoardForYear(y, type, locality, project_type);
+            if (board) {
+                let ranks = {};
+                const rankNumber = extraYear - y + 1; // This determines the rank based on the difference between the board year and the extraYear
+                const rankColumnName = `rank${rankNumber}`;
+                ranks[rankColumnName] = await getNextLexoRankValue(board.board_id, rankColumnName);
+                createdBoardProjects.push(createBoardProjectEntry(board, ranks));
+            }
+        }
+    }
+}
+
+  else if (extraYears.length === 0 || (extraYears.length === 1 && extraYears[0] === year)) {
     const board = await getBoardForYear(year + 1, type, locality, project_type);
     if (board) {
       const rank = { rank0: await getNextLexoRankValue(board.board_id, 'rank0') };
