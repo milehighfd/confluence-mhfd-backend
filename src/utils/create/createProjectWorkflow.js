@@ -61,7 +61,7 @@ export const createProjects = async (body, transaction, type, creator, subtype) 
       saveFn = saveAcquisition;
       codeProjectTypeId = 13;
       break;
-    case 'special':
+    // case 'special':
     case 'r&d':
       console.log('special RYD', type);
       saveFn = saveSpecial;
@@ -263,7 +263,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         const resDetails = await saveProjectDetails(project_id, body, creator, transaction);
         answer.resDetails = resDetails;
         break;
-      case 'special':
+      // case 'special':
       case 'r&d':
         await createCarto(...createCartoInputs);
         const resSpecial = await saveProjectDetails(project_id, body, creator, transaction);

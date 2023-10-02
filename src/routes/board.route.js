@@ -1200,7 +1200,7 @@ const updateBoards = async (board, status, comment, substatus) => {
     'Maintenance',
     'Study',
     'Acquisition',
-    board.year < 2024 ? 'Special' : 'R&D'
+    'R&D'
   ];
   logger.info(`Starting function findOne for board/`);
   for (const projectType of projectTypes) {
@@ -1260,11 +1260,11 @@ const moveCardsToNextLevel = async (board, creator) => {
                 return ['Capital', 'Maintenance'].includes(board.projecttype)
             });
             boardsToServiceArea = boards.filter((board) => {
-                return ['Study', 'Acquisition', 'Special'].includes(board.projecttype)
+                return ['Study', 'Acquisition', 'R&D'].includes(board.projecttype)
             });
           } else {
             boardsToCounty = boards.filter((board) => {
-                return ['Capital', 'Maintenance', 'Acquisition', 'Special'].includes(board.projecttype)
+                return ['Capital', 'Maintenance', 'Acquisition', 'R&D'].includes(board.projecttype)
             });
             boardsToServiceArea = boards.filter((board) => {
                 return ['Study'].includes(board.projecttype)

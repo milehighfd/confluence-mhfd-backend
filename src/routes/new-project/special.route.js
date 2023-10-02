@@ -49,7 +49,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
   let result = [];
   const creator = user.email;
   const defaultProjectId = '15';
-  const defaultProjectType = 'Special';
+  const defaultProjectType = 'R&D';
   const splitedJurisdiction = jurisdiction.split(',');
   const splitedCounty = county.split(',');
   const splitedServicearea = servicearea.split(',');
@@ -108,7 +108,7 @@ router.post('/', [auth, multer.array('files')], async (req, res) => {
     const projectsubtype = '';
 
     // Start of Add or Create Board
-    const PROJECT_TYPE = 'Special';
+    const PROJECT_TYPE = 'R&D';
     const { localitiesBoard, typesList } = createLocalitiesBoard(isWorkPlan, sendToWR, year, PROJECT_TYPE, splitedJurisdiction, splitedCounty, splitedServicearea);
     const localNames = await getLocalitiesNames(localitiesBoard);
     if (isWorkPlan === 'true'){
@@ -231,7 +231,7 @@ router.post('/:projectid', [auth, multer.array('files')], async (req, res) => {
     await attachmentService.toggleName(cover);
     await attachmentService.uploadFiles(user, req.files, project_id, cover);
     const projectsubtype = '';
-    const projecttype = 'Special';
+    const projecttype = 'R&D';
     await updateProjectsInBoard(
       project_id,
       cleanStringValue(projectname),

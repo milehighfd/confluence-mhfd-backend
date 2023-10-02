@@ -259,7 +259,7 @@ export const getCoordsByProjectId = async (projectid, isDev) => {
 export const getMidByProjectId = async (projectid, projecttype) => {
   let table = CREATE_PROJECT_TABLE;
   let fields = ["projectid", "cartodb_id", "county", "jurisdiction", "servicearea", "projectname", "status", "description", "acquisitionprogress", "acquisitionanticipateddate", "projecttype", "projectsubtype", "additionalcost", "additionalcostdescription", `${COSPONSOR1} as ${COSPONSOR}`, "frequency", "maintenanceeligibility", "overheadcost", "overheadcostdescription", "ownership", "sponsor", 'estimatedcost', 'studyreason', 'studysubreason'];
-  if (['Acquisition', 'Special', 'Maintenance', 'Capital'].includes(projecttype)) {
+  if (['Acquisition', 'R&D', 'Maintenance', 'Capital'].includes(projecttype)) {
     fields.push('ST_AsGeoJSON(the_geom) as the_geom')
   }
   let SQL = `SELECT ${fields.join(', ')} FROM ${table} where projectid=${projectid}`;
@@ -358,7 +358,7 @@ export const getProjectData = async (projectid, projecttype) => {
     'studysubreason'
   ];
   if (['Acquisition',
-  'Special',
+  'R&D',
   'Maintenance',
   'Capital'].includes(projecttype)) {
     fields.push('ST_AsGeoJSON(the_geom) as the_geom')

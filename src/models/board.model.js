@@ -13,7 +13,7 @@ export default (sequelize, DataType) => {
     },
     projecttype: {
       type: DataType.ENUM,
-      values: ['Capital', 'Study', 'Maintenance', 'Acquisition', 'Special']
+      values: ['Capital', 'Study', 'Maintenance', 'Acquisition', 'R&D']
     },
     type: {
       type: DataType.ENUM,

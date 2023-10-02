@@ -166,7 +166,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         const resDetails = await updateProjectDetail(project_id, body, creator, transaction);
         answer.resDetails = resDetails;
         break;
-      case 'special':
+      // case 'special':
       case 'r&d':
         await createCarto(...createCartoInputs);
         const resSpecial = await updateProjectDetail(project_id, body, creator, transaction);
