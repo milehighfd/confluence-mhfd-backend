@@ -132,93 +132,112 @@ function initialLexoRankValue() {
 }
 
 const getRelevantBoards = async (type, year, extraYears, locality, project_type) => {
-  const allYears = Array.from({ length: Math.max(...extraYears) - year + 1 }, (_, i) => year + i);
-  return await Board.findAll({
-    where: {
-      type,
-      year: {
-        [Op.in]: allYears
-      },
-      locality,
-      projecttype: project_type
+  try {
+    let allYears;
+    if (!extraYears || extraYears.length === 0) {
+      allYears = [year + 1];
+    } else {
+      allYears = Array.from({ length: Math.max(...extraYears) - year + 1 }, (_, i) => year + i);
     }
-  });
+    return await Board.findAll({
+      where: {
+        type,
+        year: {
+          [Op.in]: allYears
+        },
+        locality,
+        projecttype: project_type
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching relevant boards:", error);
+    throw error;
+  }
 };
+
 
 const determineMissingYears = (allRelevantBoards, year, extraYears) => {
   const boardYears = allRelevantBoards.map(board => parseInt(board.year));
-  const allYears = Array.from({ length: Math.max(...extraYears) - year + 1 }, (_, i) => year + i);
+  let endYear = extraYears.length > 0 ? Math.max(...extraYears) : year + 1;
+  const allYears = Array.from({ length: endYear - year }, (_, i) => year + 1 + i);
   return allYears.filter(y => !boardYears.includes(y));
 };
 
-async function createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts) {
-  const createdBoardProjects = [];
-  const boardRanks = {}; 
-  const yearIndex = extraYears.indexOf(year);  
-  if (yearIndex !== -1) {
-    extraYears.splice(yearIndex, 1);
-    extraYearsAmounts.splice(yearIndex, 1);
-  }
-  const statusBoardProject = extraYears.length > 0 ? 2 : 1;
-  if (extraYears.length > 0 && Math.min(...extraYears) - year > 1) {
-    for (let extraYear of extraYears) {
-      for (let y = year + 1; y <= extraYear; y++) {
-        const board = await getBoardForYear(y, type, locality, project_type);
-        if (board) {
-          if (!boardRanks[board.board_id]) {
-            boardRanks[board.board_id] = {
-              board: board,
-              ranks: {},
-              amounts: {}
-            };
-          }
-          const rankNumber = extraYear - y + 1;
-          const rankColumnName = `rank${rankNumber}`;
-          const amountColumnName = `req${rankNumber}`;
-          boardRanks[board.board_id].ranks[rankColumnName] = await getNextLexoRankValue(board.board_id, rankColumnName);
-          boardRanks[board.board_id].amounts[amountColumnName] = extraYearsAmounts[extraYears.indexOf(extraYear)];
-        }
-      }
-    }
-    for (const boardId in boardRanks) {
-      createdBoardProjects.push(createBoardProjectEntry(
-        boardRanks[boardId].board, 
-        { ...boardRanks[boardId].ranks, ...boardRanks[boardId].amounts, 
-        project_id,
-        statusBoardProject
-      }));
-    }
-  } 
-  else if (extraYears.length === 0 || (extraYears.length === 1 && extraYears[0] === year)) {
-    const board = await getBoardForYear(year + 1, type, locality, project_type);
-    if (board) {
-      const rank = { rank0: await getNextLexoRankValue(board.board_id, 'rank0') };
-      createdBoardProjects.push(createBoardProjectEntry(board, rank, project_id, statusBoardProject));
-    }
-  } else {
-    for (let boardYear of allYears) {
-      if (boardYear > year) {
-        const board = await getBoardForYear(boardYear, type, locality, project_type);
-        if (board) {
-          let ranks = {};
-          let amounts = {};
-          let rankNumber = 1;
-          for (let extraYear of extraYears) {
-            if (extraYear >= boardYear) {
-              const rankColumnName = `rank${rankNumber}`;
-              const amountColumnName = `req${rankNumber}`;
-              ranks[rankColumnName] = await getNextLexoRankValue(board.board_id, rankColumnName);
-              amounts[amountColumnName] = extraYearsAmounts[extraYears.indexOf(extraYear)];
-              rankNumber++;
-            }
-          }
-          createdBoardProjects.push(createBoardProjectEntry(board, { ...ranks, ...amounts }, project_id, statusBoardProject));
-        }
-      }
-    }
 
+async function createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData) {
+  try {
+    const createdBoardProjects = [];
+    const boardRanks = {};
+    const yearIndex = extraYears.indexOf(year);
+    if (yearIndex !== -1) {
+      extraYears.splice(yearIndex, 1);
+      extraYearsAmounts.splice(yearIndex, 1);
+    }
+    const statusBoardProject = extraYears.length > 0 ? 2 : 1;
+    if (extraYears.length > 0 && Math.min(...extraYears) - year > 1) {
+      for (let extraYear of extraYears) {
+        for (let y = year + 1; y <= extraYear; y++) {
+          const board = await getBoardForYear(y, type, locality, project_type);
+          if (board) {
+            if (!boardRanks[board.board_id]) {
+              boardRanks[board.board_id] = {
+                board: board,
+                ranks: {},
+                amounts: {}
+              };
+            }
+            const rankNumber = extraYear - y + 1;
+            const rankColumnName = `rank${rankNumber}`;
+            const amountColumnName = `req${rankNumber}`;
+            boardRanks[board.board_id].ranks[rankColumnName] = await getNextLexoRankValue(board.board_id, rankColumnName);
+            boardRanks[board.board_id].amounts[amountColumnName] = extraYearsAmounts[extraYears.indexOf(extraYear)];
+          }
+        }
+      }
+      for (const boardId in boardRanks) {
+        createdBoardProjects.push(createBoardProjectEntry(
+          boardRanks[boardId].board,
+          { ...boardRanks[boardId].ranks, ...boardRanks[boardId].amounts },
+          project_id,
+          statusBoardProject,
+          userData
+        ));
+      }
+    }
+    else if (extraYears.length === 0 || (extraYears.length === 1 && extraYears[0] === year)) {
+      const board = await getBoardForYear(year + 1, type, locality, project_type);
+      if (board) {
+        const rank = { rank0: await getNextLexoRankValue(board.board_id, 'rank0') };
+        createdBoardProjects.push(createBoardProjectEntry(board, rank, project_id, statusBoardProject, userData));
+      }
+    } else {
+      for (let boardYear of allYears) {
+        if (boardYear > year) {
+          const board = await getBoardForYear(boardYear, type, locality, project_type);
+          if (board) {
+            let ranks = {};
+            let amounts = {};
+            let rankNumber = 1;
+            for (let extraYear of extraYears) {
+              if (extraYear >= boardYear) {
+                const rankColumnName = `rank${rankNumber}`;
+                const amountColumnName = `req${rankNumber}`;
+                ranks[rankColumnName] = await getNextLexoRankValue(board.board_id, rankColumnName);
+                amounts[amountColumnName] = extraYearsAmounts[extraYears.indexOf(extraYear)];
+                rankNumber++;
+              }
+            }
+            createdBoardProjects.push(createBoardProjectEntry(board, { ...ranks, ...amounts }, project_id, statusBoardProject));
+          }
+        }
+      }
+
+    }
+    return createdBoardProjects;
+  } catch (error) {
+    console.error("Error creating board projects:", error);
+    throw error;
   }
-  return createdBoardProjects;
 }
 
 async function getNextLexoRankValue(boardId, rankColumnName) {
@@ -230,7 +249,8 @@ async function getNextLexoRankValue(boardId, rankColumnName) {
   }
 }
 
-function createBoardProjectEntry(board, rank, project_id, statusBoardProject) {
+function createBoardProjectEntry(board, rank, project_id, statusBoardProject, userData) {
+  let email = userData?.email;
   return {
       year: board.year,
       board_id: board.board_id,
@@ -239,50 +259,71 @@ function createBoardProjectEntry(board, rank, project_id, statusBoardProject) {
       createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       code_status_type_id: statusBoardProject,
+      created_by: email,
+      last_modified_by: email,
       ...rank
   };
 }
 
 async function getBoardProjectByBoardId(board_id) {
-  return await BoardProject.findOne({
-    where: {
-      board_id: board_id
-    },
-    order: [['board_project_id', 'DESC']],
-    limit: 1
-  });
+  try {
+    return await BoardProject.findOne({
+      where: {
+        board_id: board_id
+      },
+      order: [['board_project_id', 'DESC']],
+      limit: 1,
+    });
+  } catch (error) {
+    console.error("Error fetching board project by board ID:", error);
+    throw error;
+  }
 }
+
 
 async function getBoardForYear(year, type, locality, project_type) {
-  return await Board.findOne({
+  try {
+    return await Board.findOne({
       where: {
-          type,
-          year: year,
-          locality,
-          projecttype: project_type
+        type,
+        year: year,
+        locality,
+        projecttype: project_type
       }
-  });
+    });
+  } catch (error) {
+    console.error("Error fetching board for year:", error);
+    throw error;
+  }
 }
 
 
-const createMissingBoards = async (missingYears, type, locality, project_type, userData) => {
-  const createdYears = [];
-  for (let missingYear of missingYears) {
-    // await Board.create({
-    //   type,
-    //   year: missingYear,
-    //   locality,
-    //   projecttype: project_type,
-    //   status: 'Under Review',
-    //   createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-    //   updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-    //   last_modified_by: userData.email,
-    //   created_by: userData.email
-    // });
-    createdYears.push({missingYear, locality, project_type, type, user: userData.email});
+
+const createMissingBoards = async (missingYears, type, locality, project_type, userData, transaction) => {
+  try {
+    const createBoardPromises = missingYears.map(missingYear => {
+      return Board.create({
+        type,
+        year: missingYear,
+        locality,
+        projecttype: project_type,
+        status: 'Under Review',
+        createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+        updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+        last_modified_by: userData.email,
+        created_by: userData.email
+      }, { transaction: transaction });
+    });
+    await Promise.all(createBoardPromises);
+    const createdYears = missingYears.map(missingYear => ({ missingYear, locality, project_type, type, user: userData.email }));
+    return createdYears;
+  } catch (error) {
+    console.error("Error creating missing boards:", error);
+    throw error;
   }
-  return createdYears;
 };
+
+
 
 export default {
   createNewBoard,
