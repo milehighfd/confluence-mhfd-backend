@@ -1427,26 +1427,26 @@ router.post('/status-colors', async (req, res) => {
   }
 });
 
-router.post('/update-boards-approved', async (req, res) => {
+router.post('/update-boards-approved',[auth], async (req, res) => {
   try {
-    let { project_type, year, extraYears, sponsor, project_id } = req.body;
+    let { project_type, year, extraYears, sponsor, project_id, extraYearsAmounts } = req.body;
+    let userData = req.user;
     year = parseInt(year);
     const type = sponsor === 'MHFD' ? 'WORK_PLAN' : 'WORK_REQUEST';
     const locality = sponsor === 'MHFD' ? 'MHFD District Work Plan' : sponsor;
     const allRelevantBoards = await boardService.getRelevantBoards(type, year, extraYears, locality, project_type);
     const missingYears = boardService.determineMissingYears(allRelevantBoards, year, extraYears);
-    const createdBoards = await boardService.createMissingBoards(missingYears, type, locality, project_type);
+    const createdBoards = await boardService.createMissingBoards(missingYears, type, locality, project_type, userData);
     let allYears = new Set();
     if (extraYears.includes(year + 1)) {
       allYears.add(year + 1);
     }
     extraYears.forEach(y => allYears.add(y));
     allYears = [...allYears];
-    const createdBoardProjects = await boardService.createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears);    
-    let message = createdBoards.length > 0 ? `Boards Created for years: ${createdBoards.join(', ')}` : 'All years have a board';
+    const createdBoardProjects = await boardService.createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts);   
     res.send({
-      message,
-      createdBoardProjects  
+      createdBoardProjects,
+      createdBoards
     });
   } catch (error) {
     console.error(error);
