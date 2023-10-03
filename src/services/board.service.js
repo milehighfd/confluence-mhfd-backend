@@ -164,7 +164,7 @@ const determineMissingYears = (allRelevantBoards, year, extraYears) => {
 };
 
 
-async function createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData) {
+async function createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, transaction) {
   try {
     const createdBoardProjects = [];
     const boardRanks = {};
@@ -177,7 +177,7 @@ async function createBoardProjects(allYears, year, type, locality, project_type,
     if (extraYears.length > 0 && Math.min(...extraYears) - year > 1) {
       for (let extraYear of extraYears) {
         for (let y = year + 1; y <= extraYear; y++) {
-          const board = await getBoardForYear(y, type, locality, project_type);
+          const board = await getBoardForYear(y, type, locality, project_type, transaction);
           if (board) {
             if (!boardRanks[board.board_id]) {
               boardRanks[board.board_id] = {
@@ -205,7 +205,7 @@ async function createBoardProjects(allYears, year, type, locality, project_type,
       }
     }
     else if (extraYears.length === 0 || (extraYears.length === 1 && extraYears[0] === year)) {
-      const board = await getBoardForYear(year + 1, type, locality, project_type);
+      const board = await getBoardForYear(year + 1, type, locality, project_type, transaction);
       if (board) {
         const rank = { rank0: await getNextLexoRankValue(board.board_id, 'rank0') };
         createdBoardProjects.push(createBoardProjectEntry(board, rank, project_id, statusBoardProject, userData));
@@ -213,7 +213,7 @@ async function createBoardProjects(allYears, year, type, locality, project_type,
     } else {
       for (let boardYear of allYears) {
         if (boardYear > year) {
-          const board = await getBoardForYear(boardYear, type, locality, project_type);
+          const board = await getBoardForYear(boardYear, type, locality, project_type, transaction);
           if (board) {
             let ranks = {};
             let amounts = {};
@@ -281,7 +281,7 @@ async function getBoardProjectByBoardId(board_id) {
 }
 
 
-async function getBoardForYear(year, type, locality, project_type) {
+async function getBoardForYear(year, type, locality, project_type, transaction) {
   try {
     return await Board.findOne({
       where: {
@@ -289,7 +289,8 @@ async function getBoardForYear(year, type, locality, project_type) {
         year: year,
         locality,
         projecttype: project_type
-      }
+      },
+      transaction: transaction
     });
   } catch (error) {
     console.error("Error fetching board for year:", error);

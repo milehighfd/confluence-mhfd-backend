@@ -1445,12 +1445,13 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
     }
     extraYears.forEach(y => allYears.add(y));
     allYears = [...allYears];    
-    const createdBoardProjects = await boardService.createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData);   
+    const createdBoardProjects = await boardService.createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, transaction);   
     const createPromises = createdBoardProjects.map(created => BoardProject.create(created, { transaction }));
     await Promise.all(createPromises);    
     await transaction.commit();
+    const createdBoardProjectsArray = Object.values(createdBoardProjects);
     res.send({
-      createdBoardProjects,
+      createdBoardProjects: createdBoardProjectsArray,
       createdBoards
     });
   } catch (error) {
