@@ -32,6 +32,8 @@ const CodeServiceArea = db.codeServiceArea;
 const CodeStatusType = db.codeStatusType;
 const BusinessAssociate = db.businessAssociates;
 const Configuration = db.configuration;
+const BoardProjectCost = db.boardProjectCost;
+const ProjectCost = db.projectCost;
 
 const insertUniqueObject = (array, idPropertyName, groupPropertyKeyName, object) => {
   const isDuplicate = array.some(item => {
@@ -528,9 +530,10 @@ router.post('/board-for-positions2', async (req, res) => {
         filters.projecttype = [maintenanceSubtype];
       }
     }
-    if (`${position}` !== '0') {
-      attributes.push(reqColumnName);
-    }
+    // THIS is going to be replaced with MHFD owner in PROJECT COST 
+    
+    //   attributes.push(reqColumnName);
+     
     if (project_priorities && project_priorities.length > 0) {
       const conditions = [];
       const lessThan3Priorities = project_priorities.filter(r => r < 3);
@@ -553,6 +556,34 @@ router.post('/board-for-positions2', async (req, res) => {
       where,
       order: [[rankColumnName, 'ASC']],
     })).map(d => d.dataValues);
+    if (`${position}` !== '0') {
+      const boardProjectIds = boardProjects.map((boardProject) => boardProject.board_project_id);
+      const MHFD_FUNDING = 88;
+      const projectCostValues = await BoardProjectCost.findAll({
+        attributes: ['req_position', 'board_project_id'],
+        include: [{
+          attributes: ['cost', 'project_cost_id', 'project_partner_id'],
+          model: ProjectCost,
+          as: 'projectCostData',
+          where: {
+            is_active: true,
+            project_partner_id: MHFD_FUNDING
+          }
+        }],
+        where: {
+          board_project_id: boardProjectIds,
+          req_position: position
+        }
+      });
+      boardProjects.forEach((boardProject) => {
+        const projectCostValue = projectCostValues.find((pcv) => pcv.board_project_id === boardProject.board_project_id);
+        console.log('**********************\n\n ************** \nSEarch for ', boardProject.board_project_id, projectCostValue);
+        if (projectCostValue) {
+          boardProject[`req${position}`] = projectCostValue.projectCostData.cost;
+        }
+      });
+    }
+
     console.log('boardProjects', boardProjects, boardProjects.length)
     const projects_filtered = await projectService.filterProjectsBy(filters);
     const projectIds = boardProjects.filter(boardProject => projects_filtered.map(p => p.project_id).includes(boardProject.project_id));
