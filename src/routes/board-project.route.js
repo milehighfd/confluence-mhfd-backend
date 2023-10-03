@@ -11,6 +11,9 @@ const BoardProject = db.boardProject;
 const BoardProjectCost = db.boardProjectCost;
 const Project = db.project;
 const ProjectCost = db.projectCost;
+const ProjectPartner = db.projectPartner;
+const CodeProjectPartnerType = db.codeProjectPartnerType;
+const BusinessAssociates = db.businessAssociates;
 const ProjectIndependentAction = db.projectIndependentAction;
 
 const router = express.Router();
@@ -60,18 +63,29 @@ router.get('/:board_project_id/cost', async (req, res) => {
     const projectCostValues = await BoardProjectCost.findAll({
       attributes: ['req_position'],
       include: [{
-        attributes: ['cost'],
+        attributes: ['cost', 'project_cost_id', 'project_partner_id'],
         model: ProjectCost,
         as: 'projectCostData',
         where: {
           is_active: true
-        }
+        },
+        include: [{
+          model: ProjectPartner,
+          as: 'projectPartnerData',
+          include: [{
+            model: CodeProjectPartnerType,
+            as: 'projectPartnerTypeData'
+          }, {
+            model: BusinessAssociates,
+            as: 'businessAssociateData'
+          }]
+        }]
       }],
       where: {
         board_project_id
       }
     });
-    // console.log('Project Cost', projectCostValues);
+    // console.log('Project Cost', projectCostValues.map((a)=>a.projectCostData));
     console.log("BOARD PROJECT RETURN", boardProject);
     projectCostValues.forEach((projectCostValue) => {
       const pos = projectCostValue.req_position;
