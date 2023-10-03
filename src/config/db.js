@@ -76,6 +76,7 @@ import projectStatusNotification from 'bc/models/project_status_notification.mod
 import notifications from 'bc/models/notification.model.js';
 import projectSpatial from 'bc/models/project_spatial.model.js';
 import projectChecklist from 'bc/models/project_checklist.model.js';
+import budgetBoardTable from 'bc/models/budget_board_table.model.js';
 
 Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
   date = this._applyTimezone(date, options);
@@ -168,6 +169,7 @@ db.codeNotificationType = codeNotificationType(sequelize, Sequelize);
 db.projectStatusNotification = projectStatusNotification(sequelize, Sequelize);
 db.projectSpatial = projectSpatial(sequelize, Sequelize);
 db.projectChecklist = projectChecklist(sequelize, Sequelize);
+db.budgetBoardTable = budgetBoardTable(sequelize, Sequelize);
 // 14 layers called
 db.gradeControlStructure = gradeControlStructure(sequelize, Sequelize);
 db.pipeAppurtenances = pipeAppurtenances(sequelize, Sequelize);

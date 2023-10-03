@@ -39,6 +39,7 @@ import streamsRouter from 'bc/routes/streams.route.js';
 import phasetypeRouter from 'bc/routes/phasetype.route.js';
 import projectactionitemRouter from 'bc/routes/projectactionitem.route.js'
 import projectchecklistitemRouter from 'bc/routes/checklistitem.route.js'
+import budgetboardRouter from 'bc/routes/budgetBoard.route.js';
 import projectStatusRouter from 'bc/routes/projectStatus.route.js';
 import businessRouter from 'bc/routes/business.route.js';
 import notificationRouter from 'bc/routes/notifications.route.js';
@@ -125,5 +126,6 @@ app.use('/business', businessRouter);
 app.use('/notifications', notificationRouter);
 app.use('/financial',financial)
 app.use('/study', studyRouter);
+app.use('/budget-board', budgetboardRouter);
 
 export default server;
