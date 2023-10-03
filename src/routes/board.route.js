@@ -1329,7 +1329,7 @@ router.put('/', [auth], async (req, res) => {
         let bodyResponse = { status: 'updated' };        
         if (status === 'Approved' && board.status !== status) {
             logger.info(`Approving board ${boardId}`);
-            sendMails(board, req.user.name)
+            // sendMails(board, req.user.name)
             logger.info(`Starting function moveCardsToNextLevel for board/`);
             let r = await moveCardsToNextLevel(board, creator);
             bodyResponse = {

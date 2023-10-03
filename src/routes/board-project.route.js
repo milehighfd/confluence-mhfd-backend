@@ -8,6 +8,7 @@ import authOnlyEmail from 'bc/auth/auth-only-email.js';
 
 const Board = db.board;
 const BoardProject = db.boardProject;
+const BoardProjectCost = db.boardProjectCost;
 const Project = db.project;
 const ProjectCost = db.projectCost;
 const ProjectIndependentAction = db.projectIndependentAction;
@@ -20,11 +21,11 @@ router.get('/:board_project_id/cost', async (req, res) => {
   try {
     const boardProject = await BoardProject.findOne({
       attributes: [
-        'req1',
-        'req2',
-        'req3',
-        'req4',
-        'req5',
+        // 'req1',
+        // 'req2',
+        // 'req3',
+        // 'req4',
+        // 'req5',
         'year1',
         'year2'
       ],
@@ -56,7 +57,29 @@ router.get('/:board_project_id/cost', async (req, res) => {
         board_project_id
       }
     });
+    const projectCostValues = await BoardProjectCost.findAll({
+      attributes: ['req_position'],
+      include: [{
+        attributes: ['cost'],
+        model: ProjectCost,
+        as: 'projectCostData',
+        where: {
+          is_active: true
+        }
+      }],
+      where: {
+        board_project_id
+      }
+    });
+    // console.log('Project Cost', projectCostValues);
     console.log("BOARD PROJECT RETURN", boardProject);
+    projectCostValues.forEach((projectCostValue) => {
+      const pos = projectCostValue.req_position;
+      const cost = projectCostValue.projectCostData.cost;
+      if( pos > 0) {
+        boardProject['req'+pos] = cost;
+      }
+    });
     return res.status(200).send(boardProject);
   } catch (error) {
     logger.error('ERROR FROM GET COST ' + error);
