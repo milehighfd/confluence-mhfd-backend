@@ -93,6 +93,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
       cost: a.projectCostData.cost
     }));
     console.log('\n\n  ********** \n\n Project Cost \n ', returnValues, '\n\n  ********** \n\n');
+    
     const groupedData = returnValues.reduce((x, y) => {
 
       (x[y.business_name] = x[y.business_name] || []).push(y);
@@ -102,7 +103,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
   }, {});
   const getReqsValues = (currentValues) => {
     const returnObject = {};
-    currentValues.forEach((v) => {
+    currentValues?.forEach((v) => {
       const stringPos = 'req'+v.pos;
       returnObject[stringPos] = v.cost;
     });
@@ -114,17 +115,30 @@ router.get('/:board_project_id/cost', async (req, res) => {
     //TODO: add years if needed
     return returnObject;
   }
-  const allBusinessNamesRelatedToProject = ProjectPartner.findAll({
+  const currentProjectId = boardProject.projectData.project_id;
+  const allBusinessNamesRelatedToProject = await ProjectPartner.findAll({
+    attributes: ['project_partner_id', 'code_partner_type_id'],
+    include: [{
+      model: BusinessAssociates,
+      attributes: ['business_name'],
+      as: 'businessAssociateData'
+    }],
     where: {
-      
+      project_id: currentProjectId
     }
   });
-    const allBN = Object.keys(groupedData);
-    const finalAnswer = allBN.map((bname) => ({
-      business_name: bname,
-      code_partner_type_id: groupedData[bname][0].code_partner_type_id,
-      values: getReqsValues(groupedData[bname])
-    }));
+  
+    const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => ({business_name: abnrp.businessAssociateData[0].business_name, code_partner_type_id: abnrp.code_partner_type_id}));
+    const finalAnswer = allBNWithPartner.map((bnnp) => {
+      const bname = bnnp.business_name;
+      const code_partner_type_id = bnnp.code_partner_type_id;
+      const databyBN = groupedData[bname];
+      return {
+        business_name: bname,
+        code_partner_type_id: code_partner_type_id,
+        values: getReqsValues(databyBN)
+      }
+    });
     // const finalAnswer = Object.keys(groupedData) 
     // returnValues.map((rV) => ({
     //   business_name:rV.business_name,
