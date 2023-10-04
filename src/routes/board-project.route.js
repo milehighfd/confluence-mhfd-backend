@@ -94,6 +94,11 @@ router.get('/:board_project_id/cost', async (req, res) => {
         boardProject['req'+pos] = cost;
       }
     });
+    for ( let i = 1 ; i <= 5; ++i) {
+      if (boardProject['req'+i] !== null) {
+        boardProject['req'+i] = null;
+      }
+    }
     return res.status(200).send(boardProject);
   } catch (error) {
     logger.error('ERROR FROM GET COST ' + error);

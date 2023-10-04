@@ -79,6 +79,7 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
     logger.error(`Project with id = ${currentProjectId} does not exist`);
     return;
   }
+  const PROJECT_PARTNER_MHFD = 88;
   const CODE_COST_TYPE_ID = 22; // Work Request Code cost type // TODO: verify which code will be correct 
   const currentBoardProjectCosts = await BoardProjectCost.findAll({
     where: {
@@ -106,7 +107,8 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
         created_by: user.email,
         modified_by: user.email,
         is_active: 1,
-        last_modified: lastModifiedDate
+        last_modified: lastModifiedDate,
+        project_partner_id: PROJECT_PARTNER_MHFD
       });
       console.log('PROJECT COST IS CREATED', projectCostCreated);
       const project_cost_id = projectCostCreated.dataValues.project_cost_id;
