@@ -166,27 +166,29 @@ const determineMissingYears = (allRelevantBoards, year, extraYears) => {
 async function createBoardProjectsMaintenance(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, subtype, transaction) {
   const createdBoardProjects = [];
   if (extraYears.length === 0 || (extraYears.length === 1 && extraYears[0] === year)) {
-      const targetYear = year + 1;
-      const board = await getBoardForYear(targetYear, type, locality, project_type, transaction);
-      if (board) {
-          const rank = { rank0: await getNextLexoRankValue(board.board_id, 'rank0') };
-          createdBoardProjects.push(createBoardProjectEntry(board, rank, project_id, 2, userData));
-      }
+    const targetYear = year + 1;
+    const board = await getBoardForYear(targetYear, type, locality, project_type, transaction);
+    if (board) {
+      const rank = { rank0: await getNextLexoRankValue(board.board_id, 'rank0') };
+      createdBoardProjects.push(createBoardProjectEntry(board, rank, project_id, 2, userData));
+    }
   }
   for (let i = 0; i < extraYears.length; i++) {
-      const extraYear = extraYears[i];
-      if (extraYear !== year) { 
-          const board = await getBoardForYear(extraYear, type, locality, project_type, transaction);
-          if (board) {
-              const rankColumnName = `rank${subtype}`;
-              const amountColumnName = `req${subtype}`;
-              const rank = { 
-                  [rankColumnName]: await getNextLexoRankValue(board.board_id, rankColumnName),
-                  [amountColumnName]: extraYearsAmounts[i]
-              };
-              createdBoardProjects.push(createBoardProjectEntry(board, rank, project_id, 2, userData));
-          }
+    const extraYear = extraYears[i];
+    if (extraYear !== year) {
+      const board = await getBoardForYear(extraYear, type, locality, project_type, transaction);
+      if (board) {
+        const rankColumnName = `rank${subtype}`;
+        const amountColumnName = `req${subtype}`;
+        const rank = {
+          [rankColumnName]: await getNextLexoRankValue(board.board_id, rankColumnName),
+          [amountColumnName]: extraYearsAmounts[i]
+        };
+        const year1Value = extraYearsAmounts[i + 1] || null;
+        const year2Value = extraYearsAmounts[i + 2] || null;
+        createdBoardProjects.push(createBoardProjectEntry(board, rank, project_id, 2, userData, year1Value, year2Value));
       }
+    }
   }
   return createdBoardProjects;
 }
@@ -279,19 +281,21 @@ async function getNextLexoRankValue(boardId, rankColumnName) {
   }
 }
 
-function createBoardProjectEntry(board, rank, project_id, statusBoardProject, userData) {
+function createBoardProjectEntry(board, rank, project_id, statusBoardProject, userData, year1 = null, year2 = null) {
   let email = userData?.email;
   return {
-      year: board.year,
-      board_id: board.board_id,
-      origin: board.locality,
-      project_id,
-      createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-      updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-      code_status_type_id: statusBoardProject,
-      created_by: email,
-      last_modified_by: email,
-      ...rank
+    year: board.year,
+    board_id: board.board_id,
+    origin: board.locality,
+    project_id,
+    createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+    updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+    code_status_type_id: statusBoardProject,
+    created_by: email,
+    last_modified_by: email,
+    year1: year1,
+    year2: year2,
+    ...rank
   };
 }
 

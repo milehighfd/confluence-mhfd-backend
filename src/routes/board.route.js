@@ -1446,7 +1446,7 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
     extraYears.forEach(y => allYears.add(y));
     allYears = [...allYears];
     let createdBoardProjects = [];
-    if (!subtype){
+    if (!subtype && project_type !== 'Maintenance'){
       createdBoardProjects = await boardService.createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, transaction);   
     }else{
       createdBoardProjects = await boardService.createBoardProjectsMaintenance(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, subtype, transaction);
