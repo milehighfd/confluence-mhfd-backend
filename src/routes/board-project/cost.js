@@ -19,11 +19,11 @@ const updateCost = async (req, res) => {
     const beforeUpdate = await BoardProject.findOne({
       where: { board_project_id }
     });
-    const wasOnWorkspace = isOnWorkspace(beforeUpdate);
+    const wasOnWorkspace = isOnWorkspace(beforeUpdate); // based on RANK
     const board_id = beforeUpdate.board_id;
     const currentProjectId = beforeUpdate.project_id;
     const columnsChanged = [0];
-    const allCurrentAmounts = {};
+    const allCurrentAmounts = {}; // aqui se almacenan todos los reqs amounts 
     for (let pos = 1; pos <= 5; pos++) {
       const reqColumnName = `req${pos}`;
       const rankColumnName = `rank${pos}`;
@@ -36,7 +36,7 @@ const updateCost = async (req, res) => {
       }
       if (
         (beforeUpdate[reqColumnName] === null && req.body[reqColumnName] !== null) ||
-        (beforeUpdate[rankColumnName] === null && req.body[reqColumnName] !== null && beforeUpdate[reqColumnName] !== req.body[reqColumnName])
+        (beforeUpdate[rankColumnName] === null && req.body[reqColumnName] !== null && valueHasChanged)
       ) {
         const where = {
           board_id: beforeUpdate.board_id,

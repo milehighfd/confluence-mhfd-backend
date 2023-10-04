@@ -9,6 +9,7 @@ const ProjectCost = db.projectCost;
 const BoardProjectCost = db.boardProjectCost;
 const Project = db.project;
 const Board = db.board;
+const ProjectPartner = db.projectPartner;
 const { Op } = sequelize;
 
 const createNewBoard = async (
@@ -91,6 +92,13 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
   
   const projectsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
   try {
+    // TODO CHECK IF THIS IS WORKING FINE ON CREATE PROJECT OR EDIT COST 
+    const MHFD_Partner = await ProjectPartner.findOne({
+      where: {
+        project_id: currentProjectId,
+        code_partner_type_id: PROJECT_PARTNER_MHFD
+      }
+    });
     ProjectCost.update({
       is_active: 0
     }, {
@@ -108,7 +116,7 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
         modified_by: user.email,
         is_active: 1,
         last_modified: lastModifiedDate,
-        project_partner_id: PROJECT_PARTNER_MHFD
+        project_partner_id: MHFD_Partner.project_partner_id
       });
       console.log('PROJECT COST IS CREATED', projectCostCreated);
       const project_cost_id = projectCostCreated.dataValues.project_cost_id;

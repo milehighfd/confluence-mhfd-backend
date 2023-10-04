@@ -60,6 +60,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         board_project_id
       }
     });
+
     const projectCostValues = await BoardProjectCost.findAll({
       attributes: ['req_position'],
       include: [{
@@ -85,22 +86,58 @@ router.get('/:board_project_id/cost', async (req, res) => {
         board_project_id
       }
     });
-    // console.log('\n\n  ********** \n\n Project Cost \n ', projectCostValues.map((a)=>a.projectCostData));
-    console.log("BOARD PROJECT RETURN", boardProject);
-    projectCostValues.forEach((projectCostValue) => {
-      const pos = projectCostValue.req_position;
-      const cost = projectCostValue.projectCostData.cost;
-      console.log('Project cost value', projectCostValue, cost, pos);
-      if( pos > 0) {
-        boardProject['req'+pos] = cost;
-      }
+    const returnValues = projectCostValues.map((a)=> ({
+      business_name: a.projectCostData.projectPartnerData.businessAssociateData[0].business_name,
+      code_partner_type_id: a.projectCostData.projectPartnerData.projectPartnerTypeData.code_partner_type_id,
+      pos: a.req_position,
+      cost: a.projectCostData.cost
+    }));
+    console.log('\n\n  ********** \n\n Project Cost \n ', returnValues, '\n\n  ********** \n\n');
+    const groupedData = returnValues.reduce((x, y) => {
+
+      (x[y.business_name] = x[y.business_name] || []).push(y);
+
+      return x;
+
+  }, {});
+  const getReqsValues = (currentValues) => {
+    const returnObject = {};
+    currentValues.forEach((v) => {
+      const stringPos = 'req'+v.pos;
+      returnObject[stringPos] = v.cost;
     });
     for ( let i = 1 ; i <= 5; ++i) {
-      if (!boardProject['req'+i]) {
-        boardProject['req'+i] = null;
+      if (!returnObject['req'+i]) {
+        returnObject['req'+i] = null;
       }
     }
-    return res.status(200).send(boardProject);
+    //TODO: add years if needed
+    return returnObject;
+  }
+    const allBN = Object.keys(groupedData);
+    const finalAnswer = allBN.map((bname) => ({
+      business_name: bname,
+      code_partner_type_id: groupedData[bname][0].code_partner_type_id,
+      values: getReqsValues(groupedData[bname])
+    }));
+    // const finalAnswer = Object.keys(groupedData) 
+    // returnValues.map((rV) => ({
+    //   business_name:rV.business_name,
+    //   code_partner_type_id: rV.code_partner_type_id,
+    //   values: groupedData[rV.business_name]
+    // }));
+    // console.log("BOARD PROJECT RETURN", boardProject);
+    // projectCostValues.forEach((projectCostValue) => {
+    //   const pos = projectCostValue.req_position;
+    //   const cost = projectCostValue.projectCostData.cost;
+    //   const projectPartnerData = projectCostValue.projectCostData.projectPartnerData;
+    //   // console.log('Project cost value', projectCostValue, cost, pos, projectPartnerData);
+    //   if( pos > 0) {
+    //     boardProject['req'+pos] = cost;
+    //   }
+    // });
+    
+    return res.status(200).send(finalAnswer);
   } catch (error) {
     logger.error('ERROR FROM GET COST ' + error);
     return res.status(500).send({ error: error });
