@@ -163,6 +163,36 @@ const determineMissingYears = (allRelevantBoards, year, extraYears) => {
   return allYears.filter(y => !boardYears.includes(y));
 };
 
+async function createBoardProjectsMaintenance(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, subtype, transaction) {
+  const createdBoardProjects = [];
+  if (extraYears.length === 0 || (extraYears.length === 1 && extraYears[0] === year)) {
+      const targetYear = year + 1;
+      const board = await getBoardForYear(targetYear, type, locality, project_type, transaction);
+      if (board) {
+          const rank = { rank0: await getNextLexoRankValue(board.board_id, 'rank0') };
+          createdBoardProjects.push(createBoardProjectEntry(board, rank, project_id, 2, userData));
+      }
+  }
+  for (let i = 0; i < extraYears.length; i++) {
+      const extraYear = extraYears[i];
+      if (extraYear !== year) { 
+          const board = await getBoardForYear(extraYear, type, locality, project_type, transaction);
+          if (board) {
+              const rankColumnName = `rank${subtype}`;
+              const amountColumnName = `req${subtype}`;
+              const rank = { 
+                  [rankColumnName]: await getNextLexoRankValue(board.board_id, rankColumnName),
+                  [amountColumnName]: extraYearsAmounts[i]
+              };
+              createdBoardProjects.push(createBoardProjectEntry(board, rank, project_id, 2, userData));
+          }
+      }
+  }
+  return createdBoardProjects;
+}
+
+
+
 
 async function createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, transaction) {
   try {
@@ -302,20 +332,20 @@ async function getBoardForYear(year, type, locality, project_type, transaction) 
 
 const createMissingBoards = async (missingYears, type, locality, project_type, userData, transaction) => {
   try {
-    const createBoardPromises = missingYears.map(missingYear => {
-      return Board.create({
-        type,
-        year: missingYear,
-        locality,
-        projecttype: project_type,
-        status: 'Under Review',
-        createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        last_modified_by: userData.email,
-        created_by: userData.email
-      }, { transaction: transaction });
-    });
-    await Promise.all(createBoardPromises);
+    // const createBoardPromises = missingYears.map(missingYear => {
+    //   return Board.create({
+    //     type,
+    //     year: missingYear,
+    //     locality,
+    //     projecttype: project_type,
+    //     status: 'Under Review',
+    //     createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //     updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //     last_modified_by: userData.email,
+    //     created_by: userData.email
+    //   }, { transaction: transaction });
+    // });
+    // await Promise.all(createBoardPromises);
     const createdYears = missingYears.map(missingYear => ({ missingYear, locality, project_type, type, user: userData.email }));
     return createdYears;
   } catch (error) {
@@ -339,5 +369,6 @@ export default {
   determineMissingYears,
   getRelevantBoards,
   initialLexoRankValue,
-  computeNextLexoRank
+  computeNextLexoRank,
+  createBoardProjectsMaintenance
 };

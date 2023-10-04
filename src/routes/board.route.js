@@ -1431,7 +1431,7 @@ router.post('/status-colors', async (req, res) => {
 router.post('/update-boards-approved', [auth], async (req, res) => {
   const transaction = await db.sequelize.transaction();
   try {
-    let { project_type, year, extraYears, sponsor, project_id, extraYearsAmounts } = req.body;
+    let { project_type, year, extraYears, sponsor, project_id, extraYearsAmounts, subtype } = req.body;
     let userData = req.user;
     year = parseInt(year);
     const type = sponsor === 'MHFD' ? 'WORK_PLAN' : 'WORK_REQUEST';
@@ -1444,10 +1444,15 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
       allYears.add(year + 1);
     }
     extraYears.forEach(y => allYears.add(y));
-    allYears = [...allYears];    
-    const createdBoardProjects = await boardService.createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, transaction);   
-    const createPromises = createdBoardProjects.map(created => BoardProject.create(created, { transaction }));
-    await Promise.all(createPromises);    
+    allYears = [...allYears];
+    let createdBoardProjects = [];
+    if (!subtype){
+      createdBoardProjects = await boardService.createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, transaction);   
+    }else{
+      createdBoardProjects = await boardService.createBoardProjectsMaintenance(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, subtype, transaction);
+    }
+    // const createPromises = createdBoardProjects.map(created => BoardProject.create(created, { transaction }));
+    // await Promise.all(createPromises);    
     await transaction.commit();
     const createdBoardProjectsArray = Object.values(createdBoardProjects);
     res.send({
