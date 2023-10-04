@@ -85,17 +85,18 @@ router.get('/:board_project_id/cost', async (req, res) => {
         board_project_id
       }
     });
-    // console.log('Project Cost', projectCostValues.map((a)=>a.projectCostData));
+    // console.log('\n\n  ********** \n\n Project Cost \n ', projectCostValues.map((a)=>a.projectCostData));
     console.log("BOARD PROJECT RETURN", boardProject);
     projectCostValues.forEach((projectCostValue) => {
       const pos = projectCostValue.req_position;
       const cost = projectCostValue.projectCostData.cost;
+      console.log('Project cost value', projectCostValue, cost, pos);
       if( pos > 0) {
         boardProject['req'+pos] = cost;
       }
     });
     for ( let i = 1 ; i <= 5; ++i) {
-      if (boardProject['req'+i] !== null) {
+      if (!boardProject['req'+i]) {
         boardProject['req'+i] = null;
       }
     }
