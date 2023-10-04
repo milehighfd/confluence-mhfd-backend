@@ -114,6 +114,11 @@ router.get('/:board_project_id/cost', async (req, res) => {
     //TODO: add years if needed
     return returnObject;
   }
+  const allBusinessNamesRelatedToProject = ProjectPartner.findAll({
+    where: {
+      
+    }
+  });
     const allBN = Object.keys(groupedData);
     const finalAnswer = allBN.map((bname) => ({
       business_name: bname,
@@ -137,7 +142,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
     //   }
     // });
     
-    return res.status(200).send(finalAnswer);
+    return res.status(200).send({amounts: finalAnswer, projectData: boardProject.projectData});
   } catch (error) {
     logger.error('ERROR FROM GET COST ' + error);
     return res.status(500).send({ error: error });
