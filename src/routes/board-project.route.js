@@ -86,19 +86,22 @@ router.get('/:board_project_id/cost', async (req, res) => {
         board_project_id
       }
     });
-    const returnValues = projectCostValues.map((a)=> ({
-      business_name: a.projectCostData.projectPartnerData.businessAssociateData[0].business_name,
-      code_partner_type_id: a.projectCostData.projectPartnerData.projectPartnerTypeData.code_partner_type_id,
-      pos: a.req_position,
-      cost: a.projectCostData.cost
-    }));
-    console.log('\n\n  ********** \n\n Project Cost \n ', returnValues, '\n\n  ********** \n\n');
-    
-    const groupedData = returnValues.reduce((x, y) => {
+    // console.log('Project cost values', project);
+  const returnValues = projectCostValues.map((a)=> ({
+    business_associates_id: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData.projectPartnerData.businessAssociateData[0].business_associates_id : null,
+    business_name: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData.projectPartnerData.businessAssociateData[0].business_name : null,
+    code_partner_type_id: a.projectCostData?.projectPartnerData?.projectPartnerTypeData.code_partner_type_id,
+    pos: a.req_position,
+    cost: a.projectCostData.cost,
+    // datainside: JSON.stringify(a.projectCostData)
+  }));
+  console.log('\n\n  ********** \n\n Project Cost \n ', returnValues, '\n\n  ********** \n\n');
+  
+  const groupedData = returnValues.reduce((x, y) => {
 
-      (x[y.business_name] = x[y.business_name] || []).push(y);
+    (x[y.business_name] = x[y.business_name] || []).push(y);
 
-      return x;
+    return x;
 
   }, {});
   const getReqsValues = (currentValues) => {
@@ -120,25 +123,32 @@ router.get('/:board_project_id/cost', async (req, res) => {
     attributes: ['project_partner_id', 'code_partner_type_id'],
     include: [{
       model: BusinessAssociates,
-      attributes: ['business_name'],
+      attributes: ['business_name', 'business_associates_id'],
       as: 'businessAssociateData'
     }],
     where: {
       project_id: currentProjectId
     }
   });
-  
-    const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => ({business_name: abnrp.businessAssociateData[0].business_name, code_partner_type_id: abnrp.code_partner_type_id}));
-    const finalAnswer = allBNWithPartner.map((bnnp) => {
-      const bname = bnnp.business_name;
-      const code_partner_type_id = bnnp.code_partner_type_id;
-      const databyBN = groupedData[bname];
-      return {
-        business_name: bname,
-        code_partner_type_id: code_partner_type_id,
-        values: getReqsValues(databyBN)
-      }
-    });
+  const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => ({
+    business_name: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_name: null,
+    code_partner_type_id: abnrp.code_partner_type_id,
+    business_associates_id: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_associates_id: null
+  }));
+  const finalAnswer = allBNWithPartner.map((bnnp) => {
+    const bname = bnnp.business_name;
+    const bid = bnnp.business_associates_id;
+    const code_partner_type_id = bnnp.code_partner_type_id;
+    const databyBN = groupedData[bname];
+    console.log('data by business name', bnnp, bid);
+    return {
+      business_associates_id: bid,
+      business_name: bname,
+      code_partner_type_id: code_partner_type_id,
+      values: getReqsValues(databyBN)
+    }
+  });
+  console.log('final anws', finalAnswer);
     // const finalAnswer = Object.keys(groupedData) 
     // returnValues.map((rV) => ({
     //   business_name:rV.business_name,
@@ -238,6 +248,6 @@ router.put('/update-target-cost', [authOnlyEmail], async(req,res) => {
 });
 
 router.put('/:board_project_id/update-rank', [auth], updateRank);
-router.put('/:board_project_id/cost',[auth], updateCost);
+router.put('/:board_project_id/cost', [auth], updateCost); // RESTORE AUTH 
 
 export default router;

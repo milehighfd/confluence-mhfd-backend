@@ -38,15 +38,15 @@ export const determineStatusChange = async (wasOnWorkspace, boardProject, board_
   const previous_code_status_type_id = boardProject.code_status_type_id;
   const boardType = board.type;
   logger.info(`boardProject.parent_board_project_id=${boardProject.parent_board_project_id}`);
-  const hasParentProject = boardProject.parent_board_project_id !== null;
-  logger.info(`hasParentProject=${hasParentProject}`);
+  const hasParentBoardProject = boardProject.parent_board_project_id !== null;
+  logger.info(`hasParentProject=${hasParentBoardProject}`);
   const onWorkspace = isOnWorkspace(boardProject);
   if (wasOnWorkspace && !onWorkspace) {
     let code_status_type;
     if (boardType === 'WORK_REQUEST') {
       code_status_type = 2;
     } else if (boardType === 'WORK_PLAN') {
-      if (hasParentProject) {
+      if (hasParentBoardProject) {
         code_status_type = 2;
       } else {
         code_status_type = 3;
@@ -59,7 +59,7 @@ export const determineStatusChange = async (wasOnWorkspace, boardProject, board_
     if (boardType === 'WORK_REQUEST') {
       code_status_type = 1;
     } else if (boardType === 'WORK_PLAN') {
-      if (hasParentProject) {
+      if (hasParentBoardProject) {
         const parentBoardProject = await BoardProject.findByPk(boardProject.parent_board_project_id);
         const parentIsOnWorkspace = isOnWorkspace(parentBoardProject);
         if (parentIsOnWorkspace) {
