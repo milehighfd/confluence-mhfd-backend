@@ -1439,12 +1439,15 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
     const allRelevantBoards = await boardService.getRelevantBoards(type, year, extraYears, locality, project_type);
     const missingYears = boardService.determineMissingYears(allRelevantBoards, year, extraYears);
     const createdBoards = await boardService.createMissingBoards(missingYears, type, locality, project_type, userData, transaction);    
+    const startYear = year;
+    const endYear = year + 4;
     let allYears = new Set();
     if (extraYears.includes(year + 1)) {
       allYears.add(year + 1);
     }
     extraYears.forEach(y => allYears.add(y));
     allYears = [...allYears];
+    allYears = [...allYears].sort((a, b) => a - b);
     let createdBoardProjects = [];
     if (!subtype && project_type !== 'Maintenance'){
       createdBoardProjects = await boardService.createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, transaction);   
@@ -1452,9 +1455,18 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
       createdBoardProjects = await boardService.createBoardProjectsMaintenance(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, subtype, transaction);
     }
     // const createPromises = createdBoardProjects.map(created => BoardProject.create(created, { transaction }));
-    // await Promise.all(createPromises);    
-    await transaction.commit();
+    // await Promise.all(createPromises); 
     const createdBoardProjectsArray = Object.values(createdBoardProjects);
+    // const boardsToDelete = await boardService.getRelevantBoards(type, startYear, Array.from({length: 4}, (_, i) => startYear + i), locality, project_type);
+    // const boardIdsToDelete = boardsToDelete.map(board => board.board_id);
+    // await BoardProject.destroy({
+    //   where: {
+    //     project_id: project_id,
+    //     board_id: boardIdsToDelete
+    //   },
+    //   transaction
+    // });
+    await transaction.commit();
     res.send({
       createdBoardProjects: createdBoardProjectsArray,
       createdBoards
