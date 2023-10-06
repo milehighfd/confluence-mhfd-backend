@@ -144,18 +144,10 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
     logger.error(`Project with id = ${currentProjectId} does not exist`);
     return;
   }
-  const PROJECT_PARTNER_ID = currentPartnerTypeId; // WRONG CODE  /// MHFD 88 SPONSOR 11 COSPONSOR 12
+  const PROJECT_PARTNER_ID = currentPartnerTypeId;  /// MHFD 88 SPONSOR 11 COSPONSOR 12
   const CODE_COST_TYPE_ID = 22; // Work Request Code cost type // TODO: verify which code will be correct 
   const CODE_COST_TYPE_EDITED = 42; // WORK REQUEST EDITED 
-  const currentBoardProjectCosts = await BoardProjectCost.findAll({
-    where: {
-      board_project_id,
-      req_position: currentColumn
-    }
-  });
-  const projectsCostsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
   try {
-    // TODO CHECK IF THIS IS WORKING FINE ON CREATE PROJECT OR EDIT COST 
     const project_partner = await ProjectPartner.findOne({
       where: {
         project_id: currentProjectId,
@@ -163,7 +155,21 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
         business_associates_id: currentBusinessAssociatesId
       }
     });
-    console.log('******\n\n ******* \n MHFD_Partner \n *******-*-*------------*********', project_partner);
+    const currentBoardProjectCosts = await BoardProjectCost.findAll({
+      include: [{
+        model: ProjectCost,
+        where: {
+          is_active: 1,
+          project_partner_id: project_partner.project_partner_id
+        }
+      }],
+      where: {
+        board_project_id,
+        req_position: currentColumn
+      }
+    });
+    console.log(currentBoardProjectCosts, 'Getting board by', board_project_id, currentColumn);
+    const projectsCostsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
     // DESACTIVAR LOS ANTERIORES PROJECT COSTS
     ProjectCost.update({
       is_active: 0,
@@ -186,7 +192,7 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
           last_modified: lastModifiedDate,
           project_partner_id: project_partner.project_partner_id
         });
-        console.log('PROJECT COST IS CREATED', projectCostCreated);
+        console.log('PROJECT COST IS CREATED', projectCostCreated.dataValues.project_cost_id);
         const project_cost_id = projectCostCreated.dataValues.project_cost_id;
         await BoardProjectCost.create({
             board_project_id: board_project_id,

@@ -168,6 +168,7 @@ const updateCostNew = async (req, res) => {
                 // si hay projects que no existen en la columna
                 // se saca el ultimo de la columna
                 const lastProject = projects[0];
+                console.log('Last project ', lastProject[rankColumnName]);
                 updateFields[rankColumnName] = LexoRank.parse(lastProject[rankColumnName]).genNext().toString();
                 // agregamos al final de la columna
               }
@@ -192,6 +193,7 @@ const updateCostNew = async (req, res) => {
         const allPromises = [];
         const offsetMillisecond = 35007;
         let mainModifiedDate = new Date();
+        console.log('Columns changed', columnsChanged, 'for ', amount.business_name, 'with id', currentBusinessAssociatesId);
         for (let pos = 0; pos < columnsChanged.length; ++pos) {
           const currentColumn = columnsChanged[pos];
           if (currentColumn !== 0) {
@@ -266,6 +268,7 @@ const updateCostNew = async (req, res) => {
             }
           }
           // UPDATE PROJECTCOST WITH ALL NEW VALUES
+          console.log('About to update boardproject ranks', updateFields);
           await BoardProject.update(
             {
               // rank0, req1, req2, req3, req4, req5, year1, year2,
