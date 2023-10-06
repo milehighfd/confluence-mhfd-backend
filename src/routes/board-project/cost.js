@@ -99,6 +99,9 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
     const bid = bnnp.business_associates_id;
     const code_partner_type_id = bnnp.code_partner_type_id;
     const databyBN = groupedData[bname];
+    if(bname === 'MHFD') {
+      console.log('MHFD previous values are:', databyBN);
+    }
     return {
       business_associates_id: bid,
       business_name: bname,
@@ -172,7 +175,7 @@ const updateCostNew = async (req, res) => {
                 updateFields[rankColumnName] = LexoRank.parse(lastProject[rankColumnName]).genNext().toString();
                 // agregamos al final de la columna
               }
-            } else if (beforeAmounts.values[reqColumnName] !== null && currentReqAmount === null && !isMaintenance) {
+            } else if (currentReqAmount === null && !isMaintenance) {
               // Para eliminar de la columna
               updateFields[rankColumnName] = null;
             }
