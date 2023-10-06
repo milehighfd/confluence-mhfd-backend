@@ -197,6 +197,17 @@ async function createBoardProjectsMaintenance(allYears, year, type, locality, pr
       }
     }
   }
+  const currentYearEntry = createdBoardProjects.find(entry => +entry.year === +year);
+  console.log('currentYearEntry', currentYearEntry)
+  if (currentYearEntry) {
+    const mhfdBoard = await getBoardForYear(+year, 'WORK_PLAN', "MHFD District Work Plan", project_type, transaction);
+    if (mhfdBoard) {
+      const replicatedEntry = { ...currentYearEntry };
+      replicatedEntry.origin = "MHFD District Work Plan";
+      replicatedEntry.board_id = mhfdBoard.board_id;
+      createdBoardProjects.push(replicatedEntry);
+    }
+  }
   return createdBoardProjects;
 }
 
@@ -255,6 +266,24 @@ async function createBoardProjects(allYears, year, type, locality, project_type,
       }
     }
     else {
+      if (!createdBoardProjects.some(entry => +entry.year === +year) && !allYears.includes(year)) {
+        const boardCurrentYear = await getBoardForYear(year, type, locality, project_type, transaction);
+        if (boardCurrentYear) {
+          let ranks = {};
+          let amounts = {};
+          let rankNumber = 2;
+          for (let extraYear of extraYears) {
+            if (extraYear >= year) {
+              const rankColumnName = `rank${rankNumber}`;
+              const amountColumnName = `req${rankNumber}`;
+              ranks[rankColumnName] = await getNextLexoRankValue(boardCurrentYear.board_id, rankColumnName);
+              amounts[amountColumnName] = extraYearsAmounts[extraYears.indexOf(extraYear)];
+              rankNumber++;
+            }
+          }
+          createdBoardProjects.push(createBoardProjectEntry(boardCurrentYear, { ...ranks, ...amounts }, project_id, statusBoardProject, userData));
+        }
+      }
       for (let boardYear of allYears) {
         const board = await getBoardForYear(boardYear, type, locality, project_type, transaction);
         if (board) {
@@ -294,7 +323,7 @@ async function createBoardProjects(allYears, year, type, locality, project_type,
 }
 
 async function getNextLexoRankValue(boardId, rankColumnName) {
-  const existingBoardProject = await getBoardProjectByBoardId(boardId);
+  const existingBoardProject = await getBoardProjectByBoardId(boardId, rankColumnName);
   if (existingBoardProject && existingBoardProject[rankColumnName]) {
     return computeNextLexoRank(existingBoardProject[rankColumnName]);
   } else {
@@ -320,13 +349,16 @@ function createBoardProjectEntry(board, rank, project_id, statusBoardProject, us
   };
 }
 
-async function getBoardProjectByBoardId(board_id) {
+async function getBoardProjectByBoardId(board_id, rankColumnName) {
   try {
     return await BoardProject.findOne({
       where: {
-        board_id: board_id
+        board_id: board_id,
+        [rankColumnName]: {
+          [Op.ne]: null  
+        }
       },
-      order: [['board_project_id', 'DESC']],
+      order: [[rankColumnName, 'DESC']], 
       limit: 1,
     });
   } catch (error) {
@@ -334,6 +366,7 @@ async function getBoardProjectByBoardId(board_id) {
     throw error;
   }
 }
+
 
 
 async function getBoardForYear(year, type, locality, project_type, transaction) {
@@ -357,20 +390,20 @@ async function getBoardForYear(year, type, locality, project_type, transaction) 
 
 const createMissingBoards = async (missingYears, type, locality, project_type, userData, transaction) => {
   try {
-    // const createBoardPromises = missingYears.map(missingYear => {
-    //   return Board.create({
-    //     type,
-    //     year: missingYear,
-    //     locality,
-    //     projecttype: project_type,
-    //     status: 'Under Review',
-    //     createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-    //     updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-    //     last_modified_by: userData.email,
-    //     created_by: userData.email
-    //   }, { transaction: transaction });
-    // });
-    // await Promise.all(createBoardPromises);
+    const createBoardPromises = missingYears.map(missingYear => {
+      return Board.create({
+        type,
+        year: missingYear,
+        locality,
+        projecttype: project_type,
+        status: 'Under Review',
+        createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+        updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+        last_modified_by: userData.email,
+        created_by: userData.email
+      }, { transaction: transaction });
+    });
+    await Promise.all(createBoardPromises);
     const createdYears = missingYears.map(missingYear => ({ missingYear, locality, project_type, type, user: userData.email }));
     return createdYears;
   } catch (error) {

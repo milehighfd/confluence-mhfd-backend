@@ -1454,18 +1454,43 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
     }else{
       createdBoardProjects = await boardService.createBoardProjectsMaintenance(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, subtype, transaction);
     }
-    // const createPromises = createdBoardProjects.map(created => BoardProject.create(created, { transaction }));
-    // await Promise.all(createPromises); 
+    const createOrUpdatePromises = createdBoardProjects.map(async (created) => {
+      const existingEntry = await BoardProject.findOne({
+        where: {
+          project_id: created.project_id,
+          board_id: created.board_id
+        },
+        transaction
+      });    
+      if (existingEntry) {
+        const resetRanks = {};
+        //this represents the ammounts of each column in the board_project if its neccesary to delete them in a future
+        //const resetReq = {};
+        for (let i = 0; i <= 5; i++) {
+          resetRanks[`rank${i}`] = null;
+          if (i > 0){
+            //resetReq[`req${i}`] = null;
+          }
+        }
+        const updatedValues = { ...resetRanks, ...created };
+        return existingEntry.update(updatedValues, { transaction });
+      } else {
+        return BoardProject.create(created, { transaction });
+      }
+    });
+    await Promise.all(createOrUpdatePromises);
     const createdBoardProjectsArray = Object.values(createdBoardProjects);
-    // const boardsToDelete = await boardService.getRelevantBoards(type, startYear, Array.from({length: 4}, (_, i) => startYear + i), locality, project_type);
-    // const boardIdsToDelete = boardsToDelete.map(board => board.board_id);
-    // await BoardProject.destroy({
-    //   where: {
-    //     project_id: project_id,
-    //     board_id: boardIdsToDelete
-    //   },
-    //   transaction
-    // });
+    const boardsToDelete = await boardService.getRelevantBoards(type, startYear, Array.from({ length: 4 }, (_, i) => startYear + i), locality, project_type);
+    const boardIdsToDelete = boardsToDelete.map(board => board.board_id);
+    const createdBoardIds = createdBoardProjects.map(entry => entry.board_id);
+    const filteredBoardIdsToDelete = boardIdsToDelete.filter(id => !createdBoardIds.includes(id));
+    await BoardProject.destroy({
+      where: {
+        project_id: project_id,
+        board_id: filteredBoardIdsToDelete
+      },
+      transaction
+    });
     await transaction.commit();
     res.send({
       createdBoardProjects: createdBoardProjectsArray,
