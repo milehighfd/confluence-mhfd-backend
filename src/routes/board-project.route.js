@@ -86,7 +86,6 @@ router.get('/:board_project_id/cost', async (req, res) => {
         board_project_id
       }
     });
-    // console.log('Project cost values', project);
   const returnValues = projectCostValues.map((a)=> ({
     business_associates_id: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData.projectPartnerData.businessAssociateData[0].business_associates_id : null,
     business_name: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData.projectPartnerData.businessAssociateData[0].business_name : null,

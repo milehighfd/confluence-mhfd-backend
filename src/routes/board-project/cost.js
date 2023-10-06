@@ -139,16 +139,17 @@ const updateCostNew = async (req, res) => {
           for (let pos = 1; pos <= 5; pos++) {
             const reqColumnName = `req${pos}`;
             const rankColumnName = `rank${pos}`;
-            const valueHasChanged = beforeAmounts.values[reqColumnName] !== amount.values[reqColumnName];
+            const currentReqAmount = amount.values[reqColumnName] ?? null;
+            const valueHasChanged = currentReqAmount === null ? true : beforeAmounts.values[reqColumnName] !== currentReqAmount;
             if (valueHasChanged) {
               columnsChanged.push(pos);
-              allCurrentAmounts[reqColumnName] = amount.values[reqColumnName];
+              allCurrentAmounts[reqColumnName] = currentReqAmount;
             } else {
               allCurrentAmounts[reqColumnName] = beforeAmounts.values[reqColumnName];
             }
             if (
-              (beforeAmounts.values[reqColumnName] === null && amount.values[reqColumnName] !== null) || // Si antes no habia valor y ahora hay valor nuevo
-              (beforeUpdate[rankColumnName] === null && amount.values[reqColumnName] !== null && valueHasChanged) // Si no hay posicion en el board (estaba vacio en esta columna) y ahora hay un valor nuevo
+              (beforeAmounts.values[reqColumnName] === null && currentReqAmount !== null) || // Si antes no habia valor y ahora hay valor nuevo
+              (beforeUpdate[rankColumnName] === null && currentReqAmount !== null && valueHasChanged) // Si no hay posicion en el board (estaba vacio en esta columna) y ahora hay un valor nuevo
             ) {
               const where = {
                 board_id: beforeUpdate.board_id,
@@ -170,7 +171,7 @@ const updateCostNew = async (req, res) => {
                 updateFields[rankColumnName] = LexoRank.parse(lastProject[rankColumnName]).genNext().toString();
                 // agregamos al final de la columna
               }
-            } else if (beforeAmounts.values[reqColumnName] !== null && amount.values[reqColumnName] === null && !isMaintenance) {
+            } else if (beforeAmounts.values[reqColumnName] !== null && currentReqAmount === null && !isMaintenance) {
               // Para eliminar de la columna
               updateFields[rankColumnName] = null;
             }
@@ -196,7 +197,8 @@ const updateCostNew = async (req, res) => {
           if (currentColumn !== 0) {
             // NOt workspace
             const reqColumnName = `req${currentColumn}`;
-            const currentCost = amount.values[reqColumnName] ? amount.values[reqColumnName] : 0;
+            const currentReqAmount = amount.values[reqColumnName] ?? null;
+            const currentCost = currentReqAmount;
             allPromises.push(
               boardService.updateAndCreateProjectCostsForAmounts(
                 currentColumn,
