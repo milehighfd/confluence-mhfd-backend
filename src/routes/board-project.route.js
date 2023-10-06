@@ -18,6 +18,54 @@ const ProjectIndependentAction = db.projectIndependentAction;
 
 const router = express.Router();
 
+router.get('/:board_project_id/cost/test', async (req, res) => {
+  try {
+    const { board_project_id } = req.params;
+    const boardProject = await BoardProject.findOne({
+      attributes: [
+        // 'req1',
+        // 'req2',
+        // 'req3',
+        // 'req4',
+        // 'req5',
+        'year1',
+        'year2'
+      ],
+      include: [{
+        model: Project,
+        attributes: ['project_id'],
+        as: 'projectData',
+        include: [{
+          model: ProjectCost,
+          attributes: ['cost'],
+          as: 'currentCost',
+          required: false,
+          where: {
+            is_active: true
+          },
+        },
+        {
+          model: ProjectIndependentAction,
+          required: false,
+          separate: true,
+          attributes: [
+            'action_name',
+            'project_id',
+            'cost',
+            'action_status'
+          ]
+        }]
+      }],
+      where: {
+        board_project_id
+      }
+    });
+    res.send(boardProject);
+  } catch (error) {
+    logger.error('ERROR FROM GET COST ' + error);
+    return res.status(500).send({ error: error });
+  }
+});
 router.get('/:board_project_id/cost', async (req, res) => {
   logger.info('get board project cost by id');
   const { board_project_id } = req.params;
@@ -40,6 +88,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
           model: ProjectCost,
           attributes: ['cost'],
           as: 'currentCost',
+          required: false,
           where: {
             is_active: true
           },
@@ -117,55 +166,61 @@ router.get('/:board_project_id/cost', async (req, res) => {
     //TODO: add years if needed
     return returnObject;
   }
-  const currentProjectId = boardProject.projectData.project_id;
-  const allBusinessNamesRelatedToProject = await ProjectPartner.findAll({
-    attributes: ['project_partner_id', 'code_partner_type_id'],
-    include: [{
-      model: BusinessAssociates,
-      attributes: ['business_name', 'business_associates_id'],
-      as: 'businessAssociateData'
-    }],
-    where: {
-      project_id: currentProjectId
-    }
-  });
-  const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => ({
-    business_name: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_name: null,
-    code_partner_type_id: abnrp.code_partner_type_id,
-    business_associates_id: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_associates_id: null
-  }));
-  const finalAnswer = allBNWithPartner.map((bnnp) => {
-    const bname = bnnp.business_name;
-    const bid = bnnp.business_associates_id;
-    const code_partner_type_id = bnnp.code_partner_type_id;
-    const databyBN = groupedData[bname];
-    console.log('data by business name', bnnp, bid);
-    return {
-      business_associates_id: bid,
-      business_name: bname,
-      code_partner_type_id: code_partner_type_id,
-      values: getReqsValues(databyBN)
-    }
-  });
-  console.log('final anws', finalAnswer);
-    // const finalAnswer = Object.keys(groupedData) 
-    // returnValues.map((rV) => ({
-    //   business_name:rV.business_name,
-    //   code_partner_type_id: rV.code_partner_type_id,
-    //   values: groupedData[rV.business_name]
-    // }));
-    // console.log("BOARD PROJECT RETURN", boardProject);
-    // projectCostValues.forEach((projectCostValue) => {
-    //   const pos = projectCostValue.req_position;
-    //   const cost = projectCostValue.projectCostData.cost;
-    //   const projectPartnerData = projectCostValue.projectCostData.projectPartnerData;
-    //   // console.log('Project cost value', projectCostValue, cost, pos, projectPartnerData);
-    //   if( pos > 0) {
-    //     boardProject['req'+pos] = cost;
-    //   }
-    // });
-    
-    return res.status(200).send({amounts: finalAnswer, projectData: boardProject.projectData});
+  console.log('Boardproject', boardProject);
+  if (boardProject.projectData){
+    const currentProjectId = boardProject.projectData.project_id;
+    const allBusinessNamesRelatedToProject = await ProjectPartner.findAll({
+      attributes: ['project_partner_id', 'code_partner_type_id'],
+      include: [{
+        model: BusinessAssociates,
+        attributes: ['business_name', 'business_associates_id'],
+        as: 'businessAssociateData'
+      }],
+      where: {
+        project_id: currentProjectId
+      }
+    });
+    const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => ({
+      business_name: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_name: null,
+      code_partner_type_id: abnrp.code_partner_type_id,
+      business_associates_id: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_associates_id: null
+    }));
+    const finalAnswer = allBNWithPartner.map((bnnp) => {
+      const bname = bnnp.business_name;
+      const bid = bnnp.business_associates_id;
+      const code_partner_type_id = bnnp.code_partner_type_id;
+      const databyBN = groupedData[bname];
+      console.log('data by business name', bnnp, bid);
+      return {
+        business_associates_id: bid,
+        business_name: bname,
+        code_partner_type_id: code_partner_type_id,
+        values: getReqsValues(databyBN)
+      }
+    });
+    console.log('final anws', finalAnswer);
+      // const finalAnswer = Object.keys(groupedData) 
+      // returnValues.map((rV) => ({
+      //   business_name:rV.business_name,
+      //   code_partner_type_id: rV.code_partner_type_id,
+      //   values: groupedData[rV.business_name]
+      // }));
+      // console.log("BOARD PROJECT RETURN", boardProject);
+      // projectCostValues.forEach((projectCostValue) => {
+      //   const pos = projectCostValue.req_position;
+      //   const cost = projectCostValue.projectCostData.cost;
+      //   const projectPartnerData = projectCostValue.projectCostData.projectPartnerData;
+      //   // console.log('Project cost value', projectCostValue, cost, pos, projectPartnerData);
+      //   if( pos > 0) {
+      //     boardProject['req'+pos] = cost;
+      //   }
+      // });
+      
+      return res.status(200).send({amounts: finalAnswer, projectData: boardProject.projectData});
+  } else {
+    return res.status(200).send({amounts: [], projectData: boardProject.projectData});
+  }
+ 
   } catch (error) {
     logger.error('ERROR FROM GET COST ' + error);
     return res.status(500).send({ error: error });
