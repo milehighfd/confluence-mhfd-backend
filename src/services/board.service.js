@@ -9,6 +9,7 @@ const ProjectCost = db.projectCost;
 const BoardProjectCost = db.boardProjectCost;
 const Project = db.project;
 const Board = db.board;
+const ProjectPartner = db.projectPartner;
 const { Op } = sequelize;
 
 const createNewBoard = async (
@@ -79,7 +80,9 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
     logger.error(`Project with id = ${currentProjectId} does not exist`);
     return;
   }
+  const PROJECT_PARTNER_MHFD = 88; // WRONG CODE  /// MHFD 88 SPONSOR 11 COSPONSOR 12
   const CODE_COST_TYPE_ID = 22; // Work Request Code cost type // TODO: verify which code will be correct 
+  const CODE_COST_TYPE_EDITED = 42; // WORK REQUEST EDITED 
   const currentBoardProjectCosts = await BoardProjectCost.findAll({
     where: {
       board_project_id,
@@ -88,16 +91,26 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
   });
   
   
-  const projectsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
+  const projectsCostsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
   try {
+    // TODO CHECK IF THIS IS WORKING FINE ON CREATE PROJECT OR EDIT COST 
+    const MHFD_Partner = await ProjectPartner.findOne({ // THIS IS GOING TO BE AN ARRAY FOR COSPONSOR UNLESS WE SEND BUSINESS ASSOCIATES ID
+      where: {
+        project_id: currentProjectId,
+        code_partner_type_id: PROJECT_PARTNER_MHFD
+      }
+    });
+    console.log('******\n\n ******* \n MHFD_Partner \n *******-*-*------------*********', MHFD_Partner);
+    // DESACTIVAR LOS ANTERIORES PROJECT COSTS
     ProjectCost.update({
-      is_active: 0
+      is_active: 0,
+      code_cost_type_id: CODE_COST_TYPE_EDITED
     }, {
       where: {
-        project_cost_id: { [Op.in]: projectsIdsToUpdate }
+        project_cost_id: { [Op.in]: projectsCostsIdsToUpdate }
       }
     }).then(async () => {
-      logger.info('PROJECTS TO BE UPDATED'+ projectsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
+      logger.info('PROJECTS TO BE UPDATED'+ projectsCostsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
       logger.info("about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
       const projectCostCreated = await ProjectCost.create({
         cost: currentCost,
@@ -106,7 +119,8 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
         created_by: user.email,
         modified_by: user.email,
         is_active: 1,
-        last_modified: lastModifiedDate
+        last_modified: lastModifiedDate,
+        project_partner_id: MHFD_Partner.project_partner_id
       });
       console.log('PROJECT COST IS CREATED', projectCostCreated);
       const project_cost_id = projectCostCreated.dataValues.project_cost_id;
@@ -123,8 +137,81 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
   }
   
 }
+const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost, currentProjectId, currentBusinessAssociatesId, currentPartnerTypeId, user, board_project_id, lastModifiedDate) => {
+  console.log('Update And Create Cost ');
+  const countOriginalProject = await Project.count({ where: { project_id: currentProjectId } });
+  if (countOriginalProject === 0) {
+    logger.error(`Project with id = ${currentProjectId} does not exist`);
+    return;
+  }
+  const PROJECT_PARTNER_ID = currentPartnerTypeId;  /// MHFD 88 SPONSOR 11 COSPONSOR 12
+  const CODE_COST_TYPE_ID = 22; // Work Request Code cost type // TODO: verify which code will be correct 
+  const CODE_COST_TYPE_EDITED = 42; // WORK REQUEST EDITED 
+  try {
+    const project_partner = await ProjectPartner.findOne({
+      where: {
+        project_id: currentProjectId,
+        code_partner_type_id: PROJECT_PARTNER_ID,
+        business_associates_id: currentBusinessAssociatesId
+      }
+    });
+    const currentBoardProjectCosts = await BoardProjectCost.findAll({
+      include: [{
+        model: ProjectCost,
+        as: 'projectCostData',
+        where: {
+          is_active: 1,
+          project_partner_id: project_partner.project_partner_id
+        }
+      }],
+      where: {
+        board_project_id,
+        req_position: currentColumn
+      }
+    });
+    console.log(currentBoardProjectCosts, 'Getting board by', board_project_id, currentColumn);
+    const projectsCostsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
+    // DESACTIVAR LOS ANTERIORES PROJECT COSTS
+    ProjectCost.update({
+      is_active: 0,
+      code_cost_type_id: CODE_COST_TYPE_EDITED
+    }, {
+      where: {
+        project_cost_id: { [Op.in]: projectsCostsIdsToUpdate }
+      }
+    }).then(async () => {
+      logger.info('PROJECTS TO BE UPDATED'+ projectsCostsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
+      logger.info("about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
+      if (currentCost) {
+        const projectCostCreated = await ProjectCost.create({
+          cost: currentCost,
+          project_id: currentProjectId,
+          code_cost_type_id: CODE_COST_TYPE_ID,
+          created_by: user.email,
+          modified_by: user.email,
+          is_active: 1,
+          last_modified: lastModifiedDate,
+          project_partner_id: project_partner.project_partner_id
+        });
+        console.log('PROJECT COST IS CREATED', projectCostCreated.dataValues.project_cost_id);
+        const project_cost_id = projectCostCreated.dataValues.project_cost_id;
+        await BoardProjectCost.create({
+            board_project_id: board_project_id,
+            project_cost_id: project_cost_id,
+            req_position: currentColumn,
+            created_by: user.email,
+            last_modified_by: user.email
+        });
+      }
+    });
+  } catch (error) {
+    logger.error("ERROR AT PROJECT COST is", error)
+  }
+  
+}
 export default {
   createNewBoard,
   reCalculateColumn,
   updateAndCreateProjectCosts,
+  updateAndCreateProjectCostsForAmounts
 };

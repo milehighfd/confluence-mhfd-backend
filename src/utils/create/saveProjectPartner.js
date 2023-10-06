@@ -32,6 +32,22 @@ export const saveProjectPartner = async (
         logger.info('create ProjectPartner CoSponsor ');
       }
     }    
+    
+    const idmhfd = await BusinessAssociates.findOne({
+      where: {
+        business_name: 'MHFD'
+      },
+      transaction: transaction
+    });
+
+    if(idmhfd) {
+      const projectPartnerMhfd = await ProjectPartner.create({
+        code_partner_type_id: 88,
+        project_id: project_id,
+        business_associates_id: idmhfd.business_associates_id,
+      }, { transaction: transaction });
+    } 
+
     const id = await BusinessAssociates.findOne({
       where: db.Sequelize.where(
         db.Sequelize.fn('LOWER', db.Sequelize.col('business_name')),
@@ -51,6 +67,7 @@ export const saveProjectPartner = async (
     } else {
       return ({ message: 'Sponsor not found' })
     }
+    
   } catch(error) {
     logger.error('error ProjectPartner Sponsor ', error);
     throw new ProjectSponsorsError('Error creating ProjectPartner Sponsor', { cause: error});

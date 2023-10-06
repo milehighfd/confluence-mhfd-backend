@@ -213,7 +213,6 @@ export async function getCountByYearStudyWithFilter(bounds, body) {
 }
 
 export async function getComponentsValuesByColumnWithCountWithFilter(column, bounds, body, needCount) {
-  console.log('column', column)
   let result = [];
   try {
     const coords = bounds.split(',');
@@ -227,11 +226,9 @@ export async function getComponentsValuesByColumnWithCountWithFilter(column, bou
     }).join(' union ')
 
     const query = { q: ` ${LINE_SQL} ` };
-    console.log('queryyyyyyyyyy', query)
     logger.info(`Starting function needle for mapgallery.components.route/`);
     const data = await needle('post', CARTO_URL, query, { json: true });
     logger.info(`Finished function needle for mapgallery.components.route/`);
-    console.log('dataaaaaaaaaaa: ', data.body)
     let answer = [];
     if (data.statusCode === 200) {
       answer = data.body.rows;
@@ -340,7 +337,6 @@ export async function countTotalComponent(bounds, body) {
     let COUNTSQL = TABLES_COMPONENTS.map(t => {
       return `SELECT count(*) FROM ${t} where ${filters}`
     }).join(' union ');
-    console.log('COUNTES AL', COUNTSQL);
     const query = { q: ` ${COUNTSQL} ` };
     logger.info(`Starting function needle for mapgallery.components.route/`);
     const lineData = await needle('post', CARTO_URL, query, { json: true });
@@ -450,7 +446,6 @@ export async function componentParamFilterCounter(req, res) {
       jurisdiction: body.jurisdiction ? body.jurisdiction.split(','): '',
       mhfdmanager: body.mhfdmanager ? body.mhfdmanager.split(','): '' 
     };
-    console.log('filters', filters);
     const allActions = await getActions(filters, bounds);
 
     const result = {
@@ -586,7 +581,6 @@ export async function componentParamFilterRoute(req, res) {
   try {
      const bounds = req.query.bounds;
      const body = req.body;
-     console.log('bodyyyyyyyyyyyyyyy', body)
      let requests = [];
      requests.push(getCounterComponentsWithFilter(bounds, body));
      requests.push(getComponentsValuesByColumnWithFilter('status', bounds, body));

@@ -40,6 +40,9 @@ export default (sequelize, DataType) => {
     },
     is_active: {
       type: DataType.BOOLEAN
+    },
+    project_partner_id: {
+      type: DataType.STRING
     }
   }, {
     freezeTableName: true,
