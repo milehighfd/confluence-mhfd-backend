@@ -167,7 +167,6 @@ router.get('/:board_project_id/cost', async (req, res) => {
     return returnObject;
   }
   console.log('Boardproject', boardProject);
-  if (boardProject.projectData){
     const currentProjectId = boardProject.projectData.project_id;
     const allBusinessNamesRelatedToProject = await ProjectPartner.findAll({
       attributes: ['project_partner_id', 'code_partner_type_id'],
@@ -217,9 +216,6 @@ router.get('/:board_project_id/cost', async (req, res) => {
       // });
       
       return res.status(200).send({amounts: finalAnswer, projectData: boardProject.projectData});
-  } else {
-    return res.status(200).send({amounts: [], projectData: boardProject.projectData});
-  }
  
   } catch (error) {
     logger.error('ERROR FROM GET COST ' + error);
