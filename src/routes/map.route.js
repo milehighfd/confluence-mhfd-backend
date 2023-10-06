@@ -504,7 +504,7 @@ router.get('/bbox-components', async (req, res) => {
           });
           response.on('end', function () {
             const rows = JSON.parse(str).rows;
-            console.log(rows);
+            // console.log(rows);
             if (rows[0].bbox != null) {
               rows[0].bbox = rows[0].bbox.replace('BOX(', '').replace(')', '').replace(/ /g, ',').split(',');
             }

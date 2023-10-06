@@ -1397,7 +1397,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
   }
   let projects = await Promise.all(conditions);
   projects = projects.map(project => project.map(p => p.toJSON()));
-  console.log(projects);
+  // console.log(projects);
   // projects = projects?.filter(project => project.length > 0);
   const counterObject = {};
   projects?.forEach(project => {
@@ -2033,8 +2033,8 @@ const deleteByProjectId = async (Projectsid) => {
       transaction: t
     });
     await t.commit();
-    console.log(deletedProject)
-    console.log(Projectsid)
+    // console.log(deletedProject)
+    // console.log(Projectsid)
     if (deletedProject) {
       logger.info('project destroyed ');
       return true;
