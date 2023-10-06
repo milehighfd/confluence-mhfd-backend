@@ -1397,7 +1397,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
   }
   let projects = await Promise.all(conditions);
   projects = projects.map(project => project.map(p => p.toJSON()));
-  console.log(projects);
+  // console.log(projects);
   // projects = projects?.filter(project => project.length > 0);
   const counterObject = {};
   projects?.forEach(project => {
@@ -2033,8 +2033,8 @@ const deleteByProjectId = async (Projectsid) => {
       transaction: t
     });
     await t.commit();
-    console.log(deletedProject)
-    console.log(Projectsid)
+    // console.log(deletedProject)
+    // console.log(Projectsid)
     if (deletedProject) {
       logger.info('project destroyed ');
       return true;
@@ -2341,15 +2341,29 @@ const checkProjectName = async (project_name) => {
 }
 
 const globalSearch = async (keyword) => {
+  const isNumeric = /^\d+$/.test(keyword);
   const words = keyword.split(' ').filter(word => word.trim() !== '');
-  const conditions = words.map(word => ({
-    project_name: {
-      [Op.like]: `%${word}%`
-    }
-  }));
+  let conditions;
+  if (isNumeric) {
+    conditions = [
+      { project_id: keyword },
+      { onbase_project_number: keyword },
+      ...words.map(word => ({
+        project_name: {
+          [Op.like]: `%${word}%`
+        }
+      }))
+    ];
+  } else {
+    conditions = words.map(word => ({
+      project_name: {
+        [Op.like]: `%${word}%`
+      }
+    }));
+  }
   const projects = await Project.findAll({
     where: {
-      [Op.and]: conditions
+      [Op.or]: conditions
     },
     attributes: [
       'project_id',

@@ -505,7 +505,6 @@ router.post('/streams-data', async (req, res) => {
         if (!answer[str_name]) {
           answer[str_name] = [];
         }
-        console.log(row.jurisdiction);
         const locality = await CodeLocalGoverment.findOne({
           where: {
             local_government_name: row.jurisdiction,

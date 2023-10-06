@@ -71,7 +71,6 @@ const getNewFilter = (filters, body, withPrefix) => {
   //   filters += ` and ${prefix}${PROPSPROBLEMTABLES.problem_boundary[3]} = '${body.mhfdmanager}'`;
   // }
   if (body.keyword) {
-    console.log('filters', filters);
     if (filters.length > 0) {
       filters += ` and (${prefix}${PROPSPROBLEMTABLES.problem_boundary[6]} ilike '%${body.keyword}%' OR ${prefix}${PROPSPROBLEMTABLES.problem_boundary[5]}::text ilike '%${body.keyword}%')`;
     }
@@ -183,7 +182,6 @@ export async function getMHFDManager(table, column, bounds, body) {
       const query = {
         q: `select distinct ${column} as value, ROW_NUMBER() OVER (ORDER BY ${column}) AS id from ${table} group by ${column} order by ${column} `
       };
-      console.log('query at array count by', query);
       logger.info(`Starting function needle for getCountByColumnProblem`);
       const data = await needle('post', CARTO_URL, query, { json: true });
       logger.info(`Finished function needle for getCountByColumnProblem`);
@@ -461,12 +459,9 @@ export async function problemParamFilterRoute(req, res) {
      filters += await getFilters(filtersBody);
     filters += `${filters.includes('where')? ' AND ' : ' WHERE '} (ST_Contains(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom) or `;
     filters += `ST_Intersects(ST_MakeEnvelope(${coords[0]},${coords[1]},${coords[2]},${coords[3]},4326), the_geom))`;
-     console.log('Filters ', filters);
      let answer = [];
      const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${PROPSPROBLEMTABLES.problem_boundary[9]} FROM ${PROBLEM_TABLE} `;
      const query = { q: `${PROBLEM_SQL} ${filters}` };
-     console.log('query finalllllll', PROBLEM_SQL)
-     console.log( 'wwwwwwwwwwww',query)
      try {
       const data = await needle('post', CARTO_URL, query, { json: true });
       if (data.statusCode === 200) {
