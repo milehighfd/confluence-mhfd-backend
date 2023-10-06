@@ -764,7 +764,7 @@ router.post('/', async (req, res) => {
     let resolvedProjects = await Promise.all(projectsPromises);
     logger.info(`Finished function all for board/`);
     logger.info(`RESOLVERD PROJECTS: `);
-    console.log(resolvedProjects)
+    // console.log(resolvedProjects)
     resolvedProjects = resolvedProjects?.filter((bp) => bp.projectData != null);
     let projects = resolvedProjects || [];
     logger.info('FINISHING BOARD REQUEST');
@@ -1475,7 +1475,7 @@ router.post('/status-colors', async (req, res) => {
 router.post('/projects-bbox', async (req, res) => {
     logger.info(`Starting endpoint board/projects-bbox with params ${JSON.stringify(req.params, null, 2)}`)
     const { projects } = req.body;
-    console.log(projects);
+    // console.log(projects);
     let projectsParsed = '';
     for (const project of projects) {
         if (projectsParsed) {
