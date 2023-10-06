@@ -158,6 +158,7 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
     const currentBoardProjectCosts = await BoardProjectCost.findAll({
       include: [{
         model: ProjectCost,
+        as: 'projectCostData',
         where: {
           is_active: 1,
           project_partner_id: project_partner.project_partner_id
