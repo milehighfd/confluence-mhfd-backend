@@ -175,25 +175,27 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
     }).then(async () => {
       logger.info('PROJECTS TO BE UPDATED'+ projectsCostsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
       logger.info("about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
-      const projectCostCreated = await ProjectCost.create({
-        cost: currentCost,
-        project_id: currentProjectId,
-        code_cost_type_id: CODE_COST_TYPE_ID,
-        created_by: user.email,
-        modified_by: user.email,
-        is_active: 1,
-        last_modified: lastModifiedDate,
-        project_partner_id: project_partner.project_partner_id
-      });
-      console.log('PROJECT COST IS CREATED', projectCostCreated);
-      const project_cost_id = projectCostCreated.dataValues.project_cost_id;
-      await BoardProjectCost.create({
-          board_project_id: board_project_id,
-          project_cost_id: project_cost_id,
-          req_position: currentColumn,
+      if (currentCost) {
+        const projectCostCreated = await ProjectCost.create({
+          cost: currentCost,
+          project_id: currentProjectId,
+          code_cost_type_id: CODE_COST_TYPE_ID,
           created_by: user.email,
-          last_modified_by: user.email
-      });
+          modified_by: user.email,
+          is_active: 1,
+          last_modified: lastModifiedDate,
+          project_partner_id: project_partner.project_partner_id
+        });
+        console.log('PROJECT COST IS CREATED', projectCostCreated);
+        const project_cost_id = projectCostCreated.dataValues.project_cost_id;
+        await BoardProjectCost.create({
+            board_project_id: board_project_id,
+            project_cost_id: project_cost_id,
+            req_position: currentColumn,
+            created_by: user.email,
+            last_modified_by: user.email
+        });
+      }
     });
   } catch (error) {
     logger.error("ERROR AT PROJECT COST is", error)
