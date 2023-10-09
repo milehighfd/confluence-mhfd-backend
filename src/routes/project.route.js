@@ -197,6 +197,35 @@ const checkProjectName = async (req, res) => {
   }
 };
 
+const countGlobalSearch = async (req, res) => {
+  try {
+    const { keyword } = req.body;
+    const projects = await projectService.globalSearch(keyword);
+    let filteredProjects = [];
+    const isNumeric = /^\d+$/.test(keyword);
+    if (isNumeric) {
+      filteredProjects = projects;
+    } else {
+      const words = keyword.split(' ').filter(word => word.trim() !== '');
+      filteredProjects = projects.filter(project => {
+        return words.every(word => {
+          const regex = new RegExp(`\\b${word}\\b`, 'i');
+          return regex.test(project.project_name);
+        });
+      });
+    }
+    const projectsIds = filteredProjects.map(p => p.project_id);
+    logger.info('project name already exists');
+    const WRcount = await projectService.getBoardProjectDataCount(projectsIds, 'WORK_REQUEST');
+    const WPcount = await projectService.getBoardProjectDataCount(projectsIds, 'WORK_PLAN');
+    const PMcount = await projectService.getPmtoolsProjectDataCount(projectsIds);
+    res.status(200).send({WRcount: WRcount, WPcount: WPcount, PMcount: PMcount});
+  } catch (error) {
+    logger.error(`Error checking project name: ${error}`);
+    res.status(500).send('Error checking project name');
+  }
+};
+
 const globalSearch = async (req, res) => {
   try {
     const { keyword, type } = req.body;
@@ -278,6 +307,7 @@ router.get('/:project_id', getProjectDetail);
 router.get('/projectCost/:project_id', listOfCosts);
 router.post('/projectCost/:project_id', [auth], createCosts);
 router.post('/search', globalSearch);
+router.post('/count-search', countGlobalSearch);
 router.post('/page', getPagePMTools);
 
 export default router;

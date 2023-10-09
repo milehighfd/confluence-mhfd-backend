@@ -2373,6 +2373,78 @@ const globalSearch = async (keyword) => {
   return projects;
 };
 
+const getPmtoolsProjectDataCount = async (project_id) => {
+  const count = await Project.count({
+    where: {
+      project_id: project_id
+    },
+    include: [
+      {
+        model: CodeProjectType,
+        required: false
+      }, 
+      {
+        model: ProjectStatus,
+        required: true,
+        as: 'currentId',
+        include: [{
+          model: CodePhaseType,
+          required: true,
+          where: {
+            code_status_type_id: {
+              [Op.gte]: 5
+            }
+          },
+          include: {
+            model: CodeStatusType,
+            required: true
+          }
+        }]
+      }
+    ]
+  });
+
+  return count;
+}
+
+const getBoardProjectDataCount = async (project_id, type) => {  
+  const count = await BoardProject.count({
+    where: {
+      project_id: project_id,
+      [Op.or]: [
+        { rank0: { [Op.not]: null } },
+        { rank1: { [Op.not]: null } },
+        { rank2: { [Op.not]: null } },
+        { rank3: { [Op.not]: null } },
+        { rank4: { [Op.not]: null } },
+        { rank5: { [Op.not]: null } },
+      ]
+    },
+    include: [{
+      model: Board,
+      required: true,
+      where: {
+        type: type
+      }
+    },
+    {
+      model: Project,
+      attributes: [],
+      as: 'projectData', 
+      required: true,
+      where: {
+        [Op.or]: [
+          { is_archived: { [Op.ne]: 1 } },
+          { is_archived: null }
+        ]
+      }
+    }
+    ]
+  });
+
+  return count;
+}
+
 const getBoardProjectData = async (project_id, type) => {  
   const boardProject = await BoardProject.findAll({
     where: {
@@ -2556,5 +2628,7 @@ export default {
   getBoardProjectData,
   getPmtoolsProjectData,
   getProjectsByStatus,
-  getProjectPartner
+  getProjectPartner,
+  getBoardProjectDataCount,
+  getPmtoolsProjectDataCount
 };
