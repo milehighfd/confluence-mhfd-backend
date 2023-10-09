@@ -9,6 +9,7 @@ import auth from 'bc/auth/auth.js';
 import { CARTO_URL, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
 
 const ProjectCost = db.projectCost;
+const Project = db.project;
 const router = express.Router();
 
 const listProjectsForId = async (req, res) => {
@@ -297,6 +298,30 @@ const getPagePMTools = async (req, res) => {
   }
 };
 
+const updateProjectNote = async (req, res) => {
+  const { project_id } = req.params;
+  const { short_note } = req.body;
+  const user = req.user;
+  try {
+    const project = await Project.update({
+      short_project_note: short_note,
+      last_modified_by: user.email,
+      modified_date: moment().format('YYYY-MM-DD HH:mm:ss')
+    }, {
+      where: {
+        project_id: project_id
+      }
+    });
+    res.status(200).send({
+      message: 'OK',
+      short_note: project.short_project_note
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({message: 'Error updating project note'});
+  }
+};
+
 router.get('/bbox/:project_id', getBboxProject);
 router.put('/archive/:project_id', [auth], archiveProject);
 router.post('/check-project-name', checkProjectName)
@@ -309,5 +334,6 @@ router.post('/projectCost/:project_id', [auth], createCosts);
 router.post('/search', globalSearch);
 router.post('/count-search', countGlobalSearch);
 router.post('/page', getPagePMTools);
+router.put('/:project_id/short_note', [auth], updateProjectNote);
 
 export default router;

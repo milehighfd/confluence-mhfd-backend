@@ -65,6 +65,9 @@ export default (sequelize, DataType) => {
     is_archived:{
       type: DataType.BOOLEAN,
     },
+    short_project_note: {
+      type: DataType.STRING,
+    }
   }, {
     tableName: 'project',
     timestamps: false,
