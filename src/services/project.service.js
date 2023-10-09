@@ -313,6 +313,7 @@ const getDetails = async (project_id) => {
         attributes: [
           "project_id",
           "project_name",
+          'short_project_note',
           "description",
           "onbase_project_number",
           "created_date",

@@ -300,11 +300,11 @@ const getPagePMTools = async (req, res) => {
 
 const updateProjectNote = async (req, res) => {
   const { project_id } = req.params;
-  const { short_note } = req.body;
+  const { short_project_note } = req.body;
   const user = req.user;
   try {
     const project = await Project.update({
-      short_project_note: short_note,
+      short_project_note: short_project_note,
       last_modified_by: user.email,
       modified_date: moment().format('YYYY-MM-DD HH:mm:ss')
     }, {
@@ -314,7 +314,7 @@ const updateProjectNote = async (req, res) => {
     });
     res.status(200).send({
       message: 'OK',
-      short_note: project.short_project_note
+      short_project_note: project.short_project_note
     });
   } catch (e) {
     console.error(e);
