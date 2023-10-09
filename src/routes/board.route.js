@@ -1510,37 +1510,63 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
       });    
       if (existingEntry) {
         const resetRanks = {};
-        //this represents the ammounts of each column in the board_project if its neccesary to delete them in a future
-        //const resetReq = {};
+        const resetReq = {};
         for (let i = 0; i <= 5; i++) {
           resetRanks[`rank${i}`] = null;
           if (i > 0){
-            //resetReq[`req${i}`] = null;
+            resetReq[`req${i}`] = null;
           }
         }
         const updatedValues = { ...resetRanks, ...created };
-        return existingEntry.update(updatedValues, { transaction });
+        await existingEntry.update(updatedValues, { transaction });
+        const updatedEntry = await BoardProject.findOne({ where: { project_id: created.project_id, board_id: created.board_id }, transaction });
+        return updatedEntry;
       } else {
         return BoardProject.create(created, { transaction });
       }
     });
-    await Promise.all(createOrUpdatePromises);
+    const results = await Promise.all(createOrUpdatePromises);
     const createdBoardProjectsArray = Object.values(createdBoardProjects);
-    const boardsToDelete = await boardService.getRelevantBoards(type, startYear, Array.from({ length: 4 }, (_, i) => startYear + i), locality, project_type);
-    const boardIdsToDelete = boardsToDelete.map(board => board.board_id);
-    const createdBoardIds = createdBoardProjects.map(entry => entry.board_id);
-    const filteredBoardIdsToDelete = boardIdsToDelete.filter(id => !createdBoardIds.includes(id));
-    await BoardProject.destroy({
-      where: {
-        project_id: project_id,
-        board_id: filteredBoardIdsToDelete
-      },
-      transaction
-    });
+    const projectCostsToCreate = [];
+    const boardProjectsCostsToConstruct = [];
+    const projectPartnerId = await boardService.findProjectPartner(project_id);
+    const offsetMillisecond = 35007;
+    let mainModifiedDate = new Date();
+    for (const boardProject of createdBoardProjects) {
+      const boardType = await boardService.getBoardTypeById(boardProject.board_id);
+      for (let reqPosition = 1; reqPosition <= 5; reqPosition++) {
+        const DateToAvoidRepeated = moment(mainModifiedDate)
+        .subtract(offsetMillisecond * reqPosition)
+        .toDate()
+        if (boardProject[`req${reqPosition}`]) {
+          const projectCost = boardService.constructProjectCost(boardProject, reqPosition, userData, projectPartnerId, boardType, DateToAvoidRepeated);
+          projectCostsToCreate.push(projectCost);
+        }
+      }
+    }
+    boardService.updateProjectCostEntries(project_id, userData, transaction)
+    const createdProjectCosts = await boardService.createAllProjectCosts(projectCostsToCreate, transaction);
+    const createdProjectCostIds = createdProjectCosts.map(entry => entry.project_cost_id);
+    let index = 0;
+    for (let i = 0; i < createdBoardProjects.length; i++) {
+      const boardProject = createdBoardProjects[i];
+      const boardProjectId =  [...results][i].board_project_id;
+      for (let reqPosition = 1; reqPosition <= 5; reqPosition++) {
+        if (boardProject[`req${reqPosition}`]) {
+          const boardProjectsCost = boardService.constructBoardProjectsCost(boardProject, createdProjectCostIds[index], reqPosition, userData, boardProjectId);
+          boardProjectsCostsToConstruct.push(boardProjectsCost);
+          index++;
+        }
+      }
+    }
+    await boardService.createAllBoardProjectsCost(boardProjectsCostsToConstruct, transaction);
+    await boardService.cascadeDelete(project_id, createdBoardProjects, type, startYear, locality, project_type, transaction);
     await transaction.commit();
     res.send({
       createdBoardProjects: createdBoardProjectsArray,
-      createdBoards
+      createdBoards,
+      projectCostsToCreate,
+      boardProjectsCostsToConstruct
     });
   } catch (error) {
     await transaction.rollback();

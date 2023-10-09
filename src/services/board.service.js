@@ -426,6 +426,133 @@ const createMissingBoards = async (missingYears, type, locality, project_type, u
   }
 };
 
+function constructProjectCost(boardProject, reqPosition, userData, partnerId, boardType, DateToAvoidRepeated) {
+  const costType = boardType === 'WORK_PLAN' ? 21 : 22;
+  return {
+    project_id: boardProject.project_id,
+    cost: boardProject[`req${reqPosition}`],
+    code_cost_type_id: costType,
+    cost_description: '', 
+    project_partner_id: partnerId, 
+    cost_project_partner_contribution: null,
+    created_by: userData.email,
+    modified_by: userData.email,
+    created: DateToAvoidRepeated,
+    last_modified: DateToAvoidRepeated,
+    agreement_number: '', 
+    amendment_number: '',
+    code_phase_type_id: null, 
+    code_scope_of_work_type_id: 20,
+    is_active: 1,
+    effective_date: ''
+  };
+}
+
+function constructBoardProjectsCost(boardProject, projectCostId, reqPosition, userData, boardProjectId) {
+  return {
+    board_project_id: boardProjectId,
+    project_cost_id: projectCostId,
+    req_position: reqPosition,
+    created_by: userData.email,
+    last_modified_by: userData.email,
+    createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+    updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+  };
+}
+
+async function createAllBoardProjectsCost(boardProjectsCreate, transaction) {
+  return await Promise.all(boardProjectsCreate.map(cost => BoardProjectCost.create(cost, { transaction })));
+}
+
+async function createAllProjectCosts(projectCosts, transaction) {
+  return await Promise.all(projectCosts.map(cost => ProjectCost.create(cost, { transaction })));
+}
+
+async function cascadeDelete(project_id, createdBoardProjects, type, startYear, locality, project_type, transaction) {
+  const boardsToDelete = await getRelevantBoards(type, startYear, Array.from({ length: 4 }, (_, i) => startYear + i), locality, project_type);
+  const boardIdsToDelete = boardsToDelete.map(board => board.board_id);
+  const createdBoardIds = createdBoardProjects.map(entry => entry.board_id);
+  const filteredBoardIdsToDelete = boardIdsToDelete.filter(id => !createdBoardIds.includes(id));
+  const boardProjectsToDelete = await BoardProject.findAll({
+      where: {
+          project_id: project_id,
+          board_id: filteredBoardIdsToDelete
+      }
+  });
+  const boardProjectIdsToDelete = boardProjectsToDelete.map(bp => bp.board_project_id);
+  const boardProjectsCostToDelete = await BoardProjectCost.findAll({
+      where: {
+          board_project_id: boardProjectIdsToDelete
+      }
+  });
+  const projectCostIdsToDelete = boardProjectsCostToDelete.map(bpc => bpc.project_cost_id);
+  await ProjectCost.destroy({
+      where: {
+          project_cost_id: projectCostIdsToDelete
+      },
+      transaction
+  });
+  await BoardProjectCost.destroy({
+      where: {
+          board_project_cost_id: boardProjectsCostToDelete.map(bpc => bpc.board_project_cost_id)
+      },
+      transaction
+  });
+  await BoardProject.destroy({
+      where: {
+          project_id: project_id,
+          board_id: filteredBoardIdsToDelete
+      },
+      transaction
+  });
+}
+
+async function findProjectPartner(projectId) {
+  try {
+      const projectPartner = await ProjectPartner.findOne({
+          where: {
+              project_id: projectId,
+              code_partner_type_id: 11
+          }
+      });
+
+      if (projectPartner) {
+          return projectPartner.project_partner_id;
+      } else {
+          console.log("No matching ProjectPartner found.");
+          return null;
+      }
+  } catch (error) {
+      console.error("Error fetching ProjectPartner:", error);
+      throw error;
+  }
+}
+
+async function getBoardTypeById(board_id) {
+  const board = await Board.findOne({ where: { board_id: board_id } });
+  return board ? board.type : null;
+}
+
+async function updateProjectCostEntries(project_id, userData, transaction) {
+  try {
+      const updatedValues = {
+          is_active: 0,
+          last_modified: moment().format('YYYY-MM-DD HH:mm:ss'),
+          modified_by: userData.username
+      };
+
+      await ProjectCost.update(updatedValues, {
+          where: {
+              project_id: project_id,
+              code_cost_type_id: [21, 22]
+          },
+          transaction
+      });
+  } catch (error) {
+      console.error("Error updating ProjectCost entries:", error);
+      throw error;
+  }
+}
 
 
 const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost, currentProjectId, currentBusinessAssociatesId, currentPartnerTypeId, user, board_project_id, lastModifiedDate) => {
@@ -515,5 +642,13 @@ export default {
   getRelevantBoards,
   initialLexoRankValue,
   computeNextLexoRank,
-  createBoardProjectsMaintenance
+  createBoardProjectsMaintenance,
+  createAllProjectCosts,
+  constructProjectCost,
+  constructBoardProjectsCost,
+  createAllBoardProjectsCost,
+  cascadeDelete,
+  findProjectPartner,
+  getBoardTypeById,
+  updateProjectCostEntries
 };
