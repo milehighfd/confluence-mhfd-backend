@@ -584,7 +584,10 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
         as: 'projectCostData',
         where: {
           is_active: 1,
-          project_partner_id: {[Op.eq]: null}
+          [Op.or]: [
+            { project_partner_id: project_partner.project_partner_id },
+            { project_partner_id: null }
+          ]
         }
       }],
       where: {
