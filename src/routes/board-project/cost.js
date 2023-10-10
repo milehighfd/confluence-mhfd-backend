@@ -46,6 +46,7 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
       board_project_id
     }
   });
+  console.log(board_project_id, 'PROJECT COST VALUES', JSON.stringify(projectCostValues));
   const returnValues = projectCostValues.map((a) => ({
     business_associates_id: a.projectCostData?.projectPartnerData?.businessAssociateData
       ? a.projectCostData.projectPartnerData.businessAssociateData[0]?.business_associates_id
@@ -89,6 +90,7 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
       project_id: currentProjectId
     }
   });
+  console.log('PID', currentProjectId, 'ALL BUSINESS NAMES RELATED PEOJRCET ', JSON.stringify(allBusinessNamesRelatedToProject));
   const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => ({
     business_name: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_name : null,
     code_partner_type_id: abnrp.code_partner_type_id,

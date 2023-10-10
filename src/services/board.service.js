@@ -573,13 +573,18 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
         business_associates_id: currentBusinessAssociatesId
       }
     });
+    console.log('\n\n project partner at projectcost for amounts', project_partner, 'with body', {
+      project_id: currentProjectId,
+      code_partner_type_id: PROJECT_PARTNER_ID,
+      business_associates_id: currentBusinessAssociatesId
+    }, '\n\n');
     const currentBoardProjectCosts = await BoardProjectCost.findAll({
       include: [{
         model: ProjectCost,
         as: 'projectCostData',
         where: {
           is_active: 1,
-          project_partner_id: project_partner.project_partner_id
+          project_partner_id: {[Op.eq]: null}
         }
       }],
       where: {
@@ -587,7 +592,7 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
         req_position: currentColumn
       }
     });
-    console.log(currentBoardProjectCosts, 'Getting board by', board_project_id, currentColumn);
+    console.log('IS THIS EMPTY? ->', currentBoardProjectCosts, 'Getting board by', board_project_id, currentColumn);
     const projectsCostsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
     // DESACTIVAR LOS ANTERIORES PROJECT COSTS
     ProjectCost.update({
@@ -595,10 +600,10 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
       code_cost_type_id: CODE_COST_TYPE_EDITED
     }, {
       where: {
-        project_cost_id: { [Op.in]: projectsCostsIdsToUpdate }
+        project_cost_id: { [Op.in]: projectsCostsIdsToUpdate } // we need to get the projectcost olds 
       }
     }).then(async () => {
-      logger.info('PROJECTS TO BE UPDATED'+ projectsCostsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
+      logger.info('\n\n\n\n\n ************************ \n PROJECTS TO BE UPDATED'+ projectsCostsIdsToUpdate + ' <- \n\n current PROJECT ID TO INSERT' + currentProjectId);
       logger.info("about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
       if (currentCost) {
         const projectCostCreated = await ProjectCost.create({
