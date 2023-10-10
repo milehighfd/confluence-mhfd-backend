@@ -817,6 +817,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
     const boardProject = boardProjects[i];
     console.log('boardProject');
     console.log(boardProject);
+    //TODO EDIT AMOUNT: ONLY GETS SPONSOR PARTNER. SHOULD BE MHFD NOW? 
     const partner = await ProjectPartner.findOne({
       attributes: ['business_associates_id'],
       where: {
@@ -839,6 +840,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
       year: newYear,
       projecttype: previousBoard.projecttype,
     };
+    // ???
     if (sponsor === 'MHFD') {
       newBoardParams = {
         ...newBoardParams,
@@ -889,6 +891,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
         rank0: boardProject.rank0 || LexoRank.middle(),
       }
     } else {
+      // if it has values for years
       newBoardProjectParams = {
         ...newBoardProjectParams,
 
@@ -907,9 +910,11 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
         req5: null,
       }
     }
-
+    // TODO EDIT AMOUNT: here is where PROJECT COSTS should be added 
+    // first check out what happened before with partners. 
     const newBoardProjectInstance = new BoardProject(newBoardProjectParams);
     await newBoardProjectInstance.save();
+    // boardproject id from newboardprojectinstatnce
   }
 };
 
@@ -1201,6 +1206,7 @@ const updateBoards = async (board, status, comment, substatus, creator) => {
         substatus
       );
     } else {
+      // When it reaches here? in what context?
       for (let i = 0 ; i < boards.length ; i++) {
         let board = boards[i];
         if (status === 'Approved' && board.status !== status) {
