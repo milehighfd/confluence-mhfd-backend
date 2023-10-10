@@ -19,16 +19,6 @@ export const updateProjectPartner = async (
   logger.info('create ProjectPartner updateProjectPartner ');
   try {
     if (project_id) {
-      await ProjectPartner.destroy({
-        where: {
-          project_id: project_id
-        },
-        transaction: transaction
-      });
-      await saveProjectPartner(sponsor, cosponsor, project_id, transaction);
-      // we need to get all previous relations in proejct cost in order to reemplace them here after it is saved. 
-      // so first lets get 2 things, all project costs with complete data, even business name 
-      // then we need all current partners of that project specific 
       const previousSponsorRelations = await ProjectCost.findAll({
         where: {
           project_id: project_id,
@@ -50,6 +40,17 @@ export const updateProjectPartner = async (
           ]
         }]
       });
+      await ProjectPartner.destroy({
+        where: {
+          project_id: project_id
+        },
+        transaction: transaction
+      });
+      await saveProjectPartner(sponsor, cosponsor, project_id, transaction);
+      // we need to get all previous relations in proejct cost in order to reemplace them here after it is saved. 
+      // so first lets get 2 things, all project costs with complete data, even business name 
+      // then we need all current partners of that project specific 
+
       console.log('previous sponsor relations', previousSponsorRelations);
       // now we need to get all current project partners
       const currentProjectPartners = await ProjectPartner.findAll({
