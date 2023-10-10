@@ -9,6 +9,7 @@ import auth from 'bc/auth/auth.js';
 import { CARTO_URL, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
 
 const ProjectCost = db.projectCost;
+const Project = db.project;
 const router = express.Router();
 
 const listProjectsForId = async (req, res) => {
@@ -197,6 +198,35 @@ const checkProjectName = async (req, res) => {
   }
 };
 
+const countGlobalSearch = async (req, res) => {
+  try {
+    const { keyword } = req.body;
+    const projects = await projectService.globalSearch(keyword);
+    let filteredProjects = [];
+    const isNumeric = /^\d+$/.test(keyword);
+    if (isNumeric) {
+      filteredProjects = projects;
+    } else {
+      const words = keyword.split(' ').filter(word => word.trim() !== '');
+      filteredProjects = projects.filter(project => {
+        return words.every(word => {
+          const regex = new RegExp(`\\b${word}\\b`, 'i');
+          return regex.test(project.project_name);
+        });
+      });
+    }
+    const projectsIds = filteredProjects.map(p => p.project_id);
+    logger.info('project name already exists');
+    const WRcount = await projectService.getBoardProjectDataCount(projectsIds, 'WORK_REQUEST');
+    const WPcount = await projectService.getBoardProjectDataCount(projectsIds, 'WORK_PLAN');
+    const PMcount = await projectService.getPmtoolsProjectDataCount(projectsIds);
+    res.status(200).send({WRcount: WRcount, WPcount: WPcount, PMcount: PMcount});
+  } catch (error) {
+    logger.error(`Error checking project name: ${error}`);
+    res.status(500).send('Error checking project name');
+  }
+};
+
 const globalSearch = async (req, res) => {
   try {
     const { keyword, type } = req.body;
@@ -268,6 +298,30 @@ const getPagePMTools = async (req, res) => {
   }
 };
 
+const updateProjectNote = async (req, res) => {
+  const { project_id } = req.params;
+  const { short_project_note } = req.body;
+  const user = req.user;
+  try {
+    const project = await Project.update({
+      short_project_note: short_project_note,
+      last_modified_by: user.email,
+      modified_date: moment().format('YYYY-MM-DD HH:mm:ss')
+    }, {
+      where: {
+        project_id: project_id
+      }
+    });
+    res.status(200).send({
+      message: 'OK',
+      short_project_note: project.short_project_note
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({message: 'Error updating project note'});
+  }
+};
+
 router.get('/bbox/:project_id', getBboxProject);
 router.put('/archive/:project_id', [auth], archiveProject);
 router.post('/check-project-name', checkProjectName)
@@ -278,6 +332,8 @@ router.get('/:project_id', getProjectDetail);
 router.get('/projectCost/:project_id', listOfCosts);
 router.post('/projectCost/:project_id', [auth], createCosts);
 router.post('/search', globalSearch);
+router.post('/count-search', countGlobalSearch);
 router.post('/page', getPagePMTools);
+router.put('/:project_id/short_note', [auth], updateProjectNote);
 
 export default router;

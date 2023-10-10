@@ -1453,23 +1453,129 @@ router.get('/:type/:year/', async (req, res) => {
 });
 
 router.post('/status-colors', async (req, res) => {
-  const { type, year, localities, projecttype } = req.body;
-  logger.info(`Starting endpoint board/colors with params ${JSON.stringify(req.params, null, 2)}`)
-  logger.info(`Starting function findAll for board/colors`);
-  let boards = await Board.findAll({
-    attributes: ['locality', 'status'],
-    where: {
-      type,
-      year,
-      locality: {
-        [Op.in]: localities
-      },
-      projecttype
+  try {
+    const { type, year, localities, projecttype } = req.body;
+    let boards = await Board.findAll({
+      attributes: ['locality', 'status'],
+      where: {
+        type,
+        year,
+        locality: {
+          [Op.in]: localities
+        },
+        projecttype
+      }
+    });
+    console.log(boards);
+    res.send(boards);
+  } catch (error) {
+    res.status(500).send({ error: 'Internal server error' + error });
+  }
+});
+
+
+router.post('/update-boards-approved', [auth], async (req, res) => {
+  const transaction = await db.sequelize.transaction();
+  try {
+    let { project_type, year, extraYears, sponsor, project_id, extraYearsAmounts, subtype } = req.body;
+    let userData = req.user;
+    year = parseInt(year);
+    const type = sponsor === 'MHFD' ? 'WORK_PLAN' : 'WORK_REQUEST';
+    const locality = sponsor === 'MHFD' ? 'MHFD District Work Plan' : sponsor;    
+    const allRelevantBoards = await boardService.getRelevantBoards(type, year, extraYears, locality, project_type);
+    const missingYears = boardService.determineMissingYears(allRelevantBoards, year, extraYears);
+    const createdBoards = await boardService.createMissingBoards(missingYears, type, locality, project_type, userData, transaction);    
+    const startYear = year;
+    const endYear = year + 4;
+    let allYears = new Set();
+    if (extraYears.includes(year + 1)) {
+      allYears.add(year + 1);
     }
-  });
-  console.log(boards);
-  logger.info(`Finished function findAll for board/colors`);
-  res.send(boards);
+    extraYears.forEach(y => allYears.add(y));
+    allYears = [...allYears];
+    allYears = [...allYears].sort((a, b) => a - b);
+    let createdBoardProjects = [];
+    if (!subtype && project_type !== 'Maintenance'){
+      createdBoardProjects = await boardService.createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, transaction);   
+    }else{
+      createdBoardProjects = await boardService.createBoardProjectsMaintenance(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, subtype, transaction);
+    }
+    const createOrUpdatePromises = createdBoardProjects.map(async (created) => {
+      const existingEntry = await BoardProject.findOne({
+        where: {
+          project_id: created.project_id,
+          board_id: created.board_id
+        },
+        transaction
+      });    
+      if (existingEntry) {
+        const resetRanks = {};
+        const resetReq = {};
+        for (let i = 0; i <= 5; i++) {
+          resetRanks[`rank${i}`] = null;
+          if (i > 0){
+            resetReq[`req${i}`] = null;
+          }
+        }
+        const updatedValues = { ...resetRanks, ...created };
+        await existingEntry.update(updatedValues, { transaction });
+        const updatedEntry = await BoardProject.findOne({ where: { project_id: created.project_id, board_id: created.board_id }, transaction });
+        return updatedEntry;
+      } else {
+        return BoardProject.create(created, { transaction });
+      }
+    });
+    const results = await Promise.all(createOrUpdatePromises);
+    const createdBoardProjectsArray = Object.values(createdBoardProjects);
+    const projectCostsToCreate = [];
+    const boardProjectsCostsToConstruct = [];
+    const projectPartnerId = await boardService.findProjectPartner(project_id);
+    const offsetMillisecond = 35007;
+    let mainModifiedDate = new Date();
+    for (const boardProject of createdBoardProjects) {
+      const boardType = await boardService.getBoardTypeById(boardProject.board_id);
+      for (let reqPosition = 1; reqPosition <= 5; reqPosition++) {
+        const DateToAvoidRepeated = moment(mainModifiedDate)
+        .subtract(offsetMillisecond * reqPosition)
+        .toDate()
+        if (boardProject[`req${reqPosition}`]) {
+          const projectCost = boardService.constructProjectCost(boardProject, reqPosition, userData, projectPartnerId, boardType, DateToAvoidRepeated);
+          projectCostsToCreate.push(projectCost);
+        }
+      }
+    }
+    boardService.updateProjectCostEntries(project_id, userData, transaction)
+    const createdProjectCosts = await boardService.createAllProjectCosts(projectCostsToCreate, transaction);
+    const createdProjectCostIds = createdProjectCosts.map(entry => entry.project_cost_id);
+    let index = 0;
+    for (let i = 0; i < createdBoardProjects.length; i++) {
+      const boardProject = createdBoardProjects[i];
+      const boardProjectId =  [...results][i].board_project_id;
+      for (let reqPosition = 1; reqPosition <= 5; reqPosition++) {
+        if (boardProject[`req${reqPosition}`]) {
+          const boardProjectsCost = boardService.constructBoardProjectsCost(boardProject, createdProjectCostIds[index], reqPosition, userData, boardProjectId);
+          boardProjectsCostsToConstruct.push(boardProjectsCost);
+          index++;
+        }
+      }
+    }
+    await boardService.createAllBoardProjectsCost(boardProjectsCostsToConstruct, transaction);
+    await boardService.cascadeDelete(project_id, createdBoardProjects, type, startYear, locality, project_type, transaction);
+    await transaction.commit();
+    res.send({
+      createdBoardProjects: createdBoardProjectsArray,
+      createdBoards,
+      projectCostsToCreate,
+      boardProjectsCostsToConstruct
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error(error);
+    res.status(500).send({
+      error,
+      message: 'An error occurred while updating the boards',
+    });
+  }
 });
 
 router.post('/projects-bbox', async (req, res) => {
