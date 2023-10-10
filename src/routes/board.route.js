@@ -1665,6 +1665,55 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
   }
 });
 
+router.post('/send-to-workplan', [auth], async (req, res) => {
+  const transaction = await db.sequelize.transaction();
+  try {
+    let { project_type, year, board_project_id } = req.body;
+    let userData = req.user;
+    year = parseInt(year);
+    const type = 'WORK_PLAN';
+    const locality = 'MHFD District Work Plan';
+    const MhfdBoard = await Board.findOne({
+      where: {
+        type,
+        year: year,
+        locality,
+        projecttype: project_type
+      }
+    });
+    let createdBoards = [];
+    let targetBoardId;
+    if (!MhfdBoard || Object.keys(MhfdBoard).length === 0) {
+      createdBoards = await boardService.createMissingBoards(allRelevantBoards, type, locality, project_type, userData, transaction);      
+      targetBoardId = createdBoards[0].board_id;
+    } else {
+      targetBoardId = MhfdBoard.board_id;
+    }
+    const boardProject = await BoardProject.findOne({
+      where: {
+        board_project_id
+      }
+    });
+    const updatedRanks = {};
+    for (let i = 0; i <= 5; i++) {
+      const rankColumnName = `rank${i}`;
+      const nextLexoRankValue = await boardService.getNextLexoRankValue(targetBoardId, rankColumnName);
+      updatedRanks[rankColumnName] = nextLexoRankValue;
+    }
+    const newBoardProject = await BoardProject.create({
+      ...boardProject.dataValues,
+      board_project_id: undefined,
+      board_id: targetBoardId
+    }, { transaction });
+    await transaction.commit();
+    return res.json({ message: 'Boards created successfully', createdBoards, newBoardProject });
+  } catch (error) {
+    await transaction.rollback();
+    console.error(`Error creating boards: ${error}`);
+    return res.status(500).json({ error: 'An error occurred while creating boards' });
+  }
+});
+
 router.post('/projects-bbox', async (req, res) => {
     logger.info(`Starting endpoint board/projects-bbox with params ${JSON.stringify(req.params, null, 2)}`)
     const { projects } = req.body;

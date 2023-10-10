@@ -839,6 +839,23 @@ const getLightDetails = async (project_id) => {
     ],
     include: [
       {
+        model: BoardProject,
+        required: false,
+        attributes: [
+          'board_id'
+        ],
+        include: {
+          model: Board,
+          required: false,
+          attributes: [
+            'projecttype',
+            'type',
+            'year',
+            'locality'
+          ]
+        }
+      },
+      {
         model: ProjectLocalGovernment,
         required: false,
         attributes: [
