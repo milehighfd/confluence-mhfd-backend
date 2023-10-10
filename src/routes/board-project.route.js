@@ -21,46 +21,78 @@ const router = express.Router();
 router.get('/:board_project_id/cost/test', async (req, res) => {
   try {
     const { board_project_id } = req.params;
-    const boardProject = await BoardProject.findOne({
-      attributes: [
-        // 'req1',
-        // 'req2',
-        // 'req3',
-        // 'req4',
-        // 'req5',
-        'year1',
-        'year2'
-      ],
+    // await BoardProjectCost.findAll({
+    //   attributes: ['req_position'],
+    //   include: [
+    //     {
+    //       attributes: ['cost', 'project_cost_id', 'project_partner_id'],
+    //       model: ProjectCost,
+    //       as: 'projectCostData',
+    //       where: {
+    //         is_active: true
+    //       },
+    //       include: [
+    //         {
+    //           model: ProjectPartner,
+    //           as: 'projectPartnerData',
+    //           include: [
+    //             {
+    //               model: CodeProjectPartnerType,
+    //               as: 'projectPartnerTypeData'
+    //             },
+    //             {
+    //               model: BusinessAssociates,
+    //               as: 'businessAssociateData'
+    //             }
+    //           ]
+    //         }
+    //       ]
+    //     }
+    //   ],
+    //   where: {
+    //     board_project_id
+    //   }
+    // });
+    const previousSponsorRelations = await ProjectCost.findAll({
+      where: {
+        project_id: board_project_id,
+        is_active: true,
+        code_cost_type_id: 22
+      },
       include: [{
-        model: Project,
-        attributes: ['project_id'],
-        as: 'projectData',
-        include: [{
-          model: ProjectCost,
-          attributes: ['cost'],
-          as: 'currentCost',
-          required: false,
-          where: {
-            is_active: true
+        model: ProjectPartner,
+        as: 'projectPartnerData',
+        include: [
+          {
+            model: CodeProjectPartnerType,
+            as: 'projectPartnerTypeData'
           },
+          {
+            model: BusinessAssociates,
+            as: 'businessAssociateData'
+          }
+        ]
+      }]
+    });
+    console.log('previous sponsor relations', previousSponsorRelations);
+    // now we need to get all current project partners
+    const currentProjectPartners = await ProjectPartner.findAll({
+      where: {
+        project_id: board_project_id
+      },
+      include: [
+        {
+          model: CodeProjectPartnerType,
+          as: 'projectPartnerTypeData'
         },
         {
-          model: ProjectIndependentAction,
-          required: false,
-          separate: true,
-          attributes: [
-            'action_name',
-            'project_id',
-            'cost',
-            'action_status'
-          ]
-        }]
-      }],
-      where: {
-        board_project_id
-      }
+          model: BusinessAssociates,
+          as: 'businessAssociateData'
+        }
+      ]
     });
-    res.send(boardProject);
+    console.log('current project partners', currentProjectPartners);
+    res.send([previousSponsorRelations, currentProjectPartners]);
   } catch (error) {
     logger.error('ERROR FROM GET COST ' + error);
     return res.status(500).send({ error: error });

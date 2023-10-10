@@ -48,7 +48,7 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
   });
   const returnValues = projectCostValues.map((a) => ({
     business_associates_id: a.projectCostData?.projectPartnerData?.businessAssociateData
-      ? a.projectCostData.projectPartnerData.businessAssociateData[0].business_associates_id
+      ? a.projectCostData.projectPartnerData.businessAssociateData[0]?.business_associates_id
       : null,
     business_name: a.projectCostData?.projectPartnerData?.businessAssociateData
       ? a.projectCostData.projectPartnerData.businessAssociateData[0].business_name
@@ -92,7 +92,7 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
   const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => ({
     business_name: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_name : null,
     code_partner_type_id: abnrp.code_partner_type_id,
-    business_associates_id: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_associates_id : null
+    business_associates_id: abnrp.businessAssociateData ? abnrp.businessAssociateData[0]?.business_associates_id : null
   }));
   const allPreviousAmounts = allBNWithPartner.map((bnnp) => {
     const bname = bnnp.business_name;
@@ -124,6 +124,7 @@ const updateCostNew = async (req, res) => {
     const currentProjectId = beforeUpdate.project_id;
     let statusHasChanged;
     const allPreviousAmounts = await getAllPreviousAmounts(board_project_id, currentProjectId);
+    console.log( amounts, 'This are All Previous amounts for ', currentProjectId, '\n\n *********** \n ', allPreviousAmounts);
     let columnsChangesMHFD = [0];
     for(let i = 0; i < amounts.length; ++i) {
         const amount = amounts[i];
@@ -134,9 +135,16 @@ const updateCostNew = async (req, res) => {
         const allCurrentAmounts = {}; // aqui se almacenan todos los reqs amounts
         // Returns all boarcproject cost related to the current board project
         // dentro de estos estan los costos de cada partner
+        console.log('All previous amounts', allPreviousAmounts, 'searching for ', amount.business_name);
         const beforeAmounts = allPreviousAmounts.find((a) => a.business_name === amount.business_name);
-        const currentBusinessAssociatesId = beforeAmounts.business_associates_id;
-        const currentPartnerTypeId = beforeAmounts.code_partner_type_id;
+        // check if exists because it could be a new partner that wasnt in previous amounts
+        if (!beforeAmounts) {
+          console.log('Jumped save for ', amount.business_name, 'because it doesnt exist');
+          continue;
+        }
+        console.log('Before amounts have b a id  ', beforeAmounts);
+        const currentBusinessAssociatesId = beforeAmounts?.business_associates_id;
+        const currentPartnerTypeId = beforeAmounts?.code_partner_type_id;
         // EXCLUSIVO PARA MHFD FUNDING // PORQUE ES PARA AGREGAR O QUITAR CARDS DE ALGUNA COLUMNA
         if (amount.code_partner_type_id === 88) {
           for (let pos = 1; pos <= 5; pos++) {
