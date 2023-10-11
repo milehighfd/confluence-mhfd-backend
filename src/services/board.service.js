@@ -100,8 +100,6 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
         code_partner_type_id: PROJECT_PARTNER_MHFD
       }
     });
-    console.log('******\n\n ******* \n MHFD_Partner \n *******-*-*------------*********', MHFD_Partner);
-    // DESACTIVAR LOS ANTERIORES PROJECT COSTS
     ProjectCost.update({
       is_active: 0,
       code_cost_type_id: CODE_COST_TYPE_EDITED
@@ -588,6 +586,7 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
     console.log('IS THIS EMPTY? ->', currentBoardProjectCosts, 'Getting board by', board_project_id, currentColumn);
     const projectsCostsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
     // DESACTIVAR LOS ANTERIORES PROJECT COSTS
+    console.trace('HERE IS with this projectcosts', projectsCostsIdsToUpdate );
     ProjectCost.update({
       is_active: 0,
       code_cost_type_id: CODE_COST_TYPE_EDITED
