@@ -5,7 +5,7 @@ const ProjectCost = db.projectCost;
 
 const saveProjectCost = async (cost, transaction = null) => {
   try {
-    console.log('Creating project cost with this data', cost);
+    console.log('XXX Creating project cost with this data', cost);
     const response = await ProjectCost.create(cost, { transaction: transaction }); 
     logger.info('cost created');
     return response;
@@ -37,7 +37,7 @@ const setIsActiveToFalse = async (project_id) => {
 
 const updateProjectOverhead = async (cost) => {
   try {
-    logger.info('older cost updated');
+    logger.info('XXX older cost updated');
     const response = await ProjectCost.create(cost);
     logger.info('cost updated');
     return response;

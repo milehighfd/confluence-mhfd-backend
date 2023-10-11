@@ -46,6 +46,36 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
       board_project_id
     }
   });
+  const projectCostValuesComplete = await BoardProjectCost.findAll({
+    attributes: ['req_position'],
+    include: [
+      {
+        attributes: ['cost', 'project_cost_id', 'project_partner_id'],
+        model: ProjectCost,
+        as: 'projectCostData',
+        include: [
+          {
+            model: ProjectPartner,
+            as: 'projectPartnerData',
+            include: [
+              {
+                model: CodeProjectPartnerType,
+                as: 'projectPartnerTypeData'
+              },
+              {
+                model: BusinessAssociates,
+                as: 'businessAssociateData'
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    where: {
+      board_project_id
+    }
+  });
+  console.log(board_project_id, 'PROJECT COST VALUES', JSON.stringify(projectCostValues), '\n\n', 'COMPLETE', JSON.stringify(projectCostValuesComplete), '\n\n');
   const returnValues = projectCostValues.map((a) => ({
     business_associates_id: a.projectCostData?.projectPartnerData?.businessAssociateData
       ? a.projectCostData.projectPartnerData.businessAssociateData[0]?.business_associates_id

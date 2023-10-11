@@ -6,6 +6,7 @@ const ProjectCost = db.projectCost;
 export const setCostActiveToFalse = async (project_id, transaction = null) => {
   const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
   try {
+    console.log('***************\n\n************\n About to update alllllll', project_id, '**********************\n\n\n***********\n\n');
     await ProjectCost.update(
       {
         is_active: false,

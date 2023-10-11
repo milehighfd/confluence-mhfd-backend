@@ -1185,6 +1185,7 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                       .subtract(offsetMillisecond * j)
                       .toDate()
                       // here we are duplicating the previous cost with the same partner but with code cost type of workplan
+                      console.trace(' XXX PROJECTCOST CREATE', currentProjectId, prevCostOfSponsor.cost);
                       const newProjectCost = await ProjectCost.create({
                         project_id: currentProjectId,
                         cost: prevCostOfSponsor.cost,
@@ -1203,7 +1204,7 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                           project_cost_id: prevCostOfSponsor.project_cost_id
                         }
                       });
-                      console.log('Creating new relation boardporject-cost', newBoardProjectId, newProjectCost.project_cost_id, prevBoardProjectCost.req_position);
+                      console.log('XXX Creating new relation boardporject-cost', newBoardProjectId, newProjectCost.project_cost_id, prevBoardProjectCost.req_position);
                       const newBoardProjectCost = await BoardProjectCost.create({
                         board_project_id: newBoardProjectId,
                         project_cost_id: newProjectCost.project_cost_id,

@@ -63,16 +63,15 @@ export const updateProjectPartner = async (
         ]});
       // compare all partners to match 11 with sponsor and 12 with cosponsor then delete the ones that are not in there 
       console.log(sponsor, cosponsor, 'proejct Partners', JSON.stringify(projectPartners));
+      const WORK_REQUEST_EDITED = 42;
       for (let i = 0; i < projectPartners.length; i++) {
         const currentPP = projectPartners[i];
         const currentBusinessData = currentPP.businessAssociateData[0];
-        console.log(' ********-************ \n Project Partner check', JSON.stringify(currentPP), currentPP.code_partner_type_id, 'bname', currentPP.businessAssociateData[0].business_name);
         if (currentPP.code_partner_type_id === 11) {
           if (currentBusinessData?.business_name !== sponsor) {
-            console.log('about to destro sponsor', JSON.stringify(currentPP));
-            // update project cost set is_active to false where project_partner_id = currentPP.project_partner_id
             await ProjectCost.update({
-              is_active: false
+              is_active: false,
+              code_cost_type_id: WORK_REQUEST_EDITED
             }, {
               where: {
                 project_partner_id: currentPP.project_partner_id
@@ -80,43 +79,37 @@ export const updateProjectPartner = async (
               transaction: transaction
             });
             
-            await ProjectPartner.destroy({
+            const destroyed = await ProjectPartner.destroy({
               where: {
                 project_partner_id: currentPP.project_partner_id
               },
               transaction: transaction
             });
+            console.log('DESTROYING SPONSOR', currentPP.project_partner_id, 'RESULT', destroyed);
           }
         } else if (currentPP.code_partner_type_id === 12) {
-          console.log('HOJA osponsor', cosponsor.includes(currentBusinessData?.business_name), cosponsor, JSON.stringify(currentBusinessData));
           if (!cosponsor.includes(currentBusinessData?.business_name)) {
-            console.log('about to destroy cosponsor', JSON.stringify(currentPP));
             await ProjectCost.update({
-              is_active: false
+              is_active: false,
+              code_cost_type_id: WORK_REQUEST_EDITED
             }, {
               where: {
                 project_partner_id: currentPP.project_partner_id
               },
               transaction: transaction
             });
-            await ProjectPartner.destroy({
+            const destroyed = await ProjectPartner.destroy({
               where: {
                 project_partner_id: currentPP.project_partner_id
               },
               transaction: transaction
             });
+            console.log('DESTROYING cosponsor', currentPP.project_partner_id, 'RESULT', destroyed);
           }
         }
       }
-      const savedProjectPartnersponsor = await addProjectPartners(sponsor, cosponsor, project_id, transaction); // CREATE -> MHFD, SPONSOR y COSPONSORs
-      // get all partners of project_id
-     
-
+      const savedProjectPartnersponsor = await addProjectPartners(sponsor, cosponsor, project_id, transaction); 
       console.log('SAVED PROJECT PARTNER SPONSOR', savedProjectPartnersponsor);
-      // we need to get all previous relations in proejct cost in order to reemplace them here after it is saved. 
-      // so first lets get 2 things, all project costs with complete data, even business name 
-      // then we need all current partners of that project specific 
-
       console.log('previous sponsor relations', prevProjectCostWithBusinessName);
       // now we need to get all current project partners
       const currentProjectPartners = await ProjectPartner.findAll({ // the new project partners after the destroyed ones
@@ -133,14 +126,21 @@ export const updateProjectPartner = async (
             model: BusinessAssociates,
             as: 'businessAssociateData'
           }
-        ]
+        ],
+        transaction: transaction
       });
-      console.log('current project partners', currentProjectPartners); // missing the new cosponsor check in save project partner
+      console.log('current project partners after delete and add partners', JSON.stringify(currentProjectPartners));  // LLEGAN BIEN LOS NUEVOS
+      // missing the new cosponsor check in save project partner
       // update all project costs with the new project partner id matching the previous one by business_name
       for (let i = 0; i < prevProjectCostWithBusinessName.length; i++) {
         const previousSponsorRelation = prevProjectCostWithBusinessName[i];
         console.log('JSON prevprojectcostwithbusinessname', JSON.stringify(previousSponsorRelation));
-        const currentProjectPartner = currentProjectPartners.find((cpp) => cpp?.businessAssociateData?.business_name === previousSponsorRelation.projectPartnerData?.businessAssociateData?.business_name);
+        const currentProjectPartner = currentProjectPartners.find((cpp) =>  {
+          console.log('------\n trying to find currectn in current project partner one that matches previosly to copy the cost', '\n prev', JSON.stringify(previousSponsorRelation), '\n current', JSON.stringify(cpp), 'CCP',cpp?.businessAssociateData?.business_name, 'previousSponsor', previousSponsorRelation.projectPartnerData?.businessAssociateData?.business_name);
+          const ccpData = cpp?.businessAssociateData[0];
+          const previousData = previousSponsorRelation.projectPartnerData?.businessAssociateData;
+          return ccpData?.business_name === previousData?.business_name;
+        });
         console.log('JSON currentProjectPartner', JSON.stringify(currentProjectPartner));
         if (currentProjectPartner) {
           await ProjectCost.update({

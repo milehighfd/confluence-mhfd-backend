@@ -108,7 +108,7 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
         project_cost_id: { [Op.in]: projectsCostsIdsToUpdate }
       }
     }).then(async () => {
-      logger.info('PROJECTS TO BE UPDATED'+ projectsCostsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
+      logger.info('XXX PROJECTS TO BE UPDATED'+ projectsCostsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
       logger.info("about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
       const projectCostCreated = await ProjectCost.create({
         cost: currentCost,
@@ -435,6 +435,7 @@ async function createAllBoardProjectsCost(boardProjectsCreate, transaction) {
 }
 
 async function createAllProjectCosts(projectCosts, transaction) {
+  console.log('XXX proejct cost created', cost);
   return await Promise.all(projectCosts.map(cost => ProjectCost.create(cost, { transaction })));
 }
 
@@ -578,7 +579,7 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
       }
     }).then(async () => {
       logger.info('\n\n\n\n\n ************************ \n PROJECTS TO BE UPDATED'+ projectsCostsIdsToUpdate + ' <- \n\n current PROJECT ID TO INSERT' + currentProjectId);
-      logger.info("about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
+      logger.info("XXX about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
       if (currentCost) {
         const projectCostCreated = await ProjectCost.create({
           cost: currentCost,
