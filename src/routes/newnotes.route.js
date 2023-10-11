@@ -83,7 +83,7 @@ router.post('/note', [auth], async (req, res) => {
   logger.info(`Starting endpoint newnotes/note with params ${JSON.stringify(req.params, null, 2)}`);
   const user = req.user;  
   const {note_text, latitude, longitude, color_id} = req.body; 
-  const note = {note_text, latitude, longitude, color_id};
+  const note = {note_text, latitude, longitude, color_id, last_modified_by: user.email, created_by : user.email};
   note['user_id'] = user.user_id;
   try {
     logger.info(`Starting function saveNote for newnotes.route/note`);
@@ -182,6 +182,7 @@ router.put('/note/:id', [auth], async (req, res) => {
     note['position'] = position;
   }
   note['groupnotes_id'] = groupnotes_id;
+  note['last_modified_by'] = user.email;
   note['user_id'] = user.user_id;
   try {
     logger.info(`Starting function updateNote for newnotes.route/note/:id`);
