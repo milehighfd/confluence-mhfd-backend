@@ -38,7 +38,7 @@ const BoardProject = db.boardProject;
 const Board = db.board;
 const BoardProjectCost = db.boardProjectCost;
 
-export const editProjects = async (body, transaction, type, creator, subtype, project_id) => {
+export const editProjects = async (body, transaction, creator, project_id) => {
   try {
     const { projectname, description, maintenanceeligibility = null, geom, isCountyWide, isSouthPlate } = body;
     let southPlate = 0;
@@ -125,14 +125,13 @@ const parseGeographicInfoAndUpdate = async (body, project_id, user, transaction)
   }
 };
 
-const updateExtraFields = async(type, subtype, body, project_id, transaction, creator) => {
+const updateExtraFields = async(type, body, project_id, transaction, creator) => {
   const {
     additionalcost,
     additionalcostdescription,
     overheadcost,
     independentComponent,
     components,
-    projectname,
     geom,
     ids,
     streams,
@@ -302,14 +301,14 @@ const editWRBoard = async (body, user, type, subtype, transaction, project_id) =
 export const editProjectWorkflow = async (body, user, files, type, subtype, project_id) => {
   const transaction = await db.sequelize.transaction();
   try {    
-    const data = await editProjects(body, transaction, type, user.email, subtype, project_id);
+    const data = await editProjects(body, transaction, user.email, project_id);
     const { cover, sponsor, cosponsor, projectname } = body;
     if (cover !== ''){
       await toggleName(cover, project_id, transaction);
     }    
     const project_attachments = await uploadFiles(user, files, project_id, cover, transaction);
     const updateBoardWR = await editWRBoard(body, user, type, subtype, transaction, project_id);
-    const boardData = await updateProjectsInBoard(project_id, projectname, type, subtype, transaction);
+    const boardData = await updateProjectsInBoard(project_id, projectname, transaction);
     const geoInfo = await parseGeographicInfoAndUpdate(body, project_id, user, transaction);
     const project_partner = await updateProjectPartner(
       sponsor,
@@ -318,7 +317,7 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
       transaction
     );
     console.log('************* \n\n\n about to call extra fields');
-    const extra_fields = await updateExtraFields(type, subtype, body, project_id, transaction, user.email);
+    const extra_fields = await updateExtraFields(type, body, project_id, transaction, user.email);
     const composeData = { project_update: data, project_attachments, project_partner, boardData, ...geoInfo, ...extra_fields, updateBoardWR};   
     await transaction.commit();
     return composeData;

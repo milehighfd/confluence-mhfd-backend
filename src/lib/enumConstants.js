@@ -131,7 +131,7 @@ export const FIELDS = Object.freeze({
    ZOOM_AREA: 'zoomarea',
    BUSSINESS_ASSOCIATE_CONTACT_ID: 'business_associate_contact_id'
  });
-   
+
 export const EMAIL_VALIDATOR = /[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[a-zA-Z0-9]{2,}/;
 
 export const PROJECT_TYPES_AND_NAME = [
@@ -148,6 +148,6 @@ export const PROJECT_TYPES_AND_NAME = [
      name: 'Property Acquisition', id: 'propertyAcquisition'
    },
    {
-     name: 'Special', id: 'special'
+     name: 'R&D', id: 'R&D'
    }
  ];

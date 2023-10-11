@@ -5,8 +5,6 @@ const BoardProject = db.boardProject;
 export const updateProjectsInBoard = async (
   project_id,
   projectname,
-  projecttype,
-  projectsubtype,
   transaction
 ) => {
   let projectToUpdate = await BoardProject.findAll({
