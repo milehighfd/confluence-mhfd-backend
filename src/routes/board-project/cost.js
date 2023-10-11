@@ -119,15 +119,18 @@ const updateCostNew = async (req, res) => {
     const { board_project_id } = req.params;
     const user = req.user;
     const { amounts, isMaintenance } = req.body; // ALL Amounts by sponsor, mhfd funding and cosponsors
+    let columnsChangesMHFD = [0];
     const beforeUpdate = await BoardProject.findOne({
       where: { board_project_id }
     });
+    if (beforeUpdate){
+    console.log('Board project id', board_project_id, beforeUpdate);
     const board_id = beforeUpdate.board_id;
     const currentProjectId = beforeUpdate.project_id;
     let statusHasChanged;
     const allPreviousAmounts = await getAllPreviousAmounts(board_project_id, currentProjectId);
     console.log( amounts, 'This are All Previous amounts for ', currentProjectId, '\n\n *********** \n ', allPreviousAmounts);
-    let columnsChangesMHFD = [0];
+    
     for(let i = 0; i < amounts.length; ++i) {
         const amount = amounts[i];
         let updateFields = {};
@@ -327,6 +330,13 @@ const updateCostNew = async (req, res) => {
       ...allAmounts,
       columnsChanged: columnsChangesMHFD,
     });
+  } else {
+    return res.status(200).send({
+      amount:[],
+      columnsChanged: []
+    });
+  }
+    
   } catch (error) {
     logger.error('ERROR At route cost' + error);
     return res.status(500).send({ error: error });

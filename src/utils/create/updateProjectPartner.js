@@ -46,7 +46,72 @@ export const updateProjectPartner = async (
       //   },
       //   transaction: transaction
       // });
+      const projectPartners = await ProjectPartner.findAll({
+        where: {
+          project_id: project_id,
+          code_partner_type_id: [ 11, 12 ]
+        },
+        include: [
+          {
+            model: CodeProjectPartnerType,
+            as: 'projectPartnerTypeData'
+          },
+          {
+            model: BusinessAssociates,
+            as: 'businessAssociateData'
+          }
+        ]});
+      // compare all partners to match 11 with sponsor and 12 with cosponsor then delete the ones that are not in there 
+      console.log(sponsor, cosponsor, 'proejct Partners', JSON.stringify(projectPartners));
+      for (let i = 0; i < projectPartners.length; i++) {
+        const currentPP = projectPartners[i];
+        const currentBusinessData = currentPP.businessAssociateData[0];
+        console.log(' ********-************ \n Project Partner check', JSON.stringify(currentPP), currentPP.code_partner_type_id, 'bname', currentPP.businessAssociateData[0].business_name);
+        if (currentPP.code_partner_type_id === 11) {
+          if (currentBusinessData?.business_name !== sponsor) {
+            console.log('about to destro sponsor', JSON.stringify(currentPP));
+            // update project cost set is_active to false where project_partner_id = currentPP.project_partner_id
+            await ProjectCost.update({
+              is_active: false
+            }, {
+              where: {
+                project_partner_id: currentPP.project_partner_id
+              },
+              transaction: transaction
+            });
+            
+            await ProjectPartner.destroy({
+              where: {
+                project_partner_id: currentPP.project_partner_id
+              },
+              transaction: transaction
+            });
+          }
+        } else if (currentPP.code_partner_type_id === 12) {
+          console.log('HOJA osponsor', cosponsor.includes(currentBusinessData?.business_name), cosponsor, JSON.stringify(currentBusinessData));
+          if (!cosponsor.includes(currentBusinessData?.business_name)) {
+            console.log('about to destroy cosponsor', JSON.stringify(currentPP));
+            await ProjectCost.update({
+              is_active: false
+            }, {
+              where: {
+                project_partner_id: currentPP.project_partner_id
+              },
+              transaction: transaction
+            });
+            await ProjectPartner.destroy({
+              where: {
+                project_partner_id: currentPP.project_partner_id
+              },
+              transaction: transaction
+            });
+          }
+        }
+      }
       const savedProjectPartnersponsor = await addProjectPartners(sponsor, cosponsor, project_id, transaction); // CREATE -> MHFD, SPONSOR y COSPONSORs
+      // get all partners of project_id
+     
+
       console.log('SAVED PROJECT PARTNER SPONSOR', savedProjectPartnersponsor);
       // we need to get all previous relations in proejct cost in order to reemplace them here after it is saved. 
       // so first lets get 2 things, all project costs with complete data, even business name 
@@ -75,7 +140,7 @@ export const updateProjectPartner = async (
       for (let i = 0; i < prevProjectCostWithBusinessName.length; i++) {
         const previousSponsorRelation = prevProjectCostWithBusinessName[i];
         console.log('JSON prevprojectcostwithbusinessname', JSON.stringify(previousSponsorRelation));
-        const currentProjectPartner = currentProjectPartners.find((cpp) => cpp.businessAssociateData.business_name === previousSponsorRelation.projectPartnerData.businessAssociateData.business_name);
+        const currentProjectPartner = currentProjectPartners.find((cpp) => cpp?.businessAssociateData?.business_name === previousSponsorRelation.projectPartnerData?.businessAssociateData?.business_name);
         console.log('JSON currentProjectPartner', JSON.stringify(currentProjectPartner));
         if (currentProjectPartner) {
           await ProjectCost.update({
