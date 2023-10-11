@@ -56,7 +56,8 @@ export const updateProjectPartner = async (
       // now we need to get all current project partners
       const currentProjectPartners = await ProjectPartner.findAll({ // the new project partners after the destroyed ones
         where: {
-          project_id: project_id
+          project_id: project_id,
+          code_partner_type_id: [ 88, 11, 12 ]
         },
         include: [
           {
