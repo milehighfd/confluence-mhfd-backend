@@ -208,7 +208,8 @@ router.get('/:board_project_id/cost', async (req, res) => {
         as: 'businessAssociateData'
       }],
       where: {
-        project_id: currentProjectId
+        project_id: currentProjectId,
+        code_partner_type_id: [ 88, 11, 12 ]
       }
     });
     const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => ({
@@ -229,25 +230,8 @@ router.get('/:board_project_id/cost', async (req, res) => {
         values: getReqsValues(databyBN)
       }
     });
-    console.log('final anws', finalAnswer);
-      // const finalAnswer = Object.keys(groupedData) 
-      // returnValues.map((rV) => ({
-      //   business_name:rV.business_name,
-      //   code_partner_type_id: rV.code_partner_type_id,
-      //   values: groupedData[rV.business_name]
-      // }));
-      // console.log("BOARD PROJECT RETURN", boardProject);
-      // projectCostValues.forEach((projectCostValue) => {
-      //   const pos = projectCostValue.req_position;
-      //   const cost = projectCostValue.projectCostData.cost;
-      //   const projectPartnerData = projectCostValue.projectCostData.projectPartnerData;
-      //   // console.log('Project cost value', projectCostValue, cost, pos, projectPartnerData);
-      //   if( pos > 0) {
-      //     boardProject['req'+pos] = cost;
-      //   }
-      // });
-      
-      return res.status(200).send({amounts: finalAnswer, projectData: boardProject.projectData});
+    console.log('final anws', finalAnswer);      
+    return res.status(200).send({amounts: finalAnswer, projectData: boardProject.projectData});
  
   } catch (error) {
     logger.error('ERROR FROM GET COST ' + error);
