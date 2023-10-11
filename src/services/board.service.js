@@ -268,24 +268,6 @@ async function createBoardProjects(allYears, year, type, locality, project_type,
       }
     }
     else {
-      if (!createdBoardProjects.some(entry => +entry.year === +year) && !allYears.includes(year)) {
-        const boardCurrentYear = await getBoardForYear(year, type, locality, project_type, transaction);
-        if (boardCurrentYear) {
-          let ranks = {};
-          let amounts = {};
-          let rankNumber = 2;
-          for (let extraYear of extraYears) {
-            if (extraYear >= year) {
-              const rankColumnName = `rank${rankNumber}`;
-              const amountColumnName = `req${rankNumber}`;
-              ranks[rankColumnName] = await getNextLexoRankValue(boardCurrentYear.board_id, rankColumnName);
-              amounts[amountColumnName] = extraYearsAmounts[extraYears.indexOf(extraYear)];
-              rankNumber++;
-            }
-          }
-          createdBoardProjects.push(createBoardProjectEntry(boardCurrentYear, { ...ranks, ...amounts }, project_id, statusBoardProject, userData));
-        }
-      }
       for (let boardYear of allYears) {
         const board = await getBoardForYear(boardYear, type, locality, project_type, transaction);
         if (board) {
