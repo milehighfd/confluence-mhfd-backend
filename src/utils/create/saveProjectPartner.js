@@ -76,7 +76,7 @@ export const saveProjectPartner = async (
   }
 }
 
-export const saveProjectPartners = async (
+export const addProjectPartners = async (
   sponsor, 
   cosponsor,
   project_id,
@@ -87,6 +87,7 @@ export const saveProjectPartners = async (
   const allPartnersCreated = [];
   try {
     if (cosponsor) {
+      const COSPONSOR_CODE_ID = 12;
       const splitedCosponsor = cosponsor.split(',');
       for (const splited of splitedCosponsor) {
         const extraId = await BusinessAssociates.findOne({
@@ -99,36 +100,31 @@ export const saveProjectPartners = async (
         });
         console.log('Should create cosponsor with', splited, 'and id', extraId, ' __________________________ \n');
         if(extraId) {
-          const cosponsorCreated = await ProjectPartner.create({
-            code_partner_type_id: 12,
-            project_id: project_id,
-            business_associates_id: extraId.business_associates_id,
-          }, { transaction: transaction });
-          if(cosponsorCreated) {
-            allPartnersCreated.push(cosponsorCreated);
+          const existingProjectPartner = await ProjectPartner.findOne({
+            where: {
+              project_id: project_id,
+              business_associates_id: extraId.business_associates_id,
+              code_partner_type_id: COSPONSOR_CODE_ID
+            },
+            transaction: transaction
+          });
+          console.log('Exisintg ProjectPartner relation', existingProjectPartner);
+          if(!existingProjectPartner) {
+            const cosponsorCreated = await ProjectPartner.create({
+              code_partner_type_id: COSPONSOR_CODE_ID,
+              project_id: project_id,
+              business_associates_id: extraId.business_associates_id,
+            }, { transaction: transaction });
+            if(cosponsorCreated) {
+              allPartnersCreated.push(cosponsorCreated);
+            }
           }
         } 
         logger.info('create ProjectPartner CoSponsor '+ splited);
       }
     }    
-    
-    const idmhfd = await BusinessAssociates.findOne({
-      where: {
-        business_name: 'MHFD'
-      },
-      transaction: transaction
-    });
-
-    if(idmhfd) {
-      const projectPartnerMhfd = await ProjectPartner.create({
-        code_partner_type_id: 88,
-        project_id: project_id,
-        business_associates_id: idmhfd.business_associates_id,
-      }, { transaction: transaction });
-      allPartnersCreated.push(projectPartnerMhfd);
-    } 
-
-    const id = await BusinessAssociates.findOne({
+    const SPONSOR_CODE_ID = 11;
+    const idSponsor = await BusinessAssociates.findOne({
       where: db.Sequelize.where(
         db.Sequelize.fn('LOWER', db.Sequelize.col('business_name')),
         'LIKE',
@@ -137,13 +133,23 @@ export const saveProjectPartners = async (
       transaction: transaction
     });
 
-    if(id) {
-      const projectPartner = await ProjectPartner.create({
-        code_partner_type_id: 11,
-        project_id: project_id,
-        business_associates_id: id.business_associates_id,
-      }, { transaction: transaction });
-      allPartnersCreated.push(projectPartner);
+    if(idSponsor) {
+      const existingProjectPartner = await ProjectPartner.findOne({
+        where: {
+          project_id: project_id,
+          business_associates_id: idSponsor.business_associates_id,
+          code_partner_type_id: SPONSOR_CODE_ID
+        },
+        transaction: transaction
+      });
+      if (!existingProjectPartner) {
+        const projectPartner = await ProjectPartner.create({
+          code_partner_type_id: SPONSOR_CODE_ID,
+          project_id: project_id,
+          business_associates_id: idSponsor.business_associates_id,
+        }, { transaction: transaction });
+        allPartnersCreated.push(projectPartner);
+      }
     } 
 
     return allPartnersCreated;

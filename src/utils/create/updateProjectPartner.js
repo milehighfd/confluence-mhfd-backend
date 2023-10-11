@@ -7,7 +7,7 @@ const CodeProjectPartnerType = db.codeProjectPartnerType;
 const BusinessAssociates = db.businessAssociates;
 
 import { 
-  saveProjectPartners
+  addProjectPartners
 } from 'bc/utils/create';
 
 export const updateProjectPartner = async (
@@ -40,13 +40,13 @@ export const updateProjectPartner = async (
           ]
         }]
       });
-      await ProjectPartner.destroy({
-        where: {
-          project_id: project_id
-        },
-        transaction: transaction
-      });
-      const savedProjectPartnersponsor = await saveProjectPartners(sponsor, cosponsor, project_id, transaction); // CREATE -> MHFD, SPONSOR y COSPONSORs
+      // await ProjectPartner.destroy({
+      //   where: {
+      //     project_id: project_id
+      //   },
+      //   transaction: transaction
+      // });
+      const savedProjectPartnersponsor = await addProjectPartners(sponsor, cosponsor, project_id, transaction); // CREATE -> MHFD, SPONSOR y COSPONSORs
       console.log('SAVED PROJECT PARTNER SPONSOR', savedProjectPartnersponsor);
       // we need to get all previous relations in proejct cost in order to reemplace them here after it is saved. 
       // so first lets get 2 things, all project costs with complete data, even business name 
@@ -73,17 +73,12 @@ export const updateProjectPartner = async (
       // update all project costs with the new project partner id matching the previous one by business_name
       for (let i = 0; i < prevProjectCostWithBusinessName.length; i++) {
         const previousSponsorRelation = prevProjectCostWithBusinessName[i];
-        // console.log('IN FOR previous sponsor relation', previousSponsorRelation.map((pcm) => ({project_partner_id: pcm.project_partner_id, project_id: pcm.project_id, project_cost_id: pcm.project_cost_id, code_cost_type_id: pcm.code_cost_type_id, projectPartnerData: pcm.projectPartnerData.businessAssociateData.business_name})), previousSponsorRelation.projectPartnerData.businessAssociateData);
         console.log('JSON prevprojectcostwithbusinessname', JSON.stringify(previousSponsorRelation));
         const currentProjectPartner = currentProjectPartners.find((cpp) => cpp.businessAssociateData.business_name === previousSponsorRelation.projectPartnerData.businessAssociateData.business_name);
-        // console.log('IN FOR current project partner', currentProjectPartner.map((cpp) => ({bname: cpp.businessAssociateData.business_name,  project_partner_id,
-        //   code_partner_type_id,
-        //   project_id,
-        // })));
         console.log('JSON currentProjectPartner', JSON.stringify(currentProjectPartner));
         if (currentProjectPartner) {
           await ProjectCost.update({
-            project_partner_id: null
+            project_partner_id: currentProjectPartner.project_partner_id
           }, {
             where: {
               project_cost_id: previousSponsorRelation.project_cost_id
