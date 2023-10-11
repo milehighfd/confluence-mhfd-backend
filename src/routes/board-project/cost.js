@@ -87,7 +87,8 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
       }
     ],
     where: {
-      project_id: currentProjectId
+      project_id: currentProjectId,
+      code_partner_type_id: [ 88, 11, 12 ]
     }
   });
   console.log('PID', currentProjectId, 'ALL BUSINESS NAMES RELATED PEOJRCET ', JSON.stringify(allBusinessNamesRelatedToProject));
