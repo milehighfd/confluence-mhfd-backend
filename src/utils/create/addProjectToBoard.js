@@ -50,6 +50,7 @@ export const addProjectToBoard = async (
         year,
         locality,
         _projecttype,
+        user.email,
         transaction
       );
       board = response;
@@ -94,8 +95,7 @@ export const addProjectToBoard = async (
         boardProject.origin,
         boardProject.rank0,
         boardProject.projectname,
-        boardProject.projecttype,
-        boardProject.projectsubtype,
+        user.email,
         transaction
       );
     } catch (error) {
@@ -108,8 +108,9 @@ export const addProjectToBoard = async (
       boardProjectSaved,
       board,
       servicearea,
-      'servicearea'
+      'servicearea',
+      user.email,
     );
-    await sendBoardsToProp(boardProjectSaved, board, county, 'county');
+    await sendBoardsToProp(boardProjectSaved, board, county, 'county', user.email);
   }
 };

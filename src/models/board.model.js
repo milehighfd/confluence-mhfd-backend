@@ -48,7 +48,13 @@ export default (sequelize, DataType) => {
     },
     submissionDate: {
       type: DataType.DATE
-    }
+    },
+    last_modified_by: {
+      type: DataType.STRING
+    },
+    created_by: {
+      type: DataType.STRING
+    },
   });
   return board;
 }

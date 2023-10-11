@@ -37,7 +37,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/updateName', auth, async (req, res) => {
+router.put('/update-name', auth, async (req, res) => {
   try {
     const { project_checklist_id, checklist_todo_name } = req.body;
     const projectChecklist = await ProjectChecklist.update(
@@ -84,7 +84,7 @@ router.post('/create', auth, async (req, res) => {
       project_id,
       code_phase_type_id,
       created_by: req.user.email,
-      checklist_todo_name: 'New Checklist Item',
+      checklist_todo_name: '',
       last_modified_by: req.user.email,
     });
     res.send(projectChecklist);

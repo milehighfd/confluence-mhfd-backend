@@ -9,10 +9,6 @@ import auth from 'bc/auth/auth.js';
 import logger from 'bc/config/logger.js';
 import projectStreamService from 'bc/services/projectStream.service.js';
 import capitalRouter from 'bc/routes/new-project/capital.route.js';
-import maintenanceRouter from 'bc/routes/new-project/maintenance.route.js';
-import studyRouter from 'bc/routes/new-project/study.route.js';
-import acquisitionRouter from 'bc/routes/new-project/acquisition.route.js';
-import specialRouter from 'bc/routes/new-project/special.route.js';
 import copyRouter from 'bc/routes/new-project/copy.route.js';
 import projectProposedAction from "bc/services/projectProposedAction.service.js";
 import projectIndependentAction from "bc/services/projectIndependentAction.service.js";
@@ -30,10 +26,6 @@ const COMPONENTS_TABLES = ['grade_control_structure', 'pipe_appurtenances', 'spe
 'detention_facilities', 'maintenance_trails', 'land_acquisition', 'landscaping_area', 'stream_improvement_measure'];
 
 router.use('/capital', capitalRouter);
-router.use('/maintenance', maintenanceRouter);
-router.use('/study', studyRouter);
-router.use('/acquisition', acquisitionRouter);
-router.use('/special', specialRouter);
 router.use('/copy', copyRouter);
 router.use('/createproject', createProject);
 router.use('/editproject', editProject);
@@ -513,7 +505,6 @@ router.post('/streams-data', async (req, res) => {
         if (!answer[str_name]) {
           answer[str_name] = [];
         }
-        console.log(row.jurisdiction);
         const locality = await CodeLocalGoverment.findOne({
           where: {
             local_government_name: row.jurisdiction,
@@ -1206,13 +1197,6 @@ router.get('/get-independent-components-by-projectid/:projectid', [auth], async 
     res.status(500).send(error);
   }
 });
-
-const getJurisdictionByGeom = async (geom) => {
-  let sql = `SELECT jurisdiction FROM jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;
-  const query = { q: sql };
-  const data = await needle('post', CARTO_URL, query, { json: true });
-  return data.body.rows[0].jurisdiction;
-}
 
 const   getAllJurisdictionByGeom = async (geom) => {
   let sql = `SELECT jurisdiction FROM jurisidictions WHERE ST_Dwithin(the_geom, ST_GeomFromGeoJSON('${geom}'), 0)`;

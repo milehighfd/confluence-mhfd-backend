@@ -2,6 +2,7 @@ import express from 'express';
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import { getNewProjectId, copyProject } from 'bc/routes/new-project/helper.js';
+import authOnlyEmail from 'bc/auth/auth-only-email.js';
 
 const router = express.Router();
 const Board = db.board;
@@ -10,7 +11,7 @@ const BoardProject = db.boardProject;
 const ProjectComponent = db.projectComponent;
 const IndependentComponent = db.independentComponent;
 
-const getBoard = async (type, locality, year, projecttype) => {
+const getBoard = async (type, locality, year, projecttype, creator) => {
   let board = await Board.findOne({
     where: {
       type, year: `${year}`, locality, projecttype
@@ -22,7 +23,13 @@ const getBoard = async (type, locality, year, projecttype) => {
   } else {
     logger.info('new board');
     let newBoard = new Board({
-      type, year, locality, projecttype, status: 'Under Review'
+      type,
+      year,
+      locality,
+      projecttype,
+      status: 'Under Review',
+      created_by: creator,
+      last_modified_by: creator
     });
     await newBoard.save();
     return newBoard;
@@ -42,7 +49,7 @@ const addProjectToBoard = async (board, project_id, originalLocality) => {
   return boardProject;
 };
 
-router.post('/', async (req, res) => {
+router.post('/', [authOnlyEmail], async (req, res) => {
   const {
     id,
     projectid,
@@ -60,7 +67,7 @@ router.post('/', async (req, res) => {
       board_project_id: id
     }
   });
-  const board = await getBoard('WORK_PLAN', locality, year, projecttype);
+  const board = await getBoard('WORK_PLAN', locality, year, projecttype, req.user.email);
   const newProjectId = await getNewProjectId();
   await copyProject(newProjectId, projectid);
   const boardProject = await addProjectToBoard(board, newProjectId, boardProjectOriginal.origin);

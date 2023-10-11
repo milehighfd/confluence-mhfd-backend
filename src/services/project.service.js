@@ -313,6 +313,7 @@ const getDetails = async (project_id) => {
         attributes: [
           "project_id",
           "project_name",
+          'short_project_note',
           "description",
           "onbase_project_number",
           "created_date",
@@ -837,6 +838,23 @@ const getLightDetails = async (project_id) => {
       'is_located_on_south_plate_river',
     ],
     include: [
+      {
+        model: BoardProject,
+        required: false,
+        attributes: [
+          'board_id'
+        ],
+        include: {
+          model: Board,
+          required: false,
+          attributes: [
+            'projecttype',
+            'type',
+            'year',
+            'locality'
+          ]
+        }
+      },
       {
         model: ProjectLocalGovernment,
         required: false,
@@ -1397,7 +1415,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
   }
   let projects = await Promise.all(conditions);
   projects = projects.map(project => project.map(p => p.toJSON()));
-  console.log(projects);
+  // console.log(projects);
   // projects = projects?.filter(project => project.length > 0);
   const counterObject = {};
   projects?.forEach(project => {
@@ -2033,8 +2051,8 @@ const deleteByProjectId = async (Projectsid) => {
       transaction: t
     });
     await t.commit();
-    console.log(deletedProject)
-    console.log(Projectsid)
+    // console.log(deletedProject)
+    // console.log(Projectsid)
     if (deletedProject) {
       logger.info('project destroyed ');
       return true;
@@ -2341,12 +2359,29 @@ const checkProjectName = async (project_name) => {
 }
 
 const globalSearch = async (keyword) => {
-  console.log('keyword', keyword)
+  const isNumeric = /^\d+$/.test(keyword);
+  const words = keyword.split(' ').filter(word => word.trim() !== '');
+  let conditions;
+  if (isNumeric) {
+    conditions = [
+      { project_id: keyword },
+      { onbase_project_number: keyword },
+      ...words.map(word => ({
+        project_name: {
+          [Op.like]: `%${word}%`
+        }
+      }))
+    ];
+  } else {
+    conditions = words.map(word => ({
+      project_name: {
+        [Op.like]: `%${word}%`
+      }
+    }));
+  }
   const projects = await Project.findAll({
     where: {
-      project_name: {
-        [Op.like]: `%${keyword}%`
-      }
+      [Op.or]: conditions
     },
     attributes: [
       'project_id',
@@ -2356,7 +2391,79 @@ const globalSearch = async (keyword) => {
   return projects;
 };
 
-const getBoardProjectData = async (project_id, type) => {
+const getPmtoolsProjectDataCount = async (project_id) => {
+  const count = await Project.count({
+    where: {
+      project_id: project_id
+    },
+    include: [
+      {
+        model: CodeProjectType,
+        required: false
+      }, 
+      {
+        model: ProjectStatus,
+        required: true,
+        as: 'currentId',
+        include: [{
+          model: CodePhaseType,
+          required: true,
+          where: {
+            code_status_type_id: {
+              [Op.gte]: 5
+            }
+          },
+          include: {
+            model: CodeStatusType,
+            required: true
+          }
+        }]
+      }
+    ]
+  });
+
+  return count;
+}
+
+const getBoardProjectDataCount = async (project_id, type) => {  
+  const count = await BoardProject.count({
+    where: {
+      project_id: project_id,
+      [Op.or]: [
+        { rank0: { [Op.not]: null } },
+        { rank1: { [Op.not]: null } },
+        { rank2: { [Op.not]: null } },
+        { rank3: { [Op.not]: null } },
+        { rank4: { [Op.not]: null } },
+        { rank5: { [Op.not]: null } },
+      ]
+    },
+    include: [{
+      model: Board,
+      required: true,
+      where: {
+        type: type
+      }
+    },
+    {
+      model: Project,
+      attributes: [],
+      as: 'projectData', 
+      required: true,
+      where: {
+        [Op.or]: [
+          { is_archived: { [Op.ne]: 1 } },
+          { is_archived: null }
+        ]
+      }
+    }
+    ]
+  });
+
+  return count;
+}
+
+const getBoardProjectData = async (project_id, type) => {  
   const boardProject = await BoardProject.findAll({
     where: {
       project_id: project_id,
@@ -2389,6 +2496,18 @@ const getBoardProjectData = async (project_id, type) => {
     {
       attributes: ['status_name'],
       model: CodeStatusType,
+    },
+    {
+      model: Project,
+      attributes: ['project_id','is_archived'],
+      as: 'projectData', 
+      required: true,
+      where: {
+        [Op.or]: [
+          { is_archived: { [Op.ne]: 1 } },
+          { is_archived: null }
+        ]
+      }
     }
     ]
   })
@@ -2479,8 +2598,25 @@ const getProjectsByStatus = async (status_id) => {
     throw new Error('Error getting projects by status');
   }
 };
-    
 
+const getProjectPartner = async (project_id) =>{
+  const SPONSOR_TYPE = 11;
+  const project_partners = await ProjectPartner.findAll({
+    where: {
+      project_id: project_id,
+      code_partner_type_id: SPONSOR_TYPE,
+    },
+    include: { 
+      model : BusinessAssociate,
+      required: true,
+      attributes: [
+        'business_name',
+        'business_associates_id'
+      ],
+    }
+  });
+  return project_partners;
+}
 
 export default {
   checkProjectName,
@@ -2509,5 +2645,8 @@ export default {
   globalSearch,
   getBoardProjectData,
   getPmtoolsProjectData,
-  getProjectsByStatus
+  getProjectsByStatus,
+  getProjectPartner,
+  getBoardProjectDataCount,
+  getPmtoolsProjectDataCount
 };

@@ -229,11 +229,9 @@ async function getLayersInfo (conditionalWhere, typeid, id) {
 router.post('/', async (req, res) => {
   logger.info(`Starting endpoint mapgallery.route/ with params ${JSON.stringify(req.params, null, 2)}`);
   try {
-    console.log('enter here', req.body.isproblem);
     if (req.body.isproblem) {
       let filters = '';
       filters = await getFilters(req.body);
-      console.log('filters', filters);
       const PROBLEM_SQL = `SELECT cartodb_id, ${PROPSPROBLEMTABLES.problem_boundary[5]} as ${PROPSPROBLEMTABLES.problems[5]}, ${PROPSPROBLEMTABLES.problem_boundary[6]} as ${PROPSPROBLEMTABLES.problems[6]} , ${PROPSPROBLEMTABLES.problem_boundary[0]} as ${PROPSPROBLEMTABLES.problems[0]}, ${PROPSPROBLEMTABLES.problem_boundary[16]} as ${PROPSPROBLEMTABLES.problems[16]}, ${PROPSPROBLEMTABLES.problem_boundary[17]},  ${PROPSPROBLEMTABLES.problem_boundary[2]} as ${PROPSPROBLEMTABLES.problems[2]}, ${PROPSPROBLEMTABLES.problem_boundary[7]} as ${PROPSPROBLEMTABLES.problems[7]}, ${PROPSPROBLEMTABLES.problem_boundary[1]} as ${PROPSPROBLEMTABLES.problems[1]}, ${PROPSPROBLEMTABLES.problem_boundary[8]} as ${PROPSPROBLEMTABLES.problems[8]}, county, ${getCountersProblems(PROBLEM_TABLE, PROPSPROBLEMTABLES.problems[5], PROPSPROBLEMTABLES.problem_boundary[5])}, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom FROM ${PROBLEM_TABLE} `;
       console.log(' \n\n\n\n\n\ ******************************* \n\n\n\n\n QUERY AT GALLERY', `${PROBLEM_SQL} ${filters}`, '*************************\n\n\n');
       const query = { q: `${PROBLEM_SQL} ${filters}` };
@@ -913,7 +911,6 @@ async function getFilters(params) {
    if (params.limit && params.page) {
       filters = ` limit= ${limit} offset=${params.page * params.limit}`
    }
-   console.log('FILTROS', filters);
    return filters;
 }
 

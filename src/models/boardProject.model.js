@@ -93,21 +93,21 @@ export default (sequelize, DataType) => {
     projectname: {
       type: DataType.STRING
     },
-    projecttype: {
-      type: DataType.STRING
-    },
-    projectsubtype: {
-      type: DataType.STRING
-    },
     code_status_type_id: {
       type: DataType.INTEGER
     },
     parent_board_project_id: {
       type: DataType.INTEGER
-    }
+    },
+    last_modified_by: {
+      type: DataType.STRING
+    },
+    created_by: {
+      type: DataType.STRING
+    },
   }, {
     freezeTableName: true,
     tableName: 'board_project'
   });
   return boardProject;
-}
+};

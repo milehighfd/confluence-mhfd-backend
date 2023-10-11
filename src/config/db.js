@@ -76,6 +76,7 @@ import projectStatusNotification from 'bc/models/project_status_notification.mod
 import notifications from 'bc/models/notification.model.js';
 import projectSpatial from 'bc/models/project_spatial.model.js';
 import projectChecklist from 'bc/models/project_checklist.model.js';
+import budgetBoardTable from 'bc/models/budget_board_table.model.js';
 
 Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
   date = this._applyTimezone(date, options);
@@ -168,6 +169,7 @@ db.codeNotificationType = codeNotificationType(sequelize, Sequelize);
 db.projectStatusNotification = projectStatusNotification(sequelize, Sequelize);
 db.projectSpatial = projectSpatial(sequelize, Sequelize);
 db.projectChecklist = projectChecklist(sequelize, Sequelize);
+db.budgetBoardTable = budgetBoardTable(sequelize, Sequelize);
 // 14 layers called
 db.gradeControlStructure = gradeControlStructure(sequelize, Sequelize);
 db.pipeAppurtenances = pipeAppurtenances(sequelize, Sequelize);
@@ -208,6 +210,8 @@ db.project.hasMany(db.boardProject, {foreignKey: 'project_id', sourceKey: 'proje
 db.boardProject.hasOne(db.codeStatusType, {foreignKey: 'code_status_type_id', sourceKey: 'code_status_type_id'});
 db.boardProjectCost.hasMany(db.boardProject, {foreignKey: 'board_project_id'});
 db.boardProjectCost.hasMany(db.projectCost, {foreignKey: 'project_cost_id'});
+db.boardProjectCost.hasOne(db.projectCost, {foreignKey: 'project_cost_id', sourceKey: 'project_cost_id', as: 'projectCostData'});
+db.projectCost.hasOne(db.projectPartner, {foreignKey: 'project_partner_id', sourceKey: 'project_partner_id', as: 'projectPartnerData'});
 //Notifications
 db.notifications.hasOne(db.user, {foreignKey: 'user_id', sourceKey: 'recipient_user_id'});
 db.notifications.hasOne(db.projectStatusNotification, {foreignKey: 'notification_id', sourceKey: 'notification_id'});
@@ -427,7 +431,8 @@ db.project_stream.belongsTo(db.codeLocalGoverment, { foreignKey: 'code_local_gov
 // relation businessAssociates projectPartner
 db.businessAssociates.belongsTo(db.projectPartner, {foreignKey: 'business_associates_id'});
 db.projectPartner.hasMany(db.businessAssociates, { foreignKey: 'business_associates_id' });
-
+db.projectPartner.hasMany(db.businessAssociates, { foreignKey: 'business_associates_id', sourceKey: 'business_associates_id', as: 'businessAssociateData' });
+db.projectPartner.hasOne(db.codeProjectPartnerType, {foreignKey: 'code_partner_type_id', sourceKey: 'code_partner_type_id', as: 'projectPartnerTypeData'});
 db.sequelize.authenticate().then(()=>{
   console.log("Connected to Database");
 }).catch((error)=>{

@@ -3,7 +3,6 @@ import needle from 'needle';
 import { LexoRank } from 'lexorank';
 import auth from 'bc/auth/auth.js';
 import { CREATE_PROJECT_TABLE, CARTO_URL } from 'bc/config/config.js';
-import { updateProjectsInBoard }  from 'bc/routes/new-project/helper.js';
 import logger from 'bc/config/logger.js';
 import db from 'bc/config/db.js';
 import {
@@ -16,6 +15,7 @@ import projectService from 'bc/services/project.service.js';
 import moment from 'moment';
 import { isOnWorkspace, isOnFirstYear } from 'bc/services/board-project.service.js';
 import sequelize from 'sequelize';
+import authOnlyEmail from 'bc/auth/auth-only-email.js';
 
 const { Op } = sequelize;
 const router = express.Router();
@@ -32,6 +32,10 @@ const CodeServiceArea = db.codeServiceArea;
 const CodeStatusType = db.codeStatusType;
 const BusinessAssociate = db.businessAssociates;
 const Configuration = db.configuration;
+const BoardProjectCost = db.boardProjectCost;
+const ProjectCost = db.projectCost;
+const CodeProjectPartnerType = db.codeProjectPartnerType;
+const BusinessAssociates = db.businessAssociates;
 
 const insertUniqueObject = (array, idPropertyName, groupPropertyKeyName, object) => {
   const isDuplicate = array.some(item => {
@@ -99,7 +103,8 @@ router.get('/lexorank-update', async (req, res) => {
             logger.info(`Updating ${position} to ${value} for ${updates[position][value]}`);
             prs.push(BoardProject.update(
                 {
-                    [position]: value
+                    [position]: value,
+                    last_modified_by: 'system'
                 },
                 {
                     where: {
@@ -247,74 +252,6 @@ router.post('/filters', async (req, res) => {
   res.send(groupingArrayMap);
 });
 
-router.get('/lexorank-update', async (req, res) => {
-    const boards = await Board.findAll();
-    const boardProjects = await BoardProject.findAll();
-    const updates = {
-        rank0: {},
-        rank1: {},
-        rank2: {},
-        rank3: {},
-        rank4: {},
-        rank5: {}
-    };
-    const originPositions = ['position0', 'position1', 'position2', 'position3', 'position4', 'position5'];
-    const positions =  ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
-    
-    for (const board of boards) {
-        let lexoRanks = {
-            rank0: LexoRank.middle(),
-            rank1: LexoRank.middle(),
-            rank2: LexoRank.middle(),
-            rank3: LexoRank.middle(),
-            rank4: LexoRank.middle(),
-            rank5: LexoRank.middle()
-        };
-        for (const [index, position] of originPositions.entries()) {
-            boardProjects.sort((a, b) => {
-                if (a[position] == null) return -1;
-                if (b[position] == null) return 1;
-                return a[position] - b[position];
-            });
-            for (const bp of boardProjects) {
-                if (board.board_id === bp.board_id) {
-                    if (bp[position] != null) {
-                        const value = lexoRanks[positions[index]].toString();
-                        if (!updates[positions[index]][value]) {
-                            updates[positions[index]][value] = [];
-                        }
-                        updates[positions[index]][value].push(bp.board_project_id);
-                        lexoRanks[positions[index]] = lexoRanks[positions[index]].genNext();
-                    }
-                }
-            }
-        }
-    }
-    let c = 0;
-    console.log(updates);
-    const prs = [];
-    for (const position of positions) {
-        for (const value in updates[position]) {
-            c++;
-            logger.info(`Updating ${position} to ${value} for ${updates[position][value]}`);
-            prs.push(BoardProject.update(
-                {
-                    [position]: value
-                },
-                {
-                    where: {
-                        board_project_id: updates[position][value]
-                    }
-                }
-            ));
-        }
-    }
-    await Promise.all(prs);
-    res.send({
-        counter: c,
-    });
-});
-
 router.get('/coordinates/:pid', async (req, res) => {
     logger.info(`Starting endpoint board/coordinates/:pid with params ${JSON.stringify(req.params, null, 2)}`);
     let { pid } = req.params;
@@ -333,7 +270,7 @@ router.get('/', async (req, res) => {
     res.send(boards);
 });
 
-router.put('/update-budget', async (req, res) => {
+router.put('/update-budget', [authOnlyEmail], async (req, res) => {
     logger.info(`Starting endpoint board/update-budget/:id with params ${JSON.stringify(req.params, null, 2)}`);
     const { boardId, budget } = req.body;
     const {
@@ -354,40 +291,11 @@ router.put('/update-budget', async (req, res) => {
     logger.info(`Finished function findByPk for board/update-budget/:id`);
     if (board) {
         board.total_county_budget =  budget;
+        board.last_modified_by = req.user.email;
         await board.save();
         res.send(board);
     } else {
         res.status(404).send({ error: 'Not found' });
-    }
-});
-
-router.get('/board-localities', async (req, res) => {
-    logger.info(`Starting endpoint board/board-localities with params ${JSON.stringify(req.params, null, 2)}`);
-    logger.info(`Starting function findAll for board/board-localities`);
-    let boardLocalities = await BoardLocality.findAll();
-    logger.info(`Finished function findAll for board/board-localities`);
-    res.send(boardLocalities);
-});
-
-router.put('/board-localities/:id', async (req, res) => {
-    logger.info(`Starting endpoint /board/board-localities/:id with params ${JSON.stringify(req.params, null, 2)}`);
-    let { id } = req.params;
-    const email = req.body.email;
-    logger.info(`Starting function findOne for board/board-localities/:id`);
-    let boardLocalities = await BoardLocality.findOne({
-        where: {
-            id
-        }
-    });
-    logger.info(`Finished function findOne for board/board-localities/:id`);
-    if (boardLocalities) {
-        boardLocalities.email = email;
-        logger.info(`Starting function save for board/board-localities/:id`);
-        await boardLocalities.save();
-        logger.info(`Finished function save for board/board-localities/:id`);
-        res.send(boardLocalities);
-    } else {
-        res.status(404).send({error: 'Not found'});
     }
 });
 
@@ -405,7 +313,7 @@ router.get('/projects/:bid', async (req, res) => {
     res.send(boardProjects);
 });
 
-router.put('/project/:id', async (req, res) => {
+router.put('/project/:id', [auth], async (req, res) => {
     logger.info(`Starting endpoint board/project/:id with params ${JSON.stringify(req.params, null, 2)}`)
     let { id } = req.params;
     let { 
@@ -429,6 +337,7 @@ router.put('/project/:id', async (req, res) => {
     boardProject.originPosition3 = originPosition3;
     boardProject.originPosition4 = originPosition4;
     boardProject.originPosition5 = originPosition5;
+    boardProject.last_modified_by = req.user.email;
     logger.info(`Starting function save for board/projects/:id`);
     await boardProject.save();
     logger.info(`Finished function save for board/projects/:id`);
@@ -509,7 +418,7 @@ router.post('/get-or-create', async (req, res) => {
 
 router.post('/get-past-data', async (req, res) => {
   try {
-    let { boardId, projectIds } = req.body;
+    let { boardId } = req.body;
     const {
       locality,
       projecttype,
@@ -599,7 +508,7 @@ router.post('/board-for-positions2', async (req, res) => {
     };
   
     if(projecttype === 'Maintenance') {
-      let maintenanceSubtype = 8;
+      let maintenanceSubtype = 0;
       switch (position) {
         case 1:
           maintenanceSubtype = 8;
@@ -619,11 +528,14 @@ router.post('/board-for-positions2', async (req, res) => {
         default:
           break;
       } 
-      filters.projecttype = [maintenanceSubtype];
+      if (maintenanceSubtype !== 0) {
+        filters.projecttype = [maintenanceSubtype];
+      }
     }
-    if (`${position}` !== '0') {
-      attributes.push(reqColumnName);
-    }
+    // THIS is going to be replaced with MHFD owner in PROJECT COST 
+    // if (`${position}` !== '0') {
+    //   attributes.push(reqColumnName);
+    // }
     if (project_priorities && project_priorities.length > 0) {
       const conditions = [];
       const lessThan3Priorities = project_priorities.filter(r => r < 3);
@@ -646,6 +558,50 @@ router.post('/board-for-positions2', async (req, res) => {
       where,
       order: [[rankColumnName, 'ASC']],
     })).map(d => d.dataValues);
+    
+    if (`${position}` !== '0') {
+      const boardProjectIds = boardProjects.map((boardProject) => boardProject.board_project_id);
+      const MHFD_FUNDING = 88; // TODO export to constant
+      
+      const projectIds = boardProjects.map((boardProject) => boardProject.project_id);
+      
+      const MHFD_Partner = await ProjectPartner.findAll({
+        where: {
+          project_id: { [Op.in]: projectIds },
+          code_partner_type_id: MHFD_FUNDING
+        }
+      });
+
+      const Mhfd_ids = MHFD_Partner.map((mhfd) => mhfd.project_partner_id);
+      console.log('MHFD IDS', Mhfd_ids, boardProjectIds);
+      // HERE: check how to pull the correct id of mhfd
+      const projectCostValues = await BoardProjectCost.findAll({
+        attributes: ['req_position', 'board_project_id'],
+        include: [{
+          attributes: ['cost', 'project_cost_id', 'project_partner_id', 'project_id'],
+          model: ProjectCost,
+          as: 'projectCostData',
+          where: {
+            is_active: true,
+            project_partner_id: { [Op.in]: Mhfd_ids }
+          }
+        }],
+        where: {
+          board_project_id: boardProjectIds,
+          req_position: position
+        }
+      });
+      console.log('All this have the mhfd ids ', projectCostValues.map(a => JSON.stringify(a.projectCostData)));
+      boardProjects.forEach((boardProject) => {
+        const projectCostValue = projectCostValues.find((pcv) => pcv.board_project_id === boardProject.board_project_id);
+        console.log('**********************\n\n ************** \nSEarch for ', boardProject.board_project_id, projectCostValue);
+        if (projectCostValue) {
+          boardProject[`req${position}`] = projectCostValue.projectCostData.cost;
+        }
+      });
+    }
+
+    console.log('boardProjects', boardProjects, boardProjects.length)
     const projects_filtered = await projectService.filterProjectsBy(filters);
     const projectIds = boardProjects.filter(boardProject => projects_filtered.map(p => p.project_id).includes(boardProject.project_id));
     const lightDetails = await projectService.getLightDetails(projectIds.map(p => p.project_id));
@@ -810,7 +766,7 @@ router.post('/', async (req, res) => {
     let resolvedProjects = await Promise.all(projectsPromises);
     logger.info(`Finished function all for board/`);
     logger.info(`RESOLVERD PROJECTS: `);
-    console.log(resolvedProjects)
+    // console.log(resolvedProjects)
     resolvedProjects = resolvedProjects?.filter((bp) => bp.projectData != null);
     let projects = resolvedProjects || [];
     logger.info('FINISHING BOARD REQUEST');
@@ -819,7 +775,7 @@ router.post('/', async (req, res) => {
     });
 });
 
-const getBoard = async (type, locality, year, projecttype) => {
+const getBoard = async (type, locality, year, projecttype, creator) => {
     logger.info(`Trying to insert create or insert(${type}, ${locality}, ${year}, ${projecttype})`);
     logger.info(`Starting function findOne for board/`);
     let board = await Board.findOne({
@@ -834,13 +790,22 @@ const getBoard = async (type, locality, year, projecttype) => {
     } else {
         logger.info('new board');
         logger.info(`Starting function createNewBoard for board/`);
-        const newBoard = await boardService.createNewBoard(type, year, locality, projecttype, 'Under Review');
+        const newBoard = await boardService.createNewBoard(
+          type,
+          year,
+          locality,
+          projecttype,
+          'Under Review',
+          creator,
+          null,
+          null
+        );
         logger.info(`Finished function createNewBoard for board/`);
         return newBoard;        
     }
 }
 
-const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
+const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
   console.log('moveBoardProjectsToNewYear')
   console.log(newYear)
   await Configuration.update({
@@ -854,6 +819,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
     const boardProject = boardProjects[i];
     console.log('boardProject');
     console.log(boardProject);
+    //TODO EDIT AMOUNT: ONLY GETS SPONSOR PARTNER. SHOULD BE MHFD NOW? 
     const partner = await ProjectPartner.findOne({
       attributes: ['business_associates_id'],
       where: {
@@ -876,7 +842,8 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
       year: newYear,
       projecttype: previousBoard.projecttype,
     };
-    if (sponsor === 'MHFD') {
+    // ???
+    if (sponsor === 'MHFD') { // have been created direclty in workplan
       newBoardParams = {
         ...newBoardParams,
         locality: 'MHFD District Work Plan',
@@ -898,12 +865,17 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
     } catch (error) {
       console.log('Error in project Promises ', error);
     }
+    newBoardParams = {
+      ...newBoardParams,
+      last_modified_by: creator,
+      created_by: creator,
+    };
     if (newBoard === null) {
       const newBoardInstance = new Board(newBoardParams);
       newBoard = await newBoardInstance.save();  
     }
     const onWorkspace = isOnWorkspace(boardProject);
-    const onFirstYear = isOnFirstYear(boardProject);
+    const onFirstYear = isOnFirstYear(boardProject); // if on first year then move it to workspace
 
     let newBoardProjectParams = {
       board_id: newBoard.board_id,
@@ -911,14 +883,18 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
       year1: boardProject.year1,
       year2: boardProject.year2,
       origin: sponsor,
-      code_status_type_id: REQUESTED_STATUS
-    }
+      code_status_type_id: REQUESTED_STATUS,
+      created_by: creator,
+      last_modified_by: creator,
+    };
     if (onWorkspace || onFirstYear) {
+      // both to workspace
       newBoardProjectParams = {
         ...newBoardProjectParams,
         rank0: boardProject.rank0 || LexoRank.middle(),
       }
     } else {
+      // if it has values for years
       newBoardProjectParams = {
         ...newBoardProjectParams,
 
@@ -937,13 +913,15 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear) => {
         req5: null,
       }
     }
-
+    // TODO EDIT AMOUNT: here is where PROJECT COSTS should be added 
+    // first check out what happened before with partners. 
     const newBoardProjectInstance = new BoardProject(newBoardProjectParams);
     await newBoardProjectInstance.save();
+    // boardproject id from newboardprojectinstatnce
   }
 };
 
-const updateProjectStatus = async (boards) => {
+const updateProjectStatus = async (boards, creator) => {
   logger.info(`Starting function updateProjectStatus for board/`);
   const prs = [];
   for (const board of boards) {
@@ -959,6 +937,7 @@ const updateProjectStatus = async (boards) => {
   return boardProjects.map((boardProject) => {
     if (!isOnWorkspace(boardProject) && boardProject.code_status_type_id !== APPROVED_STATUS) {
       boardProject.code_status_type_id = APPROVED_STATUS;
+      boardProject.last_modified_by = creator;
       boardProject.save();
     }
     return boardProject;
@@ -1060,7 +1039,7 @@ const sendBoardProjectsToProp = async (boards, prop, creator) => {
               } else if (prop === 'servicearea' && !propVal.includes(' Service Area')) {
                   propVal = propVal.trimEnd().concat(' Service Area');
               }
-              let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype);
+              let destinyBoard = await getBoard('WORK_PLAN', propVal, board.year, board.projecttype, creator);
               logger.info(`Destiny board by prop ${prop} id is ${destinyBoard !== null ? destinyBoard.board_id : destinyBoard}`);
               if (destinyBoard === null || destinyBoard.board_id === null) {
                 logger.info('Destiny board not found');
@@ -1098,9 +1077,10 @@ const sendBoardProjectsToProp = async (boards, prop, creator) => {
                     year1: bp.year1,
                     year2: bp.year2,
                     origin: board.locality,
-                    code_status_type_id: REQUESTED_STATUS
+                    code_status_type_id: REQUESTED_STATUS,
+                    created_by: creator,
+                    last_modified_by: creator,
                 });
-                //TODO: Jorge create the relationship on cost table
                 const newBoardProjectCreated = await newBoardProject.save();
                 const offsetMillisecond = 35000;
                 let mainModifiedDate = new Date();
@@ -1121,12 +1101,12 @@ const sendBoardProjectsToProp = async (boards, prop, creator) => {
   }
 }
 
-const sendBoardProjectsToDistrict = async (boards) => {
+const sendBoardProjectsToDistrict = async (boards, creator) => {
     try {
-        logger.info(`Starting function findAll for board/`);
+        logger.info(`Starting function findAll for board/`, creator, '<- creator should be!!');
         for (let board of boards) {
             console.log(board, "current board");
-            let destinyBoard = await getBoard('WORK_PLAN', 'MHFD District Work Plan', board.year, board.projecttype);
+            let destinyBoard = await getBoard('WORK_PLAN', 'MHFD District Work Plan', board.year, board.projecttype, creator);
             BoardProject.findAll({
                 where: {
                     board_id: board.board_id
@@ -1134,9 +1114,13 @@ const sendBoardProjectsToDistrict = async (boards) => {
             }).then((async (boardProjects) => {
                 const originPositionMap = getOriginPositionMap(boardProjects);
                 const prs = [];
+                const WORKPLAN_CODE_COST = 21;
+                const projectIdsInOrder = [];
+                try {
                 for (const bp of boardProjects) {
-                    prs.push(
-                    boardService.saveProjectBoard({
+                    projectIdsInOrder.push(bp.project_id);
+                    // prs.push(
+                      const boardProjectCreated = await BoardProject.create({
                         board_id: destinyBoard.board_id,
                         project_id: bp.project_id,
                         rank0: bp.rank0,
@@ -1160,11 +1144,86 @@ const sendBoardProjectsToDistrict = async (boards) => {
                         year2: bp.year2,
                         origin: board.locality,
                         code_status_type_id: bp.code_status_type_id,
-                        parent_board_project_id: bp.board_project_id
-                    }));
+                        parent_board_project_id: bp.board_project_id,
+                        created_by: creator,
+                        last_modified_by: creator,
+                    });
+                    console.log('Board Project created', boardProjectCreated);
+                    const currentProjectId = bp.project_id;
+                    const newBoardProjectId = boardProjectCreated.board_project_id;
+                    console.log('new board proejct id', newBoardProjectId);
+                    // get all project costs related to the current project
+                    const prevCostOfProject = await ProjectCost.findAll({
+                      where: {
+                        project_id: currentProjectId,
+                        is_active: true,
+                        code_cost_type_id: 22
+                      },
+                      include: [{
+                        model: ProjectPartner,
+                        as: 'projectPartnerData',
+                        include: [
+                          {
+                            model: CodeProjectPartnerType,
+                            as: 'projectPartnerTypeData'
+                          },
+                          {
+                            model: BusinessAssociates,
+                            as: 'businessAssociateData'
+                          }
+                        ]
+                      }]
+                    });
+                    console.log(prevCostOfProject.length, 'prevcostofproject', prevCostOfProject, 'forprojectid', currentProjectId);
+                    // create new projectcosts for the new board project copying values of the previous ones but changing the project_partner_id to the new one
+                    let mainModifiedDate = new Date();
+                    const offsetMillisecond = 35007;
+                    for (let j = 0 ; j < prevCostOfProject.length ; j++) {
+                      console.log('inside for provcostofproject', j, creator);
+                      const prevCostOfSponsor = prevCostOfProject[j];
+                      const lastModifiedDate = moment(mainModifiedDate)
+                      .subtract(offsetMillisecond * j)
+                      .toDate()
+                      // here we are duplicating the previous cost with the same partner but with code cost type of workplan
+                      const newProjectCost = await ProjectCost.create({
+                        project_id: currentProjectId,
+                        cost: prevCostOfSponsor.cost,
+                        code_cost_type_id: WORKPLAN_CODE_COST,
+                        project_partner_id: prevCostOfSponsor.projectPartnerData.project_partner_id,
+                        created_by: creator,
+                        modified_by: creator,
+                        is_active: 1,
+                        last_modified: lastModifiedDate
+                      });
+                      console.log('new project cost created', newProjectCost);
+
+                      // select req_position of the previous board project cost where prevcostofsponsor is the project_cost_id
+                      const prevBoardProjectCost = await BoardProjectCost.findOne({
+                        where: {
+                          project_cost_id: prevCostOfSponsor.project_cost_id
+                        }
+                      });
+                      console.log('Creating new relation boardporject-cost', newBoardProjectId, newProjectCost.project_cost_id, prevBoardProjectCost.req_position);
+                      const newBoardProjectCost = await BoardProjectCost.create({
+                        board_project_id: newBoardProjectId,
+                        project_cost_id: newProjectCost.project_cost_id,
+                        created_by: creator,
+                        last_modified_by: creator,
+                        req_position: prevBoardProjectCost.req_position,
+                      });
+                      console.log('new board project cost created', newBoardProjectCost);
+                    }
+
+                    // );
                 }
-                try {
-                  await Promise.all(prs);
+                
+                  // const newBoardProjects = await Promise.all(prs);
+                  // console.log(' new boards projects ids should be here ->', newBoardProjects);
+                  
+                  // for(let i = 0 ; i < newBoardProjects.length ; i++) {
+                    
+                  // }
+                  
                 } catch(error) {
                   logger.error(`error on sendBoardProjectsToDistrict ${error}`);
                 }
@@ -1173,7 +1232,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
                 for (let i = 0; i < 6; i++) {
                     const rank = `rank${i}`;
                     logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
-                    updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank));
+                    updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank, creator));
                 }
                 if (updatePromises.length) {
                   try {
@@ -1193,7 +1252,7 @@ const sendBoardProjectsToDistrict = async (boards) => {
     }
 }
 
-const updateBoards = async (board, status, comment, substatus) => {
+const updateBoards = async (board, status, comment, substatus, creator) => {
   logger.info('Updating all boards different project type');
   let projectTypes = [
     'Capital',
@@ -1216,8 +1275,18 @@ const updateBoards = async (board, status, comment, substatus) => {
     });
     if (boards.length === 0) {
       logger.info(`Creating new board for ${projectType}`);
-      await boardService.specialCreationBoard(board.type, board.year, board.locality, projectType, status, comment, substatus);
+      await boardService.createNewBoard(
+        board.type,
+        board.year,
+        board.locality,
+        projectType,
+        status,
+        creator,
+        comment,
+        substatus
+      );
     } else {
+      // When it reaches here? in what context?
       for (let i = 0 ; i < boards.length ; i++) {
         let board = boards[i];
         if (status === 'Approved' && board.status !== status) {
@@ -1227,7 +1296,8 @@ const updateBoards = async (board, status, comment, substatus) => {
         let newFields = {
           status,
           comment,
-          substatus
+          substatus,
+          last_modified_by: creator,
         };
         if (status === 'Approved' && board.status !== status) {
             newFields['submissionDate'] = new Date();
@@ -1239,23 +1309,23 @@ const updateBoards = async (board, status, comment, substatus) => {
   logger.info(`Finished function findOne for board/`);
 }
 
-const moveCardsToNextLevel = async (board, creator) => {
-    logger.info('moveCardsToNextLevel');
+const moveCardsToNextLevel = async (currentBoard, creator) => {
+    logger.info('moveCardsToNextLevel', creator, '<- creator');
     logger.info(`Starting function findAll for board/`);
     let boards = await Board.findAll({
         where: {
-            type: board.type,
-            year: board.year,
-            locality: board.locality
+            type: currentBoard.type,
+            year: currentBoard.year,
+            locality: currentBoard.locality
         }
     });
     logger.info(`Finished function findAll for board/`);
 
-    if (board.type === 'WORK_REQUEST') {
+    if (currentBoard.type === 'WORK_REQUEST') {
         let boardsToCounty;
         let boardsToServiceArea
-        if  (+board.year < 2024) {
-          if (+board.year < 2022) { 
+        if  (+currentBoard.year < 2024) {
+          if (+currentBoard.year < 2022) { 
             boardsToCounty = boards.filter((board) => {
                 return ['Capital', 'Maintenance'].includes(board.projecttype)
             });
@@ -1276,59 +1346,15 @@ const moveCardsToNextLevel = async (board, creator) => {
           await sendBoardProjectsToProp(boardsToServiceArea, 'servicearea', creator);
         }
         logger.info(`Sending ${boards.length} to district`);
-        await sendBoardProjectsToDistrict(boards);
+        await sendBoardProjectsToDistrict(boards, creator);
         logger.info(`Update ${boards.length} as Requested`);
         return {}
-    } else if (board.type === 'WORK_PLAN') {
-        const boardProjectsUpdated = await updateProjectStatus(boards);
-        await moveBoardProjectsToNewYear(boardProjectsUpdated, +board.year + 1);
+    } else if (currentBoard.type === 'WORK_PLAN') {
+        const boardProjectsUpdated = await updateProjectStatus(boards, creator);
+        await moveBoardProjectsToNewYear(boardProjectsUpdated, +currentBoard.year + 1, creator);
         return {}
     }
 }
-
-router.get('/:boardId/boards/:type', async (req, res) => {
-    logger.info(`Starting endpoint /board/:boardId/boards/:type with params ${JSON.stringify(req.params, null, 2)}`)
-    const { boardId, type } = req.params;
-    logger.info(`Starting function findOne for board/`);
-    let board = await Board.findOne({
-        where: {
-            board_id: boardId
-        }
-    })
-    logger.info(`Finished function findOne for board/`);
-    logger.info(`Starting function findAll for board/`);
-    let boardLocalities = await BoardLocality.findAll({
-        where: {
-            toLocality: board.locality
-        }
-    });
-    logger.info(`Finished function findOne for board/`);
-    let bids = []
-    logger.info(`Starting function findOne for board/`);
-    for (var i = 0 ; i < boardLocalities.length ; i++) {
-        let bl = boardLocalities[i];
-        let locality = bl.fromLocality;
-        logger.info(`BOARDS INFO locality: ${locality} type: ${type} year: ${board.year} status: Approved`);
-        let boardFrom = await Board.findOne({
-            where: {
-                locality,
-                type,
-                year: board.year
-            }
-        })
-        logger.info (`BOARD FROM: ${boardFrom}`);
-        bids.push({
-            locality,
-            status: boardFrom ? boardFrom.status : 'Under Review',
-            submissionDate: boardFrom ? boardFrom.submissionDate : null,
-            substatus: boardFrom ? boardFrom.substatus : ''
-        });
-    }
-    logger.info(`Finished function findOne for board/`);
-    res.status(200).send({
-        boards: bids
-    });
-})
 
 const getEmailsForWR = async (board) => {
     let emails = [];
@@ -1410,6 +1436,7 @@ router.put('/', [auth], async (req, res) => {
     logger.info(`Starting endpoint /board/:boardId params ${JSON.stringify(req.body, null, 2)}`)
     const user = req.user;
     const creator = user.email;
+    console.log('Here reached the creator', creator, user);
     const { status, comment, substatus, boardId } = req.body;
     logger.info(`Attempting to update board ${boardId}`);
     const {
@@ -1430,12 +1457,12 @@ router.put('/', [auth], async (req, res) => {
     logger.info(`Finished function findOne for board/`);    
     if (board) {
         logger.info(`Starting function updateBoards for board/`);
-        await updateBoards(board, status, comment, substatus);
+        await updateBoards(board, status, comment, substatus, creator);
         logger.info(`Finished function updateBoards for board/`);
         let bodyResponse = { status: 'updated' };        
         if (status === 'Approved' && board.status !== status) {
             logger.info(`Approving board ${boardId}`);
-            sendMails(board, req.user.name)
+            // sendMails(board, req.user.name)
             logger.info(`Starting function moveCardsToNextLevel for board/`);
             let r = await moveCardsToNextLevel(board, creator);
             bodyResponse = {
@@ -1513,29 +1540,184 @@ router.get('/:type/:year/', async (req, res) => {
 });
 
 router.post('/status-colors', async (req, res) => {
-  const { type, year, localities, projecttype } = req.body;
-  logger.info(`Starting endpoint board/colors with params ${JSON.stringify(req.params, null, 2)}`)
-  logger.info(`Starting function findAll for board/colors`);
-  let boards = await Board.findAll({
-    attributes: ['locality', 'status'],
-    where: {
-      type,
-      year,
-      locality: {
-        [Op.in]: localities
-      },
-      projecttype
+  try {
+    const { type, year, localities, projecttype } = req.body;
+    let boards = await Board.findAll({
+      attributes: ['locality', 'status'],
+      where: {
+        type,
+        year,
+        locality: {
+          [Op.in]: localities
+        },
+        projecttype
+      }
+    });
+    console.log(boards);
+    res.send(boards);
+  } catch (error) {
+    res.status(500).send({ error: 'Internal server error' + error });
+  }
+});
+
+
+router.post('/update-boards-approved', [auth], async (req, res) => {
+  const transaction = await db.sequelize.transaction();
+  try {
+    let { project_type, year, extraYears, sponsor, project_id, extraYearsAmounts, subtype } = req.body;
+    let userData = req.user;
+    year = parseInt(year);
+    const type = sponsor === 'MHFD' ? 'WORK_PLAN' : 'WORK_REQUEST';
+    const locality = sponsor === 'MHFD' ? 'MHFD District Work Plan' : sponsor;    
+    const allRelevantBoards = await boardService.getRelevantBoards(type, year, extraYears, locality, project_type);
+    const missingYears = boardService.determineMissingYears(allRelevantBoards, year, extraYears);
+    const createdBoards = await boardService.createMissingBoards(missingYears, type, locality, project_type, userData, transaction);    
+    const startYear = year;
+    const endYear = year + 4;
+    let allYears = new Set();
+    if (extraYears.includes(year + 1)) {
+      allYears.add(year + 1);
     }
-  });
-  console.log(boards);
-  logger.info(`Finished function findAll for board/colors`);
-  res.send(boards);
+    extraYears.forEach(y => allYears.add(y));
+    allYears = [...allYears];
+    allYears = [...allYears].sort((a, b) => a - b);
+    let createdBoardProjects = [];
+    if (!subtype && project_type !== 'Maintenance'){
+      createdBoardProjects = await boardService.createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, transaction);   
+    }else{
+      createdBoardProjects = await boardService.createBoardProjectsMaintenance(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, subtype, transaction);
+    }
+    const createOrUpdatePromises = createdBoardProjects.map(async (created) => {
+      const existingEntry = await BoardProject.findOne({
+        where: {
+          project_id: created.project_id,
+          board_id: created.board_id
+        },
+        transaction
+      });    
+      if (existingEntry) {
+        const resetRanks = {};
+        const resetReq = {};
+        for (let i = 0; i <= 5; i++) {
+          resetRanks[`rank${i}`] = null;
+          if (i > 0){
+            resetReq[`req${i}`] = null;
+          }
+        }
+        const updatedValues = { ...resetRanks, ...created };
+        await existingEntry.update(updatedValues, { transaction });
+        const updatedEntry = await BoardProject.findOne({ where: { project_id: created.project_id, board_id: created.board_id }, transaction });
+        return updatedEntry;
+      } else {
+        return BoardProject.create(created, { transaction });
+      }
+    });
+    const results = await Promise.all(createOrUpdatePromises);
+    const createdBoardProjectsArray = Object.values(createdBoardProjects);
+    const projectCostsToCreate = [];
+    const boardProjectsCostsToConstruct = [];
+    const projectPartnerId = await boardService.findProjectPartner(project_id);
+    const offsetMillisecond = 35007;
+    let mainModifiedDate = new Date();
+    for (const boardProject of createdBoardProjects) {
+      const boardType = await boardService.getBoardTypeById(boardProject.board_id);
+      for (let reqPosition = 1; reqPosition <= 5; reqPosition++) {
+        const DateToAvoidRepeated = moment(mainModifiedDate)
+        .subtract(offsetMillisecond * reqPosition)
+        .toDate()
+        if (boardProject[`req${reqPosition}`]) {
+          const projectCost = boardService.constructProjectCost(boardProject, reqPosition, userData, projectPartnerId, boardType, DateToAvoidRepeated);
+          projectCostsToCreate.push(projectCost);
+        }
+      }
+    }
+    boardService.updateProjectCostEntries(project_id, userData, transaction)
+    const createdProjectCosts = await boardService.createAllProjectCosts(projectCostsToCreate, transaction);
+    const createdProjectCostIds = createdProjectCosts.map(entry => entry.project_cost_id);
+    let index = 0;
+    for (let i = 0; i < createdBoardProjects.length; i++) {
+      const boardProject = createdBoardProjects[i];
+      const boardProjectId =  [...results][i].board_project_id;
+      for (let reqPosition = 1; reqPosition <= 5; reqPosition++) {
+        if (boardProject[`req${reqPosition}`]) {
+          const boardProjectsCost = boardService.constructBoardProjectsCost(boardProject, createdProjectCostIds[index], reqPosition, userData, boardProjectId);
+          boardProjectsCostsToConstruct.push(boardProjectsCost);
+          index++;
+        }
+      }
+    }
+    await boardService.createAllBoardProjectsCost(boardProjectsCostsToConstruct, transaction);
+    await boardService.cascadeDelete(project_id, createdBoardProjects, type, startYear, locality, project_type, transaction);
+    await transaction.commit();
+    res.send({
+      createdBoardProjects: createdBoardProjectsArray,
+      createdBoards,
+      projectCostsToCreate,
+      boardProjectsCostsToConstruct
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error(error);
+    res.status(500).send({
+      error,
+      message: 'An error occurred while updating the boards',
+    });
+  }
+});
+
+router.post('/send-to-workplan', [auth], async (req, res) => {
+  const transaction = await db.sequelize.transaction();
+  try {
+    let { project_type, year, board_project_id } = req.body;
+    let userData = req.user;
+    year = parseInt(year);
+    const type = 'WORK_PLAN';
+    const locality = 'MHFD District Work Plan';
+    const MhfdBoard = await Board.findOne({
+      where: {
+        type,
+        year: year,
+        locality,
+        projecttype: project_type
+      }
+    });
+    let createdBoards = [];
+    let targetBoardId;
+    if (!MhfdBoard || Object.keys(MhfdBoard).length === 0) {
+      createdBoards = await boardService.createMissingBoards(allRelevantBoards, type, locality, project_type, userData, transaction);      
+      targetBoardId = createdBoards[0].board_id;
+    } else {
+      targetBoardId = MhfdBoard.board_id;
+    }
+    const boardProject = await BoardProject.findOne({
+      where: {
+        board_project_id
+      }
+    });
+    const updatedRanks = {};
+    for (let i = 0; i <= 5; i++) {
+      const rankColumnName = `rank${i}`;
+      const nextLexoRankValue = await boardService.getNextLexoRankValue(targetBoardId, rankColumnName);
+      updatedRanks[rankColumnName] = nextLexoRankValue;
+    }
+    const newBoardProject = await BoardProject.create({
+      ...boardProject.dataValues,
+      board_project_id: undefined,
+      board_id: targetBoardId
+    }, { transaction });
+    await transaction.commit();
+    return res.json({ message: 'Boards created successfully', createdBoards, newBoardProject });
+  } catch (error) {
+    await transaction.rollback();
+    console.error(`Error creating boards: ${error}`);
+    return res.status(500).json({ error: 'An error occurred while creating boards' });
+  }
 });
 
 router.post('/projects-bbox', async (req, res) => {
     logger.info(`Starting endpoint board/projects-bbox with params ${JSON.stringify(req.params, null, 2)}`)
     const { projects } = req.body;
-    console.log(projects);
+    // console.log(projects);
     let projectsParsed = '';
     for (const project of projects) {
         if (projectsParsed) {
@@ -1564,46 +1746,6 @@ router.post('/projects-bbox', async (req, res) => {
         res.status(500).send(error);
      }
 });
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-router.get('/sync', async (req,res) => {
-    logger.info(`Starting endpoint board/sync with params ${JSON.stringify(req.params, null, 2)}`);
-  const sql = `SELECT projectid, projectname, projecttype, projectsubtype FROM ${CREATE_PROJECT_TABLE}`;
-  const query = {
-    q: sql
-  };
-  logger.info(sql);
-  try {
-    let result;
-    logger.info(`Starting function needle for board/sync`);
-    const data = await needle('post', CARTO_URL, query, { json: true });
-    logger.info(`Finished function needle for board/sync`);
-    if (data.statusCode === 200) {
-      result = data.body;
-      for(let i = 0 ; i < result.rows.length ; ++i){
-        let projectData = result.rows[i];
-        if(projectData.projectid){
-          console.log('About to update in board', projectData.projectid, projectData.projectname);
-          logger.info(`Starting function updateProjectsinBoard for board/sync`);
-          await updateProjectsInBoard(projectData.projectid, projectData.projectname, projectData.projecttype, projectData.projectsubtype);
-          logger.info(`Finished function updateProjectsinBoard for board/sync`);
-          // updateProject
-          logger.info(`Starting function sleep for board/sync`);
-          await sleep(30);
-          logger.info(`Starting function sleep for board/sync`);
-        }
-      }
-      res.send(result.rows);
-    } else {
-      logger.error('bad status ' + data.statusCode + ' ' +  JSON.stringify(data.body, null, 2));
-      return res.status(data.statusCode).send(data.body);
-    }
-  } catch (error) {
-      logger.error('Error at sync projectname, type, subtype', error);
-      res.status(500).send(error);
-  }
-});
 
 const applyLocalityCondition = (where) => {
   if (where.locality.startsWith('South Platte River')) {
@@ -1619,4 +1761,26 @@ const applyLocalityCondition = (where) => {
   return where;
 }
 
+router.get('/update-88', async(req, res)=> {
+  const allProjectPartner = await ProjectPartner.findAll({
+    where: {
+      code_partner_type_id: 88
+    }
+  });
+  allProjectPartner.forEach(async (pc) => {
+    await ProjectCost.update(
+      {
+        project_partner_id: pc.project_partner_id
+      },
+      {
+        where: {
+          project_id: pc.project_id,
+          code_cost_type_id: 22
+        }
+      }
+    );
+  });
+  
+  res.send('ok'); 
+});
 export default router;

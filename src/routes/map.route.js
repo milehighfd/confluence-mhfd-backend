@@ -20,7 +20,6 @@ const cache = {};
 router.post('/', async (req, res) => { 
   logger.info(`Starting endpoint map.route/ with params ${JSON.stringify(req.body, null, 2)}`);
   const table = req.body.table;
-  console.log('------------------table', table)
   const cacheEntry = cache[table];
   if (cacheEntry) {
     const currentTime = new Date().getTime();
@@ -70,7 +69,7 @@ router.post('/', async (req, res) => {
       }
     }
   ]};
-  console.log('------------------sql', sql)
+  // console.log('------------------sql', sql)
   mapConfig =  encodeURIComponent(JSON.stringify(mapConfig));
   const URL = `${CARTO_URL_MAP}&config=${mapConfig}`;
   logger.info(URL);
@@ -269,7 +268,7 @@ router.get('/search/:query', async (req, res) => {
   HAVING ST_GeometryType(st_linemerge(St_union(the_geom))) = 'ST_LineString'`;
 
   sql =  encodeURIComponent(sql);
-  console.log('el query ' , sql);
+  // console.log('el query ' , sql);
   const URL = `${CARTO_URL}&q=${sql}`;
   promises.push(new Promise((resolve, reject) => {
     https.get(URL, response => {   
@@ -505,7 +504,7 @@ router.get('/bbox-components', async (req, res) => {
           });
           response.on('end', function () {
             const rows = JSON.parse(str).rows;
-            console.log(rows);
+            // console.log(rows);
             if (rows[0].bbox != null) {
               rows[0].bbox = rows[0].bbox.replace('BOX(', '').replace(')', '').replace(/ /g, ',').split(',');
             }
