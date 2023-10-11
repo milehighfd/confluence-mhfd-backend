@@ -5,7 +5,7 @@ import auth from 'bc/auth/auth.js';
 import updateRank from 'bc/routes/board-project/update-rank.js';
 import updateCost from 'bc/routes/board-project/cost.js';
 import authOnlyEmail from 'bc/auth/auth-only-email.js';
-
+import { Op } from 'sequelize';
 const Board = db.board;
 const BoardProject = db.boardProject;
 const BoardProjectCost = db.boardProjectCost;
@@ -164,7 +164,10 @@ router.get('/:board_project_id/cost', async (req, res) => {
         }]
       }],
       where: {
-        board_project_id
+        board_project_id,
+        req_position: {
+          [Op.gt]: 0
+        }
       }
     });
   const returnValues = projectCostValues.map((a)=> ({
