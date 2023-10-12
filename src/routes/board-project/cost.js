@@ -235,7 +235,7 @@ const updateCostNew = async (req, res) => {
         const allPromises = [];
         const offsetMillisecond = 35007;
         let mainModifiedDate = new Date();
-        console.log('\n\n\n\n IS WORK PLAN', isWorkPlan, 'FOR ', JSON.stringify(amount));
+        console.log('\n\n\n\n IS WORK PLAN', isWorkPlan, 'FOR ', JSON.stringify(amount), 'cCCC', columnsChanged, '\n\n\n\n');
         if (amount.code_partner_type_id !== 88 || ( amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22))) {
           console.log('Columns changed', columnsChanged, 'with id', currentBusinessAssociatesId , '\n\n\n');
           for (let pos = 0; pos < columnsChanged.length; ++pos) {
@@ -290,7 +290,7 @@ const updateCostNew = async (req, res) => {
         }
   
         await Promise.all(allPromises);
-        if (amount.code_partner_type_id === 88) {
+        if (( amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22))) {
           let rank0 = null;
           let shouldMoveToWorkspace = true;
           // IF NO AMOUNTS MOVE CARD TO WORKSPACE
@@ -353,7 +353,7 @@ const updateCostNew = async (req, res) => {
             user.email
           );
         }
-        if (amount.code_partner_type_id == 88) {
+        if (( amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22))) {
           columnsChangesMHFD = (statusHasChanged ? [0, 1, 2, 3, 4, 5] : columnsChanged);
         }
     }
