@@ -486,10 +486,11 @@ router.post('/board-for-positions2', async (req, res) => {
     };
     boardWhere = applyLocalityCondition(boardWhere);
     const boards = await Board.findAll({
-      attributes: ['board_id'],
+      attributes: ['board_id', 'type'],
       where: boardWhere,
     });
     const boardIds = boards.map(b => b.dataValues.board_id);
+    const isWorkPlan = type === 'WORK_PLAN';
     const rankColumnName = `rank${position}`;
     const reqColumnName = `req${position}`;
     const originPositionColumnName = `originPosition${position}`;
@@ -573,6 +574,8 @@ router.post('/board-for-positions2', async (req, res) => {
       });
 
       const Mhfd_ids = MHFD_Partner.map((mhfd) => mhfd.project_partner_id);
+      const WORK_PLAN_CODE_COST_TYPE_ID = 21;
+      const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
       console.log('MHFD IDS', Mhfd_ids, boardProjectIds);
       // HERE: check how to pull the correct id of mhfd
       const projectCostValues = await BoardProjectCost.findAll({
@@ -583,7 +586,8 @@ router.post('/board-for-positions2', async (req, res) => {
           as: 'projectCostData',
           where: {
             is_active: true,
-            project_partner_id: { [Op.in]: Mhfd_ids }
+            project_partner_id: { [Op.in]: Mhfd_ids },
+            code_cost_type_id: isWorkPlan ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID
           }
         }],
         where: {
