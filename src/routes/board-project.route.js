@@ -145,7 +145,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
     const projectCostValues = await BoardProjectCost.findAll({
       attributes: ['req_position'],
       include: [{
-        attributes: ['cost', 'project_cost_id', 'project_partner_id'],
+        attributes: ['cost', 'project_cost_id', 'project_partner_id', 'code_cost_type_id'],
         model: ProjectCost,
         as: 'projectCostData',
         where: {
@@ -171,8 +171,9 @@ router.get('/:board_project_id/cost', async (req, res) => {
       }
     });
   const returnValues = projectCostValues.map((a)=> ({
-    business_associates_id: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData.projectPartnerData.businessAssociateData[0].business_associates_id : null,
-    business_name: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData.projectPartnerData.businessAssociateData[0].business_name : null,
+    code_cost_type_id: a.projectCostData?.code_cost_type_id,
+    business_associates_id: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData?.projectPartnerData?.businessAssociateData[0].business_associates_id : null,
+    business_name: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData?.projectPartnerData?.businessAssociateData[0].business_name : null,
     code_partner_type_id: a.projectCostData?.projectPartnerData?.projectPartnerTypeData.code_partner_type_id,
     pos: a.req_position,
     cost: a.projectCostData.cost,
@@ -181,17 +182,16 @@ router.get('/:board_project_id/cost', async (req, res) => {
   console.log('\n\n  ********** \n\n Project Cost \n ', returnValues, '\n\n  ********** \n\n');
   
   const groupedData = returnValues.reduce((x, y) => {
-
     (x[y.business_name] = x[y.business_name] || []).push(y);
-
     return x;
-
   }, {});
-  const getReqsValues = (currentValues) => {
+  const getReqsValues = (currentValues, code_cost_type_id) => {
     const returnObject = {};
     currentValues?.forEach((v) => {
       const stringPos = 'req'+v.pos;
-      returnObject[stringPos] = v.cost;
+      if (v.code_cost_type_id == code_cost_type_id) {
+        returnObject[stringPos] = v.cost;
+      }
     });
     for ( let i = 1 ; i <= 5; ++i) {
       if (!returnObject['req'+i]) {
@@ -199,6 +199,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
       }
     }
     //TODO: add years if needed
+    console.log('return object', returnObject, 'filterebby', code_cost_type_id, 'current values', currentValues);
     return returnObject;
   }
   console.log('Boardproject', boardProject);
@@ -215,25 +216,52 @@ router.get('/:board_project_id/cost', async (req, res) => {
         code_partner_type_id: [ 88, 11, 12 ]
       }
     });
-    const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => ({
-      business_name: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_name: null,
-      code_partner_type_id: abnrp.code_partner_type_id,
-      business_associates_id: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_associates_id: null
-    }));
+    const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => {
+      const answer = {
+        business_name: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_name: null,
+        code_partner_type_id: abnrp.code_partner_type_id,
+        business_associates_id: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_associates_id: null
+      };
+      console.log('anwser', answer);
+      return answer;
+    });
+    console.log('LLEGA 1 ', groupedData, 'ALLBN', allBNWithPartner);
+    const MHFD_CODE_COST_TYPE_ID = 88;
+    const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
+    const WORK_PLAN_CODE_COST_TYPE_ID = 21;
     const finalAnswer = allBNWithPartner.map((bnnp) => {
       const bname = bnnp.business_name;
       const bid = bnnp.business_associates_id;
-      const code_partner_type_id = bnnp.code_partner_type_id;
+      const current_code_partner_type_id = bnnp.code_partner_type_id;
       const databyBN = groupedData[bname];
-      console.log('data by business name', bnnp, bid);
+      console.log('CP: dataByBN', databyBN, bname);
+      let current_code_cost_type_id = databyBN ? databyBN[0].code_cost_type_id: WORK_REQUEST_CODE_COST_TYPE_ID; // ALMOST ALL ARE GOING TO BE 22 WORK REQUEST 
+      if (current_code_partner_type_id == MHFD_CODE_COST_TYPE_ID) {
+        current_code_cost_type_id = WORK_REQUEST_CODE_COST_TYPE_ID;
+      }
       return {
+        code_cost_type_id: current_code_cost_type_id,
         business_associates_id: bid,
         business_name: bname,
-        code_partner_type_id: code_partner_type_id,
-        values: getReqsValues(databyBN)
+        code_partner_type_id: current_code_partner_type_id,
+        values: getReqsValues(databyBN, current_code_cost_type_id)
       }
     });
-    console.log('final anws', finalAnswer);      
+    console.log('LLEGA 2 ');
+    const businessMhfd = allBusinessNamesRelatedToProject.find((abnrp) => abnrp.code_partner_type_id === 88);
+    if (businessMhfd){
+      console.log('LLEGA 3', JSON.stringify(businessMhfd));
+      const bname = businessMhfd.businessAssociateData? businessMhfd.businessAssociateData[0].business_name: null;
+      const workplanValues = {
+        code_cost_type_id: WORK_PLAN_CODE_COST_TYPE_ID,
+        business_associates_id: businessMhfd.businessAssociateData? businessMhfd.businessAssociateData[0].business_associates_id: null,
+        business_name: bname,
+        code_partner_type_id: businessMhfd.code_partner_type_id,
+        values: getReqsValues(groupedData[bname], WORK_PLAN_CODE_COST_TYPE_ID)
+      };
+      finalAnswer.push(workplanValues);
+    }
+    console.log('final anws', JSON.stringify(finalAnswer));      
     return res.status(200).send({amounts: finalAnswer, projectData: boardProject.projectData});
  
   } catch (error) {
