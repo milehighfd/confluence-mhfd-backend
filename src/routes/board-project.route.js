@@ -199,7 +199,6 @@ router.get('/:board_project_id/cost', async (req, res) => {
       }
     }
     //TODO: add years if needed
-    console.log('return object', returnObject, 'filterebby', code_cost_type_id, 'current values', currentValues);
     return returnObject;
   }
   console.log('Boardproject', boardProject);
@@ -225,7 +224,6 @@ router.get('/:board_project_id/cost', async (req, res) => {
       console.log('anwser', answer);
       return answer;
     });
-    console.log('LLEGA 1 ', groupedData, 'ALLBN', allBNWithPartner);
     const MHFD_CODE_COST_TYPE_ID = 88;
     const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
     const WORK_PLAN_CODE_COST_TYPE_ID = 21;
@@ -234,7 +232,6 @@ router.get('/:board_project_id/cost', async (req, res) => {
       const bid = bnnp.business_associates_id;
       const current_code_partner_type_id = bnnp.code_partner_type_id;
       const databyBN = groupedData[bname];
-      console.log('CP: dataByBN', databyBN, bname);
       let current_code_cost_type_id = databyBN ? databyBN[0].code_cost_type_id: WORK_REQUEST_CODE_COST_TYPE_ID; // ALMOST ALL ARE GOING TO BE 22 WORK REQUEST 
       if (current_code_partner_type_id == MHFD_CODE_COST_TYPE_ID) {
         current_code_cost_type_id = WORK_REQUEST_CODE_COST_TYPE_ID;
@@ -247,10 +244,8 @@ router.get('/:board_project_id/cost', async (req, res) => {
         values: getReqsValues(databyBN, current_code_cost_type_id)
       }
     });
-    console.log('LLEGA 2 ');
     const businessMhfd = allBusinessNamesRelatedToProject.find((abnrp) => abnrp.code_partner_type_id === 88);
     if (businessMhfd){
-      console.log('LLEGA 3', JSON.stringify(businessMhfd));
       const bname = businessMhfd.businessAssociateData? businessMhfd.businessAssociateData[0].business_name: null;
       const workplanValues = {
         code_cost_type_id: WORK_PLAN_CODE_COST_TYPE_ID,
@@ -345,6 +340,6 @@ router.put('/update-target-cost', [authOnlyEmail], async(req,res) => {
 });
 
 router.put('/:board_project_id/update-rank', [auth], updateRank);
-router.put('/:board_project_id/cost', [auth], updateCost); // RESTORE AUTH 
+router.put('/:board_project_id/cost', updateCost); // RESTORE AUTH 
 
 export default router;

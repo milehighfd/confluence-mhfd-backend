@@ -18,7 +18,7 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
     attributes: ['req_position'],
     include: [
       {
-        attributes: ['cost', 'project_cost_id', 'project_partner_id'],
+        attributes: ['cost', 'project_cost_id', 'project_partner_id', 'code_cost_type_id'],
         model: ProjectCost,
         as: 'projectCostData',
         where: {
@@ -46,37 +46,8 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
       board_project_id
     }
   });
-  const projectCostValuesComplete = await BoardProjectCost.findAll({
-    attributes: ['req_position'],
-    include: [
-      {
-        attributes: ['cost', 'project_cost_id', 'project_partner_id'],
-        model: ProjectCost,
-        as: 'projectCostData',
-        include: [
-          {
-            model: ProjectPartner,
-            as: 'projectPartnerData',
-            include: [
-              {
-                model: CodeProjectPartnerType,
-                as: 'projectPartnerTypeData'
-              },
-              {
-                model: BusinessAssociates,
-                as: 'businessAssociateData'
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    where: {
-      board_project_id
-    }
-  });
-  console.log(board_project_id, 'PROJECT COST VALUES', JSON.stringify(projectCostValues), '\n\n', 'COMPLETE', JSON.stringify(projectCostValuesComplete), '\n\n');
   const returnValues = projectCostValues.map((a) => ({
+    code_cost_type_id: a.projectCostData?.code_cost_type_id,
     business_associates_id: a.projectCostData?.projectPartnerData?.businessAssociateData
       ? a.projectCostData.projectPartnerData.businessAssociateData[0]?.business_associates_id
       : null,
@@ -92,20 +63,22 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
     (x[y.business_name] = x[y.business_name] || []).push(y);
     return x;
   }, {});
-  const getReqsValues = (currentValues) => {
+  const getReqsValues = (currentValues, code_cost_type_id) => {
     const returnObject = {};
     currentValues?.forEach((v) => {
-      const stringPos = 'req' + v.pos;
-      returnObject[stringPos] = v.cost;
+      const stringPos = 'req'+v.pos;
+      if (v.code_cost_type_id == code_cost_type_id) {
+        returnObject[stringPos] = v.cost;
+      }
     });
-    for (let i = 1; i <= 5; ++i) {
-      if (!returnObject['req' + i]) {
-        returnObject['req' + i] = null;
+    for ( let i = 1 ; i <= 5; ++i) {
+      if (!returnObject['req'+i]) {
+        returnObject['req'+i] = null;
       }
     }
     //TODO: add years if needed
     return returnObject;
-  };
+  }
   const allBusinessNamesRelatedToProject = await ProjectPartner.findAll({
     attributes: ['project_partner_id', 'code_partner_type_id'],
     include: [
@@ -121,34 +94,55 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
     }
   });
   console.log('PID', currentProjectId, 'ALL BUSINESS NAMES RELATED PEOJRCET ', JSON.stringify(allBusinessNamesRelatedToProject));
-  const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => ({
-    business_name: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_name : null,
-    code_partner_type_id: abnrp.code_partner_type_id,
-    business_associates_id: abnrp.businessAssociateData ? abnrp.businessAssociateData[0]?.business_associates_id : null
-  }));
+  const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => {
+    const answer = {
+      business_name: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_name: null,
+      code_partner_type_id: abnrp.code_partner_type_id,
+      business_associates_id: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_associates_id: null
+    };
+    console.log('anwser', answer);
+    return answer;
+  });
+  const MHFD_CODE_COST_TYPE_ID = 88;
+  const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
+  const WORK_PLAN_CODE_COST_TYPE_ID = 21;
   const allPreviousAmounts = allBNWithPartner.map((bnnp) => {
     const bname = bnnp.business_name;
     const bid = bnnp.business_associates_id;
-    const code_partner_type_id = bnnp.code_partner_type_id;
+    const current_code_partner_type_id = bnnp.code_partner_type_id;
     const databyBN = groupedData[bname];
-    if(bname === 'MHFD') {
-      console.log('MHFD previous values are:', databyBN);
+    let current_code_cost_type_id = databyBN ? databyBN[0].code_cost_type_id: WORK_REQUEST_CODE_COST_TYPE_ID; // ALMOST ALL ARE GOING TO BE 22 WORK REQUEST 
+    if (current_code_partner_type_id == MHFD_CODE_COST_TYPE_ID) {
+      current_code_cost_type_id = WORK_REQUEST_CODE_COST_TYPE_ID;
     }
     return {
+      code_cost_type_id: current_code_cost_type_id,
       business_associates_id: bid,
       business_name: bname,
-      code_partner_type_id: code_partner_type_id,
-      values: getReqsValues(databyBN)
-    };
+      code_partner_type_id: current_code_partner_type_id,
+      values: getReqsValues(databyBN, current_code_cost_type_id)
+    }
   });
+  const businessMhfd = allBusinessNamesRelatedToProject.find((abnrp) => abnrp.code_partner_type_id === 88);
+  if (businessMhfd){
+    const bname = businessMhfd.businessAssociateData? businessMhfd.businessAssociateData[0].business_name: null;
+    const workplanValues = {
+      code_cost_type_id: WORK_PLAN_CODE_COST_TYPE_ID,
+      business_associates_id: businessMhfd.businessAssociateData? businessMhfd.businessAssociateData[0].business_associates_id: null,
+      business_name: bname,
+      code_partner_type_id: businessMhfd.code_partner_type_id,
+      values: getReqsValues(groupedData[bname], WORK_PLAN_CODE_COST_TYPE_ID)
+    };
+    allPreviousAmounts.push(workplanValues);
+  }
   return allPreviousAmounts;
 };
 const updateCostNew = async (req, res) => {
   logger.info('get board project cost by id');
   try {
     const { board_project_id } = req.params;
-    const user = req.user;
-    const { amounts, isMaintenance } = req.body; // ALL Amounts by sponsor, mhfd funding and cosponsors
+    const user = {email: 'req.user'};
+    const { amounts, isMaintenance, isWorkPlan } = req.body; // ALL Amounts by sponsor, mhfd funding and cosponsors
     let columnsChangesMHFD = [0];
     const beforeUpdate = await BoardProject.findOne({
       where: { board_project_id }
@@ -170,8 +164,8 @@ const updateCostNew = async (req, res) => {
         const allCurrentAmounts = {}; // aqui se almacenan todos los reqs amounts
         // Returns all boarcproject cost related to the current board project
         // dentro de estos estan los costos de cada partner
-        console.log('All previous amounts', allPreviousAmounts, 'searching for ', amount.business_name);
-        const beforeAmounts = allPreviousAmounts.find((a) => a.business_name === amount.business_name);
+        console.log('All previous amounts', allPreviousAmounts, 'searching for ', JSON.stringify(amount));
+        const beforeAmounts = allPreviousAmounts.find((a) => a.business_name === amount.business_name && a.code_cost_type_id === amount.code_cost_type_id);
         // check if exists because it could be a new partner that wasnt in previous amounts
         if (!beforeAmounts) {
           console.log('Jumped save for ', amount.business_name, 'because it doesnt exist');
@@ -181,7 +175,8 @@ const updateCostNew = async (req, res) => {
         const currentBusinessAssociatesId = beforeAmounts?.business_associates_id;
         const currentPartnerTypeId = beforeAmounts?.code_partner_type_id;
         // EXCLUSIVO PARA MHFD FUNDING // PORQUE ES PARA AGREGAR O QUITAR CARDS DE ALGUNA COLUMNA
-        if (amount.code_partner_type_id === 88) {
+        if (amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22)) {
+          console.log('MHFD FUNDING', JSON.stringify(amount), isWorkPlan, 'before amount', beforeAmounts);
           for (let pos = 1; pos <= 5; pos++) {
             const reqColumnName = `req${pos}`;
             const rankColumnName = `rank${pos}`;
@@ -223,7 +218,8 @@ const updateCostNew = async (req, res) => {
               updateFields[rankColumnName] = null;
             }
           }
-        } else {
+        } else if (amount.code_partner_type_id !== 88) {
+          console.log('NOT MHFD FUNDING', JSON.stringify(amount), 'before amount', beforeAmounts);
           for (let pos = 1; pos <= 5; pos++) {
             const reqColumnName = `req${pos}`;
             const valueHasChanged = beforeAmounts.values[reqColumnName] !== amount.values[reqColumnName];
@@ -239,30 +235,36 @@ const updateCostNew = async (req, res) => {
         const allPromises = [];
         const offsetMillisecond = 35007;
         let mainModifiedDate = new Date();
-        console.log('Columns changed', columnsChanged, 'for ', amount.business_name, 'with id', currentBusinessAssociatesId);
-        for (let pos = 0; pos < columnsChanged.length; ++pos) {
-          const currentColumn = columnsChanged[pos];
-          if (currentColumn !== 0) {
-            // NOt workspace
-            const reqColumnName = `req${currentColumn}`;
-            const currentReqAmount = amount.values[reqColumnName] ?? null;
-            const currentCost = currentReqAmount;
-            allPromises.push(
-              boardService.updateAndCreateProjectCostsForAmounts(
-                currentColumn,
-                currentCost,
-                currentProjectId,
-                currentBusinessAssociatesId,
-                currentPartnerTypeId,
-                user,
-                board_project_id,
-                moment(mainModifiedDate)
-                  .subtract(offsetMillisecond * pos)
-                  .toDate()
-              )
-            );
+        console.log('\n\n\n\n IS WORK PLAN', isWorkPlan, 'FOR ', JSON.stringify(amount));
+        if (amount.code_partner_type_id !== 88 || ( amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22))) {
+          console.log('Columns changed', columnsChanged, 'with id', currentBusinessAssociatesId , '\n\n\n');
+          for (let pos = 0; pos < columnsChanged.length; ++pos) {
+            const currentColumn = columnsChanged[pos];
+            if (currentColumn !== 0) {
+              // NOt workspace
+              const reqColumnName = `req${currentColumn}`;
+              const currentReqAmount = amount.values[reqColumnName] ?? null;
+              const currentCost = currentReqAmount;
+              console.log('About to update boardprojectcosts', amount, currentColumn, currentCost, currentProjectId, board_project_id);
+              allPromises.push(
+                boardService.updateAndCreateProjectCostsForAmounts(
+                  currentColumn,
+                  currentCost,
+                  currentProjectId,
+                  currentBusinessAssociatesId,
+                  currentPartnerTypeId,
+                  user,
+                  board_project_id,
+                  moment(mainModifiedDate)
+                    .subtract(offsetMillisecond * pos)
+                    .toDate(),
+                  amount.code_cost_type_id
+                )
+              );
+            }
           }
         }
+
         mainModifiedDate = new Date();
         // THIS IS FOR MAINTENANCE REVIEW
         if (isMaintenance) {

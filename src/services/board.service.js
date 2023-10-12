@@ -526,7 +526,17 @@ async function updateProjectCostEntries(project_id, userData, transaction) {
 }
 
 
-const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost, currentProjectId, currentBusinessAssociatesId, currentPartnerTypeId, user, board_project_id, lastModifiedDate) => {
+const updateAndCreateProjectCostsForAmounts = async (
+  currentColumn,
+  currentCost,
+  currentProjectId,
+  currentBusinessAssociatesId,
+  currentPartnerTypeId,
+  user,
+  board_project_id,
+  lastModifiedDate,
+  codeCostTypeId
+) => {
   console.log('Update And Create Cost ');
   const countOriginalProject = await Project.count({ where: { project_id: currentProjectId } });
   if (countOriginalProject === 0) {
@@ -558,7 +568,8 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
           [Op.or]: [
             { project_partner_id: project_partner.project_partner_id },
             { project_partner_id: null }
-          ]
+          ],
+          code_cost_type_id: codeCostTypeId
         }
       }],
       where: {
@@ -566,7 +577,7 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
         req_position: currentColumn
       }
     });
-    console.log('IS THIS EMPTY? ->', currentBoardProjectCosts, 'Getting board by', board_project_id, currentColumn);
+    console.log(codeCostTypeId, 'IS THIS EMPTY? ->', currentBoardProjectCosts, 'Getting board by', board_project_id, currentColumn);
     const projectsCostsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
     // DESACTIVAR LOS ANTERIORES PROJECT COSTS
     console.trace('HERE IS with this projectcosts', projectsCostsIdsToUpdate );
@@ -584,7 +595,7 @@ const updateAndCreateProjectCostsForAmounts = async (currentColumn, currentCost,
         const projectCostCreated = await ProjectCost.create({
           cost: currentCost,
           project_id: currentProjectId,
-          code_cost_type_id: CODE_COST_TYPE_ID,
+          code_cost_type_id: codeCostTypeId,
           created_by: user.email,
           modified_by: user.email,
           is_active: 1,
