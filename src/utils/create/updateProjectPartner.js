@@ -61,9 +61,10 @@ export const updateProjectPartner = async (
             as: 'businessAssociateData'
           }
         ]});
-      // compare all partners to match 11 with sponsor and 12 with cosponsor then delete the ones that are not in there 
+      // compare all partners to match 11 with sponsor and 12 with cosponsor then delete the ones that are not in there  168938
       console.log(sponsor, cosponsor, 'proejct Partners', JSON.stringify(projectPartners));
       const WORK_REQUEST_EDITED = 42;
+      let sponsorDeleted = false;
       for (let i = 0; i < projectPartners.length; i++) {
         const currentPP = projectPartners[i];
         const currentBusinessData = currentPP.businessAssociateData[0];
@@ -85,7 +86,7 @@ export const updateProjectPartner = async (
               },
               transaction: transaction
             });
-            console.log('DESTROYING SPONSOR', currentPP.project_partner_id, 'RESULT', destroyed);
+            sponsorDeleted = true;
           }
         } else if (currentPP.code_partner_type_id === 12) {
           if (!cosponsor.includes(currentBusinessData?.business_name)) {
@@ -136,7 +137,6 @@ export const updateProjectPartner = async (
         const previousSponsorRelation = prevProjectCostWithBusinessName[i];
         console.log('JSON prevprojectcostwithbusinessname', JSON.stringify(previousSponsorRelation));
         const currentProjectPartner = currentProjectPartners.find((cpp) =>  {
-          console.log('------\n trying to find currectn in current project partner one that matches previosly to copy the cost', '\n prev', JSON.stringify(previousSponsorRelation), '\n current', JSON.stringify(cpp), 'CCP',cpp?.businessAssociateData?.business_name, 'previousSponsor', previousSponsorRelation.projectPartnerData?.businessAssociateData?.business_name);
           const ccpData = cpp?.businessAssociateData[0];
           const previousData = previousSponsorRelation.projectPartnerData?.businessAssociateData;
           return ccpData?.business_name === previousData?.business_name;
@@ -148,6 +148,20 @@ export const updateProjectPartner = async (
           }, {
             where: {
               project_cost_id: previousSponsorRelation.project_cost_id
+            },
+            transaction: transaction
+          });
+        }
+        console.log('sponsorDeleted && previousSponsorRelation.projectPartnerData?.code_partner_type_id', sponsorDeleted, previousSponsorRelation.projectPartnerData?.code_partner_type_id);
+        if (sponsorDeleted && previousSponsorRelation.projectPartnerData?.code_partner_type_id === 88) {
+          const oldPartnerDataForMHFDFunding = previousSponsorRelation.project_partner_id;
+          // update project cost with is_active false where project_partner_id is the 88 from previusSponsorRelation
+          await ProjectCost.update({
+            is_active: false,
+            code_cost_type_id: WORK_REQUEST_EDITED
+          }, {
+            where: {
+              project_partner_id: oldPartnerDataForMHFDFunding
             },
             transaction: transaction
           });
