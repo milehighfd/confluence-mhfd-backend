@@ -153,8 +153,10 @@ const updateCostNew = async (req, res) => {
     const currentProjectId = beforeUpdate.project_id;
     let statusHasChanged;
     const allPreviousAmounts = await getAllPreviousAmounts(board_project_id, currentProjectId);
-    console.log( amounts, 'This are All Previous amounts for ', currentProjectId, '\n\n *********** \n ', allPreviousAmounts);
-    
+    const currentRanks = await BoardProject.findOne({
+      attributes: ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'],
+      where: { board_project_id }
+    });    
     for(let i = 0; i < amounts.length; ++i) {
         const amount = amounts[i];
         let updateFields = {};
@@ -189,32 +191,28 @@ const updateCostNew = async (req, res) => {
               allCurrentAmounts[reqColumnName] = beforeAmounts.values[reqColumnName];
             }
             if (
-              (beforeAmounts.values[reqColumnName] === null && currentReqAmount !== null) || // Si antes no habia valor y ahora hay valor nuevo
-              (beforeUpdate[rankColumnName] === null && currentReqAmount !== null && valueHasChanged) // Si no hay posicion en el board (estaba vacio en esta columna) y ahora hay un valor nuevo
+              (beforeAmounts.values[reqColumnName] === null && currentReqAmount !== null) || 
+              (beforeUpdate[rankColumnName] === null && currentReqAmount !== null && valueHasChanged)
             ) {
               const where = {
                 board_id: beforeUpdate.board_id,
-                [rankColumnName]: { [Op.ne]: null } // Not equals null   =>   !== null
+                [rankColumnName]: { [Op.ne]: null }
               };
-              // Get all projects que no tengan un rank
               const projects = await BoardProject.findAll({
                 where,
                 order: [[rankColumnName, 'DESC']],
                 limit: 1
               });
-              if (projects.length === 0) {
-                // si no hay un project con rank, entonces se le asigna el rank inicial
-                updateFields[rankColumnName] = LexoRank.middle().toString();
-              } else {
-                // si hay projects que no existen en la columna
-                // se saca el ultimo de la columna
-                const lastProject = projects[0];
-                console.log('Last project ', lastProject[rankColumnName]);
-                updateFields[rankColumnName] = LexoRank.parse(lastProject[rankColumnName]).genNext().toString();
-                // agregamos al final de la columna
-              }
+              if (currentRanks[rankColumnName] === null) {
+                if (projects.length === 0) {
+                  updateFields[rankColumnName] = LexoRank.middle().toString();
+                } else {
+                  const lastProject = projects[0];
+                  console.log('Last project ', lastProject[rankColumnName]);
+                  updateFields[rankColumnName] = LexoRank.parse(lastProject[rankColumnName]).genNext().toString();
+                }
+              }             
             } else if (currentReqAmount === null && !isMaintenance) {
-              // Para eliminar de la columna
               updateFields[rankColumnName] = null;
             }
           }
