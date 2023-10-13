@@ -215,13 +215,12 @@ router.get('/:board_project_id/cost', async (req, res) => {
         code_partner_type_id: [ 88, 11, 12 ]
       }
     });
-    const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => {
+    const allBNWithPartner = allBusinessNamesRelatedToProject.filter((bname) => !(bname.businessAssociateData[0]?.business_name === 'MHFD' && bname.code_partner_type_id === 11)).map((abnrp) => {
       const answer = {
         business_name: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_name: null,
         code_partner_type_id: abnrp.code_partner_type_id,
         business_associates_id: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_associates_id: null
       };
-      console.log('anwser', answer);
       return answer;
     });
     const MHFD_CODE_COST_TYPE_ID = 88;

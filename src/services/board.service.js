@@ -469,6 +469,7 @@ async function cascadeDelete(project_id, createdBoardProjects, type, startYear, 
       },
       transaction
   });
+  console.log('\n *************\n*************\n*************\n**************\n************ IS DESTROYING BOARD PROJECT \n***************\n***********\n', project_id, 'filteredBoardIdsToDelete', filteredBoardIdsToDelete);
   await BoardProject.destroy({
       where: {
           project_id: project_id,

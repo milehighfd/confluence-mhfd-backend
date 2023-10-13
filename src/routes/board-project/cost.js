@@ -94,7 +94,7 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
     }
   });
   console.log('PID', currentProjectId, 'ALL BUSINESS NAMES RELATED PEOJRCET ', JSON.stringify(allBusinessNamesRelatedToProject));
-  const allBNWithPartner = allBusinessNamesRelatedToProject.map((abnrp) => {
+  const allBNWithPartner = allBusinessNamesRelatedToProject.filter((bname) => !(bname.businessAssociateData[0]?.business_name === 'MHFD' && bname.code_partner_type_id === 11)).map((abnrp) => {
     const answer = {
       business_name: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_name: null,
       code_partner_type_id: abnrp.code_partner_type_id,
@@ -139,6 +139,7 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
 };
 const updateCostNew = async (req, res) => {
   logger.info('get board project cost by id');
+  
   try {
     const { board_project_id } = req.params;
     const user = req.user;

@@ -576,8 +576,6 @@ router.post('/board-for-positions2', async (req, res) => {
       const Mhfd_ids = MHFD_Partner.map((mhfd) => mhfd.project_partner_id);
       const WORK_PLAN_CODE_COST_TYPE_ID = 21;
       const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
-      console.log('MHFD IDS', Mhfd_ids, boardProjectIds);
-      // HERE: check how to pull the correct id of mhfd
       const projectCostValues = await BoardProjectCost.findAll({
         attributes: ['req_position', 'board_project_id'],
         include: [{
@@ -1171,7 +1169,7 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                         ]
                       }]
                     });
-                    console.log(prevCostOfProject.length, 'prevcostofproject', prevCostOfProject, 'forprojectid', currentProjectId);
+                    console.log(prevCostOfProject.length, 'prevcostofproject', JSON.stringify(prevCostOfProject), 'forprojectid', currentProjectId);
                     // create new projectcosts for the new board project copying values of the previous ones but changing the project_partner_id to the new one
                     let mainModifiedDate = new Date();
                     const offsetMillisecond = 35007;
@@ -1182,7 +1180,7 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                       .subtract(offsetMillisecond * j)
                       .toDate()
                       // here we are duplicating the previous cost with the same partner but with code cost type of workplan
-                      console.trace(' XXX PROJECTCOST CREATE', currentProjectId, prevCostOfSponsor.cost);
+                      console.trace(' XXX PROJECTCOST CREATE', currentProjectId, '\n ******** \n', JSON.stringify(prevCostOfSponsor));
                       const newProjectCost = await ProjectCost.create({
                         project_id: currentProjectId,
                         cost: prevCostOfSponsor.cost,

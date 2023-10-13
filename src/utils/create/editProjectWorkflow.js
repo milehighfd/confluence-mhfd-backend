@@ -217,7 +217,7 @@ const editWRBoard = async (body, user, type, subtype, transaction, project_id) =
       typesList.push('WORK_PLAN');
       localNames.push('MHFD District Work Plan');
     }
-    const board_project_mhfd = await BoardProject.findOne({
+    const boardProjectMHFD = await BoardProject.findOne({
       where: {
         project_id: project_id
       },
@@ -235,7 +235,7 @@ const editWRBoard = async (body, user, type, subtype, transaction, project_id) =
       ],
       transaction
     });    
-    const board_project = await BoardProject.findOne({
+    const boardProjectOfPId = await BoardProject.findOne({
       where: {
         project_id: project_id
       },
@@ -252,9 +252,9 @@ const editWRBoard = async (body, user, type, subtype, transaction, project_id) =
       ],      
       transaction
     });
-    if ((board_project || board_project_mhfd) 
-    && !localNames.includes(board_project?.board?.locality) 
-    && !localNames.includes(board_project_mhfd?.board?.locality) 
+    if ((boardProjectOfPId || boardProjectMHFD) 
+    && !localNames.includes(boardProjectOfPId?.board?.locality) 
+    && !localNames.includes(boardProjectMHFD?.board?.locality) 
     && year >= YEAR_WORKPLAN_V2) 
     {      
       await addProjectsToBoard(user,
@@ -270,23 +270,23 @@ const editWRBoard = async (body, user, type, subtype, transaction, project_id) =
         projectname,
         subtype,
         transaction);
-      if (board_project){
+      if (boardProjectOfPId){
         await BoardProjectCost.destroy({
           where: {
-            board_project_id : board_project.board_project_id
+            board_project_id : boardProjectOfPId.board_project_id
           },
           transaction
         });
-        await board_project.destroy({ transaction });
+        await boardProjectOfPId.destroy({ transaction });
       }
-      if (year >= YEAR_WORKPLAN_V2 && sponsor !== 'MHFD' && board_project_mhfd) {
+      if (year >= YEAR_WORKPLAN_V2 && sponsor.toUpperCase() !== 'MHFD' && boardProjectMHFD) {
         await BoardProjectCost.destroy({
           where: {
-            board_project_id: board_project_mhfd.board_project_id
+            board_project_id: boardProjectMHFD.board_project_id
           },
           transaction
         });
-        await board_project_mhfd.destroy({ transaction });
+        await boardProjectMHFD.destroy({ transaction });
       }
       return 'Board updated successfully';
     }else{
