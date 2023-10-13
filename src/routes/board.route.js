@@ -780,20 +780,14 @@ router.post('/', async (req, res) => {
 });
 
 const getBoard = async (type, locality, year, projecttype, creator) => {
-    logger.info(`Trying to insert create or insert(${type}, ${locality}, ${year}, ${projecttype})`);
-    logger.info(`Starting function findOne for board/`);
     let board = await Board.findOne({
         where: {
             type, year, locality, projecttype
         }
     });
-    logger.info(`Finished function findOne for board/`);
     if (board) {
-        logger.info('already exists');
         return board;
     } else {
-        logger.info('new board');
-        logger.info(`Starting function createNewBoard for board/`);
         const newBoard = await boardService.createNewBoard(
           type,
           year,
@@ -804,7 +798,6 @@ const getBoard = async (type, locality, year, projecttype, creator) => {
           null,
           null
         );
-        logger.info(`Finished function createNewBoard for board/`);
         return newBoard;        
     }
 }
@@ -1193,7 +1186,7 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                       const newProjectCost = await ProjectCost.create({
                         project_id: currentProjectId,
                         cost: prevCostOfSponsor.cost,
-                        code_cost_type_id: prevCostOfProject.code_cost_type_id,
+                        code_cost_type_id: prevCostOfSponsor.code_cost_type_id,
                         project_partner_id: prevCostOfSponsor.projectPartnerData.project_partner_id,
                         created_by: creator,
                         modified_by: creator,
@@ -1231,6 +1224,7 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                   
                 } catch(error) {
                   logger.error(`error on sendBoardProjectsToDistrict ${error}`);
+                  throw error;
                 }
                 logger.info('success on sendBoardProjectsToDistrict');
                 const updatePromises = [];
