@@ -12,36 +12,41 @@ const ProjectCost = db.projectCost;
 const ProjectPartner = db.projectPartner;
 const { Op } = sequelize;
 
-async function getOriginSponsorCosts(board_project_id, columnNumber, code_partner_type_id) {
-  const reqExist = await BoardProjectCost.findAll({
-    attributes: ['req_position', 'board_project_id'],
+async function getOriginSponsor(board_project_id) {
+  const SPONSOR_COSPONSOR_CODE = [11,12];
+  const results = await BoardProjectCost.findAll({
+    attributes: [],
     where: {
-      board_project_id,
-      req_position: columnNumber
+      board_project_id
     },
     include: [
       {
-        attributes: ['cost', 'code_cost_type_id', 'project_partner_id','project_id','project_cost_id'],
+        attributes: ['project_partner_id'],
         model: ProjectCost,
         as: 'projectCostData',
         where: {
-          is_active: true,
+          is_active: true
         },
-        is_required: true,
+        required: true,
         include: [
           {
+            attributes: [],
             model: ProjectPartner,
             as: 'projectPartnerData',
-            is_required: true,
+            required: true,
             where: {
-              code_partner_type_id
+              code_partner_type_id: {
+                [Op.in]: SPONSOR_COSPONSOR_CODE
+              }
             }
           }
         ]
       }
     ]
   });
-  return reqExist;
+  const projectPartnerIds = results.map(result => result.projectCostData.project_partner_id);
+  const uniqueProjectPartnerIds = [...new Set(projectPartnerIds)];
+  return uniqueProjectPartnerIds;
 }
 
 async function getBoardProjectCostMHFD(board_project_id, columnNumber) {
@@ -68,6 +73,42 @@ async function getBoardProjectCostMHFD(board_project_id, columnNumber) {
             is_required: true,
             where: {
               code_partner_type_id: MHFD_CODE_PARTNER_TYPE
+            }
+          }
+        ]
+      }
+    ]
+  });
+  return reqExist;
+}
+
+async function getBoardProjectCostSponsor(board_project_id, columnNumber, project_partner_id) {
+  const SPONSOR_COSPONSOR_CODE = [11,12];
+  const reqExist = await BoardProjectCost.findOne({
+    attributes: ['req_position', 'board_project_id'],
+    where: {
+      board_project_id,
+      req_position: columnNumber,
+    },
+    include: [
+      {
+        attributes: ['cost', 'code_cost_type_id', 'project_partner_id','project_id','project_cost_id'],
+        model: ProjectCost,
+        as: 'projectCostData',
+        where: {
+          is_active: true,
+          project_partner_id: project_partner_id
+        },
+        is_required: true,
+        include: [
+          {
+            model: ProjectPartner,
+            as: 'projectPartnerData',
+            is_required: true,
+            where: {
+              code_partner_type_id: {
+                [Op.in]: SPONSOR_COSPONSOR_CODE
+              }
             }
           }
         ]
@@ -167,14 +208,35 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
         { is_active: false },
         { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
       ));
+      const sponsorAndCosponsor = await getOriginSponsor(board_project_id);
+      sponsorAndCosponsor.forEach(async (project_partner_id) => {
+        const originSecCost = await getBoardProjectCostSponsor(board_project_id, getNumberFromRank(otherFields), project_partner_id);
+        const targetSecCost = await getBoardProjectCostSponsor(board_project_id, columnNumber, project_partner_id);
+        if (originSecCost && targetSecCost) {
+          const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
+          console.log(project_partner_id, originCost.projectCostData.project_cost_id, targetCost.projectCostData.project_cost_id, cost)
+          proms.push(
+            ProjectCost.update(
+              { cost: cost },
+              { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
+            )
+          );
+          proms.push(
+            ProjectCost.update(
+              { is_active: false },
+              { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
+            )
+          );
+        }
+      });
     }
-  }
+  }  
   try {
     const results = await Promise.all(proms);
     console.log('results', results);
   } catch (error) {
     console.error(`Error updating ranks: ${error}`);
-  }
+  }  
 };
 
 const updateRank = async (req, res) => {
@@ -276,8 +338,23 @@ const updateRank = async (req, res) => {
               { is_active: false },
               { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
             );
-            // const originSponsors = await getOriginSponsorCosts(board_project_id, getNumberFromRank(otherFields));
-            // const targetSponsors = await getOriginSponsorCosts(board_project_id, columnNumber);
+            const sponsorAndCosponsor = await getOriginSponsor(board_project_id);
+            sponsorAndCosponsor.forEach(async (project_partner_id) => {
+              const originSecCost = await getBoardProjectCostSponsor(board_project_id, getNumberFromRank(otherFields), project_partner_id);
+              const targetSecCost = await getBoardProjectCostSponsor(board_project_id, columnNumber, project_partner_id);
+              if (originSecCost && targetSecCost) {                
+                const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
+                console.log(project_partner_id, originCost.projectCostData.project_cost_id, targetCost.projectCostData.project_cost_id, cost)
+                ProjectCost.update(
+                  { cost: cost },
+                  { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
+                );
+                ProjectCost.update(
+                  { is_active: false },
+                  { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
+                );
+              }
+            });
           }
         }
       }
