@@ -141,7 +141,7 @@ const updateCostNew = async (req, res) => {
   logger.info('get board project cost by id');
   try {
     const { board_project_id } = req.params;
-    const user = {email: req.user};
+    const user = req.user;
     const { amounts, isMaintenance, isWorkPlan } = req.body; // ALL Amounts by sponsor, mhfd funding and cosponsors
     let columnsChangesMHFD = [0];
     const beforeUpdate = await BoardProject.findOne({
@@ -315,6 +315,7 @@ const updateCostNew = async (req, res) => {
           }
           // UPDATE PROJECTCOST WITH ALL NEW VALUES
           console.log('About to update boardproject ranks', updateFields);
+          console.log('\n\n\n\nn *******************EMAIL********* \n ', user.email);
           await BoardProject.update(
             {
               // rank0, req1, req2, req3, req4, req5, year1, year2,
@@ -336,6 +337,7 @@ const updateCostNew = async (req, res) => {
             }
           });
           if (!hasSomeRank) {
+            console.log('\n\n\n\nn *******************EMAIL222********* \n ', user.email);
             await BoardProject.update(
               { rank0: LexoRank.middle().toString(), last_modified_by: user.email },
               { where: { board_project_id } }
