@@ -1193,7 +1193,7 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                       const newProjectCost = await ProjectCost.create({
                         project_id: currentProjectId,
                         cost: prevCostOfSponsor.cost,
-                        code_cost_type_id: WORKPLAN_CODE_COST,
+                        code_cost_type_id: prevCostOfProject.code_cost_type_id,
                         project_partner_id: prevCostOfSponsor.projectPartnerData.project_partner_id,
                         created_by: creator,
                         modified_by: creator,
