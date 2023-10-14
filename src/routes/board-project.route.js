@@ -149,7 +149,8 @@ router.get('/:board_project_id/cost', async (req, res) => {
         model: ProjectCost,
         as: 'projectCostData',
         where: {
-          is_active: true
+          is_active: true,
+          project_id: boardProject.projectData.project_id
         },
         include: [{
           model: ProjectPartner,
@@ -164,7 +165,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         }]
       }],
       where: {
-        board_project_id,
+        //board_project_id,
         req_position: {
           [Op.gt]: 0
         }
