@@ -136,6 +136,9 @@ router.get('/:board_project_id/cost', async (req, res) => {
             'action_status'
           ]
         }]
+      },{
+        model: Board,
+        attributes: ['year']
       }],
       where: {
         board_project_id
@@ -143,11 +146,12 @@ router.get('/:board_project_id/cost', async (req, res) => {
     });
 
     const projectCostValues = await BoardProjectCost.findAll({
-      attributes: ['req_position'],
+      attributes: ['req_position', 'board_project_id'],
       include: [{
         attributes: ['cost', 'project_cost_id', 'project_partner_id', 'code_cost_type_id'],
         model: ProjectCost,
         as: 'projectCostData',
+        required: true,
         where: {
           is_active: true,
           project_id: boardProject.projectData.project_id
@@ -162,6 +166,19 @@ router.get('/:board_project_id/cost', async (req, res) => {
             model: BusinessAssociates,
             as: 'businessAssociateData'
           }]
+        }]
+      },{
+        model: BoardProject,
+        as: 'boardProjectData',
+        attributes: ['board_project_id'],
+        required: true,
+        include: [{
+          model: Board,
+          required: true,
+          attributes: ['year','board_id'],
+          where: {
+            year: boardProject.board.year
+          }
         }]
       }],
       where: {
@@ -257,7 +274,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
       finalAnswer.push(workplanValues);
     }
     console.log('final anws', JSON.stringify(finalAnswer));      
-    return res.status(200).send({amounts: finalAnswer, projectData: boardProject.projectData});
+    return res.status(200).send({projectCostValues,boardProject, amounts: finalAnswer, projectData: boardProject.projectData});
  
   } catch (error) {
     logger.error('ERROR FROM GET COST ' + error);
