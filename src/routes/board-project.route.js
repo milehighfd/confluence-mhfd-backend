@@ -273,6 +273,20 @@ router.get('/:board_project_id/cost', async (req, res) => {
       };
       finalAnswer.push(workplanValues);
     }
+    // init: added to get cost for sponsor in wr and wp 
+    const businessSponsor = allBusinessNamesRelatedToProject.find((abnrp) => abnrp.code_partner_type_id === 11);
+    if (businessSponsor){
+      const bname = businessSponsor.businessAssociateData? businessSponsor.businessAssociateData[0].business_name: null;
+      const workplanValuesForSponsor = {
+        code_cost_type_id: WORK_PLAN_CODE_COST_TYPE_ID,
+        business_associates_id: businessSponsor.businessAssociateData? businessSponsor.businessAssociateData[0].business_associates_id: null,
+        business_name: bname,
+        code_partner_type_id: businessSponsor.code_partner_type_id,
+        values: getReqsValues(groupedData[bname], WORK_PLAN_CODE_COST_TYPE_ID)
+      };
+      finalAnswer.push(workplanValuesForSponsor);
+    }
+    // end: added to get cost for sponsor in wr and wp 
     console.log('final anws', JSON.stringify(finalAnswer));      
     return res.status(200).send({projectCostValues,boardProject, amounts: finalAnswer, projectData: boardProject.projectData});
  
