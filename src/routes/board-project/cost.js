@@ -235,7 +235,17 @@ const updateCostNew = async (req, res) => {
         const offsetMillisecond = 35007;
         let mainModifiedDate = new Date();
         console.log('\n\n\n\n IS WORK PLAN', isWorkPlan, 'FOR ', JSON.stringify(amount), 'cCCC', columnsChanged, '\n\n\n\n');
-        if (amount.code_partner_type_id !== 88 || ( amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22))) {
+        if (
+          (
+            amount.code_partner_type_id === 12
+          ) // NOT MHFD FUNDING
+          ||
+          (
+            amount.code_partner_type_id === 11 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22)
+          )
+          ||
+          ( amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22)) // IF MHFD FUNDING FOR WORK PLAN OR WORK REQUEST
+        ) {
           console.log('Columns changed', columnsChanged, 'with id', currentBusinessAssociatesId , '\n\n\n');
           for (let pos = 0; pos < columnsChanged.length; ++pos) {
             const currentColumn = columnsChanged[pos];

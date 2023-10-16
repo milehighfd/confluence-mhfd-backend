@@ -1147,68 +1147,69 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                     const currentProjectId = bp.project_id;
                     const newBoardProjectId = boardProjectCreated.board_project_id;
                     console.log('new board proejct id', newBoardProjectId);
+                    // INFO: this project cost copy was commented because now workplan and workrequest have independent costs 
                     // get all project costs related to the current project
-                    const prevCostOfProject = await ProjectCost.findAll({
-                      where: {
-                        project_id: currentProjectId,
-                        is_active: true,
-                        code_cost_type_id: 22
-                      },
-                      include: [{
-                        model: ProjectPartner,
-                        as: 'projectPartnerData',
-                        include: [
-                          {
-                            model: CodeProjectPartnerType,
-                            as: 'projectPartnerTypeData'
-                          },
-                          {
-                            model: BusinessAssociates,
-                            as: 'businessAssociateData'
-                          }
-                        ]
-                      }]
-                    });
-                    console.log(prevCostOfProject.length, 'prevcostofproject', JSON.stringify(prevCostOfProject), 'forprojectid', currentProjectId);
-                    // create new projectcosts for the new board project copying values of the previous ones but changing the project_partner_id to the new one
-                    let mainModifiedDate = new Date();
-                    const offsetMillisecond = 35007;
-                    for (let j = 0 ; j < prevCostOfProject.length ; j++) {
-                      console.log('inside for provcostofproject', j, creator);
-                      const prevCostOfSponsor = prevCostOfProject[j];
-                      const lastModifiedDate = moment(mainModifiedDate)
-                      .subtract(offsetMillisecond * j)
-                      .toDate()
-                      // here we are duplicating the previous cost with the same partner but with code cost type of workplan
-                      console.trace(' XXX PROJECTCOST CREATE', currentProjectId, '\n ******** \n', JSON.stringify(prevCostOfSponsor));
-                      const newProjectCost = await ProjectCost.create({
-                        project_id: currentProjectId,
-                        cost: prevCostOfSponsor.cost,
-                        code_cost_type_id: prevCostOfSponsor.code_cost_type_id,
-                        project_partner_id: prevCostOfSponsor.projectPartnerData.project_partner_id,
-                        created_by: creator,
-                        modified_by: creator,
-                        is_active: 1,
-                        last_modified: lastModifiedDate
-                      });
-                      console.log('new project cost created', newProjectCost);
+                    // const prevCostOfProject = await ProjectCost.findAll({
+                    //   where: {
+                    //     project_id: currentProjectId,
+                    //     is_active: true,
+                    //     code_cost_type_id: 22
+                    //   },
+                    //   include: [{
+                    //     model: ProjectPartner,
+                    //     as: 'projectPartnerData',
+                    //     include: [
+                    //       {
+                    //         model: CodeProjectPartnerType,
+                    //         as: 'projectPartnerTypeData'
+                    //       },
+                    //       {
+                    //         model: BusinessAssociates,
+                    //         as: 'businessAssociateData'
+                    //       }
+                    //     ]
+                    //   }]
+                    // });
+                    // console.log(prevCostOfProject.length, 'prevcostofproject', JSON.stringify(prevCostOfProject), 'forprojectid', currentProjectId);
+                    // // create new projectcosts for the new board project copying values of the previous ones but changing the project_partner_id to the new one
+                    // let mainModifiedDate = new Date();
+                    // const offsetMillisecond = 35007;
+                    // for (let j = 0 ; j < prevCostOfProject.length ; j++) {
+                    //   console.log('inside for provcostofproject', j, creator);
+                    //   const prevCostOfSponsor = prevCostOfProject[j];
+                    //   const lastModifiedDate = moment(mainModifiedDate)
+                    //   .subtract(offsetMillisecond * j)
+                    //   .toDate()
+                    //   // here we are duplicating the previous cost with the same partner but with code cost type of workplan
+                    //   console.trace(' XXX PROJECTCOST CREATE', currentProjectId, '\n ******** \n', JSON.stringify(prevCostOfSponsor));
+                    //   const newProjectCost = await ProjectCost.create({
+                    //     project_id: currentProjectId,
+                    //     cost: prevCostOfSponsor.cost,
+                    //     code_cost_type_id: prevCostOfSponsor.code_cost_type_id,
+                    //     project_partner_id: prevCostOfSponsor.projectPartnerData.project_partner_id,
+                    //     created_by: creator,
+                    //     modified_by: creator,
+                    //     is_active: 1,
+                    //     last_modified: lastModifiedDate
+                    //   });
+                    //   console.log('new project cost created', newProjectCost);
 
-                      // select req_position of the previous board project cost where prevcostofsponsor is the project_cost_id
-                      const prevBoardProjectCost = await BoardProjectCost.findOne({
-                        where: {
-                          project_cost_id: prevCostOfSponsor.project_cost_id
-                        }
-                      });
-                      console.log('XXX Creating new relation boardporject-cost', newBoardProjectId, newProjectCost.project_cost_id, prevBoardProjectCost.req_position);
-                      const newBoardProjectCost = await BoardProjectCost.create({
-                        board_project_id: newBoardProjectId,
-                        project_cost_id: newProjectCost.project_cost_id,
-                        created_by: creator,
-                        last_modified_by: creator,
-                        req_position: prevBoardProjectCost.req_position,
-                      });
-                      console.log('new board project cost created', newBoardProjectCost);
-                    }
+                    //   // select req_position of the previous board project cost where prevcostofsponsor is the project_cost_id
+                    //   const prevBoardProjectCost = await BoardProjectCost.findOne({
+                    //     where: {
+                    //       project_cost_id: prevCostOfSponsor.project_cost_id
+                    //     }
+                    //   });
+                    //   console.log('XXX Creating new relation boardporject-cost', newBoardProjectId, newProjectCost.project_cost_id, prevBoardProjectCost.req_position);
+                    //   const newBoardProjectCost = await BoardProjectCost.create({
+                    //     board_project_id: newBoardProjectId,
+                    //     project_cost_id: newProjectCost.project_cost_id,
+                    //     created_by: creator,
+                    //     last_modified_by: creator,
+                    //     req_position: prevBoardProjectCost.req_position,
+                    //   });
+                    //   console.log('new board project cost created', newBoardProjectCost);
+                    // }
 
                     // );
                 }
