@@ -135,6 +135,24 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
   }  
 }
 
+function updateSubmissionDate(board_ids, creator) {
+  const promises = board_ids.map(board_id => {
+    try {
+      return Board.update({
+        submissionDate: moment().format('YYYY-MM-DD HH:mm:ss'),
+        last_modified_by: creator
+      }, {
+        where: {
+          board_id: board_id
+        }
+      });
+    } catch (error) {
+      logger.error(`Error updating submission date for board ${board_id}: ${error}`);
+    }
+  });
+  return Promise.all(promises);
+}
+
 function computeNextLexoRank(lastRank) {
   return LexoRank.parse(lastRank).genNext().toString();
 }
@@ -642,5 +660,6 @@ export default {
   cascadeDelete,
   findProjectPartner,
   getBoardTypeById,
-  updateProjectCostEntries
+  updateProjectCostEntries,
+  updateSubmissionDate
 };
