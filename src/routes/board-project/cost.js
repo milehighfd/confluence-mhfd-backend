@@ -12,38 +12,51 @@ const ProjectCost = db.projectCost;
 const ProjectPartner = db.projectPartner;
 const CodeProjectPartnerType = db.codeProjectPartnerType;
 const BusinessAssociates = db.businessAssociates;
+const Board = db.board;
 const { Op } = sequelize;
-const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
+const getAllPreviousAmounts = async (boardProject, currentProjectId) => {
+  console.trace('GET all PREVIOUS AMOUNTs', JSON.stringify(boardProject));
   const projectCostValues = await BoardProjectCost.findAll({
-    attributes: ['req_position'],
-    include: [
-      {
-        attributes: ['cost', 'project_cost_id', 'project_partner_id', 'code_cost_type_id'],
-        model: ProjectCost,
-        as: 'projectCostData',
+    attributes: ['req_position', 'board_project_id'],
+    include: [{
+      attributes: ['cost', 'project_cost_id', 'project_partner_id', 'code_cost_type_id'],
+      model: ProjectCost,
+      as: 'projectCostData',
+      required: true,
+      where: {
+        is_active: true,
+        project_id: boardProject.project_id
+      },
+      include: [{
+        model: ProjectPartner,
+        as: 'projectPartnerData',
+        include: [{
+          model: CodeProjectPartnerType,
+          as: 'projectPartnerTypeData'
+        }, {
+          model: BusinessAssociates,
+          as: 'businessAssociateData'
+        }]
+      }]
+    },{
+      model: BoardProject,
+      as: 'boardProjectData',
+      attributes: ['board_project_id'],
+      required: true,
+      include: [{
+        model: Board,
+        required: true,
+        attributes: ['year','board_id'],
         where: {
-          is_active: true
-        },
-        include: [
-          {
-            model: ProjectPartner,
-            as: 'projectPartnerData',
-            include: [
-              {
-                model: CodeProjectPartnerType,
-                as: 'projectPartnerTypeData'
-              },
-              {
-                model: BusinessAssociates,
-                as: 'businessAssociateData'
-              }
-            ]
-          }
-        ]
-      }
-    ],
+          year: boardProject.board.year
+        }
+      }]
+    }],
     where: {
-      board_project_id
+      //board_project_id,
+      req_position: {
+        [Op.gt]: 0
+      }
     }
   });
   const returnValues = projectCostValues.map((a) => ({
@@ -104,6 +117,7 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
     return answer;
   });
   const MHFD_CODE_COST_TYPE_ID = 88;
+  const SPONSOR_CODE_COST_TYPE_ID = 11;
   const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
   const WORK_PLAN_CODE_COST_TYPE_ID = 21;
   const allPreviousAmounts = allBNWithPartner.map((bnnp) => {
@@ -111,9 +125,11 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
     const bid = bnnp.business_associates_id;
     const current_code_partner_type_id = bnnp.code_partner_type_id;
     const databyBN = groupedData[bname];
-    let current_code_cost_type_id = databyBN ? databyBN[0].code_cost_type_id: WORK_REQUEST_CODE_COST_TYPE_ID; // ALMOST ALL ARE GOING TO BE 22 WORK REQUEST 
-    if (current_code_partner_type_id == MHFD_CODE_COST_TYPE_ID) {
+    let current_code_cost_type_id; // ALMOST ALL ARE GOING TO BE 22 WORK REQUEST 
+    if (current_code_partner_type_id == MHFD_CODE_COST_TYPE_ID || current_code_partner_type_id == SPONSOR_CODE_COST_TYPE_ID) {
       current_code_cost_type_id = WORK_REQUEST_CODE_COST_TYPE_ID;
+    } else {
+      current_code_cost_type_id = WORK_PLAN_CODE_COST_TYPE_ID;
     }
     return {
       code_cost_type_id: current_code_cost_type_id,
@@ -135,6 +151,18 @@ const getAllPreviousAmounts = async (board_project_id, currentProjectId) => {
     };
     allPreviousAmounts.push(workplanValues);
   }
+  const businessSponsor = allBusinessNamesRelatedToProject.find((abnrp) => abnrp.code_partner_type_id === 11);
+  if (businessSponsor){
+    const bname = businessSponsor.businessAssociateData? businessSponsor.businessAssociateData[0].business_name: null;
+    const workplanValuesForSponsor = {
+      code_cost_type_id: WORK_PLAN_CODE_COST_TYPE_ID,
+      business_associates_id: businessSponsor.businessAssociateData? businessSponsor.businessAssociateData[0].business_associates_id: null,
+      business_name: bname,
+      code_partner_type_id: businessSponsor.code_partner_type_id,
+      values: getReqsValues(groupedData[bname], WORK_PLAN_CODE_COST_TYPE_ID)
+    };
+    finalAnswer.push(workplanValuesForSponsor);
+  }
   return allPreviousAmounts;
 };
 const updateCostNew = async (req, res) => {
@@ -146,14 +174,18 @@ const updateCostNew = async (req, res) => {
     const { amounts, isMaintenance, isWorkPlan } = req.body; // ALL Amounts by sponsor, mhfd funding and cosponsors
     let columnsChangesMHFD = [0];
     const beforeUpdate = await BoardProject.findOne({
-      where: { board_project_id }
+      where: { board_project_id },
+      include:[{
+        model: Board,
+        attributes: ['year']
+      }]
     });
     if (beforeUpdate){
-    console.log('Board project id', board_project_id, beforeUpdate);
+    console.log('Board project id', board_project_id, 'beforeupdate', beforeUpdate);
     const board_id = beforeUpdate.board_id;
     const currentProjectId = beforeUpdate.project_id;
     let statusHasChanged;
-    const allPreviousAmounts = await getAllPreviousAmounts(board_project_id, currentProjectId);
+    const allPreviousAmounts = await getAllPreviousAmounts(beforeUpdate, currentProjectId);
     const currentRanks = await BoardProject.findOne({
       attributes: ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'],
       where: { board_project_id }
@@ -368,7 +400,7 @@ const updateCostNew = async (req, res) => {
           columnsChangesMHFD = (statusHasChanged ? [0, 1, 2, 3, 4, 5] : columnsChanged);
         }
     }
-    const allAmounts = await getAllPreviousAmounts(board_project_id, currentProjectId);
+    const allAmounts = await getAllPreviousAmounts(beforeUpdate, currentProjectId);
     return res.status(200).send({
       ...allAmounts,
       columnsChanged: columnsChangesMHFD,

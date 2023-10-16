@@ -233,6 +233,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         code_partner_type_id: [ 88, 11, 12 ]
       }
     });
+    // THIS FILTER IS TO NOT SAVE ANY DATA FOR MHFD SPONSOR
     const allBNWithPartner = allBusinessNamesRelatedToProject.filter((bname) => !(bname.businessAssociateData[0]?.business_name === 'MHFD' && bname.code_partner_type_id === 11)).map((abnrp) => {
       const answer = {
         business_name: abnrp.businessAssociateData ? abnrp.businessAssociateData[0].business_name: null,
@@ -242,6 +243,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
       return answer;
     });
     const MHFD_CODE_COST_TYPE_ID = 88;
+    const SPONSOR_CODE_COST_TYPE_ID = 11;
     const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
     const WORK_PLAN_CODE_COST_TYPE_ID = 21;
     const finalAnswer = allBNWithPartner.map((bnnp) => {
@@ -249,9 +251,12 @@ router.get('/:board_project_id/cost', async (req, res) => {
       const bid = bnnp.business_associates_id;
       const current_code_partner_type_id = bnnp.code_partner_type_id;
       const databyBN = groupedData[bname];
-      let current_code_cost_type_id = databyBN ? databyBN[0].code_cost_type_id: WORK_REQUEST_CODE_COST_TYPE_ID; // ALMOST ALL ARE GOING TO BE 22 WORK REQUEST 
-      if (current_code_partner_type_id == MHFD_CODE_COST_TYPE_ID) {
+      console.log('data filtered for', bname, 'databybn', databyBN, 'current cost type id', databyBN ? databyBN[0].code_cost_type_id: WORK_REQUEST_CODE_COST_TYPE_ID);
+      let current_code_cost_type_id; // ALMOST ALL ARE GOING TO BE 22 WORK REQUEST 
+      if (current_code_partner_type_id == MHFD_CODE_COST_TYPE_ID || current_code_partner_type_id == SPONSOR_CODE_COST_TYPE_ID) {
         current_code_cost_type_id = WORK_REQUEST_CODE_COST_TYPE_ID;
+      } else {
+        current_code_cost_type_id = WORK_PLAN_CODE_COST_TYPE_ID;
       }
       return {
         code_cost_type_id: current_code_cost_type_id,
