@@ -161,7 +161,7 @@ const getAllPreviousAmounts = async (boardProject, currentProjectId) => {
       code_partner_type_id: businessSponsor.code_partner_type_id,
       values: getReqsValues(groupedData[bname], WORK_PLAN_CODE_COST_TYPE_ID)
     };
-    finalAnswer.push(workplanValuesForSponsor);
+    allPreviousAmounts.push(workplanValuesForSponsor);
   }
   return allPreviousAmounts;
 };
