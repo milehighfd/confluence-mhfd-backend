@@ -593,10 +593,8 @@ router.post('/board-for-positions2', async (req, res) => {
           req_position: position
         }
       });
-      console.log('All this have the mhfd ids ', projectCostValues.map(a => JSON.stringify(a.projectCostData)));
       boardProjects.forEach((boardProject) => {
         const projectCostValue = projectCostValues.find((pcv) => pcv.board_project_id === boardProject.board_project_id);
-        console.log('**********************\n\n ************** \nSEarch for ', boardProject.board_project_id, projectCostValue);
         if (projectCostValue) {
           boardProject[`req${position}`] = projectCostValue.projectCostData.cost;
         }
@@ -606,7 +604,7 @@ router.post('/board-for-positions2', async (req, res) => {
     console.log('boardProjects', boardProjects, boardProjects.length)
     const projects_filtered = await projectService.filterProjectsBy(filters);
     const projectIds = boardProjects.filter(boardProject => projects_filtered.map(p => p.project_id).includes(boardProject.project_id));
-    const lightDetails = await projectService.getLightDetails(projectIds.map(p => p.project_id));
+    const lightDetails = await projectService.getLightDetails(projectIds.map(p => p.project_id));   
     let boardProjectsWithData = projectIds.map((boardProject) => {
       let details = lightDetails.find(d => d.project_id === boardProject.project_id);
       if (details) {
@@ -1345,6 +1343,8 @@ const moveCardsToNextLevel = async (currentBoard, creator) => {
         }
         logger.info(`Sending ${boards.length} to district`);
         await sendBoardProjectsToDistrict(boards, creator);
+        const boardIds = boards.map(board => board.board_id);
+        await boardService.updateSubmissionDate(boardIds, creator);
         logger.info(`Update ${boards.length} as Requested`);
         return {}
     } else if (currentBoard.type === 'WORK_PLAN') {
