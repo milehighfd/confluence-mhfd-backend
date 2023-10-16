@@ -5,9 +5,9 @@ import {
 import { EditCostProjectError } from '../../errors/project.error.js';
 import logger from 'bc/config/logger.js';
 
-export const updateCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, filtered, filterFrontOverheadCosts, transaction) => {
+export const updateCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, filtered, filterFrontOverheadCosts, transaction, isWorkPlan) => {
   try {
-    await setCostActiveToFalse(project_id, transaction);
+    await setCostActiveToFalse(project_id, transaction, isWorkPlan);
     const promises = [];
     //creating aditional cost
     promises.push(saveProjectCost({

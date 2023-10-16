@@ -125,7 +125,7 @@ const parseGeographicInfoAndUpdate = async (body, project_id, user, transaction)
   }
 };
 
-const updateExtraFields = async(type, subtype, body, project_id, transaction, creator) => {
+const updateExtraFields = async(type, subtype, body, project_id, transaction, creator, isWorkPlan) => {
   const {
     additionalcost,
     additionalcostdescription,
@@ -149,7 +149,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         const overheadCostIds = await getOverheadCostIds(transaction);
         const overhead = overheadcost.split(',').slice(1);
         const COST_ID = 4;
-        const costRes = await updateCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, transaction);
+        const costRes = await updateCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, transaction, isWorkPlan);
         answer.costRes = costRes;
         const deletePARes = await deleteProposedAction(project_id, transaction);
         answer.deletePARes = deletePARes;
@@ -302,7 +302,7 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
   const transaction = await db.sequelize.transaction();
   try {    
     const data = await editProjects(body, transaction, type, user.email, subtype, project_id);
-    const { cover, sponsor, cosponsor, projectname } = body;
+    const { cover, sponsor, cosponsor, projectname, isWorkPlan } = body;
     if (cover !== ''){
       await toggleName(cover, project_id, transaction);
     }    
@@ -317,7 +317,7 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
       transaction
     );
     console.log('************* \n\n\n about to call extra fields');
-    const extra_fields = await updateExtraFields(type, subtype, body, project_id, transaction, user.email);
+    const extra_fields = await updateExtraFields(type, subtype, body, project_id, transaction, user.email, isWorkPlan);
     const composeData = { project_update: data, project_attachments, project_partner, boardData, ...geoInfo, ...extra_fields, updateBoardWR};   
     await transaction.commit();
     return composeData;

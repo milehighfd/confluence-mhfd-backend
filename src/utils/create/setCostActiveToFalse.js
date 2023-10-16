@@ -3,8 +3,9 @@ import logger from 'bc/config/logger.js';
 import { Op } from 'sequelize';
 const ProjectCost = db.projectCost;
 
-export const setCostActiveToFalse = async (project_id, transaction = null) => {
+export const setCostActiveToFalse = async (project_id, transaction = null, isWorkPlan) => {
   const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
+  const WORK_PLAN_CODE_COST_TYPE_ID = 22;
   try {
     console.log('***************\n\n************\n About to update alllllll', project_id, '**********************\n\n\n***********\n\n');
     await ProjectCost.update(
@@ -15,7 +16,7 @@ export const setCostActiveToFalse = async (project_id, transaction = null) => {
         where: {
           project_id: project_id,
           is_active: true,
-          code_cost_type_id: {[Op.ne]: WORK_REQUEST_CODE_COST_TYPE_ID}
+          code_cost_type_id: {[Op.notIn]: [WORK_PLAN_CODE_COST_TYPE_ID , WORK_REQUEST_CODE_COST_TYPE_ID]}
         },
         transaction: transaction
       }
