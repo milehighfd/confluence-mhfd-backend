@@ -1677,12 +1677,12 @@ router.post('/send-to-workplan', [auth], async (req, res) => {
         locality,
         projecttype: project_type
       }
-    });
+    }, { transaction });
     let createdBoards = [];
     let targetBoardId;
     if (!MhfdBoard || Object.keys(MhfdBoard).length === 0) {
-      createdBoards = await boardService.createMissingBoards(allRelevantBoards, type, locality, project_type, userData, transaction);      
-      targetBoardId = createdBoards[0].board_id;
+      await transaction.rollback();
+      return res.status(404).send({ error: 'No board found' });
     } else {
       targetBoardId = MhfdBoard.board_id;
     }
@@ -1690,7 +1690,7 @@ router.post('/send-to-workplan', [auth], async (req, res) => {
       where: {
         board_project_id
       }
-    });
+    }, { transaction });
     const updatedRanks = {};
     for (let i = 0; i <= 5; i++) {
       const rankColumnName = `rank${i}`;
@@ -1700,7 +1700,11 @@ router.post('/send-to-workplan', [auth], async (req, res) => {
     const newBoardProject = await BoardProject.create({
       ...boardProject.dataValues,
       board_project_id: undefined,
-      board_id: targetBoardId
+      board_id: targetBoardId,
+      createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+      last_modified_by: userData.email,
+      created_by: userData.email,
     }, { transaction });
     await transaction.commit();
     return res.json({ message: 'Boards created successfully', createdBoards, newBoardProject });
