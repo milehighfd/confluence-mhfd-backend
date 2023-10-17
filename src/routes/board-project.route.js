@@ -103,15 +103,6 @@ router.get('/:board_project_id/cost', async (req, res) => {
   const { board_project_id } = req.params;
   try {
     const boardProject = await BoardProject.findOne({
-      attributes: [
-        // 'req1',
-        // 'req2',
-        // 'req3',
-        // 'req4',
-        // 'req5',
-        'year1',
-        'year2'
-      ],
       include: [{
         model: Project,
         attributes: ['project_id'],
@@ -188,6 +179,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         }
       }
     });
+    console.log('PROJECT COST VALUES', JSON.stringify(projectCostValues));
   const returnValues = projectCostValues.map((a)=> ({
     code_cost_type_id: a.projectCostData?.code_cost_type_id,
     business_associates_id: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData?.projectPartnerData?.businessAssociateData[0].business_associates_id : null,
@@ -212,6 +204,11 @@ router.get('/:board_project_id/cost', async (req, res) => {
       }
     });
     for ( let i = 1 ; i <= 5; ++i) {
+      if (!returnObject['req'+i]) {
+        returnObject['req'+i] = null;
+      }
+    }
+    for (let i = 11 ; i <= 12; ++i) {
       if (!returnObject['req'+i]) {
         returnObject['req'+i] = null;
       }
