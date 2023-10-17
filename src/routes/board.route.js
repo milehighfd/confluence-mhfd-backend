@@ -1102,7 +1102,8 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
             let destinyBoard = await getBoard('WORK_PLAN', 'MHFD District Work Plan', board.year, board.projecttype, creator);
             BoardProject.findAll({
                 where: {
-                    board_id: board.board_id
+                    board_id: board.board_id,
+                    rank0: null
                 }
             }).then((async (boardProjects) => {
                 const originPositionMap = getOriginPositionMap(boardProjects);
@@ -1598,9 +1599,9 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
         const resetReq = {};
         for (let i = 0; i <= 5; i++) {
           resetRanks[`rank${i}`] = null;
-          if (i > 0){
-            resetReq[`req${i}`] = null;
-          }
+          // if (i > 0){
+          //   resetReq[`req${i}`] = null;
+          // }
         }
         const updatedValues = { ...resetRanks, ...created };
         await existingEntry.update(updatedValues, { transaction });
