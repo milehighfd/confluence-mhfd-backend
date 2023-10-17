@@ -89,6 +89,11 @@ const getAllPreviousAmounts = async (boardProject, currentProjectId) => {
         returnObject['req'+i] = null;
       }
     }
+    for (let i = 11 ; i <= 12; ++i) {
+      if (!returnObject['req'+i]) {
+        returnObject['req'+i] = null;
+      }
+    }
     //TODO: add years if needed
     return returnObject;
   }
@@ -170,7 +175,7 @@ const updateCostNew = async (req, res) => {
   
   try {
     const { board_project_id } = req.params;
-    const user = req.user;
+    const user = {email: 'req.user'}; 
     const { amounts, isMaintenance, isWorkPlan } = req.body; // ALL Amounts by sponsor, mhfd funding and cosponsors
     let columnsChangesMHFD = [0];
     const beforeUpdate = await BoardProject.findOne({
@@ -190,6 +195,7 @@ const updateCostNew = async (req, res) => {
       attributes: ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'],
       where: { board_project_id }
     });    
+    console.log('HERE ARE THE REAL NEW AMONTS', amounts);
     for(let i = 0; i < amounts.length; ++i) {
         const amount = amounts[i];
         let updateFields = {};
@@ -307,23 +313,28 @@ const updateCostNew = async (req, res) => {
         }
 
         mainModifiedDate = new Date();
+        console.log('Is Maintenance', isMaintenance);
         // THIS IS FOR MAINTENANCE REVIEW
         if (isMaintenance) {
-          for (let i = 1; i <= 2; ++i) {
-            const valueYearHasChanged = beforeUpdate[`year${i}`] !== req.body[`year${i}`];
+          for (let pos = 11; pos <= 12; ++pos) {
+            const valueYearHasChanged = beforeAmounts.values[`req${pos}`] !== amount.values[`req${pos}`];
+            console.log(valueYearHasChanged, JSON.stringify(beforeAmounts.values) ,'value year', JSON.stringify(amount.values), `req${pos}`);
             if (valueYearHasChanged) {
-              const currentColumn = 0; // due to limit in req position this value is whatever.
-              const currentCost = req.body[`year${i}`] ? req.body[`year${i}`] : 0;
+              const currentColumn = pos;
+              const currentCost = amount.values[`req${pos}`] ?? null;
               allPromises.push(
-                boardService.updateAndCreateProjectCosts(
-                  currentColumn, // year1 = 6, year2 = 7
+                boardService.updateAndCreateProjectCostsForAmounts(
+                  currentColumn,
                   currentCost,
                   currentProjectId,
+                  currentBusinessAssociatesId,
+                  currentPartnerTypeId,
                   user,
                   board_project_id,
                   moment(mainModifiedDate)
-                    .subtract(offsetMillisecond * (i + columnsChanged.length))
-                    .toDate()
+                    .subtract(offsetMillisecond * pos)
+                    .toDate(),
+                  amount.code_cost_type_id
                 )
               );
             }

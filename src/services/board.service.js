@@ -109,8 +109,7 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
       }
     }).then(async () => {
       logger.info('XXX PROJECTS TO BE UPDATED'+ projectsCostsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
-      logger.info("about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
-      const projectCostCreated = await ProjectCost.create({
+      const newProjectCostData = {
         cost: currentCost,
         project_id: currentProjectId,
         code_cost_type_id: CODE_COST_TYPE_ID,
@@ -119,16 +118,19 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
         is_active: 1,
         last_modified: lastModifiedDate,
         project_partner_id: MHFD_Partner.project_partner_id
-      });
-      console.log('PROJECT COST IS CREATED', projectCostCreated);
+      };
+      console.log('NEW PROJECT COST DATA', newProjectCostData);
+      const projectCostCreated = await ProjectCost.create(newProjectCostData);
       const project_cost_id = projectCostCreated.dataValues.project_cost_id;
-      await BoardProjectCost.create({
-          board_project_id: board_project_id,
-          project_cost_id: project_cost_id,
-          req_position: currentColumn,
-          created_by: user.email,
-          last_modified_by: user.email
-      });
+      const newBoardProjectCostData = {
+        board_project_id: board_project_id,
+        project_cost_id: project_cost_id,
+        req_position: currentColumn,
+        created_by: user.email,
+        last_modified_by: user.email
+      };
+      console.log('PROJECT COST IS CREATED', newBoardProjectCostData);
+      await BoardProjectCost.create(newBoardProjectCostData);
     });
   } catch (error) {
     logger.error("ERROR AT PROJECT COST is", error)
@@ -563,7 +565,6 @@ const updateAndCreateProjectCostsForAmounts = async (
     return;
   }
   const PROJECT_PARTNER_ID = currentPartnerTypeId;  /// MHFD 88 SPONSOR 11 COSPONSOR 12
-  const CODE_COST_TYPE_ID = 22; // Work Request Code cost type // TODO: verify which code will be correct 
   const CODE_COST_TYPE_EDITED = 42; // WORK REQUEST EDITED 
   try {
     const project_partner = await ProjectPartner.findOne({

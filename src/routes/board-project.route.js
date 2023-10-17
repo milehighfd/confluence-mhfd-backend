@@ -373,6 +373,6 @@ router.put('/update-target-cost', [authOnlyEmail], async(req,res) => {
 });
 
 router.put('/:board_project_id/update-rank', [auth], updateRank);
-router.put('/:board_project_id/cost',[auth], updateCost); // RESTORE AUTH 
+router.put('/:board_project_id/cost', updateCost); // RESTORE AUTH 
 
 export default router;
