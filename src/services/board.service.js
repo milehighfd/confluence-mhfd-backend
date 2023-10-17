@@ -305,18 +305,6 @@ async function createBoardProjects(allYears, year, type, locality, project_type,
         }
       }
     }
-    const yearEntry = createdBoardProjects.find(entry => +entry.year === +year);
-    if (yearEntry) {
-      const mhfdBoard = await getBoardForYear(+year, 'WORK_PLAN', "MHFD District Work Plan", project_type, transaction);
-      if (mhfdBoard) {
-        const mhfdEntry = {
-          ...yearEntry,
-          origin: "MHFD District Work Plan",
-          board_id: mhfdBoard.board_id
-        };
-        createdBoardProjects.push(mhfdEntry);
-      }
-    }
     return createdBoardProjects;
   } catch (error) {
     console.error("Error creating board projects:", error);
