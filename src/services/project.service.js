@@ -1007,6 +1007,9 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
   const type_idF = type_id ? type_id : [];
   const work_plan_year = filter.workplanyear ? filter.workplanyear : '';
   const show_archived = false;
+  const useSouthPlate = filter.isSouthPlate ? true : false;
+  const isWorkPlan = filter.isWorkPlan ? true : false;
+  const isMHFD = filter.isMHFD ? true : false;
   let projectsSorted = [];
   if (sortby) { 
     projectsSorted = await getSortedProjectsByAttrib(sortby, sorttype);
@@ -1020,6 +1023,23 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
         where : { user_id: favorites },
       }]
     }));
+  }
+  if (isWorkPlan){
+    if (useSouthPlate){
+      conditions.push(Project.findAll({
+        attributes: ["project_id", "code_project_type_id"],
+        where: {
+          is_located_on_south_plate_river: 1
+        }
+      }));
+    }else if (!isMHFD){
+      conditions.push(Project.findAll({
+        attributes: ["project_id", "code_project_type_id"],
+        where: {
+          is_located_on_south_plate_river: 0
+        }
+      }));
+    }    
   }
   if (teams !== '') {
     logger.info(`Filtering by teams ${teams}...`);
