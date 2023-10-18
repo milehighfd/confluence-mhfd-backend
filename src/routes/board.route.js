@@ -1696,8 +1696,15 @@ router.post('/send-to-workplan', [auth], async (req, res) => {
     const updatedRanks = {};
     for (let i = 0; i <= 5; i++) {
       const rankColumnName = `rank${i}`;
-      const nextLexoRankValue = await boardService.getNextLexoRankValue(targetBoardId, rankColumnName);
-      updatedRanks[rankColumnName] = nextLexoRankValue;
+      let lexoRankValue = null;
+      if (i === 0) {
+        console.log('getting prev lexo rank value')
+        lexoRankValue = await boardService.getPrevLexoRankValue(targetBoardId, rankColumnName);
+      } else {
+        console.log('getting next lexo rank value')
+        lexoRankValue = await boardService.getNextLexoRankValue(targetBoardId, rankColumnName);
+      }      
+      updatedRanks[rankColumnName] = lexoRankValue;
     }
     const newBoardProject = await BoardProject.create({
       ...boardProject.dataValues,
@@ -1707,6 +1714,7 @@ router.post('/send-to-workplan', [auth], async (req, res) => {
       updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       last_modified_by: userData.email,
       created_by: userData.email,
+      ...updatedRanks
     }, { transaction });
     await transaction.commit();
     return res.json({ message: 'Boards created successfully', createdBoards, newBoardProject });

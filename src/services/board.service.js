@@ -159,6 +159,10 @@ function computeNextLexoRank(lastRank) {
   return LexoRank.parse(lastRank).genNext().toString();
 }
 
+function computePrevLexoRank(lastRank) {
+  return LexoRank.parse(lastRank).genPrev().toString();
+}
+
 function initialLexoRankValue() {
   return LexoRank.middle().toString();
 }
@@ -317,8 +321,21 @@ async function createBoardProjects(allYears, year, type, locality, project_type,
 async function getNextLexoRankValue(boardId, rankColumnName) {
   const existingBoardProject = await getBoardProjectByBoardId(boardId, rankColumnName);
   if (existingBoardProject && existingBoardProject[rankColumnName]) {
+    console.log(computeNextLexoRank(existingBoardProject[rankColumnName]), 'COMPUTE NEXT LEXO RANK');
     return computeNextLexoRank(existingBoardProject[rankColumnName]);
   } else {
+    console.log(initialLexoRankValue(), 'INITIAL LEXO RANK VALUE');
+    return initialLexoRankValue();
+  }
+}
+
+async function getPrevLexoRankValue(boardId, rankColumnName) {
+  const existingBoardProject = await getFirstBoardProjectById(boardId, rankColumnName);
+  if (existingBoardProject && existingBoardProject[rankColumnName]) {
+    console.log(computePrevLexoRank(existingBoardProject[rankColumnName]), 'COMPUTE PREV LEXO RANK');
+    return computePrevLexoRank(existingBoardProject[rankColumnName]);
+  } else {
+    console.log(initialLexoRankValue(), 'INITIAL LEXO RANK VALUE');
     return initialLexoRankValue();
   }
 }
@@ -359,7 +376,25 @@ async function getBoardProjectByBoardId(board_id, rankColumnName) {
   }
 }
 
-
+async function getFirstBoardProjectById(board_id, rankColumnName) {
+  try {
+    const boardProjectFirst = await BoardProject.findOne({
+      where: {
+        board_id: board_id,
+        [rankColumnName]: {
+          [Op.ne]: null  
+        }
+      },
+      order: [[rankColumnName, 'ASC']], 
+      limit: 1,
+    });
+    console.log('BOARD PROJECT FIRST', boardProjectFirst)
+    return boardProjectFirst;
+  } catch (error) {
+    console.error("Error fetching board project by board ID:", error);
+    throw error;
+  }
+}
 
 async function getBoardForYear(year, type, locality, project_type, transaction) {
   try {
@@ -636,6 +671,7 @@ export default {
   getBoardProjectByBoardId,
   createBoardProjectEntry,
   getNextLexoRankValue,
+  getPrevLexoRankValue,
   createBoardProjects,
   determineMissingYears,
   getRelevantBoards,
