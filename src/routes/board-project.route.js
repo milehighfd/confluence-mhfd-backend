@@ -112,6 +112,15 @@ router.get('/:board_project_id/cost/test', async (req, res) => {
       // datainside: JSON.stringify(a.projectCostData)
     }));
     console.log('\n\n  ********** \n\n Project Cost \n ', returnValues, '\n\n  ********** \n\n');
+    const priorFunding = {};
+    returnValues.forEach((item) => {
+      if(priorFunding[item.business_name]) {
+        priorFunding[item.business_name] += item.cost;
+      } else {
+        priorFunding[item.business_name] = item.cost;
+      }
+    });
+    console.log('Prior funding', priorFunding);
     const previousSponsorRelations = await ProjectCost.findAll({
       where: {
         project_id: board_project_id,
