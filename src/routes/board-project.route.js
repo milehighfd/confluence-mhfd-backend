@@ -21,38 +21,97 @@ const router = express.Router();
 router.get('/:board_project_id/cost/test', async (req, res) => {
   try {
     const { board_project_id } = req.params;
-    // await BoardProjectCost.findAll({
-    //   attributes: ['req_position'],
-    //   include: [
-    //     {
-    //       attributes: ['cost', 'project_cost_id', 'project_partner_id'],
-    //       model: ProjectCost,
-    //       as: 'projectCostData',
-    //       where: {
-    //         is_active: true
-    //       },
-    //       include: [
-    //         {
-    //           model: ProjectPartner,
-    //           as: 'projectPartnerData',
-    //           include: [
-    //             {
-    //               model: CodeProjectPartnerType,
-    //               as: 'projectPartnerTypeData'
-    //             },
-    //             {
-    //               model: BusinessAssociates,
-    //               as: 'businessAssociateData'
-    //             }
-    //           ]
-    //         }
-    //       ]
-    //     }
-    //   ],
-    //   where: {
-    //     board_project_id
-    //   }
-    // });
+    const boardProject = await BoardProject.findOne({
+      include: [{
+        model: Project,
+        attributes: ['project_id'],
+        as: 'projectData',
+        include: [{
+          model: ProjectCost,
+          attributes: ['cost'],
+          as: 'currentCost',
+          required: false,
+          where: {
+            is_active: true
+          },
+        },
+        {
+          model: ProjectIndependentAction,
+          required: false,
+          separate: true,
+          attributes: [
+            'action_name',
+            'project_id',
+            'cost',
+            'action_status'
+          ]
+        }]
+      },{
+        model: Board,
+        attributes: ['year']
+      }],
+      where: {
+        board_project_id
+      }
+    });
+
+    console.log('yeeeeeeear', boardProject.board.year)
+
+    const projectCostValues = await BoardProjectCost.findAll({
+      attributes: ['req_position', 'board_project_id'],
+      include: [{
+        attributes: ['cost', 'project_cost_id', 'project_partner_id', 'code_cost_type_id'],
+        model: ProjectCost,
+        as: 'projectCostData',
+        required: true,
+        where: {
+          is_active: true,
+          project_id: boardProject.projectData.project_id
+        },
+        include: [{
+          model: ProjectPartner,
+          as: 'projectPartnerData',
+          include: [{
+            model: CodeProjectPartnerType,
+            as: 'projectPartnerTypeData'
+          }, {
+            model: BusinessAssociates,
+            as: 'businessAssociateData'
+          }]
+        }]
+      },{
+        model: BoardProject,
+        as: 'boardProjectData',
+        attributes: ['board_project_id'],
+        required: true,
+        include: [{
+          model: Board,
+          required: true,
+          attributes: ['year','board_id'],
+          where: {
+            year: {
+              [Op.lt]: boardProject.board.year
+            }
+          }
+        }]
+      }],
+      where: {
+        //board_project_id,
+        req_position: 1
+      }
+    });
+    console.log('PROJECT COST VALUES', JSON.stringify(projectCostValues));
+    const returnValues = projectCostValues.map((a)=> ({
+      year: a.boardProjectData?.board?.year,
+      code_cost_type_id: a.projectCostData?.code_cost_type_id,
+      business_associates_id: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData?.projectPartnerData?.businessAssociateData[0].business_associates_id : null,
+      business_name: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData?.projectPartnerData?.businessAssociateData[0].business_name : null,
+      code_partner_type_id: a.projectCostData?.projectPartnerData?.projectPartnerTypeData.code_partner_type_id,
+      pos: a.req_position,
+      cost: a.projectCostData.cost,
+      // datainside: JSON.stringify(a.projectCostData)
+    }));
+    console.log('\n\n  ********** \n\n Project Cost \n ', returnValues, '\n\n  ********** \n\n');
     const previousSponsorRelations = await ProjectCost.findAll({
       where: {
         project_id: board_project_id,
