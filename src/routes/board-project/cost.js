@@ -175,7 +175,7 @@ const updateCostNew = async (req, res) => {
   
   try {
     const { board_project_id } = req.params;
-    const user = {email: 'req.user'}; 
+    const user = req.user; 
     const { amounts, isMaintenance, isWorkPlan } = req.body; // ALL Amounts by sponsor, mhfd funding and cosponsors
     let columnsChangesMHFD = [0];
     const beforeUpdate = await BoardProject.findOne({
