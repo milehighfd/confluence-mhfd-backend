@@ -1706,6 +1706,11 @@ router.post('/send-to-workplan', [auth], async (req, res) => {
       }      
       updatedRanks[rankColumnName] = lexoRankValue;
     }
+    for (let key in updatedRanks) {
+      if (boardProject[key] !== null) {
+        boardProject[key] = updatedRanks[key];
+      }
+    }
     const newBoardProject = await BoardProject.create({
       ...boardProject.dataValues,
       board_project_id: undefined,
@@ -1713,8 +1718,7 @@ router.post('/send-to-workplan', [auth], async (req, res) => {
       createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       last_modified_by: userData.email,
-      created_by: userData.email,
-      ...updatedRanks
+      created_by: userData.email
     }, { transaction });
     await transaction.commit();
     return res.json({ message: 'Boards created successfully', createdBoards, newBoardProject });
