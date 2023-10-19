@@ -579,7 +579,8 @@ const updateAndCreateProjectCostsForAmounts = async (
   user,
   board_project_id,
   lastModifiedDate,
-  codeCostTypeId
+  codeCostTypeId,
+  isWorkPlan
 ) => {
   console.log('Update And Create Cost ');
   const countOriginalProject = await Project.count({ where: { project_id: currentProjectId } });
@@ -588,7 +589,8 @@ const updateAndCreateProjectCostsForAmounts = async (
     return;
   }
   const PROJECT_PARTNER_ID = currentPartnerTypeId;  /// MHFD 88 SPONSOR 11 COSPONSOR 12
-  const CODE_COST_TYPE_EDITED = 42; // WORK REQUEST EDITED 
+  const WR_CODE_COST_TYPE_EDITED = 42; // WORK REQUEST EDITED 
+  const WP_CODE_COST_TYPE_EDITED = 41;
   try {
     const project_partner = await ProjectPartner.findOne({
       where: {
@@ -619,7 +621,7 @@ const updateAndCreateProjectCostsForAmounts = async (
     // DESACTIVAR LOS ANTERIORES PROJECT COSTS
     ProjectCost.update({
       is_active: 0,
-      code_cost_type_id: CODE_COST_TYPE_EDITED
+      code_cost_type_id: isWorkPlan? WP_CODE_COST_TYPE_EDITED: WR_CODE_COST_TYPE_EDITED
     }, {
       where: {
         project_cost_id: { [Op.in]: projectsCostsIdsToUpdate } // we need to get the projectcost olds 

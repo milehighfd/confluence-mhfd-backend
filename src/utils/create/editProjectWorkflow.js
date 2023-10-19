@@ -314,7 +314,8 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
       sponsor,
       cosponsor,
       project_id,
-      transaction
+      transaction,
+      isWorkPlan
     );
     console.log('************* \n\n\n about to call extra fields');
     const extra_fields = await updateExtraFields(type, subtype, body, project_id, transaction, user.email, isWorkPlan);
