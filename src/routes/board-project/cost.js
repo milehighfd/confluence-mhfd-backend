@@ -222,8 +222,10 @@ const updateCostNew = async (req, res) => {
             const reqColumnName = `req${pos}`;
             const rankColumnName = `rank${pos}`;
             const currentReqAmount = amount.values[reqColumnName] ?? null;
-            const valueHasChanged = currentReqAmount === null ? true : beforeAmounts.values[reqColumnName] !== currentReqAmount;
+            // const valueHasChanged = (currentReqAmount === null) ? true : beforeAmounts.values[reqColumnName] !== currentReqAmount;
+            const valueHasChanged = beforeAmounts.values[reqColumnName] !== currentReqAmount;
             if (valueHasChanged) {
+              console.log(' ========== 1 adding pos', pos, valueHasChanged, currentReqAmount, beforeAmounts.values[reqColumnName]);
               columnsChanged.push(pos);
               allCurrentAmounts[reqColumnName] = currentReqAmount;
             } else {
@@ -261,6 +263,7 @@ const updateCostNew = async (req, res) => {
             const reqColumnName = `req${pos}`;
             const valueHasChanged = beforeAmounts.values[reqColumnName] !== amount.values[reqColumnName];
             if (valueHasChanged) {
+              console.log(' ========== adding pos', pos, valueHasChanged, amount.values[reqColumnName], beforeAmounts.values[reqColumnName]);
               columnsChanged.push(pos);
               allCurrentAmounts[reqColumnName] = amount.values[reqColumnName];
             } else {
@@ -268,11 +271,11 @@ const updateCostNew = async (req, res) => {
             }
           }
         }
-  
+        console.log('\n\n ________ \n ------------- \n columnsChanged', columnsChanged);
         const allPromises = [];
         const offsetMillisecond = 35007;
         let mainModifiedDate = new Date();
-        console.log('\n\n\n\n IS WORK PLAN', isWorkPlan, 'FOR ', JSON.stringify(amount), 'cCCC', columnsChanged, '\n\n\n\n');
+        
         if (
           (
             amount.code_partner_type_id === 12
@@ -284,7 +287,7 @@ const updateCostNew = async (req, res) => {
           ||
           ( amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22)) // IF MHFD FUNDING FOR WORK PLAN OR WORK REQUEST
         ) {
-          console.log('Columns changed', columnsChanged, 'with id', currentBusinessAssociatesId , '\n\n\n');
+          console.log(' ------------- \nColumns changed', columnsChanged, 'with id', currentBusinessAssociatesId , '\n\n\n');
           for (let pos = 0; pos < columnsChanged.length; ++pos) {
             const currentColumn = columnsChanged[pos];
             if (currentColumn !== 0) {
@@ -316,6 +319,7 @@ const updateCostNew = async (req, res) => {
         console.log('Is Maintenance', isMaintenance);
         // THIS IS FOR MAINTENANCE REVIEW
         if (isMaintenance) {
+          console.log('------------- \n Maintenance', columnsChanged);
           for (let pos = 11; pos <= 12; ++pos) {
             const valueYearHasChanged = beforeAmounts.values[`req${pos}`] !== amount.values[`req${pos}`];
             console.log(valueYearHasChanged, JSON.stringify(beforeAmounts.values) ,'value year', JSON.stringify(amount.values), `req${pos}`);
@@ -368,8 +372,6 @@ const updateCostNew = async (req, res) => {
             }
           }
           // UPDATE PROJECTCOST WITH ALL NEW VALUES
-          console.log('About to update boardproject ranks', updateFields);
-          console.log('\n\n\n\nn *******************EMAIL********* \n ', user.email);
           await BoardProject.update(
             {
               // rank0, req1, req2, req3, req4, req5, year1, year2,
@@ -391,7 +393,6 @@ const updateCostNew = async (req, res) => {
             }
           });
           if (!hasSomeRank) {
-            console.log('\n\n\n\nn *******************EMAIL222********* \n ', user.email);
             await BoardProject.update(
               { rank0: LexoRank.middle().toString(), last_modified_by: user.email },
               { where: { board_project_id } }
@@ -408,9 +409,11 @@ const updateCostNew = async (req, res) => {
           );
         }
         if (( amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22))) {
+          console.log(' ---------- ==- ---------------\n', columnsChanged, 'status has changed', statusHasChanged, '\n\n\n');
           columnsChangesMHFD = (statusHasChanged ? [0, 1, 2, 3, 4, 5] : columnsChanged);
         }
     }
+    console.log('------------- \n Columns changes final', columnsChangesMHFD);
     const allAmounts = await getAllPreviousAmounts(beforeUpdate, currentProjectId);
     return res.status(200).send({
       ...allAmounts,

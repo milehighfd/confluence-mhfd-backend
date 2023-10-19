@@ -597,11 +597,6 @@ const updateAndCreateProjectCostsForAmounts = async (
         business_associates_id: currentBusinessAssociatesId
       }
     });
-    console.log('\n\n project partner at projectcost for amounts', project_partner, 'with body', {
-      project_id: currentProjectId,
-      code_partner_type_id: PROJECT_PARTNER_ID,
-      business_associates_id: currentBusinessAssociatesId
-    }, '\n\n');
     const currentBoardProjectCosts = await BoardProjectCost.findAll({
       include: [{
         model: ProjectCost,
@@ -620,10 +615,8 @@ const updateAndCreateProjectCostsForAmounts = async (
         req_position: currentColumn
       }
     });
-    console.log(codeCostTypeId, 'IS THIS EMPTY? ->', currentBoardProjectCosts, 'Getting board by', board_project_id, currentColumn);
     const projectsCostsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
     // DESACTIVAR LOS ANTERIORES PROJECT COSTS
-    console.trace('HERE IS with this projectcosts', projectsCostsIdsToUpdate );
     ProjectCost.update({
       is_active: 0,
       code_cost_type_id: CODE_COST_TYPE_EDITED
@@ -632,7 +625,6 @@ const updateAndCreateProjectCostsForAmounts = async (
         project_cost_id: { [Op.in]: projectsCostsIdsToUpdate } // we need to get the projectcost olds 
       }
     }).then(async () => {
-      logger.info('\n\n\n\n\n ************************ \n PROJECTS TO BE UPDATED'+ projectsCostsIdsToUpdate + ' <- \n\n current PROJECT ID TO INSERT' + currentProjectId);
       if (currentCost) {
         const projectCostCreated = await ProjectCost.create({
           cost: currentCost,
