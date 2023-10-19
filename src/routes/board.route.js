@@ -577,7 +577,6 @@ router.post('/board-for-positions2', async (req, res) => {
       
       const WORK_PLAN_CODE_COST_TYPE_ID = 21;
       const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
-      console.log(isWorkPlan ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID, ' MMMMMMMMMMM \n MHF IDS \n', Mhfd_ids, '\n projectIds', projectIds, '\n\n\n', boardProjectIds, '\n\n\n');
       const projectCostValues = await BoardProjectCost.findAll({
         attributes: ['req_position', 'board_project_id'],
         include: [{
@@ -595,7 +594,6 @@ router.post('/board-for-positions2', async (req, res) => {
           req_position: position
         }
       });
-      console.log(' ==== \n boardprojects', JSON.stringify(boardProjects), '\n\n\n projectCostValue', JSON.stringify(projectCostValues), '\nxxxxxx');
       boardProjects.forEach((boardProject) => {
         const projectCostValue = projectCostValues.find((pcv) => pcv.board_project_id === boardProject.board_project_id);
         if (projectCostValue) {
@@ -604,7 +602,6 @@ router.post('/board-for-positions2', async (req, res) => {
       });
     }
 
-    console.log(' ------ \n boardProjects', boardProjects, boardProjects.length)
     const projects_filtered = await projectService.filterProjectsBy(filters);
     const projectIds = boardProjects.filter(boardProject => projects_filtered.map(p => p.project_id).includes(boardProject.project_id));
     const lightDetails = await projectService.getLightDetails(projectIds.map(p => p.project_id));   
@@ -813,8 +810,6 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
   });
   for (let i = 0 ; i < boardProjects.length ; i++) {
     const boardProject = boardProjects[i];
-    console.log('boardProject');
-    console.log(boardProject);
     //TODO EDIT AMOUNT: ONLY GETS SPONSOR PARTNER. SHOULD BE MHFD NOW? 
     const partner = await ProjectPartner.findOne({
       attributes: ['business_associates_id'],
