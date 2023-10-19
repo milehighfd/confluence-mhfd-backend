@@ -204,7 +204,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         board_project_id
       }
     });
-
+    console.log('______ \n Board PRoject found', JSON.stringify(boardProject), '\n______');
     const projectCostValues = await BoardProjectCost.findAll({
       attributes: ['req_position', 'board_project_id'],
       include: [{
@@ -248,7 +248,6 @@ router.get('/:board_project_id/cost', async (req, res) => {
         }
       }
     });
-    console.log('PROJECT COST VALUES', JSON.stringify(projectCostValues));
   const priorFunding = await getPriorFunding(boardProject);
   const returnValues = projectCostValues.map((a)=> ({
     code_cost_type_id: a.projectCostData?.code_cost_type_id,

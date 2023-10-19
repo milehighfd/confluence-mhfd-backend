@@ -305,7 +305,8 @@ const updateCostNew = async (req, res) => {
                   moment(mainModifiedDate)
                     .subtract(offsetMillisecond * pos)
                     .toDate(),
-                  amount.code_cost_type_id
+                  amount.code_cost_type_id,
+                  isWorkPlan
                 )
               );
             }
@@ -334,7 +335,8 @@ const updateCostNew = async (req, res) => {
                   moment(mainModifiedDate)
                     .subtract(offsetMillisecond * pos)
                     .toDate(),
-                  amount.code_cost_type_id
+                  amount.code_cost_type_id,
+                  isWorkPlan
                 )
               );
             }
