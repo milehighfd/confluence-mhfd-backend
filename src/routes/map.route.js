@@ -426,7 +426,6 @@ async function getEnvelopeProblemsComponentsAndProject(id, table, field, activet
   logger.info(`Starting function newProm1 for map.route/get-aoi-from-center`);
   const dataInFunction = await newProm1;
   logger.info(`Finished function newProm1 for map.route/get-aoi-from-center`);
-  console.log('entraaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', dataInFunction);
   return dataInFunction;
 }
 
@@ -597,7 +596,6 @@ router.get('/bbox-components', async (req, res) => {
       maxLng = +coords[3];
     }
   }
-
   let selfCentroid = {
     component: 'self',
     centroid: [(minLat + maxLat) / 2, (minLng + maxLng) / 2]
@@ -606,7 +604,7 @@ router.get('/bbox-components', async (req, res) => {
   if (table === MAIN_PROJECT_TABLE) {
     const queryProjectLine = {
       q: [table].map(t => 
-        `SELECT ST_AsGeoJSON(the_geom) as geojson from ${t} where projectid = ${id}`
+        `SELECT ST_AsGeoJSON(ST_LineInterpolatePoint(ST_LineMerge(the_geom), 0.5)) as geojson from ${t} where projectid = ${id}`
       ).join(' union ')
     }
     logger.info(`Starting function needle for map.route/bbox-components`);
@@ -614,25 +612,19 @@ router.get('/bbox-components', async (req, res) => {
     logger.info(`Finished function needle for map.route/bbox-components`);
     let r = dataProjectLine.body.rows[0];
     let geojson = r? JSON.parse(r.geojson) : '';
-    let projectCenter = [0, 0];
-    if (geojson.type === 'MultiLineString') {
-      if (geojson.coordinates[0].length > 0) {
-        let len = geojson.coordinates[0].length;
-        let mid = Math.floor(len / 2);
-        projectCenter = geojson.coordinates[0][mid];
-      }
+    let projectCenter = selfCentroid.centroid;
+    if (geojson.type === 'Point') {
+      projectCenter = geojson.coordinates;
     }
     selfCentroid = {
       component: 'self',
       centroid: projectCenter
     }
-
   let SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom2, ST_AsGeoJSON(the_geom) as the_geom3 FROM ${table} where  projectid=${id} `;
   let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   logger.info(`Starting function needle for map.route/bbox-components`);
   const dataForBBOX = await needle('get', URL, { json: true });
   logger.info(`Finished function needle for map.route/bbox-components`);
-  console.log("\n\n\n\nSQL\n\n\n\n", SQL);
   let coordinatesForBBOX = [];
   if (dataForBBOX.statusCode === 200 && dataForBBOX.body.rows.length > 0) {
     const result = dataForBBOX.body.rows[0];
