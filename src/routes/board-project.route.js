@@ -6,6 +6,7 @@ import updateRank from 'bc/routes/board-project/update-rank.js';
 import updateCost from 'bc/routes/board-project/cost.js';
 import authOnlyEmail from 'bc/auth/auth-only-email.js';
 import { Op } from 'sequelize';
+import getPriorFunding from 'bc/routes/board-project/priorFunding.js';
 const Board = db.board;
 const BoardProject = db.boardProject;
 const BoardProjectCost = db.boardProjectCost;
@@ -203,7 +204,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         board_project_id
       }
     });
-
+    console.log('______ \n Board PRoject found', JSON.stringify(boardProject), '\n______');
     const projectCostValues = await BoardProjectCost.findAll({
       attributes: ['req_position', 'board_project_id'],
       include: [{
@@ -247,7 +248,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         }
       }
     });
-    console.log('PROJECT COST VALUES', JSON.stringify(projectCostValues));
+  const priorFunding = await getPriorFunding(boardProject);
   const returnValues = projectCostValues.map((a)=> ({
     code_cost_type_id: a.projectCostData?.code_cost_type_id,
     business_associates_id: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData?.projectPartnerData?.businessAssociateData[0].business_associates_id : null,
@@ -263,8 +264,14 @@ router.get('/:board_project_id/cost', async (req, res) => {
     (x[y.business_name] = x[y.business_name] || []).push(y);
     return x;
   }, {});
-  const getReqsValues = (currentValues, code_cost_type_id) => {
+  const getReqsValues = (currentValues, code_cost_type_id, business_name, priorFunding) => {
+
     const returnObject = {};
+    priorFunding.forEach((pf) => {
+      if (pf.business_name == business_name) {
+        returnObject['priorFunding'] = pf.cost;
+      }
+    })
     currentValues?.forEach((v) => {
       const stringPos = 'req'+v.pos;
       if (v.code_cost_type_id == code_cost_type_id) {
@@ -328,7 +335,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         business_associates_id: bid,
         business_name: bname,
         code_partner_type_id: current_code_partner_type_id,
-        values: getReqsValues(databyBN, current_code_cost_type_id)
+        values: getReqsValues(databyBN, current_code_cost_type_id,bname,priorFunding)
       }
     });
     const businessMhfd = allBusinessNamesRelatedToProject.find((abnrp) => abnrp.code_partner_type_id === 88);
@@ -339,7 +346,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         business_associates_id: businessMhfd.businessAssociateData? businessMhfd.businessAssociateData[0].business_associates_id: null,
         business_name: bname,
         code_partner_type_id: businessMhfd.code_partner_type_id,
-        values: getReqsValues(groupedData[bname], WORK_PLAN_CODE_COST_TYPE_ID)
+        values: getReqsValues(groupedData[bname], WORK_PLAN_CODE_COST_TYPE_ID,bname,priorFunding)
       };
       finalAnswer.push(workplanValues);
     }
@@ -352,7 +359,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         business_associates_id: businessSponsor.businessAssociateData? businessSponsor.businessAssociateData[0].business_associates_id: null,
         business_name: bname,
         code_partner_type_id: businessSponsor.code_partner_type_id,
-        values: getReqsValues(groupedData[bname], WORK_PLAN_CODE_COST_TYPE_ID)
+        values: getReqsValues(groupedData[bname], WORK_PLAN_CODE_COST_TYPE_ID,bname,priorFunding)
       };
       finalAnswer.push(workplanValuesForSponsor);
     }

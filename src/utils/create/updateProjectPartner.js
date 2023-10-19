@@ -14,7 +14,8 @@ export const updateProjectPartner = async (
   sponsor, 
   cosponsor,
   project_id,
-  transaction
+  transaction,
+  isWorkPlan
 ) => {
   logger.info('create ProjectPartner updateProjectPartner ');
   try {
@@ -64,6 +65,7 @@ export const updateProjectPartner = async (
       // compare all partners to match 11 with sponsor and 12 with cosponsor then delete the ones that are not in there  168938
       console.log(sponsor, cosponsor, 'proejct Partners', JSON.stringify(projectPartners));
       const WORK_REQUEST_EDITED = 42;
+      const WORK_PLAN_EDITED = 41;
       let sponsorDeleted = false;
       for (let i = 0; i < projectPartners.length; i++) {
         const currentPP = projectPartners[i];
@@ -72,7 +74,7 @@ export const updateProjectPartner = async (
           if (currentBusinessData?.business_name !== sponsor) {
             await ProjectCost.update({
               is_active: false,
-              code_cost_type_id: WORK_REQUEST_EDITED
+              code_cost_type_id: isWorkPlan? WORK_PLAN_EDITED: WORK_REQUEST_EDITED
             }, {
               where: {
                 project_partner_id: currentPP.project_partner_id
