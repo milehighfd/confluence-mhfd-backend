@@ -3,6 +3,8 @@ import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import auth from 'bc/auth/auth.js';
 import moment from 'moment';
+import sequelize from 'sequelize';
+const { Op } = sequelize;
 
 const BusinessContact = db.businessAssociateContact;
 const BusinessAdress = db.businessAdress;
@@ -227,10 +229,14 @@ router.get('/', async (req, res) => {
 router.get('/sponsor-list', async (req, res) => {
   logger.info(`Starting endpoint business.route/ with params ${JSON.stringify(req.params, null, 2)}`);
   const SPONSOR_CODES = [3, 6];
+  const CHERRY_CREEK_BASIN_AUTHORITY = 'Cherry Creek Basin Authority';
   const associates = await BusinessAssociates.findAll({
     attributes: ['business_associates_id', 'business_name'],
     where: {
-      code_business_associates_type_id: SPONSOR_CODES
+      [Op.or]: [
+        { code_business_associates_type_id: SPONSOR_CODES },
+        { business_name: CHERRY_CREEK_BASIN_AUTHORITY }
+      ]
     },
     order: [['business_name', 'ASC']]
   });
