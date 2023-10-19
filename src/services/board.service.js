@@ -598,7 +598,6 @@ const updateAndCreateProjectCostsForAmounts = async (
       }
     }).then(async () => {
       logger.info('\n\n\n\n\n ************************ \n PROJECTS TO BE UPDATED'+ projectsCostsIdsToUpdate + ' <- \n\n current PROJECT ID TO INSERT' + currentProjectId);
-      logger.info("XXX about to create project cost  "+ currentCost+" project id "+ currentProjectId + " created_by "+ user.email);
       if (currentCost) {
         const projectCostCreated = await ProjectCost.create({
           cost: currentCost,
