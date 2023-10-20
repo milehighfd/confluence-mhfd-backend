@@ -12,6 +12,7 @@ const BusinessAssociates = db.businessAssociates;
 
 const getPriorFunding = async (boardProject) => {
     logger.info('init function getPriorFunding');
+    const MHFDWorkPlan = 'MHFD District Work Plan';
     const projectCostValues = await BoardProjectCost.findAll({
       attributes: ['req_position', 'board_project_id'],
       include: [{
@@ -45,6 +46,7 @@ const getPriorFunding = async (boardProject) => {
           required: true,
           attributes: ['year','board_id'],
           where: {
+            locality: MHFDWorkPlan,
             year: {
               [Op.lt]: boardProject.board.year
             }
@@ -55,7 +57,6 @@ const getPriorFunding = async (boardProject) => {
         req_position: 1
       }
     });
-    console.log('projectCostValuessss' ,JSON.stringify(projectCostValues));
     const returnValues = projectCostValues.map((a)=> ({
       code_cost_type_id: a.projectCostData?.code_cost_type_id,
       business_associates_id: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData?.projectPartnerData?.businessAssociateData[0].business_associates_id : null,
@@ -64,7 +65,6 @@ const getPriorFunding = async (boardProject) => {
       pos: a.req_position,
       cost: a.projectCostData.cost,
     }));
-    console.log('returnValuesssss' ,returnValues);
     const priorFunding = Object.values(returnValues.reduce((accumulator, item) => {
       const { business_name, cost, ...rest } = item;
       const key = business_name;
@@ -75,7 +75,6 @@ const getPriorFunding = async (boardProject) => {
       }
       return accumulator;
     }, {}));
-    console.log('priorFundinggg' ,priorFunding);
     
     return priorFunding;
 
