@@ -1603,12 +1603,8 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
       });    
       if (existingEntry) {
         const resetRanks = {};
-        const resetReq = {};
         for (let i = 0; i <= 5; i++) {
           resetRanks[`rank${i}`] = null;
-          // if (i > 0){
-          //   resetReq[`req${i}`] = null;
-          // }
         }
         const updatedValues = { ...resetRanks, ...created };
         await existingEntry.update(updatedValues, { transaction });
@@ -1637,7 +1633,7 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
         }
       }
     }
-    boardService.updateProjectCostEntries(project_id, userData, transaction)
+    await boardService.updateProjectCostEntries(project_id, userData, transaction)
     const createdProjectCosts = await boardService.createAllProjectCosts(projectCostsToCreate, transaction);
     const createdProjectCostIds = createdProjectCosts.map(entry => entry.project_cost_id);
     let index = 0;
@@ -1653,7 +1649,7 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
       }
     }
     await boardService.createAllBoardProjectsCost(boardProjectsCostsToConstruct, transaction);
-    await boardService.cascadeDelete(project_id, createdBoardProjects, type, startYear, locality, project_type, transaction);
+    //await boardService.cascadeDelete(project_id, createdBoardProjects, type, startYear, locality, project_type, transaction);
     await transaction.commit();
     res.send({
       createdBoardProjects: createdBoardProjectsArray,
