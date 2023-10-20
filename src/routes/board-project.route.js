@@ -374,7 +374,9 @@ router.get('/:board_project_id/cost', async (req, res) => {
 });
 
 router.post('/getCostsMaintenance', async (req, res) => {
-  const { board_project_id } = req.body;
+  const { board_project_id, isWorkPlan } = req.body;
+  const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
+  const WORK_PLAN_CODE_COST_TYPE_ID = 21;
   try {
     // const boardProject = await BoardProject.findAll({
     //   attributes: [
@@ -440,7 +442,8 @@ router.post('/getCostsMaintenance', async (req, res) => {
         required: true,
         where: {
           is_active: true,
-          project_id: projectsIds
+          project_id: projectsIds,
+          code_cost_type_id: isWorkPlan ? WORK_PLAN_CODE_COST_TYPE_ID : WORK_REQUEST_CODE_COST_TYPE_ID
         },
         include: [{
           model: ProjectPartner,
