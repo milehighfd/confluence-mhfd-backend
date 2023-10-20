@@ -607,19 +607,24 @@ router.get('/bbox-components', async (req, res) => {
         `SELECT ST_AsGeoJSON(ST_LineInterpolatePoint(ST_LineMerge(the_geom), 0.5)) as geojson from ${t} where projectid = ${id}`
       ).join(' union ')
     }
-    logger.info(`Starting function needle for map.route/bbox-components`);
+    logger.info(`Starting function needle for map.route/bbox-components` + JSON.stringify(queryProjectLine));
     const dataProjectLine = await needle('post', CARTO_URL, queryProjectLine, { json: true });
     logger.info(`Finished function needle for map.route/bbox-components`);
-    let r = dataProjectLine.body.rows[0];
-    let geojson = r? JSON.parse(r.geojson) : '';
-    let projectCenter = selfCentroid.centroid;
-    if (geojson.type === 'Point') {
-      projectCenter = geojson.coordinates;
+    if (dataProjectLine.body.rows) {
+      let r = dataProjectLine.body.rows[0];
+      let geojson = r? JSON.parse(r.geojson) : '';
+      let projectCenter = selfCentroid.centroid;
+      if (geojson.type === 'Point') {
+        projectCenter = geojson.coordinates;
+      }
+      selfCentroid = {
+        component: 'self',
+        centroid: projectCenter
+      }
+    } else {
+      logger.error('No data geom for:' + JSON.stringify(queryProjectLine) + ' ' + JSON.stringify(dataProjectLine.body));
     }
-    selfCentroid = {
-      component: 'self',
-      centroid: projectCenter
-    }
+    
   let SQL = `SELECT *, ST_AsGeoJSON(ST_Envelope(the_geom)) as the_geom2, ST_AsGeoJSON(the_geom) as the_geom3 FROM ${table} where  projectid=${id} `;
   let URL = encodeURI(`${CARTO_URL}&q=${SQL}`);
   logger.info(`Starting function needle for map.route/bbox-components`);
