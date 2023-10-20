@@ -651,9 +651,66 @@ const updateAndCreateProjectCostsForAmounts = async (
     });
   } catch (error) {
     logger.error("ERROR AT PROJECT COST is", error)
-  }
-  
+  }  
 }
+
+const updateBoards = async (board, status, comment, substatus, creator) => {
+  logger.info('Updating all boards different project type');
+  let projectTypes = [
+    'Capital',
+    'Maintenance',
+    'Study',
+    'Acquisition',
+    board.year < 2024 ? 'Special' : 'R&D'
+  ];
+  logger.info(`Starting function findOne for board/`);
+  for (const projectType of projectTypes) {
+    logger.info(`Project type ${projectType}`);
+    let body = {
+      type: board.type,
+      year: board.year,
+      locality: board.locality,
+      projecttype: projectType
+    };
+    let boards = await Board.findAll({
+      where: body
+    });
+    if (boards.length === 0) {
+      logger.info(`Creating new board for ${projectType}`);
+      await createNewBoard(
+        board.type,
+        board.year,
+        board.locality,
+        projectType,
+        status,
+        creator,
+        comment,
+        substatus
+      );
+    } else {
+      // When it reaches here? in what context?
+      for (let i = 0 ; i < boards.length ; i++) {
+        let board = boards[i];
+        if (status === 'Approved' && board.status !== status) {
+          body['submissionDate'] = new Date();
+        }
+        logger.info('Updating board');
+        let newFields = {
+          status,
+          comment,
+          substatus,
+          last_modified_by: creator,
+        };
+        if (status === 'Approved' && board.status !== status) {
+            newFields['submissionDate'] = new Date();
+        }
+        await board.update(newFields)
+      }
+    }
+  }
+  logger.info(`Finished function findOne for board/`);
+}
+
 export default {
   createNewBoard,
   reCalculateColumn,
@@ -679,5 +736,6 @@ export default {
   findProjectPartner,
   getBoardTypeById,
   updateProjectCostEntries,
-  updateSubmissionDate
+  updateSubmissionDate,
+  updateBoards
 };

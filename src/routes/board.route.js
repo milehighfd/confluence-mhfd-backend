@@ -799,6 +799,7 @@ const getBoard = async (type, locality, year, projecttype, creator) => {
 }
 
 const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
+  try{  
   console.log('moveBoardProjectsToNewYear')
   console.log(newYear)
   await Configuration.update({
@@ -888,27 +889,92 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
       // if it has values for years
       newBoardProjectParams = {
         ...newBoardProjectParams,
-
         rank1: boardProject.rank2,
-        req1: boardProject.req2,
-  
+        req1: boardProject.req2,  
         rank2: boardProject.rank3,
-        req2: boardProject.req3,
-  
+        req2: boardProject.req3,  
         rank3: boardProject.rank4,
-        req3: boardProject.req4,
-  
+        req3: boardProject.req4,  
         rank4: boardProject.rank5,
         req4: boardProject.req5,
         rank5: null,
         req5: null,
       }
-    }
-    // TODO EDIT AMOUNT: here is where PROJECT COSTS should be added 
+    }    
     // first check out what happened before with partners. 
     const newBoardProjectInstance = new BoardProject(newBoardProjectParams);
-    await newBoardProjectInstance.save();
+    const createdBoardProject = await newBoardProjectInstance.save();
     // boardproject id from newboardprojectinstatnce
+
+    // TODO EDIT AMOUNT: here is where PROJECT COSTS should be added 
+    const reqToUse = [2,3,4,5];
+    const code_cost_type_WP = [21,41]
+    let boardProjectId = boardProject.board_project_id;
+    const foundBoardProjectCosts = await BoardProjectCost.findAll({
+      where: {
+        board_project_id: boardProjectId,
+        req_position: reqToUse
+      },
+      include: [{
+        model: ProjectCost,
+        as: 'projectCostData',
+        required: true,
+        where: {
+          is_active: true,
+          code_cost_type_id: code_cost_type_WP
+        }
+      }]
+    });
+    let mainModifiedDate = new Date();
+    let index = 1;
+    const createdProjectCostIds = [];
+    const offsetMillisecond = 35000;
+    let code_cost_type_id = 0;
+    const WORK_PLAN_CODE_COST_TYPE_ID = 21;
+    const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
+    if (sponsor === 'MHFD'){
+      code_cost_type_id = WORK_PLAN_CODE_COST_TYPE_ID;
+    }else{
+      code_cost_type_id = WORK_REQUEST_CODE_COST_TYPE_ID;
+    }
+    for (let cost of foundBoardProjectCosts) {
+      const DateToAvoidRepeated = moment(mainModifiedDate)
+        .subtract(offsetMillisecond * index)
+        .toDate();
+      index++;
+      const newProjectCost = {
+        ...cost.projectCostData.dataValues,
+        project_cost_id: null,
+        created_by: creator,
+        last_modified_by: creator,
+        created: DateToAvoidRepeated,
+        last_modified: DateToAvoidRepeated,
+        code_cost_type_id,
+      };
+      const createdCost = await ProjectCost.create(newProjectCost);
+      createdProjectCostIds.push(createdCost.project_cost_id);
+    }
+    let k = 0; 
+    for (let boardCosts of foundBoardProjectCosts) {
+      const newBoardProjectCost = {
+        ...boardCosts.dataValues,
+        board_project_cost_id: null,
+        board_project_id: createdBoardProject.board_project_id,
+        req_position: + boardCosts.req_position - 1,
+        project_cost_id: createdProjectCostIds[k], 
+        created_by: creator,
+        last_modified_by: creator,
+        createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+        updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+      };
+      await BoardProjectCost.create(newBoardProjectCost);
+      k++;
+    }
+  }
+  return true;
+  } catch (e) {
+    console.log('Error in project Promises ', e);
+    throw e;
   }
 };
 
@@ -1247,63 +1313,6 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
     }
 }
 
-const updateBoards = async (board, status, comment, substatus, creator) => {
-  logger.info('Updating all boards different project type');
-  let projectTypes = [
-    'Capital',
-    'Maintenance',
-    'Study',
-    'Acquisition',
-    board.year < 2024 ? 'Special' : 'R&D'
-  ];
-  logger.info(`Starting function findOne for board/`);
-  for (const projectType of projectTypes) {
-    logger.info(`Project type ${projectType}`);
-    let body = {
-      type: board.type,
-      year: board.year,
-      locality: board.locality,
-      projecttype: projectType
-    };
-    let boards = await Board.findAll({
-      where: body
-    });
-    if (boards.length === 0) {
-      logger.info(`Creating new board for ${projectType}`);
-      await boardService.createNewBoard(
-        board.type,
-        board.year,
-        board.locality,
-        projectType,
-        status,
-        creator,
-        comment,
-        substatus
-      );
-    } else {
-      // When it reaches here? in what context?
-      for (let i = 0 ; i < boards.length ; i++) {
-        let board = boards[i];
-        if (status === 'Approved' && board.status !== status) {
-          body['submissionDate'] = new Date();
-        }
-        logger.info('Updating board');
-        let newFields = {
-          status,
-          comment,
-          substatus,
-          last_modified_by: creator,
-        };
-        if (status === 'Approved' && board.status !== status) {
-            newFields['submissionDate'] = new Date();
-        }
-        await board.update(newFields)
-      }
-    }
-  }
-  logger.info(`Finished function findOne for board/`);
-}
-
 const moveCardsToNextLevel = async (currentBoard, creator) => {
     logger.info('moveCardsToNextLevel', creator, '<- creator');
     logger.info(`Starting function findAll for board/`);
@@ -1454,7 +1463,7 @@ router.put('/', [auth], async (req, res) => {
     logger.info(`Finished function findOne for board/`);    
     if (board) {
         logger.info(`Starting function updateBoards for board/`);
-        await updateBoards(board, status, comment, substatus, creator);
+        await boardService.updateBoards(board, status, comment, substatus, creator);
         logger.info(`Finished function updateBoards for board/`);
         let bodyResponse = { status: 'updated' };        
         if (status === 'Approved' && board.status !== status) {
