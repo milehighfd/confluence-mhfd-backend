@@ -206,7 +206,7 @@ const updateCostNew = async (req, res) => {
         // Returns all boarcproject cost related to the current board project
         // dentro de estos estan los costos de cada partner
         console.log('All previous amounts', allPreviousAmounts, 'searching for ', JSON.stringify(amount));
-        const beforeAmounts = allPreviousAmounts.find((a) => a.business_name === amount.business_name && a.code_cost_type_id === amount.code_cost_type_id);
+        const beforeAmounts = allPreviousAmounts.find((a) => a.business_name === amount.business_name && a.code_cost_type_id === amount.code_cost_type_id && a.code_partner_type_id === amount.code_partner_type_id);
         // check if exists because it could be a new partner that wasnt in previous amounts
         if (!beforeAmounts) {
           console.log('Jumped save for ', amount.business_name, 'because it doesnt exist');
@@ -271,7 +271,7 @@ const updateCostNew = async (req, res) => {
             }
           }
         }
-        console.log('\n\n ________ \n ------------- \n columnsChanged', columnsChanged);
+        console.log('\n\n ________ \n ------------- \n columnsChanged', columnsChanged, JSON.stringify(amount));
         const allPromises = [];
         const offsetMillisecond = 35007;
         let mainModifiedDate = new Date();
@@ -295,7 +295,7 @@ const updateCostNew = async (req, res) => {
               const reqColumnName = `req${currentColumn}`;
               const currentReqAmount = amount.values[reqColumnName] ?? null;
               const currentCost = currentReqAmount;
-              console.log('About to update boardprojectcosts', amount, currentColumn, currentCost, currentProjectId, board_project_id);
+              console.log('About to update boardprojectcosts', amount, currentColumn, currentCost, currentProjectId, board_project_id, currentPartnerTypeId);
               allPromises.push(
                 boardService.updateAndCreateProjectCostsForAmounts(
                   currentColumn,
