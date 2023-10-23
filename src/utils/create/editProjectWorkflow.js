@@ -27,7 +27,8 @@ import {
   getGeomProject,
   createLocalitiesBoard,
   getLocalitiesNames,
-  addProjectsToBoard
+  addProjectsToBoard,
+  saveSubtotalcost
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
 import { EditProjectError, ProjectBoardsError} from '../../errors/project.error.js';
@@ -138,6 +139,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
     streams,
     studyreason,
     otherReason,
+    subtotalcost
   } = body;
   try {
     const answer = {};
@@ -151,6 +153,8 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         const COST_ID = 4;
         const costRes = await updateCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, transaction, isWorkPlan);
         answer.costRes = costRes;
+        const saveSubtotal = await saveSubtotalcost(project_id, subtotalcost, creator, transaction);
+        answer.saveSubtotal = saveSubtotal;
         const deletePARes = await deleteProposedAction(project_id, transaction);
         answer.deletePARes = deletePARes;
         const deleteIARes = await deleteIndependentAction(project_id, transaction);

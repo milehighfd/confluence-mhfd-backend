@@ -33,7 +33,8 @@ import {
   saveSedimentRemoval,
   saveMinorRepairs,
   saveVegetationManagement,
-  cleanStringValue
+  cleanStringValue,
+  saveSubtotalcost
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
 import { ProjectError, ProjectBoardsError} from '../../errors/project.error.js';
@@ -228,6 +229,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
     streams,
     studyreason,
     otherReason,
+    subtotalcost
   } = body;
   try {
     const answer = {};
@@ -245,6 +247,8 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         const COST_ID = 4;
         const resCost = await saveCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, transaction);
         answer.resCost = resCost;
+        const saveSubtotal = await saveSubtotalcost(project_id, subtotalcost, creator, transaction);
+        answer.saveSubtotal = saveSubtotal;
         break;
       case 'acquisition':        
         await createCarto(...createCartoInputs);
