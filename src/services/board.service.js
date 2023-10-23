@@ -167,20 +167,13 @@ function initialLexoRankValue() {
   return LexoRank.middle().toString();
 }
 
-const getRelevantBoards = async (type, year, extraYears, locality, project_type) => {
+const getRelevantBoards = async (type, year, locality, project_type) => {
   try {
-    let allYears;
-    if (!extraYears || extraYears.length === 0) {
-      allYears = [year + 1];
-    } else {
-      allYears = Array.from({ length: Math.max(...extraYears) - year + 1 }, (_, i) => year + i);
-    }
-    return await Board.findAll({
+    const targetYear = year + 1;
+    return await Board.findOne({
       where: {
         type,
-        year: {
-          [Op.in]: allYears
-        },
+        year: targetYear,
         locality,
         projecttype: project_type
       }
@@ -190,6 +183,7 @@ const getRelevantBoards = async (type, year, extraYears, locality, project_type)
     throw error;
   }
 };
+
 
 
 const determineMissingYears = (allRelevantBoards, year, extraYears) => {
@@ -203,9 +197,10 @@ async function createBoardProjectsMaintenance(allYears, year, type, locality, pr
   const createdBoardProjects = [];  
   const targetYear = year + 1;
   const boardNextYear = await getBoardForYear(targetYear, type, locality, project_type, transaction);
-    if (boardNextYear) {
+  if (boardNextYear) {
     let rankColumnName = 'rank0';
     let amountColumnName = `req0`;    
+    let amountIndex = 1;
     if (extraYears.includes(year)) {
       rankColumnName = `rank${subtype}`;
       amountColumnName = `req${subtype}`;
@@ -214,7 +209,7 @@ async function createBoardProjectsMaintenance(allYears, year, type, locality, pr
       [rankColumnName]: await getNextLexoRankValue(boardNextYear.board_id, rankColumnName)
     };    
     if (rankColumnName === `rank${subtype}`) {
-      rank[amountColumnName] = extraYearsAmounts[0];
+      rank[amountColumnName] = extraYearsAmounts[amountIndex];
     }    
     createdBoardProjects.push(createBoardProjectEntry(boardNextYear, rank, project_id, 2, userData));
   }  
@@ -232,21 +227,30 @@ async function createBoardProjectsMaintenance(allYears, year, type, locality, pr
 }
 
 
+
 async function createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, transaction) {
   try {
     const createdBoardProjects = [];
     const boardRanks = {};    
     const statusBoardProject = extraYears.length > 0 ? 2 : 1;
+    if (extraYears.includes(year)) {
+      extraYears = extraYears.filter(eYear => eYear !== year);
+      extraYearsAmounts.shift();
+    }
     if (extraYears.length > 0 && Math.min(...extraYears) - year > 1) {
       const nextYear = year + 1;
       const boardNextYear = await getBoardForYear(nextYear, type, locality, project_type, transaction);
       if (boardNextYear) {
-        const rankNumber = extraYears[0] - nextYear + 1;
-        const rankColumnName = `rank${rankNumber}`;
-        const amountColumnName = `req${rankNumber}`;
-        const rank = { [rankColumnName]: await getNextLexoRankValue(boardNextYear.board_id, rankColumnName) };
-        const amount = { [amountColumnName]: extraYearsAmounts[0] };
-        createdBoardProjects.push(createBoardProjectEntry(boardNextYear, { ...rank, ...amount }, project_id, statusBoardProject, userData));
+        const ranks = {};
+        const amounts = {};
+        for (let i = 0; i < extraYears.length; i++) {
+          const rankNumber = extraYears[i] - year;
+          const rankColumnName = `rank${rankNumber}`;
+          const amountColumnName = `req${rankNumber}`;
+          ranks[rankColumnName] = await getNextLexoRankValue(boardNextYear.board_id, rankColumnName);
+          amounts[amountColumnName] = extraYearsAmounts[i];
+        }
+        createdBoardProjects.push(createBoardProjectEntry(boardNextYear, { ...ranks, ...amounts }, project_id, statusBoardProject, userData));
       }
     }
     else if (extraYears.length === 0 || (extraYears.length === 1 && extraYears[0] === year)) {
@@ -379,29 +383,33 @@ async function getBoardForYear(year, type, locality, project_type, transaction) 
 
 
 
-const createMissingBoards = async (missingYears, type, locality, project_type, userData, transaction) => {
+const createMissingBoards = async (year, type, locality, project_type, userData, transaction) => {
   try {
-    const createBoardPromises = missingYears.map(missingYear => {
-      return Board.create({
-        type,
-        year: missingYear,
-        locality,
-        projecttype: project_type,
-        status: 'Under Review',
-        createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        last_modified_by: userData.email,
-        created_by: userData.email
-      }, { transaction: transaction });
-    });
-    await Promise.all(createBoardPromises);
-    const createdYears = missingYears.map(missingYear => ({ missingYear, locality, project_type, type, user: userData.email }));
-    return createdYears;
+    const targetYear = year + 1;
+    await Board.create({
+      type,
+      year: targetYear,
+      locality,
+      projecttype: project_type,
+      status: 'Under Review',
+      createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+      last_modified_by: userData.email,
+      created_by: userData.email
+    }, { transaction: transaction });
+    return {
+      year: targetYear,
+      locality,
+      project_type,
+      type,
+      user: userData.email
+    };
   } catch (error) {
     console.error("Error creating missing boards:", error);
     throw error;
   }
 };
+
 
 function constructProjectCost(boardProject, reqPosition, userData, partnerId, boardType, DateToAvoidRepeated) {
   const costType = boardType === 'WORK_PLAN' ? 21 : 22;
@@ -409,21 +417,22 @@ function constructProjectCost(boardProject, reqPosition, userData, partnerId, bo
     project_id: boardProject.project_id,
     cost: boardProject[`req${reqPosition}`],
     code_cost_type_id: costType,
-    cost_description: '', 
+    cost_description: null, 
     project_partner_id: partnerId, 
     cost_project_partner_contribution: null,
     created_by: userData.email,
     modified_by: userData.email,
     created: DateToAvoidRepeated,
     last_modified: DateToAvoidRepeated,
-    agreement_number: '', 
-    amendment_number: '',
+    agreement_number: null, 
+    amendment_number: null,
     code_phase_type_id: null, 
     code_scope_of_work_type_id: 20,
     is_active: 1,
-    effective_date: ''
+    effective_date: null
   };
 }
+
 
 function constructBoardProjectsCost(boardProject, projectCostId, reqPosition, userData, boardProjectId) {
   return {
@@ -487,22 +496,23 @@ async function cascadeDelete(project_id, createdBoardProjects, type, startYear, 
 
 async function findProjectPartner(projectId) {
   try {
-      const projectPartner = await ProjectPartner.findOne({
-          where: {
-              project_id: projectId,
-              code_partner_type_id: 11
-          }
-      });
-
-      if (projectPartner) {
-          return projectPartner.project_partner_id;
-      } else {
-          console.log("No matching ProjectPartner found.");
-          return null;
+    const SPONSOR = 11;
+    const MHFD = 88;
+    const projectPartner = await ProjectPartner.findOne({
+      where: {
+        project_id: projectId,
+        code_partner_type_id: MHFD
       }
+    });
+    if (projectPartner) {
+      return projectPartner.project_partner_id;
+    } else {
+      console.log("No matching ProjectPartner found.");
+      return null;
+    }
   } catch (error) {
-      console.error("Error fetching ProjectPartner:", error);
-      throw error;
+    console.error("Error fetching ProjectPartner:", error);
+    throw error;
   }
 }
 
@@ -511,24 +521,31 @@ async function getBoardTypeById(board_id) {
   return board ? board.type : null;
 }
 
-async function updateProjectCostEntries(project_id, userData, transaction) {
+async function updateProjectCostEntries(project_id, userData, code_cost_type_id, projectPartnerId, transaction) {
+  const edit_cost_type = code_cost_type_id === 21 ? 41 : 42;
   try {
+    const projectCostEntries = await ProjectCost.findAll({
+      where: {
+        project_id: project_id,
+        code_cost_type_id: code_cost_type_id,
+        project_partner_id: projectPartnerId,
+        is_active: 1
+      },
+      transaction
+    });
+    for (let i = 0; i < projectCostEntries.length; i++) {
+      const offsetDate = moment().add(i, 'seconds').format('YYYY-MM-DD HH:mm:ss');
       const updatedValues = {
-          is_active: 0,
-          last_modified: moment().format('YYYY-MM-DD HH:mm:ss'),
-          modified_by: userData.username
+        is_active: 0,
+        last_modified: offsetDate,
+        modified_by: userData.username,
+        code_cost_type_id: edit_cost_type
       };
-
-      await ProjectCost.update(updatedValues, {
-          where: {
-              project_id: project_id,
-              code_cost_type_id: [21, 22]
-          },
-          transaction
-      });
+      await projectCostEntries[i].update(updatedValues, { transaction });
+    }
   } catch (error) {
-      console.error("Error updating ProjectCost entries:", error);
-      throw error;
+    console.error("Error updating ProjectCost entries:", error);
+    throw error;
   }
 }
 
