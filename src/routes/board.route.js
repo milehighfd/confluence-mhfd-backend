@@ -14,7 +14,7 @@ import boardService from 'bc/services/board.service.js';
 import projectService from 'bc/services/project.service.js';
 import moment from 'moment';
 import { isOnWorkspace, isOnFirstYear } from 'bc/services/board-project.service.js';
-import sequelize from 'sequelize';
+import sequelize, { where } from 'sequelize';
 import authOnlyEmail from 'bc/auth/auth-only-email.js';
 
 const { Op } = sequelize;
@@ -29,6 +29,7 @@ const ProjectServiceArea = db.projectServiceArea;
 const ProjectCounty = db.projectCounty;
 const CodeStateCounty = db.codeStateCounty;
 const CodeServiceArea = db.codeServiceArea;
+const CodeLocalGovernment = db.codeLocalGoverment;
 const CodeStatusType = db.codeStatusType;
 const BusinessAssociate = db.businessAssociates;
 const Configuration = db.configuration;
@@ -1439,6 +1440,7 @@ const sendMails = async (board, fullName) => {
 }
 
 router.put('/', [auth], async (req, res) => {
+  try {
     logger.info(`Starting endpoint /board/:boardId params ${JSON.stringify(req.body, null, 2)}`)
     const user = req.user;
     const creator = user.email;
@@ -1481,8 +1483,11 @@ router.put('/', [auth], async (req, res) => {
     } else {
         res.status(404).send({error: 'not found'})
     }
-
-})
+  } catch (error) {
+    console.error(`Error updating board: ${error}`);
+    res.status(500).send({ error: 'Internal server error' });
+  }
+});
 
 router.delete('/project/:projectid/:namespaceId', [auth], async (req, res) => {
     logger.info(`Starting endpoint board/project/:projectid/:namespaceId with params ${JSON.stringify(req.params, null, 2)}`)
@@ -1766,6 +1771,69 @@ router.post('/send-to-workplan', [auth], async (req, res) => {
     await transaction.rollback();
     console.error(`Error creating boards: ${error}`);
     return res.status(500).json({ error: 'An error occurred while creating boards' });
+  }
+});
+
+router.get('/filters', async (req, res) => {
+  try {
+    const sponsorCodes = [3,6]
+    const statusTypes = await CodeStatusType.findAll({
+      attributes: ['code_status_type_id', 'status_name']
+    });
+    const statusTypesMapped = statusTypes.map(statusType => ({
+      id: statusType.code_status_type_id,
+      name: statusType.status_name,
+      type: 'status'
+    }));
+    const countyTypes = await CodeStateCounty.findAll({
+      attributes: ['state_county_id', 'county_name']
+    });
+    const countyTypesMapped = countyTypes.map(countyType => ({
+      id: countyType.state_county_id,
+      name: countyType.county_name,
+      type: 'project_counties'
+    }));
+    const serviceAreaTypes = await CodeServiceArea.findAll({
+      attributes: ['code_service_area_id', 'service_area_name']
+    });
+    const serviceAreaTypesMapped = serviceAreaTypes.map(serviceAreaType => ({
+      id: serviceAreaType.code_service_area_id,
+      name: serviceAreaType.service_area_name,
+      type: 'project_service_areas'
+    }));
+    const localGovernmentTypes = await CodeLocalGovernment.findAll({
+      attributes: ['code_local_government_id', 'local_government_name']
+    });
+    const localGovernmentTypesMapped = localGovernmentTypes.map(localGovernmentType => ({
+      id: localGovernmentType.code_local_government_id,
+      name: localGovernmentType.local_government_name,
+      type: 'project_local_governments'
+    }));
+    const sponsorTypes = await BusinessAssociate.findAll(
+      {
+        attributes: ['business_associates_id', 'business_name'],
+        where: {
+          code_business_associates_type_id: {
+            [Op.in]: sponsorCodes
+          }
+        }
+      }
+    );
+    const sponsorTypesMapped = sponsorTypes.map(sponsorType => ({
+      id: sponsorType.business_associates_id,
+      name: sponsorType.business_name,
+      type: 'project_partners'
+    }));
+    res.send([
+      ...statusTypesMapped,
+      ...countyTypesMapped,
+      ...serviceAreaTypesMapped,
+      ...localGovernmentTypesMapped,
+      ...sponsorTypesMapped
+    ]);    
+  } catch (error) {
+    console.error(`Error getting filters: ${error}`);
+    res.status(500).send({ error: 'Internal server error' });
   }
 });
 
