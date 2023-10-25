@@ -2500,6 +2500,7 @@ const getBoardProjectData = async (project_id, type) => {
       'board_project_id',
       'project_id',
     ],
+    order: [['createdAt', 'DESC']],
     include: [{
       model: Board,
       required: true,
@@ -2542,6 +2543,7 @@ const getPmtoolsProjectData = async (project_id) => {
     attributes: [
       'project_id',
     ],
+    order: [['created_date', 'DESC']],
     include: [
       {
         model: CodeProjectType,
