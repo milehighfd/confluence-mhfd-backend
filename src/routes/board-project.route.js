@@ -364,8 +364,10 @@ router.get('/:board_project_id/cost', async (req, res) => {
       finalAnswer.push(workplanValuesForSponsor);
     }
     // end: added to get cost for sponsor in wr and wp 
-    console.log('final anws', JSON.stringify(finalAnswer));      
-    return res.status(200).send({projectCostValues,boardProject, amounts: finalAnswer, projectData: boardProject.projectData});
+    const filteredAmounts = finalAnswer.filter((item) => {
+      return !(item.business_name === 'MHFD' && item.code_partner_type_id === 11);
+    });  
+    return res.status(200).send({projectCostValues,boardProject, amounts: filteredAmounts, projectData: boardProject.projectData});
  
   } catch (error) {
     logger.error('ERROR FROM GET COST ' + error);
