@@ -85,12 +85,12 @@ const getAllPreviousAmounts = async (boardProject, currentProjectId) => {
       }
     });
     for ( let i = 1 ; i <= 5; ++i) {
-      if (!returnObject['req'+i]) {
+      if (returnObject['req' + i] === null || returnObject['req' + i] === undefined) {
         returnObject['req'+i] = null;
       }
     }
     for (let i = 11 ; i <= 12; ++i) {
-      if (!returnObject['req'+i]) {
+      if (returnObject['req' + i] === null || returnObject['req' + i] === undefined) {
         returnObject['req'+i] = null;
       }
     }
@@ -221,7 +221,7 @@ const updateCostNew = async (req, res) => {
           for (let pos = 1; pos <= 5; pos++) {
             const reqColumnName = `req${pos}`;
             const rankColumnName = `rank${pos}`;
-            const currentReqAmount = amount.values[reqColumnName] ?? null;
+            const currentReqAmount = amount.values[reqColumnName] ?? null;            
             // const valueHasChanged = (currentReqAmount === null) ? true : beforeAmounts.values[reqColumnName] !== currentReqAmount;
             const valueHasChanged = beforeAmounts.values[reqColumnName] !== currentReqAmount;
             if (valueHasChanged) {
@@ -253,7 +253,7 @@ const updateCostNew = async (req, res) => {
                   updateFields[rankColumnName] = LexoRank.parse(lastProject[rankColumnName]).genNext().toString();
                 }
               }             
-            } else if (currentReqAmount === null && !isMaintenance) {
+            } else if (currentReqAmount === null && !isMaintenance) {              
               updateFields[rankColumnName] = null;
             }
           }

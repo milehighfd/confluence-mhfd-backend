@@ -279,12 +279,12 @@ router.get('/:board_project_id/cost', async (req, res) => {
       }
     });
     for ( let i = 1 ; i <= 5; ++i) {
-      if (!returnObject['req'+i]) {
+      if (returnObject['req' + i] === null || returnObject['req' + i] === undefined) {
         returnObject['req'+i] = null;
       }
     }
     for (let i = 11 ; i <= 12; ++i) {
-      if (!returnObject['req'+i]) {
+      if (returnObject['req' + i] === null || returnObject['req' + i] === undefined) {
         returnObject['req'+i] = null;
       }
     }
