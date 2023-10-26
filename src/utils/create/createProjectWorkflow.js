@@ -240,7 +240,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         await createCarto(...createCartoInputs);
         const resActions = await saveActions(project_id, independentComponent, components, creator, transaction);
         answer.resActions = resActions;
-        const overhead = overheadcost.split(',').slice(1);        
+        const overhead = overheadcost.split(',');        
         const overheadCostIds = await getOverheadCostIds(transaction);  
         const resStreamsCap = await saveProjectStreams(project_id, streams, transaction); 
         answer.resStreams = resStreamsCap;

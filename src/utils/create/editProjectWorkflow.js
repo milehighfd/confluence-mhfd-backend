@@ -149,7 +149,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
       case 'capital':
         await createCarto(...createCartoInputs);
         const overheadCostIds = await getOverheadCostIds(transaction);
-        const overhead = overheadcost.split(',').slice(1);
+        const overhead = overheadcost.split(',');
         const COST_ID = 4;
         const costRes = await updateCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, transaction, isWorkPlan);
         answer.costRes = costRes;
