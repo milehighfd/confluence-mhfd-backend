@@ -28,7 +28,8 @@ import {
   createLocalitiesBoard,
   getLocalitiesNames,
   addProjectsToBoard,
-  saveSubtotalcost
+  saveSubtotalcost,
+  saveEstimatedCost
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
 import { EditProjectError, ProjectBoardsError} from '../../errors/project.error.js';
@@ -139,7 +140,8 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
     streams,
     studyreason,
     otherReason,
-    subtotalcost
+    subtotalcost,
+    estimatedcostInput
   } = body;
   try {
     const answer = {};
@@ -155,6 +157,8 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         answer.costRes = costRes;
         const saveSubtotal = await saveSubtotalcost(project_id, subtotalcost, creator, transaction);
         answer.saveSubtotal = saveSubtotal;
+        const saveEstimatedcost = await saveEstimatedCost(project_id, estimatedcostInput, creator, transaction);
+        answer.saveEstimatedcost = saveEstimatedcost;
         const deletePARes = await deleteProposedAction(project_id, transaction);
         answer.deletePARes = deletePARes;
         const deleteIARes = await deleteIndependentAction(project_id, transaction);

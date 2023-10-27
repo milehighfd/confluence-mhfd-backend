@@ -323,7 +323,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
       const bid = bnnp.business_associates_id;
       const current_code_partner_type_id = bnnp.code_partner_type_id;
       const databyBN = groupedData[bname];
-      console.log('data filtered for', bname, 'databybn', databyBN, 'current cost type id', databyBN ? databyBN[0].code_cost_type_id: WORK_REQUEST_CODE_COST_TYPE_ID);
+      // console.log('data filtered for', bname, 'databybn', databyBN, 'current cost type id', databyBN ? databyBN[0].code_cost_type_id: WORK_REQUEST_CODE_COST_TYPE_ID);
       let current_code_cost_type_id; // ALMOST ALL ARE GOING TO BE 22 WORK REQUEST 
       if (current_code_partner_type_id == MHFD_CODE_COST_TYPE_ID || current_code_partner_type_id == SPONSOR_CODE_COST_TYPE_ID) {
         current_code_cost_type_id = WORK_REQUEST_CODE_COST_TYPE_ID;
