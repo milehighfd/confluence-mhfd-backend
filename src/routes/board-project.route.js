@@ -371,10 +371,14 @@ router.get('/:board_project_id/cost', async (req, res) => {
     const estimatedCostValues = boardProject.projectData.currentCost.filter((item) => {
       return item.code_cost_type_id === 1;
     });
-    const userEstimated = await User.findOne({
-      attributes: ['firstName', 'lastName'],
-      where: { email: estimatedCostValues[0].modified_by }});
-
+    let userEstimated = {};
+    if (estimatedCostValues.length > 0) {
+      userEstimated = await User.findOne({
+        attributes: ['firstName', 'lastName'],
+        where: { email: estimatedCostValues[0].modified_by }});
+  
+    }
+    
     return res.status(200).send({projectCostValues, boardProject, amounts: filteredAmounts, projectData: boardProject.projectData, estimatedCostUser:userEstimated });
  
   } catch (error) {
