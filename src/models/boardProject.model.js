@@ -105,6 +105,12 @@ export default (sequelize, DataType) => {
     created_by: {
       type: DataType.STRING
     },
+    createdAt: {
+      type: DataType.DATE,
+    },
+    updatedAt: {
+      type: DataType.DATE,
+    }
   }, {
     freezeTableName: true,
     tableName: 'board_project'

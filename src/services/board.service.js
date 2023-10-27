@@ -607,7 +607,7 @@ const updateAndCreateProjectCostsForAmounts = async (
         project_cost_id: { [Op.in]: projectsCostsIdsToUpdate } // we need to get the projectcost olds 
       }
     }).then(async () => {
-      if (currentCost) {
+      if (currentCost !== null && currentCost !== undefined) {
         const projectCostCreated = await ProjectCost.create({
           cost: currentCost,
           project_id: currentProjectId,

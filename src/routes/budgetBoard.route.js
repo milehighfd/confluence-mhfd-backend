@@ -3,9 +3,11 @@ import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import auth from 'bc/auth/auth.js';
 import moment from 'moment';
+import sequelize from 'sequelize';
 
 const router = express.Router();
 const BudgetBoardTable = db.budgetBoardTable;
+const { Op } = sequelize;
 
 const getBudgetBoardEntries = async (req, res) => {
   try {
@@ -42,7 +44,12 @@ const getSumForBudgetBoard = async (req, res) => {
   const { boards_id } = req.body;
   const targetcostColumns = ['targetcost1', 'targetcost2', 'targetcost3', 'targetcost4', 'targetcost5'];
   try {
-    const promises = targetcostColumns.map(column => BudgetBoardTable.sum(column, { where: { boards_id } }));
+    const promises = targetcostColumns.map(column => BudgetBoardTable.sum(column, 
+      { where: 
+        { boards_id, 
+          locality: { [Op.or]: [{ [Op.like]: '%County%' }, 'South Platte River Service Area'] } 
+        } 
+      }));
     const results = await Promise.all(promises);
     const sumArray = results.map(result => result || 0);    
     res.status(200).send({ sum: sumArray });    
@@ -51,7 +58,6 @@ const getSumForBudgetBoard = async (req, res) => {
     return res.status(500).send({ error: error });
   }
 }
-
 
 const addOrUpdateBudgetBoardEntry = async (req, res) => {
   const { boards_id, locality } = req.body;
