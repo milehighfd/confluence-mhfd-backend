@@ -80,7 +80,7 @@ import projectChecklist from 'bc/models/project_checklist.model.js';
 import budgetBoardTable from 'bc/models/budget_board_table.model.js';
 
 Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
-  const mdtDate = moment(date).tz('America/Denver');
+  const mdtDate = moment.utc(date).tz('America/Denver');
   return mdtDate.format('YYYY-MM-DD HH:mm:ss.SSS');
 };
 
