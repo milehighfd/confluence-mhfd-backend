@@ -5,6 +5,7 @@ import logActivity from 'bc/models/logActivity.model.js';
 import favorites from 'bc/models/favorites.model.js';
 import ProjectFavorite from 'bc/models/project_favorites.model.js';
 import ProblemFavorite from 'bc/models/problem_favorites.model.js';
+import moment from 'moment';
 
 import board from 'bc/models/board.model.js';
 import boardProject from 'bc/models/boardProject.model.js';
@@ -79,8 +80,8 @@ import projectChecklist from 'bc/models/project_checklist.model.js';
 import budgetBoardTable from 'bc/models/budget_board_table.model.js';
 
 Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
-  date = this._applyTimezone(date, options);
-  return date.format('YYYY-MM-DD HH:mm:ss.SSS');
+  const mdtDate = moment(date).tz('America/Denver');
+  return mdtDate.format('YYYY-MM-DD HH:mm:ss.SSS');
 };
 
 const sequelize = new Sequelize(config.POSTGRESQL_DB, config.POSTGRESQL_USER, config.POSTGRESQL_PASSWORD, {
