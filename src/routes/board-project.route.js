@@ -178,7 +178,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         as: 'projectData',
         include: [{
           model: ProjectCost,
-          attributes: ['cost'],
+          attributes: ['cost', 'code_cost_type_id', 'modified_by', 'last_modified' ],
           as: 'currentCost',
           required: false,
           where: {
