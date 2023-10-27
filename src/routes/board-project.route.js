@@ -16,7 +16,7 @@ const ProjectPartner = db.projectPartner;
 const CodeProjectPartnerType = db.codeProjectPartnerType;
 const BusinessAssociates = db.businessAssociates;
 const ProjectIndependentAction = db.projectIndependentAction;
-
+const User = db.user;
 const router = express.Router();
 
 router.get('/:board_project_id/cost/test', async (req, res) => {
@@ -367,7 +367,15 @@ router.get('/:board_project_id/cost', async (req, res) => {
     const filteredAmounts = finalAnswer.filter((item) => {
       return !(item.business_name === 'MHFD' && item.code_partner_type_id === 11);
     });  
-    return res.status(200).send({projectCostValues,boardProject, amounts: filteredAmounts, projectData: boardProject.projectData});
+    // make filter to get estimated cost from projectcostvalues where codecosttypeid = 1 
+    const estimatedCostValues = boardProject.projectData.currentCost.filter((item) => {
+      return item.code_cost_type_id === 1;
+    });
+    const userEstimated = await User.findOne({
+      attributes: ['firstName', 'lastName'],
+      where: { email: estimatedCostValues[0].modified_by }});
+
+    return res.status(200).send({projectCostValues, boardProject, amounts: filteredAmounts, projectData: boardProject.projectData, estimatedCostUser:userEstimated });
  
   } catch (error) {
     logger.error('ERROR FROM GET COST ' + error);
