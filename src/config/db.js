@@ -78,6 +78,9 @@ import notifications from 'bc/models/notification.model.js';
 import projectSpatial from 'bc/models/project_spatial.model.js';
 import projectChecklist from 'bc/models/project_checklist.model.js';
 import budgetBoardTable from 'bc/models/budget_board_table.model.js';
+import projectDiscussionThread from 'bc/models/project_discussion_thread.model.js';
+import projectDiscussionTopic from 'bc/models/project_discussion_topic.model.js';
+import discussionModerator from 'bc/models/discussion_moderator.model.js';
 
 Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
   const mdtDate = moment.utc(date).tz('America/Denver');
@@ -171,6 +174,9 @@ db.projectStatusNotification = projectStatusNotification(sequelize, Sequelize);
 db.projectSpatial = projectSpatial(sequelize, Sequelize);
 db.projectChecklist = projectChecklist(sequelize, Sequelize);
 db.budgetBoardTable = budgetBoardTable(sequelize, Sequelize);
+db.projectDiscussionThread = projectDiscussionThread(sequelize, Sequelize);
+db.projectDiscussionTopic = projectDiscussionTopic(sequelize, Sequelize);
+db.discussionModerator = discussionModerator(sequelize, Sequelize);
 // 14 layers called
 db.gradeControlStructure = gradeControlStructure(sequelize, Sequelize);
 db.pipeAppurtenances = pipeAppurtenances(sequelize, Sequelize);
@@ -245,6 +251,10 @@ db.businessAssociateContact.belongsTo(db.businessAdress,{foreignKey: 'business_a
 db.businessAdress.belongsTo(db.businessAssociates,{foreignKey: 'business_associate_id'});
 db.businessAssociates.hasMany(db.businessAdress,{foreignKey: 'business_associate_id'});
 db.businessAdress.hasMany(db.businessAssociateContact,{foreignKey: 'business_address_id'});
+
+//Discussion
+db.projectDiscussionTopic.hasMany(db.projectDiscussionThread, {foreignKey: 'project_discussion_topic_id'});
+db.projectDiscussionThread.hasOne(db.user, {foreignKey: 'user_id', sourceKey: 'user_id'});
 
 /*
 db.businessAssociates.hasMany(

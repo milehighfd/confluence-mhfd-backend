@@ -46,6 +46,7 @@ import notificationRouter from 'bc/routes/notifications.route.js';
 import { createNotifications,deleteNotifications } from 'bc/utils/functionsNotifications.js';
 import financial from 'bc/routes/financial.route.js';
 import studyRouter from 'bc/routes/study.route.js';
+import discussionRoute from 'bc/routes/discussion.route.js';
 
 seed();
 
@@ -127,5 +128,7 @@ app.use('/notifications', notificationRouter);
 app.use('/financial',financial)
 app.use('/study', studyRouter);
 app.use('/budget-board', budgetboardRouter);
+app.use('/discussion', discussionRoute);
+
 
 export default server;
