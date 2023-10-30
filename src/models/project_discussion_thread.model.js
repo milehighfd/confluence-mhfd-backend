@@ -30,7 +30,6 @@ export default (sequelize, DataTypes) => {
     created_date: {
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: DataTypes.NOW
     },
     project_partner_id: {
       type: DataTypes.INTEGER,

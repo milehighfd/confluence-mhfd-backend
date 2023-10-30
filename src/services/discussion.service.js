@@ -7,27 +7,38 @@ const { Op } = sequelize;
 const ProjectDiscussionThread = db.projectDiscussionThread;
 const ProjectDiscussionTopic = db.projectDiscussionTopic;
 
-async function createTopic(projectId, topicType, userId) {
-  return await ProjectDiscussionTopic.create({
-    project_id: projectId,
-    topic: topicType,
-    is_discussion_thread_open: true,
-    created_date: new Date(),
-    modified_date: new Date(),
-    last_modified_by: userId,
-    created_by: userId,
-    related_project_discussion_topic_id: null
-  });
+async function createTopic(projectId, topicType, user, transaction) {
+  try {
+    return await ProjectDiscussionTopic.create({
+      project_id: projectId,
+      topic: topicType,
+      is_discussion_thread_open: true,
+      created_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+      modified_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+      last_modified_by: user?.email,
+      created_by: user?.email,
+      related_project_discussion_topic_id: null
+    }, { transaction });
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
 }
 
-async function createThread(topicId, message, userId) {
-  return await ProjectDiscussionThread.create({
-    project_discussion_topic_id: topicId,
-    is_internal: false,
-    message: message,
-    user_id: userId,
-    created_date: new Date()
-  });
+async function createThread(topicId, message, user, transaction) {
+  try {
+    const date = moment().format('YYYY-MM-DD HH:mm:ss');
+    return await ProjectDiscussionThread.create({
+      project_discussion_topic_id: topicId,
+      is_internal: false,
+      message: message,
+      user_id: user?.user_id,
+      created_date: date
+    }, { transaction });
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
 }
 
 export default {

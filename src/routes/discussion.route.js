@@ -1,6 +1,7 @@
 import express from 'express';
 import db from 'bc/config/db.js';
 import discussionService from 'bc/services/discussion.service.js';
+import auth from 'bc/auth/auth.js';
 
 const router = express.Router();
 const ProjectDiscussionThread = db.projectDiscussionThread;
@@ -36,10 +37,10 @@ async function getDiscussionModerators(req, res) {
 }
 
 async function getProjectDiscussion(req, res) {
-  const {project_id, topic_place} = req.body;
+  const { project_id, topic_place } = req.body;
   const topic_type = topic_place === 'details' ? 'DETAILS' : 'CREATE';
   try {
-    const threads = await ProjectDiscussionTopic.findAll(
+    const threads = await ProjectDiscussionTopic.findOne(
       {
         where: {
           project_id: project_id,
@@ -51,7 +52,7 @@ async function getProjectDiscussion(req, res) {
             include: [
               {
                 model: User,
-                attributes: ['user_id', 'firstName', 'lastName', 'email']
+                attributes: ['user_id', 'firstName', 'lastName', 'email', 'photo']
               }
             ]
           }
@@ -67,34 +68,50 @@ async function getProjectDiscussion(req, res) {
 async function createThreadTopic(req, res) {
   const { project_id, topic_place, message } = req.body;
   const topic_type = topic_place === 'details' ? 'DETAILS' : 'CREATE';
-  const userId = req.user.user_id;
-
+  const userId = req.user;
+  const transaction = await db.sequelize.transaction();
+  let result;
   try {
-    const result = await sequelize.transaction(async (t) => {
-      const topicExist = await ProjectDiscussionTopic.findOne({
-        where: { project_id, topic: topic_type }
-      }, { transaction: t });
-
-      if (topicExist) {
-        const thread = await discussionService.createThread(topicExist.project_discussion_topic_id, message, userId);
-        return { topic: topicExist, thread };
-      } else {
-        const topic = await discussionService.createTopic(project_id, topic_type, userId);
-        const thread = await discussionService.createThread(topic.project_discussion_topic_id, message, userId);
-        return { topic, thread };
-      }
+    let topicExist = await ProjectDiscussionTopic.findOne({
+      where: { project_id, topic: topic_type },
+      transaction
     });
-
+    if (topicExist) {
+      const thread = await discussionService.createThread(
+        topicExist.project_discussion_topic_id,
+        message,
+        userId,
+        transaction
+      );
+      result = { topic: topicExist, thread };
+    } else {
+      const topic = await discussionService.createTopic(
+        project_id,
+        topic_type,
+        userId,
+        transaction
+      );
+      const thread = await discussionService.createThread(
+        topic.project_discussion_topic_id,
+        message,
+        userId,
+        transaction
+      );
+      result = { topic, thread };
+    }
+    await transaction.commit();
     return res.send(result);
   } catch (error) {
+    await transaction.rollback();
     res.status(500).send(error);
   }
 }
 
-router.get('/project-discussion-threads', getProjectDiscussionThreads);
+
+router.get('/', getProjectDiscussionThreads);
 router.get('/project-discussion-topics', getProjectDiscussionTopics);
 router.get('/discussion-moderators', getDiscussionModerators);
-router.post('/project-discussion-threads', getProjectDiscussion);
-router.post('/create-theard-topic', createThreadTopic);
+router.post('/', getProjectDiscussion);
+router.put('/', [auth], createThreadTopic);
 
 export default router;
