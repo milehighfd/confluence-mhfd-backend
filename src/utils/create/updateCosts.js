@@ -14,7 +14,7 @@ export const updateCosts = async (project_id, additionalcost, aditionalCostId, a
     const currentIndependentCost = await getCostActiveForProj(project_id, [aditionalCostId], transaction);
     const currentOverheadCosts = await getCostActiveForProj(project_id, overheadIds, transaction);
     
-    const independentHasChanged = currentIndependentCost[0]?.cost !== additionalcost;
+    const independentHasChanged = currentIndependentCost[0]?.cost != additionalcost;
     if (independentHasChanged) {
       const additionalCost = {
         project_id: project_id,
