@@ -141,7 +141,8 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
     studyreason,
     otherReason,
     subtotalcost,
-    estimatedcostInput
+    estimatedcostInput,
+    overheadcostdescription
   } = body;
   try {
     const answer = {};
@@ -153,7 +154,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         const overheadCostIds = await getOverheadCostIds(transaction);
         const overhead = overheadcost.split(',');
         const COST_ID = 4;
-        const costRes = await updateCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, transaction, isWorkPlan);
+        const costRes = await updateCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, transaction, overheadcostdescription);
         answer.costRes = costRes;
         const saveSubtotal = await saveSubtotalcost(project_id, subtotalcost, creator, transaction);
         answer.saveSubtotal = saveSubtotal;

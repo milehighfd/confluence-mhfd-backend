@@ -231,7 +231,8 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
     studyreason,
     otherReason,
     subtotalcost,
-    estimatedcostInput
+    estimatedcostInput,
+    overheadcostdescription
   } = body;
   try {
     const answer = {};
@@ -247,7 +248,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         const resStreamsCap = await saveProjectStreams(project_id, streams, transaction); 
         answer.resStreams = resStreamsCap;
         const COST_ID = 4;
-        const resCost = await saveCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, transaction);
+        const resCost = await saveCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, overheadcostdescription, transaction);
         answer.resCost = resCost;
         const saveSubtotal = await saveSubtotalcost(project_id, subtotalcost, creator, transaction);
         answer.saveSubtotal = saveSubtotal;
