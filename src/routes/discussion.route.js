@@ -76,6 +76,13 @@ async function createThreadTopic(req, res) {
       where: { project_id, topic: topic_type },
       transaction
     });
+    let userIds = []; 
+    let emailList = [];
+    if (topic_type === 'DETAILS') {
+      const projectStaff = await discussionService.getStaff(project_id);
+      userIds = projectStaff.map(staff => staff.user.user_id);
+      emailList = projectStaff.map(staff => staff.user.email);
+    }
     if (topicExist) {
       const thread = await discussionService.createThread(
         topicExist.project_discussion_topic_id,
@@ -83,7 +90,7 @@ async function createThreadTopic(req, res) {
         userId,
         transaction
       );
-      result = { topic: topicExist, thread };
+      result = { topic: topicExist, thread, userIds, emailList };
     } else {
       const topic = await discussionService.createTopic(
         project_id,
@@ -97,7 +104,7 @@ async function createThreadTopic(req, res) {
         userId,
         transaction
       );
-      result = { topic, thread };
+      result = { topic, thread, userIds, emailList };
     }
     await transaction.commit();
     return res.send(result);

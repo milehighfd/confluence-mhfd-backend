@@ -6,6 +6,8 @@ import moment from 'moment';
 const { Op } = sequelize;
 const ProjectDiscussionThread = db.projectDiscussionThread;
 const ProjectDiscussionTopic = db.projectDiscussionTopic;
+const ProjectStaff = db.projectStaff;
+const User = db.user;
 
 async function createTopic(projectId, topicType, user, transaction) {
   try {
@@ -41,7 +43,28 @@ async function createThread(topicId, message, user, transaction) {
   }
 }
 
+async function getStaff(projectId) {
+  try {
+    return await ProjectStaff.findAll({
+      where: {
+        project_id: projectId,
+      },
+      attributes: ['project_id', 'is_active'],
+      include: [
+        {
+          model: User,
+          attributes: ['user_id', 'email']
+        }
+      ]
+    });
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+}
+
 export default {
   createTopic,
-  createThread
+  createThread,
+  getStaff
 }
