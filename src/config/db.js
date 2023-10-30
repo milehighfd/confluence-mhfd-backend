@@ -255,6 +255,7 @@ db.businessAdress.hasMany(db.businessAssociateContact,{foreignKey: 'business_add
 //Discussion
 db.projectDiscussionTopic.hasMany(db.projectDiscussionThread, {foreignKey: 'project_discussion_topic_id'});
 db.projectDiscussionThread.hasOne(db.user, {foreignKey: 'user_id', sourceKey: 'user_id'});
+db.projectStaff.hasOne(db.user, {foreignKey: 'business_associate_contact_id', sourceKey: 'business_associate_contact_id'});
 
 /*
 db.businessAssociates.hasMany(
