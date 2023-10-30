@@ -16,6 +16,7 @@ export const updateCosts = async (project_id, additionalcost, aditionalCostId, a
     
     const independentHasChanged = currentIndependentCost[0]?.cost != additionalcost;
     if (independentHasChanged) {
+      //creating aditional cost
       const additionalCost = {
         project_id: project_id,
         cost: !isNaN(Number(additionalcost)) ? Number(additionalcost) : 0,
@@ -28,12 +29,10 @@ export const updateCosts = async (project_id, additionalcost, aditionalCostId, a
       promisesUpdate.push(setCostActiveToFalse(project_id,aditionalCostId, transaction));
       promises.push(saveProjectCost(additionalCost, transaction));
     }
-    //creating aditional cost
-    
     //creating overhead cost
     for (const [index, element] of overheadIds.entries()) {
       const currentEquivalentOverheadCost = currentOverheadCosts.find((cost) => cost.code_cost_type_id === element);
-      const hasChanged = filterFrontOverheadCosts[index] != currentEquivalentOverheadCost?.cost;
+      const hasChanged = (filterFrontOverheadCosts[index] != currentEquivalentOverheadCost?.cost) || (overheadcostdescription != currentEquivalentOverheadCost?.cost_description);
       if (hasChanged) {
         const estimatedCostToSave = {
           project_id: project_id,
