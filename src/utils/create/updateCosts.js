@@ -1,35 +1,53 @@
 import {
   setCostActiveToFalse,
-  saveProjectCost
+  saveProjectCost,
+  getCostActiveForProj
 } from 'bc/utils/create';
 import { EditCostProjectError } from '../../errors/project.error.js';
 import logger from 'bc/config/logger.js';
 
-export const updateCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, filtered, filterFrontOverheadCosts, transaction, isWorkPlan) => {
+export const updateCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, overheadIds, filterFrontOverheadCosts, transaction, isWorkPlan) => {
   try {
-    await setCostActiveToFalse(project_id, transaction, isWorkPlan);
+    
     const promises = [];
-    //creating aditional cost
-    promises.push(saveProjectCost({
-      project_id: project_id,
-      cost: !isNaN(Number(additionalcost)) ? Number(additionalcost) : 0,
-      code_cost_type_id: aditionalCostId,
-      cost_description: additionalcostdescription,
-      created_by: creator,
-      modified_by: creator,
-      is_active: true,
-    }, transaction));
-    //creating overhead cost
-    for (const [index, element] of filtered.entries()) {
-      promises.push(saveProjectCost({
+    const promisesUpdate = [];
+    const currentIndependentCost = await getCostActiveForProj(project_id, [aditionalCostId], transaction);
+    const currentOverheadCosts = await getCostActiveForProj(project_id, overheadIds, transaction);
+    
+    const independentHasChanged = currentIndependentCost[0]?.cost !== additionalcost;
+    if (independentHasChanged) {
+      const additionalCost = {
         project_id: project_id,
-        cost: !isNaN(Number(filterFrontOverheadCosts[index])) ? Number(filterFrontOverheadCosts[index]) : 0,
-        code_cost_type_id: element,
+        cost: !isNaN(Number(additionalcost)) ? Number(additionalcost) : 0,
+        code_cost_type_id: aditionalCostId,
+        cost_description: additionalcostdescription,
         created_by: creator,
         modified_by: creator,
         is_active: true,
-      }, transaction));
+      };
+      promisesUpdate.push(setCostActiveToFalse(project_id,aditionalCostId, transaction));
+      promises.push(saveProjectCost(additionalCost, transaction));
     }
+    //creating aditional cost
+    
+    //creating overhead cost
+    for (const [index, element] of overheadIds.entries()) {
+      const currentEquivalentOverheadCost = currentOverheadCosts.find((cost) => cost.code_cost_type_id === element);
+      const hasChanged = filterFrontOverheadCosts[index] != currentEquivalentOverheadCost?.cost;
+      if (hasChanged) {
+        const estimatedCostToSave = {
+          project_id: project_id,
+          cost: !isNaN(Number(filterFrontOverheadCosts[index])) ? Number(filterFrontOverheadCosts[index]) : 0,
+          code_cost_type_id: element,
+          created_by: creator,
+          modified_by: creator,
+          is_active: true,
+        };
+        promisesUpdate.push(setCostActiveToFalse(project_id,element, transaction));
+        promises.push(saveProjectCost(estimatedCostToSave, transaction));
+      } 
+    }
+    await Promise.all(promisesUpdate);
     const result = await Promise.all(promises)
       .then((results) => {
         logger.info('All costs saved successfully');

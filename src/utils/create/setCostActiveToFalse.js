@@ -3,11 +3,26 @@ import logger from 'bc/config/logger.js';
 import { Op } from 'sequelize';
 const ProjectCost = db.projectCost;
 
-export const setCostActiveToFalse = async (project_id, transaction = null, isWorkPlan) => {
-  const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
-  const WORK_PLAN_CODE_COST_TYPE_ID = 22;
+export const getCostActiveForProj = async (project_id, code_cost_type_ids, transaction = null) => {
+  try{
+    const pc = await ProjectCost.findAll({
+      where: {
+        project_id: project_id,
+        code_cost_type_id: {
+          [Op.in]: code_cost_type_ids
+        },
+        is_active: true,
+      },
+      transaction: transaction
+    });
+    return pc;
+  } catch(error) {
+    logger.error('error getting active cost', error);
+    throw error;
+  }
+}
+export const setCostActiveToFalse = async (project_id, code_cost_type_id, transaction = null) => {
   try {
-    console.log('***************\n\n************\n About to update alllllll', project_id, '**********************\n\n\n***********\n\n');
     await ProjectCost.update(
       {
         is_active: false,
@@ -16,7 +31,7 @@ export const setCostActiveToFalse = async (project_id, transaction = null, isWor
         where: {
           project_id: project_id,
           is_active: true,
-          code_cost_type_id: {[Op.notIn]: [WORK_PLAN_CODE_COST_TYPE_ID , WORK_REQUEST_CODE_COST_TYPE_ID]}
+          code_cost_type_id: code_cost_type_id
         },
         transaction: transaction
       }
