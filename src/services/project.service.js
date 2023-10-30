@@ -1382,7 +1382,8 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
 	}
   if (sponsor_board.length) {
     logger.info(`Filtering by sponsor board ${sponsor_board}...`);
-    conditions.push(//SPONSOR BOARD
+    const CODE_SPONSOR = 11;
+    conditions.push(
       Project.findAll({
         attributes: ["project_id", "code_project_type_id"],
         include: [{
@@ -1392,10 +1393,14 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
             model: BusinessAssociate,
             attributes: [],
           },
-          where: { business_associates_id: sponsor_board }
+          where: { 
+            business_associates_id: sponsor_board,
+            code_partner_type_id: CODE_SPONSOR
+          }
         }],
       }));
   }
+
   if (work_plan_year) {
     logger.info(`Filtering by work plan year board ${work_plan_year}...`);
     conditions.push(
