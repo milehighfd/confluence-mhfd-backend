@@ -79,9 +79,13 @@ async function createThreadTopic(req, res) {
     let userIds = []; 
     let emailList = [];
     if (topic_type === 'DETAILS') {
-      const projectStaff = await discussionService.getStaff(project_id);
+      const projectStaff = await discussionService.getStaff(project_id, transaction);
       userIds = projectStaff.map(staff => staff.user.user_id);
       emailList = projectStaff.map(staff => staff.user.email);
+    } else {
+      const {ids, emails} = await discussionService.getLocalityEmailsIds(project_id, transaction);
+      userIds = ids;
+      emailList = emails;
     }
     if (topicExist) {
       const thread = await discussionService.createThread(
@@ -90,7 +94,7 @@ async function createThreadTopic(req, res) {
         userId,
         transaction
       );
-      result = { topic: topicExist, thread, userIds, emailList };
+      result = { topic: topicExist, thread, userId: userIds, emails: emailList };
     } else {
       const topic = await discussionService.createTopic(
         project_id,
@@ -104,10 +108,37 @@ async function createThreadTopic(req, res) {
         userId,
         transaction
       );
-      result = { topic, thread, userIds, emailList };
+      result = { topic, thread, userId: userIds, emails: emailList };
     }
+    const createNotifications = await discussionService.createNotifications(
+      userIds,
+      topic_type,
+      project_id,
+      userId,
+      transaction
+    );
+    result = { ...result, createNotifications };
     await transaction.commit();
     return res.send(result);
+  } catch (error) {
+    await transaction.rollback();
+    res.status(500).send(error);
+  }
+}
+
+async function deleteThreadTopic(req, res) {
+  const { message_id } = req.body;
+  const transaction = await db.sequelize.transaction();
+  try {
+    const thread = await ProjectDiscussionThread.findOne({
+      where: { project_discussion_thread_id: message_id },
+      transaction
+    });
+    if (thread) {
+      await thread.destroy({ transaction });
+    }
+    await transaction.commit();
+    return res.send({ message: 'SUCCESS' });
   } catch (error) {
     await transaction.rollback();
     res.status(500).send(error);
@@ -120,5 +151,6 @@ router.get('/project-discussion-topics', getProjectDiscussionTopics);
 router.get('/discussion-moderators', getDiscussionModerators);
 router.post('/', getProjectDiscussion);
 router.put('/', [auth], createThreadTopic);
+router.delete('/', [auth], deleteThreadTopic);
 
 export default router;

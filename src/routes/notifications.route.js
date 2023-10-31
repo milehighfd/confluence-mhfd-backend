@@ -11,15 +11,20 @@ const ProjectStatusNotification = db.projectStatusNotification;
 const ProjectStatus = db.projectStatus;
 const CodePhaseType = db.codePhaseType;
 const Project = db.project;
+const codeProjectType = db.codeProjectType;
 
 const getNotifications = async (req, res) => {
   logger.info(`Starting endpoint notifications.route/filters with params ${JSON.stringify(req.user, null, 2)}`);
   try {
     let notification = await Notifications.findAll({
-      attributes: ['notification_id'],
+      attributes: ['notification_id','subject','created_by','created_date'],
       include: [{
         model: Project,
-        attributes: ['project_id', 'project_name']
+        attributes: ['project_id', 'project_name'],
+        include: [{
+          model: codeProjectType,
+          attributes: ['project_type_name']
+        }]
       }, {
         model: User,
         attributes: ['user_id', 'name']
@@ -37,7 +42,20 @@ const getNotifications = async (req, res) => {
       }],
       where: [{ recipient_user_id: req.user.user_id }, { is_read: false }],
     });
-    res.send(notification);
+    const createdBys = notification.map(n => n.created_by);
+    const users = await User.findAll({
+      attributes: ['firstName', 'lastName'],
+      where: { email: createdBys }
+    });
+    const notificationsWithNames = notification.map(n => {
+      const user = users.find(u => u.email === n.created_by);
+      return {
+        ...n.toJSON(),
+        firstName: user?.firstName,
+        lastName: user?.lastName
+      };
+    });
+    res.send(notificationsWithNames);
   } catch (error) {
     logger.error(error);
     return res.status(500).send({ error: error });

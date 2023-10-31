@@ -9,6 +9,9 @@ export default (sequelize, DataType) => {
     recipient_user_id: {
       type: DataType.INTEGER,
     },
+    subject: {
+      type: DataType.STRING,
+    },
     message:{
       type: DataType.STRING,
     },
