@@ -149,7 +149,8 @@ async function sendTestEmail(req, res) {
     });
     const projectName = currentProject.project_name;
     const type = topic_place === 'details' ? 'Project Detail page' : 'Edit Project page';
-    userService.sendDiscussionEmail(nameSender, projectName, type, 'danilson@vizonomy.com');
+    await userService.sendDiscussionEmail(nameSender, projectName, type, 'danilson@vizonomy.com');
+    return res.send({ message: 'SUCCESS' });
   } catch (error) {
     res.status(500).send(error);
   }
