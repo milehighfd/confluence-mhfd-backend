@@ -144,7 +144,7 @@ async function sendTestEmail(req, res) {
   try {
     const { project_id, topic_place } = req.body;
     const userId = req.user;
-    const nameSender = `test`;
+    const nameSender =  `${userId.firstName} ${userId.lastName}`;
     const currentProject = await Project.findOne({
       where: { project_id: project_id }
     });

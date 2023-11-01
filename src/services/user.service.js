@@ -83,8 +83,8 @@ export const sendDiscussionEmail = async (nameSender, projectName, topicType, em
       template
         .split('{{url}}').join(redirectUrl)
         .split('{{name}}').join(nameSender)
-        .split('{{projectName}}').join(projectName)
-        .split('{{topicType}}').join(topicType)
+        .split('{{projectname}}').join(projectName)
+        .split('{{pagetype}}').join(topicType)
     );
     await sendEmail(options);
   } catch (error) {
