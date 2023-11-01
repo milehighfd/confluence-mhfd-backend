@@ -353,5 +353,6 @@ export default {
   sendApprovedAccount,
   deleteUser,
   sendSignupEmail,
-  sendRecoverAndConfirm
+  sendRecoverAndConfirm,
+  sendDiscussionEmail,
 };
