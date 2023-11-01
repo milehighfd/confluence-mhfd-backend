@@ -124,7 +124,7 @@ async function createThreadTopic(req, res) {
       transaction
     });
     const projectName = currentProject.project_name;
-    const type = topic_place === 'details' ? 'Project Detail page' : 'Edit Project page';
+    const type = topic_place === 'details' ? 'Project Detail' : 'Edit Project';
     if (emailList.length > 0) {
       emailList.foreach(email => {
         const nameSender = `${userId.firstName} ${userId.lastName}`;
