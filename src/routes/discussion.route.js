@@ -140,10 +140,10 @@ async function createThreadTopic(req, res) {
 }
 
 async function sendTestEmail(req, res) {
-  const { project_id, topic_place } = req.body;
-  const userId = req.user;
   try {
-    const nameSender = `${userId.firstName} ${userId.lastName}`;  
+    const { project_id, topic_place } = req.body;
+    const userId = req.user;
+    const nameSender = `test`;
     const currentProject = await Project.findOne({
       where: { project_id: project_id }
     });
