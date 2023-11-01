@@ -9,6 +9,7 @@ const ProjectDiscussionThread = db.projectDiscussionThread;
 const ProjectDiscussionTopic = db.projectDiscussionTopic;
 const DiscussionModerator = db.discussionModerator;
 const User = db.user;
+const Project = db.project;
 
 async function getProjectDiscussionThreads(req, res) {
   try {
