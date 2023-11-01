@@ -75,11 +75,11 @@ const sendEmail = async (options) => {
 
 export const sendDiscussionEmail = async (nameSender, projectName, topicType, email) => {
   try {
-    const redirectUrl = MHFD_FRONTEND;
+    const redirectUrl = MHFD_FRONTEND+'/map';
     const template = fs.readFileSync(__dirname + '/templates/email_discussion.html', 'utf8');
     const options = getEmailOptions(
       email,
-      "MHFD Confluence - Discussion",
+      "MHFD Confluence - A new message is available in Confluence",
       template
         .split('{{url}}').join(redirectUrl)
         .split('{{name}}').join(nameSender)
