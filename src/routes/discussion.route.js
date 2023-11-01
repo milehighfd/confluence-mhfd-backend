@@ -152,8 +152,9 @@ async function sendTestEmail(req, res) {
     await userService.sendDiscussionEmail(nameSender, projectName, type, 'danilson@vizonomy.com');
     return res.send({ message: 'SUCCESS' });
   } catch (error) {
-    res.status(500).send(error);
-  }
+    console.error(error);
+    res.status(500).send({ message: "Internal Server Error", error: error.toString() });
+  }   
 }
 
 async function deleteThreadTopic(req, res) {
