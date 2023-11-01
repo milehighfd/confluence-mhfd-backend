@@ -73,6 +73,25 @@ const sendEmail = async (options) => {
   }
 }
 
+export const sendDiscussionEmail = async (nameSender, projectName, topicType, email) => {
+  const redirectUrl = MHFD_FRONTEND;
+  const template = fs.readFileSync(__dirname + '/templates/email_discussion.html', 'utf8');
+  const options = getEmailOptions(
+    email,
+    "MHFD Confluence - Discussion",
+    template
+      .split('{{url}}').join(redirectUrl)
+      .split('{{name}}').join(nameSender)
+      .split('{{projectName}}').join(projectName)
+      .split('{{topicType}}').join(topicType)
+  );
+  try {
+    await sendEmail(options);
+  } catch(error) {
+    throw error;
+  }
+};
+
 export const sendSignupEmail = async (user) => {
   const email = user.email;
   const signupToken = user.changePasswordId;

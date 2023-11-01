@@ -2,6 +2,7 @@ import express from 'express';
 import db from 'bc/config/db.js';
 import discussionService from 'bc/services/discussion.service.js';
 import auth from 'bc/auth/auth.js';
+import userService from 'bc/services/user.service';
 
 const router = express.Router();
 const ProjectDiscussionThread = db.projectDiscussionThread;
@@ -117,11 +118,39 @@ async function createThreadTopic(req, res) {
       userId,
       transaction
     );
+    const currentProject = await Project.findOne({
+      where: { project_id: project_id },
+      transaction
+    });
+    const projectName = currentProject.project_name;
+    const type = topic_place === 'details' ? 'Project Detail page' : 'Edit Project page';
+    if (emailList.length > 0) {
+      emailList.foreach(email => {
+        const nameSender = `${userId.firstName} ${userId.lastName}`;
+        userService.sendDiscussionEmail(nameSender, projectName, type, email);
+      });
+    }
     result = { ...result, createNotifications };
     await transaction.commit();
     return res.send(result);
   } catch (error) {
     await transaction.rollback();
+    res.status(500).send(error);
+  }
+}
+
+async function sendTestEmail(req, res) {
+  const { project_id, topic_place } = req.body;
+  const userId = req.user;
+  const nameSender = `${userId.firstName} ${userId.lastName}`;
+  try {
+    const currentProject = await Project.findOne({
+      where: { project_id: project_id }
+    });
+    const projectName = currentProject.project_name;
+    const type = topic_place === 'details' ? 'Project Detail page' : 'Edit Project page';
+    userService.sendDiscussionEmail(nameSender, projectName, type, 'danilson@vizonomy.com');
+  } catch (error) {
     res.status(500).send(error);
   }
 }
@@ -152,5 +181,6 @@ router.get('/discussion-moderators', getDiscussionModerators);
 router.post('/', getProjectDiscussion);
 router.put('/', [auth], createThreadTopic);
 router.delete('/', [auth], deleteThreadTopic);
+router.post('/test-email', [auth], sendTestEmail);
 
 export default router;
