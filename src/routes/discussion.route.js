@@ -2,7 +2,7 @@ import express from 'express';
 import db from 'bc/config/db.js';
 import discussionService from 'bc/services/discussion.service.js';
 import auth from 'bc/auth/auth.js';
-import userService from 'bc/services/user.service';
+import userService from 'bc/services/user.service.js';
 
 const router = express.Router();
 const ProjectDiscussionThread = db.projectDiscussionThread;
