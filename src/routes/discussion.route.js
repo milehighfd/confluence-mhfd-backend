@@ -149,7 +149,7 @@ async function sendTestEmail(req, res) {
       where: { project_id: project_id }
     });
     const projectName = currentProject.project_name;
-    const type = topic_place === 'details' ? 'Project Detail page' : 'Edit Project page';
+    const type = topic_place === 'details' ? 'Project Detail' : 'Edit Project';
     await userService.sendDiscussionEmail(nameSender, projectName, type, 'danilson@vizonomy.com');
     return res.send({ message: 'SUCCESS' });
   } catch (error) {
