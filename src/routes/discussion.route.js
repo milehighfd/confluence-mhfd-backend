@@ -125,20 +125,24 @@ async function createThreadTopic(req, res) {
     });
     const projectName = currentProject.project_name;
     const type = topic_place === 'details' ? 'Project Detail' : 'Edit Project';
-    if (emailList.length > 0 && (process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'dev')) {     
-      await emailList.foreach(email => {
+    if (emailList.length > 0 && process.env.NODE_ENV === 'prod') {    
+      for (const email of emailList) {
         const nameSender = `${userId.firstName} ${userId.lastName}`;
-        userService.sendDiscussionEmail(nameSender, projectName, type, email);
-      });
+        await userService.sendDiscussionEmail(nameSender, projectName, type, email);
+      }
     }else{
-      await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com');
+      if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev'){
+        const nameSender = `${userId.firstName} ${userId.lastName}`;
+        await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com');
+      }      
     }
     result = { ...result, createNotifications };
     await transaction.commit();
     return res.send(result);
   } catch (error) {
     await transaction.rollback();
-    res.status(500).send(error);
+    console.error(error);
+    res.status(500).send({ message: "Internal Server Error", error: error.toString() });
   }
 }
 
