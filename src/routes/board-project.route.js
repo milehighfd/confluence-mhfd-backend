@@ -16,7 +16,7 @@ const ProjectPartner = db.projectPartner;
 const CodeProjectPartnerType = db.codeProjectPartnerType;
 const BusinessAssociates = db.businessAssociates;
 const ProjectIndependentAction = db.projectIndependentAction;
-
+const User = db.user;
 const router = express.Router();
 
 router.get('/:board_project_id/cost/test', async (req, res) => {
@@ -178,7 +178,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         as: 'projectData',
         include: [{
           model: ProjectCost,
-          attributes: ['cost'],
+          attributes: ['cost', 'code_cost_type_id', 'modified_by', 'last_modified' ],
           as: 'currentCost',
           required: false,
           where: {
@@ -323,7 +323,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
       const bid = bnnp.business_associates_id;
       const current_code_partner_type_id = bnnp.code_partner_type_id;
       const databyBN = groupedData[bname];
-      console.log('data filtered for', bname, 'databybn', databyBN, 'current cost type id', databyBN ? databyBN[0].code_cost_type_id: WORK_REQUEST_CODE_COST_TYPE_ID);
+      // console.log('data filtered for', bname, 'databybn', databyBN, 'current cost type id', databyBN ? databyBN[0].code_cost_type_id: WORK_REQUEST_CODE_COST_TYPE_ID);
       let current_code_cost_type_id; // ALMOST ALL ARE GOING TO BE 22 WORK REQUEST 
       if (current_code_partner_type_id == MHFD_CODE_COST_TYPE_ID || current_code_partner_type_id == SPONSOR_CODE_COST_TYPE_ID) {
         current_code_cost_type_id = WORK_REQUEST_CODE_COST_TYPE_ID;
@@ -367,7 +367,19 @@ router.get('/:board_project_id/cost', async (req, res) => {
     const filteredAmounts = finalAnswer.filter((item) => {
       return !(item.business_name === 'MHFD' && item.code_partner_type_id === 11);
     });  
-    return res.status(200).send({projectCostValues,boardProject, amounts: filteredAmounts, projectData: boardProject.projectData});
+    // make filter to get estimated cost from projectcostvalues where codecosttypeid = 1 
+    const estimatedCostValues = boardProject.projectData.currentCost.filter((item) => {
+      return item.code_cost_type_id === 1;
+    });
+    let userEstimated = {};
+    if (estimatedCostValues.length > 0) {
+      userEstimated = await User.findOne({
+        attributes: ['firstName', 'lastName'],
+        where: { email: estimatedCostValues[0].modified_by }});
+  
+    }
+    
+    return res.status(200).send({projectCostValues, boardProject, amounts: filteredAmounts, projectData: boardProject.projectData, estimatedCostUser:userEstimated });
  
   } catch (error) {
     logger.error('ERROR FROM GET COST ' + error);

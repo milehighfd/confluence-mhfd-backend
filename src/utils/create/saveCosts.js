@@ -2,7 +2,7 @@ import { saveProjectCost } from 'bc/utils/create';
 import logger from 'bc/config/logger.js';
 import { ProjectCostsError } from '../../errors/project.error.js';
 
-export const saveCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, filtered, filterFrontOverheadCosts, transaction) => {
+export const saveCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, filtered, filterFrontOverheadCosts, overheadcostdescription, transaction) => {
   const promises = [];  
   //creating aditional cost
   promises.push(saveProjectCost({
@@ -20,6 +20,7 @@ export const saveCosts = async (project_id, additionalcost, aditionalCostId, add
       project_id: project_id,
       cost: !isNaN(Number(filterFrontOverheadCosts[index])) ? Number(filterFrontOverheadCosts[index]) : 0,
       code_cost_type_id: element,
+      cost_description: overheadcostdescription,
       created_by: creator,
       modified_by: creator,
       is_active: true,
