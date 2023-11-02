@@ -210,7 +210,8 @@ const countGlobalSearch = async (req, res) => {
       const words = keyword.split(' ').filter(word => word.trim() !== '');
       filteredProjects = projects.filter(project => {
         return words.every(word => {
-          const regex = new RegExp(`\\b${word}\\b`, 'i');
+          let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
+          const regex = new RegExp(regexPattern, 'i');
           return regex.test(project.project_name);
         });
       });
@@ -239,7 +240,8 @@ const globalSearch = async (req, res) => {
       const words = keyword.split(' ').filter(word => word.trim() !== '');
       filteredProjects = projects.filter(project => {
         return words.every(word => {
-          const regex = new RegExp(`\\b${word}\\b`, 'i');
+          let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
+          const regex = new RegExp(regexPattern, 'i');
           return regex.test(project.project_name);
         });
       });
