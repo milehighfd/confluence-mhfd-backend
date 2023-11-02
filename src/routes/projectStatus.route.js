@@ -14,12 +14,12 @@ const Op = sequelize.Op;
 router.put('/update-group', [auth], async (req, res) => {
   logger.info(`Starting endpoint projectStatus.route/ with params ${JSON.stringify(req.params, null, 2)}`);
   const { phases } = req.body;
-  const { name } = req.user;
+  const { email } = req.user;
   try {
     const updates = [];
     for (const element of phases) {
       element.modified_date = new Date();
-      element.last_modified_by = name;
+      element.last_modified_by = email;
       if (element.current) {
         Project.update({ current_project_status_id: element.project_status_id }, {
           where: {
@@ -46,7 +46,7 @@ router.put('/update-group', [auth], async (req, res) => {
 router.post('/create-group', [auth], async (req, res) => {
   logger.info(`Starting endpoint projectStatus.route/create-group with params ${JSON.stringify(req.params, null, 2)}`);
   const { project_id, phases } = req.body;
-  const { name } = req.user;
+  const { email } = req.user;
   try {
     /*
     const phases = await CodePhaseType.findAll({
@@ -61,7 +61,7 @@ router.post('/create-group', [auth], async (req, res) => {
       const newStatus = {
         project_id,
         code_phase_type_id: element.phase_id,
-        created_by: name,
+        created_by: email,
         phase_change_date: new Date(),
         created_date: new Date(),
         modified_date: new Date(),
@@ -71,7 +71,7 @@ router.post('/create-group', [auth], async (req, res) => {
         actual_end_date: element.to,
         duration: element.duration,
         is_locked:element.locked,
-        last_modified_by: name
+        last_modified_by: email
       }
       if (element.current) {
         currentIndex = index; 

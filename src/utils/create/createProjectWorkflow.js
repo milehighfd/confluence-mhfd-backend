@@ -245,7 +245,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         answer.resActions = resActions;
         const overhead = overheadcost.split(',');        
         const overheadCostIds = await getOverheadCostIds(transaction);  
-        const resStreamsCap = await saveProjectStreams(project_id, streams, transaction); 
+        const resStreamsCap = await saveProjectStreams(project_id, streams, creator, transaction); 
         answer.resStreams = resStreamsCap;
         const COST_ID = 4;
         const resCost = await saveCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, overheadcostdescription, transaction);
@@ -267,7 +267,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         break;
       case 'study':
         await createCartoStudy(project_id, ids)
-        const resStreams = await saveProjectStreams(project_id, streams, transaction); 
+        const resStreams = await saveProjectStreams(project_id, streams, creator, transaction); 
         answer.resStreams = resStreams;
         const resStudy = await saveStudy(project_id, studyreason, creator, otherReason || null, body, transaction);
         answer.resStudy = resStudy;
@@ -276,7 +276,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         console.log('streams before saveProjectStreams: ' + streams);
         await createCarto(...createCartoInputs);
         const resMaintenance = await saveProjectDetails(project_id, body, creator, transaction);        
-        const resStreamsMain = await saveProjectStreams(project_id, streams, transaction); 
+        const resStreamsMain = await saveProjectStreams(project_id, streams, creator, transaction); 
         answer.resStreams = resStreamsMain;
         answer.resMaintenance = resMaintenance;
         break;      

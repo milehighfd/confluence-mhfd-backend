@@ -1,6 +1,6 @@
 import { saveProjectStream } from 'bc/utils/create';
 
-export const saveProjectStreams = async (project_id, streams, transaction = null) => {
+export const saveProjectStreams = async (project_id, streams, creator = 'conf_db_user', transaction = null) => {
   try {
     const promises = [];
     for (const stream of JSON.parse(streams)) {
@@ -13,6 +13,8 @@ export const saveProjectStreams = async (project_id, streams, transaction = null
           stream.code_local_goverment.length > 0
             ? stream.code_local_goverment[0].code_local_government_id
             : 0,
+        created_by: creator,
+        last_modified_by: creator,
       }, transaction);
       promises.push(promise);
     }
