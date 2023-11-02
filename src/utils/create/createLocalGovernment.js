@@ -11,7 +11,7 @@ export const createLocalGovernment = async (splitedJurisdiction, project_id, use
         code_local_government_id: parseInt(j),
         project_id: project_id,
         shape_length_ft: 0,
-        last_modified_by: user.name,
+        last_modified_by: user.email,
         created_by: user.email,
       }, { transaction: transaction });
     } catch (error) {

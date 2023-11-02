@@ -137,7 +137,7 @@ router.get("/create", auth, async (req, res) => {
     const favorite = {
       user_id: user.user_id,
       idField: id,
-      creator: user.name,
+      creator: user.email,
     };
     logger.info("create favorite ", favorite);
     logger.info(`Starting function saveFavorite for favorite/create`);

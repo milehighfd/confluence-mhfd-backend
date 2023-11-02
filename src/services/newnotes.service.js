@@ -267,9 +267,11 @@ const saveNote = async (note) => {
     throw error;
   }
 };
-const saveGroup = async (name, user_id) => {
+const saveGroup = async (name, user) => {
+  const user_id = user.user_id;
+  const email = user.email;
   console.log(name, user_id);
-  const myGroup = { group_notes_name: name, user_id: user_id };
+  const myGroup = { group_notes_name: name, user_id: user_id, created_by : email, last_modified_by: email};
   myGroup.position = await getNextBucket(user_id);
   const group = await GroupNotes.create(myGroup);
   return group;

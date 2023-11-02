@@ -52,6 +52,12 @@ export default (sequelize, DataType) => {
     },
     ba_tyler_id: {
       type: DataType.STRING,
+    },
+    created_by :{
+      type: DataType.STRING,
+    },
+    last_modified_by: {
+      type: DataType.STRING,
     }
   }, {
     freezeTableName: true,

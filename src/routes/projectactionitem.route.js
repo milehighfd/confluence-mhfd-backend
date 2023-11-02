@@ -2,6 +2,7 @@ import express from 'express';
 import db from 'bc/config/db.js';
 import sequelize from 'sequelize';
 import logger from 'bc/config/logger.js';
+import auth from "bc/auth/auth.js";
 
 const router = express.Router();
 const ProjectActionItem = db.projectActionItem;
@@ -19,12 +20,17 @@ router.get('/', async (req, res) => {
   res.send(boardProjects);
 });
 
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   logger.info(`Starting endpoint projectationitem.route/filters with params ${JSON.stringify(req.params, null, 2)}`);
-  const  name  = req.body;  
+  const name = req.body;
+  const { user } = req;
   try {
     logger.info(`Starting function create for projectationitem.route/`);
-    const group = await ProjectActionItem.create(name);
+    const group = await ProjectActionItem.create({
+      ...name,
+      created_by: user.email,
+      last_modified_by: user.email
+    });
     logger.info(`Finished function create for projectationitem.route/`);
     return res.send(group);
   } catch (error) {
@@ -33,9 +39,9 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.delete('/', async (req, res) => {
+router.delete('/',auth, async (req, res) => {
   logger.info(`Starting endpoint projectationitem.route/filters with params ${JSON.stringify(req.params, null, 2)}`);
-  const  name  = req.body;  
+  const  name  = req.body;    
   try {
     logger.info(`Starting function destroy for projectationitem.route/`);
     const project =  await ProjectActionItem.destroy({

@@ -17,6 +17,12 @@ export default (sequelize, DataType) => {
     },
     is_deleted: {
       type: DataType.INTEGER
+    },
+    created_by: {
+      type: DataType.STRING
+    },
+    last_modified_by: {
+      type: DataType.STRING
     }
   }, {
     freezeTableName: true,

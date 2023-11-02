@@ -25,6 +25,14 @@ export default (sequelize, DataType) => {
       type: DataType.FLOAT,
       allowNull: false
     },    
+    last_modified_by: {
+      type: DataType.STRING,
+      allowNull: false
+    },
+    created_by: {
+      type: DataType.STRING,
+      allowNull: false
+    }
   }, {
     freezeTableName: true,
     tableName: 'project_stream',

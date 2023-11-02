@@ -70,7 +70,7 @@ router.post('/group', [auth], async (req, res) => {
   const user = req.user;
   try {
     logger.info(`Starting function saveGroup for newnotes.route/group`);
-    const group = await NoteService.saveGroup(group_notes_name, user.user_id);
+    const group = await NoteService.saveGroup(group_notes_name, user);
     logger.info(`Finished function saveGroup for newnotes.route/group`);
     return res.send(group);
   } catch (error) {

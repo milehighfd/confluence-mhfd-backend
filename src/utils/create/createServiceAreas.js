@@ -11,7 +11,7 @@ export const createServiceAreas = async (splitedServiceArea, project_id, user, t
         project_id: project_id,
         code_service_area_id: s,
         shape_length_ft: 0,
-        last_modified_by: user.name,
+        last_modified_by: user.email,
         created_by: user.email,
       }, { transaction: transaction });
     } catch (error) {

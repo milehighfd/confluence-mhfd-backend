@@ -82,8 +82,8 @@ router.post('/business-associates', [auth], async (req, res) => {
       business_associate_name: body.name,
       business_name: body.name,
       code_business_associates_type_id: BUSINESS_ASSOCIATES_TYPE_ID,
-      created_by: req.user.user_id,
-      last_modified_by: req.user.user_id,
+      created_by: req.user.email,
+      last_modified_by: req.user.email,
       created_date: moment().format('YYYY-MM-DD HH:mm:ss'),
       last_modified_date: moment().format('YYYY-MM-DD HH:mm:ss'),
     });
@@ -190,7 +190,9 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
     const businessContact = {
       business_address_id: newBusinessAddress.business_address_id,
       contact_name: body.contact_name,
-      contact_phone_number: body.contact_phone_number || 'No number provided'
+      contact_phone_number: body.contact_phone_number || 'No number provided',
+      created_by: user.email,
+      last_modified_by: user.email,
     };
     const contact_email = body.contact_email;
     let contact = await BusinessContact.findOne({ where: { contact_email }, transaction: t });
@@ -200,7 +202,7 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
     } else {
       contact = await BusinessContact.create({
         ...businessContact,
-        contact_email: contact_email
+        contact_email: contact_email,        
       }, { transaction: t });
     }    
     const updatedUser = await updateUserBusinessContact(body.user_id, contact.business_associate_contact_id, t);
@@ -247,6 +249,7 @@ router.get('/sponsor-list', async (req, res) => {
 router.post('/create-contact/:idaddress', [auth], async (req, res) => {
   const { business_address_id, contact_name, contact_email, contact_phone_number, user_id } = req.body;
   const { full_address, state, city, zip } = req.body;
+  const user = req.user;
   const idAddress = req.params['idaddress'];
   console.log(idAddress)
   const t = await db.sequelize.transaction();
@@ -269,6 +272,8 @@ router.post('/create-contact/:idaddress', [auth], async (req, res) => {
         contact_email,
         contact_phone_number,
         business_address_id: idAddress,
+        created_by: user.email,
+        last_modified_by: user.email,
       }, { transaction: t });
     }
     const updatedUser =  await updateUserBusinessContact(user_id, contact.business_associate_contact_id, t);

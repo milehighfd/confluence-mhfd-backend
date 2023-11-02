@@ -20,6 +20,12 @@ export default (sequelize, DataType) => {
     contact_phone_number: {
       type: DataType.STRING,
       allowNull: false
+    },
+    created_by: {
+      type: DataType.STRING,
+    },
+    last_modified_by: {
+      type: DataType.STRING,
     }
   }, {
     freezeTableName: true,
