@@ -183,6 +183,72 @@ async function deleteThreadTopic(req, res) {
   }
 }
 
+async function editThreadTopic(req, res) {
+  const { message_id, message } = req.body;
+  const userData = req.user;
+  const transaction = await db.sequelize.transaction();
+  let result = {};
+  try {
+    const threadData = await ProjectDiscussionThread.findOne({
+      where: { project_discussion_thread_id: message_id },
+      transaction
+    });
+    const topicData = await ProjectDiscussionTopic.findOne({
+      where: { project_discussion_topic_id: threadData.project_discussion_topic_id },
+      transaction
+    });
+    let userIds = []; 
+    let emailList = [];
+    if (topicData.topic === 'DETAILS') {
+      const projectStaff = await discussionService.getStaff(topicData.project_id, transaction);
+      userIds = projectStaff.map(staff => staff.user.user_id);
+      emailList = projectStaff.map(staff => staff.user.email);
+    } else {
+      const {ids, emails} = await discussionService.getLocalityEmailsIds(topicData.project_id, transaction);
+      userIds = ids;
+      emailList = emails;
+    }
+    const thread = await discussionService.editThread(
+      message_id,
+      message,
+      userData,
+      transaction
+    );   
+    const topic_type = topicData.topic;
+    const createNotifications = await discussionService.createNotifications(
+      userIds,
+      topic_type,
+      topicData.project_id,
+      userData,
+      transaction
+    );
+    const currentProject = await Project.findOne({
+      where: { project_id: topicData.project_id },
+      transaction
+    });
+    const projectName = currentProject.project_name;
+    const type = topic_type === 'DETAILS' ? 'Project Detail' : 'Edit Project';
+    if (emailList.length > 0 && process.env.NODE_ENV === 'prod') {    
+      for (const email of emailList) {
+        const nameSender = `${userData.firstName} ${userData.lastName}`;
+        await userService.sendDiscussionEmail(nameSender, projectName, type, email);
+      }
+    }else{
+      if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev'){
+        const nameSender = `${userData.firstName} ${userData.lastName}`;
+        await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com');
+      }      
+    }
+    result = { ...thread, userId: userIds, emails: emailList, createNotifications };
+    await transaction.commit();
+    return res.send(result);
+  } catch (error) {
+    await transaction.rollback();
+    console.error(error);
+    res.status(500).send({ message: "Internal Server Error", error: error.toString() });
+  }
+}
+
 
 router.get('/', getProjectDiscussionThreads);
 router.get('/project-discussion-topics', getProjectDiscussionTopics);
@@ -191,5 +257,6 @@ router.post('/', getProjectDiscussion);
 router.put('/', [auth], createThreadTopic);
 router.delete('/', [auth], deleteThreadTopic);
 router.post('/test-email', [auth], sendTestEmail);
+router.post('/edit-thread', [auth], editThreadTopic)
 
 export default router;

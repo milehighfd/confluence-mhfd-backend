@@ -141,10 +141,28 @@ async function createNotifications(userIds, topicType, projectId, user, transact
   }
 }
 
+async function editThread(threadId, message, user, transaction) {
+  try {
+    const date = moment().format('YYYY-MM-DD HH:mm:ss');
+    return await ProjectDiscussionThread.update({
+      message,
+      modified_date: date,
+      last_modified_by: user?.email
+    }, {
+      where: { project_discussion_thread_id: threadId },
+      transaction
+    });
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+}
+
 export default {
   createTopic,
   createThread,
   getStaff,
   getLocalityEmailsIds,
   createNotifications,
+  editThread,
 }
