@@ -44,9 +44,9 @@ const getNotifications = async (req, res) => {
     });
     const createdBys = notification.map(n => n.created_by);
     const users = await User.findAll({
-      attributes: ['firstName', 'lastName'],
+      attributes: ['firstName', 'lastName', 'email'],
       where: { email: createdBys }
-    });
+    });    
     const notificationsWithNames = notification.map(n => {
       const user = users.find(u => u.email === n.created_by);
       return {
