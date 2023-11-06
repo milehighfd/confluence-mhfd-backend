@@ -66,10 +66,11 @@ router.post('/countydata', auth, async (req, res) => {
     JOIN CODE_STATE_COUNTY_CLIP_4326 c ON lg.Shape.STIntersects(c.Shape) = 1
     WHERE c.state_county_id IN (${stateString})
     `;
+    // for Local Government, we get the percentage of intersection between the county and the local government to avoid getting local governments that are not in the county or are only touching the border of the county
     const sqlQuery2 = `
     SELECT DISTINCT lg.code_local_government_id, lg.local_government_name 
     FROM CODE_LOCAL_GOVERNMENT_4326 lg
-    JOIN CODE_STATE_COUNTY_CLIP_4326 c ON lg.Shape.STIntersects(c.Shape) = 1
+    JOIN CODE_STATE_COUNTY_CLIP_4326 c ON (lg.Shape.STWithin(c.Shape) = 1 OR (lg.Shape.STIntersection(c.Shape).STArea() / lg.Shape.STArea())> .1)
     WHERE c.state_county_id IN (${stateString})
     `;
     const result1 = await db.sequelize.query(sqlQuery1, { type: db.sequelize.QueryTypes.SELECT});
