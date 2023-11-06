@@ -3,6 +3,7 @@ import db from 'bc/config/db.js';
 import discussionService from 'bc/services/discussion.service.js';
 import auth from 'bc/auth/auth.js';
 import userService from 'bc/services/user.service.js';
+import moment from 'moment';
 
 const router = express.Router();
 const ProjectDiscussionThread = db.projectDiscussionThread;
@@ -56,21 +57,28 @@ async function getProjectDiscussion(req, res) {
                 model: User,
                 attributes: ['user_id', 'firstName', 'lastName', 'email', 'photo']
               }
-            ]
+            ],           
+            order: [['created_date', 'DESC']] 
           }
         ]
       }
     );
+    if (threads && threads.project_discussion_threads) {
+      threads.project_discussion_threads.sort((a, b) => 
+        moment(b.created_date).diff(moment(a.created_date))
+      );
+    }
     return res.send({ threads });
   } catch (error) {
-    res.status(500).send(error);
+    console.error(error);
+    res.status(500).send({ message: "Internal Server Error", error: error.toString() });
   }
 }
 
 async function createThreadTopic(req, res) {
   const { project_id, topic_place, message } = req.body;
   const topic_type = topic_place === 'details' ? 'DETAILS' : 'CREATE';
-  const userId = req.user;
+  const userData = req.user;
   const transaction = await db.sequelize.transaction();
   let result;
   try {
@@ -89,11 +97,13 @@ async function createThreadTopic(req, res) {
       userIds = ids;
       emailList = emails;
     }
+    userIds = userIds.filter(id => id !== userData.user_id);
+    emailList = emailList.filter(email => email !== userData.email);
     if (topicExist) {
       const thread = await discussionService.createThread(
         topicExist.project_discussion_topic_id,
         message,
-        userId,
+        userData,
         transaction
       );
       result = { topic: topicExist, thread, userId: userIds, emails: emailList };
@@ -101,13 +111,13 @@ async function createThreadTopic(req, res) {
       const topic = await discussionService.createTopic(
         project_id,
         topic_type,
-        userId,
+        userData,
         transaction
       );
       const thread = await discussionService.createThread(
         topic.project_discussion_topic_id,
         message,
-        userId,
+        userData,
         transaction
       );
       result = { topic, thread, userId: userIds, emails: emailList };
@@ -116,7 +126,7 @@ async function createThreadTopic(req, res) {
       userIds,
       topic_type,
       project_id,
-      userId,
+      userData,
       transaction
     );
     const currentProject = await Project.findOne({
@@ -127,13 +137,13 @@ async function createThreadTopic(req, res) {
     const type = topic_place === 'details' ? 'Project Detail' : 'Edit Project';
     if (emailList.length > 0 && process.env.NODE_ENV === 'prod') {    
       for (const email of emailList) {
-        const nameSender = `${userId.firstName} ${userId.lastName}`;
-        await userService.sendDiscussionEmail(nameSender, projectName, type, email);
+        const nameSender = `${userData.firstName} ${userData.lastName}`;
+        await userService.sendDiscussionEmail(nameSender, projectName, type, email, message);
       }
     }else{
       if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev'){
-        const nameSender = `${userId.firstName} ${userId.lastName}`;
-        await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com');
+        const nameSender = `${userData.firstName} ${userData.lastName}`;
+        await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com', message);
       }      
     }
     result = { ...result, createNotifications };
@@ -156,7 +166,7 @@ async function sendTestEmail(req, res) {
     });
     const projectName = currentProject.project_name;
     const type = topic_place === 'details' ? 'Project Detail' : 'Edit Project';
-    await userService.sendDiscussionEmail(nameSender, projectName, type, 'danilson@vizonomy.com');
+    await userService.sendDiscussionEmail(nameSender, projectName, type, 'danilson@vizonomy.com', 'test message');
     return res.send({ message: 'SUCCESS' });
   } catch (error) {
     console.error(error);
@@ -231,12 +241,12 @@ async function editThreadTopic(req, res) {
     if (emailList.length > 0 && process.env.NODE_ENV === 'prod') {    
       for (const email of emailList) {
         const nameSender = `${userData.firstName} ${userData.lastName}`;
-        await userService.sendDiscussionEmail(nameSender, projectName, type, email);
+        await userService.sendDiscussionEmail(nameSender, projectName, type, email, message);
       }
     }else{
       if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev'){
         const nameSender = `${userData.firstName} ${userData.lastName}`;
-        await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com');
+        await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com', message);
       }      
     }
     result = { ...thread, userId: userIds, emails: emailList, createNotifications };
