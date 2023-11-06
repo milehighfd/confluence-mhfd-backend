@@ -1124,14 +1124,12 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
     logger.info(`Filtering by name ${filterName}...`);
     let whereOr = [];
     if (filterName) {
-      whereOr.push({
-        project_name: { [Op.like]: `${filterName}` }
-      });
-      whereOr.push({
-        project_name: { [Op.like]: `% ${filterName}%` }
-      });
-      whereOr.push({
-        project_name: { [Op.like]: `%${filterName} %` }
+      const words = filterName.split(' ').filter(word => word.trim() !== '');
+      console.log(words)
+      words.forEach(word => {
+        whereOr.push({
+          project_name: { [Op.like]: `%${word}%` }
+        });
       });
     }
     if (filterBase != -1) {
@@ -1146,7 +1144,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
     }
     if (whereOr.length) {
       conditions.push(Project.findAll({
-        attributes: ["project_id","code_project_type_id"],
+        attributes: ["project_id","code_project_type_id", "project_name"],
         where: {
           [Op.or]: whereOr
         }
@@ -1450,7 +1448,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
   });
   const intersection = Object.keys(counterObject).filter(key => counterObject[key] === projects.length)
     .map(key => +key);
-  const intersectedProjects = [];
+  let intersectedProjects = [];
   intersection.forEach(project_id => {
     let found = false;
     projects.forEach(project => {
@@ -1463,7 +1461,21 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
       }
     });
   });
-
+  const isNumeric = /^\d+$/.test(filterName);
+  if (filterName || filterBase) {
+    if (isNumeric) {
+      intersectedProjects = intersectedProjects;
+    } else {
+      const words = filterName.split(' ').filter(word => word.trim() !== '');
+      intersectedProjects = intersectedProjects.filter(project => {
+        return words.every(word => {
+          let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
+          const regex = new RegExp(regexPattern, 'i');
+          return regex.test(project.project_name);
+        });
+      });
+    }
+  }  
   let intersectedProjectsSorted = [];
   if (sortby) {
     projectsSorted.forEach((project) => {
@@ -1483,7 +1495,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
     intersectedProjectsSorted = intersectedProjects;
   }
   // console.log('intersectedProjects', intersectedProjectsSorted.map(p => ({id: p.project_id, cost: JSON.stringify(p)})));
-  console.log('length', intersectedProjects.length,'sorted', intersectedProjectsSorted.length, 'bf inter', projectsSorted.length);
+  console.log('lengthFinal', intersectedProjects.length,'sorted', intersectedProjectsSorted.length, 'bf inter', projectsSorted.length);
   return intersectedProjectsSorted;
 }
 
