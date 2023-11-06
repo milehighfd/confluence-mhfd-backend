@@ -143,7 +143,7 @@ async function createThreadTopic(req, res) {
     }else{
       if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev'){
         const nameSender = `${userData.firstName} ${userData.lastName}`;
-        await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com', message);
+        await userService.sendDiscussionEmail(nameSender, projectName, type, 'danilson@vizonomy.com', message);
       }      
     }
     result = { ...result, createNotifications };
