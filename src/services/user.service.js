@@ -73,7 +73,7 @@ const sendEmail = async (options) => {
   }
 }
 
-export const sendDiscussionEmail = async (nameSender, projectName, topicType, email) => {
+export const sendDiscussionEmail = async (nameSender, projectName, topicType, email, message) => {
   try {
     const redirectUrl = MHFD_FRONTEND+'/map';
     const template = fs.readFileSync(__dirname + '/templates/email_discussion.html', 'utf8');
@@ -85,6 +85,7 @@ export const sendDiscussionEmail = async (nameSender, projectName, topicType, em
         .split('{{name}}').join(nameSender)
         .split('{{projectname}}').join(projectName)
         .split('{{pagetype}}').join(topicType)
+        .split('{{message}}').join(message)
     );
     await sendEmail(options);
   } catch (error) {
