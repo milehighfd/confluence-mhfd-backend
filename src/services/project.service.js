@@ -522,6 +522,36 @@ const getDetails = async (project_id) => {
             model: ProjectStatus,
             required: false,
             separate: true,
+            as: 'currentId',
+            attributes: [
+              'code_phase_type_id',
+            ],
+            include: {
+              model: CodePhaseType,
+              required: false,
+              attributes: [
+                'phase_name',
+              ],
+              include: [{
+                model: CodeStatusType,
+                required: false,            
+                attributes: [
+                  'code_status_type_id',
+                  'status_name'
+                ]
+              }, {
+                model: CodeProjectType,
+                required: false,
+                attributes: [
+                  'code_project_type_id'
+                ]
+              }]
+            }
+          },
+          {
+            model: ProjectStatus,
+            required: false,
+            separate: true,
             attributes: [
               'code_phase_type_id',
               'planned_start_date',
@@ -685,6 +715,13 @@ const getDetails = async (project_id) => {
             attributes: [
               'code_project_type_id',
               'project_type_name'
+            ]
+          },
+          {
+            model: BoardProject,
+            required: false,
+            attributes: [
+              'code_status_type_id'
             ]
           }
         ]
