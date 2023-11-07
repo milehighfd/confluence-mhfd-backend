@@ -142,7 +142,8 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
     otherReason,
     subtotalcost,
     estimatedcostInput,
-    overheadcostdescription
+    overheadcostdescription,
+    estimatedcostDescription
   } = body;
   try {
     const answer = {};
@@ -158,7 +159,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         answer.costRes = costRes;
         const saveSubtotal = await saveSubtotalcost(project_id, subtotalcost, creator, transaction);
         answer.saveSubtotal = saveSubtotal;
-        const saveEstimatedcost = await saveEstimatedCost(project_id, estimatedcostInput, creator, transaction);
+        const saveEstimatedcost = await saveEstimatedCost(project_id, estimatedcostInput, creator, estimatedcostDescription,transaction);
         answer.saveEstimatedcost = saveEstimatedcost;
         const deletePARes = await deleteProposedAction(project_id, transaction);
         answer.deletePARes = deletePARes;

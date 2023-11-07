@@ -6,11 +6,11 @@ import {
 } from 'bc/utils/create';
 
 const ProjectCost = db.projectCost;
-export const saveEstimatedCost = async (project_id, estimatedCost, creator, transaction) => {
+export const saveEstimatedCost = async (project_id, estimatedCost, creator, estimatedcostDescription, transaction) => {
   try {
     const ESTIMATED_CODE_COST = 1;
     const currentEstimatedCost = await getCostActiveForProj(project_id, [ESTIMATED_CODE_COST], transaction);
-    const hasChanged = currentEstimatedCost[0]?.cost != estimatedCost;
+    const hasChanged = currentEstimatedCost[0]?.cost != estimatedCost || currentEstimatedCost[0]?.cost_description != estimatedcostDescription;
     if (hasChanged) {
       const pc = await ProjectCost.update({
         is_active: 0,
@@ -29,7 +29,7 @@ export const saveEstimatedCost = async (project_id, estimatedCost, creator, tran
         modified_by: creator,
         is_active: 1,
         last_modified: mainModifiedDate,
-        cost_description: 'Estimated Cost'
+        cost_description: estimatedcostDescription
       };
       const resultCreatedProjectCost = await ProjectCost.create(newProjectCostData, { transaction: transaction });
       return resultCreatedProjectCost;
