@@ -43,6 +43,9 @@ export default (sequelize, DataType) => {
     },
     project_partner_id: {
       type: DataType.STRING
+    },
+    code_data_source_type_id: {
+      type: DataType.INTEGER
     }
   }, {
     freezeTableName: true,
