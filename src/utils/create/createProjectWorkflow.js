@@ -231,6 +231,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
     studyreason,
     otherReason,
     subtotalcost,
+    estimatedcost,
     estimatedcostInput,
     overheadcostdescription,
     estimatedcostDescription
@@ -253,8 +254,15 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         answer.resCost = resCost;
         const saveSubtotal = await saveSubtotalcost(project_id, subtotalcost, creator, transaction);
         answer.saveSubtotal = saveSubtotal;
-        const saveEstimatedCostData = await saveEstimatedCost(project_id, estimatedcostInput, creator, estimatedcostDescription, transaction);
-        answer.saveEstimatedCost = saveEstimatedCostData;
+        
+        let savingEstimatedCostInput = estimatedcost;
+        let sourceFromSystem = true;
+        if (estimatedcostInput !== 'null' && estimatedcostInput !== null) {
+          savingEstimatedCostInput = estimatedcostInput;
+          sourceFromSystem = false;
+        }
+        const saveEstimatedCostData = await saveEstimatedCost(project_id, savingEstimatedCostInput, creator, estimatedcostDescription, sourceFromSystem, transaction);
+          answer.saveEstimatedCost = saveEstimatedCostData;
         break;
       case 'acquisition':        
         await createCarto(...createCartoInputs);
@@ -284,7 +292,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
     };
     return answer;
   } catch (error) {
-    logger.error('error saving extra fields');
+    logger.error(' at CREATE PROJECT: error saving extra fields');
     throw error;
   }
 };
