@@ -167,7 +167,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         const actionRes = await updateActions(project_id, independentComponent, components, creator, transaction);        
         answer.actionRes = actionRes;
         await deleteStreams(project_id, transaction);
-        const resStreamsCap = await updateStreams(project_id, streams, transaction); 
+        const resStreamsCap = await updateStreams(project_id, streams, creator, transaction); 
         answer.resStreams = resStreamsCap;
         break;
       case 'acquisition':        
@@ -183,7 +183,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
       case 'study':
         await createCartoStudy(project_id, ids)
         await deleteStreams(project_id, transaction);
-        const resStreams = await updateStreams(project_id, streams, transaction); 
+        const resStreams = await updateStreams(project_id, streams, creator, transaction); 
         answer.resStreams = resStreams;
         const resStudy = await updateStudy(project_id, studyreason, creator, otherReason || null, transaction);
         answer.resStudy = resStudy;
@@ -193,7 +193,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         const resMaintenance = await updateProjectDetail(project_id, body, creator, transaction);
         answer.resMaintenance = resMaintenance;
         await deleteStreams(project_id, transaction);
-        const resStreamsMain = await updateStreams(project_id, streams, transaction); 
+        const resStreamsMain = await updateStreams(project_id, streams, creator, transaction); 
         answer.resStreams = resStreamsMain;
         break;      
     };
