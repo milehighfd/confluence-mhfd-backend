@@ -278,8 +278,8 @@ async function editThreadTopic(req, res) {
       }
     }else{
       if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev'){
-        for (const email of emailList) {
-          const nameSender = `${userData.firstName} ${userData.lastName}`;
+        const nameSender = `${userData.firstName} ${userData.lastName}`;
+        for (const email of emailList) {          
           await userService.sendDiscussionEmail(nameSender, projectName, type, email, message);
         }
         //enable for testing
