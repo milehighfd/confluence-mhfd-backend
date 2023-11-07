@@ -1,6 +1,7 @@
 import logger from 'bc/config/logger.js';
 import { ProjectActionsError } from 'bc/errors/project.error.js';
 import db from 'bc/config/db.js';
+import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
 import {
   getCostActiveForProj
 } from 'bc/utils/create';
@@ -30,7 +31,8 @@ export const saveSubtotalcost = async (project_id, subtotalcost, creator, transa
         modified_by: creator,
         is_active: 1,
         last_modified: mainModifiedDate,
-        cost_description: 'Proposed (Formally Component Cost)'
+        cost_description: 'Proposed (Formally Component Cost)',
+        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
       };
       const resultCreatedProjectCost = await ProjectCost.create(newProjectCostData, { transaction: transaction });
       return resultCreatedProjectCost;

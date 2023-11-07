@@ -3,6 +3,7 @@ import logger from 'bc/config/logger.js';
 import moment from 'moment';
 import sequelize from 'sequelize';
 import { LexoRank } from 'lexorank';
+import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
 
 const BoardProject = db.boardProject;
 const ProjectCost = db.projectCost;
@@ -108,7 +109,6 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
         project_cost_id: { [Op.in]: projectsCostsIdsToUpdate }
       }
     }).then(async () => {
-      logger.info('XXX PROJECTS TO BE UPDATED'+ projectsCostsIdsToUpdate + ' current PROJECT ID TO INSERT' + currentProjectId);
       const newProjectCostData = {
         cost: currentCost,
         project_id: currentProjectId,
@@ -117,9 +117,9 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
         modified_by: user.email,
         is_active: 1,
         last_modified: lastModifiedDate,
-        project_partner_id: MHFD_Partner.project_partner_id
+        project_partner_id: MHFD_Partner.project_partner_id,
+        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
       };
-      console.log('NEW PROJECT COST DATA', newProjectCostData);
       const projectCostCreated = await ProjectCost.create(newProjectCostData);
       const project_cost_id = projectCostCreated.dataValues.project_cost_id;
       const newBoardProjectCostData = {
@@ -129,7 +129,6 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
         created_by: user.email,
         last_modified_by: user.email
       };
-      console.log('PROJECT COST IS CREATED', newBoardProjectCostData);
       await BoardProjectCost.create(newBoardProjectCostData);
     });
   } catch (error) {
@@ -429,7 +428,8 @@ function constructProjectCost(boardProject, reqPosition, userData, partnerId, bo
     code_phase_type_id: null, 
     code_scope_of_work_type_id: 20,
     is_active: 1,
-    effective_date: null
+    effective_date: null,
+    code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
   };
 }
 
@@ -616,7 +616,8 @@ const updateAndCreateProjectCostsForAmounts = async (
           modified_by: user.email,
           is_active: 1,
           last_modified: lastModifiedDate,
-          project_partner_id: project_partner.project_partner_id
+          project_partner_id: project_partner.project_partner_id,
+          code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
         });
         console.log('PROJECT COST IS CREATED', projectCostCreated.dataValues.project_cost_id);
         const project_cost_id = projectCostCreated.dataValues.project_cost_id;

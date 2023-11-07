@@ -151,3 +151,8 @@ export const PROJECT_TYPES_AND_NAME = [
      name: 'Special', id: 'special'
    }
  ];
+
+ export const CODE_DATA_SOURCE_TYPE = {
+  USER: 1,
+  SYSTEM: 7
+ };

@@ -16,6 +16,7 @@ import moment from 'moment';
 import { isOnWorkspace, isOnFirstYear } from 'bc/services/board-project.service.js';
 import sequelize, { where } from 'sequelize';
 import authOnlyEmail from 'bc/auth/auth-only-email.js';
+import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
 
 const { Op } = sequelize;
 const router = express.Router();
@@ -942,7 +943,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
       const DateToAvoidRepeated = moment(mainModifiedDate)
         .subtract(offsetMillisecond * index)
         .toDate();
-      index++;
+      index++;_
       const newProjectCost = {
         ...cost.projectCostData.dataValues,
         project_cost_id: null,
@@ -951,6 +952,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
         created: DateToAvoidRepeated,
         last_modified: DateToAvoidRepeated,
         code_cost_type_id,
+        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
       };
       const createdCost = await ProjectCost.create(newProjectCost);
       createdProjectCostIds.push(createdCost.project_cost_id);
@@ -967,6 +969,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
         last_modified_by: creator,
         createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
         updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
       };
       await BoardProjectCost.create(newBoardProjectCost);
       k++;
@@ -1245,7 +1248,6 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                       .subtract(offsetMillisecond * j)
                       .toDate()
                       // here we are duplicating the previous cost with the same partner but with code cost type of workplan
-                      console.trace(' XXX PROJECTCOST CREATE', currentProjectId, '\n ******** \n', JSON.stringify(prevCostOfSponsor));
                       const CODE_COST_TYPE_WP = 21;
                       const newProjectCost = await ProjectCost.create({
                         project_id: currentProjectId,
@@ -1255,7 +1257,8 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                         created_by: creator,
                         modified_by: creator,
                         is_active: 1,
-                        last_modified: lastModifiedDate
+                        last_modified: lastModifiedDate,
+                        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
                       });
                       console.log('new project cost created', newProjectCost);
 
@@ -1265,7 +1268,6 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                           project_cost_id: prevCostOfSponsor.project_cost_id
                         }
                       });
-                      console.log('XXX Creating new relation boardporject-cost', newBoardProjectId, newProjectCost.project_cost_id, prevBoardProjectCost.req_position);
                       const newBoardProjectCost = await BoardProjectCost.create({
                         board_project_id: newBoardProjectId,
                         project_cost_id: newProjectCost.project_cost_id,
@@ -1661,7 +1663,8 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
           code_phase_type_id: null,
           code_scope_of_work_type_id: 20,
           is_active: 1,
-          effective_date: ''
+          effective_date: '',
+          code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
         }
         projectCostsToCreate.push(yearprojectCost);
       }

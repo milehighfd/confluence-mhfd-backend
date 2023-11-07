@@ -1,6 +1,7 @@
 import { saveProjectCost } from 'bc/utils/create';
 import logger from 'bc/config/logger.js';
 import { ProjectCostsError } from '../../errors/project.error.js';
+import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
 
 export const saveCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, filtered, filterFrontOverheadCosts, overheadcostdescription, transaction) => {
   const promises = [];  
@@ -13,6 +14,7 @@ export const saveCosts = async (project_id, additionalcost, aditionalCostId, add
     created_by: creator,
     modified_by: creator,
     is_active: true,
+    code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
   }, transaction));
   //creating overhead cost
   for (const [index, element] of filtered.entries()) {
@@ -24,6 +26,7 @@ export const saveCosts = async (project_id, additionalcost, aditionalCostId, add
       created_by: creator,
       modified_by: creator,
       is_active: true,
+      code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
     }, transaction));
   }
   const result = await Promise.all(promises)
