@@ -88,8 +88,24 @@ const testNotifications = async (req, res) => {
   }
 }
 
+const readAllNotifications = async (req, res) => {
+  console.log(req.user)
+  try {
+    const user_id = req.user.user_id;
+    await Notifications.update(
+      { is_read: true },
+      { where: { recipient_user_id: user_id } }
+    )
+    return res.status(200).send({ message: 'SUCCESS' });
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).send({ error: error });
+  }
+}
+
 router.get('/', auth, getNotifications);
 router.post('/', auth, updateNotification);
 router.get('/test', testNotifications);
+router.post('/read-all', auth, readAllNotifications)
 
 export default router;
