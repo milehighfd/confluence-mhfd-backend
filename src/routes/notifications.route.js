@@ -41,6 +41,7 @@ const getNotifications = async (req, res) => {
         }]
       }],
       where: [{ recipient_user_id: req.user.user_id }, { is_read: false }],
+      order: [['created_date', 'DESC']]
     });
     const createdBys = notification.map(n => n.created_by);
     const users = await User.findAll({
