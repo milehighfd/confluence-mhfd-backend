@@ -10,7 +10,18 @@ export const saveEstimatedCost = async (project_id, estimatedCost, creator, esti
   try {
     const ESTIMATED_CODE_COST = 1;
     const currentEstimatedCost = await getCostActiveForProj(project_id, [ESTIMATED_CODE_COST], transaction);
-    const hasChanged = currentEstimatedCost[0]?.cost != estimatedCost || currentEstimatedCost[0]?.cost_description != estimatedcostDescription;
+    const hasChanged = currentEstimatedCost[0]?.cost != estimatedCost;
+    const descriptionHasChanged = currentEstimatedCost[0]?.cost_description != estimatedcostDescription;
+    if (descriptionHasChanged && currentEstimatedCost[0]?.cost_description == estimatedcostDescription) {
+      const pc = await ProjectCost.update({
+        cost_description: estimatedcostDescription,
+      }, {
+        where: {
+          project_id: project_id ,
+          code_cost_type_id: ESTIMATED_CODE_COST 
+        }
+      });
+    }
     if (hasChanged) {
       const pc = await ProjectCost.update({
         is_active: 0,
