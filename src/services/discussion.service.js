@@ -13,6 +13,9 @@ const ProjectServiceArea = db.projectServiceArea;
 const BoardLocality = db.boardLocality;
 const CodeServiceArea = db.codeServiceArea;
 const Notifications = db.notifications;
+const BusinessAssociateContact = db.businessAssociateContact;
+const businessAdress = db.businessAdress;
+const businessAssociates = db.businessAssociates;
 
 async function createTopic(projectId, topicType, user, transaction) {
   try {
@@ -110,7 +113,6 @@ async function getLocalityEmailsIds(project_id, transaction) {
       emailList.push(creatorEmail.created_by);
     }
     if (creatorId?.user_id){
-      console.log('here')
       userIds.push(creatorId.user_id);
     }
     return { ids: userIds, emails: emailList };
@@ -158,6 +160,74 @@ async function editThread(threadId, message, user, transaction) {
   }
 }
 
+async function getEmailAndIdInThread(topicId, transaction) {
+  try {
+    const topicThreads = await ProjectDiscussionTopic.findOne({
+      where: { project_discussion_topic_id: topicId },
+      attributes: ['project_discussion_topic_id'],
+      include: [
+        {
+          model: ProjectDiscussionThread,
+          attributes: ['project_discussion_thread_id'],
+          include: [
+            {
+              model: User,
+              attributes: ['email', 'user_id']
+            }
+          ]
+        }
+      ],
+      transaction
+    });
+    const uniqueEmails = [...new Set(topicThreads.project_discussion_threads.map(thread => thread.user.email))];
+    const uniqueIds = [...new Set(topicThreads.project_discussion_threads.map(thread => thread.user.user_id))];
+    return { emails: uniqueEmails, ids: uniqueIds };
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+}
+
+async function getMhfdIdsAndEmails ( ids, transaction) {
+  try {
+    const MHFD_NAME = 'MHFD';
+    const mhfdIds = await User.findAll({
+      where: { user_id: ids },
+      attributes: ['user_id', 'email'],
+      include: [
+        {
+          model: BusinessAssociateContact,
+          attributes: ['business_associate_contact_id'],
+          required: true,
+          include: [
+            {
+              model: businessAdress,
+              attributes: ['business_address_id'],
+              required: true,
+              include: [
+                {
+                  model: businessAssociates,
+                  attributes: ['business_associates_id','business_name'],
+                  required: true,
+                  where: { business_name: MHFD_NAME }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      transaction
+    });
+    const mhfdEmails = mhfdIds.map(id => id?.email);
+    const uniqueEmails = [...new Set(mhfdEmails)];
+    const uniqueIds = [...new Set(mhfdIds?.map(id => id?.user_id))];
+    return { emails: uniqueEmails, ids: uniqueIds };
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+}
+
 export default {
   createTopic,
   createThread,
@@ -165,4 +235,6 @@ export default {
   getLocalityEmailsIds,
   createNotifications,
   editThread,
+  getEmailAndIdInThread,
+  getMhfdIdsAndEmails
 }

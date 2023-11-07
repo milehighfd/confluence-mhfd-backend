@@ -97,6 +97,13 @@ async function createThreadTopic(req, res) {
       userIds = ids;
       emailList = emails;
     }
+    if (topicExist) {
+      const dataInThread = await discussionService.getEmailAndIdInThread(topicExist.project_discussion_topic_id, transaction);
+      const emailsInThread = dataInThread.emails;
+      const idsInThread = dataInThread.ids;
+      userIds = [...new Set([...userIds, ...idsInThread])];
+      emailList = [...new Set([...emailList, ...emailsInThread])];
+    }
     userIds = userIds.filter(id => id !== userData.user_id);
     emailList = emailList.filter(email => email !== userData.email);
     if (topicExist) {
@@ -106,7 +113,7 @@ async function createThreadTopic(req, res) {
         userData,
         transaction
       );
-      result = { topic: topicExist, thread, userId: userIds, emails: emailList };
+      result = { topic: topicExist, thread};
     } else {
       const topic = await discussionService.createTopic(
         project_id,
@@ -120,7 +127,14 @@ async function createThreadTopic(req, res) {
         userData,
         transaction
       );
-      result = { topic, thread, userId: userIds, emails: emailList };
+      result = { topic, thread };
+    }
+    if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev' || !process.env.NODE_ENV){
+      const MhfdEmailsAndIds = await discussionService.getMhfdIdsAndEmails(userIds, transaction);
+      const MhfdIds = MhfdEmailsAndIds.ids;
+      const MhfdEmails = MhfdEmailsAndIds.emails;
+      userIds = MhfdIds;
+      emailList = MhfdEmails;
     }
     const createNotifications = await discussionService.createNotifications(
       userIds,
@@ -129,6 +143,7 @@ async function createThreadTopic(req, res) {
       userData,
       transaction
     );
+    result = { ...result, userId: userIds, emails: emailList };
     const currentProject = await Project.findOne({
       where: { project_id: project_id },
       transaction
@@ -142,11 +157,15 @@ async function createThreadTopic(req, res) {
       }
     }else{
       if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev'){
-        const nameSender = `${userData.firstName} ${userData.lastName}`;
+        for (const email of emailList) {
+          const nameSender = `${userData.firstName} ${userData.lastName}`;
+          await userService.sendDiscussionEmail(nameSender, projectName, type, email, message);
+        }
+        //enable for testing
         await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com', message);
       }      
     }
-    result = { ...result, createNotifications };
+    result = { ...result };
     await transaction.commit();
     return res.send(result);
   } catch (error) {
@@ -206,9 +225,9 @@ async function editThreadTopic(req, res) {
     const topicData = await ProjectDiscussionTopic.findOne({
       where: { project_discussion_topic_id: threadData.project_discussion_topic_id },
       transaction
-    });
+    });   
     let userIds = []; 
-    let emailList = [];
+    let emailList = [];    
     if (topicData.topic === 'DETAILS') {
       const projectStaff = await discussionService.getStaff(topicData.project_id, transaction);
       userIds = projectStaff.map(staff => staff.user.user_id);
@@ -218,6 +237,13 @@ async function editThreadTopic(req, res) {
       userIds = ids;
       emailList = emails;
     }
+    const dataInThread = await discussionService.getEmailAndIdInThread(topicData.project_discussion_topic_id, transaction);
+    const emailsInThread = dataInThread.emails;
+    const idsInThread = dataInThread.ids;
+    userIds = [...new Set([...userIds, ...idsInThread])];
+    emailList = [...new Set([...emailList, ...emailsInThread])];
+    userIds = userIds.filter(id => id !== userData.user_id);
+    emailList = emailList.filter(email => email !== userData.email);
     const thread = await discussionService.editThread(
       message_id,
       message,
@@ -225,6 +251,13 @@ async function editThreadTopic(req, res) {
       transaction
     );   
     const topic_type = topicData.topic;
+    if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev' || !process.env.NODE_ENV){
+      const MhfdEmailsAndIds = await discussionService.getMhfdIdsAndEmails(userIds, transaction);
+      const MhfdIds = MhfdEmailsAndIds.ids;
+      const MhfdEmails = MhfdEmailsAndIds.emails;
+      userIds = MhfdIds;
+      emailList = MhfdEmails;
+    }
     const createNotifications = await discussionService.createNotifications(
       userIds,
       topic_type,
@@ -245,9 +278,13 @@ async function editThreadTopic(req, res) {
       }
     }else{
       if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev'){
-        const nameSender = `${userData.firstName} ${userData.lastName}`;
+        for (const email of emailList) {
+          const nameSender = `${userData.firstName} ${userData.lastName}`;
+          await userService.sendDiscussionEmail(nameSender, projectName, type, email, message);
+        }
+        //enable for testing
         await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com', message);
-      }      
+      }
     }
     result = { ...thread, userId: userIds, emails: emailList, createNotifications };
     await transaction.commit();
