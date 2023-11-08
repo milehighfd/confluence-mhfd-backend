@@ -7,9 +7,9 @@ import { EditCostProjectError } from '../../errors/project.error.js';
 import logger from 'bc/config/logger.js';
 import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
 
-export const updateCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, overheadIds, filterFrontOverheadCosts, transaction, overheadcostdescription) => {
+export const updateCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, overheadIds, filterFrontOverheadCosts, overheadcostdescription, userChangedOverhead, transaction) => {
   try {
-    
+    const overheadCostUser = JSON.parse(userChangedOverhead);
     const promises = [];
     const promisesUpdate = [];
     const currentIndependentCost = await getCostActiveForProj(project_id, [aditionalCostId], transaction);
@@ -44,8 +44,9 @@ export const updateCosts = async (project_id, additionalcost, aditionalCostId, a
           modified_by: creator,
           is_active: true,
           cost_description: overheadcostdescription,
-          code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
+          code_data_source_type_id: overheadCostUser[index] ? CODE_DATA_SOURCE_TYPE.USER: CODE_DATA_SOURCE_TYPE.SYSTEM
         };
+        console.log('About to saveoverhead costs', index, element, 'overheadCostUser', overheadCostUser[index], 'overheadCostToSave', overheadCostToSave);
         promisesUpdate.push(setCostActiveToFalse(project_id,element, transaction));
         promises.push(saveProjectCost(overheadCostToSave, transaction));
       } 
