@@ -1258,7 +1258,7 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                         modified_by: creator,
                         is_active: 1,
                         last_modified: lastModifiedDate,
-                        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
+                        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM
                       });
                       console.log('new project cost created', newProjectCost);
 
