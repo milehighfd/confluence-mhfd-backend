@@ -560,7 +560,8 @@ const updateAndCreateProjectCostsForAmounts = async (
   board_project_id,
   lastModifiedDate,
   codeCostTypeId,
-  isWorkPlan
+  isWorkPlan,
+  amountTouched
 ) => {
   console.log('Update And Create Cost ');
   const countOriginalProject = await Project.count({ where: { project_id: currentProjectId } });
@@ -608,7 +609,10 @@ const updateAndCreateProjectCostsForAmounts = async (
       }
     }).then(async () => {
       if (currentCost !== null && currentCost !== undefined) {
-        const projectCostCreated = await ProjectCost.create({
+        const hasBeenTouched = (project_partner.code_partner_type_id !== 88) ? true : amountTouched;
+        console.log('---------------\n\n\n\n ', project_partner, hasBeenTouched);
+
+        const costToCreate = {
           cost: currentCost,
           project_id: currentProjectId,
           code_cost_type_id: codeCostTypeId,
@@ -617,9 +621,10 @@ const updateAndCreateProjectCostsForAmounts = async (
           is_active: 1,
           last_modified: lastModifiedDate,
           project_partner_id: project_partner.project_partner_id,
-          code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
-        });
-        console.log('PROJECT COST IS CREATED', projectCostCreated.dataValues.project_cost_id);
+          code_data_source_type_id: hasBeenTouched ? CODE_DATA_SOURCE_TYPE.USER: CODE_DATA_SOURCE_TYPE.SYSTEM
+        };
+        console.log('About to create this cost ', costToCreate);
+        const projectCostCreated = await ProjectCost.create(costToCreate);
         const project_cost_id = projectCostCreated.dataValues.project_cost_id;
         await BoardProjectCost.create({
             board_project_id: board_project_id,

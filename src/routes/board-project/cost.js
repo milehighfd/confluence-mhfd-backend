@@ -176,7 +176,7 @@ const updateCostNew = async (req, res) => {
   try {
     const { board_project_id } = req.params;
     const user = req.user; 
-    const { amounts, isMaintenance, isWorkPlan } = req.body; // ALL Amounts by sponsor, mhfd funding and cosponsors
+    const { amounts, isMaintenance, isWorkPlan, amountsTouched } = req.body; // ALL Amounts by sponsor, mhfd funding and cosponsors
     let columnsChangesMHFD = [0];
     const beforeUpdate = await BoardProject.findOne({
       where: { board_project_id },
@@ -212,7 +212,6 @@ const updateCostNew = async (req, res) => {
           console.log('Jumped save for ', amount.business_name, 'because it doesnt exist');
           continue;
         }
-        console.log('Before amounts have b a id  ', beforeAmounts);
         const currentBusinessAssociatesId = beforeAmounts?.business_associates_id;
         const currentPartnerTypeId = beforeAmounts?.code_partner_type_id;
         // EXCLUSIVO PARA MHFD FUNDING // PORQUE ES PARA AGREGAR O QUITAR CARDS DE ALGUNA COLUMNA
@@ -225,7 +224,6 @@ const updateCostNew = async (req, res) => {
             // const valueHasChanged = (currentReqAmount === null) ? true : beforeAmounts.values[reqColumnName] !== currentReqAmount;
             const valueHasChanged = beforeAmounts.values[reqColumnName] !== currentReqAmount;
             if (valueHasChanged) {
-              console.log(' ========== 1 adding pos', pos, valueHasChanged, currentReqAmount, beforeAmounts.values[reqColumnName]);
               columnsChanged.push(pos);
               allCurrentAmounts[reqColumnName] = currentReqAmount;
             } else {
@@ -258,7 +256,6 @@ const updateCostNew = async (req, res) => {
             }
           }
         } else if (amount.code_partner_type_id !== 88) {
-          console.log('NOT MHFD FUNDING', JSON.stringify(amount), 'before amount', beforeAmounts);
           for (let pos = 1; pos <= 5; pos++) {
             const reqColumnName = `req${pos}`;
             const valueHasChanged = beforeAmounts.values[reqColumnName] !== amount.values[reqColumnName];
@@ -309,7 +306,8 @@ const updateCostNew = async (req, res) => {
                     .subtract(offsetMillisecond * pos)
                     .toDate(),
                   amount.code_cost_type_id,
-                  isWorkPlan
+                  isWorkPlan,
+                  amountsTouched[`req${currentColumn}`]
                 )
               );
             }
