@@ -42,3 +42,25 @@ export const setCostActiveToFalse = async (project_id, code_cost_type_id, transa
     throw error;
   }
 };
+
+export const updateDescriptionOnly = async (project_id, overhead_id, newDescription, transaction = null) => {
+  try {
+    await ProjectCost.update(
+      {
+        cost_description: newDescription
+      },
+      {
+        where: {
+          project_id: project_id,
+          is_active: true,
+          code_cost_type_id: overhead_id
+        },
+        transaction: transaction
+      }
+    );
+    return;
+  } catch (error) {
+    logger.error('error updating cost to false', error);
+    throw error;
+  }
+};

@@ -1,7 +1,8 @@
 import {
   setCostActiveToFalse,
   saveProjectCost,
-  getCostActiveForProj
+  getCostActiveForProj,
+  updateDescriptionOnly
 } from 'bc/utils/create';
 import { EditCostProjectError } from '../../errors/project.error.js';
 import logger from 'bc/config/logger.js';
@@ -34,7 +35,7 @@ export const updateCosts = async (project_id, additionalcost, aditionalCostId, a
     //creating overhead cost
     for (const [index, element] of overheadIds.entries()) {
       const currentEquivalentOverheadCost = currentOverheadCosts.find((cost) => cost.code_cost_type_id === element);
-      const hasChanged = (filterFrontOverheadCosts[index] != currentEquivalentOverheadCost?.cost) || (overheadcostdescription != currentEquivalentOverheadCost?.cost_description);
+      const hasChanged = (filterFrontOverheadCosts[index] != currentEquivalentOverheadCost?.cost); 
       if (hasChanged) {
         const overheadCostToSave = {
           project_id: project_id,
@@ -46,10 +47,11 @@ export const updateCosts = async (project_id, additionalcost, aditionalCostId, a
           cost_description: overheadcostdescription,
           code_data_source_type_id: overheadCostUser[index] ? CODE_DATA_SOURCE_TYPE.USER: CODE_DATA_SOURCE_TYPE.SYSTEM
         };
-        console.log('About to saveoverhead costs', index, element, 'overheadCostUser', overheadCostUser[index], 'overheadCostToSave', overheadCostToSave);
         promisesUpdate.push(setCostActiveToFalse(project_id,element, transaction));
         promises.push(saveProjectCost(overheadCostToSave, transaction));
-      } 
+      } else if (overheadcostdescription != currentEquivalentOverheadCost?.cost_description) {
+        promisesUpdate.push(updateDescriptionOnly(project_id, element, overheadcostdescription, transaction));
+      }
     }
     await Promise.all(promisesUpdate);
     const result = await Promise.all(promises)

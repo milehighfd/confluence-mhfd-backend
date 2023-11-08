@@ -29,7 +29,6 @@ export const saveCosts = async (project_id, additionalcost, aditionalCostId, add
       is_active: true,
       code_data_source_type_id: overheadCostUser[index]? CODE_DATA_SOURCE_TYPE.USER: CODE_DATA_SOURCE_TYPE.SYSTEM
     };
-    console.log(' \n\n\n\n ----------------- \n\n -------------- \n\n About to save overhead with', overheadData);
     promises.push(saveProjectCost(overheadData, transaction));
   }
   const result = await Promise.all(promises)

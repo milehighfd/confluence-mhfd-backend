@@ -16,16 +16,6 @@ export const saveEstimatedCost = async (project_id, estimatedCost, creator, esti
     const CODE_DATA_SOURCE_TYPE_VALUE = sourceFromSystem ? CODE_DATA_SOURCE_TYPE.SYSTEM: CODE_DATA_SOURCE_TYPE.USER;
     console.log('saveEstimatedCost', project_id, estimatedCost, sourceFromSystem, CODE_DATA_SOURCE_TYPE_VALUE);
     const descriptionHasChanged = currentEstimatedCost[0]?.cost_description != estimatedcostDescription;
-    if (descriptionHasChanged && currentEstimatedCost[0]?.cost_description == estimatedcostDescription) {
-      const pc = await ProjectCost.update({
-        cost_description: estimatedcostDescription,
-      }, {
-        where: {
-          project_id: project_id ,
-          code_cost_type_id: ESTIMATED_CODE_COST 
-        }
-      });
-    }
     if (hasChanged) {
       const pc = await ProjectCost.update({
         is_active: 0,
@@ -47,9 +37,17 @@ export const saveEstimatedCost = async (project_id, estimatedCost, creator, esti
         cost_description: estimatedcostDescription,
         code_data_source_type_id: CODE_DATA_SOURCE_TYPE_VALUE
       };
-      console.log('About to create new project cost data', newProjectCostData);
       const resultCreatedProjectCost = await ProjectCost.create(newProjectCostData, { transaction: transaction });
       return resultCreatedProjectCost;
+    } else if (descriptionHasChanged) {
+      const pc = await ProjectCost.update({
+        cost_description: estimatedcostDescription,
+      }, {
+        where: {
+          project_id: project_id ,
+          code_cost_type_id: ESTIMATED_CODE_COST 
+        }
+      });
     } else {
       return [];
     }
