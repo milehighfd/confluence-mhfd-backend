@@ -162,7 +162,7 @@ async function createThreadTopic(req, res) {
           await userService.sendDiscussionEmail(nameSender, projectName, type, email, message);
         }
         //enable for testing
-        await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com', message);
+        //await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com', message);
       }      
     }
     result = { ...result };
@@ -283,7 +283,7 @@ async function editThreadTopic(req, res) {
           await userService.sendDiscussionEmail(nameSender, projectName, type, email, message);
         }
         //enable for testing
-        await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com', message);
+        //await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com', message);
       }
     }
     result = { ...thread, userId: userIds, emails: emailList, createNotifications };
