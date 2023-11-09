@@ -168,14 +168,24 @@ const getFinancialInformation = async (id, filters) => {
     );
     if (!PARTNER_FILTER || PARTNER_FILTER === MHFD_PARTNER_ID) {
         // mhfd project cost creation 
+        const totalContributions = resProjectCost.reduce((acc, projectCost) => {
+            const key = `${projectCost.agreement_number}-${projectCost.amendment_number}`;
+            if (!acc[key]) {
+                acc[key] = 0;
+            }
+            acc[key] += projectCost.cost_project_partner_contribution || 0;
+            return acc;
+        }, {});
         resProjectCost.forEach(function callback(projectCost) {
             if (projectCost?.cost_project_partner_contribution && projectCost?.cost > 0 && !projectCost?.code_cost_type?.cost_type_name.includes('Vendor')) {
+                const key = `${projectCost.agreement_number}-${projectCost.amendment_number}`;
+                const subtract = totalContributions[key] || 0;
                 resProjectCost.push({
                     "agreement_number": projectCost.agreement_number,
                     "amendment_number": projectCost.amendment_number,
                     "code_phase_type_id": projectCost.code_phase_type_id,
                     "project_partner_id": MHFD_PARTNER_ID,
-                    "cost": projectCost.cost - projectCost.cost_project_partner_contribution,
+                    "cost": projectCost.cost - subtract,
                     "cost_project_partner_contribution": projectCost.cost_project_partner_contribution,
                     "effective_date": projectCost.effective_date,
                     "code_cost_type": {
