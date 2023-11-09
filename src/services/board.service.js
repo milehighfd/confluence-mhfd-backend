@@ -610,7 +610,7 @@ const updateAndCreateProjectCostsForAmounts = async (
     }).then(async () => {
       if (currentCost !== null && currentCost !== undefined) {
         const hasBeenTouched = (project_partner.code_partner_type_id !== 88) ? true : amountTouched;
-        console.log('---------------\n\n\n\n ', project_partner, hasBeenTouched);
+        console.log('---------------\n\n\n\n ', project_partner, hasBeenTouched, 'amountTouched', amountTouched);
 
         const costToCreate = {
           cost: currentCost,

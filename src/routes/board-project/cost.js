@@ -338,7 +338,8 @@ const updateCostNew = async (req, res) => {
                     .subtract(offsetMillisecond * pos)
                     .toDate(),
                   amount.code_cost_type_id,
-                  isWorkPlan
+                  isWorkPlan,
+                  amountsTouched ? amountsTouched[`req${currentColumn}`] : true
                 )
               );
             }
