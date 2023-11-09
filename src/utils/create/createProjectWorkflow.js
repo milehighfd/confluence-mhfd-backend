@@ -235,12 +235,14 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
     estimatedcostInput,
     overheadcostdescription,
     estimatedcostDescription,
-    userChangedOverhead
+    userChangedOverhead,
+    userChangedAdditional
   } = body;
   try {
     const answer = {};
     let createCartoInputs = [CREATE_PROJECT_TABLE, geom, project_id, transaction];
     let createCarto = createCartoEntry;
+    const booleanUserChangedAdditional = userChangedAdditional === 'true';
     switch(type) {
       case 'capital':                
         await createCarto(...createCartoInputs);
@@ -251,7 +253,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         const resStreamsCap = await saveProjectStreams(project_id, streams, creator, transaction); 
         answer.resStreams = resStreamsCap;
         const COST_ID = 4;
-        const resCost = await saveCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, overheadcostdescription, userChangedOverhead, transaction);
+        const resCost = await saveCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, overheadcostdescription, userChangedOverhead, booleanUserChangedAdditional, transaction);
         answer.resCost = resCost;
         const saveSubtotal = await saveSubtotalcost(project_id, subtotalcost, creator, transaction);
         answer.saveSubtotal = saveSubtotal;

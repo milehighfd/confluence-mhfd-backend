@@ -3,11 +3,11 @@ import logger from 'bc/config/logger.js';
 import { ProjectCostsError } from '../../errors/project.error.js';
 import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
 
-export const saveCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, filtered, filterFrontOverheadCosts, overheadcostdescription, userChangedOverhead, transaction) => {
+export const saveCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, filtered, filterFrontOverheadCosts, overheadcostdescription, userChangedOverhead, userChangedAdditional, transaction) => {
   const promises = [];  
   //creating aditional cost
   const overheadCostUser = JSON.parse(userChangedOverhead);
-  promises.push(saveProjectCost({
+  const dataProjectCost = {
     project_id: project_id,
     cost: !isNaN(Number(additionalcost)) ? Number(additionalcost) : 0,
     code_cost_type_id: aditionalCostId,
@@ -15,8 +15,10 @@ export const saveCosts = async (project_id, additionalcost, aditionalCostId, add
     created_by: creator,
     modified_by: creator,
     is_active: true,
-    code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
-  }, transaction));
+    code_data_source_type_id: userChangedAdditional ? CODE_DATA_SOURCE_TYPE.USER : CODE_DATA_SOURCE_TYPE.SYSTEM
+  };
+  console.log('Save this values ', userChangedAdditional, ' values', dataProjectCost);
+  promises.push(saveProjectCost(dataProjectCost, transaction));
   //creating overhead cost
   for (const [index, element] of filtered.entries()) {
     const overheadData = {

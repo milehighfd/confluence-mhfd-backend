@@ -43,7 +43,7 @@ export const setCostActiveToFalse = async (project_id, code_cost_type_id, transa
   }
 };
 
-export const updateDescriptionOnly = async (project_id, overhead_id, newDescription, transaction = null) => {
+export const updateDescriptionOnly = async (project_id, cost_type_id, newDescription, transaction = null) => {
   try {
     await ProjectCost.update(
       {
@@ -53,7 +53,7 @@ export const updateDescriptionOnly = async (project_id, overhead_id, newDescript
         where: {
           project_id: project_id,
           is_active: true,
-          code_cost_type_id: overhead_id
+          code_cost_type_id: cost_type_id
         },
         transaction: transaction
       }

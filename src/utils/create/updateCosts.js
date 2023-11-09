@@ -8,16 +8,17 @@ import { EditCostProjectError } from '../../errors/project.error.js';
 import logger from 'bc/config/logger.js';
 import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
 
-export const updateCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, overheadIds, filterFrontOverheadCosts, overheadcostdescription, userChangedOverhead, transaction) => {
+export const updateCosts = async (project_id, additionalcost, aditionalCostId, additionalcostdescription, creator, overheadIds, filterFrontOverheadCosts, overheadcostdescription, userChangedOverhead, userChangedAdditional, transaction) => {
   try {
     const overheadCostUser = JSON.parse(userChangedOverhead);
     const promises = [];
     const promisesUpdate = [];
-    const currentIndependentCost = await getCostActiveForProj(project_id, [aditionalCostId], transaction);
+    const currentAdditionalCost = await getCostActiveForProj(project_id, [aditionalCostId], transaction);
     const currentOverheadCosts = await getCostActiveForProj(project_id, overheadIds, transaction);
     
-    const independentHasChanged = currentIndependentCost[0]?.cost != additionalcost;
-    if (independentHasChanged) {
+    const aditionalHasChanged = currentAdditionalCost[0]?.cost != additionalcost;
+    const additionalDescriptionHasChanged = currentAdditionalCost[0]?.cost_description != additionalcostdescription;
+    if (aditionalHasChanged) {
       //creating aditional cost
       const additionalCost = {
         project_id: project_id,
@@ -27,10 +28,13 @@ export const updateCosts = async (project_id, additionalcost, aditionalCostId, a
         created_by: creator,
         modified_by: creator,
         is_active: true,
-        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
+        code_data_source_type_id:  userChangedAdditional? CODE_DATA_SOURCE_TYPE.USER : CODE_DATA_SOURCE_TYPE.SYSTEM
       };
+      console.log('Data for update addiciont', additionalCost, 'userChangedAdditional', userChangedAdditional);
       promisesUpdate.push(setCostActiveToFalse(project_id,aditionalCostId, transaction));
       promises.push(saveProjectCost(additionalCost, transaction));
+    } else if (additionalDescriptionHasChanged) {
+      promisesUpdate.push(updateDescriptionOnly(project_id, aditionalCostId, additionalcostdescription, transaction));
     }
     //creating overhead cost
     for (const [index, element] of overheadIds.entries()) {
