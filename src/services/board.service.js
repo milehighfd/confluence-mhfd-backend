@@ -602,7 +602,8 @@ const updateAndCreateProjectCostsForAmounts = async (
     // DESACTIVAR LOS ANTERIORES PROJECT COSTS
     ProjectCost.update({
       is_active: 0,
-      code_cost_type_id: isWorkPlan? WP_CODE_COST_TYPE_EDITED: WR_CODE_COST_TYPE_EDITED
+      code_cost_type_id: isWorkPlan? WP_CODE_COST_TYPE_EDITED: WR_CODE_COST_TYPE_EDITED,
+      last_modified: lastModifiedDate
     }, {
       where: {
         project_cost_id: { [Op.in]: projectsCostsIdsToUpdate } // we need to get the projectcost olds 
