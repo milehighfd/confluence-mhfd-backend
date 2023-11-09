@@ -32,7 +32,7 @@ export const saveSubtotalcost = async (project_id, subtotalcost, creator, transa
         is_active: 1,
         last_modified: mainModifiedDate,
         cost_description: 'Proposed (Formally Component Cost)',
-        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
+        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM
       };
       const resultCreatedProjectCost = await ProjectCost.create(newProjectCostData, { transaction: transaction });
       return resultCreatedProjectCost;
