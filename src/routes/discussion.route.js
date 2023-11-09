@@ -153,16 +153,16 @@ async function createThreadTopic(req, res) {
     if (emailList.length > 0 && process.env.NODE_ENV === 'prod') {    
       for (const email of emailList) {
         const nameSender = `${userData.firstName} ${userData.lastName}`;
-        await userService.sendDiscussionEmail(nameSender, projectName, type, email, message);
+        await userService.sendDiscussionEmail(nameSender, projectName, type, email);
       }
     }else{
       if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev'){
         const nameSender = `${userData.firstName} ${userData.lastName}`;
         for (const email of emailList) {          
-          await userService.sendDiscussionEmail(nameSender, projectName, type, email, message);
+          await userService.sendDiscussionEmail(nameSender, projectName, type, email);
         }
         //enable for testing
-        //await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com', message);
+        //await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com');
       }      
     }
     result = { ...result };
@@ -185,7 +185,7 @@ async function sendTestEmail(req, res) {
     });
     const projectName = currentProject.project_name;
     const type = topic_place === 'details' ? 'Project Detail' : 'Edit Project';
-    await userService.sendDiscussionEmail(nameSender, projectName, type, 'danilson@vizonomy.com', 'test message');
+    await userService.sendDiscussionEmail(nameSender, projectName, type, 'danilson@vizonomy.com');
     return res.send({ message: 'SUCCESS' });
   } catch (error) {
     console.error(error);
@@ -274,16 +274,16 @@ async function editThreadTopic(req, res) {
     if (emailList.length > 0 && process.env.NODE_ENV === 'prod') {    
       for (const email of emailList) {
         const nameSender = `${userData.firstName} ${userData.lastName}`;
-        await userService.sendDiscussionEmail(nameSender, projectName, type, email, message);
+        await userService.sendDiscussionEmail(nameSender, projectName, type, email);
       }
     }else{
       if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev'){
         const nameSender = `${userData.firstName} ${userData.lastName}`;
         for (const email of emailList) {          
-          await userService.sendDiscussionEmail(nameSender, projectName, type, email, message);
+          await userService.sendDiscussionEmail(nameSender, projectName, type, email);
         }
         //enable for testing
-        //await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com', message);
+        //await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com');
       }
     }
     result = { ...thread, userId: userIds, emails: emailList, createNotifications };
