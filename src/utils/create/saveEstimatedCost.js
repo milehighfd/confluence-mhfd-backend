@@ -1,6 +1,7 @@
 import logger from 'bc/config/logger.js';
 import { ProjectActionsError } from 'bc/errors/project.error.js';
 import db from 'bc/config/db.js';
+import moment from 'moment';
 import {
   getCostActiveForProj
 } from 'bc/utils/create';
@@ -19,6 +20,7 @@ export const saveEstimatedCost = async (project_id, estimatedCost, creator, esti
     if (hasChanged) {
       const pc = await ProjectCost.update({
         is_active: 0,
+        last_modified: moment().format('YYYY-MM-DD HH:mm:ss')
       }, {
         where: {
           project_id: project_id ,

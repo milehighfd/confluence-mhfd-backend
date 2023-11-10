@@ -103,7 +103,8 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
     });
     ProjectCost.update({
       is_active: 0,
-      code_cost_type_id: CODE_COST_TYPE_EDITED
+      code_cost_type_id: CODE_COST_TYPE_EDITED,
+      last_modified: lastModifiedDate
     }, {
       where: {
         project_cost_id: { [Op.in]: projectsCostsIdsToUpdate }

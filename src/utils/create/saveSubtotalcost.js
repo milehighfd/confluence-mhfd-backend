@@ -5,6 +5,7 @@ import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
 import {
   getCostActiveForProj
 } from 'bc/utils/create';
+import moment from 'moment';
 
 const ProjectCost = db.projectCost;
 export const saveSubtotalcost = async (project_id, subtotalcost, creator, transaction) => {
@@ -16,6 +17,7 @@ export const saveSubtotalcost = async (project_id, subtotalcost, creator, transa
     if (hasChanged) {
       const pc = await ProjectCost.update({
         is_active: 0,
+        last_modified: moment().format('YYYY-MM-DD HH:mm:ss')
       }, {
         where: {
           project_id: project_id ,

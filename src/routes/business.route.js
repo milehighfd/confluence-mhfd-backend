@@ -231,14 +231,12 @@ router.get('/', async (req, res) => {
 router.get('/sponsor-list', async (req, res) => {
   logger.info(`Starting endpoint business.route/ with params ${JSON.stringify(req.params, null, 2)}`);
   const SPONSOR_CODES = [3, 6];
-  const CHERRY_CREEK_BASIN_AUTHORITY = 'Cherry Creek Basin Authority';
   const CHERRY_CREEK_WATER_AUTHORITY = 'CHERRY CREEK BASIN WATER QUALITY AUTHORITY';
   const associates = await BusinessAssociates.findAll({
     attributes: ['business_associates_id', 'business_name'],
     where: {
       [Op.or]: [
         { code_business_associates_type_id: SPONSOR_CODES },
-        { business_name: CHERRY_CREEK_BASIN_AUTHORITY },
         { business_name: CHERRY_CREEK_WATER_AUTHORITY }
       ]
     },
