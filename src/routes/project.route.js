@@ -12,6 +12,7 @@ const ProjectCost = db.projectCost;
 const Project = db.project;
 const User = db.user;
 const CodeDataSourceType = db.codeDataSourceType;
+const CodeCostType = db.codeCostType;
 const router = express.Router();
 
 const listProjectsForId = async (req, res) => {
@@ -153,11 +154,14 @@ const completeListOfCosts = async (req, res) => {
       model: CodeDataSourceType,
       as: 'codeSourceData',
       attributes: ['update_source', 'code_data_source_type_id']
+    },{
+      model: CodeCostType,
+      attributes: ['cost_type_name', 'code_cost_type_id']
     }],
     order: [['last_modified', 'DESC']]
   });
   for(let element of projectCost) {
-    if(element.codeSourceData.code_data_source_type_id === 1) {
+    if(element.codeSourceData?.code_data_source_type_id === 1) {
       const modifiedUser = element.modified_by;
       let userModified = await User.findOne({
           attributes: ['firstName', 'lastName'],
