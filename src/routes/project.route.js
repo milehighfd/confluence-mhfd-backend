@@ -10,6 +10,8 @@ import { CARTO_URL, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
 
 const ProjectCost = db.projectCost;
 const Project = db.project;
+const User = db.user;
+const CodeDataSourceType = db.codeDataSourceType;
 const router = express.Router();
 
 const listProjectsForId = async (req, res) => {
@@ -133,6 +135,37 @@ const listOfCosts = async (req, res) => {
     });
     logger.info(`Finished function findAll for endpoint project/projectCost/:project_id`);
   logger.info('projects being called');
+  res.send(projectCost);
+};
+const completeListOfCosts = async (req, res) => {
+  logger.info(`Starting endpoint project/projectCost/:project_id with params `);
+  const project_id = req.params['project_id'];
+  // code_source_type_id 
+  // first name last name 
+  // cost 
+  // last_modified_by
+  let projectCost = await ProjectCost.findAll({
+    attributes: ['cost', 'modified_by', 'last_modified', 'code_cost_type_id'],
+    where: {
+      project_id: project_id,
+    },
+    include: [{
+      model: CodeDataSourceType,
+      as: 'codeSourceData',
+      attributes: ['update_source', 'code_data_source_type_id']
+    }],
+    order: [['last_modified', 'DESC']]
+  });
+  for(let element of projectCost) {
+    if(element.codeSourceData.code_data_source_type_id === 1) {
+      const modifiedUser = element.modified_by;
+      let userModified = await User.findOne({
+          attributes: ['firstName', 'lastName'],
+          where: { email: modifiedUser }
+      });
+      element.dataValues.userModified = userModified;
+    } 
+  }
   res.send(projectCost);
 };
 
@@ -337,5 +370,6 @@ router.post('/search', globalSearch);
 router.post('/count-search', countGlobalSearch);
 router.post('/page', getPagePMTools);
 router.put('/:project_id/short_note', [auth], updateProjectNote);
+router.get('/complete/projectCost/:project_id', completeListOfCosts);
 
 export default router;

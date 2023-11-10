@@ -23,6 +23,7 @@ import componentDependency from 'bc/models/componentDependency.model.js';
 import configuration from 'bc/models/configuration.model.js';
 import codeCostType from 'bc/models/code_cost_type.model.js';
 import projectCost from 'bc/models/project_cost.model.js';
+import codeDataSourceType from 'bc/models/code_data_source_type.model.js';
 import projectStatusActionItemTracking from 'bc/models/project_status_action_item_tracking.model.js';
 import codeProjectType from 'bc/models/code_project_type.model.js';
 import projectStatus from 'bc/models/project_status.model.js';
@@ -139,6 +140,7 @@ db.componentdependency = componentDependency(sequelize, Sequelize);
 db.configuration = configuration(sequelize, Sequelize);
 db.codeCostType = codeCostType(sequelize, Sequelize);
 db.projectCost = projectCost(sequelize, Sequelize);
+db.codeDataSourceType = codeDataSourceType(sequelize, Sequelize);
 db.projectStatusActionItemTracking = projectStatusActionItemTracking(sequelize, Sequelize);
 db.codeProjectType = codeProjectType(sequelize, Sequelize);
 db.projectStatus = projectStatus(sequelize, Sequelize);
@@ -220,6 +222,7 @@ db.boardProjectCost.hasOne(db.boardProject, {foreignKey: 'board_project_id', sou
 db.boardProjectCost.hasMany(db.projectCost, {foreignKey: 'project_cost_id'});
 db.boardProjectCost.hasOne(db.projectCost, {foreignKey: 'project_cost_id', sourceKey: 'project_cost_id', as: 'projectCostData'});
 db.projectCost.hasOne(db.projectPartner, {foreignKey: 'project_partner_id', sourceKey: 'project_partner_id', as: 'projectPartnerData'});
+db.projectCost.hasOne(db.codeDataSourceType, {foreignKey: 'code_data_source_type_id', sourceKey: 'code_data_source_type_id', as: 'codeSourceData'});
 //Notifications
 db.notifications.hasOne(db.user, {foreignKey: 'user_id', sourceKey: 'recipient_user_id'});
 db.notifications.hasOne(db.projectStatusNotification, {foreignKey: 'notification_id', sourceKey: 'notification_id'});
