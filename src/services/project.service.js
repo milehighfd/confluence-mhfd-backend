@@ -1064,14 +1064,14 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
   if (isWorkPlan){
     if (useSouthPlate){
       conditions.push(Project.findAll({
-        attributes: ["project_id", "code_project_type_id"],
+        attributes: ["project_id", "code_project_type_id", "project_name"],
         where: {
           is_located_on_south_plate_river: 1
         }
       }));
     }else if (!isMHFD){
       conditions.push(Project.findAll({
-        attributes: ["project_id", "code_project_type_id"],
+        attributes: ["project_id", "code_project_type_id", "project_name"],
         where: {
           is_located_on_south_plate_river: 0
         }
@@ -1082,7 +1082,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
     logger.info(`Filtering by teams ${teams}...`);
     //Teams
     conditions.push(Project.findAll({
-      attributes: ["project_id", "code_project_type_id"],
+      attributes: ["project_id", "code_project_type_id", "project_name"],
       include: [{
         model: ProjectStaff,
         attributes: [],
@@ -1104,7 +1104,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
     //LG Manager
     const LG_LEAD = 10;
     conditions.push(Project.findAll({
-      attributes: ["project_id", "code_project_type_id"],
+      attributes: ["project_id", "code_project_type_id", "project_name"],
       include: [{
         model: ProjectStaff,
         attributes: [],
@@ -1136,7 +1136,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
       where = { business_associate_contact_id: mhfd_lead };
     }
     conditions.push(Project.findAll({
-      attributes: ["project_id", "code_project_type_id"],
+      attributes: ["project_id", "code_project_type_id", "project_name"],
       include: [{
         model: ProjectStaff,
         attributes: [],
@@ -1200,7 +1200,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
     }
     conditions.push(//CONTRACTOR
       Project.findAll({
-        attributes: ["project_id", "code_project_type_id"],
+        attributes: ["project_id", "code_project_type_id", "project_name"],
         include: [{
           model: ProjectPartner,
           attributes: [],
@@ -1224,7 +1224,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
     }
     conditions.push(//CONSULTANT
       Project.findAll({
-        attributes: ["project_id", "code_project_type_id"],
+        attributes: ["project_id", "code_project_type_id", "project_name"],
         include: [{
           model: ProjectPartner,
           attributes: [],
@@ -1248,7 +1248,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
 	  }
 	  conditions.push(//PROJECT TYPE
 		Project.findAll({
-		  attributes: ["project_id","code_project_type_id"],
+		  attributes: ["project_id","code_project_type_id", "project_name"],
 		  where: where
 	  }));
 	}
@@ -1264,7 +1264,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
 	  }
 	  conditions.push(//SERVICE AREA
 		Project.findAll({
-		  attributes: ["project_id","code_project_type_id"],
+		  attributes: ["project_id","code_project_type_id", "project_name"],
 		  include: [{
 			attributes: [],
 			model: ProjectServiceArea,
@@ -1288,7 +1288,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
 	  }
 	  conditions.push(//COUNTY
 		Project.findAll({
-		  attributes: ["project_id","code_project_type_id"],
+		  attributes: ["project_id","code_project_type_id", "project_name"],
 		  include: [{
 			attributes: [],
 			model: ProjectCounty,
@@ -1304,7 +1304,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
     logger.info(`Filtering by stream ${stream_id}...`);
     conditions.push(//STREAM
       Project.findAll({
-        attributes: ["project_id","code_project_type_id"],
+        attributes: ["project_id","code_project_type_id", "project_name"],
         include: [{
           attributes: [],
           model: ProjectStreams,
@@ -1328,7 +1328,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
 	  }
 	  conditions.push(//JURISDICTION
 		Project.findAll({
-		  attributes: ["project_id","code_project_type_id"],
+		  attributes: ["project_id","code_project_type_id", "project_name"],
 		  include: [{
 			attributes: [],
 			model: ProjectLocalGovernment,
@@ -1344,7 +1344,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
     logger.info(`Filtering by cost ${cost}...`);
     conditions.push(//COST
       Project.findAll({
-        attributes: ["project_id","code_project_type_id"],
+        attributes: ["project_id","code_project_type_id", "project_name"],
         include: [{
           model: ProjectCost,
           attributes: [],
@@ -1364,7 +1364,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
 	  }
 	  conditions.push(//STATUS
 		Project.findAll({
-		  attributes: ["project_id","code_project_type_id"],
+		  attributes: ["project_id","code_project_type_id", "project_name"],
 		  include: [{
 			model: ProjectStatus,
 			attributes: [],
@@ -1383,7 +1383,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
       where = { code_status_type_id: defaultStatus };
       conditions.push(//STATUS
         Project.findAll({
-          attributes: ["project_id","code_project_type_id"],
+          attributes: ["project_id","code_project_type_id", "project_name"],
           include: [{
           model: ProjectStatus,
           attributes: [],
@@ -1401,7 +1401,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
   if (phase.length) {	  
 	  conditions.push(//PHASE
 		Project.findAll({
-		  attributes: ["project_id","code_project_type_id"],
+		  attributes: ["project_id","code_project_type_id", "project_name"],
 		  include: [{
 			model: ProjectStatus,
 			attributes: [],
@@ -1420,7 +1420,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
     const CODE_SPONSOR = 11;
     conditions.push(
       Project.findAll({
-        attributes: ["project_id", "code_project_type_id"],
+        attributes: ["project_id", "code_project_type_id", "project_name"],
         include: [{
           model: ProjectPartner,
           attributes: [],
@@ -1440,7 +1440,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
     logger.info(`Filtering by work plan year board ${work_plan_year}...`);
     conditions.push(
     Project.findAll({
-      attributes: ["project_id", "code_project_type_id"],
+      attributes: ["project_id", "code_project_type_id", "project_name"],
       include: [{
         model: BoardProject,
         attributes: [],
@@ -1459,7 +1459,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
   }
   if (!show_archived) {
     conditions.push(Project.findAll({
-      attributes: ["project_id","code_project_type_id"],
+      attributes: ["project_id","code_project_type_id", "project_name"],
       where: {
         [Op.or]: [
           { is_archived: { [Op.ne]: 1 } },
@@ -1470,12 +1470,11 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
   }
   if (conditions.length === 0) {
     conditions.push(Project.findAll({
-      attributes: ["project_id","code_project_type_id"],
+      attributes: ["project_id","code_project_type_id", "project_name"],
     }));
   }
   let projects = await Promise.all(conditions);
   projects = projects.map(project => project.map(p => p.toJSON()));
-  // console.log(projects);
   // projects = projects?.filter(project => project.length > 0);
   const counterObject = {};
   projects?.forEach(project => {
@@ -1505,6 +1504,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
     } else {
       const words = filterName.split(' ').filter(word => word.trim() !== '');
       intersectedProjects = intersectedProjects.filter(project => {
+        console.log(project)
         return words.every(word => {
           let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
           const regex = new RegExp(regexPattern, 'i');
@@ -1512,7 +1512,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
         });
       });
     }
-  }  
+  }    
   let intersectedProjectsSorted = [];
   if (sortby) {
     projectsSorted.forEach((project) => {
@@ -2554,7 +2554,9 @@ const getBoardProjectData = async (project_id, type) => {
       'board_project_id',
       'project_id',
     ],
-    order: [['createdAt', 'DESC']],
+    order: [
+      [ { model: Board, as: 'BoardAlias' }, 'year', 'DESC' ] 
+    ],
     include: [{
       model: Board,
       required: true,
