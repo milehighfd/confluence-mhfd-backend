@@ -20,7 +20,8 @@ export const saveEstimatedCost = async (project_id, estimatedCost, creator, esti
     if (hasChanged) {
       const pc = await ProjectCost.update({
         is_active: 0,
-        last_modified: moment().format('YYYY-MM-DD HH:mm:ss')
+        last_modified: moment().format('YYYY-MM-DD HH:mm:ss'),
+        modified_by: creator
       }, {
         where: {
           project_id: project_id ,

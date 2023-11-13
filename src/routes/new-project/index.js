@@ -30,7 +30,7 @@ router.use('/copy', copyRouter);
 router.use('/createproject', createProject);
 router.use('/editproject', editProject);
 
-router.post('/get-components-by-components-and-geom', auth,async (req, res) => {
+router.post('/get-components-by-components-and-geom',async (req, res) => {
   const geom = req.body.geom;
   const components = req.body.components;
   const usableComponents = {};
@@ -75,7 +75,7 @@ router.post('/get-components-by-components-and-geom', auth,async (req, res) => {
     const projectid = component === 'stream_improvement_measure' ? 'project_id' : 'projectid';
     const sql = `SELECT objectid, cartodb_id, ${type}, ${jurisdiction}, status, ${cost}, ${problemid}  FROM ${component} 
     WHERE  ${queryWhere} AND ${projectid} is null AND (status LIKE '%Constructed%' Or status LIKE '%Proposed%' )`;
-    console.log(sql);
+    console.log('QUERY FOR COMPONENT: \n', sql);
     const query = {
       q: sql
     };

@@ -31,7 +31,7 @@ export const updateCosts = async (project_id, additionalcost, aditionalCostId, a
         code_data_source_type_id:  userChangedAdditional? CODE_DATA_SOURCE_TYPE.USER : CODE_DATA_SOURCE_TYPE.SYSTEM
       };
       console.log('Data for update addiciont', additionalCost, 'userChangedAdditional', userChangedAdditional);
-      promisesUpdate.push(setCostActiveToFalse(project_id,aditionalCostId, transaction));
+      promisesUpdate.push(setCostActiveToFalse(project_id,aditionalCostId, creator, transaction));
       promises.push(saveProjectCost(additionalCost, transaction));
     } else if (additionalDescriptionHasChanged) {
       promisesUpdate.push(updateDescriptionOnly(project_id, aditionalCostId, additionalcostdescription, transaction));
@@ -51,7 +51,7 @@ export const updateCosts = async (project_id, additionalcost, aditionalCostId, a
           cost_description: overheadcostdescription,
           code_data_source_type_id: overheadCostUser[index] ? CODE_DATA_SOURCE_TYPE.USER: CODE_DATA_SOURCE_TYPE.SYSTEM
         };
-        promisesUpdate.push(setCostActiveToFalse(project_id,element, transaction));
+        promisesUpdate.push(setCostActiveToFalse(project_id,element, creator, transaction));
         promises.push(saveProjectCost(overheadCostToSave, transaction));
       } else if (overheadcostdescription != currentEquivalentOverheadCost?.cost_description) {
         promisesUpdate.push(updateDescriptionOnly(project_id, element, overheadcostdescription, transaction));

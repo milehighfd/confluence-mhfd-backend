@@ -22,12 +22,13 @@ export const getCostActiveForProj = async (project_id, code_cost_type_ids, trans
     throw error;
   }
 }
-export const setCostActiveToFalse = async (project_id, code_cost_type_id, transaction = null) => {
+export const setCostActiveToFalse = async (project_id, code_cost_type_id, modifier, transaction = null) => {
   try {
     await ProjectCost.update(
       {
         is_active: false,
-        last_modified: moment().format('YYYY-MM-DD HH:mm:ss')
+        last_modified: moment().format('YYYY-MM-DD HH:mm:ss'),
+        modified_by: modifier
       },
       {
         where: {

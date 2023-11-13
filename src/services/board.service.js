@@ -104,7 +104,8 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
     ProjectCost.update({
       is_active: 0,
       code_cost_type_id: CODE_COST_TYPE_EDITED,
-      last_modified: lastModifiedDate
+      last_modified: lastModifiedDate,
+      modified_by: user.email
     }, {
       where: {
         project_cost_id: { [Op.in]: projectsCostsIdsToUpdate }
@@ -604,7 +605,8 @@ const updateAndCreateProjectCostsForAmounts = async (
     ProjectCost.update({
       is_active: 0,
       code_cost_type_id: isWorkPlan? WP_CODE_COST_TYPE_EDITED: WR_CODE_COST_TYPE_EDITED,
-      last_modified: lastModifiedDate
+      last_modified: lastModifiedDate,
+      modified_by: user.email
     }, {
       where: {
         project_cost_id: { [Op.in]: projectsCostsIdsToUpdate } // we need to get the projectcost olds 
