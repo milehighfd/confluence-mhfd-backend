@@ -16,6 +16,18 @@ export default (sequelize, DataType) => {
     type: {
       type: DataType.STRING,
       allowNull: false
+    },
+    createdAt: {
+      type: DataType.DATE,
+      allowNull: true
+    },
+    updatedAt: {
+      type: DataType.DATE,
+      allowNull: true
+    },
+    id: {
+      type: DataType.INTEGER,
+      primaryKey: true,
     }
   });
   return Configuration;
