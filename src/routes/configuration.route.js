@@ -53,7 +53,7 @@ router.put('/:key', async (req, res) => {
 const getYearBoardByUser = async (req, res) => {
   const { user } = req;
   const { type } = req.body;
-  const associateType = user.business_associate_contact.business_address.business_associate.code_business_associates_type_id;
+  const associateType = user?.business_associate_contact?.business_address?.business_associate?.code_business_associates_type_id;
   const MHFD_CODE = 6;
   const CONSULTANT_CODE = 2;
   const CONTRACTOR_CODE = 4;
