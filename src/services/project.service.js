@@ -630,6 +630,7 @@ const getDetails = async (project_id) => {
             required: false,
             separate: true,
             attributes: [
+              'independent_action_id',
               'action_name',
               'project_id',
               'cost',
@@ -1504,7 +1505,7 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
     } else {
       const words = filterName.split(' ').filter(word => word.trim() !== '');
       intersectedProjects = intersectedProjects.filter(project => {
-        console.log(project)
+        // console.log(project)
         return words.every(word => {
           let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
           const regex = new RegExp(regexPattern, 'i');

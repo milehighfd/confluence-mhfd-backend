@@ -173,8 +173,9 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         answer.saveEstimatedcost = saveEstimatedcost;
         const deletePARes = await deleteProposedAction(project_id, transaction);
         answer.deletePARes = deletePARes;
-        const deleteIARes = await deleteIndependentAction(project_id, transaction);
-        answer.deleteIARes = deleteIARes;
+        console.log('************* \n\n\n about to call independentttt', independentComponent);
+        // const deleteIARes = await deleteIndependentAction(project_id, transaction);
+        // answer.deleteIARes = deleteIARes;
         const actionRes = await updateActions(project_id, independentComponent, components, creator, transaction);        
         answer.actionRes = actionRes;
         await deleteStreams(project_id, transaction);
