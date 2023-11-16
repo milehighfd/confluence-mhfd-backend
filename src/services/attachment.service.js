@@ -306,7 +306,8 @@ const toggleValue = async (id, newIsCover) => {
 const toggleName = async (name) => {
   await Attachment.update(
     { 
-      is_cover: false 
+      is_cover: false,
+      last_modified_date: moment().format('YYYY-MM-DD HH:mm:ss'), 
     },
     {
       where: {
@@ -316,7 +317,8 @@ const toggleName = async (name) => {
   );
   await Attachment.update(
     { 
-      is_cover: true 
+      is_cover: true,
+      last_modified_date: moment().format('YYYY-MM-DD HH:mm:ss'), 
     },
     {
       where: { attachment_reference_key: name }      

@@ -14,6 +14,8 @@ const User = db.user;
 const CodeDataSourceType = db.codeDataSourceType;
 const CodeCostType = db.codeCostType;
 const ProjectIndependentAction = db.projectIndependentAction;
+const Attachment = db.projectAttachment;
+
 const router = express.Router();
 
 const listProjectsForId = async (req, res) => {
@@ -180,6 +182,7 @@ const independentActionHistory = async (req, res) => {
       project_id: project_id,
     },
     attributes: ['action_name', 'cost', 'modified_date', 'last_modified_by'],
+    order: [['modified_date', 'DESC']]
   });
   for(let element of independentActions) {
       const modifiedUser = element.last_modified_by;
@@ -190,6 +193,26 @@ const independentActionHistory = async (req, res) => {
       element.dataValues.userModified = userModified;
   }
   res.send(independentActions);
+}
+
+const attachmentHistory = async (req, res) => {
+  const project_id = req.params['project_id'];
+  let attachments = await Attachment.findAll({
+    where: {
+      project_id: project_id,
+    },
+    attributes: ['attachment_reference_key', 'created_by','created_date','last_modified_by', 'last_modified_date'],
+    order: [['created_date', 'DESC']]
+  });
+  for(let element of attachments) {
+      const modifiedUser = element.created_by;
+      let userModified = await User.findOne({
+          attributes: ['firstName', 'lastName'],
+          where: { email: modifiedUser }
+      });
+      element.dataValues.userModified = userModified;
+  }
+  res.send(attachments);
 }
 
 const createCosts = async (req, res) => {
@@ -395,5 +418,6 @@ router.post('/page', getPagePMTools);
 router.put('/:project_id/short_note', [auth], updateProjectNote);
 router.get('/complete/projectCost/:project_id', completeListOfCosts);
 router.get('/complete/independentActionHistory/:project_id', independentActionHistory);
+router.get('/complete/attachmentHistory/:project_id', attachmentHistory);
 
 export default router;

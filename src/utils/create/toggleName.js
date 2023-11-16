@@ -1,5 +1,6 @@
 import sequelize from 'sequelize';
 import db from 'bc/config/db.js';
+import moment from 'moment';
 
 const { Op } = sequelize;
 const Attachment = db.projectAttachment;
@@ -8,7 +9,8 @@ export const toggleName = async (name, project_id, transaction = null) => {
   try {
     await Attachment.update(
       { 
-        is_cover: false 
+        is_cover: false,
+        last_modified_date: moment().format('YYYY-MM-DD HH:mm:ss'), 
       },
       {
         where: {
@@ -20,7 +22,8 @@ export const toggleName = async (name, project_id, transaction = null) => {
     );
     await Attachment.update(
       { 
-        is_cover: true 
+        is_cover: true,
+        last_modified_date: moment().format('YYYY-MM-DD HH:mm:ss'), 
       },
       {
         where: { 
