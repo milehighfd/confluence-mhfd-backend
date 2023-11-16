@@ -13,6 +13,7 @@ const Project = db.project;
 const User = db.user;
 const CodeDataSourceType = db.codeDataSourceType;
 const CodeCostType = db.codeCostType;
+const ProjectIndependentAction = db.projectIndependentAction;
 const router = express.Router();
 
 const listProjectsForId = async (req, res) => {
@@ -172,6 +173,24 @@ const completeListOfCosts = async (req, res) => {
   }
   res.send(projectCost);
 };
+const independentActionHistory = async (req, res) => {
+  const project_id = req.params['project_id'];
+  let independentActions = await ProjectIndependentAction.findAll({
+    where: {
+      project_id: project_id,
+    },
+    attributes: ['action_name', 'cost', 'modified_date', 'last_modified_by'],
+  });
+  for(let element of independentActions) {
+      const modifiedUser = element.last_modified_by;
+      let userModified = await User.findOne({
+          attributes: ['firstName', 'lastName'],
+          where: { email: modifiedUser }
+      });
+      element.dataValues.userModified = userModified;
+  }
+  res.send(independentActions);
+}
 
 const createCosts = async (req, res) => {
   logger.info(`Starting endpoint project/projectCost/:project_id with params ${JSON.stringify(req, null, 2)}`);
@@ -375,5 +394,6 @@ router.post('/count-search', countGlobalSearch);
 router.post('/page', getPagePMTools);
 router.put('/:project_id/short_note', [auth], updateProjectNote);
 router.get('/complete/projectCost/:project_id', completeListOfCosts);
+router.get('/complete/independentActionHistory/:project_id', independentActionHistory);
 
 export default router;
