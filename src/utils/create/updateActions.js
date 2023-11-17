@@ -3,6 +3,7 @@ import logger from 'bc/config/logger.js';
 import db from 'bc/config/db.js';
 
 const ProjectIndependentAction = db.projectIndependentAction;
+const ProjectProposedAction = db.projectProposedAction;
 
 export const updateActions = async (project_id, independentComponent, components, creator, transaction = null) => {
 
@@ -53,6 +54,27 @@ export const updateActions = async (project_id, independentComponent, components
     logger.info('create independent component');
   }
   if (components){
+    const ProjectProposedActionInDB = await ProjectProposedAction.findAll({
+      where: {
+        project_id: project_id,
+      }
+    })
+    const actionIds = ProjectProposedActionInDB.map(item => item.object_id);
+    console.log('ProjectProposedActionInDB', ProjectProposedActionInDB);
+    console.log('actionIds', actionIds);
+    console.log('componentssss', components);
+    const actionsToRemove = actionIds.filter(id => 
+      !JSON.parse(components).some(action => action.objectid === id )
+    );
+    console.log('actionsToRemove', actionsToRemove);
+    if (actionsToRemove.length > 0) {
+      await ProjectProposedAction.destroy({
+        where: {
+          object_id: actionsToRemove
+        },
+        transaction
+      });
+    }
     for (const component of JSON.parse(components)) {
       const action = {
         project_id,
@@ -61,7 +83,7 @@ export const updateActions = async (project_id, independentComponent, components
         last_modified_by: creator,
         created_by: creator,      
       };
-      await saveProjectAction(action,transaction);
+      await saveProjectAction(action,actionIds,transaction);
     }
     logger.info('All components saved successfully');
   }  
