@@ -15,6 +15,7 @@ const CodeDataSourceType = db.codeDataSourceType;
 const CodeCostType = db.codeCostType;
 const ProjectIndependentAction = db.projectIndependentAction;
 const Attachment = db.projectAttachment;
+const ProjectDetail = db.projectDetail;
 
 const router = express.Router();
 
