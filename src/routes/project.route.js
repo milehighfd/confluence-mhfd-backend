@@ -14,6 +14,7 @@ const User = db.user;
 const CodeDataSourceType = db.codeDataSourceType;
 const CodeCostType = db.codeCostType;
 const ProjectIndependentAction = db.projectIndependentAction;
+const ProjectProposedAction = db.projectProposedAction;
 const Attachment = db.projectAttachment;
 const ProjectDetail = db.projectDetail;
 
@@ -195,6 +196,25 @@ const independentActionHistory = async (req, res) => {
   }
   
   res.send(independentActions);
+}
+
+const proposedActionHistory = async(req, res) => {
+  const project_id = req.params['project_id'];
+  let proposedActionHist = await ProjectProposedAction.findAll({
+    where: {
+      project_id: project_id,
+    },
+    attributes: ['modified_date', 'last_modified_by']
+  });
+  for(let element of proposedActionHist) {
+    const modifiedUser = element.last_modified_by;
+    let userModified = await User.findOne({
+        attributes: ['firstName', 'lastName'],
+        where: { email: modifiedUser }
+    });
+    element.dataValues.userModified = userModified;
+  }
+  res.send(proposedActionHist);
 }
 
 const projectHistory = async(req, res) => {
@@ -462,5 +482,6 @@ router.get('/complete/independentActionHistory/:project_id', independentActionHi
 router.get('/complete/attachmentHistory/:project_id', attachmentHistory);
 router.get('/complete/detailHistory/:project_id', detailHistory);
 router.get('/complete/projectHistory/:project_id', projectHistory);
+router.get('/complete/proposedActionHistory/:project_id', proposedActionHistory);
 
 export default router;
