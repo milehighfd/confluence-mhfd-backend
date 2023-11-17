@@ -1,11 +1,12 @@
-import { saveProjectAction, saveProjectIndependentAction } from 'bc/utils/create';
+import { updateProjectActions, saveProjectIndependentAction } from 'bc/utils/create';
 import logger from 'bc/config/logger.js';
 import db from 'bc/config/db.js';
-
+import sequelize, { where } from 'sequelize';
 const ProjectIndependentAction = db.projectIndependentAction;
 const ProjectProposedAction = db.projectProposedAction;
+const { Op } = sequelize;
 
-export const updateActions = async (project_id, independentComponent, components, creator, transaction = null) => {
+export const updateActions = async (project_id, independentComponent, actions, creator, transaction = null) => {
 
   const independentActionsinDB = await ProjectIndependentAction.findAll({
     where: {
@@ -20,7 +21,7 @@ export const updateActions = async (project_id, independentComponent, components
   if (actionsToRemove.length > 0) {
     await ProjectIndependentAction.destroy({
       where: {
-        independent_action_id: actionsToRemove
+        independent_action_id: {[Op.in]: actionsToRemove}
       },
       transaction
     });
@@ -53,7 +54,7 @@ export const updateActions = async (project_id, independentComponent, components
     }
     logger.info('create independent component');
   }
-  if (components){
+  if (actions){
     const ProjectProposedActionInDB = await ProjectProposedAction.findAll({
       where: {
         project_id: project_id,
@@ -62,29 +63,25 @@ export const updateActions = async (project_id, independentComponent, components
     const actionIds = ProjectProposedActionInDB.map(item => item.object_id);
     console.log('ProjectProposedActionInDB', ProjectProposedActionInDB);
     console.log('actionIds', actionIds);
-    console.log('componentssss', components);
+    console.log('compotents from frontned', actions);
     const actionsToRemove = actionIds.filter(id => 
-      !JSON.parse(components).some(action => action.objectid === id )
+      !JSON.parse(actions).some(action => action.objectid === id )
     );
-    console.log('actionsToRemove', actionsToRemove);
+    // get actionids minus actionstoremove 
+    const previousActionsNotRemoved = actionIds.filter(id => !actionsToRemove.includes(id));
+    
+    console.log('actionsToRemoveb remove this ', actionsToRemove, 'previousActionsNotRemoved', previousActionsNotRemoved);
     if (actionsToRemove.length > 0) {
-      await ProjectProposedAction.destroy({
+     const destroyecactions = await ProjectProposedAction.destroy({
         where: {
-          object_id: actionsToRemove
+          object_id: { [Op.in]: actionsToRemove},
+          project_id: project_id
         },
         transaction
       });
+      console.log('destroyed values', destroyecactions);
     }
-    for (const component of JSON.parse(components)) {
-      const action = {
-        project_id,
-        object_id: component.objectid,
-        source_table_name: component.table,
-        last_modified_by: creator,
-        created_by: creator,      
-      };
-      await saveProjectAction(action,ProjectProposedActionInDB,transaction);
-    }
+    await updateProjectActions(JSON.parse(actions),previousActionsNotRemoved, project_id, creator, transaction);
     logger.info('All components saved successfully');
   }  
 };
