@@ -1,5 +1,6 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
+import moment from 'moment';
 
 const ProjectDetail = db.projectDetail;
 
@@ -25,7 +26,8 @@ export const updateProjectDetail = async (
         code_acquisition_progress_status_id: codeAcquisitionProgressStatusId && Number(codeAcquisitionProgressStatusId),
         last_modified_by: creator,
         code_study_reason_id: codeStudyReasonId,
-        is_routine: isRoutine
+        is_routine: isRoutine,
+        modified_date: moment().format('YYYY-MM-DD HH:mm:ss')
       },
       {
         where: { project_id: project_id },

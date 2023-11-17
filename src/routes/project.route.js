@@ -192,7 +192,47 @@ const independentActionHistory = async (req, res) => {
       });
       element.dataValues.userModified = userModified;
   }
+  
   res.send(independentActions);
+}
+
+const projectHistory = async(req, res) => {
+  const project_id = req.params['project_id'];
+  let projectHistory = await Project.findAll({
+    where: {
+      project_id: project_id,
+    },
+    attributes: ['modified_date', 'last_modified_by']
+  });
+  for(let element of projectHistory) {
+    const modifiedUser = element.last_modified_by;
+    let userModified = await User.findOne({
+        attributes: ['firstName', 'lastName'],
+        where: { email: modifiedUser }
+    });
+    element.dataValues.userModified = userModified;
+  }
+  res.send(projectHistory);
+}
+
+const detailHistory = async (req, res) => {
+  const project_id = req.params['project_id'];
+  let projectDetail = await ProjectDetail.findAll({
+    where: {
+      project_id: project_id,
+    },
+    attributes: ['last_modified_by', 'modified_date'],
+    order: [['modified_date', 'DESC']]
+  });
+  for(let element of projectDetail) {
+    const modifiedUser = element.last_modified_by;
+    let userModified = await User.findOne({
+        attributes: ['firstName', 'lastName'],
+        where: { email: modifiedUser }
+    });
+    element.dataValues.userModified = userModified;
+  }
+  res.send(projectDetail);
 }
 
 const attachmentHistory = async (req, res) => {
@@ -419,5 +459,7 @@ router.put('/:project_id/short_note', [auth], updateProjectNote);
 router.get('/complete/projectCost/:project_id', completeListOfCosts);
 router.get('/complete/independentActionHistory/:project_id', independentActionHistory);
 router.get('/complete/attachmentHistory/:project_id', attachmentHistory);
+router.get('/complete/detailHistory/:project_id', detailHistory);
+router.get('/complete/projectHistory/:project_id', projectHistory);
 
 export default router;
