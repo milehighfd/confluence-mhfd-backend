@@ -83,7 +83,7 @@ export const updateActions = async (project_id, independentComponent, components
         last_modified_by: creator,
         created_by: creator,      
       };
-      await saveProjectAction(action,actionIds,transaction);
+      await saveProjectAction(action,ProjectProposedActionInDB,transaction);
     }
     logger.info('All components saved successfully');
   }  
