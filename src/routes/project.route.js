@@ -20,6 +20,9 @@ const ProjectIndependentAction = db.projectIndependentAction;
 const ProjectProposedAction = db.projectProposedAction;
 const Attachment = db.projectAttachment;
 const ProjectDetail = db.projectDetail;
+const CodeProjectPartnerType = db.codeProjectPartnerType;
+const BusinessAssociates = db.businessAssociates;
+const ProjectPartner = db.projectPartner;
 
 const router = express.Router();
 
@@ -150,9 +153,10 @@ const completeListOfCosts = async (req, res) => {
   logger.info(`Starting endpoint project/projectCost/:project_id with params `);
   const project_id = req.params['project_id'];
   let projectCost = await ProjectCost.findAll({
-    attributes: ['project_cost_id', 'cost', 'modified_by', 'last_modified', 'code_cost_type_id', 'is_active'],
+    attributes: ['project_cost_id', 'cost', 'modified_by', 'last_modified', 'code_cost_type_id', 'is_active', 'created'],
     where: {
       project_id: project_id,
+      code_cost_type_id: [21,22,41,42]
     },
     include: [{
       model: CodeDataSourceType,
@@ -160,7 +164,7 @@ const completeListOfCosts = async (req, res) => {
       attributes: ['update_source', 'code_data_source_type_id']
     },{
       model: CodeCostType,
-      attributes: ['cost_type_name', 'code_cost_type_id']
+      attributes: ['cost_type_name', 'code_cost_type_id'],
     }, {
       model: BoardProjectcost,
       as: 'boardProjectCostData',
@@ -178,6 +182,17 @@ const completeListOfCosts = async (req, res) => {
           ]
         }
       ]
+    }, {
+      model: ProjectPartner,
+      as: 'projectPartnerData',
+      include: [{
+        model: CodeProjectPartnerType,
+        as: 'projectPartnerTypeData'
+      }, {
+        model: BusinessAssociates,
+        as: 'businessAssociateData',
+        attributes: ['business_name']
+      }]
     }],
     order: [['last_modified', 'DESC']]
   });
