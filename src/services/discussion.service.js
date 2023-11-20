@@ -62,6 +62,12 @@ async function getStaff(projectId, transaction) {
         {
           model: User,
           attributes: ['user_id', 'email']
+        }, {
+          model: BusinessAssociateContact,
+          attributes: [
+            'contact_name',
+            'business_associate_contact_id'
+          ]
         }
       ],
       transaction
@@ -101,13 +107,13 @@ async function getLocalityEmailsIds(project_id, transaction) {
       transaction
     });
     const uniqueEmails = [...new Set(boardLocalityEmails.map(email => email.email))];
-    const boardLocalityIds = await User.findAll({
+    const users = await User.findAll({
       where: { email: uniqueEmails },
-      attributes: ['user_id'],
+      attributes: ['user_id', 'email'],
       transaction
     });    
-    let userIds = [...new Set(boardLocalityIds.map(id => id?.user_id))]
-    let emailList = [...new Set(uniqueEmails)];
+    let userIds = users.map(user => user.user_id);
+    let emailList = users.map(user => user.email);
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;    
     if (emailRegex.test(creatorEmail.created_by)){
       emailList.push(creatorEmail.created_by);

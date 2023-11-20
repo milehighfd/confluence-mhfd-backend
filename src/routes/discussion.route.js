@@ -80,6 +80,7 @@ async function createThreadTopic(req, res) {
   const topic_type = topic_place === 'details' ? 'DETAILS' : 'CREATE';
   const userData = req.user;
   const transaction = await db.sequelize.transaction();
+  let invalidUsers = [];
   let result;
   try {
     let topicExist = await ProjectDiscussionTopic.findOne({
@@ -90,8 +91,10 @@ async function createThreadTopic(req, res) {
     let emailList = [];
     if (topic_type === 'DETAILS') {
       const projectStaff = await discussionService.getStaff(project_id, transaction);
-      userIds = projectStaff.map(staff => staff.user.user_id);
-      emailList = projectStaff.map(staff => staff.user.email);
+      const validStaff = projectStaff.filter(staff => staff.user);
+      invalidUsers = projectStaff.filter(staff => !staff.user);
+      userIds = validStaff.map(staff => staff.user.user_id);
+      emailList = validStaff.map(staff => staff.user.email);
     } else {
       const {ids, emails} = await discussionService.getLocalityEmailsIds(project_id, transaction);
       userIds = ids;
@@ -165,7 +168,7 @@ async function createThreadTopic(req, res) {
         //await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com');
       }      
     }
-    result = { ...result };
+    result = { ...result, invalidUsers };
     await transaction.commit();
     return res.send(result);
   } catch (error) {
@@ -216,6 +219,7 @@ async function editThreadTopic(req, res) {
   const { message_id, message } = req.body;
   const userData = req.user;
   const transaction = await db.sequelize.transaction();
+  let invalidUsers = [];
   let result = {};
   try {
     const threadData = await ProjectDiscussionThread.findOne({
@@ -230,8 +234,10 @@ async function editThreadTopic(req, res) {
     let emailList = [];    
     if (topicData.topic === 'DETAILS') {
       const projectStaff = await discussionService.getStaff(topicData.project_id, transaction);
-      userIds = projectStaff.map(staff => staff.user.user_id);
-      emailList = projectStaff.map(staff => staff.user.email);
+      const validStaff = projectStaff.filter(staff => staff.user);
+      invalidUsers = projectStaff.filter(staff => !staff.user);
+      userIds = validStaff.map(staff => staff.user.user_id);
+      emailList = validStaff.map(staff => staff.user.email);
     } else {
       const {ids, emails} = await discussionService.getLocalityEmailsIds(topicData.project_id, transaction);
       userIds = ids;
@@ -286,7 +292,7 @@ async function editThreadTopic(req, res) {
         //await userService.sendDiscussionEmail(nameSender, projectName, type, 'ricardo@vizonomy.com');
       }
     }
-    result = { ...thread, userId: userIds, emails: emailList, createNotifications };
+    result = { ...thread, userId: userIds, emails: emailList, createNotifications, invalidUsers };
     await transaction.commit();
     return res.send(result);
   } catch (error) {
