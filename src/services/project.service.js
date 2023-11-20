@@ -640,7 +640,6 @@ const getDetails = async (project_id) => {
           {
             model: ProjectStaff,
             required: false,
-            separate: true,
             attributes: [
               'code_project_staff_role_type_id',
               'is_active',
@@ -648,6 +647,10 @@ const getDetails = async (project_id) => {
               'business_associate_contact_id'
             ],
             include: [{
+              model: User,
+              attributes: ['user_id']
+              },              
+              {
               model: BusinessAssociateContact,
               attributes: [
                 'contact_name',
