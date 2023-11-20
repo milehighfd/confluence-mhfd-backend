@@ -13,6 +13,9 @@ const Project = db.project;
 const User = db.user;
 const CodeDataSourceType = db.codeDataSourceType;
 const CodeCostType = db.codeCostType;
+const BoardProjectcost = db.boardProjectCost;
+const Board = db.board;
+const BoardProject = db.boardProject;
 const ProjectIndependentAction = db.projectIndependentAction;
 const ProjectProposedAction = db.projectProposedAction;
 const Attachment = db.projectAttachment;
@@ -146,12 +149,8 @@ const listOfCosts = async (req, res) => {
 const completeListOfCosts = async (req, res) => {
   logger.info(`Starting endpoint project/projectCost/:project_id with params `);
   const project_id = req.params['project_id'];
-  // code_source_type_id 
-  // first name last name 
-  // cost 
-  // last_modified_by
   let projectCost = await ProjectCost.findAll({
-    attributes: ['cost', 'modified_by', 'last_modified', 'code_cost_type_id'],
+    attributes: ['project_cost_id', 'cost', 'modified_by', 'last_modified', 'code_cost_type_id'],
     where: {
       project_id: project_id,
     },
@@ -162,6 +161,23 @@ const completeListOfCosts = async (req, res) => {
     },{
       model: CodeCostType,
       attributes: ['cost_type_name', 'code_cost_type_id']
+    }, {
+      model: BoardProjectcost,
+      as: 'boardProjectCostData',
+      attributes: ['board_project_cost_id', 'board_project_id', 'req_position'],
+      include: [
+        {
+          model: BoardProject,
+          as: 'boardProjectData',
+          attributes: ['board_project_id', 'board_id', 'project_id'],
+          include: [
+            {
+              model: Board,
+              attributes: ['locality', 'board_id', 'year', 'projecttype']
+            }
+          ]
+        }
+      ]
     }],
     order: [['last_modified', 'DESC']]
   });

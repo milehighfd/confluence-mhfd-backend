@@ -221,6 +221,7 @@ db.boardProjectCost.hasMany(db.boardProject, {foreignKey: 'board_project_id'});
 db.boardProjectCost.hasOne(db.boardProject, {foreignKey: 'board_project_id', sourceKey: 'board_project_id', as: 'boardProjectData'});
 db.boardProjectCost.hasMany(db.projectCost, {foreignKey: 'project_cost_id'});
 db.boardProjectCost.hasOne(db.projectCost, {foreignKey: 'project_cost_id', sourceKey: 'project_cost_id', as: 'projectCostData'});
+db.projectCost.hasOne(db.boardProjectCost, {foreignKey: 'project_cost_id', sourceKey: 'project_cost_id', as: 'boardProjectCostData'});
 db.projectCost.hasOne(db.projectPartner, {foreignKey: 'project_partner_id', sourceKey: 'project_partner_id', as: 'projectPartnerData'});
 db.projectCost.hasOne(db.codeDataSourceType, {foreignKey: 'code_data_source_type_id', sourceKey: 'code_data_source_type_id', as: 'codeSourceData'});
 //Notifications
