@@ -150,7 +150,7 @@ const completeListOfCosts = async (req, res) => {
   logger.info(`Starting endpoint project/projectCost/:project_id with params `);
   const project_id = req.params['project_id'];
   let projectCost = await ProjectCost.findAll({
-    attributes: ['project_cost_id', 'cost', 'modified_by', 'last_modified', 'code_cost_type_id'],
+    attributes: ['project_cost_id', 'cost', 'modified_by', 'last_modified', 'code_cost_type_id', 'is_active'],
     where: {
       project_id: project_id,
     },
