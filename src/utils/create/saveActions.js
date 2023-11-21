@@ -8,7 +8,7 @@ export const saveActions = async (project_id, independentComponent, components, 
     // Insert independent components
     if (independentComponent) {
       for (const independent of JSON.parse(independentComponent)) {
-        const promise = saveProjectIndependentAction({
+        const promise = saveProjectIndependentAction([],{
           action_name: independent.name,
           project_id: project_id,
           cost: !isNaN(Number(independent.cost)) ? Number(independent.cost) : 0,
