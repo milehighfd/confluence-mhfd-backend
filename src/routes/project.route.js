@@ -244,7 +244,7 @@ const completeListOfEditCosts = async (req, res) => {
         attributes: ['business_name']
       }]
     }],
-    order: [['last_modified', 'DESC']]
+    order: [['created', 'DESC']]
   });
   for(let element of projectCost) {
     if(element.codeSourceData?.code_data_source_type_id === 1) {
