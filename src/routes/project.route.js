@@ -7,6 +7,7 @@ import projectService from 'bc/services/project.service.js';
 import { projectsByFiltersForIds, getIdsInBbox } from 'bc/utils/functionsProjects.js';
 import auth from 'bc/auth/auth.js';
 import { CARTO_URL, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
+import sequelize from 'sequelize';
 
 const Op = sequelize.Op;
 const ProjectCost = db.projectCost;
