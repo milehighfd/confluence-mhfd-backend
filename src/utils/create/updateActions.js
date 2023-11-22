@@ -6,6 +6,26 @@ const ProjectIndependentAction = db.projectIndependentAction;
 const ProjectProposedAction = db.projectProposedAction;
 const { Op } = sequelize;
 
+const arraysMatch = (actionIds, ActionsFromFrontend) => {
+  // Check if the arrays have the same length
+  if (actionIds.length !== ActionsFromFrontend.length) {
+      return false;
+  }
+
+  // Check if each objectid in actionIds is present in ActionsFromFrontend
+  for (let i = 0; i < actionIds.length; i++) {
+      const actionId = actionIds[i];
+      const found = ActionsFromFrontend.some(item => item.objectid === actionId);
+
+      // If the objectid is not found in ActionsFromFrontend, return false
+      if (!found) {
+          return false;
+      }
+  }
+
+  // If all objectids are found, return true
+  return true;
+}
 export const updateActions = async (project_id, independentComponent, actions, creator, transaction = null) => {
 
   const independentActionsinDB = await ProjectIndependentAction.findAll({
@@ -64,24 +84,27 @@ export const updateActions = async (project_id, independentComponent, actions, c
     console.log('ProjectProposedActionInDB', ProjectProposedActionInDB);
     console.log('actionIds', actionIds);
     console.log('compotents from frontned', actions);
-    const actionsToRemove = actionIds.filter(id => 
-      !JSON.parse(actions).some(action => action.objectid === id )
-    );
-    // get actionids minus actionstoremove 
-    const previousActionsNotRemoved = actionIds.filter(id => !actionsToRemove.includes(id));
-    
-    console.log('actionsToRemoveb remove this ', actionsToRemove, 'previousActionsNotRemoved', previousActionsNotRemoved);
-    if (actionsToRemove.length > 0) {
-     const destroyecactions = await ProjectProposedAction.destroy({
-        where: {
-          object_id: { [Op.in]: actionsToRemove},
-          project_id: project_id
-        },
-        transaction
-      });
-      console.log('destroyed values', destroyecactions);
+
+    if (arraysMatch(indActionIds, JSON.parse(independentComponent))) {
+      const actionsToRemove = actionIds.filter(id => 
+        !JSON.parse(actions).some(action => action.objectid === id )
+      );
+      // get actionids minus actionstoremove 
+      const previousActionsNotRemoved = actionIds.filter(id => !actionsToRemove.includes(id));
+      
+      console.log('actionsToRemoveb remove this ', actionsToRemove, 'previousActionsNotRemoved', previousActionsNotRemoved);
+      if (actionsToRemove.length > 0) {
+       const destroyecactions = await ProjectProposedAction.destroy({
+          where: {
+            object_id: { [Op.in]: actionsToRemove},
+            project_id: project_id
+          },
+          transaction
+        });
+        console.log('destroyed values', destroyecactions);
+      }
+      await updateProjectActions(JSON.parse(actions),previousActionsNotRemoved, project_id, creator, transaction);
+      logger.info('All components saved successfully');
     }
-    await updateProjectActions(JSON.parse(actions),previousActionsNotRemoved, project_id, creator, transaction);
-    logger.info('All components saved successfully');
   }  
 };
