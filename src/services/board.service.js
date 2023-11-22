@@ -624,6 +624,7 @@ const updateAndCreateProjectCostsForAmounts = async (
           modified_by: user.email,
           is_active: 1,
           last_modified: lastModifiedDate,
+          created: lastModifiedDate,
           project_partner_id: project_partner.project_partner_id,
           code_data_source_type_id: hasBeenTouched ? CODE_DATA_SOURCE_TYPE.USER: CODE_DATA_SOURCE_TYPE.SYSTEM
         };
