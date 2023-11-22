@@ -3,7 +3,7 @@ import sequelize from 'sequelize';
 import db from 'bc/config/db.js';
 import moment from 'moment';
 import logger from 'bc/config/logger.js';
-import { OFFSET_MILLISECONDS } from 'bc/lib/enumConstants';
+import { OFFSET_MILLISECONDS } from 'bc/lib/enumConstants.js';
 import boardService from 'bc/services/board.service.js';
 import { isOnWorkspace, determineStatusChange } from 'bc/services/board-project.service.js';
 

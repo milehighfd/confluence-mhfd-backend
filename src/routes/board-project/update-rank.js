@@ -5,7 +5,7 @@ import { isOnWorkspace, determineStatusChange } from 'bc/services/board-project.
 import sequelize from 'sequelize';
 import { LexoRank } from 'lexorank';
 import moment from 'moment';
-import { OFFSET_MILLISECONDS } from 'bc/lib/enumConstants';
+import { OFFSET_MILLISECONDS } from 'bc/lib/enumConstants.js';
 
 const BoardProject = db.boardProject;
 const BoardProjectCost = db.boardProjectCost;
