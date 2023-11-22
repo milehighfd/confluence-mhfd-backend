@@ -156,3 +156,5 @@ export const PROJECT_TYPES_AND_NAME = [
   USER: 1,
   SYSTEM: 7
  };
+
+ export const OFFSET_MILLISECONDS = 400;

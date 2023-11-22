@@ -5,6 +5,7 @@ import { isOnWorkspace, determineStatusChange } from 'bc/services/board-project.
 import sequelize from 'sequelize';
 import { LexoRank } from 'lexorank';
 import moment from 'moment';
+import { OFFSET_MILLISECONDS } from 'bc/lib/enumConstants';
 
 const BoardProject = db.boardProject;
 const BoardProjectCost = db.boardProjectCost;
@@ -166,7 +167,6 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
         { ...otherFields, [rankColumnName]: lastLexo },
         { where: { board_project_id: board_project_id } }
       );
-      const offsetMillisecond = 35000;
       let mainModifiedDate = new Date();
       let multiplicator = 0;
       for (const keys in otherFields) {
@@ -181,9 +181,9 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
             project.project_id,
             user,
             board_project_id,
-            moment(mainModifiedDate).subtract(offsetMillisecond * multiplicator).toDate()
+            moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS * multiplicator).toDate()
           );
-          console.log('Multiplicating 000', moment(mainModifiedDate).subtract(offsetMillisecond * multiplicator).toDate(), multiplicator);
+          console.log('Multiplicating 000', moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS * multiplicator).toDate(), multiplicator);
           multiplicator++;
         }
       }
@@ -307,7 +307,6 @@ const updateRank = async (req, res) => {
         board_project_id
       }
     });
-    const offsetMillisecond = 35000;
     let mainModifiedDate = new Date();
     let multiplicator = 0;
     const boardProjectUpdatedStatus = await BoardProject.update(

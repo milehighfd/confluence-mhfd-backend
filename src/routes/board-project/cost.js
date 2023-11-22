@@ -3,6 +3,7 @@ import sequelize from 'sequelize';
 import db from 'bc/config/db.js';
 import moment from 'moment';
 import logger from 'bc/config/logger.js';
+import { OFFSET_MILLISECONDS } from 'bc/lib/enumConstants';
 import boardService from 'bc/services/board.service.js';
 import { isOnWorkspace, determineStatusChange } from 'bc/services/board-project.service.js';
 
@@ -270,7 +271,7 @@ const updateCostNew = async (req, res) => {
         }
         console.log('\n\n ________ \n ------------- \n columnsChanged', columnsChanged, JSON.stringify(amount));
         const allPromises = [];
-        const offsetMillisecond = 35007;
+        
         let mainModifiedDate = new Date();
         
         if (
@@ -303,7 +304,7 @@ const updateCostNew = async (req, res) => {
                   user,
                   board_project_id,
                   moment(mainModifiedDate)
-                    .subtract(offsetMillisecond * pos)
+                    .subtract(OFFSET_MILLISECONDS * pos)
                     .toDate(),
                   amount.code_cost_type_id,
                   isWorkPlan,
@@ -335,7 +336,7 @@ const updateCostNew = async (req, res) => {
                   user,
                   board_project_id,
                   moment(mainModifiedDate)
-                    .subtract(offsetMillisecond * pos)
+                    .subtract(OFFSET_MILLISECONDS * pos)
                     .toDate(),
                   amount.code_cost_type_id,
                   isWorkPlan,

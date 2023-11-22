@@ -16,7 +16,7 @@ import moment from 'moment';
 import { isOnWorkspace, isOnFirstYear } from 'bc/services/board-project.service.js';
 import sequelize, { where } from 'sequelize';
 import authOnlyEmail from 'bc/auth/auth-only-email.js';
-import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
+import { CODE_DATA_SOURCE_TYPE, OFFSET_MILLISECONDS } from 'bc/lib/enumConstants.js';
 
 const { Op } = sequelize;
 const router = express.Router();
@@ -930,7 +930,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
     let mainModifiedDate = new Date();
     let index = 1;
     const createdProjectCostIds = [];
-    const offsetMillisecond = 35000;
+    
     let code_cost_type_id = 0;
     const WORK_PLAN_CODE_COST_TYPE_ID = 21;
     const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
@@ -941,7 +941,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
     }
     for (let cost of foundBoardProjectCosts) {
       const DateToAvoidRepeated = moment(mainModifiedDate)
-        .subtract(offsetMillisecond * index)
+        .subtract(OFFSET_MILLISECONDS * index)
         .toDate();
       index++;_
       const newProjectCost = {
@@ -1143,7 +1143,6 @@ const sendBoardProjectsToProp = async (boards, prop, creator) => {
                     last_modified_by: creator,
                 });
                 const newBoardProjectCreated = await newBoardProject.save();
-                const offsetMillisecond = 35000;
                 let mainModifiedDate = new Date();
                 console.log('New Board Proejct Created', newBoardProjectCreated, newBoardProjectCreated.board_project_id);
                 for (let i = 1 ; i <= 5 ; ++i) {
@@ -1153,7 +1152,7 @@ const sendBoardProjectsToProp = async (boards, prop, creator) => {
                     bp.project_id,
                     {email: creator},
                     newBoardProjectCreated.board_project_id,
-                    moment(mainModifiedDate).subtract( offsetMillisecond * i).toDate()
+                    moment(mainModifiedDate).subtract( OFFSET_MILLISECONDS * i).toDate()
                   );
                 }
               }
@@ -1240,12 +1239,12 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                     console.log(prevCostOfProject.length, 'prevcostofproject', JSON.stringify(prevCostOfProject), 'forprojectid', currentProjectId);
                     // create new projectcosts for the new board project copying values of the previous ones but changing the project_partner_id to the new one
                     let mainModifiedDate = new Date();
-                    const offsetMillisecond = 35007;
+                    
                     for (let j = 0 ; j < prevCostOfProject.length ; j++) {
                       console.log('inside for provcostofproject', j, creator);
                       const prevCostOfSponsor = prevCostOfProject[j];
                       const lastModifiedDate = moment(mainModifiedDate)
-                      .subtract(offsetMillisecond * j)
+                      .subtract(OFFSET_MILLISECONDS * j)
                       .toDate()
                       // here we are duplicating the previous cost with the same partner but with code cost type of workplan
                       const CODE_COST_TYPE_WP = 21;
@@ -1630,13 +1629,13 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
     const projectCostsToCreate = [];
     const boardProjectsCostsToConstruct = [];
     const projectPartnerId = await boardService.findProjectPartner(project_id);
-    const offsetMillisecond = 35007;
+    
     let mainModifiedDate = new Date();
     for (const boardProject of createdBoardProjects) {
       const boardType = await boardService.getBoardTypeById(boardProject.board_id);
       for (let reqPosition = 1; reqPosition <= 5; reqPosition++) {
         const dateToAvoidRepeated = moment(mainModifiedDate)
-        .subtract(offsetMillisecond * reqPosition)
+        .subtract(OFFSET_MILLISECONDS * reqPosition)
         .toDate()
         if (boardProject[`req${reqPosition}`]) {
           const projectCost = boardService.constructProjectCost(boardProject, reqPosition, userData, projectPartnerId, boardType, dateToAvoidRepeated);
@@ -1645,7 +1644,7 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
       }
       if (project_type === 'Maintenance' && extraYears[2] && extraYearsAmounts[2]) {
         const dateToAvoidRepeated = moment(mainModifiedDate)
-        .subtract(offsetMillisecond * 6)
+        .subtract(OFFSET_MILLISECONDS * 6)
         .toDate()
         const yearprojectCost = {
           project_id: boardProject.project_id,
