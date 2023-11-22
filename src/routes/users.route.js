@@ -71,7 +71,7 @@ router.post('/signup', validator(UserService.requiredFields('signup')), async (r
       return res.status(422).send({ error: 'The token is invalid' });
     }
     const maximumDate = processed.changePasswordExpiration.getTime();
-    const currentDate = new Date().getTime();
+    const currentDate = new Date().toLocaleString('en-US', { timeZone: 'America/Denver' });
     if (currentDate > maximumDate) {
       return res.status(422).send({ error: 'The token has expired' });
     }
