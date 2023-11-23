@@ -85,7 +85,7 @@ export const updateActions = async (project_id, independentComponent, actions, c
     console.log('actionIds', actionIds);
     console.log('compotents from frontned', actions);
     console.log('arraysMatch', arraysMatch(actionIds, JSON.parse(actions)));
-    if (arraysMatch(actionIds, JSON.parse(actions))) {
+    if (!arraysMatch(actionIds, JSON.parse(actions))) {
       const actionsToRemove = actionIds.filter(id => 
         !JSON.parse(actions).some(action => action.objectid === id )
       );
