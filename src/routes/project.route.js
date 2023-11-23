@@ -155,7 +155,7 @@ const completeListOfCosts = async (req, res) => {
   logger.info(`Starting endpoint project/projectCost/:project_id with params `);
   const project_id = req.params['project_id'];
   let projectCost = await ProjectCost.findAll({
-    attributes: ['project_cost_id', 'cost', 'modified_by', 'last_modified', 'code_cost_type_id'],
+    attributes: ['project_cost_id', 'cost', 'modified_by', 'last_modified', 'code_cost_type_id','created'],
     where: {
       project_id: project_id,
       code_cost_type_id: {[Op.notIn]:[21,22,41,42]}
@@ -185,7 +185,7 @@ const completeListOfCosts = async (req, res) => {
         }
       ]
     }],
-    order: [['last_modified', 'DESC']]
+    order: [['created', 'DESC']]
   });
   for(let element of projectCost) {
     if(element.codeSourceData?.code_data_source_type_id === 1) {
@@ -264,8 +264,8 @@ const independentActionHistory = async (req, res) => {
     where: {
       project_id: project_id,
     },
-    attributes: ['action_name', 'cost', 'modified_date', 'last_modified_by'],
-    order: [['modified_date', 'DESC']]
+    attributes: ['action_name', 'cost', 'modified_date', 'last_modified_by', 'created_date'],
+    order: [['created_date', 'DESC']]
   });
   for(let element of independentActions) {
       const modifiedUser = element.last_modified_by;
@@ -285,7 +285,8 @@ const proposedActionHistory = async(req, res) => {
     where: {
       project_id: project_id,
     },
-    attributes: ['modified_date', 'last_modified_by']
+    attributes: ['modified_date', 'last_modified_by', 'created_date'],
+    order: [['created_date', 'DESC']]
   });
   for(let element of proposedActionHist) {
     const modifiedUser = element.last_modified_by;
@@ -304,7 +305,8 @@ const projectHistory = async(req, res) => {
     where: {
       project_id: project_id,
     },
-    attributes: ['modified_date', 'last_modified_by']
+    attributes: ['modified_date', 'last_modified_by', 'created_date'],
+    order: [['created_date', 'DESC']]
   });
   for(let element of projectHistory) {
     const modifiedUser = element.last_modified_by;
@@ -323,8 +325,8 @@ const detailHistory = async (req, res) => {
     where: {
       project_id: project_id,
     },
-    attributes: ['last_modified_by', 'modified_date'],
-    order: [['modified_date', 'DESC']]
+    attributes: ['last_modified_by', 'modified_date', 'created_date'],
+    order: [['created_date', 'DESC']]
   });
   for(let element of projectDetail) {
     const modifiedUser = element.last_modified_by;
