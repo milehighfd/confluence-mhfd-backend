@@ -508,6 +508,57 @@ const globalSearch = async (req, res) => {
   }
 };
 
+const searchImport = async (req, res) => {
+  const { keyword, locality, year } = req.body;
+  try {
+    const projects = await projectService.projectSearch(keyword);
+    let filteredProjects = [];
+    const isNumeric = /^\d+$/.test(keyword);
+    if (isNumeric) {
+      filteredProjects = projects;
+    } else {
+      const words = keyword.split(' ').filter(word => word.trim() !== '');
+      filteredProjects = projects.filter(project => {
+        return words.every(word => {
+          let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
+          const regex = new RegExp(regexPattern, 'i');
+          return regex.test(project.project_name);
+        });
+      });
+    }
+    const projectsIds = filteredProjects.map(p => p.project_id);
+    const projectsInBoard = await BoardProject.findAll({
+      attributes : ['project_id'],
+      where: {
+        project_id: projectsIds
+      },
+      include: [{
+        model: Board,
+        attributes: ['locality', 'year', 'projecttype', 'type'],
+        where: { 
+          locality: locality,
+          year: {
+            [Op.not]: year
+          }
+        },
+        required: true
+      },{
+        model: Project,
+        attributes: ['project_name'],
+        as: 'projectData',
+      }]
+    });
+    const uniqueProjectsInBoard = Array.from(new Set(projectsInBoard.map(p => p.project_id)))
+    .map(project_id => {
+      return projectsInBoard.find(p => p.project_id === project_id);
+    });
+    res.status(200).send(uniqueProjectsInBoard);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error searching import');
+  }
+};
+
 const getPagePMTools = async (req, res) => {
   try {
     const { status, pageSize, project_id } = req.body;
@@ -558,6 +609,7 @@ router.get('/projectCost/:project_id', listOfCosts);
 router.post('/projectCost/:project_id', [auth], createCosts);
 router.post('/search', globalSearch);
 router.post('/count-search', countGlobalSearch);
+router.post('/search-import', searchImport);
 router.post('/page', getPagePMTools);
 router.put('/:project_id/short_note', [auth], updateProjectNote);
 router.get('/complete/projectCost/:project_id', completeListOfCosts);

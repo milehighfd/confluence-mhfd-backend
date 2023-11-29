@@ -2469,6 +2469,45 @@ const globalSearch = async (keyword) => {
   return projects;
 };
 
+const projectSearch = async (keyword) => {
+  if (keyword.trim() === '') {
+    const projects = await Project.findAll({
+      attributes: ['project_id', 'project_name'],
+    });
+    return projects;
+  }
+
+  const isNumeric = /^\d+$/.test(keyword);
+  const words = keyword.split(' ').filter(word => word.trim() !== '');
+  let conditions;
+  if (isNumeric) {
+    conditions = [
+      { project_id: keyword },
+      { onbase_project_number: keyword },
+      ...words.map(word => ({
+        project_name: {
+          [Op.like]: `%${word}%`
+        }
+      }))
+    ];
+  } else {
+    conditions = words.map(word => ({
+      project_name: {
+        [Op.like]: `%${word}%`
+      }
+    }));
+  }
+
+  const projects = await Project.findAll({
+    where: {
+      [Op.or]: conditions
+    },
+    attributes: ['project_id', 'project_name'],
+  });
+
+  return projects;
+};
+
 const getPmtoolsProjectDataCount = async (project_id) => {
   const count = await Project.count({
     where: {
@@ -2730,5 +2769,6 @@ export default {
   getProjectsByStatus,
   getProjectPartner,
   getBoardProjectDataCount,
-  getPmtoolsProjectDataCount
+  getPmtoolsProjectDataCount,
+  projectSearch
 };
