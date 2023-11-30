@@ -512,6 +512,7 @@ const searchImport = async (req, res) => {
   const { keyword, locality, year } = req.body;
   try {
     const projects = await projectService.projectSearch(keyword);
+    const CODE_SPONSOR = 11;
     let filteredProjects = [];
     const isNumeric = /^\d+$/.test(keyword);
     if (isNumeric) {
@@ -546,9 +547,35 @@ const searchImport = async (req, res) => {
         model: Project,
         attributes: ['project_name'],
         as: 'projectData',
+        required: true,
+        include: [{
+          model: ProjectPartner,
+          attributes: ['project_partner_id', 'code_partner_type_id'],
+          where: {
+            code_partner_type_id: CODE_SPONSOR
+          },
+          required: true,
+          include: [{
+            model: BusinessAssociates,
+            attributes: ['business_name']
+          }]
+        }],        
       }]
     });
-    const uniqueProjectsInBoard = Array.from(new Set(projectsInBoard.map(p => p.project_id)))
+    const projectsToAvoid = await BoardProject.findAll({
+      attributes : ['project_id'],
+      include: [{
+        model: Board,
+        attributes: ['locality', 'year', 'projecttype', 'type'],
+        where: {
+          year: year
+        },
+        required: true
+      }]
+    });
+    const projectsToAvoidIds = projectsToAvoid.map(p => p.project_id);
+    const filteredProjectsInBoard = projectsInBoard.filter(p => !projectsToAvoidIds.includes(p.project_id));
+    const uniqueProjectsInBoard = Array.from(new Set(filteredProjectsInBoard.map(p => p.project_id)))
     .map(project_id => {
       return projectsInBoard.find(p => p.project_id === project_id);
     });

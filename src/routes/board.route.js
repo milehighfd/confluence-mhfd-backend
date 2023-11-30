@@ -1889,6 +1889,77 @@ const applyLocalityCondition = (where) => {
   return where;
 }
 
+router.post('/import-project', [auth], async (req, res) => {
+  const {
+    locality,
+    projecttype,
+    type,
+    year,
+    project_id
+  } = req.body;
+  const user = req.user;
+  const creator = user.email;
+  const transaction = await db.sequelize.transaction();
+  try {
+    let boardData = null;
+    boardData = await Board.findOne({
+      where: {
+        locality,
+        projecttype,
+        type,
+        year
+      },
+      transaction
+    });    
+    if (!boardData) {
+      boardData= await boardService.createNewBoard(
+        type,
+        year,
+        locality,
+        projecttype,
+        'Under Review',
+        creator,
+        '',
+        ''
+      );
+    }
+    const boardId = boardData.dataValues.board_id;
+    const rankValue = await boardService.getPrevLexoRankValue(boardId, 'rank0');
+    const initialBoardProject = await BoardProject.findOne({
+      where: {
+        project_id: project_id
+      }
+    });
+    const newProjectBoard = await BoardProject.create({
+      board_id: boardId,
+      project_id,
+      rank0: rankValue,
+      rank1: null,
+      rank2: null,
+      rank3: null,
+      rank4: null,
+      rank5: null,
+      req1: null,
+      req2: null,
+      req3: null,
+      req4: null,
+      req5: null,
+      year1: null,
+      year2: null,
+      origin: initialBoardProject?.origin || 'MHFD District Work Plan',
+      code_status_type_id: REQUESTED_STATUS,
+      created_by: creator,
+      last_modified_by: creator,
+    }, { transaction });
+    await transaction.commit();
+    res.status(200).send(newProjectBoard);
+  } catch (error) {
+    await transaction.rollback();
+    console.error(`Error importing board: ${error}`);
+    res.status(500).send({ error: error, message: 'Internal error' });
+  }
+});
+
 router.get('/update-88', async(req, res)=> {
   const allProjectPartner = await ProjectPartner.findAll({
     where: {
