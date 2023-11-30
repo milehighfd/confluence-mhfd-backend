@@ -1391,10 +1391,53 @@ const getEmailsForWR = async (board) => {
     return finalEmailList;
 }
 
+router.get('/test-email', async (req, res) => {
+  try {
+    const emailList = await testMailForWP();
+    res.send(emailList);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ error: 'Internal server error' });
+  }
+});
+
+const testMailForWP = async () => {
+  const STAFF = 'staff';
+  const ADMIN = 'admin';
+  const LOCALGOVERNMENT = 'government_staff';
+  let userEmails = await User.findAll({
+    attributes: ['email'],
+    where: {
+      designation: {
+        [Op.or]: [STAFF, ADMIN, LOCALGOVERNMENT]
+      }
+    }
+  });
+  let emails = [];
+  userEmails.forEach((ue) => {
+    emails.push(ue.email);
+  })
+  return emails;
+}
+
 const getEmailsForWP = async (board) => {
     //TODO: maybe replace it with a distinct on board localities
+    const STAFF = 'staff';
+    const ADMIN = 'admin';
+    const LOCALGOVERNMENT = 'government_staff';
     let emails = [];
     let allStaffEmails = ['dskuodas@mhfd.org', 'kbauer@mhfd.org', 'jwatt@mhfd.org', 'bseymour@mhfd.org', 'mlynch@mhfd.org', 'jvillines@mhfd.org', 'bkohlenberg@mhfd.org', 'tpatterson@mhfd.org', 'bchongtoua@mhfd.org']
+    let userEmails = await User.findAll({
+      attributes: ['email'],
+      where: {
+        designation: {
+          [Op.or]: [STAFF, ADMIN, LOCALGOVERNMENT]
+        }
+      }
+    });
+    userEmails.forEach((ue) => {
+      emails.push(ue.email);
+    })
     allStaffEmails.forEach((ase) => {
         emails.push(ase);
     })
@@ -1418,6 +1461,7 @@ const getEmailsForWP = async (board) => {
             emails.push(u.email)
         })
     }
+    emails = [...new Set(emails)]; 
     return emails;
 }
    
