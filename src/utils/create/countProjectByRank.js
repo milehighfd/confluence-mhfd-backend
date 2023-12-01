@@ -6,9 +6,9 @@ export const countProjectsByRank = async (board_id, rank, transaction = null) =>
   const counter = await BoardProject.count({
     where: {
       board_id,
-      [rank]: {
-        [Op.ne]: null
-      }
+      // [rank]: {
+      //   [Op.ne]: null
+      // }
     },
     transaction
   });

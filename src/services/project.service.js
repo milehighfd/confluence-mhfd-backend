@@ -2546,14 +2546,14 @@ const getBoardProjectDataCount = async (project_id, type) => {
   const count = await BoardProject.count({
     where: {
       project_id: project_id,
-      [Op.or]: [
-        { rank0: { [Op.not]: null } },
-        { rank1: { [Op.not]: null } },
-        { rank2: { [Op.not]: null } },
-        { rank3: { [Op.not]: null } },
-        { rank4: { [Op.not]: null } },
-        { rank5: { [Op.not]: null } },
-      ]
+      // [Op.or]: [
+      //   { rank0: { [Op.not]: null } },
+      //   { rank1: { [Op.not]: null } },
+      //   { rank2: { [Op.not]: null } },
+      //   { rank3: { [Op.not]: null } },
+      //   { rank4: { [Op.not]: null } },
+      //   { rank5: { [Op.not]: null } },
+      // ]
     },
     include: [{
       model: Board,
@@ -2584,14 +2584,14 @@ const getBoardProjectData = async (project_id, type) => {
   const boardProject = await BoardProject.findAll({
     where: {
       project_id: project_id,
-      [Op.or]: [
-        { rank0: { [Op.not]: null } },
-        { rank1: { [Op.not]: null } },
-        { rank2: { [Op.not]: null } },
-        { rank3: { [Op.not]: null } },
-        { rank4: { [Op.not]: null } },
-        { rank5: { [Op.not]: null } },
-      ]
+      // [Op.or]: [
+      //   { rank0: { [Op.not]: null } },
+      //   { rank1: { [Op.not]: null } },
+      //   { rank2: { [Op.not]: null } },
+      //   { rank3: { [Op.not]: null } },
+      //   { rank4: { [Op.not]: null } },
+      //   { rank5: { [Op.not]: null } },
+      // ]
     },
     attributes: [
       'board_project_id',

@@ -123,19 +123,19 @@ function getNumberFromRank(otherFields) {
   if (!otherFields) {
     return null;
   }
-  for (let i = 0; i <= 5; i++) {
-    const rankKey = `rank${i}`;
-    if (otherFields.hasOwnProperty(rankKey)) {
-      return i;
-    }
-  }
+  // for (let i = 0; i <= 5; i++) {
+  //   const rankKey = `rank${i}`;
+  //   if (otherFields.hasOwnProperty(rankKey)) {
+  //     return i;
+  //   }
+  // }
   return null;
 }
 
 const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition, otherFields, board_project_id, user) => {
   console.log('here');
   const reqColumnName = `req${columnNumber}`;
-  const rankColumnName = `rank${columnNumber}`;
+  // const rankColumnName = `rank${columnNumber}`;
   const where = { board_id };
   let reqExist = null;
   if (`${columnNumber}` !== '0') {
@@ -146,13 +146,13 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
       where['board_project_id'] = reqExist.board_project_id;
     }
   } else {
-    where[rankColumnName] = { [Op.ne]: null }
+    // where[rankColumnName] = { [Op.ne]: null }
   }
   console.log('where', where)
   console.log('req', reqExist)
   const projects = await BoardProject.findAll({
     where,
-    order: [[rankColumnName, 'ASC']],
+    // order: [[rankColumnName, 'ASC']],
   });
   let lastLexo = null;
   const proms = projects.map(async (project, index) => {
@@ -164,7 +164,9 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
     if (index === targetPosition) {
       lastLexo = LexoRank.parse(lastLexo).genNext().toString();
       await BoardProject.update(
-        { ...otherFields, [rankColumnName]: lastLexo },
+        { ...otherFields, 
+          // [rankColumnName]: lastLexo 
+        },
         { where: { board_project_id: board_project_id } }
       );
       let mainModifiedDate = new Date();
@@ -188,15 +190,15 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
         }
       }
     }   
-    return await BoardProject.update(
-      { [rankColumnName]: lastLexo },
-      { where: { board_project_id: project.board_project_id } }
-    );
+    // return await BoardProject.update(
+    //   { [rankColumnName]: lastLexo },
+    //   { where: { board_project_id: project.board_project_id } }
+    // );
   });
   let originCost = null;
   let targetCost = null;
   if (getNumberFromRank(otherFields) && columnNumber) {
-    originCost = await getBoardProjectCostMHFD(board_project_id, getNumberFromRank(otherFields));
+    // originCost = await getBoardProjectCostMHFD(board_project_id, getNumberFromRank(otherFields));
     targetCost = await getBoardProjectCostMHFD(board_project_id, columnNumber);
     if (originCost && targetCost) {
       const cost = originCost.projectCostData.cost + targetCost.projectCostData.cost;
@@ -210,24 +212,24 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
       ));
       const sponsorAndCosponsor = await getOriginSponsor(board_project_id);
       sponsorAndCosponsor.forEach(async (project_partner_id) => {
-        const originSecCost = await getBoardProjectCostSponsor(board_project_id, getNumberFromRank(otherFields), project_partner_id);
+        // const originSecCost = await getBoardProjectCostSponsor(board_project_id, getNumberFromRank(otherFields), project_partner_id);
         const targetSecCost = await getBoardProjectCostSponsor(board_project_id, columnNumber, project_partner_id);
-        if (originSecCost && targetSecCost) {
-          const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
-          console.log(project_partner_id, originCost.projectCostData.project_cost_id, targetCost.projectCostData.project_cost_id, cost)
-          proms.push(
-            ProjectCost.update(
-              { cost: cost },
-              { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
-            )
-          );
-          proms.push(
-            ProjectCost.update(
-              { is_active: false },
-              { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
-            )
-          );
-        }
+        // if (originSecCost && targetSecCost) {
+        //   const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
+        //   console.log(project_partner_id, originCost.projectCostData.project_cost_id, targetCost.projectCostData.project_cost_id, cost)
+        //   proms.push(
+        //     ProjectCost.update(
+        //       { cost: cost },
+        //       { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
+        //     )
+        //   );
+        //   proms.push(
+        //     ProjectCost.update(
+        //       { is_active: false },
+        //       { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
+        //     )
+        //   );
+        // }
       });
     }
   }  
@@ -253,7 +255,7 @@ const updateRank = async (req, res) => {
   const user = req.user;
   if (before === undefined) before = null;
   if (after === undefined) after = null;
-  const rankColumnName = `rank${columnNumber}`;
+  // const rankColumnName = `rank${columnNumber}`;
   const boardProjectBeforeUpdate = await BoardProject.findOne({
     where: {
       board_project_id
@@ -264,7 +266,7 @@ const updateRank = async (req, res) => {
   const board_id = boardProjectBeforeUpdate.board_id;
   const columnCountWhere = {
     board_id,
-    [rankColumnName]: { [Op.ne]: null }
+    // [rankColumnName]: { [Op.ne]: null }
   };
   const count = await BoardProject.count({ where: columnCountWhere });
   if (before === null && after === null && count > 0) {
@@ -285,16 +287,16 @@ const updateRank = async (req, res) => {
   }
   let lexo;
   if (count === 0) {
-    lexo = LexoRank.middle().toString();
+    // lexo = LexoRank.middle().toString();
   } else if (before === null) {
-    lexo = LexoRank.parse(after).genPrev().toString();
+    // lexo = LexoRank.parse(after).genPrev().toString();
   } else if (after === null) {
-    lexo = LexoRank.parse(before).genNext().toString();
+    // lexo = LexoRank.parse(before).genNext().toString();
   } else {
     if (before === after) {
       lexo = before; //TODO: change as this should not happen
     } else {
-      lexo = LexoRank.parse(before).between(LexoRank.parse(after)).toString();
+      // lexo = LexoRank.parse(before).between(LexoRank.parse(after)).toString();
     }
   }
   try {
@@ -310,7 +312,9 @@ const updateRank = async (req, res) => {
     let mainModifiedDate = new Date();
     let multiplicator = 0;
     const boardProjectUpdatedStatus = await BoardProject.update(
-      { [rankColumnName]: lexo, ...otherFields },
+      { 
+        // [rankColumnName]: lexo,
+         ...otherFields },
       { where: { board_project_id } }
     );
 
@@ -321,42 +325,42 @@ const updateRank = async (req, res) => {
     const onWorkspace = isOnWorkspace(boardProjectUpdated);
     console.log('onWorkspace', onWorkspace);
     for (const key in otherFields) {
-      if (key != 'rank0') {
-        let originCost = null;
-        let targetCost = null;    
-        if (getNumberFromRank(otherFields) && columnNumber) {
-          originCost = await getBoardProjectCostMHFD(board_project_id, getNumberFromRank(otherFields));
-          targetCost = await getBoardProjectCostMHFD(board_project_id, columnNumber);
-          if (originCost && targetCost) {
-            const cost = originCost.projectCostData.cost + targetCost.projectCostData.cost;
-            ProjectCost.update(
-              { cost: cost },
-              { where: { project_cost_id: targetCost.projectCostData.project_cost_id } }
-            );
-            ProjectCost.update(
-              { is_active: false },
-              { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
-            );
-            const sponsorAndCosponsor = await getOriginSponsor(board_project_id);
-            sponsorAndCosponsor.forEach(async (project_partner_id) => {
-              const originSecCost = await getBoardProjectCostSponsor(board_project_id, getNumberFromRank(otherFields), project_partner_id);
-              const targetSecCost = await getBoardProjectCostSponsor(board_project_id, columnNumber, project_partner_id);
-              if (originSecCost && targetSecCost) {                
-                const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
-                console.log(project_partner_id, originCost.projectCostData.project_cost_id, targetCost.projectCostData.project_cost_id, cost)
-                ProjectCost.update(
-                  { cost: cost },
-                  { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
-                );
-                ProjectCost.update(
-                  { is_active: false },
-                  { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
-                );
-              }
-            });
-          }
-        }
-      }
+      // if (key != 'rank0') {
+      //   let originCost = null;
+      //   let targetCost = null;    
+      //   if (getNumberFromRank(otherFields) && columnNumber) {
+      //     originCost = await getBoardProjectCostMHFD(board_project_id, getNumberFromRank(otherFields));
+      //     targetCost = await getBoardProjectCostMHFD(board_project_id, columnNumber);
+      //     if (originCost && targetCost) {
+      //       const cost = originCost.projectCostData.cost + targetCost.projectCostData.cost;
+      //       ProjectCost.update(
+      //         { cost: cost },
+      //         { where: { project_cost_id: targetCost.projectCostData.project_cost_id } }
+      //       );
+      //       ProjectCost.update(
+      //         { is_active: false },
+      //         { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
+      //       );
+      //       const sponsorAndCosponsor = await getOriginSponsor(board_project_id);
+      //       sponsorAndCosponsor.forEach(async (project_partner_id) => {
+      //         const originSecCost = await getBoardProjectCostSponsor(board_project_id, getNumberFromRank(otherFields), project_partner_id);
+      //         const targetSecCost = await getBoardProjectCostSponsor(board_project_id, columnNumber, project_partner_id);
+      //         if (originSecCost && targetSecCost) {                
+      //           const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
+      //           console.log(project_partner_id, originCost.projectCostData.project_cost_id, targetCost.projectCostData.project_cost_id, cost)
+      //           ProjectCost.update(
+      //             { cost: cost },
+      //             { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
+      //           );
+      //           ProjectCost.update(
+      //             { is_active: false },
+      //             { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
+      //           );
+      //         }
+      //       });
+      //     }
+      //   }
+      // }
     }
     [boardProjectUpdated, ] = await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id, user.email);
     return res.status(200).send(boardProjectUpdatedStatus);

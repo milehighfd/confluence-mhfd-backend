@@ -192,10 +192,10 @@ const updateCostNew = async (req, res) => {
     const currentProjectId = beforeUpdate.project_id;
     let statusHasChanged;
     const allPreviousAmounts = await getAllPreviousAmounts(beforeUpdate, currentProjectId);
-    const currentRanks = await BoardProject.findOne({
-      attributes: ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'],
-      where: { board_project_id }
-    });    
+    // const currentRanks = await BoardProject.findOne({
+    //   attributes: ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'],
+    //   where: { board_project_id }
+    // });    
     console.log('HERE ARE THE REAL NEW AMONTS', amounts);
     for(let i = 0; i < amounts.length; ++i) {
         const amount = amounts[i];
@@ -220,7 +220,7 @@ const updateCostNew = async (req, res) => {
           console.log('MHFD FUNDING', JSON.stringify(amount), isWorkPlan, 'before amount', beforeAmounts);
           for (let pos = 1; pos <= 5; pos++) {
             const reqColumnName = `req${pos}`;
-            const rankColumnName = `rank${pos}`;
+            // const rankColumnName = `rank${pos}`;
             const currentReqAmount = amount.values[reqColumnName] ?? null;            
             // const valueHasChanged = (currentReqAmount === null) ? true : beforeAmounts.values[reqColumnName] !== currentReqAmount;
             const valueHasChanged = beforeAmounts.values[reqColumnName] !== currentReqAmount;
@@ -231,29 +231,29 @@ const updateCostNew = async (req, res) => {
               allCurrentAmounts[reqColumnName] = beforeAmounts.values[reqColumnName];
             }
             if (
-              (beforeAmounts.values[reqColumnName] === null && currentReqAmount !== null) || 
-              (beforeUpdate[rankColumnName] === null && currentReqAmount !== null && valueHasChanged)
+              (beforeAmounts.values[reqColumnName] === null && currentReqAmount !== null)  
+              // || (beforeUpdate[rankColumnName] === null && currentReqAmount !== null && valueHasChanged)
             ) {
               const where = {
                 board_id: beforeUpdate.board_id,
-                [rankColumnName]: { [Op.ne]: null }
+                // [rankColumnName]: { [Op.ne]: null }
               };
               const projects = await BoardProject.findAll({
                 where,
-                order: [[rankColumnName, 'DESC']],
+                // order: [[rankColumnName, 'DESC']],
                 limit: 1
               });
-              if (currentRanks[rankColumnName] === null) {
-                if (projects.length === 0) {
-                  updateFields[rankColumnName] = LexoRank.middle().toString();
-                } else {
-                  const lastProject = projects[0];
-                  console.log('Last project ', lastProject[rankColumnName]);
-                  updateFields[rankColumnName] = LexoRank.parse(lastProject[rankColumnName]).genNext().toString();
-                }
-              }             
+              // if (currentRanks[rankColumnName] === null) {
+              //   if (projects.length === 0) {
+              //     updateFields[rankColumnName] = LexoRank.middle().toString();
+              //   } else {
+              //     const lastProject = projects[0];
+              //     console.log('Last project ', lastProject[rankColumnName]);
+              //     updateFields[rankColumnName] = LexoRank.parse(lastProject[rankColumnName]).genNext().toString();
+              //   }
+              // }             
             } else if (currentReqAmount === null && !isMaintenance) {              
-              updateFields[rankColumnName] = null;
+              // updateFields[rankColumnName] = null;
             }
           }
         } else if (amount.code_partner_type_id !== 88) {
@@ -349,28 +349,28 @@ const updateCostNew = async (req, res) => {
   
         await Promise.all(allPromises);
         if (( amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22))) {
-          let rank0 = null;
+          // let rank0 = null;
           let shouldMoveToWorkspace = true;
           // IF NO AMOUNTS MOVE CARD TO WORKSPACE
-          for (let currentRank in allCurrentAmounts) {
-            if (allCurrentAmounts[currentRank]) {
-              shouldMoveToWorkspace = false;
-            }
-          }
+          // for (let currentRank in allCurrentAmounts) {
+          //   if (allCurrentAmounts[currentRank]) {
+          //     shouldMoveToWorkspace = false;
+          //   }
+          // }
           if (shouldMoveToWorkspace && !isMaintenance) {
             const projects = await BoardProject.findAll({
               where: {
                 board_id: beforeUpdate.board_id,
-                rank0: { [Op.ne]: null }
+                // rank0: { [Op.ne]: null }
               },
-              order: [[`rank${0}`, 'ASC']],
+              // order: [[`rank${0}`, 'ASC']],
               limit: 1
             });
             if (projects.length === 0) {
-              rank0 = LexoRank.middle().toString();
+              // rank0 = LexoRank.middle().toString();
             } else {
               const firstProject = projects[0];
-              rank0 = LexoRank.parse(firstProject[`rank0`]).genPrev().toString();
+              // rank0 = LexoRank.parse(firstProject[`rank0`]).genPrev().toString();
             }
           }
           // UPDATE PROJECTCOST WITH ALL NEW VALUES
@@ -384,22 +384,22 @@ const updateCostNew = async (req, res) => {
           );
   
           const updatedRanks = await BoardProject.findOne({
-            attributes: ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'],
+            // attributes: ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'],
             where: { board_project_id }
           });
           let hasSomeRank = false;
-          Object.keys(updatedRanks.dataValues).forEach((key) => {
-            if (updatedRanks.dataValues[key] !== null) {
-              // THE PROJECT BOARD HAS SOME RANK IN SOME COLUMN
-              hasSomeRank = true;
-            }
-          });
-          if (!hasSomeRank) {
-            await BoardProject.update(
-              { rank0: LexoRank.middle().toString(), last_modified_by: user.email },
-              { where: { board_project_id } }
-            );
-          }
+          // Object.keys(updatedRanks.dataValues).forEach((key) => {
+          //   if (updatedRanks.dataValues[key] !== null) {
+          //     // THE PROJECT BOARD HAS SOME RANK IN SOME COLUMN
+          //     hasSomeRank = true;
+          //   }
+          // });
+          // if (!hasSomeRank) {
+          //   await BoardProject.update(
+          //     { rank0: LexoRank.middle().toString(), last_modified_by: user.email },
+          //     { where: { board_project_id } }
+          //   );
+          // }
           let boardProjectUpdated = await BoardProject.findOne({
             where: { board_project_id }
           });

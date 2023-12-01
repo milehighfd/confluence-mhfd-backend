@@ -68,19 +68,19 @@ export const addProjectToBoard = async (
   const firstProject = await BoardProject.findOne({
     where: {
       board_id: board.board_id,
-      rank0: {
-        [Op.ne]: null,
-      }
+      // rank0: {
+      //   [Op.ne]: null,
+      // }
     }, 
-    order: [['rank0', 'ASC']],
+    // order: [['rank0', 'ASC']],
     transaction: transaction,
   });
   if (firstProject) {
-    boardProjectObject.rank0 = LexoRank.parse(firstProject.rank0)
-      .genPrev()
-      .toString();
+    // boardProjectObject.rank0 = LexoRank.parse(firstProject.rank0)
+    //   .genPrev()
+    //   .toString();
   } else { 
-    boardProjectObject.rank0 = LexoRank.middle().toString();
+    // boardProjectObject.rank0 = LexoRank.middle().toString();
   }
   boardProjectObject.projectname = projectname;
   boardProjectObject.projecttype = projecttype;
@@ -93,7 +93,7 @@ export const addProjectToBoard = async (
         boardProject.board_id,
         boardProject.project_id,
         boardProject.origin,
-        boardProject.rank0,
+        // boardProject.rank0,
         boardProject.projectname,
         user.email,
         transaction

@@ -54,72 +54,72 @@ const REQUESTED_STATUS = 2;
 const APPROVED_STATUS = 3;
 
 router.get('/lexorank-update', async (req, res) => {
-    const boards = await Board.findAll();
-    const boardProjects = await BoardProject.findAll();
-    const updates = {
-        rank0: {},
-        rank1: {},
-        rank2: {},
-        rank3: {},
-        rank4: {},
-        rank5: {}
-    };
-    const originPositions = ['position0', 'position1', 'position2', 'position3', 'position4', 'position5'];
-    const positions =  ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+    // const boards = await Board.findAll();
+    // const boardProjects = await BoardProject.findAll();
+    // const updates = {
+    //     rank0: {},
+    //     rank1: {},
+    //     rank2: {},
+    //     rank3: {},
+    //     rank4: {},
+    //     rank5: {}
+    // };
+    // const originPositions = ['position0', 'position1', 'position2', 'position3', 'position4', 'position5'];
+    // const positions =  ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
     
-    for (const board of boards) {
-        let lexoRanks = {
-            rank0: LexoRank.middle(),
-            rank1: LexoRank.middle(),
-            rank2: LexoRank.middle(),
-            rank3: LexoRank.middle(),
-            rank4: LexoRank.middle(),
-            rank5: LexoRank.middle()
-        };
-        for (const [index, position] of originPositions.entries()) {
-            boardProjects.sort((a, b) => {
-                if (a[position] == null) return -1;
-                if (b[position] == null) return 1;
-                return a[position] - b[position];
-            });
-            for (const bp of boardProjects) {
-                if (board.board_id === bp.board_id) {
-                    if (bp[position] != null) {
-                        const value = lexoRanks[positions[index]].toString();
-                        if (!updates[positions[index]][value]) {
-                            updates[positions[index]][value] = [];
-                        }
-                        updates[positions[index]][value].push(bp.board_project_id);
-                        lexoRanks[positions[index]] = lexoRanks[positions[index]].genNext();
-                    }
-                }
-            }
-        }
-    }
-    let c = 0;
-    console.log(updates);
-    const prs = [];
-    for (const position of positions) {
-        for (const value in updates[position]) {
-            c++;
-            logger.info(`Updating ${position} to ${value} for ${updates[position][value]}`);
-            prs.push(BoardProject.update(
-                {
-                    [position]: value,
-                    last_modified_by: 'system'
-                },
-                {
-                    where: {
-                        board_project_id: updates[position][value]
-                    }
-                }
-            ));
-        }
-    }
-    await Promise.all(prs);
-    res.send({
-        counter: c,
-    });
+    // for (const board of boards) {
+    //     let lexoRanks = {
+    //         rank0: LexoRank.middle(),
+    //         rank1: LexoRank.middle(),
+    //         rank2: LexoRank.middle(),
+    //         rank3: LexoRank.middle(),
+    //         rank4: LexoRank.middle(),
+    //         rank5: LexoRank.middle()
+    //     };
+    //     for (const [index, position] of originPositions.entries()) {
+    //         boardProjects.sort((a, b) => {
+    //             if (a[position] == null) return -1;
+    //             if (b[position] == null) return 1;
+    //             return a[position] - b[position];
+    //         });
+    //         for (const bp of boardProjects) {
+    //             if (board.board_id === bp.board_id) {
+    //                 if (bp[position] != null) {
+    //                     const value = lexoRanks[positions[index]].toString();
+    //                     if (!updates[positions[index]][value]) {
+    //                         updates[positions[index]][value] = [];
+    //                     }
+    //                     updates[positions[index]][value].push(bp.board_project_id);
+    //                     lexoRanks[positions[index]] = lexoRanks[positions[index]].genNext();
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+    // let c = 0;
+    // console.log(updates);
+    // const prs = [];
+    // for (const position of positions) {
+    //     for (const value in updates[position]) {
+    //         c++;
+    //         logger.info(`Updating ${position} to ${value} for ${updates[position][value]}`);
+    //         prs.push(BoardProject.update(
+    //             {
+    //                 [position]: value,
+    //                 last_modified_by: 'system'
+    //             },
+    //             {
+    //                 where: {
+    //                     board_project_id: updates[position][value]
+    //                 }
+    //             }
+    //         ));
+    //     }
+    // }
+    // await Promise.all(prs);
+    // res.send({
+    //     counter: c,
+    // });
 });
 
 router.post('/filters', async (req, res) => {
@@ -493,21 +493,21 @@ router.post('/board-for-positions2', async (req, res) => {
     });
     const boardIds = boards.map(b => b.dataValues.board_id);
     const isWorkPlan = type === 'WORK_PLAN';
-    const rankColumnName = `rank${position}`;
+    // const rankColumnName = `rank${position}`;
     const reqColumnName = `req${position}`;
     const originPositionColumnName = `originPosition${position}`;
     const attributes = [
       'board_project_id',
       'project_id',
       'projectname',
-      rankColumnName,
+      // rankColumnName,
       'origin',
       originPositionColumnName,
       'code_status_type_id',
     ];
     const where = {
       board_id: {[Op.in]: boardIds},
-      [rankColumnName]: { [Op.ne]: null }
+      // [rankColumnName]: { [Op.ne]: null }
     };
   
     if(projecttype === 'Maintenance') {
@@ -559,7 +559,7 @@ router.post('/board-for-positions2', async (req, res) => {
     const boardProjects = (await BoardProject.findAll({
       attributes,
       where,
-      order: [[rankColumnName, 'ASC']],
+      // order: [[rankColumnName, 'ASC']],
     })).map(d => d.dataValues);
     
     if (`${position}` !== '0') {
@@ -885,21 +885,21 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
       // both to workspace
       newBoardProjectParams = {
         ...newBoardProjectParams,
-        rank0: boardProject.rank0 || LexoRank.middle(),
+        // rank0: boardProject.rank0 || LexoRank.middle(),
       }
     } else {
       // if it has values for years
       newBoardProjectParams = {
         ...newBoardProjectParams,
-        rank1: boardProject.rank2,
+        // rank1: boardProject.rank2,
         req1: boardProject.req2,  
-        rank2: boardProject.rank3,
+        // rank2: boardProject.rank3,
         req2: boardProject.req3,  
-        rank3: boardProject.rank4,
+        // rank3: boardProject.rank4,
         req3: boardProject.req4,  
-        rank4: boardProject.rank5,
+        // rank4: boardProject.rank5,
         req4: boardProject.req5,
-        rank5: null,
+        // rank5: null,
         req5: null,
       }
     }    
@@ -1009,7 +1009,7 @@ const getOriginPositionMap = (boardProjects) => {
   const columns = [0, 1, 2, 3, 4, 5];
   const originPositionMap = {};
   columns.forEach(columnNumber => {
-    const rankName = `rank${columnNumber}`;
+    // const rankName = `rank${columnNumber}`;
     const reqName = `req${columnNumber}`;
     let arr = [];
     for (var j = 0 ; j < boardProjects.length ; j++) {
@@ -1018,21 +1018,21 @@ const getOriginPositionMap = (boardProjects) => {
         let isEmptyBoardProject = true;
         columns.forEach(cNumber => {
           if (cNumber === 0) return;
-          isEmptyBoardProject = isEmptyBoardProject && (!bp[`rank${cNumber}`] && !bp[`req${cNumber}`]);
+          // isEmptyBoardProject = isEmptyBoardProject && (!bp[`rank${cNumber}`] && !bp[`req${cNumber}`]);
         })
         if (isEmptyBoardProject) {
           arr.push({
             bp,
-            value: bp[rankName]
+            // value: bp[rankName]
           });
         }
       } else {
-        if (bp[rankName] || bp[reqName]) {
+        // if (bp[rankName] || bp[reqName]) {
           arr.push({
               bp,
-              value: bp[rankName]
+              // value: bp[rankName]
           });
-        }
+        // }
       }
     }
     arr.sort();
@@ -1118,12 +1118,12 @@ const sendBoardProjectsToProp = async (boards, prop, creator) => {
                 let newBoardProject = new BoardProject({
                     board_id: destinyBoard.board_id,
                     project_id: bp.project_id,
-                    rank0: bp.rank0,
-                    rank1: bp.rank1,
-                    rank2: bp.rank2,
-                    rank3: bp.rank3,
-                    rank4: bp.rank4,
-                    rank5: bp.rank5,
+                    // rank0: bp.rank0,
+                    // rank1: bp.rank1,
+                    // rank2: bp.rank2,
+                    // rank3: bp.rank3,
+                    // rank4: bp.rank4,
+                    // rank5: bp.rank5,
                     originPosition0: originPositionMap[bp.project_id][0],
                     originPosition1: originPositionMap[bp.project_id][1],
                     originPosition2: originPositionMap[bp.project_id][2],
@@ -1170,7 +1170,7 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
             BoardProject.findAll({
                 where: {
                     board_id: board.board_id,
-                    rank0: null
+                    // rank0: null
                 }
             }).then((async (boardProjects) => {
                 const originPositionMap = getOriginPositionMap(boardProjects);
@@ -1184,12 +1184,12 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                       const boardProjectCreated = await BoardProject.create({
                         board_id: destinyBoard.board_id,
                         project_id: bp.project_id,
-                        rank0: bp.rank0,
-                        rank1: bp.rank1,
-                        rank2: bp.rank2,
-                        rank3: bp.rank3,
-                        rank4: bp.rank4,
-                        rank5: bp.rank5,
+                        // rank0: bp.rank0,
+                        // rank1: bp.rank1,
+                        // rank2: bp.rank2,
+                        // rank3: bp.rank3,
+                        // rank4: bp.rank4,
+                        // rank5: bp.rank5,
                         originPosition0: originPositionMap[bp.project_id][0],
                         originPosition1: originPositionMap[bp.project_id][1],
                         originPosition2: originPositionMap[bp.project_id][2],
@@ -1293,11 +1293,11 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                 }
                 logger.info('success on sendBoardProjectsToDistrict');
                 const updatePromises = [];
-                for (let i = 0; i < 6; i++) {
-                    const rank = `rank${i}`;
-                    logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
-                    updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank, creator));
-                }
+                // for (let i = 0; i < 6; i++) {
+                //     const rank = `rank${i}`;
+                //     logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
+                //     updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank, creator));
+                // }
                 if (updatePromises.length) {
                   try {
                     await Promise.all(updatePromises)
@@ -1656,12 +1656,12 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
         transaction
       });    
       if (existingEntry) {
-        const resetRanks = {};
-        for (let i = 0; i <= 5; i++) {
-          resetRanks[`rank${i}`] = null;
-        }
-        const updatedValues = { ...resetRanks, ...created };
-        await existingEntry.update(updatedValues, { transaction });
+        // const resetRanks = {};
+        // for (let i = 0; i <= 5; i++) {
+        //   resetRanks[`rank${i}`] = null;
+        // }
+        // const updatedValues = { ...resetRanks, ...created };
+        // await existingEntry.update(updatedValues, { transaction });
         const updatedEntry = await BoardProject.findOne({ where: { project_id: created.project_id, board_id: created.board_id }, transaction });
         return updatedEntry;
       } else {
@@ -1788,23 +1788,23 @@ router.post('/send-to-workplan', [auth], async (req, res) => {
       }
     }, { transaction });
     const updatedRanks = {};
-    for (let i = 0; i <= 5; i++) {
-      const rankColumnName = `rank${i}`;
-      let lexoRankValue = null;
-      if (i === 0) {
-        console.log('getting prev lexo rank value')
-        lexoRankValue = await boardService.getPrevLexoRankValue(targetBoardId, rankColumnName);
-      } else {
-        console.log('getting next lexo rank value')
-        lexoRankValue = await boardService.getNextLexoRankValue(targetBoardId, rankColumnName);
-      }      
-      updatedRanks[rankColumnName] = lexoRankValue;
-    }
-    for (let key in updatedRanks) {
-      if (boardProject[key] !== null) {
-        boardProject[key] = updatedRanks[key];
-      }
-    }
+    // for (let i = 0; i <= 5; i++) {
+    //   const rankColumnName = `rank${i}`;
+    //   let lexoRankValue = null;
+    //   if (i === 0) {
+    //     console.log('getting prev lexo rank value')
+    //     lexoRankValue = await boardService.getPrevLexoRankValue(targetBoardId, rankColumnName);
+    //   } else {
+    //     console.log('getting next lexo rank value')
+    //     lexoRankValue = await boardService.getNextLexoRankValue(targetBoardId, rankColumnName);
+    //   }      
+    //   updatedRanks[rankColumnName] = lexoRankValue;
+    // }
+    // for (let key in updatedRanks) {
+    //   if (boardProject[key] !== null) {
+    //     boardProject[key] = updatedRanks[key];
+    //   }
+    // }
     const newBoardProject = await BoardProject.create({
       ...boardProject.dataValues,
       board_project_id: undefined,

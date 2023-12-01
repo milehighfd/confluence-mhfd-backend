@@ -21,9 +21,11 @@ export const reCalculateColumn = async (board_id, column, transaction, creator) 
   });
   const pr = [];
   boardProjects.forEach((project) => {
-    const rank = startValue.genNext();
+    // const rank = startValue.genNext();
     pr.push(BoardProject.update(
-      { [column]: rank.toString(), last_modified_by: creator },
+      { 
+        // [column]: rank.toString(), 
+        last_modified_by: creator },
       { where: { board_project_id: project.board_project_id }, transaction: transaction }
     ));
   });

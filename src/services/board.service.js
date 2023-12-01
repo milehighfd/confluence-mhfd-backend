@@ -62,13 +62,15 @@ const reCalculateColumn = async (board_id, column, creator) => {
     ]
   });
   const pr = [];
-  let rank = startValue;
+  // let rank = startValue;
   boardProjects.forEach((project) => {      
     pr.push(BoardProject.update(
-      { [column]: rank.toString(), last_modified_by: creator },
+      { 
+        // [column]: rank.toString(), 
+        last_modified_by: creator },
       { where: { board_project_id: project.board_project_id } }
     ));
-    rank = rank.genNext();
+    // rank = rank.genNext();
   });
   const solve = await Promise.all(pr);
   return solve;
@@ -199,19 +201,19 @@ async function createBoardProjectsMaintenance(allYears, year, type, locality, pr
   const targetYear = year + 1;
   const boardNextYear = await getBoardForYear(targetYear, type, locality, project_type, transaction);
   if (boardNextYear) {
-    let rankColumnName = 'rank0';
+    // let rankColumnName = 'rank0';
     let amountColumnName = `req0`;    
     let amountIndex = 1;
     if (extraYears.includes(year)) {
-      rankColumnName = `rank${subtype}`;
+      // rankColumnName = `rank${subtype}`;
       amountColumnName = `req${subtype}`;
     }    
     const rank = {
-      [rankColumnName]: await getNextLexoRankValue(boardNextYear.board_id, rankColumnName)
+      // [rankColumnName]: await getNextLexoRankValue(boardNextYear.board_id, rankColumnName)
     };    
-    if (rankColumnName === `rank${subtype}`) {
-      rank[amountColumnName] = extraYearsAmounts[amountIndex];
-    }    
+    // if (rankColumnName === `rank${subtype}`) {
+    //   rank[amountColumnName] = extraYearsAmounts[amountIndex];
+    // }    
     createdBoardProjects.push(createBoardProjectEntry(boardNextYear, rank, project_id, 2, userData));
   }  
   const currentYearEntry = createdBoardProjects.find(entry => +entry.year === +year);  
@@ -245,40 +247,42 @@ async function createBoardProjects(allYears, year, type, locality, project_type,
         const ranks = {};
         const amounts = {};
         for (let i = 0; i < extraYears.length; i++) {
-          const rankNumber = extraYears[i] - year;
-          const rankColumnName = `rank${rankNumber}`;
-          const amountColumnName = `req${rankNumber}`;
-          ranks[rankColumnName] = await getNextLexoRankValue(boardNextYear.board_id, rankColumnName);
+          // const rankNumber = extraYears[i] - year;
+          // const rankColumnName = `rank${rankNumber}`;
+          // const amountColumnName = `req${rankNumber}`;
+          // ranks[rankColumnName] = await getNextLexoRankValue(boardNextYear.board_id, rankColumnName);
           amounts[amountColumnName] = extraYearsAmounts[i];
         }
-        createdBoardProjects.push(createBoardProjectEntry(boardNextYear, { ...ranks, ...amounts }, project_id, statusBoardProject, userData));
+        createdBoardProjects.push(createBoardProjectEntry(boardNextYear, { 
+          // ...ranks, 
+          ...amounts }, project_id, statusBoardProject, userData));
       }
     }
     else if (extraYears.length === 0 || (extraYears.length === 1 && extraYears[0] === year)) {
       const boardNextYear = await getBoardForYear(year + 1, type, locality, project_type, transaction);
-      if (boardNextYear) {
-        const rank = { rank0: await getNextLexoRankValue(boardNextYear.board_id, 'rank0') };
-        createdBoardProjects.push(createBoardProjectEntry(boardNextYear, rank, project_id, statusBoardProject, userData));
-      }
+      // if (boardNextYear) {
+      //   const rank = { rank0: await getNextLexoRankValue(boardNextYear.board_id, 'rank0') };
+      //   createdBoardProjects.push(createBoardProjectEntry(boardNextYear, rank, project_id, statusBoardProject, userData));
+      // }
     }
     else {
       const nextYear = year + 1;
       const boardNextYear = await getBoardForYear(nextYear, type, locality, project_type, transaction);
-      if (boardNextYear) {
-        let ranks = {};
-        let amounts = {};
-        let rankNumber = 1;
-        for (let extraYear of extraYears) {
-          if (extraYear >= nextYear) {
-            const rankColumnName = `rank${rankNumber}`;
-            const amountColumnName = `req${rankNumber}`;
-            ranks[rankColumnName] = await getNextLexoRankValue(boardNextYear.board_id, rankColumnName);
-            amounts[amountColumnName] = extraYearsAmounts[extraYears.indexOf(extraYear)];
-            rankNumber++;
-          }
-        }
-        createdBoardProjects.push(createBoardProjectEntry(boardNextYear, { ...ranks, ...amounts }, project_id, statusBoardProject));
-      }
+      // if (boardNextYear) {
+      //   let ranks = {};
+      //   let amounts = {};
+      //   let rankNumber = 1;
+      //   for (let extraYear of extraYears) {
+      //     if (extraYear >= nextYear) {
+      //       const rankColumnName = `rank${rankNumber}`;
+      //       const amountColumnName = `req${rankNumber}`;
+      //       ranks[rankColumnName] = await getNextLexoRankValue(boardNextYear.board_id, rankColumnName);
+      //       amounts[amountColumnName] = extraYearsAmounts[extraYears.indexOf(extraYear)];
+      //       rankNumber++;
+      //     }
+      //   }
+      //   createdBoardProjects.push(createBoardProjectEntry(boardNextYear, { ...ranks, ...amounts }, project_id, statusBoardProject));
+      // }
     }
     return createdBoardProjects;
   } catch (error) {
@@ -332,11 +336,11 @@ async function getBoardProjectByBoardId(board_id, rankColumnName) {
     return await BoardProject.findOne({
       where: {
         board_id: board_id,
-        [rankColumnName]: {
-          [Op.ne]: null  
-        }
+        // [rankColumnName]: {
+        //   [Op.ne]: null  
+        // }
       },
-      order: [[rankColumnName, 'DESC']], 
+      // order: [[rankColumnName, 'DESC']], 
       limit: 1,
     });
   } catch (error) {
@@ -350,11 +354,11 @@ async function getFirstBoardProjectById(board_id, rankColumnName) {
     const boardProjectFirst = await BoardProject.findOne({
       where: {
         board_id: board_id,
-        [rankColumnName]: {
-          [Op.ne]: null  
-        }
+        // [rankColumnName]: {
+        //   [Op.ne]: null  
+        // }
       },
-      order: [[rankColumnName, 'ASC']], 
+      // order: [[rankColumnName, 'ASC']], 
       limit: 1,
     });
     console.log('BOARD PROJECT FIRST', boardProjectFirst)

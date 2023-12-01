@@ -7,24 +7,24 @@ const Board = db.board;
 export const isOnWorkspace = (boardProject) => {
   let allNull = true;
   const indexes = [1, 2, 3, 4, 5];
-  indexes.forEach((index) => {
-    const rankColumnName = `rank${index}`;
-    if (boardProject[rankColumnName] !== null) {
-      allNull = false;
-    }
-  });
+  // indexes.forEach((index) => {
+  //   const rankColumnName = `rank${index}`;
+  //   if (boardProject[rankColumnName] !== null) {
+  //     allNull = false;
+  //   }
+  // });
   return allNull;
 };
 
 export const isOnFirstYear = (boardProject) => {
   let allNull = true;
   const indexes = [0, 2, 3, 4, 5];
-  indexes.forEach((index) => {
-    const rankColumnName = `rank${index}`;
-    if (boardProject[rankColumnName] !== null) {
-      allNull = false;
-    }
-  });
+  // indexes.forEach((index) => {
+  //   const rankColumnName = `rank${index}`;
+  //   if (boardProject[rankColumnName] !== null) {
+  //     allNull = false;
+  //   }
+  // });
   return allNull;
 };
 
@@ -75,15 +75,15 @@ export const determineStatusChange = async (wasOnWorkspace, boardProject, board_
     logger.info('determineStatusChange !wasOnWorkspace && onWorkspace');
   }
   statusHasChanged = boardProject.code_status_type_id !== previous_code_status_type_id;
-  if (onWorkspace) {
-    boardProject.rank1 = null;
-    boardProject.rank2 = null;
-    boardProject.rank3 = null;
-    boardProject.rank4 = null;
-    boardProject.rank5 = null;
-  } else {
-    boardProject.rank0 = null;
-  }
+  // if (onWorkspace) {
+  //   boardProject.rank1 = null;
+  //   boardProject.rank2 = null;
+  //   boardProject.rank3 = null;
+  //   boardProject.rank4 = null;
+  //   boardProject.rank5 = null;
+  // } else {
+  //   boardProject.rank0 = null;
+  // }
   boardProject.last_modified_by = creator;
   boardProject = await boardProject.save();
   return [boardProject, statusHasChanged];
