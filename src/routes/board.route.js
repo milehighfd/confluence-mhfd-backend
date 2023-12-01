@@ -1991,7 +1991,7 @@ router.post('/import-project', [auth], async (req, res) => {
       year1: null,
       year2: null,
       origin: initialBoardProject?.origin || 'MHFD District Work Plan',
-      code_status_type_id: REQUESTED_STATUS,
+      code_status_type_id: DRAFT_STATUS,
       created_by: creator,
       last_modified_by: creator,
     }, { transaction });
