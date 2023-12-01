@@ -35,7 +35,8 @@ import {
   saveVegetationManagement,
   cleanStringValue,
   saveSubtotalcost,
-  saveEstimatedCost
+  saveEstimatedCost,
+  saveWorkspaceCostInit
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
 import { ProjectError, ProjectBoardsError} from '../../errors/project.error.js';
@@ -304,7 +305,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
   try {    
     const data = await createProjects(body, transaction, type, user.email, subtype);
     const { project_id } = data;
-    const { cover, sponsor, cosponsor } = body;
+    const { cover, sponsor, cosponsor, isWorkPlan } = body;
     const project_attachments = await uploadFiles(user, files, project_id, cover, transaction);
     await addToBoard(body, user, type, subtype, transaction, project_id);
     const geoInfo = await parseGeographicInfoAndCreate(body, project_id, user, transaction);
@@ -330,7 +331,15 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
       },
     });
     console.log('\n-*******************- \n Last Project created should be: ', project_id, lastProject);
-
+    const WORK_PLAN_CODE_COST_TYPE_ID = 21;
+    const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
+    await saveWorkspaceCostInit(
+      project_id,
+      boardProjectId.board_project_id,
+      isWorkPlan ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
+      user.email
+    );
+    
     const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, lastProject, boardProjectId};
     return composeData;
   } catch (error) {
