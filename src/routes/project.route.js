@@ -526,12 +526,37 @@ const searchImport = async (req, res) => {
           return regex.test(project.project_name);
         });
       });
+      const getProjectsBySponsor = await Project.findAll({
+        attributes: ['project_id'],
+        include: [{
+          model: ProjectPartner,
+          attributes: [],
+          where: {
+            code_partner_type_id: CODE_SPONSOR
+          },
+          required: true,
+          include: [{
+            model: BusinessAssociates,
+            attributes: ['business_name'],
+            where: {
+              business_name: {
+                [Op.like]: `%${keyword}%`
+              }
+            },
+            required: true
+          }]
+        }]
+      });
+      const projectsIds = filteredProjects.map(p => p.project_id);
+      const projectsBySponsorIds = getProjectsBySponsor.map(p => p.project_id);
+      const mergedProjects = [...projectsIds, ...projectsBySponsorIds];
+      filteredProjects = mergedProjects
     }
-    const projectsIds = filteredProjects.map(p => p.project_id);
+    console.log(filteredProjects);    
     const projectsInBoard = await BoardProject.findAll({
       attributes : ['project_id'],
       where: {
-        project_id: projectsIds
+        project_id: filteredProjects
       },
       include: [{
         model: Board,
