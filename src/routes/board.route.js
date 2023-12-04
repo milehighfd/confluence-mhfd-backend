@@ -969,7 +969,8 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
         last_modified_by: creator,
         createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
         updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
+        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER,
+        sort_order: 0
       };
       await BoardProjectCost.create(newBoardProjectCost);
       k++;
@@ -1273,6 +1274,7 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                         created_by: creator,
                         last_modified_by: creator,
                         req_position: prevBoardProjectCost.req_position,
+                        sort_order: 0
                       });
                       console.log('new board project cost created', newBoardProjectCost);
                     }

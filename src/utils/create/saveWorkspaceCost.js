@@ -23,7 +23,8 @@ export const saveWorkspaceCostInit = async (project_id, board_project_id, code_c
         project_cost_id: project_cost_id,
         req_position: currentColumn,
         created_by: creator,
-        last_modified_by: creator
+        last_modified_by: creator,
+        sort_order: 0
     });  
     return boardProjectCostCreated;
   } catch (error) {

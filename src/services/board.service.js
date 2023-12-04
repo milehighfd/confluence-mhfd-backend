@@ -129,7 +129,8 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
         project_cost_id: project_cost_id,
         req_position: currentColumn,
         created_by: user.email,
-        last_modified_by: user.email
+        last_modified_by: user.email,
+        sort_order: 0
       };
       await BoardProjectCost.create(newBoardProjectCostData);
     });
@@ -636,7 +637,8 @@ const updateAndCreateProjectCostsForAmounts = async (
             project_cost_id: project_cost_id,
             req_position: currentColumn,
             created_by: user.email,
-            last_modified_by: user.email
+            last_modified_by: user.email,
+            sort_order: 0
         });
       }
     });

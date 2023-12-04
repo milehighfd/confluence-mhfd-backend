@@ -242,11 +242,11 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
 const updateRank = async (req, res) => {
   logger.info('get board project cost by id');
   const { board_project_id } = req.params;
-  let { before, after } = req.body;
+  let { before, after } = req.body; // lexo values in string
   const {
     columnNumber,
-    beforeIndex,
-    afterIndex,
+    beforeIndex, 
+    afterIndex, 
     targetPosition,
     otherFields
   } = req.body;
