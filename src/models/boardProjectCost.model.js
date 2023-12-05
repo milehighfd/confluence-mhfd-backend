@@ -33,7 +33,8 @@ export default (sequelize, DataType) => {
     }
   }, {
     freezeTableName: true,
-    tableName: 'board_project_cost'
+    tableName: 'board_project_cost',
+    hasTrigger: true
   });
   return boardProjectCost
 }

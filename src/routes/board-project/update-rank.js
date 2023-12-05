@@ -244,11 +244,11 @@ const updateRank = async (req, res) => {
   const { board_project_id } = req.params;
   let { before, after } = req.body; // lexo values in string
   const {
-    columnNumber,
-    beforeIndex, 
-    afterIndex, 
-    targetPosition,
-    otherFields
+    columnNumber,  // destiny column 
+    beforeIndex,  // targetposition -1 
+    afterIndex,   // targetposition +1 
+    targetPosition,  // target position in destiny column 
+    otherFields //   previous rankX, that is going to be deleted
   } = req.body;
   const user = req.user;
   if (before === undefined) before = null;
@@ -260,14 +260,18 @@ const updateRank = async (req, res) => {
     }
   }) || {};
   const wasOnWorkspace = isOnWorkspace(boardProjectBeforeUpdate);
-  console.log('wasOnWorkspace', wasOnWorkspace)
+  console.log('wasOnWorkspace before update', wasOnWorkspace)
   const board_id = boardProjectBeforeUpdate.board_id;
   const columnCountWhere = {
     board_id,
     [rankColumnName]: { [Op.ne]: null }
   };
-  const count = await BoardProject.count({ where: columnCountWhere });
-  if (before === null && after === null && count > 0) {
+  const count = await BoardProject.count({ where: columnCountWhere }); // count all projects in the destiny column  
+  if (
+    before === null &&
+    after === null &&   /// if before and after are null, it means there is no project in that destiny column
+    count > 0   // but if in DB it exists, is going to fix the error
+  ) {
     const results = await insertOnColumnAndFixColumn(
       columnNumber,
       board_id,
@@ -283,7 +287,7 @@ const updateRank = async (req, res) => {
   } else if (after === null && afterIndex !== -1) {
     logger.error('after is null but afterIndex is not -1');
   }
-  let lexo;
+  let lexo; // get the value of the destiny position
   if (count === 0) {
     lexo = LexoRank.middle().toString();
   } else if (before === null) {
@@ -298,28 +302,18 @@ const updateRank = async (req, res) => {
     }
   }
   try {
-    const boardProject = await BoardProject.findOne({
-      attributes: [
-        'board_id',
-        'project_id'
-      ],
-      where: {
-        board_project_id
-      }
-    });
-    let mainModifiedDate = new Date();
-    let multiplicator = 0;
+    // update boardproject with the new lexo for rank of destiny and from other fields, remove previous position
     const boardProjectUpdatedStatus = await BoardProject.update(
       { [rankColumnName]: lexo, ...otherFields },
       { where: { board_project_id } }
     );
-
+    // get the boardproject updated
     let boardProjectUpdated = await BoardProject.findOne({
       where: { board_project_id }
     });
-
+    // check if now is on workspace
     const onWorkspace = isOnWorkspace(boardProjectUpdated);
-    console.log('onWorkspace', onWorkspace);
+    console.log('onWorkspace after update: ', onWorkspace);
     for (const key in otherFields) {
       if (key != 'rank0') {
         let originCost = null;
