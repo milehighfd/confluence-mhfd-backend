@@ -512,7 +512,6 @@ const searchImport = async (req, res) => {
   const { keyword, locality, year } = req.body;
   try {
     const projects = await projectService.projectSearch(keyword);
-    const CODE_SPONSOR = 11;
     let filteredProjects = [];
     const isNumeric = /^\d+$/.test(keyword);
     if (isNumeric) {
@@ -526,84 +525,23 @@ const searchImport = async (req, res) => {
           return regex.test(project.project_name);
         });
       });
-      const getProjectsBySponsor = await Project.findAll({
-        attributes: ['project_id'],
-        include: [{
-          model: ProjectPartner,
-          attributes: [],
-          where: {
-            code_partner_type_id: CODE_SPONSOR
-          },
-          required: true,
-          include: [{
-            model: BusinessAssociates,
-            attributes: ['business_name'],
-            where: {
-              business_name: {
-                [Op.like]: `%${keyword}%`
-              }
-            },
-            required: true
-          }]
-        }]
-      });
+      const getProjectsBySponsor = await projectService.getProjectsBySponsor(keyword);
       const projectsIds = filteredProjects.map(p => p.project_id);
       const projectsBySponsorIds = getProjectsBySponsor.map(p => p.project_id);
       const mergedProjects = [...projectsIds, ...projectsBySponsorIds];
       filteredProjects = mergedProjects
     }
-    console.log(filteredProjects);    
-    const projectsInBoard = await BoardProject.findAll({
-      attributes : ['project_id'],
-      where: {
-        project_id: filteredProjects
-      },
-      include: [{
-        model: Board,
-        attributes: ['locality', 'year', 'projecttype', 'type'],
-        where: { 
-          locality: locality,
-          year: {
-            [Op.not]: year
-          }
-        },
-        required: true
-      },{
-        model: Project,
-        attributes: ['project_name'],
-        as: 'projectData',
-        required: true,
-        include: [{
-          model: ProjectPartner,
-          attributes: ['project_partner_id', 'code_partner_type_id'],
-          where: {
-            code_partner_type_id: CODE_SPONSOR
-          },
-          required: true,
-          include: [{
-            model: BusinessAssociates,
-            attributes: ['business_name']
-          }]
-        }],        
-      }]
-    });
-    const projectsToAvoid = await BoardProject.findAll({
-      attributes : ['project_id'],
-      include: [{
-        model: Board,
-        attributes: ['locality', 'year', 'projecttype', 'type'],
-        where: {
-          year: year
-        },
-        required: true
-      }]
-    });
+    const projectsInBoard = await projectService.getProjectsInBoard(locality);
+    const projectsInBoardIds = projectsInBoard.map(p => p.project_id);
+    const intersection = projectsInBoardIds.filter(id => filteredProjects.includes(id));
+    const projectsToAvoid = await projectService.getProjectsToAvoid(year);
     const projectsToAvoidIds = projectsToAvoid.map(p => p.project_id);
     const filteredProjectsInBoard = projectsInBoard.filter(p => !projectsToAvoidIds.includes(p.project_id));
-    const uniqueProjectsInBoard = Array.from(new Set(filteredProjectsInBoard.map(p => p.project_id)))
-    .map(project_id => {
-      return projectsInBoard.find(p => p.project_id === project_id);
-    });
+    const intersectionInBoard = filteredProjectsInBoard.filter(p => intersection.includes(p.project_id));
+    const uniqueProjectsInBoard = Array.from(new Set(intersectionInBoard.map(p => p.project_id)))
+      .map(project_id => {
+        return projectsInBoard.find(p => p.project_id === project_id);
+      });
     res.status(200).send(uniqueProjectsInBoard);
   } catch (error) {
     console.error(error);

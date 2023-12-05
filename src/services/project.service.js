@@ -65,6 +65,7 @@ const BoardProject = db.boardProject;
 const ProjectSpatial = db.projectSpatial;
 const BoardProjectCost = db.boardProjectCost;
 const Board = db.board;
+const BusinessAssociates = db.businessAssociates;
 
 async function getCentroidsOfAllProjects () {
   const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid, projectid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE}`;
@@ -2739,6 +2740,71 @@ const getProjectPartner = async (project_id) =>{
   return project_partners;
 }
 
+const getProjectsBySponsor = async (keyword) => {
+  const CODE_SPONSOR = 11;
+  return await Project.findAll({
+    attributes: ['project_id'],
+    include: [{
+      model: ProjectPartner,
+      attributes: [],
+      where: {
+        code_partner_type_id: CODE_SPONSOR
+      },
+      required: true,
+      include: [{
+        model: BusinessAssociates,
+        attributes: ['business_name'],
+        where: {
+          business_name: {
+            [Op.like]: `%${keyword}%`
+          }
+        },
+        required: true
+      }]
+    }]
+  });
+};
+
+const getProjectsInBoard = async (locality) => {
+  const CODE_SPONSOR = 11;
+  return await Project.findAll({
+    attributes: ['project_id','project_name'],
+    include: [{
+      model: ProjectPartner,
+      attributes:  ['project_partner_id', 'code_partner_type_id'],
+      where: {
+        code_partner_type_id: CODE_SPONSOR
+      },
+      required: true,
+      include: [{
+        model: BusinessAssociates,
+        attributes: ['business_name'],
+        where: {
+          business_name: locality
+        },
+        required: true
+      }]
+    },{
+      model: CodeProjectType,
+      required: true,
+    }]
+  });
+};
+
+const getProjectsToAvoid = async (year) => {
+  return await BoardProject.findAll({
+    attributes : ['project_id'],
+    include: [{
+      model: Board,
+      attributes: ['locality', 'year', 'projecttype', 'type'],
+      where: {
+        year: year
+      },
+      required: true
+    }]
+  });
+};
+
 export default {
   checkProjectName,
   getAll,
@@ -2770,5 +2836,8 @@ export default {
   getProjectPartner,
   getBoardProjectDataCount,
   getPmtoolsProjectDataCount,
-  projectSearch
+  projectSearch,
+  getProjectsBySponsor,
+  getProjectsInBoard,
+  getProjectsToAvoid
 };
