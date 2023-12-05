@@ -531,9 +531,17 @@ const searchImport = async (req, res) => {
       const mergedProjects = [...projectsIds, ...projectsBySponsorIds];
       filteredProjects = mergedProjects
     }
-    const projectsInBoard = await projectService.getProjectsInBoard(locality);
+    let projectsInBoard = [];
+    if (locality !== 'MHFD District Work Plan') {
+      projectsInBoard = await projectService.getProjectsInBoard(locality);
+    }else{
+      projectsInBoard = await projectService.getProjectsForMHFD(filteredProjects);
+    }
     const projectsInBoardIds = projectsInBoard.map(p => p.project_id);
-    const intersection = projectsInBoardIds.filter(id => filteredProjects.includes(id));
+    let intersection = projectsInBoardIds;
+    if (locality !== 'MHFD District Work Plan') {
+      intersection = projectsInBoardIds.filter(id => filteredProjects.includes(id));
+    }
     const projectsToAvoid = await projectService.getProjectsToAvoid(year);
     const projectsToAvoidIds = projectsToAvoid.map(p => p.project_id);
     const filteredProjectsInBoard = projectsInBoard.filter(p => !projectsToAvoidIds.includes(p.project_id));
