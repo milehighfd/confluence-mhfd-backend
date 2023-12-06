@@ -329,14 +329,16 @@ const updateRank = async (req, res) => {
         last_modified_by: user.email,
         code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_EDITED: WORK_REQUEST_EDITED,
       };
+      console.log('COST UPDATE DATa', costUpdateData);
       await ProjectCost.update(
         costUpdateData,
         { where: { 
           is_active: true,
-          project_id: boardProjectUpdated.project_id
+          project_id: boardProjectUpdated.project_id,
+          code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID
         } }
       );
-      
+      console.log('ERRORR ');
       const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
       // create a new cost with null value for project partner mhfd 
       const project_partner_id = projectPartnerMHFD[0].project_partner_id;
@@ -351,6 +353,7 @@ const updateRank = async (req, res) => {
         code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
         code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
       };
+      console.log('COST UPDATE DATa 1 2', newProjectCost);
       const createdProjectCost = await ProjectCost.create(newProjectCost);
       // create a null cost with req_position  = 0
       const newBoardProjectCost = {
@@ -414,7 +417,7 @@ const updateRank = async (req, res) => {
     [boardProjectUpdated, ] = await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id, user.email);
     return res.status(200).send(boardProjectUpdatedStatus);
   } catch (error) {
-    logger.error(error);
+    logger.error('Error at update rank' + error);
     return res.status(500).send({ error: error });
   }
 };
