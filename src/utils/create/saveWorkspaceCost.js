@@ -13,7 +13,7 @@ export const saveWorkspaceCostInit = async (project_id, board_project_id, code_c
       modified_by: creator,
       is_active: true,
       code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
-      project_parent_id: project_partner_id,
+      project_partner_id: project_partner_id,
     };
     console.log('Null cost is created with values', dataProjectCost);
     const projectCostCreated = await saveProjectCost(dataProjectCost, transaction);
