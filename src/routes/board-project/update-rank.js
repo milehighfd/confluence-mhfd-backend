@@ -257,6 +257,8 @@ const updateRank = async (req, res) => {
   const isWorkPlanBoolean = isWorkPlan === 'true' ? true : false;
   const WORK_PLAN_CODE_COST_TYPE_ID = 21;
   const WORK_REQUEST_CODE_COST_TYPE_ID = 22;  
+  const WORK_REQUEST_EDITED = 42;
+  const WORK_PLAN_EDITED = 41;
   const user = req.user;
   if (before === undefined) before = null;
   if (after === undefined) after = null;
@@ -321,25 +323,18 @@ const updateRank = async (req, res) => {
     const onWorkspace = isOnWorkspace(boardProjectUpdated);
     if (onWorkspace) {
       // deactiva all costs related to this board_project_id
+      const costUpdateData = {
+        is_active: false,
+        last_modified: moment().toDate(),
+        last_modified_by: user.email,
+        code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_EDITED: WORK_REQUEST_EDITED,
+      };
       await ProjectCost.update(
-        {
-          is_active: false,
-          last_modified: moment().toDate(),
-          last_modified_by: user.email,
-          code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
-        },
+        costUpdateData,
         { where: { 
+          is_active: true,
           project_id: boardProjectUpdated.project_id
         } }
-      );
-      ProjectCost.update(
-        {
-          is_active: false,
-          last_modified: moment().toDate(),
-          last_modified_by: user.email,
-          code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
-        },
-        { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
       );
       
       const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
