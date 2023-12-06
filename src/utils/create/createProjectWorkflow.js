@@ -328,7 +328,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
         project_id: project_id
       },
     });
-    console.log('\n-*******************- \n Last Project created should be: ', project_id, lastProject);
+    console.log('\n-*******************- \n Last Project created should be: ', project_id, lastProject, project_partner, project_partner.project_partner_id);
     const WORK_PLAN_CODE_COST_TYPE_ID = 21;
     const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
     await saveWorkspaceCostInit(
