@@ -5,7 +5,7 @@ import { isOnWorkspace, determineStatusChange } from 'bc/services/board-project.
 import sequelize from 'sequelize';
 import { LexoRank } from 'lexorank';
 import moment from 'moment';
-import { OFFSET_MILLISECONDS } from 'bc/lib/enumConstants.js';
+import { OFFSET_MILLISECONDS, CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
 
 const BoardProject = db.boardProject;
 const BoardProjectCost = db.boardProjectCost;
@@ -13,7 +13,7 @@ const ProjectCost = db.projectCost;
 const ProjectPartner = db.projectPartner;
 const { Op } = sequelize;
 
-async function getOriginSponsor(board_project_id) {
+async function getOriginSponsorCosponsor(board_project_id) {
   const SPONSOR_COSPONSOR_CODE = [11,12];
   const results = await BoardProjectCost.findAll({
     attributes: [],
@@ -49,7 +49,16 @@ async function getOriginSponsor(board_project_id) {
   const uniqueProjectPartnerIds = [...new Set(projectPartnerIds)];
   return uniqueProjectPartnerIds;
 }
-
+async function getProjectPartnerMHFD(project_id) {
+  const MHFD_CODE_PARTNER_TYPE = 88;
+  const results = await ProjectPartner.findAll({
+    where: {
+      project_id,
+      code_partner_type_id: MHFD_CODE_PARTNER_TYPE
+    }
+  });
+  return results;
+}
 async function getBoardProjectCostMHFD(board_project_id, columnNumber) {
   const MHFD_CODE_PARTNER_TYPE = 88;
   const reqExist = await BoardProjectCost.findOne({
@@ -83,7 +92,7 @@ async function getBoardProjectCostMHFD(board_project_id, columnNumber) {
   return reqExist;
 }
 
-async function getBoardProjectCostSponsor(board_project_id, columnNumber, project_partner_id) {
+async function getBoardProjectCostSponsorCosponsor(board_project_id, columnNumber, project_partner_id) {
   const SPONSOR_COSPONSOR_CODE = [11,12];
   const reqExist = await BoardProjectCost.findOne({
     attributes: ['req_position', 'board_project_id'],
@@ -133,7 +142,7 @@ function getNumberFromRank(otherFields) {
 }
 
 const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition, otherFields, board_project_id, user) => {
-  console.log('here');
+  
   const reqColumnName = `req${columnNumber}`;
   const rankColumnName = `rank${columnNumber}`;
   const where = { board_id };
@@ -148,8 +157,6 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
   } else {
     where[rankColumnName] = { [Op.ne]: null }
   }
-  console.log('where', where)
-  console.log('req', reqExist)
   const projects = await BoardProject.findAll({
     where,
     order: [[rankColumnName, 'ASC']],
@@ -173,8 +180,6 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
         if (keys.includes('req')) {
           const costToUpdate = otherFields[keys] ? otherFields[keys] : 0;
           const columnToEdit = keys.match(/[0-9]+/);
-          console.log(columnToEdit, 'columnToEdit')
-          console.log(costToUpdate, 'costToUpdate')
           await boardService.updateAndCreateProjectCosts(
             columnToEdit,
             costToUpdate,
@@ -183,7 +188,6 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
             board_project_id,
             moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS * multiplicator).toDate()
           );
-          console.log('Multiplicating 000', moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS * multiplicator).toDate(), multiplicator);
           multiplicator++;
         }
       }
@@ -208,13 +212,12 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
         { is_active: false },
         { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
       ));
-      const sponsorAndCosponsor = await getOriginSponsor(board_project_id);
+      const sponsorAndCosponsor = await getOriginSponsorCosponsor(board_project_id);
       sponsorAndCosponsor.forEach(async (project_partner_id) => {
-        const originSecCost = await getBoardProjectCostSponsor(board_project_id, getNumberFromRank(otherFields), project_partner_id);
-        const targetSecCost = await getBoardProjectCostSponsor(board_project_id, columnNumber, project_partner_id);
+        const originSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, getNumberFromRank(otherFields), project_partner_id);
+        const targetSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, columnNumber, project_partner_id);
         if (originSecCost && targetSecCost) {
           const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
-          console.log(project_partner_id, originCost.projectCostData.project_cost_id, targetCost.projectCostData.project_cost_id, cost)
           proms.push(
             ProjectCost.update(
               { cost: cost },
@@ -248,7 +251,8 @@ const updateRank = async (req, res) => {
     beforeIndex,  // targetposition -1 
     afterIndex,   // targetposition +1 
     targetPosition,  // target position in destiny column 
-    otherFields //   previous rankX, that is going to be deleted
+    otherFields, //   previous rankX, that is going to be deleted
+    isWorkPlan
   } = req.body;
   const user = req.user;
   if (before === undefined) before = null;
@@ -260,7 +264,6 @@ const updateRank = async (req, res) => {
     }
   }) || {};
   const wasOnWorkspace = isOnWorkspace(boardProjectBeforeUpdate);
-  console.log('wasOnWorkspace before update', wasOnWorkspace)
   const board_id = boardProjectBeforeUpdate.board_id;
   const columnCountWhere = {
     board_id,
@@ -313,45 +316,86 @@ const updateRank = async (req, res) => {
     });
     // check if now is on workspace
     const onWorkspace = isOnWorkspace(boardProjectUpdated);
-    console.log('onWorkspace after update: ', onWorkspace);
-    for (const key in otherFields) {
-      if (key != 'rank0') {
-        let originCost = null;
-        let targetCost = null;    
-        if (getNumberFromRank(otherFields) && columnNumber) {
-          originCost = await getBoardProjectCostMHFD(board_project_id, getNumberFromRank(otherFields));
-          targetCost = await getBoardProjectCostMHFD(board_project_id, columnNumber);
-          if (originCost && targetCost) {
-            const cost = originCost.projectCostData.cost + targetCost.projectCostData.cost;
-            ProjectCost.update(
-              { cost: cost },
-              { where: { project_cost_id: targetCost.projectCostData.project_cost_id } }
-            );
-            ProjectCost.update(
-              { is_active: false },
-              { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
-            );
-            const sponsorAndCosponsor = await getOriginSponsor(board_project_id);
-            sponsorAndCosponsor.forEach(async (project_partner_id) => {
-              const originSecCost = await getBoardProjectCostSponsor(board_project_id, getNumberFromRank(otherFields), project_partner_id);
-              const targetSecCost = await getBoardProjectCostSponsor(board_project_id, columnNumber, project_partner_id);
-              if (originSecCost && targetSecCost) {                
-                const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
-                console.log(project_partner_id, originCost.projectCostData.project_cost_id, targetCost.projectCostData.project_cost_id, cost)
-                ProjectCost.update(
-                  { cost: cost },
-                  { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
-                );
-                ProjectCost.update(
-                  { is_active: false },
-                  { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
-                );
-              }
-            });
+    if (onWorkspace) {
+      // deactiva all costs related to this board_project_id
+      await ProjectCost.update(
+        { is_active: false },
+        { where: { 
+          project_id: boardProjectUpdated.project_id
+        } }
+      );
+      const WORK_PLAN_CODE_COST_TYPE_ID = 21;
+      const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
+      const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
+      // create a new cost with null value for project partner mhfd 
+      const project_partner_id = projectPartnerMHFD[0].project_partner_id;
+      const newProjectCost = {
+        project_id: boardProjectUpdated.project_id,
+        project_partner_id: project_partner_id,
+        cost: null,
+        created_by: user.email,
+        modified_by: user.email,
+        createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+        updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+        code_cost_type_id: isWorkPlan ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
+        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
+      };
+      const createdProjectCost = await ProjectCost.create(newProjectCost);
+      // create a null cost with req_position  = 0
+      const newBoardProjectCost = {
+        board_project_id: board_project_id,
+        req_position: 0,
+        project_cost_id: createdProjectCost.project_cost_id, 
+        created_by: user.email,
+        last_modified_by: user.email,
+        createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+        updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
+      };
+      await BoardProjectCost.create(newBoardProjectCost);
+    } else {
+    // is to add costs in the new column with the previous column cost 
+      for (const key in otherFields) {
+        if (key != 'rank0') {
+          let originCost = null;
+          let targetCost = null;    
+          if (getNumberFromRank(otherFields) && columnNumber) {
+            originCost = await getBoardProjectCostMHFD(board_project_id, getNumberFromRank(otherFields));
+            targetCost = await getBoardProjectCostMHFD(board_project_id, columnNumber);
+            if (originCost && targetCost) {
+              const cost = originCost.projectCostData.cost + targetCost.projectCostData.cost;
+              // update targetCost with the added cost
+              ProjectCost.update(
+                { cost: cost },
+                { where: { project_cost_id: targetCost.projectCostData.project_cost_id } }
+              );
+              // deactivate previous cost of origin column
+              ProjectCost.update(
+                { is_active: false },
+                { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
+              );
+              const sponsorAndCosponsor = await getOriginSponsorCosponsor(board_project_id);
+              sponsorAndCosponsor.forEach(async (project_partner_id) => {
+                const originSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, getNumberFromRank(otherFields), project_partner_id);
+                const targetSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, columnNumber, project_partner_id);
+                if (originSecCost && targetSecCost) {                
+                  const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
+                  ProjectCost.update(
+                    { cost: cost },
+                    { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
+                  );
+                  ProjectCost.update(
+                    { is_active: false },
+                    { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
+                  );
+                }
+              });
+            }
           }
         }
       }
     }
+
     [boardProjectUpdated, ] = await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id, user.email);
     return res.status(200).send(boardProjectUpdatedStatus);
   } catch (error) {

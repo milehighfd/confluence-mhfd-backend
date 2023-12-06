@@ -41,9 +41,9 @@ export const saveProjectPartner = async (
       },
       transaction: transaction
     });
-
+    let projectPartnerMhfd = undefined;
     if(idmhfd) {
-      const projectPartnerMhfd = await ProjectPartner.create({
+      projectPartnerMhfd = await ProjectPartner.create({
         code_partner_type_id: 88,
         project_id: project_id,
         business_associates_id: idmhfd.business_associates_id,
@@ -65,11 +65,10 @@ export const saveProjectPartner = async (
         project_id: project_id,
         business_associates_id: id.business_associates_id,
       }, { transaction: transaction });
-      return projectPartner;
     } else {
       return ({ message: 'Sponsor not found' })
     }
-    
+    return projectPartnerMhfd;
   } catch(error) {
     logger.error('error ProjectPartner Sponsor ', error);
     throw new ProjectSponsorsError('Error creating ProjectPartner Sponsor', { cause: error});

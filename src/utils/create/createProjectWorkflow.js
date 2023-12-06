@@ -142,7 +142,6 @@ const addToBoard = async (body, user, type, subtype, transaction, project_id) =>
     splitedServicearea,
     sponsorId
   );
-  console.log('localitiesBoard', localitiesBoard, typesList)
   try {
     const localNames = await getLocalitiesNames(localitiesBoard, transaction);
     if (isWorkPlan === 'true' && year < YEAR_WORKPLAN_V2) {
@@ -286,7 +285,6 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         answer.resStudy = resStudy;
         break;
       case 'maintenance':
-        console.log('streams before saveProjectStreams: ' + streams);
         await createCarto(...createCartoInputs);
         const resMaintenance = await saveProjectDetails(project_id, body, creator, transaction);        
         const resStreamsMain = await saveProjectStreams(project_id, streams, creator, transaction); 
@@ -337,6 +335,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
       project_id,
       boardProjectId.board_project_id,
       isWorkPlan ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
+      project_partner.project_partner_id,
       user.email
     );
     

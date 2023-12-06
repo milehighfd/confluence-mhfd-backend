@@ -3,7 +3,7 @@ import db from 'bc/config/db.js';
 import { ProjectCostsError } from '../../errors/project.error.js';
 import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
 const BoardProjectCost = db.boardProjectCost;
-export const saveWorkspaceCostInit = async (project_id, board_project_id, code_cost_type_id, creator, transaction) => { 
+export const saveWorkspaceCostInit = async (project_id, board_project_id, code_cost_type_id, creator, project_partner_id, transaction) => { 
   try {
     const dataProjectCost = {
       project_id: project_id,
@@ -12,7 +12,8 @@ export const saveWorkspaceCostInit = async (project_id, board_project_id, code_c
       created_by: creator,
       modified_by: creator,
       is_active: true,
-      code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM
+      code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
+      project_parent_id: project_partner_id,
     };
     console.log('Null cost is created with values', dataProjectCost);
     const projectCostCreated = await saveProjectCost(dataProjectCost, transaction);
