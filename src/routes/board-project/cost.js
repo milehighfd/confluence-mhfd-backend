@@ -288,7 +288,7 @@ const updateCostNew = async (req, res) => {
           console.log(' ------------- \nColumns changed', columnsChanged, 'with id', currentBusinessAssociatesId , '\n\n\n');
           for (let pos = 0; pos < columnsChanged.length; ++pos) {
             const currentColumn = columnsChanged[pos];
-            if (currentColumn !== 0) {
+            // if (currentColumn !== 0) {
               // NOt workspace
               const reqColumnName = `req${currentColumn}`;
               const currentReqAmount = amount.values[reqColumnName] ?? null;
@@ -311,7 +311,7 @@ const updateCostNew = async (req, res) => {
                   amountsTouched ? amountsTouched[`req${currentColumn}`] : true
                 )
               );
-            }
+            // }
           }
         }
 
