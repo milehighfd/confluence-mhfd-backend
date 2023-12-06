@@ -523,7 +523,55 @@ async function getBoardTypeById(board_id) {
   const board = await Board.findOne({ where: { board_id: board_id } });
   return board ? board.type : null;
 }
-
+async function updateProjectCostOfWorkspace (activeValue, user, currentBusinessAssociatesId,currentPartnerTypeId, currentProjectId, board_project_id, lastModifiedDate, isWorkPlan, codeCostTypeId) {
+  try {
+    const WR_CODE_COST_TYPE_EDITED = 42;
+    const WP_CODE_COST_TYPE_EDITED = 41;
+    const PROJECT_PARTNER_ID = currentPartnerTypeId;  /// MHFD 88 SPONSOR 11 COSPONSOR 12
+    const project_partner = await ProjectPartner.findOne({
+      where: {
+        project_id: currentProjectId,
+        code_partner_type_id: PROJECT_PARTNER_ID,
+        business_associates_id: currentBusinessAssociatesId
+      }
+    });
+    console.log('Project PArtner ', project_partner);
+    const currentBoardProjectCosts = await BoardProjectCost.findAll({
+      include: [{
+        model: ProjectCost,
+        as: 'projectCostData',
+        where: {
+          is_active: 1,
+          [Op.or]: [
+            { project_partner_id: project_partner.project_partner_id },
+            { project_partner_id: null }
+          ],
+          code_cost_type_id: codeCostTypeId
+        }
+      }],
+      where: {
+        board_project_id,
+        req_position: 0
+      }
+    });
+    console.log('CurrentBoardProjecCost', currentBoardProjectCosts, 'currentBoardProjectCosts');
+    const projectsCostsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
+    console.log('IDS TO Pdate', projectsCostsIdsToUpdate);
+    // DESACTIVAR LOS ANTERIORES PROJECT COSTS
+    await ProjectCost.update({
+      is_active: activeValue,
+      code_cost_type_id: isWorkPlan? WP_CODE_COST_TYPE_EDITED: WR_CODE_COST_TYPE_EDITED,
+      last_modified: lastModifiedDate,
+      modified_by: user.email,
+    }, {
+      where: {
+        project_cost_id: { [Op.in]: projectsCostsIdsToUpdate }
+      }
+    })
+  } catch (error){
+    logger.error("ERROR at Workspace update", error)
+  }
+}
 async function updateProjectCostEntries(project_id, userData, code_cost_type_id, projectPartnerId, transaction) {
   const edit_cost_type = code_cost_type_id === 21 ? 41 : 42;
   try {
@@ -730,5 +778,6 @@ export default {
   getBoardTypeById,
   updateProjectCostEntries,
   updateSubmissionDate,
-  updateBoards
+  updateBoards,
+  updateProjectCostOfWorkspace
 };

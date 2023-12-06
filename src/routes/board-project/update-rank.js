@@ -255,6 +255,8 @@ const updateRank = async (req, res) => {
     isWorkPlan
   } = req.body;
   const isWorkPlanBoolean = isWorkPlan === 'true' ? true : false;
+  const WORK_PLAN_CODE_COST_TYPE_ID = 21;
+  const WORK_REQUEST_CODE_COST_TYPE_ID = 22;  
   const user = req.user;
   if (before === undefined) before = null;
   if (after === undefined) after = null;
@@ -325,8 +327,7 @@ const updateRank = async (req, res) => {
           project_id: boardProjectUpdated.project_id
         } }
       );
-      const WORK_PLAN_CODE_COST_TYPE_ID = 21;
-      const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
+      
       const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
       // create a new cost with null value for project partner mhfd 
       const project_partner_id = projectPartnerMHFD[0].project_partner_id;
@@ -372,7 +373,12 @@ const updateRank = async (req, res) => {
               );
               // deactivate previous cost of origin column
               ProjectCost.update(
-                { is_active: false },
+                {
+                  is_active: false,
+                  last_modified: moment().toDate(),
+                  last_modified_by: user.email,
+                  code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
+                },
                 { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
               );
               const sponsorAndCosponsor = await getOriginSponsorCosponsor(board_project_id);
