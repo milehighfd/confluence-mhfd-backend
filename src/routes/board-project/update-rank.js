@@ -322,10 +322,24 @@ const updateRank = async (req, res) => {
     if (onWorkspace) {
       // deactiva all costs related to this board_project_id
       await ProjectCost.update(
-        { is_active: false },
+        {
+          is_active: false,
+          last_modified: moment().toDate(),
+          last_modified_by: user.email,
+          code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
+        },
         { where: { 
           project_id: boardProjectUpdated.project_id
         } }
+      );
+      ProjectCost.update(
+        {
+          is_active: false,
+          last_modified: moment().toDate(),
+          last_modified_by: user.email,
+          code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
+        },
+        { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
       );
       
       const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
@@ -376,8 +390,7 @@ const updateRank = async (req, res) => {
                 {
                   is_active: false,
                   last_modified: moment().toDate(),
-                  last_modified_by: user.email,
-                  code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
+                  last_modified_by: user.email
                 },
                 { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
               );
