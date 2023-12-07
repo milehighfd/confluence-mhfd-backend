@@ -319,6 +319,10 @@ const updateRank = async (req, res) => {
     let boardProjectUpdated = await BoardProject.findOne({
       where: { board_project_id }
     });
+    if(wasOnWorkspace){
+      console.log('boardProjectBeforeUpdate', boardProjectBeforeUpdate)
+      console.log('boardProjectUpdated', boardProjectUpdated)
+    }
     // check if now is on workspace
     const onWorkspace = isOnWorkspace(boardProjectUpdated);
     if (onWorkspace) {
@@ -369,6 +373,7 @@ const updateRank = async (req, res) => {
       await BoardProjectCost.create(newBoardProjectCost);
     } else {
     // is to add costs in the new column with the previous column cost 
+    console.log('tambien entra aqui')
       for (const key in otherFields) {
         if (key != 'rank0') {
           let originCost = null;
@@ -410,6 +415,50 @@ const updateRank = async (req, res) => {
               });
             }
           }
+        } else {
+
+          const costUpdateData = {
+            is_active: false,
+            last_modified: moment().toDate(),
+            last_modified_by: user.email,
+            code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_EDITED: WORK_REQUEST_EDITED,
+          };
+
+          await ProjectCost.update(
+            costUpdateData,
+            { where: { 
+              is_active: true,
+              project_id: boardProjectUpdated.project_id,
+              code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID
+            } }
+          );
+
+          const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
+          // create a new cost with null value for project partner mhfd 
+          const project_partner_id = projectPartnerMHFD[0].project_partner_id;
+          const newProjectCost = {
+            project_id: boardProjectUpdated.project_id,
+            project_partner_id: project_partner_id,
+            cost: null,
+            created_by: user.email,
+            modified_by: user.email,
+            createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+            updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+            code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
+            code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER,
+          };
+          const createdProjectCost = await ProjectCost.create(newProjectCost);
+
+          const newBoardProjectCost = {
+            board_project_id: board_project_id,
+            req_position: columnNumber,
+            project_cost_id: createdProjectCost.project_cost_id, 
+            created_by: user.email,
+            last_modified_by: user.email,
+            createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+            updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+          };
+          await BoardProjectCost.create(newBoardProjectCost);
         }
       }
     }
