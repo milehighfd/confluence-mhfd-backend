@@ -330,15 +330,15 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
     });
     console.log('\n-*******************- \n Last Project created should be: ', project_id, lastProject, project_partner, project_partner.project_partner_id);
     console.log('Is WOrk Plan', isWorkPlan);
-    const WORK_PLAN_CODE_COST_TYPE_ID = 21;
-    const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
-    await saveWorkspaceCostInit(
-      project_id,
-      boardProjectId.board_project_id,
-      isWorkPlan == 'true' ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
-      project_partner.project_partner_id,
-      user.email
-    );
+    // const WORK_PLAN_CODE_COST_TYPE_ID = 21;
+    // const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
+    // await saveWorkspaceCostInit(
+    //   project_id,
+    //   boardProjectId.board_project_id,
+    //   isWorkPlan == 'true' ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
+    //   project_partner.project_partner_id,
+    //   user.email
+    // );
     
     const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, lastProject, boardProjectId};
     return composeData;

@@ -319,10 +319,6 @@ const updateRank = async (req, res) => {
     let boardProjectUpdated = await BoardProject.findOne({
       where: { board_project_id }
     });
-    if(wasOnWorkspace){
-      console.log('boardProjectBeforeUpdate', boardProjectBeforeUpdate)
-      console.log('boardProjectUpdated', boardProjectUpdated)
-    }
     // check if now is on workspace
     const onWorkspace = isOnWorkspace(boardProjectUpdated);
     if (onWorkspace) {
@@ -373,7 +369,6 @@ const updateRank = async (req, res) => {
       await BoardProjectCost.create(newBoardProjectCost);
     } else {
     // is to add costs in the new column with the previous column cost 
-    console.log('tambien entra aqui')
       for (const key in otherFields) {
         if (key != 'rank0') {
           let originCost = null;
