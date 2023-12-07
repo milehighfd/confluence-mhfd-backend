@@ -41,6 +41,7 @@ import codeStudyReason from 'bc/models/code_study_reason.model.js';
 import codeServiceArea from 'bc/models/code_service_area.model.js';
 import localGovernment from 'bc/models/local_government.model.js';
 import project_stream from 'bc/models/project_stream.model.js';
+import primaryStream from 'bc/models/primary_stream.model.js';
 import projectAttachment from 'bc/models/project_attachment.model.js';
 import projectLocalGovernment from 'bc/models/project_local_government.model.js';
 import projectStaff from 'bc/models/project_staff.model.js';
@@ -161,6 +162,7 @@ db.codeServiceArea = codeServiceArea(sequelize, Sequelize);
 db.codeLocalGoverment = codeLocalGoverment(sequelize, Sequelize);
 db.localGovernment = localGovernment(sequelize, Sequelize);
 db.project_stream = project_stream(sequelize, Sequelize);
+db.primaryStream = primaryStream(sequelize, Sequelize);
 db.projectAttachment = projectAttachment(sequelize, Sequelize);
 db.projectLocalGovernment = projectLocalGovernment(sequelize, Sequelize);
 db.projectStaff = projectStaff(sequelize, Sequelize);
@@ -327,6 +329,10 @@ db.project.hasMany(db.project_stream, {foreignKey: 'project_id', as: 'currentStr
 db.project_stream.belongsTo(
   db.stream,
   { foreignKey: 'stream_id'}
+)
+db.primaryStream.belongsTo(
+  db.project_stream,
+  { foreignKey: 'project_stream_id'}
 )
 // project localgovernment
 
