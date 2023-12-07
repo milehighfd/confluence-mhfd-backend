@@ -388,6 +388,25 @@ const updateCostNew = async (req, res) => {
               rank0 = LexoRank.parse(firstProject[`rank0`]).genPrev().toString();
             }
           }
+          if (!shouldMoveToWorkspace){
+            const costUpdateData = {
+              is_active: false,
+              last_modified: moment().toDate(),
+              last_modified_by: user.email,
+              code_cost_type_id: isWorkPlan ? 41: 42,
+            };
+            await ProjectCost.update(
+              costUpdateData,
+              {
+                where: { 
+                  cost: null,
+                  is_active: true,
+                  project_id: currentProjectId,
+                  code_cost_type_id: isWorkPlan ? 21: 22
+                }
+              } 
+            )
+          }
           // UPDATE PROJECTCOST WITH ALL NEW VALUES
           await BoardProject.update(
             {
