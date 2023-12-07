@@ -8,6 +8,7 @@ import { projectsByFiltersForIds, getIdsInBbox } from 'bc/utils/functionsProject
 import auth from 'bc/auth/auth.js';
 import { CARTO_URL, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
 import sequelize from 'sequelize';
+import groupService from 'bc/services/group.service.js';
 
 const Op = sequelize.Op;
 const ProjectCost = db.projectCost;
@@ -25,6 +26,11 @@ const ProjectDetail = db.projectDetail;
 const CodeProjectPartnerType = db.codeProjectPartnerType;
 const BusinessAssociates = db.businessAssociates;
 const ProjectPartner = db.projectPartner;
+const ProjectStream = db.project_stream;
+const Stream = db.stream;
+const PrimaryStream = db.primaryStream;
+const ProjectStaff = db.projectStaff;
+const BusinessAssociateContact = db.businessAssociateContact;
 
 const router = express.Router();
 
@@ -596,6 +602,114 @@ const updateProjectNote = async (req, res) => {
   }
 };
 
+const getProjectStreams = async (req, res) => {
+  try {
+    const { project_id } = req.params;
+    const projectStreams = await ProjectStream.findAll({
+      attributes: ['project_stream_id', 'project_id', 'stream_id'],
+      where: {
+        project_id: project_id
+      },
+      include: [{
+        model: Stream,
+        attributes: ['stream_name', 'stream_id'],
+        where: {
+          stream_name: {
+            [Op.ne]: null
+          }
+        }
+      }]
+    });
+
+    const primaryStream = await PrimaryStream.findOne({
+      attributes: ['primary_stream_id', 'project_stream_id'],
+      include: [{
+        model: ProjectStream,
+        attributes: ['project_stream_id', 'project_id', 'stream_id'],
+        where: {
+          project_id: project_id
+        },
+        include: [{
+          model: Stream,
+          attributes: ['stream_name', 'stream_id']
+        }]
+      }]
+    });
+
+    const uniqueProjectStreams = projectStreams.filter((ps, index, self) =>
+      index === self.findIndex((t) => (
+        t.stream_id === ps.stream_id
+      ))
+    );
+    return ({ projectStreams: uniqueProjectStreams, primaryStream: primaryStream });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: 'Error getting project streams' });
+  }
+}
+
+const getProjectStaff = async (req, res) => {
+  try {
+    const CODE_MHFD_LEAD = 1;
+    const { project_id } = req.params;
+    const mhfdLead = await ProjectStaff.findOne({
+      where: {
+        project_id: project_id,
+        code_project_staff_role_type_id: CODE_MHFD_LEAD
+      },
+      include: [{
+        model: BusinessAssociateContact,
+        required: true,
+      }],
+    });
+    const mhfdStaff = await groupService.getMhfdStaff();
+    return ({ mhfdLead: mhfdLead, mhfdStaff: mhfdStaff });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({message: 'Error getting project staff'});
+  }
+}
+
+const getProjectLocation = async (req, res) => {
+  try {
+    const { project_id } = req.params;
+    const project = await Project.findOne({
+      attributes: ['project_id', 'location','onbase_project_number','is_county_wide'],
+      where: {
+        project_id: project_id
+      }
+    });
+    console.log(project)
+    return project;
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({message: 'Error getting project location'});
+  }
+}
+
+const getActiveDetails = async (req, res) => {
+  try {
+    const { project_id } = req.params;
+
+    const [projectStreams, projectStaff, projectLocation] = await Promise.all([
+      getProjectStreams({ params: { project_id } }),
+      getProjectStaff({ params: { project_id } }),
+      getProjectLocation({ params: { project_id } })
+    ]);
+
+    const projectDetails = {
+      projectStreams,
+      projectStaff,
+      projectLocation
+    };
+
+    res.status(200).send(projectDetails);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: 'Error getting project details' });
+  }
+}
+
 router.get('/bbox/:project_id', getBboxProject);
 router.put('/archive/:project_id', [auth], archiveProject);
 router.post('/check-project-name', checkProjectName)
@@ -617,5 +731,6 @@ router.get('/complete/attachmentHistory/:project_id', attachmentHistory);
 router.get('/complete/detailHistory/:project_id', detailHistory);
 router.get('/complete/projectHistory/:project_id', projectHistory);
 router.get('/complete/proposedActionHistory/:project_id', proposedActionHistory);
+router.get('/active-details/:project_id', getActiveDetails);
 
 export default router;
