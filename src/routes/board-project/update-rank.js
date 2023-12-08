@@ -434,13 +434,13 @@ const updateRank = async (req, res) => {
           const newProjectCost = {
             project_id: boardProjectUpdated.project_id,
             project_partner_id: project_partner_id,
-            cost: null,
+            cost: 0,
             created_by: user.email,
             modified_by: user.email,
             createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
             updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
             code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
-            code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER,
+            code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
           };
           const createdProjectCost = await ProjectCost.create(newProjectCost);
 
