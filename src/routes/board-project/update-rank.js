@@ -5,7 +5,7 @@ import { isOnWorkspace, determineStatusChange } from 'bc/services/board-project.
 import sequelize from 'sequelize';
 import { LexoRank } from 'lexorank';
 import moment from 'moment';
-import { OFFSET_MILLISECONDS, CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
+import { OFFSET_MILLISECONDS, CODE_DATA_SOURCE_TYPE, COST_IDS } from 'bc/lib/enumConstants.js';
 
 const BoardProject = db.boardProject;
 const BoardProjectCost = db.boardProjectCost;
@@ -254,7 +254,7 @@ const updateRank = async (req, res) => {
     otherFields, //   previous rankX, that is going to be deleted
     isWorkPlan
   } = req.body;
-  const isWorkPlanBoolean = isWorkPlan === 'true' ? true : false;
+  const isWorkPlanBoolean = typeof isWorkPlan === 'boolean' ? isWorkPlan : isWorkPlan === 'true' ? true : false;
   const WORK_PLAN_CODE_COST_TYPE_ID = 21;
   const WORK_REQUEST_CODE_COST_TYPE_ID = 22;  
   const WORK_REQUEST_EDITED = 42;
@@ -329,7 +329,6 @@ const updateRank = async (req, res) => {
         last_modified_by: user.email,
         code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_EDITED: WORK_REQUEST_EDITED,
       };
-      console.log('COST UPDATE DATa', costUpdateData);
       await ProjectCost.update(
         costUpdateData,
         { where: { 
@@ -338,7 +337,6 @@ const updateRank = async (req, res) => {
           code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID
         } }
       );
-      console.log('ERRORR ');
       const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
       // create a new cost with null value for project partner mhfd 
       const project_partner_id = projectPartnerMHFD[0].project_partner_id;
@@ -353,7 +351,6 @@ const updateRank = async (req, res) => {
         code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
         code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
       };
-      console.log('COST UPDATE DATa 1 2', newProjectCost);
       const createdProjectCost = await ProjectCost.create(newProjectCost);
       // create a null cost with req_position  = 0
       const newBoardProjectCost = {
@@ -416,10 +413,9 @@ const updateRank = async (req, res) => {
             is_active: false,
             last_modified: moment().toDate(),
             last_modified_by: user.email,
-            code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_EDITED: WORK_REQUEST_EDITED,
+            code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
           };
-
-          await ProjectCost.update(
+          const updatevalue = await ProjectCost.update(
             costUpdateData,
             { where: { 
               is_active: true,
@@ -427,7 +423,6 @@ const updateRank = async (req, res) => {
               code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID
             } }
           );
-
           const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
           // create a new cost with null value for project partner mhfd 
           const project_partner_id = projectPartnerMHFD[0].project_partner_id;

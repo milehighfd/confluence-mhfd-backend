@@ -473,7 +473,7 @@ const updateCostNew = async (req, res) => {
       await saveWorkspaceCostInit(
         currentProjectId,
         board_project_id,
-        isWorkPlan == 'true' ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID,
+        isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID,
         projectPartnerId.project_partner_id,
         user.email,
         null
