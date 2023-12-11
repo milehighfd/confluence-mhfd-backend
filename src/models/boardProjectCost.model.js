@@ -27,6 +27,9 @@ export default (sequelize, DataType) => {
     },
     created_by: {
       type: DataType.STRING
+    },
+    sort_order: {
+      type: DataType.INTEGER
     }
   }, {
     freezeTableName: true,

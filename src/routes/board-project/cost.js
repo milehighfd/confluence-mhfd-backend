@@ -3,9 +3,10 @@ import sequelize from 'sequelize';
 import db from 'bc/config/db.js';
 import moment from 'moment';
 import logger from 'bc/config/logger.js';
-import { OFFSET_MILLISECONDS } from 'bc/lib/enumConstants.js';
+import { OFFSET_MILLISECONDS, COST_IDS } from 'bc/lib/enumConstants.js';
 import boardService from 'bc/services/board.service.js';
 import { isOnWorkspace, determineStatusChange } from 'bc/services/board-project.service.js';
+import { saveWorkspaceCostInit } from 'bc/utils/create';
 
 const BoardProject = db.boardProject;
 const BoardProjectCost = db.boardProjectCost;
@@ -122,20 +123,16 @@ const getAllPreviousAmounts = async (boardProject, currentProjectId) => {
     console.log('anwser', answer);
     return answer;
   });
-  const MHFD_CODE_COST_TYPE_ID = 88;
-  const SPONSOR_CODE_COST_TYPE_ID = 11;
-  const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
-  const WORK_PLAN_CODE_COST_TYPE_ID = 21;
   const allPreviousAmounts = allBNWithPartner.map((bnnp) => {
     const bname = bnnp.business_name;
     const bid = bnnp.business_associates_id;
     const current_code_partner_type_id = bnnp.code_partner_type_id;
     const databyBN = groupedData[bname];
     let current_code_cost_type_id; // ALMOST ALL ARE GOING TO BE 22 WORK REQUEST 
-    if (current_code_partner_type_id == MHFD_CODE_COST_TYPE_ID || current_code_partner_type_id == SPONSOR_CODE_COST_TYPE_ID) {
-      current_code_cost_type_id = WORK_REQUEST_CODE_COST_TYPE_ID;
+    if (current_code_partner_type_id == COST_IDS.MHFD_CODE_COST_TYPE_ID || current_code_partner_type_id == COST_IDS.SPONSOR_CODE_COST_TYPE_ID) {
+      current_code_cost_type_id = COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID;
     } else {
-      current_code_cost_type_id = WORK_PLAN_CODE_COST_TYPE_ID;
+      current_code_cost_type_id = COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID;
     }
     return {
       code_cost_type_id: current_code_cost_type_id,
@@ -149,11 +146,11 @@ const getAllPreviousAmounts = async (boardProject, currentProjectId) => {
   if (businessMhfd){
     const bname = businessMhfd.businessAssociateData? businessMhfd.businessAssociateData[0].business_name: null;
     const workplanValues = {
-      code_cost_type_id: WORK_PLAN_CODE_COST_TYPE_ID,
+      code_cost_type_id: COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID,
       business_associates_id: businessMhfd.businessAssociateData? businessMhfd.businessAssociateData[0].business_associates_id: null,
       business_name: bname,
       code_partner_type_id: businessMhfd.code_partner_type_id,
-      values: getReqsValues(groupedData[bname], WORK_PLAN_CODE_COST_TYPE_ID)
+      values: getReqsValues(groupedData[bname], COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID)
     };
     allPreviousAmounts.push(workplanValues);
   }
@@ -161,11 +158,11 @@ const getAllPreviousAmounts = async (boardProject, currentProjectId) => {
   if (businessSponsor){
     const bname = businessSponsor.businessAssociateData? businessSponsor.businessAssociateData[0].business_name: null;
     const workplanValuesForSponsor = {
-      code_cost_type_id: WORK_PLAN_CODE_COST_TYPE_ID,
+      code_cost_type_id: COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID,
       business_associates_id: businessSponsor.businessAssociateData? businessSponsor.businessAssociateData[0].business_associates_id: null,
       business_name: bname,
       code_partner_type_id: businessSponsor.code_partner_type_id,
-      values: getReqsValues(groupedData[bname], WORK_PLAN_CODE_COST_TYPE_ID)
+      values: getReqsValues(groupedData[bname], COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID)
     };
     allPreviousAmounts.push(workplanValuesForSponsor);
   }
@@ -286,9 +283,11 @@ const updateCostNew = async (req, res) => {
           ( amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22)) // IF MHFD FUNDING FOR WORK PLAN OR WORK REQUEST
         ) {
           console.log(' ------------- \nColumns changed', columnsChanged, 'with id', currentBusinessAssociatesId , '\n\n\n');
+          let shouldRemoveWorkspaceReq = false;
           for (let pos = 0; pos < columnsChanged.length; ++pos) {
             const currentColumn = columnsChanged[pos];
             if (currentColumn !== 0) {
+              shouldRemoveWorkspaceReq = amount.code_partner_type_id === 88 ? true: false;
               // NOt workspace
               const reqColumnName = `req${currentColumn}`;
               const currentReqAmount = amount.values[reqColumnName] ?? null;
@@ -313,6 +312,22 @@ const updateCostNew = async (req, res) => {
               );
             }
           }
+          if ( shouldRemoveWorkspaceReq) {
+            allPromises.push(
+              boardService.updateProjectCostOfWorkspace(
+                0,
+                user,
+                currentBusinessAssociatesId,
+                currentPartnerTypeId,
+                currentProjectId,
+                board_project_id,
+                moment().toDate(),
+                isWorkPlan,
+                amount.code_cost_type_id
+              )
+            )
+          }
+          console.log('Should REMOVE WORKSPACE ', shouldRemoveWorkspaceReq);
         }
 
         mainModifiedDate = new Date();
@@ -373,6 +388,25 @@ const updateCostNew = async (req, res) => {
               rank0 = LexoRank.parse(firstProject[`rank0`]).genPrev().toString();
             }
           }
+          if (!shouldMoveToWorkspace){
+            const costUpdateData = {
+              is_active: false,
+              last_modified: moment().toDate(),
+              last_modified_by: user.email,
+              code_cost_type_id: isWorkPlan ? 41: 42,
+            };
+            await ProjectCost.update(
+              costUpdateData,
+              {
+                where: { 
+                  cost: null,
+                  is_active: true,
+                  project_id: currentProjectId,
+                  code_cost_type_id: isWorkPlan ? 21: 22
+                }
+              } 
+            )
+          }
           // UPDATE PROJECTCOST WITH ALL NEW VALUES
           await BoardProject.update(
             {
@@ -411,12 +445,40 @@ const updateCostNew = async (req, res) => {
           );
         }
         if (( amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22))) {
-          console.log(' ---------- ==- ---------------\n', columnsChanged, 'status has changed', statusHasChanged, '\n\n\n');
+          
           columnsChangesMHFD = (statusHasChanged ? [0, 1, 2, 3, 4, 5] : columnsChanged);
         }
     }
     console.log('------------- \n Columns changes final', columnsChangesMHFD);
     const allAmounts = await getAllPreviousAmounts(beforeUpdate, currentProjectId);
+    const afterUpdate = await BoardProject.findOne({
+      where: { board_project_id },
+      include:[{
+        model: Board,
+        attributes: ['year']
+      }]
+    });
+    const currentIsOnWorkspace = isOnWorkspace(afterUpdate);
+    if (currentIsOnWorkspace) {
+      const businessData = allAmounts.find((a) => a.code_partner_type_id === 88 && (isWorkPlan ? a.code_cost_type_id === 21 : a.code_cost_type_id === 22));
+      // get project partner id
+      const projectPartnerId = await ProjectPartner.findOne({
+        attributes: ['project_partner_id'],
+        where: {
+          project_id: currentProjectId,
+          business_associates_id: businessData.business_associates_id,
+          code_partner_type_id: businessData.code_partner_type_id
+        }
+      });
+      await saveWorkspaceCostInit(
+        currentProjectId,
+        board_project_id,
+        isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID,
+        projectPartnerId.project_partner_id,
+        user.email,
+        null
+      ) 
+    }
     return res.status(200).send({
       ...allAmounts,
       columnsChanged: columnsChangesMHFD,
