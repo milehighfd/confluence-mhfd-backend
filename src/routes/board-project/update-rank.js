@@ -220,13 +220,23 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
           const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
           proms.push(
             ProjectCost.update(
-              { cost: cost },
+              {
+                cost: cost,
+                last_modified: moment().toDate(),
+                modified_by: user.email,
+              },
               { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
             )
           );
+          
           proms.push(
             ProjectCost.update(
-              { is_active: false },
+              {
+                is_active: false,
+                last_modified: moment().toDate(),
+                modified_by: user.email,
+                code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
+              },
               { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
             )
           );
@@ -377,7 +387,11 @@ const updateRank = async (req, res) => {
               const cost = originCost.projectCostData.cost + targetCost.projectCostData.cost;
               // update targetCost with the added cost
               ProjectCost.update(
-                { cost: cost },
+                {
+                  cost: cost,
+                  last_modified: moment().toDate(),
+                  modified_by: user.email
+                },
                 { where: { project_cost_id: targetCost.projectCostData.project_cost_id } }
               );
               // deactivate previous cost of origin column
@@ -385,7 +399,8 @@ const updateRank = async (req, res) => {
                 {
                   is_active: false,
                   last_modified: moment().toDate(),
-                  last_modified_by: user.email
+                  last_modified_by: user.email,
+                  code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
                 },
                 { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
               );
@@ -396,11 +411,20 @@ const updateRank = async (req, res) => {
                 if (originSecCost && targetSecCost) {                
                   const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
                   ProjectCost.update(
-                    { cost: cost },
+                    {
+                      cost: cost,
+                      last_modified: moment().toDate(),
+                      modified_by: user.email
+                    },
                     { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
                   );
                   ProjectCost.update(
-                    { is_active: false },
+                    {
+                      is_active: false,
+                      last_modified: moment().toDate(),
+                      modified_by: user.email,
+                      code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
+                    },
                     { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
                   );
                 }
