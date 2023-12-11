@@ -2,7 +2,8 @@ export default  (sequelize, DataType) => {
   const ProjectStaff = sequelize.define('project_staff', {
     project_staff_id: {
       type: DataType.INTEGER,
-      primaryKey: true
+      primaryKey: true,
+      autoIncrement: true
     },
     project_id: {
       type: DataType.INTEGER
@@ -15,7 +16,13 @@ export default  (sequelize, DataType) => {
     },
     is_active: {
       type: DataType.INTEGER
-    }
+    },
+    effective_date: {
+      type: DataType.DATE
+    },
+    last_modified_date: {
+      type: DataType.DATE
+    },
   }, {
     freezeTableName: true,
     tableName: 'project_staff',

@@ -334,6 +334,9 @@ db.primaryStream.belongsTo(
   db.project_stream,
   { foreignKey: 'project_stream_id'}
 )
+db.project_stream.hasMany(db.primaryStream, {
+  foreignKey: 'project_stream_id',
+});
 // project localgovernment
 
 db.project.hasMany(db.projectLocalGovernment, {foreignKey: 'project_id'});
