@@ -1542,6 +1542,417 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
 }
 
 let cache = null;
+const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit = 20, filters) => {  
+  const CONSULTANT = 3;
+  const LANDSCAPE_CONTRACTOR_ID = 9;
+  const CIVIL_CONTRACTOR_ID = 8;
+  const LG_LEAD = 10;
+  let where = {};
+  const offset = (+page - 1) * +limit;
+  const toRange = +offset + +limit;
+ 
+  let limitRange = filters?.sortby ? undefined : limit;
+  let offsetRange = filters?.sortby ? undefined : offset;
+  console.log('Limit', limit, limitRange, offsetRange);
+  try {
+    if (cache) {
+      return JSON.parse(JSON.stringify(cache));
+    }
+    let projects = await Project.findAll({
+      // where: where,
+      limit: limitRange,
+      // offset: offsetRange,
+      separate: true,
+      attributes: [
+        "project_id",
+        "project_name",
+        "description",
+        "onbase_project_number",
+        "created_date",
+        'code_project_type_id',
+        'current_project_status_id',
+      ],  
+      
+      include: [
+        {
+          model: ProjectAttachment,
+          required: false,
+          separate: true,
+          where: {
+            is_cover: 1
+          },
+          attributes: [
+            'attachment_url'
+          ]
+        },
+        {
+          model: CodePhaseType,
+          required: false,
+          include: {
+            model: CodeRuleActionItem,
+            required: false,
+          },
+          where : {
+            phase_ordinal_position: {
+              [Op.not]: -1
+            },
+            code_phase_type_id: {
+              [Op.gt]: 4
+            }
+          },
+        },
+        {
+          model: ProjectStaff,
+          required: false,
+          separate: true,
+          where: {
+            is_active: 1
+          },
+          attributes: [
+            'code_project_staff_role_type_id',
+            'is_active',
+            'project_staff_id'
+          ],
+          include: [{
+            model: BusinessAssociateContact,
+            required: false,           
+          },{
+            model: CodeProjectStaffRole,
+            required: false,
+          }]
+        },
+        {
+          model: ProjectServiceArea,
+          separate: true,
+          required: false,
+          include: {
+            model: CodeServiceArea,
+            required: false,
+            attributes: [
+              'service_area_name',
+              'code_service_area_id'
+            ]
+          },
+          attributes: [
+            'project_service_area_id'
+          ] 
+        },        
+        {
+          model: ProjectCounty,
+          separate: true,
+          include: {
+            model: CodeStateCounty,
+            required: false,
+            attributes: [
+              'county_name',
+              'state_county_id'
+            ]
+          },
+          attributes: [
+            'project_county_id'
+          ]
+        },
+        {
+          model: ProjectStreams,
+          separate: true,
+          required: false,
+          include: {
+            model: Streams,
+            required: false,
+            attributes: [
+              'stream_id',
+              'stream_name'
+            ]
+          }
+        },
+        {
+          model: ProjectLocalGovernment,
+          separate: true,
+          required: false,
+          include: {
+            model: CodeLocalGoverment,
+            required: false,
+            attributes: [
+              'local_government_name',
+              'code_local_government_id'
+            ]
+          },
+          attributes: [
+            'project_local_government_id'
+          ]
+        },
+        {
+          model: ProjectCost,
+          separate: true,
+          required: false,
+          attributes: [
+            'code_cost_type_id',
+            'cost'
+          ],
+          where: {
+            is_active: 1
+          }
+        },
+        {
+          model: ProjectStatus,
+          separate: true,
+          required: false,
+          attributes: [
+            'code_phase_type_id',
+            'planned_start_date',
+            'actual_start_date',
+            'actual_end_date',
+            'planned_end_date',
+            'project_status_id',
+            'modified_date',
+            'is_locked',
+            'is_done'
+          ],
+          include: {
+            model: CodePhaseType,
+            required: false,
+            attributes: [
+              'phase_name',
+              'phase_ordinal_position'
+            ],
+            include: [{
+              model: CodeStatusType,
+              required: false,
+              attributes: [
+                'code_status_type_id',
+                'status_name'
+              ]
+            }, {
+              model: CodeProjectType,
+              required: false,
+              attributes: [
+                'code_project_type_id',
+                'project_type_name'
+              ]
+            }]
+          }
+        },
+        {
+          model: ProjectPartner,
+          separate: true,
+          required: false,
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          include: [{
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+              'business_associates_id'
+            ]
+          }, {
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+              'partner_type'
+            ],
+          }],
+          // where: {
+          //   code_partner_type_id: [3, 8, 11]
+          // }
+        }, {
+          model: CodeProjectType,
+          required: false,
+          attributes: [
+            'code_project_type_id',
+            'project_type_name'
+          ]
+        },
+        {
+          model: ProjectStatus,
+          separate: true,
+          required: false,
+          attributes: [
+            'code_phase_type_id'
+          ],
+          as: 'currentId',
+          include: {
+            model: CodePhaseType,
+            required: false,
+            attributes: [
+              'code_phase_type_id',
+              'phase_name',
+            ],
+            include: [{
+              model: CodeStatusType,
+              required: false,
+              attributes: [
+                'status_name',
+                'code_status_type_id'
+              ]
+            }]
+          }
+        },
+        {
+          model: ProjectPartner,
+          as: 'currentConsultant',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { code_partner_type_id: CONSULTANT }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+        },
+        {
+          model: ProjectPartner,
+          as: 'landscapeContractor',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { code_partner_type_id: LANDSCAPE_CONTRACTOR_ID }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+        },
+        {
+          model: ProjectPartner,
+          as: 'civilContractor',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { code_partner_type_id: CIVIL_CONTRACTOR_ID }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+        },
+        {
+          model: ProjectStatus,
+          separate: true,
+          required: false,
+          attributes: [
+            'code_phase_type_id',
+            'planned_start_date',
+            'actual_start_date',
+          ],
+          as: 'construction_phase',
+          include: {
+            model: CodePhaseType,
+            required: true,
+            attributes: [
+              'code_phase_type_id',
+              'phase_name',
+            ],
+            where: {
+              phase_name: 'Construction',
+            }
+          }
+        },
+        {
+          model: ProjectPartner,
+          as: 'project_sponsor',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+              'partner_type',
+            ],
+            where: { partner_type: 'SPONSOR' }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+                'business_name',
+              ]
+            },],
+        },
+        {
+          model: ProjectStaff,
+          required: false,
+          separate: true,
+          as: 'currentProjectStaff',
+          where: {
+            is_active: 1
+          },
+          attributes: [
+            'code_project_staff_role_type_id',
+            'is_active',
+            'project_staff_id'
+          ],
+          include: [{
+            model: BusinessAssociateContact,
+            required: false,
+          },{
+            model: CodeProjectStaffRole,
+            required: true,
+            where: {
+              code_project_staff_role_type_id: LG_LEAD,
+            },
+          }]
+        }
+      ],
+    });
+    logger.info(`projects found: ${projects.length}`);
+    /*
+      projects = projects.map(project => {
+        project.centroid = centroids.find(centroid => centroid.projectid === project.project_id);
+        return project;
+      });
+    */
+    //cache = projects;
+    if (filters?.sortby) {
+      projects = await sortProjectsByAttrib(projects, project_ids_array, filters);
+    }
+    return projects;
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+}
 const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, filters) => {  
   const CONSULTANT = 3;
   const LANDSCAPE_CONTRACTOR_ID = 9;
@@ -2838,6 +3249,7 @@ export default {
   deleteByProjectId,
   archiveByProjectId,
   saveProject,
+  getUpcomingProjects,
   getProjects,
   filterProjectsBy,
   getProjectsDeprecated,

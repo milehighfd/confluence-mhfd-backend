@@ -318,7 +318,7 @@ const listProjects = async (req, res) => {
   }
 
   logger.info(`Starting function getProjects for endpoint pmtools/list`);
-  let projects = await projectService.getProjects({code_project_type_id: code_project_type_id}, null);
+  let projects = await projectService.getUpcomingProjects({code_project_type_id: code_project_type_id}, null, []);
   logger.info(`Finished function getProjects for endpoint pmtools/list`);
   const ids = projects.map((p) => p.project_id);
 
