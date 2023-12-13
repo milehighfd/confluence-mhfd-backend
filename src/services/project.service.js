@@ -1987,12 +1987,10 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
         return project;
       });
     */
-    //cache = projects;
     if (filters?.sortby) {
       projects = await sortProjectsByAttrib(projects, project_ids_array, filters);
     }
-    // concat studyacqrndprojects and restprojects 
-    projects = studyAcqRNDProjects.concat(restProjects);
+    projects = [...studyAcqRNDProjects, ...restProjects];
     return projects;
   } catch (error) {
     logger.error(error);
