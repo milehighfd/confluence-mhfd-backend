@@ -289,6 +289,7 @@ db.project.hasMany(db.projectAttachment, {foreignKey: 'project_id',sourceKey: "p
 // project partner 
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id'});
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'currentConsultant'});
+db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'currentPrimeConsultant'});
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'civilContractor'});
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'landscapeContractor'});
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'project_sponsor'});

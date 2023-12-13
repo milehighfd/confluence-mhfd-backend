@@ -1544,10 +1544,11 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
 let cache = null;
 const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit = 20, filters) => {  
   const CONSULTANT = 3;
+  const PRIME_CONSULTANT = 13;
   const LANDSCAPE_CONTRACTOR_ID = 9;
   const CIVIL_CONTRACTOR_ID = 8;
   const LG_LEAD = 10;
-  let where = {};
+  let where = { project_id: {[Op.gt]: 20000000}}; // DELETE THIS FILTER
   const offset = (+page - 1) * +limit;
   const toRange = +offset + +limit;
  
@@ -1809,6 +1810,30 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
         },
         {
           model: ProjectPartner,
+          as: 'currentPrimeConsultant',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { code_partner_type_id: PRIME_CONSULTANT }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+        },
+        {
+          model: ProjectPartner,
           as: 'landscapeContractor',
           attributes: [
             'project_partner_id',
@@ -1929,6 +1954,33 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
       ],
     });
     logger.info(`projects found: ${projects.length}`);
+    // filter projects by code_project_type_id with 1, 13, 15, 16
+    let studyAcqRNDProjects = projects.filter(project => {
+      const project_type = project.code_project_type_id;
+      return [1, 13, 15, 16].includes(project_type);
+    });
+    let restProjects = projects.filter(project => {
+      const project_type = project.code_project_type_id;
+      return ![1, 13, 15, 16].includes(project_type);
+    });
+    // filter studyacqrndprojects by currentPrimeConsultant 
+    studyAcqRNDProjects = studyAcqRNDProjects.filter(project => {
+      const currentPrimeConsultant = project.currentPrimeConsultant;
+      if( currentPrimeConsultant.length > 0) {
+        return false;
+      } else {
+        return true;
+      }
+    });
+    restProjects = restProjects.filter(project => {
+      const currentPrimeConsultant = project.currentPrimeConsultant;
+      const civilContractor = project.civilContractor;
+      if( currentPrimeConsultant.length > 0 && civilContractor.length > 0) {
+        return false;
+      } else {
+        return true;
+      }
+    });
     /*
       projects = projects.map(project => {
         project.centroid = centroids.find(centroid => centroid.projectid === project.project_id);
@@ -1939,6 +1991,8 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
     if (filters?.sortby) {
       projects = await sortProjectsByAttrib(projects, project_ids_array, filters);
     }
+    // concat studyacqrndprojects and restprojects 
+    projects = studyAcqRNDProjects.concat(restProjects);
     return projects;
   } catch (error) {
     logger.error(error);

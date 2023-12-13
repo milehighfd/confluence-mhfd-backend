@@ -319,263 +319,114 @@ const listProjects = async (req, res) => {
 
   logger.info(`Starting function getProjects for endpoint pmtools/list`);
   let projects = await projectService.getUpcomingProjects({code_project_type_id: code_project_type_id}, null, []);
-  logger.info(`Finished function getProjects for endpoint pmtools/list`);
-  const ids = projects.map((p) => p.project_id);
-
-  const MHFD_LEAD = 1;
-  logger.info(`Starting function findAll for endpoint pmtools/list`);
-  const projectStaff = await ProjectStaff.findAll({
-    where: {
-      project_id: ids,
-      code_project_staff_role_type_id: MHFD_LEAD
-    }
-  });
-  logger.info(`Finished function findAll for endpoint pmtools/list`);  
-  logger.info(`Finished function findAll for endpoint pmtools/list`);
-  const DEVELOPER_CODE = 6;
-  logger.info('projects being called');
-  if (+code_project_type_id === DEVELOPER_CODE) {
-    //GET Developer
-    logger.info('Developer');
-    const DEVELOPER_ID = 1;
-    logger.info(`Starting function findAll for endpoint pmtools/list`);
-    let developers = await ProjectPartner.findAll({
-      where: {
-        project_id: ids,
-        code_partner_type_id: DEVELOPER_ID
-      }
-    });
-    logger.info(`Finished function findAll for endpoint pmtools/list`);
-    const developerIds = developers.map((data) => data.business_associates_id).filter((data) => data !== null);
-    logger.info(`Starting function findAll for endpoint pmtools/list`);
-    let developerLIst = await BusinessAssociante.findAll({
-      where: {
-        business_associates_id: developerIds
-      }
-    });
-    logger.info(`Finished function findAll for endpoint pmtools/list`);
-    developers = developers.map((staff) => {
-      const developer = developerLIst.filter((cons) => {
-        return cons.business_associates_id === staff.business_associates_id
-      });
-      return {
-        ...staff,
-        developer
-      }
-    });
-    projects = projects.map((project) => {
-      const staffs = developers.filter(consult => consult.project_id === project.project_id);
-      const construction_start_date = project?.project_status?.code_phase_type?.code_phase_type_id === 125 ? project?.project_status?.planned_start_date : project?.project_status?.actual_start_date
-      return {
-        ...project,
-        developers: staffs,
-        construction_start_date: construction_start_date
-      }
-    });
-  }
-  if (myprojects) {
-    logger.info(`Starting function findAll for endpoint pmtools/list`);
-    const staffs = await ProjectStaff.findAll({
-      where: {
-        project_id: ids
-      }
-    });
-    logger.info(`Finished function findAll for endpoint pmtools/list`);
-  }
-  logger.info(`Starting function projectsByFilters for endpoint pmtools/list`);
-  projects = await projectsByFilters(projects, body);
-  logger.info(`Finished function projectsByFilters for endpoint pmtools/list`);
-  if ( sortby ) {
-    projects = sortInside(projects, sortby, order);
-  }
-      
-  if (filterby === 'servicearea') {
-    projects = projects.filter(project => project?.serviceArea?.codeServiceArea?.code_service_area_id === +filtervalue);
-  }
-  if (filterby === 'county') {
-    projects = projects.filter(project => project?.county?.codeStateCounty?.state_county_id === +filtervalue);
-  }
-  if (filterby === 'jurisdiction') {
-    projects = projects.filter(project => project?.localGoverment?.codeLocalGoverment?.code_local_government_id === +filtervalue);
-  }
-  if (filterby === 'consultant') {
-    projects = projects.filter(project => {
-      const consultants = project.consultants || [];
-      let possible = 0;
-      consultants.forEach((consultant) => {
-        const business = consultant?.consultant || [];
-        possible |= business.some(bus => bus?.business_associates_id === +filtervalue);
-      });
-      return possible;
-    });
-  }
-  if (filterby === 'contractor') {
-    projects = projects.filter(project => {
-      const consultants = project.civilContractor || [];
-      const landscapeContractors = project.landscapeContractor || [];
-      let possible = 0;
-      consultants.forEach((consultant) => {
-        const business = consultant?.business || [];
-        possible |= business.some(bus => bus.business_associates_id === +filtervalue);
-      });
-      landscapeContractors.forEach((consultant) => {
-        const business = consultant?.business || [];
-        possible |= business.some(bus => bus.business_associates_id === +filtervalue);
-      });
-      return possible;
-    });
-  }
-  if (group === 'status') {
-    const groupProjects = {};
-    projects.forEach(project => {
-      
-      const status = projectService.getCurrentProjectStatus(project)?.code_phase_type?.code_status_type?.code_status_type_id || -1;
-      if (!groupProjects[status]) {
-        groupProjects[status] = [];
-      }
-      groupProjects[status].push(project);
-    });
-    res.send(groupProjects);
-    return;
-  }
-  if (group === 'jurisdiction') {
-    const groupProjects = {};
-    projects.forEach(project => {
-      project.project_local_governments.forEach(pl => {
-        const jurisdiction = pl?.CODE_LOCAL_GOVERNMENT?.code_local_government_id || -1;
-        if (!groupProjects[jurisdiction]) {
-          groupProjects[jurisdiction] = [];
-        }
-        groupProjects[jurisdiction].push(project);  
-      });
-      if (!project.project_local_governments.length) {
-        if (!groupProjects[-1]) {
-          groupProjects[-1] = [];
-        }
-        groupProjects[-1].push(project);
-      }
-    });
-    res.send(groupProjects);
-    return;
-  }
-  if (group === 'county') {
-    const groupProjects = {};
-    projects.forEach(project => {
-      project.project_counties.forEach(pl => {
-        const county = pl?.CODE_STATE_COUNTY?.state_county_id || -1;
-        if (!groupProjects[county]) {
-          groupProjects[county] = [];
-        }
-        groupProjects[county].push(project);  
-      });
-      if (!project.project_counties.length) {
-        if (!groupProjects[-1]) {
-          groupProjects[-1] = [];
-        }
-        groupProjects[-1].push(project);
-      }
-    });
-    res.send(groupProjects);
-    return;
-  }
-  if (group === 'servicearea') {
-    const groupProjects = {};
-    projects.forEach(project => {
-      project.project_service_areas.forEach(pl => {
-        const sa = pl?.CODE_SERVICE_AREA?.code_service_area_id || -1;
-        if (!groupProjects[sa]) {
-          groupProjects[sa] = [];
-        }
-        groupProjects[sa].push(project);  
-      });
-      if (!project.project_service_areas.length) {
-        if (!groupProjects[-1]) {
-          groupProjects[-1] = [];
-        }
-        groupProjects[-1].push(project);
-      }
-
-      const serviceArea = project.serviceArea?.codeServiceArea?.code_service_area_id || -1;
-      if (!groupProjects[serviceArea]) {
-        groupProjects[serviceArea] = [];
-      }
-      groupProjects[serviceArea].push(project);
-    });
-    res.send(groupProjects);
-    return;
-  }
-  if (group === 'consultant') { 
-    const groupProjects = {};
-    projects.forEach(project => {
-      let enter = false;
-      const CONSULTANT_ID = 3;
-      project.project_partners.forEach((pp) => {
-        if (pp.code_partner_type_id === CONSULTANT_ID) {
-          enter = true;
-          const business_associates_id = pp.business_associate.business_associates_id || -1;
-          if (!groupProjects[business_associates_id]) {
-            groupProjects[business_associates_id] = [];
-          }
-          groupProjects[business_associates_id].push(project);
-        }
-      });
-      if (!enter) {
-        if (!groupProjects[-1]) {
-          groupProjects[-1] = [];
-        }
-        groupProjects[-1].push(project);
-      }
-    });
-    res.send(groupProjects);
-    return;
-  }
-  if (group === 'contractor') {
-    const groupProjects = {};
-    projects.forEach(project => {
-      let enter = false;
-      const LANDSCAPE_CONTRACTOR_ID = 9, CIVIL_CONTRACTOR_ID = 8;
-      project.project_partners.forEach((pp) => {
-        if (pp.code_partner_type_id === CIVIL_CONTRACTOR_ID ||
-          pp.code_partner_type_id === LANDSCAPE_CONTRACTOR_ID) {
-          enter = true;
-          const business_associates_id = pp.business_associate.business_associates_id || -1;
-          if (!groupProjects[business_associates_id]) {
-            groupProjects[business_associates_id] = [];
-          }
-          groupProjects[business_associates_id].push(project);
-        }
-      });
-      if (!enter) {
-        if (!groupProjects[-1]) {
-          groupProjects[-1] = [];
-        }
-        groupProjects[-1].push(project);
-      }
-    });
-    res.send(groupProjects);
-    return;
-  }
-  if (group === 'streams') {
-    const groupProjects = {};
-    projects.forEach(project => {
-      project.project_streams.forEach((ps) => {
-        const stream = ps.stream_id || -1;
-        if (!groupProjects[stream]) {
-          groupProjects[stream] = [];
-        }
-        groupProjects[stream].push(project);  
-      });
-      if (!project.project_streams.length) {
-        if (!groupProjects[-1]) {
-          groupProjects[-1] = [];
-        }
-        groupProjects[-1].push(project);
-      }
-    });
-    res.send(groupProjects);
-    return;
-  }
   res.send(projects);
+  // logger.info(`Finished function getProjects for endpoint pmtools/list`);
+  // const ids = projects.map((p) => p.project_id);
+
+  // const MHFD_LEAD = 1;
+  // logger.info(`Starting function findAll for endpoint pmtools/list`);
+  // const projectStaff = await ProjectStaff.findAll({
+  //   where: {
+  //     project_id: ids,
+  //     code_project_staff_role_type_id: MHFD_LEAD
+  //   }
+  // });
+  // logger.info(`Finished function findAll for endpoint pmtools/list`);  
+  // logger.info(`Finished function findAll for endpoint pmtools/list`);
+  // const DEVELOPER_CODE = 6;
+  // logger.info('projects being called');
+  // if (+code_project_type_id === DEVELOPER_CODE) {
+  //   //GET Developer
+  //   logger.info('Developer');
+  //   const DEVELOPER_ID = 1;
+  //   logger.info(`Starting function findAll for endpoint pmtools/list`);
+  //   let developers = await ProjectPartner.findAll({
+  //     where: {
+  //       project_id: ids,
+  //       code_partner_type_id: DEVELOPER_ID
+  //     }
+  //   });
+  //   logger.info(`Finished function findAll for endpoint pmtools/list`);
+  //   const developerIds = developers.map((data) => data.business_associates_id).filter((data) => data !== null);
+  //   logger.info(`Starting function findAll for endpoint pmtools/list`);
+  //   let developerLIst = await BusinessAssociante.findAll({
+  //     where: {
+  //       business_associates_id: developerIds
+  //     }
+  //   });
+  //   logger.info(`Finished function findAll for endpoint pmtools/list`);
+  //   developers = developers.map((staff) => {
+  //     const developer = developerLIst.filter((cons) => {
+  //       return cons.business_associates_id === staff.business_associates_id
+  //     });
+  //     return {
+  //       ...staff,
+  //       developer
+  //     }
+  //   });
+  //   projects = projects.map((project) => {
+  //     const staffs = developers.filter(consult => consult.project_id === project.project_id);
+  //     const construction_start_date = project?.project_status?.code_phase_type?.code_phase_type_id === 125 ? project?.project_status?.planned_start_date : project?.project_status?.actual_start_date
+  //     return {
+  //       ...project,
+  //       developers: staffs,
+  //       construction_start_date: construction_start_date
+  //     }
+  //   });
+  // }
+  // if (myprojects) {
+  //   logger.info(`Starting function findAll for endpoint pmtools/list`);
+  //   const staffs = await ProjectStaff.findAll({
+  //     where: {
+  //       project_id: ids
+  //     }
+  //   });
+  //   logger.info(`Finished function findAll for endpoint pmtools/list`);
+  // }
+  // logger.info(`Starting function projectsByFilters for endpoint pmtools/list`);
+  // projects = await projectsByFilters(projects, body);
+  // logger.info(`Finished function projectsByFilters for endpoint pmtools/list`);
+  // if ( sortby ) {
+  //   projects = sortInside(projects, sortby, order);
+  // }
+      
+  // if (filterby === 'servicearea') {
+  //   projects = projects.filter(project => project?.serviceArea?.codeServiceArea?.code_service_area_id === +filtervalue);
+  // }
+  // if (filterby === 'county') {
+  //   projects = projects.filter(project => project?.county?.codeStateCounty?.state_county_id === +filtervalue);
+  // }
+  // if (filterby === 'jurisdiction') {
+  //   projects = projects.filter(project => project?.localGoverment?.codeLocalGoverment?.code_local_government_id === +filtervalue);
+  // }
+  // if (filterby === 'consultant') {
+  //   projects = projects.filter(project => {
+  //     const consultants = project.consultants || [];
+  //     let possible = 0;
+  //     consultants.forEach((consultant) => {
+  //       const business = consultant?.consultant || [];
+  //       possible |= business.some(bus => bus?.business_associates_id === +filtervalue);
+  //     });
+  //     return possible;
+  //   });
+  // }
+  // if (filterby === 'contractor') {
+  //   projects = projects.filter(project => {
+  //     const consultants = project.civilContractor || [];
+  //     const landscapeContractors = project.landscapeContractor || [];
+  //     let possible = 0;
+  //     consultants.forEach((consultant) => {
+  //       const business = consultant?.business || [];
+  //       possible |= business.some(bus => bus.business_associates_id === +filtervalue);
+  //     });
+  //     landscapeContractors.forEach((consultant) => {
+  //       const business = consultant?.business || [];
+  //       possible |= business.some(bus => bus.business_associates_id === +filtervalue);
+  //     });
+  //     return possible;
+  //   });
+  // }
+  
 };
 
 const getDataForGroupFilters = async (req, res) => {
