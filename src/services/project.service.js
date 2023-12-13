@@ -1560,9 +1560,9 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
     }
     let projects = await Project.findAll({
       // where: where,
-      limit: limitRange,
+      // limit: limitRange,
       // offset: offsetRange,
-      separate: true,
+      // separate: true,
       attributes: [
         "project_id",
         "project_name",
@@ -1574,17 +1574,6 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
       ],  
       
       include: [
-        {
-          model: ProjectAttachment,
-          required: false,
-          separate: true,
-          where: {
-            is_cover: 1
-          },
-          attributes: [
-            'attachment_url'
-          ]
-        },
         {
           model: CodePhaseType,
           required: false,
@@ -1768,26 +1757,29 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
         },
         {
           model: ProjectStatus,
-          separate: true,
-          required: false,
+          // separate: true,
+          required: true,
           attributes: [
             'code_phase_type_id'
           ],
           as: 'currentId',
           include: {
             model: CodePhaseType,
-            required: false,
+            required: true,
             attributes: [
               'code_phase_type_id',
               'phase_name',
             ],
             include: [{
               model: CodeStatusType,
-              required: false,
+              required: true,
               attributes: [
                 'status_name',
                 'code_status_type_id'
-              ]
+              ],
+              where: {
+                code_status_type_id: {[Op.in]: [3,5]}
+              }
             }]
           }
         },
