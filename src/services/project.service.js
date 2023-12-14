@@ -1981,17 +1981,39 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
         return true;
       }
     });
-    /*
-      projects = projects.map(project => {
-        project.centroid = centroids.find(centroid => centroid.projectid === project.project_id);
-        return project;
-      });
-    */
+
     if (filters?.sortby) {
       projects = await sortProjectsByAttrib(projects, project_ids_array, filters);
     }
     projects = [...studyAcqRNDProjects, ...restProjects];
-    return projects;
+    let newProjects = [];
+    for(let i = 0; i < projects.length; ++i) {
+      const project = projects[i];
+      const projectStatuses = project.project_statuses;
+      const constructionStatuses = projectStatuses.filter(projectStatus => {
+        const code_phase_type_id = projectStatus.code_phase_type_id;
+        return code_phase_type_id >= 215 && code_phase_type_id <= 224;
+      });
+      const consultantStatuses = projectStatuses.filter(projectStatus => {
+        const code_phase_type_id = projectStatus.code_phase_type_id;
+        return code_phase_type_id >= 290 && code_phase_type_id <= 299;
+      });
+      const contractorStatuses = projectStatuses.filter(projectStatus => {
+        const code_phase_type_id = projectStatus.code_phase_type_id;
+        return code_phase_type_id >= 140 && code_phase_type_id <= 149;
+      });
+      const valueA =  constructionStatuses.length? constructionStatuses[0]?.dataValues : undefined;
+      const valueB =  consultantStatuses.length ? consultantStatuses[0]?.dataValues: undefined;
+      const valueC =  contractorStatuses.length ? contractorStatuses[0]?.dataValues: undefined;
+      // make a copy project and add valueA, valueB and valueC to its attribs 
+      project.construction_phase = valueA;
+      project.currentConsultant = valueB;
+      project.currentContractor = valueC;
+      
+      newProjects.push(project);
+    }
+    // console.log('projects', JSON.stringify(newProjects));
+    return newProjects;
   } catch (error) {
     logger.error(error);
     throw error;
