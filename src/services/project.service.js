@@ -2008,12 +2008,20 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
       const construction_phase =  constructionStatuses.length? constructionStatuses[0]?.dataValues : undefined;
       const consultant_phase =  consultantStatuses.length ? consultantStatuses[0]?.dataValues: undefined;
       const contractor_phase =  contractorStatuses.length ? contractorStatuses[0]?.dataValues: undefined;
-      // make a copy project and add valueA, valueB and valueC to its attribs 
-      project.construction_phase = construction_phase;
-      project.consultant_phase = consultant_phase;
-      project.contractor_phase = contractor_phase;
-            
-      newProjects.push(project);
+
+      // // make a copy project and add valueA, valueB and valueC to its attribs 
+      // project.construction_phase = construction_phase;
+      // project.consultant_phase = consultant_phase;
+      // project.contractor_phase = contractor_phase;
+      // // make newproject based on copy of project with each phase 
+      const newProject = {
+        ...project.dataValues,
+        construction_phase,
+        consultant_phase,
+        contractor_phase
+      };
+
+      newProjects.push(newProject);
     }
     // console.log('projects', JSON.stringify(newProjects));
     return newProjects;
