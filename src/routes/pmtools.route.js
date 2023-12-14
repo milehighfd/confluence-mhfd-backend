@@ -288,15 +288,14 @@ const sortInside = (projects, sortvalue, order) => {
 }
 const listProjects = async (req, res) => {
   logger.info(`Starting endpoint pmtools/list with params ${JSON.stringify(req.params, null, 2)}`);
+  const { code_project_type_id } = req.query;
   const {
     offset = 0,
     limit = 120000,
-    code_project_type_id,
     group,
     sortby,
     order,
     filterby,
-    filtervalue,
     favorites,
     myprojects,
     _id 
@@ -316,9 +315,11 @@ const listProjects = async (req, res) => {
     where.project_id = list;
     console.log('list of favorites', list);
   }
-
+  console.log('CODE P TYPE ID ', code_project_type_id);
+  const project_ids = await projectService.filterProjectsBy(body, null, null, code_project_type_id);
+  console.log('OProject ids', project_ids.length);
   logger.info(`Starting function getProjects for endpoint pmtools/list`);
-  let projects = await projectService.getUpcomingProjects({code_project_type_id: code_project_type_id}, null, []);
+  let projects = await projectService.getUpcomingProjects(null, null, project_ids);
   res.send(projects);
   // logger.info(`Finished function getProjects for endpoint pmtools/list`);
   // const ids = projects.map((p) => p.project_id);

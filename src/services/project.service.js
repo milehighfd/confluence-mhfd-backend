@@ -1548,7 +1548,7 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
   const LANDSCAPE_CONTRACTOR_ID = 9;
   const CIVIL_CONTRACTOR_ID = 8;
   const LG_LEAD = 10;
-  let where = { project_id: {[Op.gt]: 20000000}}; // DELETE THIS FILTER
+  let where = {};
   const offset = (+page - 1) * +limit;
   const toRange = +offset + +limit;
  
@@ -1559,8 +1559,14 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
     if (cache) {
       return JSON.parse(JSON.stringify(cache));
     }
+    let project_ids_array;
+    if (project_ids) {
+      project_ids_array = project_ids.map(project => project.project_id);
+      where = {project_id: project_ids_array};
+    }
+
     let projects = await Project.findAll({
-      // where: where,
+      where: where,
       // limit: limitRange,
       // offset: offsetRange,
       // separate: true,
