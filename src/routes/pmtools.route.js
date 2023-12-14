@@ -313,11 +313,8 @@ const listProjects = async (req, res) => {
     logger.info(`Finished function getFavorites for endpoint pmtools/list`);
     list = list.map(result => result.project_id);
     where.project_id = list;
-    console.log('list of favorites', list);
   }
-  console.log('CODE P TYPE ID ', code_project_type_id);
   const project_ids = await projectService.filterProjectsBy(body, null, null, code_project_type_id);
-  console.log('OProject ids', project_ids.length);
   logger.info(`Starting function getProjects for endpoint pmtools/list`);
   let projects = await projectService.getUpcomingProjects(null, null, project_ids);
   res.send(projects);
