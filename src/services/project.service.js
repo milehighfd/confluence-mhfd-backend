@@ -1992,24 +1992,27 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
       const projectStatuses = project.project_statuses;
       const constructionStatuses = projectStatuses.filter(projectStatus => {
         const code_phase_type_id = projectStatus.code_phase_type_id;
+        // Construction ids
         return code_phase_type_id >= 215 && code_phase_type_id <= 224;
       });
       const consultantStatuses = projectStatuses.filter(projectStatus => {
         const code_phase_type_id = projectStatus.code_phase_type_id;
+        // Consultant Procurement ids 
         return code_phase_type_id >= 290 && code_phase_type_id <= 299;
       });
       const contractorStatuses = projectStatuses.filter(projectStatus => {
         const code_phase_type_id = projectStatus.code_phase_type_id;
+        // Contractor Procurement ids
         return code_phase_type_id >= 140 && code_phase_type_id <= 149;
       });
-      const valueA =  constructionStatuses.length? constructionStatuses[0]?.dataValues : undefined;
-      const valueB =  consultantStatuses.length ? consultantStatuses[0]?.dataValues: undefined;
-      const valueC =  contractorStatuses.length ? contractorStatuses[0]?.dataValues: undefined;
+      const construction_phase =  constructionStatuses.length? constructionStatuses[0]?.dataValues : undefined;
+      const consultant_phase =  consultantStatuses.length ? consultantStatuses[0]?.dataValues: undefined;
+      const contractor_phase =  contractorStatuses.length ? contractorStatuses[0]?.dataValues: undefined;
       // make a copy project and add valueA, valueB and valueC to its attribs 
-      project.construction_phase = valueA;
-      project.currentConsultant = valueB;
-      project.currentContractor = valueC;
-      
+      project.construction_phase = construction_phase;
+      project.consultant_phase = consultant_phase;
+      project.contractor_phase = contractor_phase;
+            
       newProjects.push(project);
     }
     // console.log('projects', JSON.stringify(newProjects));
