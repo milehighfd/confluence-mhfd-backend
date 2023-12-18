@@ -2011,10 +2011,14 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
         // Contractor Procurement ids
         return code_phase_type_id >= 140 && code_phase_type_id <= 149;
       });
+      const fundingConsultantSelection = projectStatuses.filter(projectStatus => {
+        const code_phase_type_id = projectStatus.code_phase_type_id;
+        return code_phase_type_id == 61;
+      });
       const construction_phase =  constructionStatuses.length? constructionStatuses[0]?.dataValues : undefined;
       const consultant_phase =  consultantStatuses.length ? consultantStatuses[0]?.dataValues: undefined;
       const contractor_phase =  contractorStatuses.length ? contractorStatuses[0]?.dataValues: undefined;
-
+      const fundingConsultantSelectionPhase = fundingConsultantSelection.length ? fundingConsultantSelection[0]?.dataValues: undefined;
       // // make a copy project and add valueA, valueB and valueC to its attribs 
       // project.construction_phase = construction_phase;
       // project.consultant_phase = consultant_phase;
@@ -2024,7 +2028,8 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
         ...project.dataValues,
         construction_phase,
         consultant_phase,
-        contractor_phase
+        contractor_phase,
+        fundingConsultantSelectionPhase
       };
 
       newProjects.push(newProject);
