@@ -33,11 +33,14 @@ const CodeServiceArea = db.codeServiceArea;
 const CodeLocalGovernment = db.codeLocalGoverment;
 const CodeStatusType = db.codeStatusType;
 const BusinessAssociate = db.businessAssociates;
+const ProjectStaff = db.projectStaff;
 const Configuration = db.configuration;
 const BoardProjectCost = db.boardProjectCost;
 const ProjectCost = db.projectCost;
 const CodeProjectPartnerType = db.codeProjectPartnerType;
 const BusinessAssociates = db.businessAssociates;
+const BusinessAssociateContact = db.businessAssociateContact;
+const CodeProjectStaffRole = db.codeProjectStaffRole;
 
 const insertUniqueObject = (array, idPropertyName, groupPropertyKeyName, object) => {
   const isDuplicate = array.some(item => {
@@ -1875,12 +1878,41 @@ router.get('/filters', async (req, res) => {
       name: sponsorType.business_name,
       type: 'project_partners'
     }));
+    const MHFD_LEAD = 1 ;
+    const MHFD_leads = await ProjectStaff.findAll(
+      {
+        include: [{
+          model: BusinessAssociateContact,
+          required: true,           
+        }, {
+          model: CodeProjectStaffRole,
+          required: true,
+          where: {
+            code_project_staff_role_type_id: MHFD_LEAD,
+          }
+        }]
+      }
+    );
+    const MhfdLeadsMapped = MHFD_leads.map(MhfdLead => ({
+      id: MhfdLead?.project_staff_id,
+      name: MhfdLead?.business_associate_contact?.contact_name,
+      type: 'mhfd_lead'
+    }));
+    // make an array with all values of mhfdleadmapped but with distinct name for mhfdleadsmapped
+    const distinctMhfdLeads = MhfdLeadsMapped.filter((thing, index, self) =>
+      index === self.findIndex((t) => (
+        t.name === thing.name
+      ))
+    );
+    
+
     res.send([
       ...statusTypesMapped,
       ...countyTypesMapped,
       ...serviceAreaTypesMapped,
       ...localGovernmentTypesMapped,
-      ...sponsorTypesMapped
+      ...sponsorTypesMapped,
+      ...distinctMhfdLeads
     ]);    
   } catch (error) {
     console.error(`Error getting filters: ${error}`);
