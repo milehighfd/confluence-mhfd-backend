@@ -659,20 +659,8 @@ const updateProjectNote = async (req, res) => {
 const getProjectStreams = async (req, res) => {
   try {
     const { project_id } = req.params;
-    const projectStreams = await ProjectStream.findAll({
-      attributes: ['project_stream_id', 'project_id', 'stream_id'],
-      where: {
-        project_id: project_id
-      },
-      include: [{
-        model: Stream,
-        attributes: ['stream_name', 'stream_id'],
-        where: {
-          stream_name: {
-            [Op.ne]: null
-          }
-        }
-      }]
+    const projectStreams = await Stream.findAll({
+      attributes: ['stream_name', 'stream_id','mhfd_code'],
     });
 
     const primaryStream = await PrimaryStream.findOne({
@@ -694,12 +682,7 @@ const getProjectStreams = async (req, res) => {
       }]
     });
 
-    const uniqueProjectStreams = projectStreams.filter((ps, index, self) =>
-      index === self.findIndex((t) => (
-        t.stream_id === ps.stream_id
-      ))
-    );
-    return ({ projectStreams: uniqueProjectStreams, primaryStream: primaryStream });
+    return ({ projectStreams , primaryStream: primaryStream });
   } catch (e) {
     console.error(e);
     res.status(500).send({ message: 'Error getting project streams' });
