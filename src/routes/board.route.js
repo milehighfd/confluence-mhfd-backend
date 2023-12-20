@@ -1894,7 +1894,7 @@ router.get('/filters', async (req, res) => {
       }
     );
     const MhfdLeadsMapped = MHFD_leads.map(MhfdLead => ({
-      id: MhfdLead?.project_staff_id,
+      id: MhfdLead?.business_associate_contact?.business_associate_contact_id,
       name: MhfdLead?.business_associate_contact?.contact_name,
       type: 'mhfd_lead'
     }));
