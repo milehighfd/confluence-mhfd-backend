@@ -28,6 +28,7 @@ const BusinessAssociates = db.businessAssociates;
 const ProjectPartner = db.projectPartner;
 const ProjectStream = db.project_stream;
 const Stream = db.stream;
+const StreamSingular = db.streamSingular;
 const PrimaryStream = db.primaryStream;
 const ProjectStaff = db.projectStaff;
 const BusinessAssociateContact = db.businessAssociateContact;
@@ -659,8 +660,48 @@ const updateProjectNote = async (req, res) => {
 const getProjectStreams = async (req, res) => {
   try {
     const { project_id } = req.params;
-    const projectStreams = await Stream.findAll({
-      attributes: ['stream_name', 'stream_id','mhfd_code'],
+    let projectStreams = await ProjectStream.findAll({
+      attributes: ['project_stream_id', 'project_id', 'stream_id'],
+      where: {
+        project_id: project_id
+      },
+      include: [{
+        model: Stream,
+        attributes: ['stream_name', 'stream_id','MHFD_Code'],
+        required: true,
+        as: 'streamData'
+      }]
+    });
+    let uniqueProjectStreams;
+    if (projectStreams.length === 0) {
+      projectStreams = await StreamSingular.findAll({
+        attributes: ['stream_id', 'stream_name', 'mhfd_code_stream'],        
+      });
+      uniqueProjectStreams = projectStreams.map(stream => ({
+        ...stream.get(),
+        project_stream_id: -1
+      }));
+    } else {
+      uniqueProjectStreams = projectStreams.reduce((unique, ps) => {
+        console.log(ps)
+        if (!unique.find(item => item.stream_id === ps.stream_id)) {
+          unique.push({
+            project_stream_id: ps.project_stream_id,
+            project_id: ps.project_id,
+            stream_id: ps.stream_id,
+            stream_name: ps.streamData?.stream_name,
+            mhfd_code_stream: ps.streamData?.MHFD_Code,
+            project_stream_id: ps.project_stream_id,
+          });
+        }
+        return unique;
+      }, []);
+    }
+
+    uniqueProjectStreams.sort((a, b) => {
+      if (a.stream_name === null) return 1;
+      if (b.stream_name === null) return -1;
+      return a.stream_name.localeCompare(b.stream_name);
     });
 
     const primaryStream = await PrimaryStream.findOne({
@@ -681,8 +722,19 @@ const getProjectStreams = async (req, res) => {
         }]
       }]
     });
+    let flatPrimaryStream;
+    
+    if (primaryStream) {
+      flatPrimaryStream = {
+        primary_stream_id: primaryStream.primary_stream_id,
+        project_stream_id: primaryStream.ProjectStream.project_stream_id,
+        project_id: primaryStream.ProjectStream.project_id,
+        stream_id: primaryStream.ProjectStream.stream_id,
+        stream_name: primaryStream.ProjectStream.Stream.stream_name,
+      };
+    }
 
-    return ({ projectStreams , primaryStream: primaryStream });
+    return ({ projectStreams: uniqueProjectStreams, primaryStream: flatPrimaryStream });
   } catch (e) {
     console.error(e);
     res.status(500).send({ message: 'Error getting project streams' });

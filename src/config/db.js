@@ -46,6 +46,7 @@ import projectAttachment from 'bc/models/project_attachment.model.js';
 import projectLocalGovernment from 'bc/models/project_local_government.model.js';
 import projectStaff from 'bc/models/project_staff.model.js';
 import stream from 'bc/models/stream.model.js';
+import streamSingular from 'bc/models/stream_singular.model.js';
 import businessAssociateContact from 'bc/models/business_associate_contact.model.js';
 import businessAdress from 'bc/models/business_address.model.js';
 import businessAssociates from 'bc/models/business_associates.model.js';
@@ -168,6 +169,7 @@ db.projectLocalGovernment = projectLocalGovernment(sequelize, Sequelize);
 db.projectStaff = projectStaff(sequelize, Sequelize);
 db.codeProjectStaffRole = CodeProjectStaffRole(sequelize, Sequelize);
 db.stream = stream(sequelize, Sequelize);
+db.streamSingular = streamSingular(sequelize, Sequelize);
 db.businessAssociateContact = businessAssociateContact(sequelize, Sequelize);
 db.businessAdress = businessAdress(sequelize, Sequelize);
 db.businessAssociates = businessAssociates(sequelize, Sequelize);
@@ -329,6 +331,14 @@ db.project.hasMany(db.project_stream, {foreignKey: 'project_id'});
 db.project.hasMany(db.project_stream, {foreignKey: 'project_id', as: 'currentStream'});
 db.project_stream.belongsTo(
   db.stream,
+  { foreignKey: 'stream_id'}
+)
+db.project_stream.belongsTo(
+  db.stream,
+  { foreignKey: 'stream_id', sourceKey: 'stream_id', as: 'streamData'}
+)
+db.project_stream.belongsTo(
+  db.streamSingular,
   { foreignKey: 'stream_id'}
 )
 db.primaryStream.belongsTo(
