@@ -161,7 +161,9 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         const COST_ID = 4;
         const costRes = await updateCosts(project_id, additionalcost, COST_ID, additionalcostdescription, creator, overheadCostIds, overhead, overheadcostdescription, userChangedOverhead, booleanUserChangedAdditional, transaction);
         answer.costRes = costRes;
+        console.log('Before subtotal');
         const saveSubtotal = await saveSubtotalcost(project_id, subtotalcost, creator, transaction);
+        console.log('After subtotal');
         answer.saveSubtotal = saveSubtotal;
         let savingEstimatedCostInput = estimatedcost;
         let sourceFromSystem = true;
@@ -214,7 +216,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
     
     return answer;
   } catch (error) {
-    logger.error('error saving extra fields');
+    logger.error('error saving extra fields '+error);
     throw error;
   }
 };
@@ -327,10 +329,15 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
     if (cover !== ''){
       await toggleName(cover, project_id, transaction);
     }    
+    console.log('XA');
     const project_attachments = await uploadFiles(user, files, project_id, cover, transaction);
+    console.log('XB');
     const updateBoardWR = await editWRBoard(body, user, type, subtype, transaction, project_id);
+    console.log('XX');
     const boardData = await updateProjectsInBoard(project_id, projectname, type, subtype, transaction);
+    console.log('XD');
     const geoInfo = await parseGeographicInfoAndUpdate(body, project_id, user, transaction);
+    console.log('XE');
     const project_partner = await updateProjectPartner(
       sponsor,
       cosponsor,
@@ -345,7 +352,7 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
     return composeData;
   } catch (error) {    
     await transaction.rollback();
-    logger.error(error);
+    logger.error('Error at Edit project workflow ' + error);
     throw error;
   };
 }
