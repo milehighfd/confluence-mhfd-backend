@@ -18,13 +18,6 @@ export const saveEstimatedCost = async (project_id, estimatedCost, creator, esti
     console.log('saveEstimatedCost', project_id, estimatedCost, sourceFromSystem, CODE_DATA_SOURCE_TYPE_VALUE);
     const descriptionHasChanged = currentEstimatedCost[0]?.cost_description != estimatedcostDescription;
     if (hasChanged) {
-      const pc = await ProjectCost.update({
-        
-      }, {
-        where: {
-          
-        }
-      });
       const findOne = await ProjectCost.findOne({
         where: {
           project_id: project_id ,
