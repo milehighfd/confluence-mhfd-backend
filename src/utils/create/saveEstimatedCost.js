@@ -27,7 +27,7 @@ export const saveEstimatedCost = async (project_id, estimatedCost, creator, esti
       console.log('Found one ', findOne);
       findOne.is_active = 0,
       findOne.last_modified = moment().format('YYYY-MM-DD HH:mm:ss'),
-      modified_by = creator
+      findOne.modified_by = creator
       await findOne.save({ transaction: transaction });
 
       let mainModifiedDate = new Date();
