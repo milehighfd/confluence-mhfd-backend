@@ -25,10 +25,12 @@ export const saveEstimatedCost = async (project_id, estimatedCost, creator, esti
         }
       }, { transaction: transaction });
       console.log('Found one ', findOne);
-      findOne.is_active = 0,
-      findOne.last_modified = moment().format('YYYY-MM-DD HH:mm:ss'),
-      findOne.modified_by = creator
-      await findOne.save({ transaction: transaction });
+      if ( findOne ) {
+        findOne.is_active = 0,
+        findOne.last_modified = moment().format('YYYY-MM-DD HH:mm:ss'),
+        findOne.modified_by = creator
+        await findOne.save({ transaction: transaction });
+      }
 
       let mainModifiedDate = new Date();
       const newProjectCostData = {
@@ -52,8 +54,10 @@ export const saveEstimatedCost = async (project_id, estimatedCost, creator, esti
         }
       }, { transaction: transaction });
       console.log('Found one ', findOne);
-      findOne.cost_description = estimatedcostDescription,
-      await findOne.save({ transaction: transaction });
+      if (findOne) {
+        findOne.cost_description = estimatedcostDescription,
+        await findOne.save({ transaction: transaction });
+      }
       // const pc = await ProjectCost.update({
       //   cost_description: estimatedcostDescription,
       // }, {

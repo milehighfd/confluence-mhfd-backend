@@ -26,11 +26,12 @@ export const saveSubtotalcost = async (project_id, subtotalcost, creator, transa
           code_cost_type_id: PROPOSED_CODE_COST
         }
       }, { transaction: transaction });
-      console.log('Found one ', findOne);
-      findOne.is_active = 0;
-      findOne.last_modified = moment().format('YYYY-MM-DD HH:mm:ss');
-      findOne.modified_by = 'creatorFAKE@GMAIL>COM';
-      await findOne.save({ transaction: transaction });
+      if (findOne) {
+        findOne.is_active = 0;
+        findOne.last_modified = moment().format('YYYY-MM-DD HH:mm:ss');
+        findOne.modified_by = 'creatorFAKE@GMAIL>COM';
+        await findOne.save({ transaction: transaction });
+      }
       // const pc = await ProjectCost.update({
       //   is_active: 0,
       //   last_modified: moment().format('YYYY-MM-DD HH:mm:ss'),
