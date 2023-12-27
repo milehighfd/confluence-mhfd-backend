@@ -567,12 +567,13 @@ router.post('/board-for-positions2', async (req, res) => {
     const boardProjects = (await BoardProject.findAll({
       attributes,
       where,
-      // order: [[rankColumnName, 'ASC']],
+      order: [[{model: BoardProjectCost, as: 'boardProjectToCostData'},'sort_order', 'ASC']],
+      // [{ model: BoardProjectCost, as: 'boardProjectToCostData' }, 'sort_order', 'ASC']
       include:[{
         model: BoardProjectCost,
         as: 'boardProjectToCostData',
         required: true,
-        order: [['sort_order', 'ASC']],
+        // order: [['sort_order', 'ASC']],
         where: {
           req_position: position
         },
