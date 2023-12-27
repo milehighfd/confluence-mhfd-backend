@@ -223,6 +223,7 @@ db.project.hasMany(db.boardProject, {foreignKey: 'project_id', sourceKey: 'proje
 db.boardProject.hasOne(db.codeStatusType, {foreignKey: 'code_status_type_id', sourceKey: 'code_status_type_id'});
 db.boardProjectCost.hasMany(db.boardProject, {foreignKey: 'board_project_id'});
 db.boardProjectCost.hasOne(db.boardProject, {foreignKey: 'board_project_id', sourceKey: 'board_project_id', as: 'boardProjectData'});
+db.boardProject.hasMany(db.boardProjectCost, {foreignKey: 'board_project_id', sourceKey: 'board_project_id', as: 'boardProjectToCostData'});
 db.boardProjectCost.hasMany(db.projectCost, {foreignKey: 'project_cost_id'});
 db.boardProjectCost.hasOne(db.projectCost, {foreignKey: 'project_cost_id', sourceKey: 'project_cost_id', as: 'projectCostData'});
 db.projectCost.hasOne(db.boardProjectCost, {foreignKey: 'project_cost_id', sourceKey: 'project_cost_id', as: 'boardProjectCostData'});

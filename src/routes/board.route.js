@@ -16,7 +16,7 @@ import moment from 'moment';
 import { isOnWorkspace, isOnFirstYear } from 'bc/services/board-project.service.js';
 import sequelize, { where } from 'sequelize';
 import authOnlyEmail from 'bc/auth/auth-only-email.js';
-import { CODE_DATA_SOURCE_TYPE, OFFSET_MILLISECONDS } from 'bc/lib/enumConstants.js';
+import { CODE_DATA_SOURCE_TYPE, COST_IDS, OFFSET_MILLISECONDS } from 'bc/lib/enumConstants.js';
 
 const { Op } = sequelize;
 const router = express.Router();
@@ -489,6 +489,7 @@ router.post('/board-for-positions2', async (req, res) => {
       locality,
       projecttype,
     };
+    // specific for two localities
     boardWhere = applyLocalityCondition(boardWhere);
     const boards = await Board.findAll({
       attributes: ['board_id', 'type'],
@@ -559,29 +560,50 @@ router.post('/board-for-positions2', async (req, res) => {
     if (status_board && status_board.length > 0) {
       where.code_status_type_id = status_board;
     }
+    console.log('where', {
+      is_active: true,
+      code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
+    });
     const boardProjects = (await BoardProject.findAll({
       attributes,
       where,
       // order: [[rankColumnName, 'ASC']],
+      include:[{
+        model: BoardProjectCost,
+        as: 'boardProjectToCostData',
+        required: true,
+        order: [['sort_order', 'ASC']],
+        where: {
+          req_position: position
+        },
+        include: [
+          {
+            model: ProjectCost,
+            as: 'projectCostData',
+            required: true,
+            where: {
+              is_active: true,
+              code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
+            }
+          }
+        ]
+      }]
     })).map(d => d.dataValues);
-    
+    console.log('\n\n\n *************** \n\n\n THIS IS THE DATA NEEDED  >', JSON.stringify(boardProjects), '\n\n\n\n');
+    // is not in workspace
     if (`${position}` !== '0') {
       const boardProjectIds = boardProjects.map((boardProject) => boardProject.board_project_id);
-      const MHFD_FUNDING = 88; // TODO export to constant
       
       const projectIds = boardProjects.map((boardProject) => boardProject.project_id);
       console.log('Project ids for search mhfd partner of ', projectIds);
       const MHFD_Partner = await ProjectPartner.findAll({
         where: {
           project_id: { [Op.in]: projectIds },
-          code_partner_type_id: MHFD_FUNDING
+          code_partner_type_id: COST_IDS.MHFD_CODE_COST_TYPE_ID
         }
       });
 
       const Mhfd_ids = MHFD_Partner.map((mhfd) => mhfd.project_partner_id);
-      
-      const WORK_PLAN_CODE_COST_TYPE_ID = 21;
-      const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
       const projectCostValues = await BoardProjectCost.findAll({
         attributes: ['req_position', 'board_project_id'],
         include: [{
@@ -591,7 +613,7 @@ router.post('/board-for-positions2', async (req, res) => {
           where: {
             is_active: true,
             project_partner_id: { [Op.in]: Mhfd_ids },
-            code_cost_type_id: isWorkPlan ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID
+            code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID
           }
         }],
         where: {
