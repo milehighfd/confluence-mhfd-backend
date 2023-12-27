@@ -8,6 +8,7 @@ import { projectsByFiltersForIds, getIdsInBbox } from 'bc/utils/functionsProject
 import auth from 'bc/auth/auth.js';
 import { CARTO_URL, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
 import sequelize from 'sequelize';
+import groupService from 'bc/services/group.service.js';
 
 const Op = sequelize.Op;
 const ProjectCost = db.projectCost;
@@ -25,6 +26,12 @@ const ProjectDetail = db.projectDetail;
 const CodeProjectPartnerType = db.codeProjectPartnerType;
 const BusinessAssociates = db.businessAssociates;
 const ProjectPartner = db.projectPartner;
+const ProjectStream = db.project_stream;
+const Stream = db.stream;
+const StreamSingular = db.streamSingular;
+const PrimaryStream = db.primaryStream;
+const ProjectStaff = db.projectStaff;
+const BusinessAssociateContact = db.businessAssociateContact;
 
 const router = express.Router();
 
@@ -299,6 +306,60 @@ const proposedActionHistory = async(req, res) => {
   res.send(proposedActionHist);
 }
 
+const projectStaffHistory = async(req, res) => {
+  try {
+    const project_id = req.params['project_id'];
+    let projectStaffHist = await ProjectStaff.findAll({
+      where: {
+        project_id: project_id,
+      },
+      attributes: ['last_modified_date'],
+      order: [['last_modified_date', 'DESC']]
+    });
+    for(let element of projectStaffHist) {
+      const modifiedUser = element.last_modified_by;
+      let userModified = await User.findOne({
+          attributes: ['firstName', 'lastName'],
+          where: { email: modifiedUser }
+      });
+      element.dataValues.userModified = userModified;
+    }
+    res.send(projectStaffHist);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: 'Error retrieving project staff history' });
+  }
+}
+
+const primaryStreamsHistory = async (req, res) => {
+  try {
+    const project_id = req.params['project_id'];
+    const projectStream = await ProjectStream.findAll({
+      where: {
+        project_id: project_id,
+      },
+      include: [{
+        required: true,
+        model: PrimaryStream,
+        attributes: ['primary_stream_id', 'project_stream_id', 'code_data_source_update_type_id', 'created_by', 'last_modified_by', 'is_active', 'created_date', 'modified_date'],
+      }],
+    });
+    const primaryStream = projectStream.map(ps => ps.primaryStream).filter(ps => ps);
+    for (let element of primaryStream) {
+      const modifiedUser = element.primaryStream.last_modified_by;
+      let userModified = await User.findOne({
+        attributes: ['firstName', 'lastName'],
+        where: { email: modifiedUser }
+      });
+      element.dataValues.userModified = userModified;
+    }
+    res.send(primaryStream);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: 'Error retrieving primary streams history' });
+  }
+}
+
 const projectHistory = async(req, res) => {
   const project_id = req.params['project_id'];
   let projectHistory = await Project.findAll({
@@ -512,7 +573,6 @@ const searchImport = async (req, res) => {
   const { keyword, locality, year } = req.body;
   try {
     const projects = await projectService.projectSearch(keyword);
-    const CODE_SPONSOR = 11;
     let filteredProjects = [];
     const isNumeric = /^\d+$/.test(keyword);
     if (isNumeric) {
@@ -526,84 +586,31 @@ const searchImport = async (req, res) => {
           return regex.test(project.project_name);
         });
       });
-      const getProjectsBySponsor = await Project.findAll({
-        attributes: ['project_id'],
-        include: [{
-          model: ProjectPartner,
-          attributes: [],
-          where: {
-            code_partner_type_id: CODE_SPONSOR
-          },
-          required: true,
-          include: [{
-            model: BusinessAssociates,
-            attributes: ['business_name'],
-            where: {
-              business_name: {
-                [Op.like]: `%${keyword}%`
-              }
-            },
-            required: true
-          }]
-        }]
-      });
+      const getProjectsBySponsor = await projectService.getProjectsBySponsor(keyword);
       const projectsIds = filteredProjects.map(p => p.project_id);
       const projectsBySponsorIds = getProjectsBySponsor.map(p => p.project_id);
       const mergedProjects = [...projectsIds, ...projectsBySponsorIds];
       filteredProjects = mergedProjects
     }
-    console.log(filteredProjects);    
-    const projectsInBoard = await BoardProject.findAll({
-      attributes : ['project_id'],
-      where: {
-        project_id: filteredProjects
-      },
-      include: [{
-        model: Board,
-        attributes: ['locality', 'year', 'projecttype', 'type'],
-        where: { 
-          locality: locality,
-          year: {
-            [Op.not]: year
-          }
-        },
-        required: true
-      },{
-        model: Project,
-        attributes: ['project_name'],
-        as: 'projectData',
-        required: true,
-        include: [{
-          model: ProjectPartner,
-          attributes: ['project_partner_id', 'code_partner_type_id'],
-          where: {
-            code_partner_type_id: CODE_SPONSOR
-          },
-          required: true,
-          include: [{
-            model: BusinessAssociates,
-            attributes: ['business_name']
-          }]
-        }],        
-      }]
-    });
-    const projectsToAvoid = await BoardProject.findAll({
-      attributes : ['project_id'],
-      include: [{
-        model: Board,
-        attributes: ['locality', 'year', 'projecttype', 'type'],
-        where: {
-          year: year
-        },
-        required: true
-      }]
-    });
+    let projectsInBoard = [];
+    if (locality !== 'MHFD District Work Plan') {
+      projectsInBoard = await projectService.getProjectsInBoard(locality);
+    }else{
+      projectsInBoard = await projectService.getProjectsForMHFD(filteredProjects);
+    }
+    const projectsInBoardIds = projectsInBoard.map(p => p.project_id);
+    let intersection = projectsInBoardIds;
+    if (locality !== 'MHFD District Work Plan') {
+      intersection = projectsInBoardIds.filter(id => filteredProjects.includes(id));
+    }
+    const projectsToAvoid = await projectService.getProjectsToAvoid(year);
     const projectsToAvoidIds = projectsToAvoid.map(p => p.project_id);
     const filteredProjectsInBoard = projectsInBoard.filter(p => !projectsToAvoidIds.includes(p.project_id));
-    const uniqueProjectsInBoard = Array.from(new Set(filteredProjectsInBoard.map(p => p.project_id)))
-    .map(project_id => {
-      return projectsInBoard.find(p => p.project_id === project_id);
-    });
+    const intersectionInBoard = filteredProjectsInBoard.filter(p => intersection.includes(p.project_id));
+    const uniqueProjectsInBoard = Array.from(new Set(intersectionInBoard.map(p => p.project_id)))
+      .map(project_id => {
+        return projectsInBoard.find(p => p.project_id === project_id);
+      });
     res.status(200).send(uniqueProjectsInBoard);
   } catch (error) {
     console.error(error);
@@ -650,6 +657,276 @@ const updateProjectNote = async (req, res) => {
   }
 };
 
+const getProjectStreams = async (req, res) => {
+  try {
+    const { project_id } = req.params;
+    let projectStreams = await ProjectStream.findAll({
+      attributes: ['project_stream_id', 'project_id', 'stream_id'],
+      where: {
+        project_id: project_id
+      },
+      include: [{
+        model: Stream,
+        attributes: ['stream_name', 'stream_id','MHFD_Code'],
+        required: true,
+        as: 'streamData'
+      }]
+    });
+    let uniqueProjectStreams;
+    if (projectStreams.length === 0) {
+      projectStreams = await StreamSingular.findAll({
+        attributes: ['stream_id', 'stream_name', 'mhfd_code_stream'],        
+      });
+      uniqueProjectStreams = projectStreams.map(stream => ({
+        ...stream.get(),
+        project_stream_id: -1
+      }));
+    } else {
+      uniqueProjectStreams = projectStreams.reduce((unique, ps) => {
+        console.log(ps)
+        if (!unique.find(item => item.stream_id === ps.stream_id)) {
+          unique.push({
+            project_stream_id: ps.project_stream_id,
+            project_id: ps.project_id,
+            stream_id: ps.stream_id,
+            stream_name: ps.streamData?.stream_name,
+            mhfd_code_stream: ps.streamData?.MHFD_Code,
+            project_stream_id: ps.project_stream_id,
+          });
+        }
+        return unique;
+      }, []);
+    }
+
+    uniqueProjectStreams.sort((a, b) => {
+      if (a.stream_name === null) return 1;
+      if (b.stream_name === null) return -1;
+      return a.stream_name.localeCompare(b.stream_name);
+    });
+
+    const primaryStream = await PrimaryStream.findOne({
+      attributes: ['primary_stream_id', 'project_stream_id'],
+      where: {
+        is_active: true
+      },
+      include: [{
+        model: ProjectStream,
+        attributes: ['project_stream_id', 'project_id', 'stream_id'],
+        required: true,
+        where: {
+          project_id: project_id
+        },
+        include: [{
+          model: Stream,
+          attributes: ['stream_name', 'stream_id']
+        }]
+      }]
+    });
+    let flatPrimaryStream;
+    
+    if (primaryStream) {
+      flatPrimaryStream = {
+        primary_stream_id: primaryStream.primary_stream_id,
+        project_stream_id: primaryStream.ProjectStream.project_stream_id,
+        project_id: primaryStream.ProjectStream.project_id,
+        stream_id: primaryStream.ProjectStream.stream_id,
+        stream_name: primaryStream.ProjectStream.Stream.stream_name,
+      };
+    }
+
+    return ({ projectStreams: uniqueProjectStreams, primaryStream: flatPrimaryStream });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: 'Error getting project streams' });
+  }
+}
+
+const getProjectStaff = async (req, res) => {
+  try {
+    const CODE_MHFD_LEAD = 1;
+    const { project_id } = req.params;
+    const mhfdLead = await ProjectStaff.findOne({
+      where: {
+        project_id: project_id,
+        code_project_staff_role_type_id: CODE_MHFD_LEAD,
+        is_active: true
+      },
+      include: [{
+        model: BusinessAssociateContact,
+        required: true,
+      }],
+    });
+    const mhfdStaff = await groupService.getMhfdStaff();
+    return ({ mhfdLead: mhfdLead, mhfdStaff: mhfdStaff });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({message: 'Error getting project staff'});
+  }
+}
+
+const getProjectLocation = async (req, res) => {
+  try {
+    const { project_id } = req.params;
+    const project = await Project.findOne({
+      attributes: ['project_id', 'location','onbase_project_number','is_county_wide'],
+      where: {
+        project_id: project_id
+      }
+    });
+    return project;
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({message: 'Error getting project location'});
+  }
+}
+
+const getActiveDetails = async (req, res) => {
+  try {
+    const { project_id } = req.params;
+
+    const [projectStreams, projectStaff, projectLocation] = await Promise.all([
+      getProjectStreams({ params: { project_id } }),
+      getProjectStaff({ params: { project_id } }),
+      getProjectLocation({ params: { project_id } })
+    ]);
+
+    const projectDetails = {
+      projectStreams,
+      projectStaff,
+      projectLocation
+    };
+
+    res.status(200).send(projectDetails);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: 'Error getting project details' });
+  }
+}
+
+const getLastProjectDetails = async (project_id) => {
+  const CODE_MHFD_LEAD = 1;
+  const getLastActiveData = await Project.findOne({
+    attributes: ['location'],
+    where: {
+      project_id: project_id
+    }
+  });
+  const lastMhfdLead = await ProjectStaff.findOne({
+    where: {
+      project_id: project_id,
+      code_project_staff_role_type_id: CODE_MHFD_LEAD,
+      is_active: true
+    },
+    include: [{
+      model: BusinessAssociateContact,
+      required: true,
+    }],
+  });
+  const LastPrimaryStream = await PrimaryStream.findOne({
+    attributes: ['primary_stream_id', 'project_stream_id'],
+    where: {
+      is_active: true
+    },
+    include: [{
+      model: ProjectStream,
+      attributes: ['project_stream_id', 'project_id', 'stream_id'],
+      required: true,
+      where: {
+        project_id: project_id
+      },
+      include: [{
+        model: Stream,
+        attributes: ['stream_name', 'stream_id']
+      }]
+    }]
+  });
+  const lastLocation = getLastActiveData?.location;
+  const lastMhfdLeadId = lastMhfdLead?.business_associate_contact_id;
+  const lastProjectStreamId = LastPrimaryStream?.project_stream_id;
+  const lastPrimaryStreamId = LastPrimaryStream?.primary_stream_id;
+
+  return {
+    lastLocation,
+    lastMhfdLeadId,
+    lastProjectStreamId,
+    lastPrimaryStreamId
+  };
+}
+
+const updateActiveDetails = async (req, res) => {
+  const { project_id, location, mhfdLead, primaryStream } = req.body;
+  const transaction = await db.sequelize.transaction();
+  const creator = req.user.email;
+  try {
+    const CODE_MHFD_LEAD = 1;
+    const CONF_USER = 1;
+    const lastProjectDetails = await getLastProjectDetails(project_id);
+    const date = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    if (lastProjectDetails.lastLocation !== location) {
+      await Project.update({ 
+        location: location,
+        last_modified_by: creator,
+        modified_date: date
+      }, {
+        where: { project_id: project_id },
+        transaction: transaction
+      });
+    }
+    if (lastProjectDetails.lastMhfdLeadId !== mhfdLead) {
+      await ProjectStaff.update({
+        is_active: false,
+        last_modified_date: date
+      }, {
+        where: { 
+          project_id: project_id,
+          code_project_staff_role_type_id: CODE_MHFD_LEAD
+        },
+        transaction: transaction
+      });
+      await ProjectStaff.create({
+        project_id: project_id,
+        business_associate_contact_id: mhfdLead,
+        code_project_staff_role_type_id: CODE_MHFD_LEAD,
+        last_modified_date : date,
+        effective_date: date,
+        is_active: true
+      }, {
+        transaction: transaction
+      });
+    }
+    if (lastProjectDetails.lastProjectStreamId !== primaryStream) {
+      if (lastProjectDetails.lastPrimaryStreamId) {
+        await PrimaryStream.update({ 
+          is_active: false, 
+          last_update_by: creator,
+          last_modified_by : date
+        }, {
+          where: { primary_stream_id: lastProjectDetails.lastPrimaryStreamId },
+          transaction: transaction
+        });
+      }      
+      await PrimaryStream.create({
+        project_stream_id: primaryStream,
+        code_data_source_update_type_id: CONF_USER,
+        created_by: creator,
+        last_modified_by: creator,
+        is_active: true
+      }, {
+        transaction: transaction
+      });
+    }
+
+    await transaction.commit();
+
+    res.status(200).send({ message: 'Project details updated successfully' });
+  } catch (error) {
+    console.error(error);
+    await transaction.rollback();    
+    res.status(500).send({ message: 'Error updating project details' });
+  }
+}
+
 router.get('/bbox/:project_id', getBboxProject);
 router.put('/archive/:project_id', [auth], archiveProject);
 router.post('/check-project-name', checkProjectName)
@@ -671,5 +948,9 @@ router.get('/complete/attachmentHistory/:project_id', attachmentHistory);
 router.get('/complete/detailHistory/:project_id', detailHistory);
 router.get('/complete/projectHistory/:project_id', projectHistory);
 router.get('/complete/proposedActionHistory/:project_id', proposedActionHistory);
+router.get('/complete/project-streams/:project_id', primaryStreamsHistory);
+router.get('/complete/project-staff/:project_id', projectStaffHistory);
+router.get('/active-details/:project_id', getActiveDetails);
+router.post('/active-details', [auth], updateActiveDetails);
 
 export default router;

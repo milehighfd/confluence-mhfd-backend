@@ -27,10 +27,14 @@ export default (sequelize, DataType) => {
     },
     created_by: {
       type: DataType.STRING
+    },
+    sort_order: {
+      type: DataType.INTEGER
     }
   }, {
     freezeTableName: true,
-    tableName: 'board_project_cost'
+    tableName: 'board_project_cost',
+    hasTrigger: true
   });
   return boardProjectCost
 }

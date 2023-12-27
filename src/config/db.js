@@ -41,10 +41,12 @@ import codeStudyReason from 'bc/models/code_study_reason.model.js';
 import codeServiceArea from 'bc/models/code_service_area.model.js';
 import localGovernment from 'bc/models/local_government.model.js';
 import project_stream from 'bc/models/project_stream.model.js';
+import primaryStream from 'bc/models/primary_stream.model.js';
 import projectAttachment from 'bc/models/project_attachment.model.js';
 import projectLocalGovernment from 'bc/models/project_local_government.model.js';
 import projectStaff from 'bc/models/project_staff.model.js';
 import stream from 'bc/models/stream.model.js';
+import streamSingular from 'bc/models/stream_singular.model.js';
 import businessAssociateContact from 'bc/models/business_associate_contact.model.js';
 import businessAdress from 'bc/models/business_address.model.js';
 import businessAssociates from 'bc/models/business_associates.model.js';
@@ -161,11 +163,13 @@ db.codeServiceArea = codeServiceArea(sequelize, Sequelize);
 db.codeLocalGoverment = codeLocalGoverment(sequelize, Sequelize);
 db.localGovernment = localGovernment(sequelize, Sequelize);
 db.project_stream = project_stream(sequelize, Sequelize);
+db.primaryStream = primaryStream(sequelize, Sequelize);
 db.projectAttachment = projectAttachment(sequelize, Sequelize);
 db.projectLocalGovernment = projectLocalGovernment(sequelize, Sequelize);
 db.projectStaff = projectStaff(sequelize, Sequelize);
 db.codeProjectStaffRole = CodeProjectStaffRole(sequelize, Sequelize);
 db.stream = stream(sequelize, Sequelize);
+db.streamSingular = streamSingular(sequelize, Sequelize);
 db.businessAssociateContact = businessAssociateContact(sequelize, Sequelize);
 db.businessAdress = businessAdress(sequelize, Sequelize);
 db.businessAssociates = businessAssociates(sequelize, Sequelize);
@@ -287,6 +291,7 @@ db.project.hasMany(db.projectAttachment, {foreignKey: 'project_id',sourceKey: "p
 // project partner 
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id'});
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'currentConsultant'});
+db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'currentPrimeConsultant'});
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'civilContractor'});
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'landscapeContractor'});
 db.project.hasMany(db.projectPartner, {foreignKey: 'project_id', as: 'project_sponsor'});
@@ -328,6 +333,21 @@ db.project_stream.belongsTo(
   db.stream,
   { foreignKey: 'stream_id'}
 )
+db.project_stream.belongsTo(
+  db.stream,
+  { foreignKey: 'stream_id', sourceKey: 'stream_id', as: 'streamData'}
+)
+db.project_stream.belongsTo(
+  db.streamSingular,
+  { foreignKey: 'stream_id'}
+)
+db.primaryStream.belongsTo(
+  db.project_stream,
+  { foreignKey: 'project_stream_id'}
+)
+db.project_stream.hasMany(db.primaryStream, {
+  foreignKey: 'project_stream_id',
+});
 // project localgovernment
 
 db.project.hasMany(db.projectLocalGovernment, {foreignKey: 'project_id'});

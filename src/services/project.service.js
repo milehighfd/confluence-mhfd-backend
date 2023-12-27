@@ -65,6 +65,7 @@ const BoardProject = db.boardProject;
 const ProjectSpatial = db.projectSpatial;
 const BoardProjectCost = db.boardProjectCost;
 const Board = db.board;
+const BusinessAssociates = db.businessAssociates;
 
 async function getCentroidsOfAllProjects () {
   const SQL = `SELECT st_asGeojson(ST_PointOnSurface(the_geom)) as centroid, projectid FROM "denver-mile-high-admin".${CREATE_PROJECT_TABLE}`;
@@ -1541,6 +1542,505 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
 }
 
 let cache = null;
+const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit = 20, filters) => {  
+  const CONSULTANT = 3;
+  const PRIME_CONSULTANT = 13;
+  const LANDSCAPE_CONTRACTOR_ID = 9;
+  const CIVIL_CONTRACTOR_ID = 8;
+  const LG_LEAD = 10;
+  let where = {};
+  const offset = (+page - 1) * +limit;
+  const toRange = +offset + +limit;
+ 
+  let limitRange = filters?.sortby ? undefined : limit;
+  let offsetRange = filters?.sortby ? undefined : offset;
+  console.log('Limit', limit, limitRange, offsetRange);
+  try {
+    if (cache) {
+      return JSON.parse(JSON.stringify(cache));
+    }
+    let project_ids_array;
+    if (project_ids) {
+      project_ids_array = project_ids.map(project => project.project_id);
+      where = {project_id: project_ids_array};
+    }
+
+    let projects = await Project.findAll({
+      where: where,
+      // limit: limitRange,
+      // offset: offsetRange,
+      // separate: true,
+      attributes: [
+        "project_id",
+        "project_name",
+        "description",
+        "onbase_project_number",
+        "created_date",
+        'code_project_type_id',
+        'current_project_status_id',
+      ],  
+      
+      include: [
+        {
+          model: CodePhaseType,
+          required: false,
+          include: {
+            model: CodeRuleActionItem,
+            required: false,
+          },
+          where : {
+            phase_ordinal_position: {
+              [Op.not]: -1
+            },
+            code_phase_type_id: {
+              [Op.gt]: 4
+            }
+          },
+        },
+        {
+          model: ProjectStaff,
+          required: false,
+          separate: true,
+          where: {
+            is_active: 1
+          },
+          attributes: [
+            'code_project_staff_role_type_id',
+            'is_active',
+            'project_staff_id'
+          ],
+          include: [{
+            model: BusinessAssociateContact,
+            required: false,           
+          },{
+            model: CodeProjectStaffRole,
+            required: false,
+          }]
+        },
+        {
+          model: ProjectServiceArea,
+          separate: true,
+          required: false,
+          include: {
+            model: CodeServiceArea,
+            required: false,
+            attributes: [
+              'service_area_name',
+              'code_service_area_id'
+            ]
+          },
+          attributes: [
+            'project_service_area_id'
+          ] 
+        },        
+        {
+          model: ProjectCounty,
+          separate: true,
+          include: {
+            model: CodeStateCounty,
+            required: false,
+            attributes: [
+              'county_name',
+              'state_county_id'
+            ]
+          },
+          attributes: [
+            'project_county_id'
+          ]
+        },
+        {
+          model: ProjectStreams,
+          separate: true,
+          required: false,
+          include: {
+            model: Streams,
+            required: false,
+            attributes: [
+              'stream_id',
+              'stream_name'
+            ]
+          }
+        },
+        {
+          model: ProjectLocalGovernment,
+          separate: true,
+          required: false,
+          include: {
+            model: CodeLocalGoverment,
+            required: false,
+            attributes: [
+              'local_government_name',
+              'code_local_government_id'
+            ]
+          },
+          attributes: [
+            'project_local_government_id'
+          ]
+        },
+        {
+          model: ProjectCost,
+          separate: true,
+          required: false,
+          attributes: [
+            'code_cost_type_id',
+            'cost'
+          ],
+          where: {
+            is_active: 1
+          }
+        },
+        {
+          model: ProjectStatus,
+          separate: true,
+          required: false,
+          attributes: [
+            'code_phase_type_id',
+            'planned_start_date',
+            'actual_start_date',
+            'actual_end_date',
+            'planned_end_date',
+            'project_status_id',
+            'modified_date',
+            'is_locked',
+            'is_done'
+          ],
+          include: {
+            model: CodePhaseType,
+            required: false,
+            attributes: [
+              'phase_name',
+              'phase_ordinal_position'
+            ],
+            include: [{
+              model: CodeStatusType,
+              required: false,
+              attributes: [
+                'code_status_type_id',
+                'status_name'
+              ]
+            }, {
+              model: CodeProjectType,
+              required: false,
+              attributes: [
+                'code_project_type_id',
+                'project_type_name'
+              ]
+            }]
+          }
+        },
+        {
+          model: ProjectPartner,
+          separate: true,
+          required: false,
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          include: [{
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+              'business_associates_id'
+            ]
+          }, {
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+              'partner_type'
+            ],
+          }],
+          // where: {
+          //   code_partner_type_id: [3, 8, 11]
+          // }
+        }, {
+          model: CodeProjectType,
+          required: false,
+          attributes: [
+            'code_project_type_id',
+            'project_type_name'
+          ]
+        },
+        {
+          model: ProjectStatus,
+          // separate: true,
+          required: true,
+          attributes: [
+            'code_phase_type_id'
+          ],
+          as: 'currentId',
+          include: {
+            model: CodePhaseType,
+            required: true,
+            attributes: [
+              'code_phase_type_id',
+              'phase_name',
+            ],
+            include: [{
+              model: CodeStatusType,
+              required: true,
+              attributes: [
+                'status_name',
+                'code_status_type_id'
+              ],
+              where: {
+                code_status_type_id: {[Op.in]: [3,5]}
+              }
+            }]
+          }
+        },
+        {
+          model: ProjectPartner,
+          as: 'currentConsultant',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { code_partner_type_id: CONSULTANT }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+        },
+        {
+          model: ProjectPartner,
+          as: 'currentPrimeConsultant',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { code_partner_type_id: PRIME_CONSULTANT }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+        },
+        {
+          model: ProjectPartner,
+          as: 'landscapeContractor',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { code_partner_type_id: LANDSCAPE_CONTRACTOR_ID }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+        },
+        {
+          model: ProjectPartner,
+          as: 'civilContractor',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { code_partner_type_id: CIVIL_CONTRACTOR_ID }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+        },
+        {
+          model: ProjectStatus,
+          separate: true,
+          required: false,
+          attributes: [
+            'code_phase_type_id',
+            'planned_start_date',
+            'actual_start_date',
+          ],
+          as: 'construction_phase',
+          include: {
+            model: CodePhaseType,
+            required: true,
+            attributes: [
+              'code_phase_type_id',
+              'phase_name',
+            ],
+            where: {
+              phase_name: 'Construction',
+            }
+          }
+        },
+        {
+          model: ProjectPartner,
+          as: 'project_sponsor',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+              'partner_type',
+            ],
+            where: { partner_type: 'SPONSOR' }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+                'business_name',
+              ]
+            },],
+        },
+        {
+          model: ProjectStaff,
+          required: false,
+          separate: true,
+          as: 'currentProjectStaff',
+          where: {
+            is_active: 1
+          },
+          attributes: [
+            'code_project_staff_role_type_id',
+            'is_active',
+            'project_staff_id'
+          ],
+          include: [{
+            model: BusinessAssociateContact,
+            required: false,
+          },{
+            model: CodeProjectStaffRole,
+            required: true,
+            where: {
+              code_project_staff_role_type_id: LG_LEAD,
+            },
+          }]
+        }
+      ],
+    });
+    logger.info(`projects found: ${projects.length}`);
+    // filter projects by code_project_type_id with 1, 13, 15, 16
+    let studyAcqRNDProjects = projects.filter(project => {
+      const project_type = project.code_project_type_id;
+      return [1, 13, 15, 16].includes(project_type);
+    });
+    let restProjects = projects.filter(project => {
+      const project_type = project.code_project_type_id;
+      return ![1, 13, 15, 16].includes(project_type);
+    });
+    // filter studyacqrndprojects by currentPrimeConsultant 
+    studyAcqRNDProjects = studyAcqRNDProjects.filter(project => {
+      const currentPrimeConsultant = project.currentPrimeConsultant;
+      if( currentPrimeConsultant.length > 0) {
+        return false;
+      } else {
+        return true;
+      }
+    });
+    restProjects = restProjects.filter(project => {
+      const currentPrimeConsultant = project.currentPrimeConsultant;
+      const civilContractor = project.civilContractor;
+      if( currentPrimeConsultant.length > 0 && civilContractor.length > 0) {
+        return false;
+      } else {
+        return true;
+      }
+    });
+
+    if (filters?.sortby) {
+      projects = await sortProjectsByAttrib(projects, project_ids_array, filters);
+    }
+    projects = [...studyAcqRNDProjects, ...restProjects];
+    let newProjects = [];
+    for(let i = 0; i < projects.length; ++i) {
+      const project = projects[i];
+      const projectStatuses = project.project_statuses;
+      const constructionStatuses = projectStatuses.filter(projectStatus => {
+        const code_phase_type_id = projectStatus.code_phase_type_id;
+        // Construction ids
+        return code_phase_type_id >= 215 && code_phase_type_id <= 224;
+      });
+      const consultantStatuses = projectStatuses.filter(projectStatus => {
+        const code_phase_type_id = projectStatus.code_phase_type_id;
+        // Consultant Procurement ids 
+        return code_phase_type_id >= 290 && code_phase_type_id <= 299;
+      });
+      const contractorStatuses = projectStatuses.filter(projectStatus => {
+        const code_phase_type_id = projectStatus.code_phase_type_id;
+        // Contractor Procurement ids
+        return code_phase_type_id >= 140 && code_phase_type_id <= 149;
+      });
+      const fundingConsultantSelection = projectStatuses.filter(projectStatus => {
+        const code_phase_type_id = projectStatus.code_phase_type_id;
+        return code_phase_type_id == 61;
+      });
+      const construction_phase =  constructionStatuses.length? constructionStatuses[0]?.dataValues : undefined;
+      const consultant_phase =  consultantStatuses.length ? consultantStatuses[0]?.dataValues: undefined;
+      const contractor_phase =  contractorStatuses.length ? contractorStatuses[0]?.dataValues: undefined;
+      const fundingConsultantSelectionPhase = fundingConsultantSelection.length ? fundingConsultantSelection[0]?.dataValues: undefined;
+      // // make a copy project and add valueA, valueB and valueC to its attribs 
+      // project.construction_phase = construction_phase;
+      // project.consultant_phase = consultant_phase;
+      // project.contractor_phase = contractor_phase;
+      // // make newproject based on copy of project with each phase 
+      const newProject = {
+        ...project.dataValues,
+        construction_phase,
+        consultant_phase,
+        contractor_phase,
+        fundingConsultantSelectionPhase
+      };
+
+      newProjects.push(newProject);
+    }
+    // console.log('projects', JSON.stringify(newProjects));
+    return newProjects;
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+}
 const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, filters) => {  
   const CONSULTANT = 3;
   const LANDSCAPE_CONTRACTOR_ID = 9;
@@ -2739,6 +3239,97 @@ const getProjectPartner = async (project_id) =>{
   return project_partners;
 }
 
+const getProjectsBySponsor = async (keyword) => {
+  const CODE_SPONSOR = 11;
+  return await Project.findAll({
+    attributes: ['project_id'],
+    include: [{
+      model: ProjectPartner,
+      attributes: [],
+      where: {
+        code_partner_type_id: CODE_SPONSOR
+      },
+      required: true,
+      include: [{
+        model: BusinessAssociates,
+        attributes: ['business_name'],
+        where: {
+          business_name: {
+            [Op.like]: `%${keyword}%`
+          }
+        },
+        required: true
+      }]
+    }]
+  });
+};
+
+const getProjectsInBoard = async (locality) => {
+  const CODE_SPONSOR = 11;
+  return await Project.findAll({
+    attributes: ['project_id','project_name'],
+    include: [{
+      model: ProjectPartner,
+      attributes:  ['project_partner_id', 'code_partner_type_id'],
+      where: {
+        code_partner_type_id: CODE_SPONSOR
+      },
+      required: true,
+      include: [{
+        model: BusinessAssociates,
+        attributes: ['business_name'],
+        where: {
+          business_name: locality
+        },
+        required: true
+      }]
+    },{
+      model: CodeProjectType,
+      required: true,
+    }]
+  });
+};
+
+const getProjectsToAvoid = async (year) => {
+  return await BoardProject.findAll({
+    attributes : ['project_id'],
+    include: [{
+      model: Board,
+      attributes: ['locality', 'year', 'projecttype', 'type'],
+      where: {
+        year: year
+      },
+      required: true
+    }]
+  });
+};
+
+const getProjectsForMHFD = async (filteredProjects) => {
+  const CODE_SPONSOR = 11;
+  return await Project.findAll({
+    attributes: ['project_id','project_name'],
+    where: {
+      project_id: filteredProjects
+    },
+    include: [{
+      model: ProjectPartner,
+      attributes:  ['project_partner_id', 'code_partner_type_id'],
+      where: {
+        code_partner_type_id: CODE_SPONSOR
+      },
+      required: true,
+      include: [{
+        model: BusinessAssociates,
+        attributes: ['business_name'],
+        required: true
+      }]
+    },{
+      model: CodeProjectType,
+      required: true,
+    }]
+  });
+};
+
 export default {
   checkProjectName,
   getAll,
@@ -2746,6 +3337,7 @@ export default {
   deleteByProjectId,
   archiveByProjectId,
   saveProject,
+  getUpcomingProjects,
   getProjects,
   filterProjectsBy,
   getProjectsDeprecated,
@@ -2770,5 +3362,9 @@ export default {
   getProjectPartner,
   getBoardProjectDataCount,
   getPmtoolsProjectDataCount,
-  projectSearch
+  projectSearch,
+  getProjectsBySponsor,
+  getProjectsInBoard,
+  getProjectsToAvoid,
+  getProjectsForMHFD,
 };

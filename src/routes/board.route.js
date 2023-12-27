@@ -33,11 +33,14 @@ const CodeServiceArea = db.codeServiceArea;
 const CodeLocalGovernment = db.codeLocalGoverment;
 const CodeStatusType = db.codeStatusType;
 const BusinessAssociate = db.businessAssociates;
+const ProjectStaff = db.projectStaff;
 const Configuration = db.configuration;
 const BoardProjectCost = db.boardProjectCost;
 const ProjectCost = db.projectCost;
 const CodeProjectPartnerType = db.codeProjectPartnerType;
 const BusinessAssociates = db.businessAssociates;
+const BusinessAssociateContact = db.businessAssociateContact;
+const CodeProjectStaffRole = db.codeProjectStaffRole;
 
 const insertUniqueObject = (array, idPropertyName, groupPropertyKeyName, object) => {
   const isDuplicate = array.some(item => {
@@ -969,7 +972,8 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
         last_modified_by: creator,
         createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
         updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
+        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER,
+        sort_order: 0
       };
       await BoardProjectCost.create(newBoardProjectCost);
       k++;
@@ -1273,6 +1277,7 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                         created_by: creator,
                         last_modified_by: creator,
                         req_position: prevBoardProjectCost.req_position,
+                        sort_order: 0
                       });
                       console.log('new board project cost created', newBoardProjectCost);
                     }
@@ -1873,12 +1878,41 @@ router.get('/filters', async (req, res) => {
       name: sponsorType.business_name,
       type: 'project_partners'
     }));
+    const MHFD_LEAD = 1 ;
+    const MHFD_leads = await ProjectStaff.findAll(
+      {
+        include: [{
+          model: BusinessAssociateContact,
+          required: true,           
+        }, {
+          model: CodeProjectStaffRole,
+          required: true,
+          where: {
+            code_project_staff_role_type_id: MHFD_LEAD,
+          }
+        }]
+      }
+    );
+    const MhfdLeadsMapped = MHFD_leads.map(MhfdLead => ({
+      id: MhfdLead?.business_associate_contact?.business_associate_contact_id,
+      name: MhfdLead?.business_associate_contact?.contact_name,
+      type: 'mhfd_lead'
+    }));
+    // make an array with all values of mhfdleadmapped but with distinct name for mhfdleadsmapped
+    const distinctMhfdLeads = MhfdLeadsMapped.filter((thing, index, self) =>
+      index === self.findIndex((t) => (
+        t.name === thing.name
+      ))
+    );
+    
+
     res.send([
       ...statusTypesMapped,
       ...countyTypesMapped,
       ...serviceAreaTypesMapped,
       ...localGovernmentTypesMapped,
-      ...sponsorTypesMapped
+      ...sponsorTypesMapped,
+      ...distinctMhfdLeads
     ]);    
   } catch (error) {
     console.error(`Error getting filters: ${error}`);

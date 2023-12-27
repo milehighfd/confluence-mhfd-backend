@@ -15,16 +15,33 @@ export const saveSubtotalcost = async (project_id, subtotalcost, creator, transa
     const currentSubtotalCost = await getCostActiveForProj(project_id, [PROPOSED_CODE_COST], transaction);
     const hasChanged = currentSubtotalCost[0]?.cost != subtotalcost;
     if (hasChanged) {
-      const pc = await ProjectCost.update({
+      console.log('About to update with this data', {
         is_active: 0,
         last_modified: moment().format('YYYY-MM-DD HH:mm:ss'),
         modified_by: creator
-      }, {
+      });
+      const findOne = await ProjectCost.findOne({
         where: {
           project_id: project_id ,
           code_cost_type_id: PROPOSED_CODE_COST
         }
-      });
+      }, { transaction: transaction });
+      if (findOne) {
+        findOne.is_active = 0;
+        findOne.last_modified = moment().format('YYYY-MM-DD HH:mm:ss');
+        findOne.modified_by = 'creatorFAKE@GMAIL>COM';
+        await findOne.save({ transaction: transaction });
+      }
+      // const pc = await ProjectCost.update({
+      //   is_active: 0,
+      //   last_modified: moment().format('YYYY-MM-DD HH:mm:ss'),
+      //   modified_by: creator
+      // }, {
+      //   where: {
+      //     project_id: project_id ,
+      //     code_cost_type_id: PROPOSED_CODE_COST
+      //   }
+      // }, { transaction: transaction });
       let mainModifiedDate = new Date();
       const newProjectCostData = {
         cost: +subtotalcost,
@@ -37,6 +54,7 @@ export const saveSubtotalcost = async (project_id, subtotalcost, creator, transa
         cost_description: 'Proposed (Formally Component Cost)',
         code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM
       };
+      console.log('About to create with ', newProjectCostData);
       const resultCreatedProjectCost = await ProjectCost.create(newProjectCostData, { transaction: transaction });
       return resultCreatedProjectCost;
     } else {

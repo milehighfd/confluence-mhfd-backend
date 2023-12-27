@@ -290,6 +290,19 @@ const getProjectCards = async (req, res) => {
     res.status(500).send({ error: error });
   }
 };
+const getOneProjectData = async (req, res) => {
+  logger.info(`Starting endpoint favorite/project-cards with params`);
+  const project_id = req.params.project_id;
+  console.log('About to get this projectid ', project_id);
+  try {
+    let projects = await projectService.getProjects(null, null, [{project_id: project_id}], 1, 1000);   
+    res.send(projects);
+  } catch (error) {
+    logger.error(error);
+    res.status(500).send({ error: error });
+  }
+}
 
 router.get("/project-cards", auth, getProjectCards);
+router.get("/project-cards/:project_id", getOneProjectData);
 export default router;

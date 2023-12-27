@@ -35,7 +35,8 @@ import {
   saveVegetationManagement,
   cleanStringValue,
   saveSubtotalcost,
-  saveEstimatedCost
+  saveEstimatedCost,
+  saveWorkspaceCostInit
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
 import { ProjectError, ProjectBoardsError} from '../../errors/project.error.js';
@@ -141,7 +142,6 @@ const addToBoard = async (body, user, type, subtype, transaction, project_id) =>
     splitedServicearea,
     sponsorId
   );
-  console.log('localitiesBoard', localitiesBoard, typesList)
   try {
     const localNames = await getLocalitiesNames(localitiesBoard, transaction);
     if (isWorkPlan === 'true' && year < YEAR_WORKPLAN_V2) {
@@ -285,7 +285,6 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         answer.resStudy = resStudy;
         break;
       case 'maintenance':
-        console.log('streams before saveProjectStreams: ' + streams);
         await createCarto(...createCartoInputs);
         const resMaintenance = await saveProjectDetails(project_id, body, creator, transaction);        
         const resStreamsMain = await saveProjectStreams(project_id, streams, creator, transaction); 
@@ -304,7 +303,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
   try {    
     const data = await createProjects(body, transaction, type, user.email, subtype);
     const { project_id } = data;
-    const { cover, sponsor, cosponsor } = body;
+    const { cover, sponsor, cosponsor, isWorkPlan } = body;
     const project_attachments = await uploadFiles(user, files, project_id, cover, transaction);
     await addToBoard(body, user, type, subtype, transaction, project_id);
     const geoInfo = await parseGeographicInfoAndCreate(body, project_id, user, transaction);
@@ -329,8 +328,18 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
         project_id: project_id
       },
     });
-    console.log('\n-*******************- \n Last Project created should be: ', project_id, lastProject);
-
+    console.log('\n-*******************- \n Last Project created should be: ', project_id, lastProject, project_partner, project_partner.project_partner_id);
+    console.log('Is WOrk Plan', isWorkPlan);
+    // const WORK_PLAN_CODE_COST_TYPE_ID = 21;
+    // const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
+    // await saveWorkspaceCostInit(
+    //   project_id,
+    //   boardProjectId.board_project_id,
+    //   isWorkPlan == 'true' ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
+    //   project_partner.project_partner_id,
+    //   user.email
+    // );
+    
     const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, lastProject, boardProjectId};
     return composeData;
   } catch (error) {

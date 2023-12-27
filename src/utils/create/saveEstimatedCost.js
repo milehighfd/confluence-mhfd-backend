@@ -18,16 +18,20 @@ export const saveEstimatedCost = async (project_id, estimatedCost, creator, esti
     console.log('saveEstimatedCost', project_id, estimatedCost, sourceFromSystem, CODE_DATA_SOURCE_TYPE_VALUE);
     const descriptionHasChanged = currentEstimatedCost[0]?.cost_description != estimatedcostDescription;
     if (hasChanged) {
-      const pc = await ProjectCost.update({
-        is_active: 0,
-        last_modified: moment().format('YYYY-MM-DD HH:mm:ss'),
-        modified_by: creator
-      }, {
+      const findOne = await ProjectCost.findOne({
         where: {
           project_id: project_id ,
           code_cost_type_id: ESTIMATED_CODE_COST 
         }
-      });
+      }, { transaction: transaction });
+      console.log('Found one ', findOne);
+      if ( findOne ) {
+        findOne.is_active = 0,
+        findOne.last_modified = moment().format('YYYY-MM-DD HH:mm:ss'),
+        findOne.modified_by = creator
+        await findOne.save({ transaction: transaction });
+      }
+
       let mainModifiedDate = new Date();
       const newProjectCostData = {
         cost: +estimatedCost,
@@ -43,14 +47,25 @@ export const saveEstimatedCost = async (project_id, estimatedCost, creator, esti
       const resultCreatedProjectCost = await ProjectCost.create(newProjectCostData, { transaction: transaction });
       return resultCreatedProjectCost;
     } else if (descriptionHasChanged) {
-      const pc = await ProjectCost.update({
-        cost_description: estimatedcostDescription,
-      }, {
+      const findOne = await ProjectCost.findOne({
         where: {
           project_id: project_id ,
           code_cost_type_id: ESTIMATED_CODE_COST 
         }
-      });
+      }, { transaction: transaction });
+      console.log('Found one ', findOne);
+      if (findOne) {
+        findOne.cost_description = estimatedcostDescription,
+        await findOne.save({ transaction: transaction });
+      }
+      // const pc = await ProjectCost.update({
+      //   cost_description: estimatedcostDescription,
+      // }, {
+      //   where: {
+      //     project_id: project_id ,
+      //     code_cost_type_id: ESTIMATED_CODE_COST 
+      //   }
+      // });
     } else {
       return [];
     }
