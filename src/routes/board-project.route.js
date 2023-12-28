@@ -3,7 +3,7 @@ import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import auth from 'bc/auth/auth.js';
 import updateRank from 'bc/routes/board-project/update-rank.js';
-import updateCost from 'bc/routes/board-project/cost.js';
+import updateCostNew from 'bc/routes/board-project/cost.js';
 import authOnlyEmail from 'bc/auth/auth-only-email.js';
 import { Op } from 'sequelize';
 import getPriorFunding from 'bc/routes/board-project/priorFunding.js';
@@ -578,6 +578,6 @@ router.put('/update-target-cost', [authOnlyEmail], async(req,res) => {
 });
 
 router.put('/:board_project_id/update-rank', [auth], updateRank);
-router.put('/:board_project_id/cost', [auth], updateCost); // RESTORE AUTH 
+router.put('/:board_project_id/cost', [auth], updateCostNew); // RESTORE AUTH 
 
 export default router;

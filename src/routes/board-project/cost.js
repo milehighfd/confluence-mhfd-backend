@@ -174,7 +174,7 @@ const updateCostNew = async (req, res) => {
   try {
     const { board_project_id } = req.params;
     const user = req.user; 
-    const { amounts, isMaintenance, isWorkPlan, amountsTouched } = req.body; // ALL Amounts by sponsor, mhfd funding and cosponsors
+    const { amounts, isMaintenance, isWorkPlan, amountsTouched, boardId } = req.body; // ALL Amounts by sponsor, mhfd funding and cosponsors
     let columnsChangesMHFD = [0];
     const beforeUpdate = await BoardProject.findOne({
       where: { board_project_id },
@@ -476,6 +476,7 @@ const updateCostNew = async (req, res) => {
         isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID,
         projectPartnerId.project_partner_id,
         user.email,
+        boardId,
         null
       ) 
     }

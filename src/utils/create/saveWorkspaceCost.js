@@ -2,8 +2,9 @@ import { saveProjectCost } from 'bc/utils/create';
 import db from 'bc/config/db.js';
 import { ProjectCostsError } from '../../errors/project.error.js';
 import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
+import { insertAtBeginningOfColumn } from 'bc/routes/board-project/updateSortOrderFunctions.js';
 const BoardProjectCost = db.boardProjectCost;
-export const saveWorkspaceCostInit = async (project_id, board_project_id, code_cost_type_id, project_partner_id, creator, transaction) => { 
+export const saveWorkspaceCostInit = async (project_id, board_project_id, code_cost_type_id, project_partner_id, creator, boardId, transaction) => { 
   try {
     const dataProjectCost = {
       project_id: project_id,
@@ -25,8 +26,9 @@ export const saveWorkspaceCostInit = async (project_id, board_project_id, code_c
         req_position: currentColumn,
         created_by: creator,
         last_modified_by: creator,
-        sort_order: 0
+        sort_order: 1
     });  
+    insertAtBeginningOfColumn(boardId, currentColumn, transaction);
     return boardProjectCostCreated;
   } catch (error) {
     console.error('FAIL at SAVE WORKSPACE COST INIT', error);
