@@ -7,14 +7,14 @@ export const saveBoard = async (
   board_id, 
   project_id,
   origin, 
-  rank0 ,
+  // rank0 ,
   projectname,
   creator,
   transaction = null
 ) => {
   const DRAFT_STATUS = 1;
   try {
-    const response = await BoardProject.create({
+    const bpdata = {
       board_id: board_id,
       project_id: project_id,
       origin: origin,
@@ -25,7 +25,9 @@ export const saveBoard = async (
       updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       created_by: creator,
       last_modified_by: creator
-    }, { transaction: transaction });
+    };
+    console.log('\n\n\n\n About to create with this data ', bpdata, '\n\n\n\n');
+    const response = await BoardProject.create(bpdata, { transaction: transaction });
     return response;
   } catch (error) {
     console.error(`Error saving board project: ${error}`);
