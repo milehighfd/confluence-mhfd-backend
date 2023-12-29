@@ -41,68 +41,87 @@ export const moveProjectCostsOnePosition = async (boardProjects, transaction) =>
     console.error('FAIL at moveProjectCostsOnePosition ', error);
   }
 }
+const getBoardProjectsValues =  async (boardId, currentColumn, movePosition) => {
+  const {
+    locality,
+    projecttype,
+    type,
+    year,
+  } = boardId;
+  let boardWhere = {
+    type,
+    year,
+    locality,
+    projecttype,
+  };
+  boardWhere = applyLocalityCondition(boardWhere);
+  const boards = await Board.findAll({
+    attributes: ['board_id', 'type'],
+    where: boardWhere,
+  });
+  const boardIds = boards.map(b => b.dataValues.board_id);
+  const isWorkPlan = type === 'WORK_PLAN';
+  const originPositionColumnName = `originPosition${currentColumn}`;
+  const attributes = [
+    'board_project_id',
+    'project_id',
+    'projectname',
+    // rankColumnName,
+    'origin',
+    originPositionColumnName,
+    'code_status_type_id',
+  ];
+  const where = {
+    board_id: {[Op.in]: boardIds},
+    // [rankColumnName]: { [Op.ne]: null }
+  };
+  const boardProjects = (await BoardProject.findAll({
+    attributes,
+    where,
+    order: [[{model: BoardProjectCost, as: 'boardProjectToCostData'},'sort_order', 'ASC']],
+    // [{ model: BoardProjectCost, as: 'boardProjectToCostData' }, 'sort_order', 'ASC']
+    include:[{
+      model: BoardProjectCost,
+      as: 'boardProjectToCostData',
+      required: true,
+      // order: [['sort_order', 'ASC']],
+      where: {
+        req_position: currentColumn,
+        sort_order: {[Op.gte]: movePosition}
+      },
+      include: [
+        {
+          model: ProjectCost,
+          as: 'projectCostData',
+          required: true,
+          where: {
+            is_active: true,
+            code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
+          }
+        }
+      ]
+    }]
+  })).map(d => d.dataValues);
+  return boardProjects;
+}
+export const getSortOrderValue = async (boardId, currentColumn, transaction) => {
+  try {
+    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, 0);
+    // get the max value of sort_order in boardProjects 
+    const maxSortOrder = boardProjects.reduce((acc, curr) => {
+      const currSortOrder = curr.boardProjectToCostData[0].sort_order;
+      return currSortOrder > acc ? currSortOrder : acc;
+    }, 0);
+    console.log('_________ \n\n _________ maxSortOrder', maxSortOrder);
+    return maxSortOrder + 1;
+  } catch(error) {
+    console.error('FAIL at getSortOrderValue ', error);
+    return [];
+  }
+}
 export const insertFromPositionOfColumn = async (boardId, currentColumn, movePosition, transaction) => {
   try {
-    const {
-      locality,
-      projecttype,
-      type,
-      year,
-    } = boardId;
-    let boardWhere = {
-      type,
-      year,
-      locality,
-      projecttype,
-    };
-    boardWhere = applyLocalityCondition(boardWhere);
-    const boards = await Board.findAll({
-      attributes: ['board_id', 'type'],
-      where: boardWhere,
-    });
-    const boardIds = boards.map(b => b.dataValues.board_id);
-    const isWorkPlan = type === 'WORK_PLAN';
-    const originPositionColumnName = `originPosition${currentColumn}`;
-    const attributes = [
-      'board_project_id',
-      'project_id',
-      'projectname',
-      // rankColumnName,
-      'origin',
-      originPositionColumnName,
-      'code_status_type_id',
-    ];
-    const where = {
-      board_id: {[Op.in]: boardIds},
-      // [rankColumnName]: { [Op.ne]: null }
-    };
-    const boardProjects = (await BoardProject.findAll({
-      attributes,
-      where,
-      order: [[{model: BoardProjectCost, as: 'boardProjectToCostData'},'sort_order', 'ASC']],
-      // [{ model: BoardProjectCost, as: 'boardProjectToCostData' }, 'sort_order', 'ASC']
-      include:[{
-        model: BoardProjectCost,
-        as: 'boardProjectToCostData',
-        required: true,
-        // order: [['sort_order', 'ASC']],
-        where: {
-          req_position: currentColumn,
-          sort_order: {[Op.gte]: movePosition}
-        },
-        include: [
-          {
-            model: ProjectCost,
-            as: 'projectCostData',
-            required: true,
-            where: {
-              is_active: true,
-              code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
-            }
-          }
-        ]
-      }]
-    })).map(d => d.dataValues);
+    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, movePosition);
     // TODO: now move all sort values to +1 so that the new one is at the beginning
     moveProjectCostsOnePosition(boardProjects, transaction);
   } catch(error) {

@@ -7,26 +7,21 @@ const BoardProjectCost = db.boardProjectCost;
 const ProjectCost = db.projectCost;
 
 export const isOnWorkspace =  async (boardProject) => {
-  let allNull = true;
-  const indexes = [1, 2, 3, 4, 5];
-  // indexes.forEach((index) => {
-  //   const rankColumnName = `rank${index}`;
-  //   if (boardProject[rankColumnName] !== null) {
-  //     allNull = false;
-  //   }
-  // });
-  // validate if boardproject has a board_project_cost with req_position = 0 with project_cost with is_active = true
   const boardProjectId = boardProject.board_project_id;
-  // find all boardprojectcost of boardProejctId and get projectCost that has is_active = true
   const boardProjectCosts = await BoardProjectCost.findAll({
     where: { board_project_id: boardProjectId },
     include: [{
       model: ProjectCost,
-      // where: { is_active: true }
+      as: 'projectCostData',
+      where: { is_active: true }
     }]
   });
-  console.log('IS ON WORKSPACE CHECK', boardProjectCosts, boardProjectId);
-  return allNull;
+  if (boardProjectCosts.length > 0 && boardProjectCosts[0].dataValues.req_position === 0) {
+    console.log('Is on Workspace', JSON.stringify(boardProjectCosts));
+    return true;
+  } else {
+    return false;
+  }
 };
 
 export const isOnFirstYear = (boardProject) => {

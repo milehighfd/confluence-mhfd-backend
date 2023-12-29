@@ -197,7 +197,7 @@ const updateCostNew = async (req, res) => {
     for(let i = 0; i < amounts.length; ++i) {
         const amount = amounts[i];
         let updateFields = {};
-        const wasOnWorkspace = isOnWorkspace(beforeUpdate); // based on RANK
+        const wasOnWorkspace = await isOnWorkspace(beforeUpdate); // based on RANK
         const columnsChanged = [0];
   
         const allCurrentAmounts = {}; // aqui se almacenan todos los reqs amounts
@@ -227,31 +227,31 @@ const updateCostNew = async (req, res) => {
             } else {
               allCurrentAmounts[reqColumnName] = beforeAmounts.values[reqColumnName];
             }
-            if (
-              (beforeAmounts.values[reqColumnName] === null && currentReqAmount !== null)  
-              // || (beforeUpdate[rankColumnName] === null && currentReqAmount !== null && valueHasChanged)
-            ) {
-              const where = {
-                board_id: beforeUpdate.board_id,
-                // [rankColumnName]: { [Op.ne]: null }
-              };
-              const projects = await BoardProject.findAll({
-                where,
-                // order: [[rankColumnName, 'DESC']],
-                limit: 1
-              });
-              // if (currentRanks[rankColumnName] === null) {
-              //   if (projects.length === 0) {
-              //     updateFields[rankColumnName] = LexoRank.middle().toString();
-              //   } else {
-              //     const lastProject = projects[0];
-              //     console.log('Last project ', lastProject[rankColumnName]);
-              //     updateFields[rankColumnName] = LexoRank.parse(lastProject[rankColumnName]).genNext().toString();
-              //   }
-              // }             
-            } else if (currentReqAmount === null && !isMaintenance) {              
-              // updateFields[rankColumnName] = null;
-            }
+            // all this if was related to rank order to add it at the beggining or at the end, or to delete from that column deleting that rank, now is useless for now 
+            // if (
+            //   (beforeAmounts.values[reqColumnName] === null && currentReqAmount !== null)   // if before didnt have value and now it has
+            //   // || (beforeUpdate[rankColumnName] === null && currentReqAmount !== null && valueHasChanged) // if didnt exist in that column and now it will // TODO: give a check in the future
+            // ) {
+            //   const where = {
+            //     board_id: beforeUpdate.board_id,
+            //     // [rankColumnName]: { [Op.ne]: null } // get values where the rank existed, so existed in that column before
+            //   };
+            //   const projects = await BoardProject.findAll({
+            //     where,
+            //     // order: [[rankColumnName, 'DESC']],
+            //     limit: 1
+            //   });
+            //   // if (currentRanks[rankColumnName] === null) { // if in the current board, the project didnt existed in that column 
+            //   //   if (projects.length === 0) {
+            //   //     updateFields[rankColumnName] = LexoRank.middle().toString(); // there was no project so add the first one, in the new case will be sort_order = 1
+            //   //   } else {
+            //   //     const lastProject = projects[0]; // here we get the last project in that column
+            //   //     updateFields[rankColumnName] = LexoRank.parse(lastProject[rankColumnName]).genNext().toString(); // place it at the end, now it will be in sort_order = last + 1 
+            //   //   }
+            //   // }             
+            // } else if (currentReqAmount === null && !isMaintenance) {              
+            //   // updateFields[rankColumnName] = null; // we have to delete the rank in that column
+            // }
           }
         } else if (amount.code_partner_type_id !== 88) {
           for (let pos = 1; pos <= 5; pos++) {
@@ -288,7 +288,7 @@ const updateCostNew = async (req, res) => {
             const currentColumn = columnsChanged[pos];
             if (currentColumn !== 0) {
               shouldRemoveWorkspaceReq = amount.code_partner_type_id === 88 ? true: false;
-              // NOt workspace
+              // Not workspace values, current Column not 0
               const reqColumnName = `req${currentColumn}`;
               const currentReqAmount = amount.values[reqColumnName] ?? null;
               const currentCost = currentReqAmount;
@@ -307,7 +307,9 @@ const updateCostNew = async (req, res) => {
                     .toDate(),
                   amount.code_cost_type_id,
                   isWorkPlan,
-                  amountsTouched ? amountsTouched[`req${currentColumn}`] : true
+                  amountsTouched ? amountsTouched[`req${currentColumn}`] : true,
+                  amount.code_partner_type_id,
+                  boardId,
                 )
               );
             }
@@ -458,7 +460,7 @@ const updateCostNew = async (req, res) => {
         attributes: ['year']
       }]
     });
-    const currentIsOnWorkspace = isOnWorkspace(afterUpdate);
+    const currentIsOnWorkspace = await isOnWorkspace(afterUpdate);
     if (currentIsOnWorkspace) {
       const businessData = allAmounts.find((a) => a.code_partner_type_id === 88 && (isWorkPlan ? a.code_cost_type_id === 21 : a.code_cost_type_id === 22));
       // get project partner id

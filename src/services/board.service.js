@@ -4,6 +4,7 @@ import moment from 'moment';
 import sequelize from 'sequelize';
 import { LexoRank } from 'lexorank';
 import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
+import { getSortOrderValue } from 'bc/routes/board-project/updateSortOrderFunctions.js';
 
 const BoardProject = db.boardProject;
 const ProjectCost = db.projectCost;
@@ -616,7 +617,9 @@ const updateAndCreateProjectCostsForAmounts = async (
   lastModifiedDate,
   codeCostTypeId,
   isWorkPlan,
-  amountTouched
+  amountTouched,
+  code_partner_type_id,
+  boardId
 ) => {
   console.log('Update And Create Cost ');
   const countOriginalProject = await Project.count({ where: { project_id: currentProjectId } });
@@ -684,13 +687,14 @@ const updateAndCreateProjectCostsForAmounts = async (
         console.log('About to create this cost ', costToCreate);
         const projectCostCreated = await ProjectCost.create(costToCreate);
         const project_cost_id = projectCostCreated.dataValues.project_cost_id;
+        const currentSortOrderInBoard = await getSortOrderValue(boardId, currentColumn );
         await BoardProjectCost.create({
             board_project_id: board_project_id,
             project_cost_id: project_cost_id,
             req_position: currentColumn,
             created_by: user.email,
             last_modified_by: user.email,
-            sort_order: 0
+            sort_order: currentSortOrderInBoard
         });
       }
     });
