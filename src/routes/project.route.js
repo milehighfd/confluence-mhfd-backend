@@ -610,7 +610,8 @@ const searchImport = async (req, res) => {
     const uniqueProjectsInBoard = Array.from(new Set(intersectionInBoard.map(p => p.project_id)))
       .map(project_id => {
         return projectsInBoard.find(p => p.project_id === project_id);
-      });
+      })
+      .sort((a, b) => a.project_name.localeCompare(b.project_name));
     res.status(200).send(uniqueProjectsInBoard);
   } catch (error) {
     console.error(error);
