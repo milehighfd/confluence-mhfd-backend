@@ -103,10 +103,8 @@ export const insertFromPositionOfColumn = async (boardId, currentColumn, movePos
         ]
       }]
     })).map(d => d.dataValues);
-    console.log('BOARD PROJECT CHECK ', boardProjects);
     // TODO: now move all sort values to +1 so that the new one is at the beginning
-    moveProjectCostsOnePosition(boardProjects, transaction)
-    console.log('\n ****************** \n\n ************* \n\n ************ \n\n THESE are the values for boardproject ', boardProjects, '\n\n ********* \n\n ');
+    moveProjectCostsOnePosition(boardProjects, transaction);
   } catch(error) {
     console.error('FAIL at INSERT AT BEGINNING OF COLUMN', error);
     return [];

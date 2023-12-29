@@ -3,8 +3,10 @@ import logger from 'bc/config/logger.js';
 
 const BoardProject = db.boardProject;
 const Board = db.board;
+const BoardProjectCost = db.boardProjectCost;
+const ProjectCost = db.projectCost;
 
-export const isOnWorkspace = (boardProject) => {
+export const isOnWorkspace =  async (boardProject) => {
   let allNull = true;
   const indexes = [1, 2, 3, 4, 5];
   // indexes.forEach((index) => {
@@ -13,6 +15,17 @@ export const isOnWorkspace = (boardProject) => {
   //     allNull = false;
   //   }
   // });
+  // validate if boardproject has a board_project_cost with req_position = 0 with project_cost with is_active = true
+  const boardProjectId = boardProject.board_project_id;
+  // find all boardprojectcost of boardProejctId and get projectCost that has is_active = true
+  const boardProjectCosts = await BoardProjectCost.findAll({
+    where: { board_project_id: boardProjectId },
+    include: [{
+      model: ProjectCost,
+      // where: { is_active: true }
+    }]
+  });
+  console.log('IS ON WORKSPACE CHECK', boardProjectCosts, boardProjectId);
   return allNull;
 };
 
@@ -40,7 +53,7 @@ export const determineStatusChange = async (wasOnWorkspace, boardProject, board_
   logger.info(`boardProject.parent_board_project_id=${boardProject.parent_board_project_id}`);
   const hasParentBoardProject = boardProject.parent_board_project_id !== null;
   logger.info(`hasParentProject=${hasParentBoardProject}`);
-  const onWorkspace = isOnWorkspace(boardProject);
+  const onWorkspace = await isOnWorkspace(boardProject);
   if (wasOnWorkspace && !onWorkspace) {
     let code_status_type;
     if (boardType === 'WORK_REQUEST') {
@@ -61,7 +74,7 @@ export const determineStatusChange = async (wasOnWorkspace, boardProject, board_
     } else if (boardType === 'WORK_PLAN') {
       if (hasParentBoardProject) {
         const parentBoardProject = await BoardProject.findByPk(boardProject.parent_board_project_id);
-        const parentIsOnWorkspace = isOnWorkspace(parentBoardProject);
+        const parentIsOnWorkspace = await isOnWorkspace(parentBoardProject);
         if (parentIsOnWorkspace) {
           code_status_type = 1;
         } else {
