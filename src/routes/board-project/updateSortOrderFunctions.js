@@ -20,7 +20,28 @@ const applyLocalityCondition = (where) => {
   }
   return where;
 }
-export const insertAtBeginningOfColumn = async (boardId, currentColumn, transaction) => {
+export const moveProjectCostsOnePosition = async (boardProjects, transaction) => { 
+  // iterate though boardprojects and get the project_cost_id then update the sort_order and add 1 to each
+  try {
+    const boardProjectCostIds = boardProjects.map(b => b.boardProjectToCostData[0].board_project_cost_id);
+    console.log('boardprojectsosids', boardProjectCostIds);
+    const boardProjectCostsUpdate = await BoardProjectCost.update(
+      { sort_order: sequelize.literal('sort_order + 1') },
+      {
+        where: {
+          board_project_cost_id: {
+            [Op.in]: boardProjectCostIds
+          }
+        },
+        transaction
+      }
+    );
+    console.log('Updated pcu', boardProjectCostsUpdate);
+  } catch(error) {
+    console.error('FAIL at moveProjectCostsOnePosition ', error);
+  }
+}
+export const insertFromPositionOfColumn = async (boardId, currentColumn, movePosition, transaction) => {
   try {
     const {
       locality,
@@ -66,7 +87,8 @@ export const insertAtBeginningOfColumn = async (boardId, currentColumn, transact
         required: true,
         // order: [['sort_order', 'ASC']],
         where: {
-          req_position: currentColumn
+          req_position: currentColumn,
+          sort_order: {[Op.gte]: movePosition}
         },
         include: [
           {
@@ -81,7 +103,9 @@ export const insertAtBeginningOfColumn = async (boardId, currentColumn, transact
         ]
       }]
     })).map(d => d.dataValues);
+    console.log('BOARD PROJECT CHECK ', boardProjects);
     // TODO: now move all sort values to +1 so that the new one is at the beginning
+    moveProjectCostsOnePosition(boardProjects, transaction)
     console.log('\n ****************** \n\n ************* \n\n ************ \n\n THESE are the values for boardproject ', boardProjects, '\n\n ********* \n\n ');
   } catch(error) {
     console.error('FAIL at INSERT AT BEGINNING OF COLUMN', error);
