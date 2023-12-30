@@ -120,14 +120,18 @@ router.get('/reverse-lexorank-update', async (req, res) => {
         for (const board_project_id of updates[position][value]) {
           c++;
           logger.info(`Updating ${position} to ${value} for ${board_project_id}`);
-          prs.push(BoardProjectCost.create(
+          prs.push(BoardProjectCost.update(
             {
               req_position: index,
               board_project_id: board_project_id,
               sort_order: value,
-              project_cost_id: 135499,
               last_modified_by: 'system',
-              created_by: 'system'
+            },
+            {
+              where: {
+                req_position: index,
+                board_project_id:board_project_id
+              }
             }
           ));
         }
