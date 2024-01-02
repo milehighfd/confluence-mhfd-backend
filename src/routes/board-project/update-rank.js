@@ -257,14 +257,15 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
 const updateRank = async (req, res) => {
   logger.info('get board project cost by id');
   const { board_project_id } = req.params;
-  let { before, after } = req.body; // lexo values in string
+  let { before, after } = req.body; // lexo values in string // now are integers for sort_order 
   const {
     columnNumber,  // destiny column 
     beforeIndex,  // targetposition -1 
     afterIndex,   // targetposition +1 
     targetPosition,  // target position in destiny column 
     otherFields, //   previous rankX, that is going to be deleted
-    isWorkPlan
+    isWorkPlan,
+    boardId
   } = req.body;
   const isWorkPlanBoolean = typeof isWorkPlan === 'boolean' ? isWorkPlan : isWorkPlan === 'true' ? true : false;
   const WORK_PLAN_CODE_COST_TYPE_ID = 21;
