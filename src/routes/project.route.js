@@ -855,7 +855,7 @@ const getLastProjectDetails = async (project_id) => {
 }
 
 const updateActiveDetails = async (req, res) => {
-  const { project_id, location, mhfdLead, primaryStream } = req.body;
+  const { project_id, location, mhfdLead, primaryStream, hasProjectStream } = req.body;
   const transaction = await db.sequelize.transaction();
   const creator = req.user.email;
   try {
@@ -896,6 +896,28 @@ const updateActiveDetails = async (req, res) => {
         transaction: transaction
       });
     }
+    let projectStreamId;
+
+    if (!hasProjectStream) {
+      const newProjectStream = await ProjectStream.create({
+        project_id: project_id,
+        stream_id: primaryStream,
+        code_data_source_update_type_id: CONF_USER,
+        length_in_mile: 0,
+        code_local_government_id: 9999,
+        created_by: creator,
+        last_modified_by: creator,
+        is_active: true,
+        drainage_area_in_sq_miles: 0,
+      }, {
+        transaction: transaction
+      });
+
+      projectStreamId = newProjectStream.project_stream_id;
+    } else {
+      projectStreamId = lastProjectDetails.lastProjectStreamId;
+    }
+
     if (lastProjectDetails.lastProjectStreamId !== primaryStream) {
       if (lastProjectDetails.lastPrimaryStreamId) {
         await PrimaryStream.update({ 
@@ -908,7 +930,7 @@ const updateActiveDetails = async (req, res) => {
         });
       }      
       await PrimaryStream.create({
-        project_stream_id: primaryStream,
+        project_stream_id: projectStreamId,
         code_data_source_update_type_id: CONF_USER,
         created_by: creator,
         last_modified_by: creator,
