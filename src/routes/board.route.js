@@ -693,6 +693,7 @@ router.post('/board-for-positions2', async (req, res) => {
       });
 
       const Mhfd_ids = MHFD_Partner.map((mhfd) => mhfd.project_partner_id);
+      console.log('MHFD IDS TO SEARCH', Mhfd_ids, isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID);
       const projectCostValues = await BoardProjectCost.findAll({
         attributes: ['req_position', 'board_project_id'],
         include: [{
@@ -702,7 +703,7 @@ router.post('/board-for-positions2', async (req, res) => {
           where: {
             is_active: true,
             project_partner_id: { [Op.in]: Mhfd_ids },
-            code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID
+            code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
           }
         }],
         where: {
@@ -710,6 +711,7 @@ router.post('/board-for-positions2', async (req, res) => {
           req_position: position
         }
       });
+      console.log('\n\n\n __________________ \n Project cost values \n', projectCostValues, '\n\n\n');
       boardProjects.forEach((boardProject) => {
         const projectCostValue = projectCostValues.find((pcv) => pcv.board_project_id === boardProject.board_project_id);
         if (projectCostValue) {
