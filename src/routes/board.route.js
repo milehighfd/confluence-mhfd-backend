@@ -56,6 +56,90 @@ const DRAFT_STATUS = 1;
 const REQUESTED_STATUS = 2;
 const APPROVED_STATUS = 3;
 
+function* rankGenerator() {
+  let num = 0;
+  while (true) {
+      yield num;
+      num++;
+  }
+}
+
+router.get('/reverse-lexorank-update', async (req, res) => {
+  const boards = await Board.findAll();
+  const boardProjects = await BoardProject.findAll();
+  const updates = {
+      rank0: {},
+      rank1: {},
+      rank2: {},
+      rank3: {},
+      rank4: {},
+      rank5: {}
+  };
+  const positions =  ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+
+  for (const board of boards) {
+    const gen0 = rankGenerator();
+    const gen1 = rankGenerator();
+    const gen2 = rankGenerator();
+    const gen3 = rankGenerator();
+    const gen4 = rankGenerator();
+    const gen5 = rankGenerator();
+    let lexoRanks = {
+        rank0: gen0,
+        rank1: gen1,
+        rank2: gen2,
+        rank3: gen3,
+        rank4: gen4,
+        rank5: gen5
+    };
+    for (const [index, position] of positions.entries()) {
+        boardProjects.sort((a, b) => {
+            if (!a[position]) return -1;
+            if (!b[position]) return 1;
+            return a[position].localeCompare(b[position]);
+        });
+        for (const bp of boardProjects) {
+            if (board.board_id === bp.board_id) {
+                if (bp[position]) {
+                    const value = lexoRanks[positions[index]].next().value;
+                    if (!updates[positions[index]][value]) {
+                        updates[positions[index]][value] = [];
+                    }
+                    updates[positions[index]][value].push(bp.board_project_id);
+                    // lexoRanks[positions[index]] = lexoRanks[positions[index]].next().value;
+                }
+            }
+        }
+    }
+  }
+  let c = 0;
+  console.log(updates);
+  const prs = [];
+  for (const [index, position] of positions.entries()) {
+      for (const value in updates[position]) {
+        for (const board_project_id of updates[position][value]) {
+          c++;
+          logger.info(`Updating ${position} to ${value} for ${board_project_id}`);
+          prs.push(BoardProjectCost.create(
+            {
+              req_position: index,
+              board_project_id: board_project_id,
+              sort_order: value,
+              project_cost_id: 135499,
+              last_modified_by: 'system',
+              created_by: 'system'
+            }
+          ));
+        }
+      }
+  }
+  await Promise.all(prs);
+  res.send({
+      counter: c,
+  });
+});
+
+
 router.get('/lexorank-update', async (req, res) => {
     // const boards = await Board.findAll();
     // const boardProjects = await BoardProject.findAll();
