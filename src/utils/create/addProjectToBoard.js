@@ -89,6 +89,7 @@ export const addProjectToBoard = async (
   let boardProjectSaved = boardProject;
   if ((sendToWR === 'true' && board.status === 'Under Review') || isWorkPlan) {
     try {
+      console.log('About to save Board ');
       boardProjectSaved = await saveBoard(
         boardProject.board_id,
         boardProject.project_id,
@@ -99,7 +100,7 @@ export const addProjectToBoard = async (
         transaction
       );
     } catch (error) {
-      logger.error('error in save board ' + error);
+      logger.error('XXXXXXXXXXXXXXXXXXXXX \n\n error in save board ' + error);
       throw error;
     }
   }

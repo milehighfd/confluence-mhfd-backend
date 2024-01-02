@@ -41,8 +41,6 @@ import {
 import db from 'bc/config/db.js';
 import { ProjectError, ProjectBoardsError} from '../../errors/project.error.js';
 
-
-const CodeCostType = db.codeCostType
 const Project = db.project;
 const BoardProject = db.boardProject;
 

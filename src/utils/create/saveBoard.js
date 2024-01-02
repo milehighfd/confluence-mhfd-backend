@@ -26,11 +26,11 @@ export const saveBoard = async (
       created_by: creator,
       last_modified_by: creator
     };
-    console.log('\n\n\n\n About to create with this data ', bpdata, '\n\n\n\n');
+    console.log('\n\n\n\n About to create board project  with this data ', bpdata, '\n\n\n\n');
     const response = await BoardProject.create(bpdata, { transaction: transaction });
     return response;
   } catch (error) {
-    console.error(`Error saving board project: ${error}`);
+    console.error(`\n\n\n\n\n XXXXXXXXXXXXXXX \n\n\n\n Error saving board project: ${error}`);
     throw error;
   }
 }

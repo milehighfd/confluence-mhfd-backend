@@ -184,7 +184,7 @@ const updateCostNew = async (req, res) => {
       }]
     });
     if (beforeUpdate){
-    console.log('Board project id', board_project_id, 'beforeupdate', beforeUpdate);
+    console.log('COST: Board project id', board_project_id, 'beforeupdate', beforeUpdate);
     const board_id = beforeUpdate.board_id;
     const currentProjectId = beforeUpdate.project_id;
     let statusHasChanged;
@@ -193,28 +193,28 @@ const updateCostNew = async (req, res) => {
     //   attributes: ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'],
     //   where: { board_project_id }
     // });    
-    console.log('HERE ARE THE REAL NEW AMONTS', amounts);
+    console.log('COST: HERE ARE THE REAL NEW AMONTS', amounts);
     for(let i = 0; i < amounts.length; ++i) {
         const amount = amounts[i];
         let updateFields = {};
-        const wasOnWorkspace = await isOnWorkspace(beforeUpdate); // based on RANK
+        const wasOnWorkspace = await isOnWorkspace(beforeUpdate);
         const columnsChanged = [0];
   
         const allCurrentAmounts = {}; // aqui se almacenan todos los reqs amounts
         // Returns all boarcproject cost related to the current board project
         // dentro de estos estan los costos de cada partner
-        console.log('All previous amounts', allPreviousAmounts, 'searching for ', JSON.stringify(amount));
+        console.log('COST: All previous amounts', allPreviousAmounts, 'searching for ', JSON.stringify(amount));
         const beforeAmounts = allPreviousAmounts.find((a) => a.business_name === amount.business_name && a.code_cost_type_id === amount.code_cost_type_id && a.code_partner_type_id === amount.code_partner_type_id);
         // check if exists because it could be a new partner that wasnt in previous amounts
         if (!beforeAmounts) {
-          console.log('Jumped save for ', amount.business_name, 'because it doesnt exist');
+          console.log(' COST: Jumped save for ', amount.business_name, 'because it doesnt exist');
           continue;
         }
         const currentBusinessAssociatesId = beforeAmounts?.business_associates_id;
         const currentPartnerTypeId = beforeAmounts?.code_partner_type_id;
         // EXCLUSIVO PARA MHFD FUNDING // PORQUE ES PARA AGREGAR O QUITAR CARDS DE ALGUNA COLUMNA
         if (amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22)) {
-          console.log('MHFD FUNDING', JSON.stringify(amount), isWorkPlan, 'before amount', beforeAmounts);
+          console.log(' COST: MHFD FUNDING', JSON.stringify(amount), isWorkPlan, 'before amount', beforeAmounts);
           for (let pos = 1; pos <= 5; pos++) {
             const reqColumnName = `req${pos}`;
             // const rankColumnName = `rank${pos}`;
@@ -258,7 +258,7 @@ const updateCostNew = async (req, res) => {
             const reqColumnName = `req${pos}`;
             const valueHasChanged = beforeAmounts.values[reqColumnName] !== amount.values[reqColumnName];
             if (valueHasChanged) {
-              console.log(' ========== adding pos', pos, valueHasChanged, amount.values[reqColumnName], beforeAmounts.values[reqColumnName]);
+              console.log(' COST:  ========== adding pos', pos, valueHasChanged, amount.values[reqColumnName], beforeAmounts.values[reqColumnName]);
               columnsChanged.push(pos);
               allCurrentAmounts[reqColumnName] = amount.values[reqColumnName];
             } else {
@@ -266,7 +266,7 @@ const updateCostNew = async (req, res) => {
             }
           }
         }
-        console.log('\n\n ________ \n ------------- \n columnsChanged', columnsChanged, JSON.stringify(amount));
+        console.log(' COST: \n\n ________ \n ------------- \n columnsChanged', columnsChanged, JSON.stringify(amount));
         const allPromises = [];
         
         let mainModifiedDate = new Date();
@@ -282,7 +282,7 @@ const updateCostNew = async (req, res) => {
           ||
           ( amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22)) // IF MHFD FUNDING FOR WORK PLAN OR WORK REQUEST
         ) {
-          console.log(' ------------- \nColumns changed', columnsChanged, 'with id', currentBusinessAssociatesId , '\n\n\n');
+          console.log(' COST:  ------------- \nColumns changed', columnsChanged, 'with id', currentBusinessAssociatesId , '\n\n\n');
           let shouldRemoveWorkspaceReq = false;
           for (let pos = 0; pos < columnsChanged.length; ++pos) {
             const currentColumn = columnsChanged[pos];
@@ -292,7 +292,7 @@ const updateCostNew = async (req, res) => {
               const reqColumnName = `req${currentColumn}`;
               const currentReqAmount = amount.values[reqColumnName] ?? null;
               const currentCost = currentReqAmount;
-              console.log('About to update boardprojectcosts', amount, currentColumn, currentCost, currentProjectId, board_project_id, currentPartnerTypeId);
+              console.log(' COST: About to update boardprojectcosts', amount, currentColumn, currentCost, currentProjectId, board_project_id, currentPartnerTypeId);
               allPromises.push(
                 boardService.updateAndCreateProjectCostsForAmounts(
                   currentColumn,

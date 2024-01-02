@@ -124,7 +124,7 @@ router.get('/reverse-lexorank-update', async (req, res) => {
             {
               req_position: index,
               board_project_id: board_project_id,
-              sort_order: value,
+              sort_order: value + 1 ,
               last_modified_by: 'system',
             },
             {
@@ -678,7 +678,7 @@ router.post('/board-for-positions2', async (req, res) => {
         ]
       }]
     })).map(d => d.dataValues);
-    console.log('\n\n\n *************** \n\n\n THIS IS THE DATA NEEDED  >', JSON.stringify(boardProjects), '\n\n\n\n');
+    console.log('\n\n\n ***************' , 'position', position, '\n\n\n THIS IS THE DATA NEEDED  >', JSON.stringify(boardProjects), '\n\n\n\n');
     // is not in workspace
     if (`${position}` !== '0') {
       const boardProjectIds = boardProjects.map((boardProject) => boardProject.board_project_id);
