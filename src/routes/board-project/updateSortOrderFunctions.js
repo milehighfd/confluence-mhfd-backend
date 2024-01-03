@@ -1,5 +1,6 @@
 import db from 'bc/config/db.js';
-import { COST_IDS } from 'bc/lib/enumConstants.js';
+import { CODE_DATA_SOURCE_TYPE, COST_IDS } from 'bc/lib/enumConstants.js';
+import { saveProjectCost } from 'bc/utils/create';
 import sequelize from 'sequelize';
 const { Op } = sequelize;
 const BoardProject = db.boardProject;
@@ -119,13 +120,48 @@ export const getSortOrderValue = async (boardId, currentColumn, transaction) => 
     return [];
   }
 }
-export const insertFromPositionOfColumn = async (boardId, currentColumn, movePosition, transaction) => {
+// move the cards from certain positions by 1
+export const moveFromPositionOfColumn = async (boardId, currentColumn, movePosition, transaction) => {
   try {
     const boardProjects = await getBoardProjectsValues(boardId, currentColumn, movePosition);
-    // TODO: now move all sort values to +1 so that the new one is at the beginning
-    moveProjectCostsOnePosition(boardProjects, transaction);
+    console.log('Move positions of ', boardProjects, currentColumn, movePosition);
+    await moveProjectCostsOnePosition(boardProjects, transaction);
   } catch(error) {
     console.error('FAIL at INSERT AT BEGINNING OF COLUMN', error);
     return [];
   }
 }
+
+export const createCostAndInsertInPosition = async (project_id, board_project_id, code_cost_type_id, project_partner_id, creator, boardId, currentColumn, movePosition, cost, transaction) => { 
+  try {
+    const dataProjectCost = {
+      project_id: project_id,
+      cost: cost,
+      code_cost_type_id: code_cost_type_id,
+      created_by: creator,
+      modified_by: creator,
+      is_active: true,
+      code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER,
+      project_partner_id: project_partner_id,
+    };
+    console.log('Null cost is created with values', dataProjectCost);
+    const projectCostCreated = await saveProjectCost(dataProjectCost, transaction);
+    const project_cost_id = projectCostCreated.dataValues.project_cost_id;
+    const newProjectBoardData = {
+      board_project_id: board_project_id,
+      project_cost_id: project_cost_id,
+      req_position: currentColumn,
+      created_by: creator,
+      last_modified_by: creator,
+      sort_order: movePosition
+    };
+    console.log('new BoardProjectBoardData', newProjectBoardData);
+    await moveFromPositionOfColumn(boardId, currentColumn, movePosition, transaction);
+    const boardProjectCostCreated = await BoardProjectCost.create(newProjectBoardData);  
+    return boardProjectCostCreated;
+  } catch (error) {
+    console.error('FAIL at SAVE and create cost in position', error);
+    return [];
+  }
+  
+};

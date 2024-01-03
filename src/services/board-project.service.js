@@ -16,7 +16,6 @@ export const isOnWorkspace =  async (boardProject) => {
       where: { is_active: true }
     }]
   });
-  console.log('Board project costs to check workspace', boardProjectCosts);
   if ((boardProjectCosts.length > 0 && boardProjectCosts[0].dataValues.req_position === 0) || boardProjectCosts.length === 0) {
     console.log('COST: Is on Workspace', JSON.stringify(boardProjectCosts));
     return true;

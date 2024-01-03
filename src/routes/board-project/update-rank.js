@@ -6,11 +6,13 @@ import sequelize from 'sequelize';
 import { LexoRank } from 'lexorank';
 import moment from 'moment';
 import { OFFSET_MILLISECONDS, CODE_DATA_SOURCE_TYPE, COST_IDS } from 'bc/lib/enumConstants.js';
+import { createCostAndInsertInPosition } from './updateSortOrderFunctions.js';
 
 const BoardProject = db.boardProject;
 const BoardProjectCost = db.boardProjectCost;
 const ProjectCost = db.projectCost;
 const ProjectPartner = db.projectPartner;
+const BusinessAssociates = db.businessAssociates;
 const { Op } = sequelize;
 
 async function getOriginSponsorCosponsor(board_project_id) {
@@ -263,9 +265,10 @@ const updateRank = async (req, res) => {
     beforeIndex,  // targetposition -1 
     afterIndex,   // targetposition +1 
     targetPosition,  // target position in destiny column 
-    otherFields, //   previous rankX, that is going to be deleted
+    previousColumn, //   previous rankX, that is going to be deleted
     isWorkPlan,
-    boardId
+    boardId,
+    projectData
   } = req.body;
   const isWorkPlanBoolean = typeof isWorkPlan === 'boolean' ? isWorkPlan : isWorkPlan === 'true' ? true : false;
   const WORK_PLAN_CODE_COST_TYPE_ID = 21;
@@ -308,182 +311,228 @@ const updateRank = async (req, res) => {
   } else if (after === null && afterIndex !== -1) {
     logger.error('after is null but afterIndex is not -1');
   }
-  let lexo; // get the value of the destiny position
-  if (count === 0) {
-    // lexo = LexoRank.middle().toString();
-  } else if (before === null) {
-    // lexo = LexoRank.parse(after).genPrev().toString();
-  } else if (after === null) {
-    // lexo = LexoRank.parse(before).genNext().toString();
-  } else {
-    if (before === after) {
-      lexo = before; //TODO: change as this should not happen
-    } else {
-      // lexo = LexoRank.parse(before).between(LexoRank.parse(after)).toString();
-    }
-  }
+  let lexo = targetPosition + 1; // get the value of the destiny position
   try {
     // update boardproject with the new lexo for rank of destiny and from other fields, remove previous position
-    const boardProjectUpdatedStatus = await BoardProject.update(
-      { 
-        // [rankColumnName]: lexo,
-         ...otherFields },
-      { where: { board_project_id } }
+    // const boardProjectUpdatedStatus = await BoardProject.update(
+    //   { 
+    //     // [rankColumnName]: lexo,
+    //      ...otherFields },
+    //   { where: { board_project_id } }
+    // );
+    // remove from previous position, previousColumn, so projectCost has to be deactivated 
+    const boardProjectCosts = await BoardProjectCost.findAll({
+      where: {
+        board_project_id,
+        req_position: previousColumn
+      },
+      include: [
+        {
+          model: ProjectCost,
+          as: 'projectCostData',
+          where: {
+            is_active: true,
+            code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID
+          }
+        }
+      ]
+    });
+    console.log('BoardProejctCost', boardProjectCosts);
+    if (boardProjectCosts.length > 0) {
+      const projectCostId = boardProjectCosts[0].projectCostData.project_cost_id;
+      const costUpdateData = {
+        is_active: false,
+        last_modified: moment().toDate(),
+        modified_by: user.email,
+        code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
+      };
+      const projectCostUpdated = await ProjectCost.update(
+        costUpdateData,
+        { where: { project_cost_id: projectCostId } }
+      );
+      console.log('projectCostUpdated', projectCostUpdated, '\n\n', costUpdateData);
+    }
+
+
+    const { project_id, } = projectData;
+    const projectPartnerId = await ProjectPartner.findAll({
+      attributes: ['project_partner_id'],
+      where: {
+        project_id: project_id,
+        code_partner_type_id: COST_IDS.MHFD_CODE_COST_TYPE_ID
+      },
+      include: [ {
+        model: BusinessAssociates,
+        as: 'businessAssociateData'
+      }]
+    });
+    await createCostAndInsertInPosition(
+      project_id, 
+      board_project_id,
+      isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID,
+      projectPartnerId[0].project_partner_id,
+      user.email,
+      boardId,
+      columnNumber,
+      lexo,
+      null,
+      null
     );
     // get the boardproject updated
     let boardProjectUpdated = await BoardProject.findOne({
       where: { board_project_id }
     });
     // check if now is on workspace
-    const onWorkspace = isOnWorkspace(boardProjectUpdated);
-    if (onWorkspace) {
-      // deactiva all costs related to this board_project_id
-      const costUpdateData = {
-        is_active: false,
-        last_modified: moment().toDate(),
-        last_modified_by: user.email,
-        code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_EDITED: WORK_REQUEST_EDITED,
-      };
-      await ProjectCost.update(
-        costUpdateData,
-        { where: { 
-          is_active: true,
-          project_id: boardProjectUpdated.project_id,
-          code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID
-        } }
-      );
-      const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
-      // create a new cost with null value for project partner mhfd 
-      const project_partner_id = projectPartnerMHFD[0].project_partner_id;
-      const newProjectCost = {
-        project_id: boardProjectUpdated.project_id,
-        project_partner_id: project_partner_id,
-        cost: null,
-        created_by: user.email,
-        modified_by: user.email,
-        createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
-        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
-      };
-      const createdProjectCost = await ProjectCost.create(newProjectCost);
-      // create a null cost with req_position  = 0
-      const newBoardProjectCost = {
-        board_project_id: board_project_id,
-        req_position: 0,
-        project_cost_id: createdProjectCost.project_cost_id, 
-        created_by: user.email,
-        last_modified_by: user.email,
-        createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
-      };
-      await BoardProjectCost.create(newBoardProjectCost);
-    } else {
-    // is to add costs in the new column with the previous column cost 
-      for (const key in otherFields) {
-        if (key != 'rank0') {
-          let originCost = null;
-          let targetCost = null;    
-          if (getNumberFromRank(otherFields) && columnNumber) {
-            originCost = await getBoardProjectCostMHFD(board_project_id, getNumberFromRank(otherFields));
-            targetCost = await getBoardProjectCostMHFD(board_project_id, columnNumber);
-            if (originCost && targetCost) {
-              const cost = originCost.projectCostData.cost + targetCost.projectCostData.cost;
-              // update targetCost with the added cost
-              ProjectCost.update(
-                {
-                  cost: cost,
-                  last_modified: moment().toDate(),
-                  modified_by: user.email
-                },
-                { where: { project_cost_id: targetCost.projectCostData.project_cost_id } }
-              );
-              // deactivate previous cost of origin column
-              ProjectCost.update(
-                {
-                  is_active: false,
-                  last_modified: moment().toDate(),
-                  last_modified_by: user.email,
-                  code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
-                },
-                { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
-              );
-              const sponsorAndCosponsor = await getOriginSponsorCosponsor(board_project_id);
-              sponsorAndCosponsor.forEach(async (project_partner_id) => {
-                const originSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, getNumberFromRank(otherFields), project_partner_id);
-                const targetSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, columnNumber, project_partner_id);
-                if (originSecCost && targetSecCost) {                
-                  const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
-                  ProjectCost.update(
-                    {
-                      cost: cost,
-                      last_modified: moment().toDate(),
-                      modified_by: user.email
-                    },
-                    { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
-                  );
-                  ProjectCost.update(
-                    {
-                      is_active: false,
-                      last_modified: moment().toDate(),
-                      modified_by: user.email,
-                      code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
-                    },
-                    { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
-                  );
-                }
-              });
-            }
-          }
-        } else {
+    const onWorkspace = await isOnWorkspace(boardProjectUpdated);
+    console.log('Check if now on Workspace', onWorkspace);
+    // if (onWorkspace) {
+    //   // deactiva all costs related to this board_project_id
+    //   const costUpdateData = {
+    //     is_active: false,
+    //     last_modified: moment().toDate(),
+    //     last_modified_by: user.email,
+    //     code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_EDITED: WORK_REQUEST_EDITED,
+    //   };
+    //   await ProjectCost.update(
+    //     costUpdateData,
+    //     { where: { 
+    //       is_active: true,
+    //       project_id: boardProjectUpdated.project_id,
+    //       code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID
+    //     } }
+    //   );
+    //   const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
+    //   // create a new cost with null value for project partner mhfd 
+    //   const project_partner_id = projectPartnerMHFD[0].project_partner_id;
+    //   const newProjectCost = {
+    //     project_id: boardProjectUpdated.project_id,
+    //     project_partner_id: project_partner_id,
+    //     cost: null,
+    //     created_by: user.email,
+    //     modified_by: user.email,
+    //     createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //     updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //     code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
+    //     code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
+    //   };
+    //   const createdProjectCost = await ProjectCost.create(newProjectCost);
+    //   // create a null cost with req_position  = 0
+    //   const newBoardProjectCost = {
+    //     board_project_id: board_project_id,
+    //     req_position: 0,
+    //     project_cost_id: createdProjectCost.project_cost_id, 
+    //     created_by: user.email,
+    //     last_modified_by: user.email,
+    //     createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //     updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //     code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
+    //   };
+    //   await BoardProjectCost.create(newBoardProjectCost);
+    // } else {
+    // // is to add costs in the new column with the previous column cost 
+    //   for (const key in otherFields) {
+    //     if (key != 'rank0') {
+    //       let originCost = null;
+    //       let targetCost = null;    
+    //       if (getNumberFromRank(otherFields) && columnNumber) {
+    //         originCost = await getBoardProjectCostMHFD(board_project_id, getNumberFromRank(otherFields));
+    //         targetCost = await getBoardProjectCostMHFD(board_project_id, columnNumber);
+    //         if (originCost && targetCost) {
+    //           const cost = originCost.projectCostData.cost + targetCost.projectCostData.cost;
+    //           // update targetCost with the added cost
+    //           ProjectCost.update(
+    //             {
+    //               cost: cost,
+    //               last_modified: moment().toDate(),
+    //               modified_by: user.email
+    //             },
+    //             { where: { project_cost_id: targetCost.projectCostData.project_cost_id } }
+    //           );
+    //           // deactivate previous cost of origin column
+    //           ProjectCost.update(
+    //             {
+    //               is_active: false,
+    //               last_modified: moment().toDate(),
+    //               last_modified_by: user.email,
+    //               code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
+    //             },
+    //             { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
+    //           );
+    //           const sponsorAndCosponsor = await getOriginSponsorCosponsor(board_project_id);
+    //           sponsorAndCosponsor.forEach(async (project_partner_id) => {
+    //             const originSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, getNumberFromRank(otherFields), project_partner_id);
+    //             const targetSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, columnNumber, project_partner_id);
+    //             if (originSecCost && targetSecCost) {                
+    //               const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
+    //               ProjectCost.update(
+    //                 {
+    //                   cost: cost,
+    //                   last_modified: moment().toDate(),
+    //                   modified_by: user.email
+    //                 },
+    //                 { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
+    //               );
+    //               ProjectCost.update(
+    //                 {
+    //                   is_active: false,
+    //                   last_modified: moment().toDate(),
+    //                   modified_by: user.email,
+    //                   code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
+    //                 },
+    //                 { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
+    //               );
+    //             }
+    //           });
+    //         }
+    //       }
+    //     } else {
 
-          const costUpdateData = {
-            is_active: false,
-            last_modified: moment().toDate(),
-            last_modified_by: user.email,
-            code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
-          };
-          const updatevalue = await ProjectCost.update(
-            costUpdateData,
-            { where: { 
-              is_active: true,
-              project_id: boardProjectUpdated.project_id,
-              code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID
-            } }
-          );
-          const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
-          // create a new cost with null value for project partner mhfd 
-          const project_partner_id = projectPartnerMHFD[0].project_partner_id;
-          const newProjectCost = {
-            project_id: boardProjectUpdated.project_id,
-            project_partner_id: project_partner_id,
-            cost: 0,
-            created_by: user.email,
-            modified_by: user.email,
-            createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-            updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-            code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
-            code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
-          };
-          const createdProjectCost = await ProjectCost.create(newProjectCost);
+    //       const costUpdateData = {
+    //         is_active: false,
+    //         last_modified: moment().toDate(),
+    //         last_modified_by: user.email,
+    //         code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
+    //       };
+    //       const updatevalue = await ProjectCost.update(
+    //         costUpdateData,
+    //         { where: { 
+    //           is_active: true,
+    //           project_id: boardProjectUpdated.project_id,
+    //           code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID
+    //         } }
+    //       );
+    //       const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
+    //       // create a new cost with null value for project partner mhfd 
+    //       const project_partner_id = projectPartnerMHFD[0].project_partner_id;
+    //       const newProjectCost = {
+    //         project_id: boardProjectUpdated.project_id,
+    //         project_partner_id: project_partner_id,
+    //         cost: 0,
+    //         created_by: user.email,
+    //         modified_by: user.email,
+    //         createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //         updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //         code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
+    //         code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
+    //       };
+    //       const createdProjectCost = await ProjectCost.create(newProjectCost);
 
-          const newBoardProjectCost = {
-            board_project_id: board_project_id,
-            req_position: columnNumber,
-            project_cost_id: createdProjectCost.project_cost_id, 
-            created_by: user.email,
-            last_modified_by: user.email,
-            createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-            updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-          };
-          await BoardProjectCost.create(newBoardProjectCost);
-        }
-      }
-    }
+    //       const newBoardProjectCost = {
+    //         board_project_id: board_project_id,
+    //         req_position: columnNumber,
+    //         project_cost_id: createdProjectCost.project_cost_id, 
+    //         created_by: user.email,
+    //         last_modified_by: user.email,
+    //         createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //         updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+    //       };
+    //       await BoardProjectCost.create(newBoardProjectCost);
+    //     }
+    //   }
+    // }
 
-    [boardProjectUpdated, ] = await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id, user.email);
-    return res.status(200).send(boardProjectUpdatedStatus);
+    // [boardProjectUpdated, ] = await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id, user.email);
+    return res.status(200).send(null);
   } catch (error) {
     logger.error('Error at update rank' + error);
     return res.status(500).send({ error: error });
