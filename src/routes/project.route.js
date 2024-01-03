@@ -903,12 +903,12 @@ const updateActiveDetails = async (req, res) => {
         project_id: project_id,
         stream_id: primaryStream,
         code_data_source_update_type_id: CONF_USER,
-        length_in_mile: 0,
+        length_in_feet: 0,
         code_local_government_id: 9999,
         created_by: creator,
         last_modified_by: creator,
         is_active: true,
-        drainage_area_in_sq_miles: 0,
+        drainage_area_in_acres: 0,
       }, {
         transaction: transaction
       });

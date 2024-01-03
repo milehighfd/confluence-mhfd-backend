@@ -17,11 +17,11 @@ export default (sequelize, DataType) => {
       type: DataType.INTEGER,
       allowNull: false
     },
-    length_in_mile: {
+    length_in_feet: {
       type: DataType.FLOAT,
       allowNull: false
     },
-    drainage_area_in_sq_miles: {
+    drainage_area_in_acres: {
       type: DataType.FLOAT,
       allowNull: false
     },    
