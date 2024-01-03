@@ -291,21 +291,21 @@ const updateRank = async (req, res) => {
     // [rankColumnName]: { [Op.ne]: null }
   };
   const count = await BoardProject.count({ where: columnCountWhere }); // count all projects in the destiny column  
-  if (
-    before === null &&
-    after === null &&   /// if before and after are null, it means there is no project in that destiny column
-    count > 0   // but if in DB it exists, is going to fix the error
-  ) {
-    const results = await insertOnColumnAndFixColumn(
-      columnNumber,
-      board_id,
-      targetPosition,
-      otherFields,
-      board_project_id,
-      user
-    );
-    return res.status(201).send(results);
-  }
+  // if (
+  //   before === null &&
+  //   after === null    /// if before and after are null, it means there is no project in that destiny column
+  //   // count > 0   // but if in DB it exists, is going to fix the error
+  // ) {
+  //   const results = await insertOnColumnAndFixColumn(
+  //     columnNumber,
+  //     board_id,
+  //     targetPosition,
+  //     otherFields,
+  //     board_project_id,
+  //     user
+  //   );
+  //   return res.status(201).send(results);
+  // }
   if (before === null && beforeIndex !== -1) {
     logger.error('before is null but beforeIndex is not -1');
   } else if (after === null && afterIndex !== -1) {
