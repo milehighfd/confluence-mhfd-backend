@@ -915,9 +915,8 @@ const updateActiveDetails = async (req, res) => {
 
       projectStreamId = newProjectStream.project_stream_id;
     } else {
-      projectStreamId = lastProjectDetails.lastProjectStreamId;
+      projectStreamId = primaryStream;
     }
-
     if (lastProjectDetails.lastProjectStreamId !== primaryStream) {
       if (lastProjectDetails.lastPrimaryStreamId) {
         await PrimaryStream.update({ 
