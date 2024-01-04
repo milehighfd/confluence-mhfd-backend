@@ -2,6 +2,7 @@ import db from 'bc/config/db.js';
 import { CODE_DATA_SOURCE_TYPE, COST_IDS } from 'bc/lib/enumConstants.js';
 import { saveProjectCost } from 'bc/utils/create';
 import sequelize from 'sequelize';
+import moment from 'moment';
 const { Op } = sequelize;
 const BoardProject = db.boardProject;
 const Board = db.board;
@@ -140,6 +141,8 @@ export const createCostAndInsertInPosition = async (project_id, board_project_id
       code_cost_type_id: code_cost_type_id,
       created_by: creator,
       modified_by: creator,
+      createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       is_active: true,
       code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER,
       project_partner_id: project_partner_id,
@@ -153,7 +156,10 @@ export const createCostAndInsertInPosition = async (project_id, board_project_id
       req_position: currentColumn,
       created_by: creator,
       last_modified_by: creator,
-      sort_order: movePosition
+      sort_order: movePosition,
+      last_modified_by: creator,
+      createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
     };
     console.log('new BoardProjectBoardData', newProjectBoardData);
     await moveFromPositionOfColumn(boardId, currentColumn, movePosition, transaction);

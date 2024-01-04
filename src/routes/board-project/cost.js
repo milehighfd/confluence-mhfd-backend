@@ -189,17 +189,12 @@ const updateCostNew = async (req, res) => {
     const currentProjectId = beforeUpdate.project_id;
     let statusHasChanged;
     const allPreviousAmounts = await getAllPreviousAmounts(beforeUpdate, currentProjectId);
-    // const currentRanks = await BoardProject.findOne({
-    //   attributes: ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'],
-    //   where: { board_project_id }
-    // });    
     console.log('COST: HERE ARE THE REAL NEW AMONTS', amounts);
     for(let i = 0; i < amounts.length; ++i) {
         const amount = amounts[i];
         let updateFields = {};
         const wasOnWorkspace = await isOnWorkspace(beforeUpdate);
         const columnsChanged = [0];
-  
         const allCurrentAmounts = {}; // aqui se almacenan todos los reqs amounts
         // Returns all boarcproject cost related to the current board project
         // dentro de estos estan los costos de cada partner
@@ -217,9 +212,7 @@ const updateCostNew = async (req, res) => {
           console.log(' COST: MHFD FUNDING', JSON.stringify(amount), isWorkPlan, 'before amount', beforeAmounts);
           for (let pos = 1; pos <= 5; pos++) {
             const reqColumnName = `req${pos}`;
-            // const rankColumnName = `rank${pos}`;
-            const currentReqAmount = amount.values[reqColumnName] ?? null;            
-            // const valueHasChanged = (currentReqAmount === null) ? true : beforeAmounts.values[reqColumnName] !== currentReqAmount;
+            const currentReqAmount = amount.values[reqColumnName] ?? null;
             const valueHasChanged = beforeAmounts.values[reqColumnName] !== currentReqAmount;
             if (valueHasChanged) {
               columnsChanged.push(pos);
