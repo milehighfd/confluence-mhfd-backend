@@ -163,7 +163,7 @@ export const createCostAndInsertInPosition = async (project_id, board_project_id
     };
     console.log('new BoardProjectBoardData', newProjectBoardData);
     await moveFromPositionOfColumn(boardId, currentColumn, movePosition, transaction);
-    const boardProjectCostCreated = await BoardProjectCost.create(newProjectBoardData);  
+    const boardProjectCostCreated = await BoardProjectCost.create(newProjectBoardData, {transaction});  
     return boardProjectCostCreated;
   } catch (error) {
     console.error('FAIL at SAVE and create cost in position', error);

@@ -379,6 +379,7 @@ const updateRank = async (req, res) => {
 
 
     if (destinyIsWorkspace) { // ANYWHERE -> WORKSPACE
+      console.log('\n ****************************** \n SENDING TO WORKSPACE \n ****************************** \n');
       await deactivateCostFromPreviousPosition(board_project_id, previousColumn, isWorkPlanBoolean, user, transaction);
       // deactiva all costs related to this board_project_id
       const costUpdateData = {
@@ -411,6 +412,7 @@ const updateRank = async (req, res) => {
     // is to add costs in the new column with the previous column cost 
       const previousColumnNumber = previousColumn;
       if (previousColumnNumber != 0) { // COLUMN TO COLUMN 
+        console.log('\n ****************************** \n SENDING TO COLUMN TO COLUMNs \n ****************************** \n');
         let originCost = null;
         let targetCost = null;    
         if (previousColumn && columnNumber) {
@@ -466,6 +468,7 @@ const updateRank = async (req, res) => {
           }
         }
       } else {
+        console.log('\n ****************************** \n SENDING WORKSPACE TO COLUMN \n ****************************** \n');
         // is not workspace and previous column is 0 ->  WORKSPACE to COLUMN  
         await deactivateCostFromPreviousPosition(board_project_id, previousColumn, isWorkPlanBoolean, user, transaction);
         // const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
