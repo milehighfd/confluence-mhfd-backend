@@ -6,7 +6,7 @@ import sequelize from 'sequelize';
 import { LexoRank } from 'lexorank';
 import moment from 'moment';
 import { OFFSET_MILLISECONDS, CODE_DATA_SOURCE_TYPE, COST_IDS } from 'bc/lib/enumConstants.js';
-import { createCostAndInsertInPosition } from './updateSortOrderFunctions.js';
+import { createCostAndInsertInPosition, deletePositionInColumn } from './updateSortOrderFunctions.js';
 
 const BoardProject = db.boardProject;
 const BoardProjectCost = db.boardProjectCost;
@@ -246,7 +246,7 @@ const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition
     console.error(`Error updating ranks: ${error}`);
   }  
 };
-const deactivateCostFromPreviousPosition = async (board_project_id, previousColumn, isWorkPlanBoolean, user, transaction) => {
+const deactivateCostFromPreviousPosition = async (board_project_id, boardId, previousColumn, isWorkPlanBoolean, user, transaction) => {
   try {
     const boardProjectCosts = await BoardProjectCost.findAll({
       where: {
@@ -266,6 +266,8 @@ const deactivateCostFromPreviousPosition = async (board_project_id, previousColu
       transaction
     });
     if (boardProjectCosts.length > 0) {
+      const previousSortOrder = boardProjectCosts[0].sort_order;
+      await deletePositionInColumn(boardId, previousColumn, previousSortOrder + 1, transaction);
       const projectCostId = boardProjectCosts[0].projectCostData.project_cost_id;
       const costUpdateData = {
         is_active: false,
@@ -304,6 +306,23 @@ const createCostAndInsertIntoColumn = async (project_id, board_project_id, board
   } catch (error) {
     console.error('Error at insertCostInColumn ', error); 
   }
+}
+const deactivatAllPreviousCosts = async (currentBoardProject, user, isWorkPlanBoolean, transaction) => {
+  const costUpdateData = {
+    is_active: false,
+    last_modified: moment().toDate(),
+    last_modified_by: user.email,
+    code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
+  };
+  await ProjectCost.update(
+    costUpdateData,
+    { where: { 
+      is_active: true,
+      project_id: currentBoardProject.project_id,
+      code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
+    } },
+    { transaction }
+  );
 }
 const updateRank = async (req, res) => {
   logger.info('get board project cost by id');
@@ -380,23 +399,7 @@ const updateRank = async (req, res) => {
 
     if (destinyIsWorkspace) { // ANYWHERE -> WORKSPACE
       console.log('\n ****************************** \n SENDING TO WORKSPACE \n ****************************** \n');
-      await deactivateCostFromPreviousPosition(board_project_id, previousColumn, isWorkPlanBoolean, user, transaction);
-      // deactiva all costs related to this board_project_id
-      const costUpdateData = {
-        is_active: false,
-        last_modified: moment().toDate(),
-        last_modified_by: user.email,
-        code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_EDITED: WORK_REQUEST_EDITED,
-      };
-      await ProjectCost.update(
-        costUpdateData,
-        { where: { 
-          is_active: true,
-          project_id: boardProjectUpdated.project_id,
-          code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID
-        } },
-        { transaction }
-      );
+      await deactivateCostFromPreviousPosition(board_project_id, boardId, previousColumn, isWorkPlanBoolean, user, transaction);
       await createCostAndInsertIntoColumn(
         project_id,
         board_project_id,
@@ -470,33 +473,7 @@ const updateRank = async (req, res) => {
       } else {
         console.log('\n ****************************** \n SENDING WORKSPACE TO COLUMN \n ****************************** \n');
         // is not workspace and previous column is 0 ->  WORKSPACE to COLUMN  
-        await deactivateCostFromPreviousPosition(board_project_id, previousColumn, isWorkPlanBoolean, user, transaction);
-        // const projectPartnerMHFD = await getProjectPartnerMHFD(boardProjectUpdated.project_id);
-        // // create a new cost with null value for project partner mhfd 
-        // const project_partner_id = projectPartnerMHFD[0].project_partner_id;
-        // const newProjectCost = {
-        //   project_id: boardProjectUpdated.project_id,
-        //   project_partner_id: project_partner_id,
-        //   cost: 0,
-        //   created_by: user.email,
-        //   modified_by: user.email,
-        //   createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        //   updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        //   code_cost_type_id: isWorkPlanBoolean ? WORK_PLAN_CODE_COST_TYPE_ID: WORK_REQUEST_CODE_COST_TYPE_ID,
-        //   code_data_source_type_id: CODE_DATA_SOURCE_TYPE.SYSTEM,
-        // };
-        // const createdProjectCost = await ProjectCost.create(newProjectCost);
-
-        // const newBoardProjectCost = {
-        //   board_project_id: board_project_id,
-        //   req_position: columnNumber,
-        //   project_cost_id: createdProjectCost.project_cost_id, 
-        //   created_by: user.email,
-        //   last_modified_by: user.email,
-        //   createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        //   updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        // };
-        // await BoardProjectCost.create(newBoardProjectCost);
+        await deactivateCostFromPreviousPosition(board_project_id, boardId, previousColumn, isWorkPlanBoolean, user, transaction);
         await createCostAndInsertIntoColumn(
           project_id,
           board_project_id,

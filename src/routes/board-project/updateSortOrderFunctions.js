@@ -22,13 +22,13 @@ const applyLocalityCondition = (where) => {
   }
   return where;
 }
-export const moveProjectCostsOnePosition = async (boardProjects, transaction) => { 
+export const moveProjectCostsOnePosition = async (boardProjects, arithmeticOperation ,transaction) => { 
   // iterate though boardprojects and get the project_cost_id then update the sort_order and add 1 to each
   try {
     const boardProjectCostIds = boardProjects.map(b => b.boardProjectToCostData[0].board_project_cost_id);
     console.log('boardprojectsosids', boardProjectCostIds);
     const boardProjectCostsUpdate = await BoardProjectCost.update(
-      { sort_order: sequelize.literal('sort_order + 1') },
+      { sort_order: sequelize.literal(`sort_order ${arithmeticOperation}`) },
       {
         where: {
           board_project_cost_id: {
@@ -126,9 +126,21 @@ export const moveFromPositionOfColumn = async (boardId, currentColumn, movePosit
   try {
     const boardProjects = await getBoardProjectsValues(boardId, currentColumn, movePosition);
     console.log('Move positions of ', boardProjects, currentColumn, movePosition);
-    await moveProjectCostsOnePosition(boardProjects, transaction);
+    const arithmeticOperation = '+ 1';
+    await moveProjectCostsOnePosition(boardProjects, arithmeticOperation, transaction);
   } catch(error) {
     console.error('FAIL at INSERT AT BEGINNING OF COLUMN', error);
+    return [];
+  }
+}
+export const deletePositionInColumn = async (boardId, currentColumn, movePosition, transaction) => {
+  try {
+    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, movePosition);
+    console.log('Delete positions of ', boardProjects, currentColumn, movePosition);
+    const arithmeticOperation = '- 1';
+    await moveProjectCostsOnePosition(boardProjects, arithmeticOperation, transaction);
+  } catch(error) {
+    console.error('FAIL at DELETE POSITION IN COLUMN', error);
     return [];
   }
 }
