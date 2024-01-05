@@ -6,7 +6,7 @@ import sequelize from 'sequelize';
 import { LexoRank } from 'lexorank';
 import moment from 'moment';
 import { OFFSET_MILLISECONDS, CODE_DATA_SOURCE_TYPE, COST_IDS } from 'bc/lib/enumConstants.js';
-import { createCostAndInsertInPosition, deletePositionInColumn } from './updateSortOrderFunctions.js';
+import { createCostAndInsertInPosition, deletePositionInColumn, moveFromPositionOfColumn, movePositionInsideColumn } from './updateSortOrderFunctions.js';
 
 const BoardProject = db.boardProject;
 const BoardProjectCost = db.boardProjectCost;
@@ -334,16 +334,13 @@ const updateRank = async (req, res) => {
     beforeIndex,  // targetposition -1 
     afterIndex,   // targetposition +1 
     targetPosition,  // target position in destiny column 
+    sourcePosition,
     previousColumn, //   previous rankX, that is going to be deleted
     isWorkPlan,
     boardId,
     projectData
   } = req.body;
   const isWorkPlanBoolean = typeof isWorkPlan === 'boolean' ? isWorkPlan : isWorkPlan === 'true' ? true : false;
-  const WORK_PLAN_CODE_COST_TYPE_ID = 21;
-  const WORK_REQUEST_CODE_COST_TYPE_ID = 22;  
-  const WORK_REQUEST_EDITED = 42;
-  const WORK_PLAN_EDITED = 41;
   const user = req.user;
   if (before === undefined) before = null;
   if (after === undefined) after = null;
@@ -385,7 +382,7 @@ const updateRank = async (req, res) => {
     // remove from previous position, previousColumn
     // so projectCost has to be deactivated 
     
-    const { project_id, } = projectData;
+    const { project_id } = projectData;
     // await createCostAndInsertIntoColumn(project_id, board_project_id, boardId, columnNumber, sortOrderValue, isWorkPlanBoolean, user);
     // get the boardproject updated
     let boardProjectUpdated = await BoardProject.findOne({
@@ -415,61 +412,72 @@ const updateRank = async (req, res) => {
     // is to add costs in the new column with the previous column cost 
       const previousColumnNumber = previousColumn;
       if (previousColumnNumber != 0) { // COLUMN TO COLUMN 
-        console.log('\n ****************************** \n SENDING TO COLUMN TO COLUMNs \n ****************************** \n');
-        let originCost = null;
-        let targetCost = null;    
-        if (previousColumn && columnNumber) {
-          originCost = await getBoardProjectCostMHFD(board_project_id, previousColumn);
-          targetCost = await getBoardProjectCostMHFD(board_project_id, columnNumber);
-          console.log(previousColumn, 'originCost', originCost, '\n', columnNumber, 'targetCost', targetCost);
-          if (originCost && targetCost) {
-            const cost = originCost.projectCostData.cost + targetCost.projectCostData.cost;
-            // update targetCost with the added cost
-            ProjectCost.update(
-              {
-                cost: cost,
-                last_modified: moment().toDate(),
-                modified_by: user.email
-              },
-              { where: { project_cost_id: targetCost.projectCostData.project_cost_id } }
-            );
-            // deactivate previous cost of origin column
-            ProjectCost.update(
-              {
-                is_active: false,
-                last_modified: moment().toDate(),
-                last_modified_by: user.email,
-                code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
-              },
-              { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
-            );
-            const sponsorAndCosponsor = await getOriginSponsorCosponsor(board_project_id);
-            sponsorAndCosponsor.forEach(async (project_partner_id) => {
-              const originSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, previousColumn, project_partner_id);
-              const targetSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, columnNumber, project_partner_id);
-              if (originSecCost && targetSecCost) {                
-                const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
-                ProjectCost.update(
-                  {
-                    cost: cost,
-                    last_modified: moment().toDate(),
-                    modified_by: user.email
-                  },
-                  { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
-                );
-                ProjectCost.update(
-                  {
-                    is_active: false,
-                    last_modified: moment().toDate(),
-                    modified_by: user.email,
-                    code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
-                  },
-                  { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
-                );
-              }
-            });
+        
+        if (previousColumn === columnNumber) {
+          console.log('\n ****************************** \n SENDING TO COLUMN TO SAME COLUMNs \n ****************************** \n');
+          let direction = 'greater';
+          if (sourcePosition < targetPosition) {
+            direction = 'lower';
+          }
+          await movePositionInsideColumn(boardId, previousColumn, sortOrderValue, (sourcePosition + 1), direction, board_project_id, transaction);
+        } else {
+          console.log('\n ****************************** \n SENDING TO COLUMN TO DIFF COLUMNs \n ****************************** \n');
+          let originCost = null;
+          let targetCost = null;    
+          if (previousColumn && columnNumber) {
+            originCost = await getBoardProjectCostMHFD(board_project_id, previousColumn);
+            targetCost = await getBoardProjectCostMHFD(board_project_id, columnNumber);
+            console.log(previousColumn, 'originCost', originCost, '\n', columnNumber, 'targetCost', targetCost);
+            if (originCost && targetCost) {
+              const cost = originCost.projectCostData.cost + targetCost.projectCostData.cost;
+              // update targetCost with the added cost
+              ProjectCost.update(
+                {
+                  cost: cost,
+                  last_modified: moment().toDate(),
+                  modified_by: user.email
+                },
+                { where: { project_cost_id: targetCost.projectCostData.project_cost_id } }
+              );
+              // deactivate previous cost of origin column
+              ProjectCost.update(
+                {
+                  is_active: false,
+                  last_modified: moment().toDate(),
+                  last_modified_by: user.email,
+                  code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
+                },
+                { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
+              );
+              const sponsorAndCosponsor = await getOriginSponsorCosponsor(board_project_id);
+              sponsorAndCosponsor.forEach(async (project_partner_id) => {
+                const originSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, previousColumn, project_partner_id);
+                const targetSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, columnNumber, project_partner_id);
+                if (originSecCost && targetSecCost) {                
+                  const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
+                  ProjectCost.update(
+                    {
+                      cost: cost,
+                      last_modified: moment().toDate(),
+                      modified_by: user.email
+                    },
+                    { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
+                  );
+                  ProjectCost.update(
+                    {
+                      is_active: false,
+                      last_modified: moment().toDate(),
+                      modified_by: user.email,
+                      code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
+                    },
+                    { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
+                  );
+                }
+              });
+            }
           }
         }
+       
       } else {
         console.log('\n ****************************** \n SENDING WORKSPACE TO COLUMN \n ****************************** \n');
         // is not workspace and previous column is 0 ->  WORKSPACE to COLUMN  

@@ -22,6 +22,23 @@ const applyLocalityCondition = (where) => {
   }
   return where;
 }
+export const updateSortOrder = async (boardProject, movePosition, transaction) => {
+  try { 
+    const boardProjectCostId = boardProject.boardProjectToCostData[0].board_project_cost_id;
+    const boardProjectCostsUpdate = await BoardProjectCost.update(
+      { sort_order: movePosition },
+      {
+        where: {
+          board_project_cost_id: boardProjectCostId
+        },
+        transaction
+      }
+    );
+    console.log('Updated pcu', boardProjectCostsUpdate, JSON.stringify(boardProject));
+  } catch(error) {
+    console.error('FAIL at updateSortOrder ', error);
+  }
+}
 export const moveProjectCostsOnePosition = async (boardProjects, arithmeticOperation ,transaction) => { 
   // iterate though boardprojects and get the project_cost_id then update the sort_order and add 1 to each
   try {
@@ -43,7 +60,7 @@ export const moveProjectCostsOnePosition = async (boardProjects, arithmeticOpera
     console.error('FAIL at moveProjectCostsOnePosition ', error);
   }
 }
-const getBoardProjectsValues =  async (boardId, currentColumn, movePosition) => {
+const getBoardProjectsValues =  async (boardId, currentColumn, direction, movePosition) => {
   const {
     locality,
     projecttype,
@@ -63,12 +80,22 @@ const getBoardProjectsValues =  async (boardId, currentColumn, movePosition) => 
   });
   const boardIds = boards.map(b => b.dataValues.board_id);
   const isWorkPlan = type === 'WORK_PLAN';
+  const whereBPC = {
+    req_position: currentColumn
+  };
   const originPositionColumnName = `originPosition${currentColumn}`;
+  if (direction == 'greater') {
+    whereBPC.sort_order = {
+      [Op.gte]: movePosition
+    }
+  } else {
+    whereBPC.sort_order = {
+      [Op.lte]: movePosition
+    }
+  }
   const attributes = [
     'board_project_id',
     'project_id',
-    'projectname',
-    // rankColumnName,
     'origin',
     originPositionColumnName,
     'code_status_type_id',
@@ -87,10 +114,74 @@ const getBoardProjectsValues =  async (boardId, currentColumn, movePosition) => 
       as: 'boardProjectToCostData',
       required: true,
       // order: [['sort_order', 'ASC']],
-      where: {
-        req_position: currentColumn,
-        sort_order: {[Op.gte]: movePosition}
-      },
+      where: whereBPC,
+      include: [
+        {
+          model: ProjectCost,
+          as: 'projectCostData',
+          required: true,
+          where: {
+            is_active: true,
+            code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
+          }
+        }
+      ]
+    }]
+  })).map(d => d.dataValues);
+  return boardProjects;
+}
+const getBoardProjectsValuesInRange =  async (boardId, currentColumn, movePosition, sourcePosition) => {
+  const {
+    locality,
+    projecttype,
+    type,
+    year,
+  } = boardId;
+  let boardWhere = {
+    type,
+    year,
+    locality,
+    projecttype,
+  };
+  const min = Math.min(movePosition, sourcePosition);
+  const max = Math.max(movePosition, sourcePosition);
+  
+  boardWhere = applyLocalityCondition(boardWhere);
+  const boards = await Board.findAll({
+    attributes: ['board_id', 'type'],
+    where: boardWhere,
+  });
+  const boardIds = boards.map(b => b.dataValues.board_id);
+  const isWorkPlan = type === 'WORK_PLAN';
+  const whereBPC = {
+    req_position: currentColumn
+  };
+  const originPositionColumnName = `originPosition${currentColumn}`;
+  whereBPC.sort_order = {
+    [Op.between]: [min, max]
+  }
+  const attributes = [
+    'board_project_id',
+    'project_id',
+    'origin',
+    originPositionColumnName,
+    'code_status_type_id',
+  ];
+  const where = {
+    board_id: {[Op.in]: boardIds},
+    // [rankColumnName]: { [Op.ne]: null }
+  };
+  const boardProjects = (await BoardProject.findAll({
+    attributes,
+    where,
+    order: [[{model: BoardProjectCost, as: 'boardProjectToCostData'},'sort_order', 'ASC']],
+    // [{ model: BoardProjectCost, as: 'boardProjectToCostData' }, 'sort_order', 'ASC']
+    include:[{
+      model: BoardProjectCost,
+      as: 'boardProjectToCostData',
+      required: true,
+      // order: [['sort_order', 'ASC']],
+      where: whereBPC,
       include: [
         {
           model: ProjectCost,
@@ -108,7 +199,7 @@ const getBoardProjectsValues =  async (boardId, currentColumn, movePosition) => 
 }
 export const getSortOrderValue = async (boardId, currentColumn, transaction) => {
   try {
-    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, 0);
+    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, 'greater',0);
     // get the max value of sort_order in boardProjects 
     const maxSortOrder = boardProjects.reduce((acc, curr) => {
       const currSortOrder = curr.boardProjectToCostData[0].sort_order;
@@ -118,30 +209,55 @@ export const getSortOrderValue = async (boardId, currentColumn, transaction) => 
     return maxSortOrder + 1;
   } catch(error) {
     console.error('FAIL at getSortOrderValue ', error);
-    return [];
+    throw new Error('UPDATE SORT ORDER');
   }
+}
+export const movePositionInsideColumn = async (boardId, currentColumn, movePosition, sourcePosition,direction, board_project_id, transaction) => {
+  try {
+    const boardProjects = await getBoardProjectsValuesInRange(boardId, currentColumn, movePosition, sourcePosition);
+    // remove from boardProjects the board with board_project_id 
+    const boardProjectIndex = boardProjects.findIndex(b => {
+      return b.board_project_id === +board_project_id
+    });
+    // get the boardproject that is going to be removed 
+    const currentBoardProject = boardProjects[boardProjectIndex];
+    
+    
+    if (boardProjectIndex !== -1) {
+      boardProjects.splice(boardProjectIndex, 1);
+      const arithmeticOperation = direction === 'greater' ? '+ 1' : '- 1';
+      await moveProjectCostsOnePosition(boardProjects, arithmeticOperation, transaction);
+      if ( currentBoardProject ) {
+        await updateSortOrder(currentBoardProject, movePosition, transaction);
+      }
+    }
+  } catch(error) {
+    console.error('FAIL at MOVE POSITION INSIDE COLUMN', error);
+    throw new Error('UPDATE SORT ORDER');
+  }
+
 }
 // move the cards from certain positions by 1
 export const moveFromPositionOfColumn = async (boardId, currentColumn, movePosition, transaction) => {
   try {
-    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, movePosition);
+    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, 'greater', movePosition);
     console.log('Move positions of ', boardProjects, currentColumn, movePosition);
     const arithmeticOperation = '+ 1';
     await moveProjectCostsOnePosition(boardProjects, arithmeticOperation, transaction);
   } catch(error) {
     console.error('FAIL at INSERT AT BEGINNING OF COLUMN', error);
-    return [];
+    throw new Error('UPDATE SORT ORDER');
   }
 }
 export const deletePositionInColumn = async (boardId, currentColumn, movePosition, transaction) => {
   try {
-    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, movePosition);
+    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, 'greater', movePosition);
     console.log('Delete positions of ', boardProjects, currentColumn, movePosition);
     const arithmeticOperation = '- 1';
     await moveProjectCostsOnePosition(boardProjects, arithmeticOperation, transaction);
   } catch(error) {
     console.error('FAIL at DELETE POSITION IN COLUMN', error);
-    return [];
+    throw new Error('UPDATE SORT ORDER');
   }
 }
 
@@ -179,7 +295,7 @@ export const createCostAndInsertInPosition = async (project_id, board_project_id
     return boardProjectCostCreated;
   } catch (error) {
     console.error('FAIL at SAVE and create cost in position', error);
-    return [];
+    throw new Error('UPDATE SORT ORDER');
   }
   
 };
