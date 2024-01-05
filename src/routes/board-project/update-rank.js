@@ -486,7 +486,7 @@ const updateRank = async (req, res) => {
           project_id,
           board_project_id,
           boardId,
-          null,
+          0,
           columnNumber,
           sortOrderValue,
           isWorkPlanBoolean,
