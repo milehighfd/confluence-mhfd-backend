@@ -429,51 +429,67 @@ const updateRank = async (req, res) => {
             targetCost = await getBoardProjectCostMHFD(board_project_id, columnNumber);
             console.log(previousColumn, 'originCost', originCost, '\n', columnNumber, 'targetCost', targetCost);
             if (originCost && targetCost) {
-              const cost = originCost.projectCostData.cost + targetCost.projectCostData.cost;
-              // update targetCost with the added cost
-              ProjectCost.update(
-                {
-                  cost: cost,
-                  last_modified: moment().toDate(),
-                  modified_by: user.email
-                },
-                { where: { project_cost_id: targetCost.projectCostData.project_cost_id } }
+              console.log('\n ****************************** \n SENDING TO COLUMN WITH COST \n ****************************** \n');
+            //   const cost = originCost.projectCostData.cost + targetCost.projectCostData.cost;
+            //   // update targetCost with the added cost
+            //   ProjectCost.update(
+            //     {
+            //       cost: cost,
+            //       last_modified: moment().toDate(),
+            //       modified_by: user.email
+            //     },
+            //     { where: { project_cost_id: targetCost.projectCostData.project_cost_id } }
+            //   );
+            //   // deactivate previous cost of origin column
+            //   ProjectCost.update(
+            //     {
+            //       is_active: false,
+            //       last_modified: moment().toDate(),
+            //       last_modified_by: user.email,
+            //       code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
+            //     },
+            //     { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
+            //   );
+            //   const sponsorAndCosponsor = await getOriginSponsorCosponsor(board_project_id);
+            //   sponsorAndCosponsor.forEach(async (project_partner_id) => {
+            //     const originSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, previousColumn, project_partner_id);
+            //     const targetSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, columnNumber, project_partner_id);
+            //     if (originSecCost && targetSecCost) {                
+            //       const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
+            //       ProjectCost.update(
+            //         {
+            //           cost: cost,
+            //           last_modified: moment().toDate(),
+            //           modified_by: user.email
+            //         },
+            //         { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
+            //       );
+            //       ProjectCost.update(
+            //         {
+            //           is_active: false,
+            //           last_modified: moment().toDate(),
+            //           modified_by: user.email,
+            //           code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
+            //         },
+            //         { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
+            //       );
+            //     }
+            //   });
+            } else {
+              const previousCost = originCost ? originCost.projectCostData.cost : 0;
+              console.log('\n ****************************** \n SENDING TO COLUMN WITHOUT COST \n ****************************** \n');
+              await deactivateCostFromPreviousPosition(board_project_id, boardId, previousColumn, isWorkPlanBoolean, user, transaction);
+              await createCostAndInsertIntoColumn(
+                project_id,
+                board_project_id,
+                boardId,
+                previousCost,
+                columnNumber,
+                sortOrderValue,
+                isWorkPlanBoolean,
+                user,
+                transaction
               );
-              // deactivate previous cost of origin column
-              ProjectCost.update(
-                {
-                  is_active: false,
-                  last_modified: moment().toDate(),
-                  last_modified_by: user.email,
-                  code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
-                },
-                { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
-              );
-              const sponsorAndCosponsor = await getOriginSponsorCosponsor(board_project_id);
-              sponsorAndCosponsor.forEach(async (project_partner_id) => {
-                const originSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, previousColumn, project_partner_id);
-                const targetSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, columnNumber, project_partner_id);
-                if (originSecCost && targetSecCost) {                
-                  const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
-                  ProjectCost.update(
-                    {
-                      cost: cost,
-                      last_modified: moment().toDate(),
-                      modified_by: user.email
-                    },
-                    { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
-                  );
-                  ProjectCost.update(
-                    {
-                      is_active: false,
-                      last_modified: moment().toDate(),
-                      modified_by: user.email,
-                      code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
-                    },
-                    { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
-                  );
-                }
-              });
             }
           }
         }
