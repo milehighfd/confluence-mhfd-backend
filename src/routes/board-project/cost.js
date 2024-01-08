@@ -350,7 +350,9 @@ const updateCostNew = async (req, res) => {
                     .toDate(),
                   amount.code_cost_type_id,
                   isWorkPlan,
-                  amountsTouched ? amountsTouched[`req${currentColumn}`] : true
+                  amountsTouched ? amountsTouched[`req${currentColumn}`] : true,
+                  amount.code_partner_type_id,
+                  boardId
                 )
               );
             }

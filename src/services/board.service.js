@@ -687,7 +687,10 @@ const updateAndCreateProjectCostsForAmounts = async (
         console.log('About to create this cost ', costToCreate);
         const projectCostCreated = await ProjectCost.create(costToCreate);
         const project_cost_id = projectCostCreated.dataValues.project_cost_id;
-        const currentSortOrderInBoard = await getSortOrderValue(boardId, currentColumn );
+        let currentSortOrderInBoard = 0;
+        if ( currentColumn <= 5) {
+          currentSortOrderInBoard = await getSortOrderValue(boardId, currentColumn );
+        }
         // missing to check sponsor and cosponsor if this is working fine
         await BoardProjectCost.create({
             board_project_id: board_project_id,
