@@ -83,6 +83,7 @@ export const determineStatusChange = async (wasOnWorkspace, boardProject, board_
     logger.info('determineStatusChange !wasOnWorkspace && onWorkspace');
   }
   statusHasChanged = boardProject.code_status_type_id !== previous_code_status_type_id;
+  console.log('\n ---------------- ======== ------------- \n status has changed', statusHasChanged, '\n ---------------- ======== ------------- \n wasONWORKSPACE',wasOnWorkspace,' is now on workspace?', onWorkspace,' \n board project', JSON.stringify(boardProject));
   // if (onWorkspace) {
   //   boardProject.rank1 = null;
   //   boardProject.rank2 = null;

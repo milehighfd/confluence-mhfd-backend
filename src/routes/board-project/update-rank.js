@@ -350,7 +350,7 @@ const updateRank = async (req, res) => {
       board_project_id
     }
   }) || {};
-  const wasOnWorkspace = isOnWorkspace(boardProjectBeforeUpdate);
+  const wasOnWorkspace = await isOnWorkspace(boardProjectBeforeUpdate);
   const board_id = boardProjectBeforeUpdate.board_id;
   const columnCountWhere = {
     board_id,
