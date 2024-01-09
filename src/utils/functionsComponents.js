@@ -6,21 +6,6 @@ import {
 } from 'bc/config/config.js';
 import projectService from 'bc/services/project.service.js';
 import pkg from 'sequelize';
-const Projects = db.project;
-const ProjectPartner = db.projectPartner;
-const ProjectCounty = db.projectCounty;
-const CodeStateCounty = db.codeStateCounty;
-const ProjectServiceArea = db.projectServiceArea;
-const CodeServiceArea = db.codeServiceArea;
-const ProjectLocalGovernment = db.projectLocalGovernment;
-const CodeLocalGoverment = db.codeLocalGoverment;
-const ProjectCost = db.projectCost;
-const ProjectStaff = db.projectStaff;
-const ProjectDetail = db.projectDetail;
-const BusinessAssociante = db.businessAssociates;
-const ProjectStreams = db.project_stream;
-const Streams = db.stream;
-const Attachment = db.projectAttachment;
 
 const GradeControlStructure = db.gradeControlStructure;
 const PipeAppurtenances = db.pipeAppurtenances;
