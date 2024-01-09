@@ -668,7 +668,7 @@ const getProjectStreams = async (req, res) => {
       },
       include: [{
         model: Stream,
-        attributes: ['stream_name', 'stream_id','MHFD_Code'],
+        attributes: ['stream_name', 'stream_id','mhfd_code_stream'],
         required: true,
         as: 'streamData'
       }]

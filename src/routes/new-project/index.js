@@ -519,7 +519,7 @@ router.post('/streams-data', async (req, res) => {
         });
         const stream = await Stream.findOne({
           where: whereStatement,
-          attributes: ['stream_id', 'stream_name', 'mhfd_code']
+          attributes: ['stream_id', 'stream_name', 'mhfd_code_stream']
         });
         answer[str_name].push({
           jurisdiction: row.jurisdiction,
@@ -1159,7 +1159,7 @@ router.get('/get-streams-by-projectid/:projectid', [auth], async (req, res) => {
     for (const stream of filtered) {
       const local = await projectStreamService.getOneByStream(stream.code_local_government_id);    
       if (stream.stream) {
-        const res = {stream, code_local_goverment: local, length: stream.length_in_feet, tributary: stream.drainage_area_in_acres,jurisdiction: local[0]?.local_government_name,mhfd_code:stream.stream.MHFD_Code}
+        const res = {stream, code_local_goverment: local, length: stream.length_in_feet, tributary: stream.drainage_area_in_acres,jurisdiction: local[0]?.local_government_name,mhfd_code:stream.stream.mhfd_code_stream}
         obj[stream.stream.stream_name].push(res);
       }  
     }
