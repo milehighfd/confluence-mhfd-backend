@@ -34,9 +34,15 @@ const getStreamDatabyID = async (req, res) => {
       attributes: [
         'mhfd_code_stream',
         'mhfd_code_segment',
-        'stream_name'
+        'stream_name',
+        'slope_ft',
       ],
     });
+    console.log(streamSegment)
+    if (!streamSegment) {
+      res.status(404).send('Not found');
+      return;
+    }
     let streamData = await streams.findAll({
       where: {
         mhfd_code_stream: streamSegment.mhfd_code_stream
@@ -51,7 +57,13 @@ const getStreamDatabyID = async (req, res) => {
     });
     logger.info(`Finished function findAll for streams.route/:OBJECTID`);
     if (streamData) {
-      res.send(streamData)
+      streamData = streamData.map(data => {
+        return {
+          ...data.dataValues,
+          slope_ft: streamSegment.slope_ft
+        };
+      });
+      res.send(streamData);
     }
     else {
       res.status(404).send('Not found');

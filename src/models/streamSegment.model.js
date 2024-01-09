@@ -20,6 +20,10 @@ export default (sequelize, DataType) => {
       type: DataType.STRING,
       allowNull: false
     },
+    slope_ft: {
+      type: DataType.FLOAT,
+      allowNull: false
+    },
   }, {
     freezeTableName: true,
     tableName: 'STREAM_SEGMENT',
