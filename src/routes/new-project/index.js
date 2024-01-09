@@ -451,6 +451,14 @@ router.post('/streams-data', async (req, res) => {
     streamsIntersected.stream_id,  
     streamsIntersected.mhfd_code_stream,
     streamsIntersected.sum_catchment_area_ac,
+    streamsIntersected.trib_code1,
+    streamsIntersected.trib_code2,
+    streamsIntersected.trib_code3,
+    streamsIntersected.trib_code4,
+    streamsIntersected.trib_code5,
+    streamsIntersected.trib_code6,
+    streamsIntersected.trib_code7,
+    streamsIntersected.reach_code,
     ST_length(ST_intersection(streamsIntersected.the_geom, j.the_geom)::geography) * 3.28084 as length 
     FROM 
     ( 
@@ -459,7 +467,15 @@ router.post('/streams-data', async (req, res) => {
       stream_id,
       stream_name,
       sum_catchment_area_ac,
-      ${geometrySegment}
+      ${geometrySegment},
+      trib_code1,
+      trib_code2,
+      trib_code3,
+      trib_code4,
+      trib_code5,
+      trib_code6,
+      trib_code7,
+      reach_code
       FROM
       stream
       WHERE
@@ -538,14 +554,16 @@ try {
             c.catch_acre
           FROM jurisidictions j, mhfd_catchments_simple_v1_valid c
           WHERE ST_intersects(j.the_geom, c.the_geom) AND '${data_max.reach_code}' is not distinct from c.reach_code
-          ${data_max.trib_code1 != null ? `and ${data_max.trib_code1} is not distinct from c.trib_code1` : ''} 
-          ${data_max.trib_code2 != null ? `and ${data_max.trib_code2} is not distinct from c.trib_code2` : ''} 
-          ${data_max.trib_code3 != null ? `and ${data_max.trib_code3} is not distinct from c.trib_code3` : ''} 
-          ${data_max.trib_code4 != null ? `and ${data_max.trib_code4} is not distinct from c.trib_code4` : ''} 
-          ${data_max.trib_code5 != null ? `and ${data_max.trib_code5} is not distinct from c.trib_code5` : ''} 
-          ${data_max.trib_code6 != null ? `and ${data_max.trib_code6} is not distinct from c.trib_code6` : ''} 
-          ${data_max.trib_code7 != null ? `and ${data_max.trib_code7} is not distinct from c.trib_code7` : ''} 
+          ${data_max.trib_code1 != null && data_max.trib_code1 != 0 ? `and ${data_max.trib_code1} is not distinct from c.trib_code1` : ''} 
+          ${data_max.trib_code2 != null && data_max.trib_code2 != 0 ? `and ${data_max.trib_code2} is not distinct from c.trib_code2` : ''} 
+          ${data_max.trib_code3 != null && data_max.trib_code3 != 0 ? `and ${data_max.trib_code3} is not distinct from c.trib_code3` : ''} 
+          ${data_max.trib_code4 != null && data_max.trib_code4 != 0 ? `and ${data_max.trib_code4} is not distinct from c.trib_code4` : ''} 
+          ${data_max.trib_code5 != null && data_max.trib_code5 != 0 ? `and ${data_max.trib_code5} is not distinct from c.trib_code5` : ''} 
+          ${data_max.trib_code6 != null && data_max.trib_code6 != 0 ? `and ${data_max.trib_code6} is not distinct from c.trib_code6` : ''} 
+          ${data_max.trib_code7 != null && data_max.trib_code7 != 0 ? `and ${data_max.trib_code7} is not distinct from c.trib_code7` : ''} 
           `;
+          console.log('query', newDrainageQuery)
+          console.log('data_max', data_max.trib_code7 != 0)
           const query = {
             q: newDrainageQuery
           };
