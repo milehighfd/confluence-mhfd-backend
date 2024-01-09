@@ -445,101 +445,80 @@ router.post('/streams-data', async (req, res) => {
   const geom = req.body.geom;
   const geometrySegment = req.body.projecttype === 'STUDY' ? `the_geom` : `st_intersection(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom) as the_geom`
   const sql = `
-    SELECT 
-      j.jurisdiction, 
-      streamsIntersected.str_name, 
-      streamsIntersected.cartodb_id,  
-      streamsIntersected.mhfd_code,
-      streamsIntersected.reach_code,
-      streamsIntersected.trib_code1,
-      streamsIntersected.trib_code2,
-      streamsIntersected.trib_code3,
-      streamsIntersected.trib_code4,
-      streamsIntersected.trib_code5,
-      streamsIntersected.trib_code6,
-      streamsIntersected.trib_code7,
-      streamsIntersected.sum_catch_acre,
-      ST_length(ST_intersection(streamsIntersected.the_geom, j.the_geom)::geography) * 3.28084 as length 
-      FROM 
-      ( 
-        SELECT
-        unique_mhfd_code as mhfd_code,
-        reach_code,
-        trib_code1,
-        trib_code2,
-        trib_code3,
-        trib_code4,
-        trib_code5,
-        trib_code6,
-        trib_code7, 
-        cartodb_id,
-        str_name,
-        sum_catch_acre,
-        ${geometrySegment}
-        FROM
-        mhfd_stream_reaches
-        WHERE
-          ST_DWithin(
-            ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0
-          )
-      ) streamsIntersected ,
-      jurisidictions j 
+  SELECT 
+    j.jurisdiction, 
+    streamsIntersected.stream_name, 
+    streamsIntersected.stream_id,  
+    streamsIntersected.mhfd_code_stream,
+    streamsIntersected.sum_catchment_area_ac,
+    ST_length(ST_intersection(streamsIntersected.the_geom, j.the_geom)::geography) * 3.28084 as length 
+    FROM 
+    ( 
+      SELECT
+      mhfd_code_stream,
+      stream_id,
+      stream_name,
+      sum_catchment_area_ac,
+      ${geometrySegment}
+      FROM
+      stream
       WHERE
-      ST_DWithin(streamsIntersected.the_geom, j.the_geom, 0)
-  `;
+        ST_DWithin(
+          ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom, 0
+        )
+    ) streamsIntersected,
+    jurisidictions j 
+    WHERE
+    ST_DWithin(streamsIntersected.the_geom, j.the_geom, 0)
+`;
+
   const query = {
     q: sql
   }
   logger.info(sql);
   let streamsInfo = [];
-  try {
-    const data = await needle('post', CARTO_URL, query, { json: true });
-    if (data.statusCode === 200) {
-      const body = data.body;
-      streamsInfo = body.rows;
-      const answer = {};
-      for(let i = 0; i < body.rows.length ; ++i) {
-        const row = body.rows[i];
-        let str_name = row.str_name ? row.str_name : 'Unnamed Streams';
-        
-        if (!answer[str_name]) {
-          answer[str_name] = [];
-        }
-        const locality = await CodeLocalGoverment.findOne({
-          where: {
-            local_government_name: row.jurisdiction,
-          }
-        });
-        const whereStatement = {};
-        const ids = row.mhfd_code.split('.')
-        if (row.str_name) whereStatement.stream_name = row.str_name;
-        ids.forEach((element, index) => {
-          if(index === 0) whereStatement.Reach_Code = parseInt(element);
-          else whereStatement[`Trib_Code${index}`] = parseInt(element);
-        });
-        const stream = await Stream.findOne({
-          where: whereStatement,
-          attributes: ['stream_id', 'stream_name', 'mhfd_code_stream']
-        });
-        answer[str_name].push({
-          jurisdiction: row.jurisdiction,
-          length: row.length,
-          cartodb_id: row.cartodb_id,
-          mhfd_code: row.mhfd_code,
-          str_name: str_name,
-          drainage: 0,
-          code_local_goverment: [locality],
-          stream: stream ? [stream] : [],
-          sum_catch_acre: row.sum_catch_acre,
-          stream_data: row
-        });
+try {
+  const data = await needle('post', CARTO_URL, query, { json: true });
+  if (data.statusCode === 200) {
+    const body = data.body;
+    streamsInfo = body.rows;
+    const answer = {};
+    for(let i = 0; i < body.rows.length; ++i) {
+      const row = body.rows[i];
+      let streamName = row.stream_name ? row.stream_name : 'Unnamed Streams';
+      
+      if (!answer[streamName]) {
+        answer[streamName] = [];
       }
-      // for each stream: 
-      // get the maxsumcatchacre 
-      // if (row.sum_catch_acre > max_sum_catch_acre) {
-      //   max_sum_catch_acre = row.sum_catch_acre;
-      //   data_max = row;
-      // }
+      const locality = await CodeLocalGoverment.findOne({
+        where: {
+          local_government_name: row.jurisdiction,
+        }
+      });
+      const whereStatement = {};
+      const ids = row.mhfd_code_stream.split('.')
+      if (row.stream_name) whereStatement.stream_name = row.stream_name;
+      ids.forEach((element, index) => {
+        if(index === 0) whereStatement.Reach_Code = parseInt(element);
+        else whereStatement[`Trib_Code${index}`] = parseInt(element);
+      });
+      const stream = await Stream.findOne({
+        where: whereStatement,
+        attributes: ['stream_id', 'stream_name', 'mhfd_code_stream']
+      });
+      answer[streamName].push({
+        jurisdiction: row.jurisdiction,
+        length: row.length,
+        cartodb_id: row.stream_id,
+        mhfd_code: row.mhfd_code_stream,
+        str_name: streamName,
+        drainage: 0,
+        code_local_goverment: [locality],
+        stream: stream ? [stream] : [],
+        sum_catch_acre: row.sum_catchment_area_ac,
+        stream_data: row
+      });
+    }
       if ( req.body.projecttype === 'STUDY' ) {
         
         for ( const str_name in answer) { /// each stream name which has jurisdiction segment of stream
@@ -591,76 +570,6 @@ router.post('/streams-data', async (req, res) => {
 
         }
       }
-     
-      // Uncomment when stream calculation is returned 
-      // for (const stream of streamsInfo) {
-      //   const drainageSQL = `
-      //     SELECT
-      //       st_area(ST_transform(st_intersection(j.the_geom, union_c.the_geom), 26986) ) as area ,
-      //       j.jurisdiction from jurisidictions j ,
-      //       (
-      //         select st_union(the_geom) as the_geom from mhfd_catchments_simple_v1 c
-      //         where 
-      //     '${stream.reach_code}' is not distinct from c.reach_code 
-      //       ${stream.trib_code1 != null ? `and ${stream.trib_code1} is not distinct from c.trib_code1` : ''} 
-      //       ${stream.trib_code2 != null ? `and ${stream.trib_code2} is not distinct from c.trib_code2` : ''} 
-      //       ${stream.trib_code3 != null ? `and ${stream.trib_code3} is not distinct from c.trib_code3` : ''} 
-      //       ${stream.trib_code4 != null ? `and ${stream.trib_code4} is not distinct from c.trib_code4` : ''} 
-      //       ${stream.trib_code5 != null ? `and ${stream.trib_code5} is not distinct from c.trib_code5` : ''} 
-      //       ${stream.trib_code6 != null ? `and ${stream.trib_code6} is not distinct from c.trib_code6` : ''} 
-      //       ${stream.trib_code7 != null ? `and ${stream.trib_code7} is not distinct from c.trib_code7` : ''} 
-      //       ) union_c 
-      //     where ST_INTERSECTS(ST_SimplifyPreserveTopology(j.the_geom, 0.1), ST_SimplifyPreserveTopology(union_c.the_geom, 0.1)) `;
-      //     const drainageQuery = {
-      //       q: drainageSQL
-      //     };
-      //     console.log('**************\n\n\n\n DRAINAGE QUERY FOR ', stream.str_name, stream.cartodb_id, '\n', drainageSQL);
-      //     const promise = new Promise((resolve, reject) => {
-      //       needle('post', CARTO_URL, drainageQuery, { json: true })
-      //       .then(response => {
-      //         if (response.statusCode === 200) {
-      //           logger.info('I reached ', JSON.stringify(response.body.rows));
-      //           resolve({
-      //             str_name: stream.str_name,
-      //             drainage: response.body.rows 
-      //           });
-      //         } else {
-      //           logger.info('for query '+ drainageSQL);
-      //           logger.error(response.statusCode + ' ' + JSON.stringify(response.body));
-      //           resolve({
-      //             str_name: stream.str_name,
-      //             drainage: []
-      //           });
-      //         }
-      //       })
-      //       .catch(error => {
-      //         logger.info('crashed');
-      //         reject({
-      //           str_name: stream.str_name,
-      //           drainage: []
-      //         });
-      //       });
-      //     });
-      //     promises.push(promise);
-      // }
-      // iterate trough answer values 
-      
-      // Promise.all(promises).then(async (promiseData) => {
-      //   logger.info('my values '+ JSON.stringify(promiseData));
-      //   promiseData.forEach(async bucket => {
-      //     const str_name = bucket.str_name? bucket.str_name : 'Unnamed Streams';
-      //     for (const array of answer[str_name]) {
-      //       logger.info('array '+ JSON.stringify(array));
-      //       for (const info of bucket.drainage) {
-      //         if (array.jurisdiction === info.jurisdiction) {
-      //           array.drainage += (info.area * 3.86102e-7);
-      //         }
-      //       }
-      //     }
-      //   });
-      //   console.log('Answer pre', answer);
-      //   res.send(answer);
-      // });
       res.send(answer);
     } else {
       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
@@ -697,12 +606,12 @@ router.post('/get-countyservicearea-for-polygon', auth, async (req, res) => {
     SELECT  (
             ST_Dump(
                 ST_Intersection( 
-                    mhfd_stream_reaches.the_geom, 
-        ST_GeomFromGeoJSON('${JSON.stringify(geom)}')
+                    stream.the_geom, 
+                    ST_GeomFromGeoJSON('${JSON.stringify(geom)}')
                 )
             )
         ).geom AS the_geom
-    FROM mhfd_stream_reaches
+    FROM stream
 ),
 unioned AS (
     SELECT ST_Union(the_geom) AS the_geom FROM dumped
@@ -745,6 +654,7 @@ AND ST_DWithin(
     res.status(500).send(error);
   };
 });
+
 
 router.post('/get-countyservicearea-for-geom', auth, async (req, res) => {
   const geom = req.body.geom;
@@ -910,22 +820,33 @@ router.post('/convexhull-by-components', auth, async(req, res) => {
 
 router.post('/get-all-streams', auth, async (req, res) => {
   const geom = req.body.geom;
-  const sql = `SELECT cartodb_id, unique_mhfd_code as mhfd_code, str_name FROM mhfd_stream_reaches WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom)`;
+  // Updated the SQL query to use the new table and field names
+  const sql = `
+    SELECT 
+      cartodb_id, 
+      mhfd_code_stream as mhfd_code, 
+      stream_name as str_name 
+    FROM stream 
+    WHERE ST_INTERSECTS(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'), the_geom)
+  `;
   const query = {
     q: sql
   };
   let body = {}
   try {
     const data = await needle('post', CARTO_URL, query, { json: true });
-    //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       body = data.body;
       logger.info(JSON.stringify(body.rows));
+      // Mapping the data to the desired format
       body.rows = body.rows.map(data => { 
-        return {cartodb_id: data.cartodb_id, mhfd_code: data.mhfd_code, str_name: data.str_name}
+        return {
+          cartodb_id: data.cartodb_id, 
+          mhfd_code: data.mhfd_code, 
+          str_name: data.str_name
+        }
       });
       res.send(body.rows);
-      //logger.info(JSON.stringify(body, null, 2));
     } else {
       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data);
@@ -936,26 +857,26 @@ router.post('/get-all-streams', auth, async (req, res) => {
   };
 });
 
+
 router.post('/get-stream', auth, async (req, res) => {
   const geom = req.body.geom;
   let result = {};
+  // Update the SQL query to use the new 'stream' table
   const sql = `SELECT ST_AsGeoJSON(
     ST_Intersection(ST_GeomFromGeoJSON('${JSON.stringify(geom)}'),
-                    ST_COLLECT(ARRAY(SELECT the_geom FROM mhfd_stream_reaches)))
+                    ST_COLLECT(ARRAY(SELECT the_geom FROM stream)))
   ) as geom`;
   const query = {
     q: sql
   };
-  console.log(sql)
+  console.log(sql);
   let body = {};
   try {
     const data = await needle('post', CARTO_URL, query, { json: true });
-    //console.log('STATUS', data.statusCode);
     if (data.statusCode === 200) {
       body = data.body;
       logger.info(JSON.stringify(body.rows[0]));
       res.send(body.rows[0]);
-      //logger.info(JSON.stringify(body, null, 2));
     } else {
       logger.error('bad status ' + data.statusCode + '  -- '+ sql +  JSON.stringify(data.body, null, 2));
       res.status(data.statusCode).send(data);
@@ -965,6 +886,7 @@ router.post('/get-stream', auth, async (req, res) => {
     res.status(500).send(error);
   };
 });
+
 
 router.post('/get-stream-convexhull', auth, async (req, res) => {
   const geom = req.body.geom;
@@ -1207,29 +1129,28 @@ const   getAllJurisdictionByGeom = async (geom) => {
 }
 
 const getAllJurisdictionByGeomStreams = async (geom) => {
-  
   let sql = `
   WITH dumped AS (
-    SELECT  (
+    SELECT (
             ST_Dump(
                 ST_Intersection( 
-                    mhfd_stream_reaches.the_geom, 
-        ST_GeomFromGeoJSON('${geom}')
+                    stream.the_geom, 
+                    ST_GeomFromGeoJSON('${geom}')
                 )
             )
         ).geom AS the_geom
-    FROM mhfd_stream_reaches
-),
-unioned AS (
+    FROM stream
+  ),
+  unioned AS (
     SELECT ST_Union(the_geom) AS the_geom FROM dumped
-)
-SELECT jurisdiction 
-FROM jurisidictions, unioned 
-WHERE ST_DWithin( 
-    unioned.the_geom, 
-    jurisidictions.the_geom, 
-    0
-)`;
+  )
+  SELECT jurisdiction 
+  FROM jurisidictions, unioned 
+  WHERE ST_DWithin( 
+      unioned.the_geom, 
+      jurisidictions.the_geom, 
+      0
+  )`;
   const query = { q: sql };
   const data = await needle('post', CARTO_URL, query, { json: true });
   return data.body.rows.map(element => element.jurisdiction);
