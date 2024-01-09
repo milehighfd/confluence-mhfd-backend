@@ -192,7 +192,9 @@ export const getStreamsDataByProjectIds = async (ids) => {
       where: {
         stream_id: projectStreamsIds
       },
-      attributes: {exclude: ['Shape']}
+      attributes: {
+        exclude: ['Shape', 'GDB_GEOMATTR_DATA']
+      }
     });
     projectStreams = projectStreams.map((data) => {
       const streamvalue = streamsList.filter((d => d.stream_id === data.stream_id));
