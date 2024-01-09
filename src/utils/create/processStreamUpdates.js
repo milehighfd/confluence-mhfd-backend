@@ -26,8 +26,10 @@ export const processStreamUpdates = async (project_id, newStreams, creator, tran
       return streamId;
     });
     console.log('newStreamsObj', newStreamsObj.map(stream => {
-      return stream.stream.stream_id;
+      return stream.stream;
     }))
+    console.log('newStreamIds', newStreamIds)
+    console.log('oldIds', oldIds)
     for (let currentStream of currentProjectStreams) {
       if (!newStreamIds.includes(currentStream.stream_id)) {
         await PrimaryStream.destroy({
@@ -36,7 +38,7 @@ export const processStreamUpdates = async (project_id, newStreams, creator, tran
         });
       }
     }
-    if (!newStreamIds.every(id => oldIds.includes(id)) && !oldIds.every(id => newStreamIds.includes(id))) {
+    if (!newStreamIds.every(id => oldIds.includes(id)) || !oldIds.every(id => newStreamIds.includes(id))) {
       const deletedIds = oldIds.filter(id => !newStreamIds.includes(id));
       console.log('deletedIds', deletedIds)
       const newIds = newStreamIds.filter(id => !oldIds.includes(id));
