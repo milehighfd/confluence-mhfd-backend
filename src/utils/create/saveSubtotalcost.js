@@ -23,7 +23,8 @@ export const saveSubtotalcost = async (project_id, subtotalcost, creator, transa
       const findOne = await ProjectCost.findOne({
         where: {
           project_id: project_id ,
-          code_cost_type_id: PROPOSED_CODE_COST
+          code_cost_type_id: PROPOSED_CODE_COST,
+          is_active: true
         }
       }, { transaction: transaction });
       if (findOne) {
