@@ -130,6 +130,35 @@ const getBoardProjectsValues =  async (boardId, currentColumn, direction, movePo
   })).map(d => d.dataValues);
   return boardProjects;
 }
+export const getBoardProjectsOfBoard = async (board_id, isWorkPlan) => {
+  const boardProjects = (await BoardProject.findAll({
+    where: {
+      board_id: board_id,
+    },
+    order: [[{model: BoardProjectCost, as: 'boardProjectToCostData'},'sort_order', 'ASC']],
+    include:[{
+      model: BoardProjectCost,
+      as: 'boardProjectToCostData',
+      required: true,
+      where: {
+        req_position: {[Op.gt]: 0 }
+      },
+      include: [
+        {
+          model: ProjectCost,
+          as: 'projectCostData',
+          required: true,
+          where: {
+            is_active: true,
+            code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
+          }
+        }
+      ]
+    }]
+  })).map(d => d.dataValues);
+  console.log('\n --------------- \n Board Projects ',board_id, '\n', boardProjects, '\n ---------- \n');
+  return boardProjects;
+}
 const getBoardProjectsValuesInRange =  async (boardId, currentColumn, movePosition, sourcePosition) => {
   const {
     locality,

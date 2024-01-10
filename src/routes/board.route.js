@@ -17,6 +17,7 @@ import { isOnWorkspace, isOnFirstYear } from 'bc/services/board-project.service.
 import sequelize, { where } from 'sequelize';
 import authOnlyEmail from 'bc/auth/auth-only-email.js';
 import { CODE_DATA_SOURCE_TYPE, COST_IDS, OFFSET_MILLISECONDS } from 'bc/lib/enumConstants.js';
+import { getBoardProjectsOfBoard } from './board-project/updateSortOrderFunctions.js';
 
 const { Op } = sequelize;
 const router = express.Router();
@@ -1128,6 +1129,7 @@ const getOriginPositionMap = (boardProjects) => {
     for (var j = 0 ; j < boardProjects.length ; j++) {
       let bp = boardProjects[j];
       if (columnNumber === 0) {
+        // just exist in workspace
         let isEmptyBoardProject = true;
         columns.forEach(cNumber => {
           if (cNumber === 0) return;
@@ -1280,15 +1282,16 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
         for (let board of boards) {
             console.log(board, "current board");
             let destinyBoard = await getBoard('WORK_PLAN', 'MHFD District Work Plan', board.year, board.projecttype, creator);
-            BoardProject.findAll({
-                where: {
-                    board_id: board.board_id,
-                    // rank0: null
-                }
-            }).then((async (boardProjects) => {
+            // BoardProject.findAll({
+            //   where: {
+            //       board_id: board.board_id,
+            //       // rank0: null
+            //   }
+            getBoardProjectsOfBoard(board.board_id, false)
+            .then((async (boardProjects) => {
+              
                 const originPositionMap = getOriginPositionMap(boardProjects);
                 const prs = [];
-                const WORKPLAN_CODE_COST = 21;
                 const projectIdsInOrder = [];
                 try {
                 for (const bp of boardProjects) {
