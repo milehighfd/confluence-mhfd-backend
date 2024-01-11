@@ -140,9 +140,9 @@ export const getBoardProjectsOfBoard = async (board_id, isWorkPlan) => {
       model: BoardProjectCost,
       as: 'boardProjectToCostData',
       required: true,
-      where: {
-        req_position: {[Op.gt]: 0 }
-      },
+      // where: {
+      //   req_position: {[Op.gt]: 0 }
+      // },
       include: [
         {
           model: ProjectCost,

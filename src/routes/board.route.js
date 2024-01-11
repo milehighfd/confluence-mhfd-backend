@@ -1119,6 +1119,26 @@ const updateProjectStatus = async (boards, creator) => {
   })
 };
 
+const getOriginSortOrderOfBoards = (boardProject) => {
+  const columns = [0, 1, 2, 3, 4, 5];
+  const originPositionMap = {};
+  columns.forEach(columnNumber => {
+    // make an array of origin position with key of project_id, with sort_order values of each reqposition 
+    const currentReqPosition = columnNumber;
+    for ( let i = 0 ; i < boardProject.length ; i++) {
+      let bp = boardProject[i];
+      let bpReqPosition = bp.boardProjectToCostData.find((bpc) => bpc.req_position === currentReqPosition);
+      if (bpReqPosition) {
+        if (!originPositionMap[bp.project_id]) {
+          originPositionMap[bp.project_id] = {};
+        }
+        originPositionMap[bp.project_id][currentReqPosition] = bpReqPosition.sort_order;
+      }
+    }
+  });
+  return originPositionMap;
+}
+
 const getOriginPositionMap = (boardProjects) => {
   const columns = [0, 1, 2, 3, 4, 5];
   const originPositionMap = {};
@@ -1289,41 +1309,35 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
             //   }
             getBoardProjectsOfBoard(board.board_id, false)
             .then((async (boardProjects) => {
-              
-                const originPositionMap = getOriginPositionMap(boardProjects);
+                const originSortOrders = getOriginSortOrderOfBoards(boardProjects);
+                console.log('origin sort', originSortOrders);
+                // const originPositionMap = getOriginPositionMap(boardProjects);
                 const prs = [];
                 const projectIdsInOrder = [];
                 try {
                 for (const bp of boardProjects) {
                     projectIdsInOrder.push(bp.project_id);
-                    // prs.push(
-                      const boardProjectCreated = await BoardProject.create({
-                        board_id: destinyBoard.board_id,
-                        project_id: bp.project_id,
-                        // rank0: bp.rank0,
-                        // rank1: bp.rank1,
-                        // rank2: bp.rank2,
-                        // rank3: bp.rank3,
-                        // rank4: bp.rank4,
-                        // rank5: bp.rank5,
-                        originPosition0: originPositionMap[bp.project_id][0],
-                        originPosition1: originPositionMap[bp.project_id][1],
-                        originPosition2: originPositionMap[bp.project_id][2],
-                        originPosition3: originPositionMap[bp.project_id][3],
-                        originPosition4: originPositionMap[bp.project_id][4],
-                        originPosition5: originPositionMap[bp.project_id][5],
-                        req1: bp.req1,
-                        req2: bp.req2,
-                        req3: bp.req3,
-                        req4: bp.req4,
-                        req5: bp.req5,
-                        year1: bp.year1,
-                        year2: bp.year2,
-                        origin: board.locality,
-                        code_status_type_id: bp.code_status_type_id,
-                        parent_board_project_id: bp.board_project_id,
-                        created_by: creator,
-                        last_modified_by: creator,
+                    const boardProjectCreated = await BoardProject.create({
+                      board_id: destinyBoard.board_id,
+                      project_id: bp.project_id,
+                      originPosition0: originSortOrders[bp.project_id][0],
+                      originPosition1: originSortOrders[bp.project_id][1],
+                      originPosition2: originSortOrders[bp.project_id][2],
+                      originPosition3: originSortOrders[bp.project_id][3],
+                      originPosition4: originSortOrders[bp.project_id][4],
+                      originPosition5: originSortOrders[bp.project_id][5],
+                      // req1: bp.req1,
+                      // req2: bp.req2,
+                      // req3: bp.req3,
+                      // req4: bp.req4,
+                      // req5: bp.req5,
+                      year1: bp.year1,
+                      year2: bp.year2,
+                      origin: board.locality,
+                      code_status_type_id: bp.code_status_type_id,
+                      parent_board_project_id: bp.board_project_id,
+                      created_by: creator,
+                      last_modified_by: creator,
                     });
                     console.log('Board Project created', boardProjectCreated);
                     const currentProjectId = bp.project_id;
@@ -1335,7 +1349,7 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                       where: {
                         project_id: currentProjectId,
                         is_active: true,
-                        code_cost_type_id: 22
+                        code_cost_type_id: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
                       },
                       include: [{
                         model: ProjectPartner,
@@ -1363,11 +1377,10 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                       .subtract(OFFSET_MILLISECONDS * j)
                       .toDate()
                       // here we are duplicating the previous cost with the same partner but with code cost type of workplan
-                      const CODE_COST_TYPE_WP = 21;
                       const newProjectCost = await ProjectCost.create({
                         project_id: currentProjectId,
                         cost: prevCostOfSponsor.cost,
-                        code_cost_type_id: CODE_COST_TYPE_WP,
+                        code_cost_type_id: COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID,
                         project_partner_id: prevCostOfSponsor.projectPartnerData.project_partner_id,
                         created_by: creator,
                         modified_by: creator,
@@ -1389,12 +1402,10 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                         created_by: creator,
                         last_modified_by: creator,
                         req_position: prevBoardProjectCost.req_position,
-                        sort_order: 0
+                        sort_order: prevBoardProjectCost.sort_order
                       });
                       console.log('new board project cost created', newBoardProjectCost);
                     }
-
-                    // );
                 }
                 
                   // const newBoardProjects = await Promise.all(prs);
@@ -1410,11 +1421,11 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                 }
                 logger.info('success on sendBoardProjectsToDistrict');
                 const updatePromises = [];
-                // for (let i = 0; i < 6; i++) {
-                //     const rank = `rank${i}`;
-                //     logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
-                //     updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank, creator));
-                // }
+                for (let i = 0; i < 6; i++) {
+                    const rank = `rank${i}`;
+                    logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
+                    // updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank, creator));
+                }
                 if (updatePromises.length) {
                   try {
                     await Promise.all(updatePromises)
