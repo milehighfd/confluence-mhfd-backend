@@ -58,7 +58,7 @@ const getYearBoardByUser = async (req, res) => {
   const CONSULTANT_CODE = 2;
   const CONTRACTOR_CODE = 4;
   const LOCAL_GOVERNMENT = 3;
-  let key = 'BOARD_YEAR'
+  let key = 'MHFD_BOARD_YEAR'
   switch (associateType) {
     case MHFD_CODE:
       key = `MHFD_BOARD_YEAR`;
