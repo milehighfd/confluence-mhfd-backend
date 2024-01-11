@@ -1300,7 +1300,6 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
     try {
         logger.info(`Starting function findAll for board/`, creator, '<- creator should be!!');
         for (let board of boards) {
-            console.log(board, "current board");
             let destinyBoard = await getBoard('WORK_PLAN', 'MHFD District Work Plan', board.year, board.projecttype, creator);
             // BoardProject.findAll({
             //   where: {
@@ -1310,7 +1309,6 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
             getBoardProjectsOfBoard(board.board_id, false)
             .then((async (boardProjects) => {
                 const originSortOrders = getOriginSortOrderOfBoards(boardProjects);
-                console.log('origin sort', originSortOrders);
                 // const originPositionMap = getOriginPositionMap(boardProjects);
                 const prs = [];
                 const projectIdsInOrder = [];
@@ -1339,10 +1337,8 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                       created_by: creator,
                       last_modified_by: creator,
                     });
-                    console.log('Board Project created', boardProjectCreated);
                     const currentProjectId = bp.project_id;
                     const newBoardProjectId = boardProjectCreated.board_project_id;
-                    console.log('new board proejct id', newBoardProjectId);
                     // INFO: this project cost copy was commented because now workplan and workrequest have independent costs 
                     // get all project costs related to the current project
                     const prevCostOfProject = await ProjectCost.findAll({
@@ -1366,12 +1362,10 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                         ]
                       }]
                     });
-                    console.log(prevCostOfProject.length, 'prevcostofproject', JSON.stringify(prevCostOfProject), 'forprojectid', currentProjectId);
                     // create new projectcosts for the new board project copying values of the previous ones but changing the project_partner_id to the new one
                     let mainModifiedDate = new Date();
                     
                     for (let j = 0 ; j < prevCostOfProject.length ; j++) {
-                      console.log('inside for provcostofproject', j, creator);
                       const prevCostOfSponsor = prevCostOfProject[j];
                       const lastModifiedDate = moment(mainModifiedDate)
                       .subtract(OFFSET_MILLISECONDS * j)
@@ -1404,7 +1398,6 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                         req_position: prevBoardProjectCost.req_position,
                         sort_order: prevBoardProjectCost.sort_order
                       });
-                      console.log('new board project cost created', newBoardProjectCost);
                     }
                 }
                 
@@ -1422,9 +1415,9 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                 logger.info('success on sendBoardProjectsToDistrict');
                 const updatePromises = [];
                 for (let i = 0; i < 6; i++) {
-                    const rank = `rank${i}`;
+                    const rank = i;
                     logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
-                    // updatePromises.push(boardService.reCalculateColumn(destinyBoard.board_id, rank, creator));
+                    updatePromises.push(boardService.reCalculateSortOrderForColumn(destinyBoard.board_id, rank, creator, null));
                 }
                 if (updatePromises.length) {
                   try {

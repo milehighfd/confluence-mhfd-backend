@@ -1,10 +1,10 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
 import moment from 'moment';
-import sequelize from 'sequelize';
+import sequelize, { col } from 'sequelize';
 import { LexoRank } from 'lexorank';
 import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
-import { getSortOrderValue } from 'bc/routes/board-project/updateSortOrderFunctions.js';
+import { getBoardProjectsOfBoardOfColumn, getSortOrderValue } from 'bc/routes/board-project/updateSortOrderFunctions.js';
 
 const BoardProject = db.boardProject;
 const ProjectCost = db.projectCost;
@@ -49,6 +49,34 @@ const createNewBoard = async (
   return res;
 }
 
+const reCalculateSortOrderForColumn = async (board_id, column, creator, transaction) => {
+  try {
+  const isWorkPlan = true;
+  const boardProjects = await getBoardProjectsOfBoardOfColumn(board_id, isWorkPlan, column);
+  let startValue = 1;
+  const pr = [];
+  if (boardProjects.length) {
+    boardProjects.forEach((bp) => {
+      pr.push(BoardProjectCost.update(
+        { 
+          sort_order: startValue++, 
+          updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+          last_modified_by: creator
+        },
+        { where: { board_project_cost_id: bp.boardProjectToCostData[0]?.board_project_cost_id } },
+        { transaction }
+      ));
+    });
+    const solve = await Promise.all(pr);
+    return solve;
+  } else {
+    return [];
+  }
+
+  } catch (error) {
+    logger.error("ERROR AT RECALCULATE SORT ORDER", error);
+  }
+}
 const reCalculateColumn = async (board_id, column, creator) => {
   const startValue = LexoRank.middle();
   const boardProjects = await BoardProject.findAll({
@@ -766,6 +794,7 @@ const updateBoards = async (board, status, comment, substatus, creator) => {
 
 export default {
   createNewBoard,
+  reCalculateSortOrderForColumn,
   reCalculateColumn,
   updateAndCreateProjectCosts,
   updateAndCreateProjectCostsForAmounts,
