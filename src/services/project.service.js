@@ -2972,6 +2972,9 @@ const globalSearch = async (keyword) => {
 const projectSearch = async (keyword) => {
   if (keyword.trim() === '') {
     const projects = await Project.findAll({
+      where: {
+        is_archived: 0
+      },
       attributes: ['project_id', 'project_name'],
     });
     return projects;
@@ -3000,7 +3003,8 @@ const projectSearch = async (keyword) => {
 
   const projects = await Project.findAll({
     where: {
-      [Op.or]: conditions
+      [Op.or]: conditions,
+      is_archived: 0
     },
     attributes: ['project_id', 'project_name'],
   });
