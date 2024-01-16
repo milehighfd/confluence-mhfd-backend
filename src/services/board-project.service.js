@@ -24,15 +24,25 @@ export const isOnWorkspace =  async (boardProject) => {
   }
 };
 
-export const isOnFirstYear = (boardProject) => {
+export const isOnFirstYear = async (boardProject) => {
   let allNull = true;
-  const indexes = [0, 2, 3, 4, 5];
+  const indexes = [2, 3, 4, 5];
+  const boardProjectId = boardProject.board_project_id;
+  const boardProjectCosts = await BoardProjectCost.findAll({
+    where: { board_project_id: boardProjectId },
+    include: [{
+      model: ProjectCost,
+      as: 'projectCostData',
+      where: { is_active: true }
+    }]
+  });
+  console.log('IS ON FIRST YEAR BPCOSTS to check if array has more than 1', boardProjectCosts);
   // indexes.forEach((index) => {
-  //   const rankColumnName = `rank${index}`;
-  //   if (boardProject[rankColumnName] !== null) {
-  //     allNull = false;
+  //   if ((boardProjectCosts.length > 0 && boardProjectCosts[0].dataValues.req_position === 0) || boardProjectCosts.length === 0) {
+
   //   }
   // });
+  
   return allNull;
 };
 
@@ -83,7 +93,7 @@ export const determineStatusChange = async (wasOnWorkspace, boardProject, board_
     logger.info('determineStatusChange !wasOnWorkspace && onWorkspace');
   }
   statusHasChanged = boardProject.code_status_type_id !== previous_code_status_type_id;
-  console.log('\n ---------------- ======== ------------- \n status has changed', statusHasChanged, '\n ---------------- ======== ------------- \n wasONWORKSPACE',wasOnWorkspace,' is now on workspace?', onWorkspace,' \n board project', JSON.stringify(boardProject));
+  console.log('\n --------BC-------- ======== ------------- \n status has changed', statusHasChanged, '\n ---------------- ======== ------------- \n wasONWORKSPACE',wasOnWorkspace,' is now on workspace?', onWorkspace,' \n board project', JSON.stringify(boardProject));
   // if (onWorkspace) {
   //   boardProject.rank1 = null;
   //   boardProject.rank2 = null;

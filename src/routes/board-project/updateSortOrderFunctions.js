@@ -130,7 +130,7 @@ const getBoardProjectsValues =  async (boardId, currentColumn, direction, movePo
   })).map(d => d.dataValues);
   return boardProjects;
 }
-export const getBoardProjectsOfBoardOfColumn = async (board_id, isWorkPlan, columnNumber) => {
+export const getBoardProjectsOfBoardOfColumn = async (board_id, isWorkPlan, columnNumber, transaction) => {
   const boardProjects = (await BoardProject.findAll({
     where: {
       board_id: board_id,
@@ -154,9 +154,10 @@ export const getBoardProjectsOfBoardOfColumn = async (board_id, isWorkPlan, colu
           }
         }
       ]
-    }]
+    }],
+    transaction: transaction
   })).map(d => d.dataValues);
-  console.log('\n --------------- \n Board Projects ',board_id, '\n', boardProjects, '\n ---------- \n');
+  console.log(board_id, isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID, 'column nomber', columnNumber, '\n -------N -------- \n Board Projects ',board_id, '\n', boardProjects, '\n ---------- \n');
   return boardProjects;
 }
 export const getBoardProjectsOfBoard = async (board_id, isWorkPlan) => {
@@ -185,7 +186,7 @@ export const getBoardProjectsOfBoard = async (board_id, isWorkPlan) => {
       ]
     }]
   })).map(d => d.dataValues);
-  console.log('\n --------------- \n Board Projects ',board_id, '\n', boardProjects, '\n ---------- \n');
+  console.log('\n -------A-------- \n Board Projects ',board_id, '\n', boardProjects, '\n ---------- \n');
   return boardProjects;
 }
 const getBoardProjectsValuesInRange =  async (boardId, currentColumn, movePosition, sourcePosition) => {

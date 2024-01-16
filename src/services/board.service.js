@@ -52,22 +52,31 @@ const createNewBoard = async (
 const reCalculateSortOrderForColumn = async (board_id, column, creator, transaction) => {
   try {
   const isWorkPlan = true;
-  const boardProjects = await getBoardProjectsOfBoardOfColumn(board_id, isWorkPlan, column);
+  const boardProjects = await getBoardProjectsOfBoardOfColumn(board_id, isWorkPlan, column, transaction);
+  console.log(column, ' \n board_id \n All board projects to recalculate', board_id, JSON.stringify(boardProjects));
   let startValue = 1;
   const pr = [];
   if (boardProjects.length) {
-    boardProjects.forEach((bp) => {
-      pr.push(BoardProjectCost.update(
-        { 
-          sort_order: startValue++, 
-          updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-          last_modified_by: creator
+    boardProjects.forEach(async (bp) => {
+      // find one boardprojectcost with the boardprojectcostid and update the sort order 
+      const boardProjectCostToUpdate = await BoardProjectCost.findOne({
+        where: {
+          board_project_cost_id: bp.boardProjectToCostData[0]?.board_project_cost_id
         },
-        { where: { board_project_cost_id: bp.boardProjectToCostData[0]?.board_project_cost_id } },
-        { transaction }
-      ));
+        transaction: transaction
+      });
+      console.log('Aobard Project to update', boardProjectCostToUpdate);
+      if (boardProjectCostToUpdate) {
+        boardProjectCostToUpdate.sort_order = startValue++;
+        boardProjectCostToUpdate.updatedAt = moment().format('YYYY-MM-DD HH:mm:ss');
+        boardProjectCostToUpdate.last_modified_by = 'creatorplox';
+        console.log( startValue, 'Setting new values ', boardProjectCostToUpdate);
+        pr.push(boardProjectCostToUpdate.save({transaction: transaction}));
+      }
     });
+    console.log('ABOUT TO SOLVE ');
     const solve = await Promise.all(pr);
+    console.log(' SOLVEdD ');
     return solve;
   } else {
     return [];
@@ -170,7 +179,7 @@ const updateAndCreateProjectCosts = async (currentColumn, currentCost, currentPr
   }  
 }
 
-function updateSubmissionDate(board_ids, creator) {
+function updateSubmissionDate(board_ids, creator, transaction) {
   const promises = board_ids.map(board_id => {
     try {
       return Board.update({
@@ -179,7 +188,8 @@ function updateSubmissionDate(board_ids, creator) {
       }, {
         where: {
           board_id: board_id
-        }
+        },
+        transaction
       });
     } catch (error) {
       logger.error(`Error updating submission date for board ${board_id}: ${error}`);
@@ -698,7 +708,7 @@ const updateAndCreateProjectCostsForAmounts = async (
     }).then(async () => {
       if (currentCost !== null && currentCost !== undefined) {
         const hasBeenTouched = (project_partner.code_partner_type_id !== 88) ? true : amountTouched;
-        console.log('---------------\n\n\n\n ', project_partner, hasBeenTouched, 'amountTouched', amountTouched);
+        console.log('-----CNO----------\n\n\n\n ', project_partner, hasBeenTouched, 'amountTouched', amountTouched);
 
         const costToCreate = {
           cost: currentCost,
@@ -735,7 +745,7 @@ const updateAndCreateProjectCostsForAmounts = async (
   }  
 }
 
-const updateBoards = async (board, status, comment, substatus, creator) => {
+const updateBoards = async (board, status, comment, substatus, creator, transaction) => {
   logger.info('Updating all boards different project type');
   let projectTypes = [
     'Capital',
@@ -766,7 +776,8 @@ const updateBoards = async (board, status, comment, substatus, creator) => {
         status,
         creator,
         comment,
-        substatus
+        substatus,
+        transaction
       );
     } else {
       // When it reaches here? in what context?
@@ -785,7 +796,7 @@ const updateBoards = async (board, status, comment, substatus, creator) => {
         if (status === 'Approved' && board.status !== status) {
             newFields['submissionDate'] = new Date();
         }
-        await board.update(newFields)
+        await board.update(newFields, { transaction })
       }
     }
   }
