@@ -186,7 +186,7 @@ export const getBoardProjectsOfBoard = async (board_id, isWorkPlan) => {
       ]
     }]
   })).map(d => d.dataValues);
-  console.log('\n -------A-------- \n Board Projects ',board_id, '\n', boardProjects, '\n ---------- \n');
+  console.log('\n -------A-------- \n Board Projects of ',board_id, '\n', boardProjects, '\n ---------- \n');
   return boardProjects;
 }
 const getBoardProjectsValuesInRange =  async (boardId, currentColumn, movePosition, sourcePosition) => {

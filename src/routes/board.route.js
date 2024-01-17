@@ -1423,7 +1423,6 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
 
 						const promisesResponse = await Promise.all(updatePromises)
 						console.log('Promises Response', promisesResponse);
-						return promisesResponse;
 					} catch(error) {
 						logger.error(`error on recalculate columns ${error}`);
 					}
@@ -1432,6 +1431,7 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
 		}
 		logger.info(`Finished function findAll for board/`);
 		logger.info('success on sendBoardProjectsToDistrict');
+    return {};
 	} catch (error) {
 		console.log( 'ERROR AT BOARD ROUTE ->', error);
 		logger.error(error);
@@ -1449,7 +1449,7 @@ const moveCardsToNextLevel = async (currentBoard, creator, transaction) => {
 		}
 	},{ transaction: transaction });
 	logger.info(`Finished function findAll for board/`);
-
+  console.log('Board Find All with', currentBoard.type, currentBoard.year, currentBoard.locality, '\n\n ', JSON.stringify(boards));
 	if (currentBoard.type === 'WORK_REQUEST') {
 		// SOME CODE DELETED FOR APPROVEING BOARDS with year < 2024
 		logger.info(`Sending ${boards.length} to district`);
@@ -1639,7 +1639,6 @@ router.put('/', [auth], async (req, res) => {
 		}
 	} catch (error) {
 		console.error(`Error updating board: ${error}`);
-		await transaction.rollback();
 		res.status(500).send({ error: 'Internal server error' });
 	}
 });
