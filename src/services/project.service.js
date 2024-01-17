@@ -1709,7 +1709,8 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
             required: false,
             attributes: [
               'phase_name',
-              'phase_ordinal_position'
+              'phase_ordinal_position',
+              'code_project_type_id'
             ],
             include: [{
               model: CodeStatusType,
@@ -1995,26 +1996,31 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
     let newProjects = [];
     for(let i = 0; i < projects.length; ++i) {
       const project = projects[i];
+      // console.log('\n ************* \n Project DAta', JSON.stringify(project));
       const projectStatuses = project.project_statuses;
       const constructionStatuses = projectStatuses.filter(projectStatus => {
         const code_phase_type_id = projectStatus.code_phase_type_id;
+        const code_project_type_id = projectStatus.code_phase_type.code_project_type.code_project_type_id;
         // Construction ids
-        return code_phase_type_id >= 215 && code_phase_type_id <= 224;
+        return (code_phase_type_id >= 215 && code_phase_type_id <= 224) && code_project_type_id === project.code_project_type_id;
       });
       const consultantStatuses = projectStatuses.filter(projectStatus => {
         const code_phase_type_id = projectStatus.code_phase_type_id;
+        const code_project_type_id = projectStatus.code_phase_type.code_project_type.code_project_type_id;
         // Consultant Procurement ids 
-        return code_phase_type_id >= 290 && code_phase_type_id <= 299;
+        return (code_phase_type_id >= 290 && code_phase_type_id <= 299) && code_project_type_id === project.code_project_type_id;
       });
       const contractorStatuses = projectStatuses.filter(projectStatus => {
         const code_phase_type_id = projectStatus.code_phase_type_id;
+        const code_project_type_id = projectStatus.code_phase_type.code_project_type.code_project_type_id;
         // Contractor Procurement ids
-        return code_phase_type_id >= 140 && code_phase_type_id <= 149;
+        return (code_phase_type_id >= 140 && code_phase_type_id <= 149) && code_project_type_id === project.code_project_type_id;
       });
       const fundingConsultantSelection = projectStatuses.filter(projectStatus => {
         const code_phase_type_id = projectStatus.code_phase_type_id;
         return code_phase_type_id == 61;
       });
+      
       const construction_phase =  constructionStatuses.length? constructionStatuses[0]?.dataValues : undefined;
       const consultant_phase =  consultantStatuses.length ? consultantStatuses[0]?.dataValues: undefined;
       const contractor_phase =  contractorStatuses.length ? contractorStatuses[0]?.dataValues: undefined;
