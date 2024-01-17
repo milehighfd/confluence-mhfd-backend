@@ -932,22 +932,22 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 			attributes: ['business_associates_id'],
 			where: {
 				project_id: boardProject.project_id,
-				code_partner_type_id: 11
+				code_partner_type_id: COST_IDS.SPONSOR_CODE_COST_TYPE_ID
 			},
-			transaction
+			transaction: transaction
 		});
 		const businessAssociate = await BusinessAssociate.findOne({
 			attributes: ['business_name'],
 			where: {
 				business_associates_id: partner.business_associates_id
 			},
-			transaction
+			transaction: transaction
 		});
 		const sponsor = businessAssociate.business_name;
 		const previousBoard = await Board.findOne({
 			attributes: ['projecttype'],
 			where: { board_id: boardProject.board_id },
-			transaction
+			transaction: transaction
 		})
 		let newBoardParams = {
 			year: newYear,
@@ -972,7 +972,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 		try {
 			newBoard = await Board.findOne({
 				where: newBoardParams,
-				transaction
+				transaction: transaction
 			});
 		} catch (error) {
 			console.log('Error in project Promises ', error);
@@ -984,49 +984,31 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 		};
 		if (newBoard === null) {
 			const newBoardInstance = new Board(newBoardParams);
-			newBoard = await newBoardInstance.save({transaction}); 
-		}
-		const onWorkspace = await isOnWorkspace(boardProject);
-		const onFirstYear = await isOnFirstYear(boardProject); // if on first year then move it to workspace
 
+			newBoard = await newBoardInstance.save({transaction: transaction}); 
+      console.log('The board has been created', newBoard);
+		}
 		let newBoardProjectParams = {
 			board_id: newBoard.board_id,
 			project_id: boardProject.project_id,
-			// year1: boardProject.year1,
-			// year2: boardProject.year2,
 			origin: sponsor,
 			code_status_type_id: REQUESTED_STATUS,
 			created_by: creator,
 			last_modified_by: creator,
 		};
-		if (onWorkspace || onFirstYear) { 
-			// both to workspace
-			newBoardProjectParams = {
-				...newBoardProjectParams,
-				// rank0: boardProject.rank0 || LexoRank.middle(),
-			}
-		} else {
-			// if it has values for years
-			newBoardProjectParams = {
-				...newBoardProjectParams,
-				// // rank1: boardProject.rank2,
-				// req1: boardProject.req2, 
-				// // rank2: boardProject.rank3,
-				// req2: boardProject.req3, 
-				// // rank3: boardProject.rank4,
-				// req3: boardProject.req4, 
-				// // rank4: boardProject.rank5,
-				// req4: boardProject.req5,
-				// // rank5: null,
-				// req5: null,
-			}
-		} 
+    newBoardProjectParams = {
+      ...newBoardProjectParams,
+      // rank0: boardProject.rank0 || LexoRank.middle(),
+    }
 		// first check out what happened before with partners. 
+    console.log('**************** about to create board rpoject');
 		const newBoardProjectInstance = new BoardProject(newBoardProjectParams);
-		const createdBoardProject = await newBoardProjectInstance.save(transaction);
+		const createdBoardProject = await newBoardProjectInstance.save({transaction: transaction});
+    console.log('new board project instatnace', createdBoardProject);
 		const reqToUse = [0,1,2,3,4,5];
-		const code_cost_type_WP = [21,41]
+		const code_cost_type_WP = [COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID,COST_IDS.WORK_PLAN_EDITED];
 		let boardProjectId = boardProject.board_project_id;
+    // find all project costs related to current boardproject 
 		const foundBoardProjectCosts = await BoardProjectCost.findAll({
 			where: {
 				board_project_id: boardProjectId,
@@ -1041,7 +1023,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 					code_cost_type_id: code_cost_type_WP
 				}
 			}],
-			transaction
+			transaction: transaction
 		});
 		console.log('all Board Found project costs', JSON.stringify(foundBoardProjectCosts));
 		let mainModifiedDate = new Date();
@@ -1092,12 +1074,23 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 			await BoardProjectCost.create(newBoardProjectCost, { transaction });
 			k++;
 		}
+    const updatePromises = [];
+    for (let i = 0; i < 6; i++) {
+      const rank = i;
+      logger.info(`Start count for ${rank} and board ${createdBoardProject.board_id}`);
+      updatePromises.push(boardService.reCalculateSortOrderForColumn(createdBoardProject.board_id, rank, creator, transaction));
+    }
+    if (updatePromises.length) {
+      try {
+        const promisesResponse = await Promise.all(updatePromises)
+        console.log('Promises Response', promisesResponse);
+      } catch(error) {
+        logger.error(`error on recalculate columns ${error}`);
+      }
+      logger.info('success on recalculate Columns');
+    }
 	}
-	for (let i = 0; i < 6; i++) {
-		const rank = i;
-		logger.info(`Start count for ${rank} and board ${createdBoardProject.board_id}`);
-		updatePromises.push(boardService.reCalculateSortOrderForColumn(createdBoardProject.board_id, rank, creator, transaction));
-	}
+
 	return true;
 	} catch (e) {
 		console.log('Error in project Promises ', e);
@@ -1105,7 +1098,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 	}
 };
 
-const updateProjectStatus = async (boards, creator, transaction) => {
+const updateProjectStatus = async (boards, creator, isWorkPlan, transaction) => {
 	logger.info(`Starting function updateProjectStatus for board/`);
 	const prs = [];
 	for (const board of boards) {
@@ -1114,6 +1107,26 @@ const updateProjectStatus = async (boards, creator, transaction) => {
 				where: {
 					board_id: board.board_id,
 				},
+        order: [[{model: BoardProjectCost, as: 'boardProjectToCostData'},'sort_order', 'ASC']],
+        include:[{
+          model: BoardProjectCost,
+          as: 'boardProjectToCostData',
+          required: true,
+          // where: {
+          //   req_position: {[Op.gt]: 0 }
+          // },
+          include: [
+            {
+              model: ProjectCost,
+              as: 'projectCostData',
+              required: true,
+              where: {
+                is_active: true,
+                code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
+              }
+            }
+          ]
+        }],
 				transaction
 			})
 		);
@@ -1459,7 +1472,7 @@ const moveCardsToNextLevel = async (currentBoard, creator, transaction) => {
 		logger.info(`Update ${boards.length} as Requested`);
 		return {}
 	} else if (currentBoard.type === 'WORK_PLAN') {
-		const boardProjectsUpdated = await updateProjectStatus(boards, creator, transaction);
+		const boardProjectsUpdated = await updateProjectStatus(boards, creator, true, transaction);
 		await moveBoardProjectsToNewYear(boardProjectsUpdated, +currentBoard.year + 1, creator, transaction);
 		return {}
 	}
