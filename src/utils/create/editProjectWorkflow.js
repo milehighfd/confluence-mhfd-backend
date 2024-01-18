@@ -29,7 +29,8 @@ import {
   getLocalitiesNames,
   addProjectsToBoard,
   saveSubtotalcost,
-  saveEstimatedCost
+  saveEstimatedCost,
+  processStreamUpdates
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
 import { EditProjectError, ProjectBoardsError} from '../../errors/project.error.js';
@@ -180,8 +181,9 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         // answer.deleteIARes = deleteIARes;
         const actionRes = await updateActions(project_id, independentComponent, components, creator, transaction);        
         answer.actionRes = actionRes;
-        await deleteStreams(project_id, transaction);
-        const resStreamsCap = await updateStreams(project_id, streams, creator, transaction); 
+        // await deleteStreams(project_id, transaction);
+        // const resStreamsCap = await updateStreams(project_id, streams, creator, transaction); 
+        const resStreamsCap = await processStreamUpdates(project_id, streams, creator, transaction);
         answer.resStreams = resStreamsCap;
         break;
       case 'acquisition':        
@@ -196,8 +198,9 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         break;
       case 'study':
         await createCartoStudy(project_id, ids)
-        await deleteStreams(project_id, transaction);
-        const resStreams = await updateStreams(project_id, streams, creator, transaction); 
+        // await deleteStreams(project_id, transaction);
+        // const resStreams = await updateStreams(project_id, streams, creator, transaction); 
+        const resStreams = await processStreamUpdates(project_id, streams, creator, transaction);
         answer.resStreams = resStreams;
         const resStudy = await updateStudy(project_id, studyreason, creator, otherReason || null, transaction);
         answer.resStudy = resStudy;
@@ -206,8 +209,9 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         await createCarto(...createCartoInputs);
         const resMaintenance = await updateProjectDetail(project_id, body, creator, transaction);
         answer.resMaintenance = resMaintenance;
-        await deleteStreams(project_id, transaction);
-        const resStreamsMain = await updateStreams(project_id, streams, creator, transaction); 
+        // await deleteStreams(project_id, transaction);
+        // const resStreamsMain = await updateStreams(project_id, streams, creator, transaction); 
+        const resStreamsMain = await processStreamUpdates(project_id, streams, creator, transaction);
         answer.resStreams = resStreamsMain;
         break;      
     };

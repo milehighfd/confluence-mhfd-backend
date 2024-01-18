@@ -20,18 +20,18 @@ export const saveSubtotalcost = async (project_id, subtotalcost, creator, transa
         last_modified: moment().format('YYYY-MM-DD HH:mm:ss'),
         modified_by: creator
       });
-      const findOne = await ProjectCost.findOne({
+      await ProjectCost.update({
+        is_active: 0,
+        last_modified: moment().format('YYYY-MM-DD HH:mm:ss'),
+        modified_by: creator
+      }, {
         where: {
-          project_id: project_id ,
-          code_cost_type_id: PROPOSED_CODE_COST
-        }
-      }, { transaction: transaction });
-      if (findOne) {
-        findOne.is_active = 0;
-        findOne.last_modified = moment().format('YYYY-MM-DD HH:mm:ss');
-        findOne.modified_by = 'creatorFAKE@GMAIL>COM';
-        await findOne.save({ transaction: transaction });
-      }
+          project_id: project_id,
+          code_cost_type_id: PROPOSED_CODE_COST,
+          is_active: true
+        },
+        transaction: transaction
+      });
       // const pc = await ProjectCost.update({
       //   is_active: 0,
       //   last_modified: moment().format('YYYY-MM-DD HH:mm:ss'),

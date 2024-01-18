@@ -42,6 +42,9 @@ const updateBudgetBoardEntry = async (req, res) => {
 
 const getSumForBudgetBoard = async (req, res) => {
   const { boards_id } = req.body;
+  if (!boards_id) {
+    return res.status(400).send({ error: 'boards_id is required' });
+  }
   const targetcostColumns = ['targetcost1', 'targetcost2', 'targetcost3', 'targetcost4', 'targetcost5'];
   try {
     const promises = targetcostColumns.map(column => BudgetBoardTable.sum(column, 

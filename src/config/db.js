@@ -47,6 +47,7 @@ import projectLocalGovernment from 'bc/models/project_local_government.model.js'
 import projectStaff from 'bc/models/project_staff.model.js';
 import stream from 'bc/models/stream.model.js';
 import streamSingular from 'bc/models/stream_singular.model.js';
+import streamSegment from 'bc/models/streamSegment.model.js';
 import businessAssociateContact from 'bc/models/business_associate_contact.model.js';
 import businessAdress from 'bc/models/business_address.model.js';
 import businessAssociates from 'bc/models/business_associates.model.js';
@@ -170,6 +171,7 @@ db.projectStaff = projectStaff(sequelize, Sequelize);
 db.codeProjectStaffRole = CodeProjectStaffRole(sequelize, Sequelize);
 db.stream = stream(sequelize, Sequelize);
 db.streamSingular = streamSingular(sequelize, Sequelize);
+db.streamSegment = streamSegment(sequelize, Sequelize);
 db.businessAssociateContact = businessAssociateContact(sequelize, Sequelize);
 db.businessAdress = businessAdress(sequelize, Sequelize);
 db.businessAssociates = businessAssociates(sequelize, Sequelize);

@@ -6,7 +6,7 @@ import logger from 'bc/config/logger.js';
 
 export const insertToCartoStudy = async (table, project_id, parsedIds) => {
   const insertQuery = `INSERT INTO ${table} (the_geom, projectid)
-  (SELECT ST_Collect(the_geom) as the_geom, ${project_id} as projectid FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds}))`;
+  (SELECT ST_Collect(the_geom) as the_geom, ${project_id} as projectid FROM stream WHERE mhfd_code_stream IN(${parsedIds}))`;
   const query = {
     q: insertQuery
   };
@@ -23,8 +23,9 @@ export const insertToCartoStudy = async (table, project_id, parsedIds) => {
   }
 }
 
+
 export const getGeomGeojson = async (parsedIds) => {
-  const queryGeom = `SELECT ST_AsGeoJSON(ST_union(the_geom)) as the_geom FROM mhfd_stream_reaches WHERE unique_mhfd_code  IN(${parsedIds})`;
+  const queryGeom = `SELECT ST_AsGeoJSON(ST_union(the_geom)) as the_geom FROM stream WHERE mhfd_code_stream IN(${parsedIds})`;
   const query = {
     q: queryGeom
   };
@@ -39,7 +40,6 @@ export const getGeomGeojson = async (parsedIds) => {
   } catch(error) {
     logger.error(error, 'at', queryGeom);
   }
-
 }
 
 export const getGeomProject = async (project_id) => {

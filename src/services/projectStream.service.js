@@ -16,7 +16,7 @@ const getAll = (projectid) => {
         attributes: [
           'stream_id',
           'stream_name',
-          'MHFD_Code'
+          'mhfd_code_stream',
         ]
       }
     ]});
