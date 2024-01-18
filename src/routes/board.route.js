@@ -1034,7 +1034,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator) => {
       const DateToAvoidRepeated = moment(mainModifiedDate)
         .subtract(OFFSET_MILLISECONDS * index)
         .toDate();
-      index++;_
+      index++;
       const newProjectCost = {
         ...cost.projectCostData.dataValues,
         project_cost_id: null,
@@ -1359,16 +1359,19 @@ const sendBoardProjectsToDistrict = async (boards, creator) => {
                           project_cost_id: prevCostOfSponsor.project_cost_id
                         }
                       });
-                      const newBoardProjectCost = await BoardProjectCost.create({
-                        board_project_id: newBoardProjectId,
-                        project_cost_id: newProjectCost.project_cost_id,
-                        created_by: creator,
-                        last_modified_by: creator,
-                        req_position: prevBoardProjectCost.req_position,
-                        sort_order: 0
-                      });
-                      console.log('new board project cost created', newBoardProjectCost);
-                    }
+                      if (prevBoardProjectCost) {
+                        const newBoardProjectCost = await BoardProjectCost.create({
+                          board_project_id: newBoardProjectId,
+                          project_cost_id: newProjectCost.project_cost_id,
+                          created_by: creator,
+                          last_modified_by: creator,
+                          req_position: prevBoardProjectCost.req_position,
+                          sort_order: 0
+                        });
+                        console.log('new board project cost created', newBoardProjectCost);
+                      }
+                      }
+                      
 
                     // );
                 }
