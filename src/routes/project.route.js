@@ -691,7 +691,7 @@ const getProjectStreams = async (req, res) => {
             project_id: ps.project_id,
             stream_id: ps.stream_id,
             stream_name: ps.streamData?.stream_name,
-            mhfd_code_stream: ps.streamData?.MHFD_Code,
+            mhfd_code_stream: ps.streamData?.mhfd_code_stream,
             project_stream_id: ps.project_stream_id,
           });
         }
@@ -874,6 +874,7 @@ const updateActiveDetails = async (req, res) => {
         transaction: transaction
       });
     }
+
     if (lastProjectDetails.lastMhfdLeadId !== mhfdLead) {
       await ProjectStaff.update({
         is_active: false,
@@ -885,62 +886,66 @@ const updateActiveDetails = async (req, res) => {
         },
         transaction: transaction
       });
+
       await ProjectStaff.create({
         project_id: project_id,
         business_associate_contact_id: mhfdLead,
         code_project_staff_role_type_id: CODE_MHFD_LEAD,
-        last_modified_date : date,
+        last_modified_date: date,
         effective_date: date,
         is_active: true
       }, {
         transaction: transaction
       });
     }
+
     let projectStreamId;
 
-    if (!hasProjectStream) {
-      const newProjectStream = await ProjectStream.create({
-        project_id: project_id,
-        stream_id: primaryStream,
-        code_data_source_update_type_id: CONF_USER,
-        length_in_feet: 0,
-        code_local_government_id: 9999,
-        created_by: creator,
-        last_modified_by: creator,
-        is_active: true,
-        drainage_area_in_acres: 0,
-      }, {
-        transaction: transaction
-      });
-
-      projectStreamId = newProjectStream.project_stream_id;
-    } else {
-      projectStreamId = primaryStream;
-    }
-    if (lastProjectDetails.lastProjectStreamId !== primaryStream) {
-      if (lastProjectDetails.lastPrimaryStreamId) {
-        await PrimaryStream.update({ 
-          is_active: false, 
-          last_update_by: creator,
-          last_modified_by : date
+    if (primaryStream !== null) {
+      if (!hasProjectStream) {
+        const newProjectStream = await ProjectStream.create({
+          project_id: project_id,
+          stream_id: primaryStream,
+          code_data_source_update_type_id: CONF_USER,
+          length_in_feet: 0,
+          code_local_government_id: 9999,
+          created_by: creator,
+          last_modified_by: creator,
+          is_active: true,
+          drainage_area_in_acres: 0,
         }, {
-          where: { primary_stream_id: lastProjectDetails.lastPrimaryStreamId },
           transaction: transaction
         });
-      }      
-      await PrimaryStream.create({
-        project_stream_id: projectStreamId,
-        code_data_source_update_type_id: CONF_USER,
-        created_by: creator,
-        last_modified_by: creator,
-        is_active: true
-      }, {
-        transaction: transaction
-      });
+
+        projectStreamId = newProjectStream.project_stream_id;
+      } else {
+        projectStreamId = primaryStream;
+      }
+
+      if (lastProjectDetails.lastProjectStreamId !== primaryStream) {
+        if (lastProjectDetails.lastPrimaryStreamId) {
+          await PrimaryStream.update({ 
+            is_active: false, 
+            last_update_by: creator,
+            last_modified_by: date
+          }, {
+            where: { primary_stream_id: lastProjectDetails.lastPrimaryStreamId },
+            transaction: transaction
+          });
+        }      
+        await PrimaryStream.create({
+          project_stream_id: projectStreamId,
+          code_data_source_update_type_id: CONF_USER,
+          created_by: creator,
+          last_modified_by: creator,
+          is_active: true
+        }, {
+          transaction: transaction
+        });
+      }
     }
 
     await transaction.commit();
-
     res.status(200).send({ message: 'Project details updated successfully' });
   } catch (error) {
     console.error(error);
