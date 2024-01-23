@@ -2975,17 +2975,19 @@ const globalSearch = async (keyword) => {
   return projects;
 };
 
-const projectSearch = async (keyword) => {
+const projectSearch = async (keyword) => {  
   if (keyword.trim() === '') {
     const projects = await Project.findAll({
       where: {
-        is_archived: 0
+        [Op.or]: [
+          { is_archived: { [Op.ne]: 1 } },
+          { is_archived: { [Op.is]: null } }
+        ]
       },
       attributes: ['project_id', 'project_name'],
     });
     return projects;
   }
-
   const isNumeric = /^\d+$/.test(keyword);
   const words = keyword.split(' ').filter(word => word.trim() !== '');
   let conditions;
@@ -3005,12 +3007,14 @@ const projectSearch = async (keyword) => {
         [Op.like]: `%${word}%`
       }
     }));
-  }
-
+  }   
   const projects = await Project.findAll({
     where: {
       [Op.or]: conditions,
-      is_archived: 0
+      [Op.or]: [
+        { is_archived: { [Op.ne]: 1 } },
+        { is_archived: { [Op.is]: null } }
+      ]
     },
     attributes: ['project_id', 'project_name'],
   });
@@ -3315,25 +3319,12 @@ const getProjectsToAvoid = async (year) => {
 };
 
 const getProjectsForMHFD = async (filteredProjects) => {
-  const CODE_SPONSOR = 11;
   return await Project.findAll({
     attributes: ['project_id','project_name'],
     where: {
       project_id: filteredProjects
     },
     include: [{
-      model: ProjectPartner,
-      attributes:  ['project_partner_id', 'code_partner_type_id'],
-      where: {
-        code_partner_type_id: CODE_SPONSOR
-      },
-      required: true,
-      include: [{
-        model: BusinessAssociates,
-        attributes: ['business_name'],
-        required: true
-      }]
-    },{
       model: CodeProjectType,
       required: true,
     }]
