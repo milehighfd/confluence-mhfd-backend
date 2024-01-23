@@ -43,8 +43,15 @@ export const addProjectToBoard = async (
     },
     transaction: transaction,
   });
+  console.log('\n\n ===================== \n\n search board', {
+    type,
+    year,
+    locality,
+    projecttype: _projecttype,
+  }, '\n\n ===================== \n\n', board ? board.dataValues : 'NOT FOUND');
   if (!board) {
     try {
+      console.log('About to create new Board because havent found one', type, year, locality, _projecttype);
       const response = await createNewBoard(
         type,
         year,
@@ -65,27 +72,29 @@ export const addProjectToBoard = async (
     project_id: project_id,
     origin: locality,
   };
-  const firstProject = await BoardProject.findOne({
-    where: {
-      board_id: board.board_id,
-      // rank0: {
-      //   [Op.ne]: null,
-      // }
-    }, 
-    // order: [['rank0', 'ASC']],
-    transaction: transaction,
-  });
-  if (firstProject) {
-    // boardProjectObject.rank0 = LexoRank.parse(firstProject.rank0)
-    //   .genPrev()
-    //   .toString();
-  } else { 
-    // boardProjectObject.rank0 = LexoRank.middle().toString();
-  }
+  // const firstProject = await BoardProject.findOne({
+  //   where: {
+  //     board_id: board.board_id,
+  //     // rank0: {
+  //     //   [Op.ne]: null,
+  //     // }
+  //   }, 
+  //   // order: [['rank0', 'ASC']],
+  //   transaction: transaction,
+  // });
+  // if (firstProject) {
+  //   // boardProjectObject.rank0 = LexoRank.parse(firstProject.rank0)
+  //   //   .genPrev()
+  //   //   .toString();
+  // } else { 
+  //   // boardProjectObject.rank0 = LexoRank.middle().toString();
+  // }
   boardProjectObject.projectname = projectname;
   boardProjectObject.projecttype = projecttype;
   boardProjectObject.projectsubtype = projectsubtype;
+  console.log('\n HERE BOARD PROJECT OBJECT \n', boardProjectObject, '\n\n\n\n');
   let boardProject = new BoardProject(boardProjectObject);
+  console.log('HAS BEEN CREATED ', boardProject, ' -> ',boardProject.board_id);
   let boardProjectSaved = boardProject;
   if ((sendToWR === 'true' && board.status === 'Under Review') || isWorkPlan) {
     try {
@@ -100,7 +109,7 @@ export const addProjectToBoard = async (
         transaction
       );
     } catch (error) {
-      logger.error('XXXXXXXXXXXXXXXXXXXXX \n\n error in save board ' + error);
+      logger.error(' \n\n error in save board ' + error);
       throw error;
     }
   }

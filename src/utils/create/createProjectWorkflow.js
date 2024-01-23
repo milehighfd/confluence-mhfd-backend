@@ -149,6 +149,7 @@ const addToBoard = async (body, user, type, subtype, transaction, project_id) =>
       typesList.push('WORK_PLAN');
       localNames.push('MHFD District Work Plan');
     }
+    console.log(sponsor, year, 'Types list', typesList);
     await addProjectsToBoard(user,
       servicearea,
       county,

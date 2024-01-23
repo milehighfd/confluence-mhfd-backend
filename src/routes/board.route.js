@@ -649,10 +649,7 @@ router.post('/board-for-positions2', async (req, res) => {
 		if (status_board && status_board.length > 0) {
 			where.code_status_type_id = status_board;
 		}
-		console.log('where', {
-			is_active: true,
-			code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
-		});
+		console.log('where', where, boardWhere, boardIds);
 		const boardProjects = (await BoardProject.findAll({
 			attributes,
 			where,
@@ -679,11 +676,13 @@ router.post('/board-for-positions2', async (req, res) => {
 				]
 			}]
 		})).map(d => d.dataValues);
+    console.log('This are board projects \n *********** \n ', JSON.stringify(boardProjects));
 		// is not in workspace
 		if (`${position}` !== '0') {
 			const boardProjectIds = boardProjects.map((boardProject) => boardProject.board_project_id);
 
 			const projectIds = boardProjects.map((boardProject) => boardProject.project_id);
+      console.log('\n \n the project ids', projectIds);
 			const MHFD_Partner = await ProjectPartner.findAll({
 				where: {
 					project_id: { [Op.in]: projectIds },

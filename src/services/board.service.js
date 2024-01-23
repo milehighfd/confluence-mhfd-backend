@@ -659,7 +659,7 @@ const updateAndCreateProjectCostsForAmounts = async (
   code_partner_type_id,
   boardId
 ) => {
-  console.log('Update And Create Cost ');
+  console.log('Update And Create Cost column, cost, pid ', currentColumn, currentCost, currentProjectId);
   const countOriginalProject = await Project.count({ where: { project_id: currentProjectId } });
   if (countOriginalProject === 0) {
     logger.error(`Project with id = ${currentProjectId} does not exist`);
@@ -729,8 +729,16 @@ const updateAndCreateProjectCostsForAmounts = async (
         if ( currentColumn <= 5) {
           currentSortOrderInBoard = await getSortOrderValue(boardId, currentColumn );
         }
+        console.log('\n\n --------------------- \n create Boardproject cost', {
+          board_project_id: board_project_id,
+          project_cost_id: project_cost_id,
+          req_position: currentColumn,
+          created_by: user.email,
+          last_modified_by: user.email,
+          sort_order: currentSortOrderInBoard
+      } );
         // missing to check sponsor and cosponsor if this is working fine
-        await BoardProjectCost.create({
+        const bpcreated = await BoardProjectCost.create({
             board_project_id: board_project_id,
             project_cost_id: project_cost_id,
             req_position: currentColumn,
@@ -738,6 +746,7 @@ const updateAndCreateProjectCostsForAmounts = async (
             last_modified_by: user.email,
             sort_order: currentSortOrderInBoard
         });
+        console.log('Board project cost created ',JSON.stringify(bpcreated));
       }
     });
   } catch (error) {

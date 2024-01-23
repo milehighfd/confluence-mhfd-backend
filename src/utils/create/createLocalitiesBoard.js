@@ -7,12 +7,14 @@ export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, 
   if (isWorkPlan === 'false') {
     if (sponsorIdChech) {
       localitiesBoard.push(sponsorId);
+      console.log('AQUI ANADE WORK_REQUEST', isWorkPlan);
       typesList.push('WORK_REQUEST');
     }
   } else {
     if (sendToWR === 'true') {
       if (sponsorIdChech) {
         localitiesBoard.push(sponsorId);
+        console.log('AQUI ANADE WORK_REQUEST 2 ', sendToWR);
         typesList.push('WORK_REQUEST');
       }
     }
@@ -50,6 +52,6 @@ export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, 
       }
     }
   }
-
+  console.log('Types List in create', typesList);
   return { localitiesBoard, typesList };
 }
