@@ -2977,6 +2977,7 @@ const globalSearch = async (keyword) => {
 
 const projectSearch = async (keyword) => {  
   if (keyword.trim() === '') {
+    console.log('empty keyword')
     const projects = await Project.findAll({
       where: {
         [Op.or]: [
@@ -2992,9 +2993,10 @@ const projectSearch = async (keyword) => {
   const words = keyword.split(' ').filter(word => word.trim() !== '');
   let conditions;
   if (isNumeric) {
+    console.log('is numeric')
     conditions = [
-      { project_id: keyword },
-      { onbase_project_number: keyword },
+      { project_id: parseInt(keyword, 10) },
+      { onbase_project_number: parseInt(keyword, 10) },
       ...words.map(word => ({
         project_name: {
           [Op.like]: `%${word}%`
@@ -3008,12 +3010,15 @@ const projectSearch = async (keyword) => {
       }
     }));
   }   
+  console.log(conditions, 'conditions')
   const projects = await Project.findAll({
     where: {
-      [Op.or]: conditions,
-      [Op.or]: [
-        { is_archived: { [Op.ne]: 1 } },
-        { is_archived: { [Op.is]: null } }
+      [Op.and]: [
+        { [Op.or]: conditions },
+        { [Op.or]: [
+          { is_archived: { [Op.ne]: 1 } },
+          { is_archived: { [Op.is]: null } }
+        ]}
       ]
     },
     attributes: ['project_id', 'project_name'],

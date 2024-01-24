@@ -576,7 +576,7 @@ const searchImport = async (req, res) => {
     let filteredProjects = [];
     const isNumeric = /^\d+$/.test(keyword);
     if (isNumeric) {
-      filteredProjects = projects;
+      filteredProjects = projects.map(project => project.project_id);
     } else {
       const words = keyword.split(' ').filter(word => word.trim() !== '');
       filteredProjects = projects.filter(project => {
@@ -595,7 +595,7 @@ const searchImport = async (req, res) => {
     let projectsInBoard = [];
     if (locality !== 'MHFD District Work Plan') {
       projectsInBoard = await projectService.getProjectsInBoard(locality);
-    }else{
+    } else {
       projectsInBoard = await projectService.getProjectsForMHFD(filteredProjects);
     }
     const projectsInBoardIds = projectsInBoard.map(p => p.project_id);
