@@ -157,7 +157,7 @@ export const getBoardProjectsOfBoardOfColumn = async (board_id, isWorkPlan, colu
     }],
     transaction: transaction
   })).map(d => d.dataValues);
-  console.log(board_id, isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID, 'column nomber', columnNumber, '\n -------N -------- \n Board Projects ',board_id, '\n', boardProjects, '\n ---------- \n');
+  console.log( 'code cost type -> ', isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID, 'column nomber ->', columnNumber, '\n --------------- \n Board Projects ',board_id, '\n', boardProjects, '\n ---------- \n');
   return boardProjects;
 }
 export const getBoardProjectsOfBoard = async (board_id, isWorkPlan) => {

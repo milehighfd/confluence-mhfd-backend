@@ -57,8 +57,8 @@ const reCalculateSortOrderForColumn = async (board_id, column, creator, transact
   let startValue = 1;
   const pr = [];
   if (boardProjects.length) {
-    boardProjects.forEach(async (bp) => {
-      // find one boardprojectcost with the boardprojectcostid and update the sort order 
+    for(let i = 0 ; i < boardProjects.length ; ++i) {
+      const bp = boardProjects[i];
       const boardProjectCostToUpdate = await BoardProjectCost.findOne({
         where: {
           board_project_cost_id: bp.boardProjectToCostData[0]?.board_project_cost_id
@@ -69,16 +69,16 @@ const reCalculateSortOrderForColumn = async (board_id, column, creator, transact
       if (boardProjectCostToUpdate) {
         boardProjectCostToUpdate.sort_order = startValue++;
         boardProjectCostToUpdate.updatedAt = moment().format('YYYY-MM-DD HH:mm:ss');
-        boardProjectCostToUpdate.last_modified_by = 'creatorplox';
-        console.log( startValue, 'Setting new values ', boardProjectCostToUpdate);
+        boardProjectCostToUpdate.last_modified_by = creator;
         pr.push(boardProjectCostToUpdate.save({transaction: transaction}));
       }
-    });
+    }
     console.log('ABOUT TO SOLVE ');
     const solve = await Promise.all(pr);
     console.log(' SOLVEdD ');
     return solve;
   } else {
+    console.log('Solved without data');
     return [];
   }
 

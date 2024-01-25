@@ -18,6 +18,8 @@ import sequelize, { where } from 'sequelize';
 import authOnlyEmail from 'bc/auth/auth-only-email.js';
 import { CODE_DATA_SOURCE_TYPE, COST_IDS, OFFSET_MILLISECONDS } from 'bc/lib/enumConstants.js';
 import { getBoardProjectsOfBoard } from './board-project/updateSortOrderFunctions.js';
+import { createInterface } from 'readline';
+
 
 const { Op } = sequelize;
 const router = express.Router();
@@ -451,7 +453,7 @@ router.post('/projectdata', async (req, res) => {
 			project = await getProjectData(projectid, projecttype);
 		logger.info(`Finished function getProjectData for board/projectdata`);
 	} catch(e) {
-		console.log('Error in project Promises ', e);
+		console.log('Error in project getting data ', e);
 	}
 	res.send(project);
 });
@@ -856,7 +858,7 @@ router.post('/', async (req, res) => {
 					logger.info(`Finished function getDetails for board/`);
 				}
 			} catch (error) {
-				console.log('Error in project Promises ', error);
+				console.log('Error in project find project ', error);
 			}
 			let newObject = {
 				id: bp.id,
@@ -911,22 +913,38 @@ const getBoard = async (type, locality, year, projecttype, creator) => {
 		return newBoard; 
 	}
 }
+function pauseExecution() {
+  return new Promise((resolve) => {
+      const rl = createInterface({
+          input: process.stdin,
+          output: process.stdout
+      });
 
+      rl.question('Press Enter to continue...', () => {
+          rl.close();
+          resolve();
+      });
+  });
+}
 const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, transaction) => {
 	try{ 
-	console.log('moveBoardProjectsToNewYear')
+	console.log('XX2 moveBoardProjectsToNewYear')
 	console.log(newYear)
+  // await pauseExecution();
 	await Configuration.update({
 		value: newYear,
 	}, {
 		where: {
 			key: 'BOARD_YEAR',
 		},
-		transaction
+		transaction: transaction
 	});
 	for (let i = 0 ; i < boardProjects.length ; i++) {
 		const boardProject = boardProjects[i];
 		//TODO EDIT AMOUNT: ONLY GETS SPONSOR PARTNER. SHOULD BE MHFD NOW? 
+    if (Object.keys(boardProject).length === 0 ) {
+      console.log('board project is empty', boardProject, 'index', i);
+    }
 		const partner = await ProjectPartner.findOne({
 			attributes: ['business_associates_id'],
 			where: {
@@ -974,18 +992,19 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 				transaction: transaction
 			});
 		} catch (error) {
-			console.log('Error in project Promises ', error);
+			console.log('Error in project find one board ', error);
 		}
 		newBoardParams = {
 			...newBoardParams,
 			last_modified_by: creator,
 			created_by: creator,
 		};
+    // await pauseExecution();
+    console.log(i, '\n XX3 \n', newBoard, ' ++++++++++++= \n NEW BOARD \n', newBoardParams);
 		if (newBoard === null) {
 			const newBoardInstance = new Board(newBoardParams);
-
 			newBoard = await newBoardInstance.save({transaction: transaction}); 
-      console.log('The board has been created', newBoard);
+      console.log('The NEW board has been created', newBoard);
 		}
 		let newBoardProjectParams = {
 			board_id: newBoard.board_id,
@@ -995,15 +1014,9 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 			created_by: creator,
 			last_modified_by: creator,
 		};
-    newBoardProjectParams = {
-      ...newBoardProjectParams,
-      // rank0: boardProject.rank0 || LexoRank.middle(),
-    }
-		// first check out what happened before with partners. 
-    console.log('**************** about to create board rpoject');
+    console.log(i, '\n XX4 **************** about to create board rpoject', newBoardProjectParams);
 		const newBoardProjectInstance = new BoardProject(newBoardProjectParams);
 		const createdBoardProject = await newBoardProjectInstance.save({transaction: transaction});
-    console.log('new board project instatnace', createdBoardProject);
 		const reqToUse = [0,1,2,3,4,5];
 		const code_cost_type_WP = [COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID,COST_IDS.WORK_PLAN_EDITED];
 		let boardProjectId = boardProject.board_project_id;
@@ -1024,11 +1037,10 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 			}],
 			transaction: transaction
 		});
-		console.log('all Board Found project costs', JSON.stringify(foundBoardProjectCosts));
+		console.log('all Board Found project costs for', boardProjectId , '\n\n', JSON.stringify(foundBoardProjectCosts));
 		let mainModifiedDate = new Date();
 		let index = 1;
 		const createdProjectCostIds = [];
-
 		let code_cost_type_id = 0;
 		const WORK_PLAN_CODE_COST_TYPE_ID = 21;
 		const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
@@ -1037,11 +1049,12 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 		}else{
 			code_cost_type_id = WORK_REQUEST_CODE_COST_TYPE_ID;
 		}
+    const isBPOnFirstYear = await isOnFirstYear(boardProject, transaction);
 		for (let cost of foundBoardProjectCosts) {
 			const DateToAvoidRepeated = moment(mainModifiedDate)
 				.subtract(OFFSET_MILLISECONDS * index)
 				.toDate();
-			index++;
+      index++;
 			const newProjectCost = {
 				...cost.projectCostData.dataValues,
 				project_cost_id: null,
@@ -1057,11 +1070,15 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 		}
 		let k = 0; 
 		for (let boardCosts of foundBoardProjectCosts) {
+      let newReqPosition = +boardCosts.req_position === 0 ? +boardCosts.req_position : +boardCosts.req_position - 1;;
+      if (!isBPOnFirstYear && +boardCosts.req_position === 1) {
+        continue;
+      }
 			const newBoardProjectCost = {
 				...boardCosts.dataValues,
 				board_project_cost_id: null,
 				board_project_id: createdBoardProject.board_project_id,
-				req_position: +boardCosts.req_position === 0 ? +boardCosts.req_position : +boardCosts.req_position - 1,
+				req_position: newReqPosition,
 				project_cost_id: createdProjectCostIds[k], 
 				created_by: creator,
 				last_modified_by: creator,
@@ -1074,6 +1091,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 			k++;
 		}
     const updatePromises = [];
+    
     for (let i = 0; i < 6; i++) {
       const rank = i;
       logger.info(`Start count for ${rank} and board ${createdBoardProject.board_id}`);
@@ -1082,17 +1100,19 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
     if (updatePromises.length) {
       try {
         const promisesResponse = await Promise.all(updatePromises)
-        console.log('Promises Response', promisesResponse);
+        console.log('FINISH RECALCULATE FOR ',i,'\n XX5 THESE ARE THE bP CREATED \n', promisesResponse);
+        // await pauseExecution();
       } catch(error) {
         logger.error(`error on recalculate columns ${error}`);
       }
       logger.info('success on recalculate Columns');
     }
 	}
-
+  console.log(' ******************* \n * FINISH MOVE TO NEXT YEAR *\n *-*-*-*-*-*-*-*-*-*');
+  // await pauseExecution();
 	return true;
 	} catch (e) {
-		console.log('Error in project Promises ', e);
+		console.log('Error in project moving project to new year ', e);
 		throw e;
 	}
 };
@@ -1131,14 +1151,22 @@ const updateProjectStatus = async (boards, creator, isWorkPlan, transaction) => 
 		);
 	}
 	let boardProjects = (await Promise.all(prs)).flat();
-	return boardProjects.map((boardProject) => {
-		if (!isOnWorkspace(boardProject) && boardProject.code_status_type_id !== APPROVED_STATUS) {
-			boardProject.code_status_type_id = APPROVED_STATUS;
-			boardProject.last_modified_by = creator;
-			boardProject.save({transaction});
+  const boardProjectsUpdated = [];
+  console.log(' -*-*-*-*-*-* \n All board projects', isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID, '\n\n', JSON.stringify(boardProjects));
+  for(let i = 0; i < boardProjects.length; i++) {
+    const boardProject = boardProjects[i].dataValues;
+    const bpInstance = await BoardProject.findOne({
+      where: {board_project_id: boardProject.board_project_id}
+    }, { transaction });
+    const isBPOnWorkspace = await isOnWorkspace(bpInstance);
+    if (!isBPOnWorkspace && bpInstance.code_status_type_id !== APPROVED_STATUS) {
+			bpInstance.code_status_type_id = APPROVED_STATUS;
+			bpInstance.last_modified_by = creator;
+			await bpInstance.save({transaction: transaction});
 		}
-		return boardProject;
-	})
+    boardProjectsUpdated.push(bpInstance);
+  }
+	return boardProjectsUpdated
 };
 
 const getOriginSortOrderOfBoards = (boardProject) => {
@@ -1472,6 +1500,7 @@ const moveCardsToNextLevel = async (currentBoard, creator, transaction) => {
 		return {}
 	} else if (currentBoard.type === 'WORK_PLAN') {
 		const boardProjectsUpdated = await updateProjectStatus(boards, creator, true, transaction);
+    console.log('\n -----------> \n XX1 the projects with status updated to APPROVED \n ', boardProjectsUpdated);
 		await moveBoardProjectsToNewYear(boardProjectsUpdated, +currentBoard.year + 1, creator, transaction);
 		return {}
 	}

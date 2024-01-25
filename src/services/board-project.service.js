@@ -24,7 +24,7 @@ export const isOnWorkspace =  async (boardProject) => {
   }
 };
 
-export const isOnFirstYear = async (boardProject) => {
+export const isOnFirstYear = async (boardProject, transaction) => {
   let allNull = true;
   const indexes = [2, 3, 4, 5];
   const boardProjectId = boardProject.board_project_id;
@@ -34,15 +34,19 @@ export const isOnFirstYear = async (boardProject) => {
       model: ProjectCost,
       as: 'projectCostData',
       where: { is_active: true }
-    }]
+    }],
+    transaction: transaction
   });
-  console.log('IS ON FIRST YEAR BPCOSTS to check if array has more than 1', boardProjectCosts);
-  // indexes.forEach((index) => {
-  //   if ((boardProjectCosts.length > 0 && boardProjectCosts[0].dataValues.req_position === 0) || boardProjectCosts.length === 0) {
-
-  //   }
-  // });
-  
+  if(boardProjectCosts.length > 0) {
+    // check if exist any boardprojectcost with req_position > 1 
+    // if exist, then it is not on first year
+    for (let i = 0; i < boardProjectCosts.length; i++) {
+      if (indexes.includes(boardProjectCosts[i].dataValues.req_position)) {
+        allNull = false;
+        break;
+      }
+    }
+  }
   return allNull;
 };
 
