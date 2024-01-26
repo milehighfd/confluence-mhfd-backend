@@ -150,12 +150,19 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
     userChangedAdditional
   } = body;
   try {
+    const PROJECT_TYPES = {
+      capital: 'capital',
+      acquisition: 'acquisition',
+      research: 'research and development',
+      study: 'study',
+      maintenance: 'maintenance'
+    }
     const answer = {};
     let createCartoInputs = [CREATE_PROJECT_TABLE, geom, project_id, transaction];
     let createCarto = createCartoEntry;
     const booleanUserChangedAdditional = userChangedAdditional === 'true';
     switch (type) {
-      case 'capital':
+      case PROJECT_TYPES.capital:
         await createCarto(...createCartoInputs);
         const overheadCostIds = await getOverheadCostIds(transaction);
         const overhead = overheadcost.split(',');
@@ -186,17 +193,17 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         const resStreamsCap = await processStreamUpdates(project_id, streams, creator, transaction);
         answer.resStreams = resStreamsCap;
         break;
-      case 'acquisition':        
+      case PROJECT_TYPES.acquisition:       
         await createCarto(...createCartoInputs);
         const resDetails = await updateProjectDetail(project_id, body, creator, transaction);
         answer.resDetails = resDetails;
         break;
-      case 'special':
+      case PROJECT_TYPES.research:
         await createCarto(...createCartoInputs);
         const resSpecial = await updateProjectDetail(project_id, body, creator, transaction);
         answer.resSpecial = resSpecial;
         break;
-      case 'study':
+      case PROJECT_TYPES.study:
         await createCartoStudy(project_id, ids)
         // await deleteStreams(project_id, transaction);
         // const resStreams = await updateStreams(project_id, streams, creator, transaction); 
@@ -205,7 +212,7 @@ const updateExtraFields = async(type, subtype, body, project_id, transaction, cr
         const resStudy = await updateStudy(project_id, studyreason, creator, otherReason || null, transaction);
         answer.resStudy = resStudy;
         break;
-      case 'maintenance':
+      case PROJECT_TYPES.maintenance:
         await createCarto(...createCartoInputs);
         const resMaintenance = await updateProjectDetail(project_id, body, creator, transaction);
         answer.resMaintenance = resMaintenance;
