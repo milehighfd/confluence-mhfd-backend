@@ -24,9 +24,9 @@ export const isOnWorkspace =  async (boardProject) => {
   }
 };
 
-export const isOnFirstYear = async (boardProject, transaction) => {
+export const isOnFirstYear = async (boardProject, isMaintenance, transaction) => {
   let allNull = true;
-  const indexes = [2, 3, 4, 5];
+  const indexes = isMaintenance? [11, 12] : [2, 3, 4, 5];
   const boardProjectId = boardProject.board_project_id;
   const boardProjectCosts = await BoardProjectCost.findAll({
     where: { board_project_id: boardProjectId },

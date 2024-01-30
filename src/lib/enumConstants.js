@@ -167,3 +167,4 @@ export const PROJECT_TYPES_AND_NAME = [
   WORK_REQUEST_EDITED: 42,
   WORK_PLAN_EDITED: 41
  }
+ export const MAINTENANCE_IDS = [7, 8, 9, 11, 17];
