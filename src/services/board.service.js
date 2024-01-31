@@ -49,11 +49,11 @@ const createNewBoard = async (
   return res;
 }
 
-const reCalculateSortOrderForColumn = async (board_id, column, creator, transaction) => {
+const reCalculateSortOrderForColumn = async (board_id, toWorkPlan, column, creator, transaction) => {
   try {
-  const isWorkPlan = true;
-  const boardProjects = await getBoardProjectsOfBoardOfColumn(board_id, isWorkPlan, column, transaction);
-  console.log(column, ' \n board_id \n All board projects to recalculate', board_id, JSON.stringify(boardProjects));
+  
+  const boardProjects = await getBoardProjectsOfBoardOfColumn(board_id, toWorkPlan, column, transaction);
+  console.log(column, ' All board projects to recalculate', board_id, JSON.stringify(boardProjects));
   let startValue = 1;
   const pr = [];
   if (boardProjects.length) {
@@ -65,7 +65,6 @@ const reCalculateSortOrderForColumn = async (board_id, column, creator, transact
         },
         transaction: transaction
       });
-      console.log('Aobard Project to update', boardProjectCostToUpdate);
       if (boardProjectCostToUpdate) {
         boardProjectCostToUpdate.sort_order = startValue++;
         boardProjectCostToUpdate.updatedAt = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -73,9 +72,8 @@ const reCalculateSortOrderForColumn = async (board_id, column, creator, transact
         pr.push(boardProjectCostToUpdate.save({transaction: transaction}));
       }
     }
-    console.log('ABOUT TO SOLVE ');
     const solve = await Promise.all(pr);
-    console.log(' SOLVEdD ');
+    console.log(' Solved all boardprojectcosts updated after recaulculate sort order values');
     return solve;
   } else {
     console.log('Solved without data');

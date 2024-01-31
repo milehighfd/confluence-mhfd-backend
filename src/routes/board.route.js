@@ -957,7 +957,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 	try{ 
 	console.log('XX2 moveBoardProjectsToNewYear')
 	console.log(newYear)
-  // await pauseExecution();
+  await pauseExecution();
 	await Configuration.update({
 		value: newYear,
 	}, {
@@ -972,6 +972,8 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
     if (Object.keys(boardProject).length === 0 ) {
       console.log('board project is empty', boardProject, 'index', i);
     }
+    console.log('the current Board Project is', boardProject, 'index', i);
+    await pauseExecution();
     const code_project_type = await Project.findOne({
       attributes: ['code_project_type_id'],
       where: {
@@ -1005,18 +1007,20 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 			projecttype: previousBoard.projecttype,
 		};
 		// ???
+    let sendingToWP = true;
 		if (sponsor === 'MHFD') { // have been created direclty in workplan
 			newBoardParams = {
 				...newBoardParams,
 				locality: 'MHFD District Work Plan',
 				type: 'WORK_PLAN',
-			}
+			};
 		} else {
 			newBoardParams = {
 				...newBoardParams,
 				locality: sponsor,
 				type: 'WORK_REQUEST',
-			}
+			};
+      sendingToWP = false;
 		}
 
 		let newBoard;
@@ -1033,13 +1037,14 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 			last_modified_by: creator,
 			created_by: creator,
 		};
-    // await pauseExecution();
-    console.log(i, '\n XX3 \n', newBoard, ' ++++++++++++= \n NEW BOARD \n', newBoardParams);
+    
 		if (newBoard === null) {
 			const newBoardInstance = new Board(newBoardParams);
 			newBoard = await newBoardInstance.save({transaction: transaction}); 
       console.log('The NEW board has been created', newBoard);
 		}
+    console.log(i, '\n XX3 if null \n', newBoard);
+    await pauseExecution();
 		let newBoardProjectParams = {
 			board_id: newBoard.board_id,
 			project_id: boardProject.project_id,
@@ -1073,9 +1078,9 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 			transaction: transaction
 		});
 		console.log('all Board Found project costs for', boardProjectId , '\n\n', JSON.stringify(foundBoardProjectCosts));
+    await pauseExecution();
 		let mainModifiedDate = new Date();
 		let index = 1;
-		const createdProjectCostIds = {};
 		let code_cost_type_id = 0;
 		const WORK_PLAN_CODE_COST_TYPE_ID = 21;
 		const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
@@ -1085,7 +1090,14 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 			code_cost_type_id = WORK_REQUEST_CODE_COST_TYPE_ID;
 		}
     const isBPOnFirstYear = await isOnFirstYear(boardProject, isMaintenance, transaction);
-    console.log(boardProject.project_id, 'IS BP ON FIRST YEAR??', isBPOnFirstYear, 'ismain', isMaintenance, 'code_project_type', code_project_type, code_project_type.code_project_type_id);
+    console.log(boardProject.project_id, 'IS BP ON FIRST YEAR??', isBPOnFirstYear, 'ismain', isMaintenance, 'code_project_type', code_project_type.code_project_type_id);
+    await pauseExecution();
+    
+    let sortOrderMaintenance = null;
+    if (isMaintenance) {
+      sortOrderMaintenance = foundBoardProjectCosts.find((cost) => cost.req_position !== 11 && cost.req_position !== 12).sort_order;
+    }
+    
 		for (let boardCosts of foundBoardProjectCosts) {
       let newReqPosition = +boardCosts.req_position === 0 ? +boardCosts.req_position : +boardCosts.req_position - 1;
       let oldReqPosition = +boardCosts.req_position;
@@ -1139,8 +1151,12 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 				code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
 			};
 			const createdCost = await ProjectCost.create(newProjectCost, { transaction: transaction });
+      let sortOrderValue = boardCosts.sort_order;
+      if (isMaintenance) {
+        sortOrderValue = sortOrderMaintenance;
+      }
       const newBoardProjectCost = {
-        // ...boardCosts.dataValues,
+        ...boardCosts.dataValues,
         board_project_cost_id: null,
         board_project_id: createdBoardProject.board_project_id,
         req_position: newReqPosition,
@@ -1150,11 +1166,13 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
         createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
         updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
         code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER,
-        sort_order: boardCosts.sort_order
+        sort_order: (newReqPosition === 11 || newReqPosition === 12 ? 0 : sortOrderValue)
       };
-      console.log('Create boardproject', newReqPosition, 'with costs', newBoardProjectCost);
+      
       const newBPC = await BoardProjectCost.create(newBoardProjectCost, { transaction: transaction });
-      console.log('AFTER AWAIT NEW BPC', newBPC);
+      console.log('Create boardproject', newReqPosition, 'with costs', createdCost);
+      console.log('the new boardprojectcost created is ->', newBPC);
+      await pauseExecution();
 		}
 
 
@@ -1163,7 +1181,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
     for (let i = 0; i < 6; i++) {
       const rank = i;
       logger.info(`Start count for ${rank} and board ${createdBoardProject.board_id}`);
-      updatePromises.push(boardService.reCalculateSortOrderForColumn(createdBoardProject.board_id, rank, creator, transaction));
+      updatePromises.push(boardService.reCalculateSortOrderForColumn(createdBoardProject.board_id, sendingToWP, rank, creator, transaction));
     }
     if (updatePromises.length) {
       try {
@@ -1177,7 +1195,7 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
     }
 	}
   console.log(' ******************* \n * FINISH MOVE TO NEXT YEAR *\n *-*-*-*-*-*-*-*-*-*');
-  // await pauseExecution();
+  await pauseExecution();
 	return true;
 	} catch (e) {
 		console.log('Error in project moving project to new year ', e);
@@ -1526,7 +1544,7 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
 				for (let i = 0; i < 6; i++) {
 					const rank = i;
 					logger.info(`Start count for ${rank} and board ${destinyBoard.board_id}`);
-					updatePromises.push(boardService.reCalculateSortOrderForColumn(destinyBoard.board_id, rank, creator, transaction));
+					updatePromises.push(boardService.reCalculateSortOrderForColumn(destinyBoard.board_id, true, rank, creator, transaction));
 				}
 				if (updatePromises.length) {
 					try {
@@ -1570,7 +1588,7 @@ const moveCardsToNextLevel = async (currentBoard, creator, transaction) => {
 		return {}
 	} else if (currentBoard.type === 'WORK_PLAN') {
 		const boardProjectsUpdated = await updateProjectStatus(boards, creator, true, transaction);
-    console.log('\n -----------> \n XX1 the projects with status updated to APPROVED \n ', boardProjectsUpdated);
+    console.log('\n -----------> \n The projects status -> APPROVED \n ', boardProjectsUpdated);
 		await moveBoardProjectsToNewYear(boardProjectsUpdated, +currentBoard.year + 1, creator, transaction);
 		return {}
 	}
