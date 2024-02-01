@@ -576,7 +576,6 @@ async function updateProjectCostOfWorkspace (activeValue, user, currentBusinessA
         business_associates_id: currentBusinessAssociatesId
       }
     });
-    console.log('Project PArtner ', project_partner);
     const currentBoardProjectCosts = await BoardProjectCost.findAll({
       include: [{
         model: ProjectCost,
@@ -595,11 +594,9 @@ async function updateProjectCostOfWorkspace (activeValue, user, currentBusinessA
         req_position: 0
       }
     });
-    console.log('CurrentBoardProjecCost', currentBoardProjectCosts, 'currentBoardProjectCosts');
     const projectsCostsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
-    console.log('IDS TO Pdate', projectsCostsIdsToUpdate);
     // DESACTIVAR LOS ANTERIORES PROJECT COSTS
-    await ProjectCost.update({
+    const projectCostUpdated = await ProjectCost.update({
       is_active: activeValue,
       code_cost_type_id: isWorkPlan? WP_CODE_COST_TYPE_EDITED: WR_CODE_COST_TYPE_EDITED,
       last_modified: lastModifiedDate,
@@ -608,7 +605,8 @@ async function updateProjectCostOfWorkspace (activeValue, user, currentBusinessA
       where: {
         project_cost_id: { [Op.in]: projectsCostsIdsToUpdate }
       }
-    })
+    });
+    return Promise.resolve(projectCostUpdated);
   } catch (error){
     logger.error("ERROR at Workspace update", error)
   }
@@ -654,10 +652,10 @@ const updateAndCreateProjectCostsForAmounts = async (
   codeCostTypeId,
   isWorkPlan,
   amountTouched,
-  code_partner_type_id,
+  currentSortOrder,
   boardId
 ) => {
-  console.log('Update And Create Cost column, cost, pid ', currentColumn, currentCost, currentProjectId);
+  console.log('YY1 Update And Create Cost column, cost, pid ', currentColumn, currentCost, currentProjectId);
   const countOriginalProject = await Project.count({ where: { project_id: currentProjectId } });
   if (countOriginalProject === 0) {
     logger.error(`Project with id = ${currentProjectId} does not exist`);
@@ -692,9 +690,10 @@ const updateAndCreateProjectCostsForAmounts = async (
         req_position: currentColumn
       }
     });
+    console.log('all Current Board Project Costs', currentBoardProjectCosts);
     const projectsCostsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
     // DESACTIVAR LOS ANTERIORES PROJECT COSTS
-    ProjectCost.update({
+    const projectCostUpdated = await ProjectCost.update({
       is_active: 0,
       code_cost_type_id: isWorkPlan? WP_CODE_COST_TYPE_EDITED: WR_CODE_COST_TYPE_EDITED,
       last_modified: lastModifiedDate,
@@ -703,50 +702,51 @@ const updateAndCreateProjectCostsForAmounts = async (
       where: {
         project_cost_id: { [Op.in]: projectsCostsIdsToUpdate } // we need to get the projectcost olds 
       }
-    }).then(async () => {
-      if (currentCost !== null && currentCost !== undefined) {
-        const hasBeenTouched = (project_partner.code_partner_type_id !== 88) ? true : amountTouched;
-        console.log('-----CNO----------\n\n\n\n ', project_partner, hasBeenTouched, 'amountTouched', amountTouched);
+    })
+    if (currentCost !== null && currentCost !== undefined) {
+      const hasBeenTouched = (project_partner.code_partner_type_id !== 88) ? true : amountTouched;
+      console.log('-----CNO----------\n\n\n\n ', project_partner, hasBeenTouched, 'amountTouched', amountTouched);
 
-        const costToCreate = {
-          cost: currentCost,
-          project_id: currentProjectId,
-          code_cost_type_id: codeCostTypeId,
-          created_by: user.email,
-          modified_by: user.email,
-          is_active: 1,
-          last_modified: lastModifiedDate,
-          created: lastModifiedDate,
-          project_partner_id: project_partner.project_partner_id,
-          code_data_source_type_id: hasBeenTouched ? CODE_DATA_SOURCE_TYPE.USER: CODE_DATA_SOURCE_TYPE.SYSTEM
-        };
-        console.log('About to create this cost ', costToCreate);
-        const projectCostCreated = await ProjectCost.create(costToCreate);
-        const project_cost_id = projectCostCreated.dataValues.project_cost_id;
-        let currentSortOrderInBoard = 0;
-        if ( currentColumn <= 5) {
-          currentSortOrderInBoard = await getSortOrderValue(boardId, currentColumn );
-        }
-        console.log('\n\n --------------------- \n create Boardproject cost', {
+      const costToCreate = {
+        cost: currentCost,
+        project_id: currentProjectId,
+        code_cost_type_id: codeCostTypeId,
+        created_by: user.email,
+        modified_by: user.email,
+        is_active: 1,
+        last_modified: lastModifiedDate,
+        created: lastModifiedDate,
+        project_partner_id: project_partner.project_partner_id,
+        code_data_source_type_id: hasBeenTouched ? CODE_DATA_SOURCE_TYPE.USER: CODE_DATA_SOURCE_TYPE.SYSTEM
+      };
+      console.log('About to create this cost ', costToCreate);
+      const projectCostCreated = await ProjectCost.create(costToCreate);
+      const project_cost_id = projectCostCreated.dataValues.project_cost_id;
+      let currentSortOrderInBoard = currentSortOrder;
+      if ( currentColumn <= 5 && currentSortOrder === null) {
+        currentSortOrderInBoard = await getSortOrderValue(boardId, currentColumn, null );
+        console.log(currentSortOrder,'the maximum value ', currentSortOrderInBoard, currentSortOrder);
+      }
+      console.log('\n\n --------------------- \n CREATE Boardproject cost', {
+        board_project_id: board_project_id,
+        project_cost_id: project_cost_id,
+        req_position: currentColumn,
+        created_by: user.email,
+        last_modified_by: user.email,
+        sort_order: currentSortOrderInBoard
+      });
+      // missing to check sponsor and cosponsor if this is working fine
+      const bpcreated = await BoardProjectCost.create({
           board_project_id: board_project_id,
           project_cost_id: project_cost_id,
           req_position: currentColumn,
           created_by: user.email,
           last_modified_by: user.email,
           sort_order: currentSortOrderInBoard
-      } );
-        // missing to check sponsor and cosponsor if this is working fine
-        const bpcreated = await BoardProjectCost.create({
-            board_project_id: board_project_id,
-            project_cost_id: project_cost_id,
-            req_position: currentColumn,
-            created_by: user.email,
-            last_modified_by: user.email,
-            sort_order: currentSortOrderInBoard
-        });
-        console.log('Board project cost created ',JSON.stringify(bpcreated));
-      }
-    });
+      });
+      console.log('Board project cost created ',JSON.stringify(bpcreated));
+      return Promise.resolve(bpcreated);
+    };
   } catch (error) {
     logger.error("ERROR AT PROJECT COST is", error)
   }  

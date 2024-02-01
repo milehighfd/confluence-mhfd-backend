@@ -57,7 +57,6 @@ export const insertIntoArcGis = async (geom, projectid) => {
       const fd = getAuthenticationFormData();
       const token_data = await needle('post', URL_TOKEN, fd, { multipart: true });
       const TOKEN = JSON.parse(token_data.body).token;
-      console.log('DATA IN CREATE GEOM in insert', JSON.parse(geom).coordinates, TOKEN, projectid);
       const bodyFD = createGeomDataForARCGIS(JSON.parse(geom).coordinates, TOKEN, projectid);
       console.log('About to call endpoint: ', `${ARCGIS_SERVICE}/applyEdits`);
       const createOnArcGis = await needle('post',`${ARCGIS_SERVICE}/applyEdits`, bodyFD, { multipart: true });

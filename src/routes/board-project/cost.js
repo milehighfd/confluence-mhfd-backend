@@ -19,7 +19,7 @@ const { Op } = sequelize;
 const getAllPreviousAmounts = async (boardProject, currentProjectId) => {
   console.trace('GET all PREVIOUS AMOUNTs', JSON.stringify(boardProject));
   const projectCostValues = await BoardProjectCost.findAll({
-    attributes: ['req_position', 'board_project_id'],
+    attributes: ['req_position', 'board_project_id', 'sort_order'],
     include: [{
       attributes: ['cost', 'project_cost_id', 'project_partner_id', 'code_cost_type_id'],
       model: ProjectCost,
@@ -71,13 +71,24 @@ const getAllPreviousAmounts = async (boardProject, currentProjectId) => {
       : null,
     code_partner_type_id: a.projectCostData?.projectPartnerData?.projectPartnerTypeData.code_partner_type_id,
     pos: a.req_position,
-    cost: a.projectCostData.cost
+    cost: a.projectCostData.cost,
+    sort_order: a.sort_order
     // datainside: JSON.stringify(a.projectCostData)
   }));
   const groupedData = returnValues.reduce((x, y) => {
     (x[y.business_name] = x[y.business_name] || []).push(y);
     return x;
   }, {});
+  const getSortOrderValues = (currentValues, code_cost_type_id) => {
+    const returnObject = {};
+    currentValues?.forEach((v) => {
+      const stringPos = v.pos;
+      if (v.code_cost_type_id == code_cost_type_id) {
+        returnObject[stringPos] = v.sort_order;
+      }
+    })
+    return returnObject;
+  }
   const getReqsValues = (currentValues, code_cost_type_id) => {
     const returnObject = {};
     currentValues?.forEach((v) => {
@@ -96,7 +107,6 @@ const getAllPreviousAmounts = async (boardProject, currentProjectId) => {
         returnObject['req'+i] = null;
       }
     }
-    //TODO: add years if needed
     return returnObject;
   }
   const allBusinessNamesRelatedToProject = await ProjectPartner.findAll({
@@ -139,7 +149,8 @@ const getAllPreviousAmounts = async (boardProject, currentProjectId) => {
       business_associates_id: bid,
       business_name: bname,
       code_partner_type_id: current_code_partner_type_id,
-      values: getReqsValues(databyBN, current_code_cost_type_id)
+      values: getReqsValues(databyBN, current_code_cost_type_id),
+      positions: getSortOrderValues(databyBN, current_code_cost_type_id)
     }
   });
   const businessMhfd = allBusinessNamesRelatedToProject.find((abnrp) => abnrp.code_partner_type_id === 88);
@@ -205,11 +216,11 @@ const updateCostNew = async (req, res) => {
           console.log(' COST: Jumped save for ', amount.business_name, 'because it doesnt exist');
           continue;
         }
+        console.log('Before Amounts with sortOrder', beforeAmounts);
         const currentBusinessAssociatesId = beforeAmounts?.business_associates_id;
         const currentPartnerTypeId = beforeAmounts?.code_partner_type_id;
         // EXCLUSIVO PARA MHFD FUNDING // PORQUE ES PARA AGREGAR O QUITAR CARDS DE ALGUNA COLUMNA
         if (amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22)) {
-          console.log(' COST: MHFD FUNDING', JSON.stringify(amount), isWorkPlan, 'before amount', beforeAmounts);
           for (let pos = 1; pos <= 5; pos++) {
             const reqColumnName = `req${pos}`;
             const currentReqAmount = amount.values[reqColumnName] ?? null;
@@ -220,31 +231,6 @@ const updateCostNew = async (req, res) => {
             } else {
               allCurrentAmounts[reqColumnName] = beforeAmounts.values[reqColumnName];
             }
-            // all this if was related to rank order to add it at the beggining or at the end, or to delete from that column deleting that rank, now is useless for now 
-            // if (
-            //   (beforeAmounts.values[reqColumnName] === null && currentReqAmount !== null)   // if before didnt have value and now it has
-            //   // || (beforeUpdate[rankColumnName] === null && currentReqAmount !== null && valueHasChanged) // if didnt exist in that column and now it will // TODO: give a check in the future
-            // ) {
-            //   const where = {
-            //     board_id: beforeUpdate.board_id,
-            //     // [rankColumnName]: { [Op.ne]: null } // get values where the rank existed, so existed in that column before
-            //   };
-            //   const projects = await BoardProject.findAll({
-            //     where,
-            //     // order: [[rankColumnName, 'DESC']],
-            //     limit: 1
-            //   });
-            //   // if (currentRanks[rankColumnName] === null) { // if in the current board, the project didnt existed in that column 
-            //   //   if (projects.length === 0) {
-            //   //     updateFields[rankColumnName] = LexoRank.middle().toString(); // there was no project so add the first one, in the new case will be sort_order = 1
-            //   //   } else {
-            //   //     const lastProject = projects[0]; // here we get the last project in that column
-            //   //     updateFields[rankColumnName] = LexoRank.parse(lastProject[rankColumnName]).genNext().toString(); // place it at the end, now it will be in sort_order = last + 1 
-            //   //   }
-            //   // }             
-            // } else if (currentReqAmount === null && !isMaintenance) {              
-            //   // updateFields[rankColumnName] = null; // we have to delete the rank in that column
-            // }
           }
         } else if (amount.code_partner_type_id !== 88) {
           for (let pos = 1; pos <= 5; pos++) {
@@ -279,6 +265,7 @@ const updateCostNew = async (req, res) => {
           let shouldRemoveWorkspaceReq = false;
           for (let pos = 0; pos < columnsChanged.length; ++pos) {
             const currentColumn = columnsChanged[pos];
+            const currentSortOrderValue = beforeAmounts.positions[`${currentColumn}`] ?? null;
             if (currentColumn !== 0) {
               shouldRemoveWorkspaceReq = amount.code_partner_type_id === 88 ? true: false;
               // Not workspace values, current Column not 0
@@ -301,7 +288,7 @@ const updateCostNew = async (req, res) => {
                   amount.code_cost_type_id,
                   isWorkPlan,
                   amountsTouched ? amountsTouched[`req${currentColumn}`] : true,
-                  amount.code_partner_type_id,
+                  currentSortOrderValue,
                   boardId,
                 )
               );
@@ -351,7 +338,7 @@ const updateCostNew = async (req, res) => {
                   amount.code_cost_type_id,
                   isWorkPlan,
                   amountsTouched ? amountsTouched[`req${currentColumn}`] : true,
-                  amount.code_partner_type_id,
+                  null,
                   boardId
                 )
               );
@@ -361,29 +348,14 @@ const updateCostNew = async (req, res) => {
   
         await Promise.all(allPromises);
         if (( amount.code_partner_type_id === 88 && (isWorkPlan ? amount.code_cost_type_id === 21 : amount.code_cost_type_id === 22))) {
-          // let rank0 = null;
           let shouldMoveToWorkspace = true;
-          // IF NO AMOUNTS MOVE CARD TO WORKSPACE
-          // for (let currentRank in allCurrentAmounts) {
-          //   if (allCurrentAmounts[currentRank]) {
-          //     shouldMoveToWorkspace = false;
-          //   }
-          // }
           if (shouldMoveToWorkspace && !isMaintenance) {
             const projects = await BoardProject.findAll({
               where: {
                 board_id: beforeUpdate.board_id,
-                // rank0: { [Op.ne]: null }
               },
-              // order: [[`rank${0}`, 'ASC']],
               limit: 1
             });
-            if (projects.length === 0) {
-              // rank0 = LexoRank.middle().toString();
-            } else {
-              const firstProject = projects[0];
-              // rank0 = LexoRank.parse(firstProject[`rank0`]).genPrev().toString();
-            }
           }
           if (!shouldMoveToWorkspace){
             const costUpdateData = {
@@ -405,7 +377,7 @@ const updateCostNew = async (req, res) => {
             )
           }
           // UPDATE PROJECTCOST WITH ALL NEW VALUES
-          await BoardProject.update(
+          const boardProjectHasBeenUpdated = await BoardProject.update(
             {
               // rank0, req1, req2, req3, req4, req5, year1, year2,
               ...updateFields,
@@ -413,27 +385,11 @@ const updateCostNew = async (req, res) => {
             },
             { where: { board_project_id } }
           );
-  
-          const updatedRanks = await BoardProject.findOne({
-            // attributes: ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'],
-            where: { board_project_id }
-          });
-          let hasSomeRank = false;
-          // Object.keys(updatedRanks.dataValues).forEach((key) => {
-          //   if (updatedRanks.dataValues[key] !== null) {
-          //     // THE PROJECT BOARD HAS SOME RANK IN SOME COLUMN
-          //     hasSomeRank = true;
-          //   }
-          // });
-          // if (!hasSomeRank) {
-          //   await BoardProject.update(
-          //     { rank0: LexoRank.middle().toString(), last_modified_by: user.email },
-          //     { where: { board_project_id } }
-          //   );
-          // }
+          console.log('board{rojectHasBeenUpdated', boardProjectHasBeenUpdated);
           let boardProjectUpdated = await BoardProject.findOne({
             where: { board_project_id }
           });
+          console.log('Founded boardproject', boardProjectUpdated);
           [boardProjectUpdated, statusHasChanged] = await determineStatusChange(
             wasOnWorkspace,
             boardProjectUpdated,
