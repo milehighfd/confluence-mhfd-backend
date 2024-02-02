@@ -61,7 +61,7 @@ export const createProjects = async (body, transaction, type, creator, subtype) 
       saveFn = saveAcquisition;
       codeProjectTypeId = 13;
       break;
-    case 'special':
+    case 'research and development':
       saveFn = saveSpecial;
       codeProjectTypeId = 15;
       break;
@@ -238,12 +238,19 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
     userChangedAdditional
   } = body;
   try {
+    const PROJECT_TYPES = {
+      capital: 'capital',
+      acquisition: 'acquisition',
+      research: 'research and development',
+      study: 'study',
+      maintenance: 'maintenance'
+    }
     const answer = {};
     let createCartoInputs = [CREATE_PROJECT_TABLE, geom, project_id, transaction];
     let createCarto = createCartoEntry;
     const booleanUserChangedAdditional = userChangedAdditional === 'true';
     switch(type) {
-      case 'capital':                
+      case PROJECT_TYPES.capital:                
         await createCarto(...createCartoInputs);
         const resActions = await saveActions(project_id, independentComponent, components, creator, transaction);
         answer.resActions = resActions;
@@ -266,24 +273,24 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
         const saveEstimatedCostData = await saveEstimatedCost(project_id, savingEstimatedCostInput, creator, estimatedcostDescription, sourceFromSystem, transaction);
           answer.saveEstimatedCost = saveEstimatedCostData;
         break;
-      case 'acquisition':        
+      case PROJECT_TYPES.acquisition:
         await createCarto(...createCartoInputs);
         const resDetails = await saveProjectDetails(project_id, body, creator, transaction);
         answer.resDetails = resDetails;
         break;
-      case 'special':
+      case PROJECT_TYPES.research:
         await createCarto(...createCartoInputs);
         const resSpecial = await saveProjectDetails(project_id, body, creator, transaction);
         answer.resSpecial = resSpecial;
         break;
-      case 'study':
+      case PROJECT_TYPES.study:
         await createCartoStudy(project_id, ids)
         const resStreams = await saveProjectStreams(project_id, streams, creator, transaction); 
         answer.resStreams = resStreams;
         const resStudy = await saveStudy(project_id, studyreason, creator, otherReason || null, body, transaction);
         answer.resStudy = resStudy;
         break;
-      case 'maintenance':
+      case PROJECT_TYPES.maintenance:
         await createCarto(...createCartoInputs);
         const resMaintenance = await saveProjectDetails(project_id, body, creator, transaction);        
         const resStreamsMain = await saveProjectStreams(project_id, streams, creator, transaction); 
