@@ -722,10 +722,13 @@ const updateAndCreateProjectCostsForAmounts = async (
       console.log('About to create this cost ', costToCreate);
       const projectCostCreated = await ProjectCost.create(costToCreate);
       const project_cost_id = projectCostCreated.dataValues.project_cost_id;
-      let currentSortOrderInBoard = currentSortOrder;
-      if ( currentColumn <= 5 && currentSortOrder === null) {
-        currentSortOrderInBoard = await getSortOrderValue(boardId, currentColumn, null );
-        console.log(currentSortOrder,'the maximum value ', currentSortOrderInBoard, currentSortOrder);
+      let currentSortOrderInBoard = 0;
+      if ( project_partner.code_partner_type_id === 88) {
+        currentSortOrderInBoard = currentSortOrder;   
+        if ( currentColumn <= 5 && currentSortOrder === null) {
+          currentSortOrderInBoard = await getSortOrderValue(boardId, currentColumn, null );
+          console.log(currentSortOrder,'the maximum value ', currentSortOrderInBoard, currentSortOrder);
+        }
       }
       console.log('\n\n --------------------- \n CREATE Boardproject cost', {
         board_project_id: board_project_id,
@@ -735,6 +738,7 @@ const updateAndCreateProjectCostsForAmounts = async (
         last_modified_by: user.email,
         sort_order: currentSortOrderInBoard
       });
+      console.log('\n\n\n\n HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEY \n\n ', project_partner.code_partner_type_id, currentSortOrderInBoard, currentSortOrder);
       // missing to check sponsor and cosponsor if this is working fine
       const bpcreated = await BoardProjectCost.create({
           board_project_id: board_project_id,
@@ -742,13 +746,14 @@ const updateAndCreateProjectCostsForAmounts = async (
           req_position: currentColumn,
           created_by: user.email,
           last_modified_by: user.email,
-          sort_order: currentSortOrderInBoard
+          sort_order: currentSortOrderInBoard ?? 0
       });
       console.log('Board project cost created ',JSON.stringify(bpcreated));
       return Promise.resolve(bpcreated);
     };
   } catch (error) {
-    logger.error("ERROR AT PROJECT COST is", error)
+    logger.error("ERROR AT PROJECT COST is", error);
+    throw error;
   }  
 }
 

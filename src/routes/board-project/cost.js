@@ -263,9 +263,12 @@ const updateCostNew = async (req, res) => {
         ) {
           console.log(' COST:  ------------- \nColumns changed', columnsChanged, 'with id', currentBusinessAssociatesId , '\n\n\n');
           let shouldRemoveWorkspaceReq = false;
+          try {
           for (let pos = 0; pos < columnsChanged.length; ++pos) {
+            console.log('columnsChanged[pos]',pos,  columnsChanged[pos]);
             const currentColumn = columnsChanged[pos];
-            const currentSortOrderValue = beforeAmounts.positions[`${currentColumn}`] ?? null;
+            console.log('beforeAmounts.positions[`${currentColumn}`]',currentColumn,  beforeAmounts.positions);
+            const currentSortOrderValue = beforeAmounts.positions? (beforeAmounts.positions[`${currentColumn}`] ?? null): null;
             if (currentColumn !== 0) {
               shouldRemoveWorkspaceReq = amount.code_partner_type_id === 88 ? true: false;
               // Not workspace values, current Column not 0
@@ -294,6 +297,10 @@ const updateCostNew = async (req, res) => {
               );
             }
           }
+        } catch(e) {
+          logger.error('Error at updating boardprojectcosts' + e);
+          throw error;
+        }
           if ( shouldRemoveWorkspaceReq) {
             allPromises.push(
               boardService.updateProjectCostOfWorkspace(
