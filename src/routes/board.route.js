@@ -60,7 +60,7 @@ const REQUESTED_STATUS = 2;
 const APPROVED_STATUS = 3;
 
 function* rankGenerator() {
-	let num = 0;
+	let num = 1;
 	while (true) {
 		yield num;
 		num++;
@@ -68,18 +68,33 @@ function* rankGenerator() {
 }
 
 router.get('/reverse-lexorank-update', async (req, res) => {
-	const boards = await Board.findAll();
-	const boardProjects = await BoardProject.findAll();
-	const updates = {
-		rank0: {},
-		rank1: {},
-		rank2: {},
-		rank3: {},
-		rank4: {},
-		rank5: {}
-	};
-	const positions = ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
-
+	const boards = await Board.findAll({
+    where: {
+      board_id: 348
+    }
+  });
+	const boardProjects = await BoardProject.findAll({
+    include: [
+      // add project association to filter it by is_archive
+      {
+        model: Project,
+        as: 'projectData',
+      },
+      {
+				model: BoardProjectCost,
+				as: 'boardProjectToCostData'
+      }
+    ]
+  });
+  const positions = ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
+  const updates = {
+    rank0: {},
+    rank1: {},
+    rank2: {},
+    rank3: {},
+    rank4: {},
+    rank5: {}
+  };   
 	for (const board of boards) {
 		const gen0 = rankGenerator();
 		const gen1 = rankGenerator();
@@ -102,41 +117,65 @@ router.get('/reverse-lexorank-update', async (req, res) => {
 				return a[position].localeCompare(b[position]);
 			});
 			for (const bp of boardProjects) {
+        if (bp.dataValues.projectData.is_archived === true) {
+          continue;
+        }
+
 				if (board.board_id === bp.board_id) {
-					if (bp[position]) {
-						const value = lexoRanks[positions[index]].next().value;
-						if (!updates[positions[index]][value]) {
-							updates[positions[index]][value] = [];
+          const rankCost = bp.boardProjectToCostData.find((cost)=> cost.req_position === index);
+					if (bp[position] || (!bp[position] && rankCost)) {
+						const value = lexoRanks[position].next().value;
+            console.log(bp.projecttype, bp.board_id, bp.board_project_id, position, 'value', value);
+						if (!updates[position][value]) {
+							updates[position][value] = [];
 						}
-						updates[positions[index]][value].push(bp.board_project_id);
-						// lexoRanks[positions[index]] = lexoRanks[positions[index]].next().value;
+						updates[position][value].push(bp.board_project_id);
+						// lexoRanks[position] = lexoRanks[position].next().value;
 					}
 				}
 			}
 		}
 	}
 	let c = 0;
-	console.log(updates);
+	// console.log(updates);
 	const prs = [];
 	for (const [index, position] of positions.entries()) {
-		for (const value in updates[position]) {
-			for (const board_project_id of updates[position][value]) {
-				c++;
-				logger.info(`Updating ${position} to ${value} for ${board_project_id}`);
-				prs.push(BoardProjectCost.update(
-					{
-						req_position: index,
-						board_project_id: board_project_id,
-						sort_order: value + 1 ,
-						last_modified_by: 'system',
-					},
-					{
-						where: {
-							req_position: index,
-							board_project_id:board_project_id
-						}
-					}
-				));
+		for (const sortOrderValue in updates[position]) {
+			for (const board_project_id of updates[position][sortOrderValue]) {
+				c++;				
+        // find one boardprojectcost to update
+        const bp = BoardProjectCost.findOne({
+          where: {
+            req_position: index,
+            board_project_id: board_project_id
+          }
+        });
+        if (bp) {
+          console.log('update', board_project_id);
+          prs.push(BoardProjectCost.update(
+            {
+              req_position: index,
+              board_project_id: board_project_id,
+              sort_order: sortOrderValue ,
+              last_modified_by: 'system',
+            },
+            {
+              where: {
+                req_position: index,
+                board_project_id:board_project_id
+              }
+            }
+          ));
+        } else {
+          console.log('Want to create');
+          const currentBP = boardProjects.find((bp) => bp.board_project_id === board_project_id);
+          if( currentBP ) {
+            const projectPartner = await projectService.getProjectPartner(currentBP.project_id);
+            // create project cost before boardprojectcost 
+            console.log(currentBP , 'projectPartner', projectPartner);
+          }
+        }
+
 			}
 		}
 	}
@@ -1150,7 +1189,8 @@ const moveBoardProjectsToNewYear = async (boardProjects, newYear, creator, trans
 				created: DateToAvoidRepeated,
 				last_modified: DateToAvoidRepeated,
 				code_cost_type_id,
-				code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
+				code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER,
+        cost: newReqPosition === 0 ? null: boardCosts?.projectCostData?.cost
 			};
 			const createdCost = await ProjectCost.create(newProjectCost, { transaction: transaction });
       let sortOrderValue = boardCosts.sort_order;
@@ -1491,9 +1531,20 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
 										as: 'businessAssociateData'
 									}
 								]
-							}]
+							}, {
+                model: BoardProjectCost,
+                as: 'boardProjectCostData',
+                required: true,
+                where: {
+                  board_project_id: bp.board_project_id
+                }
+              }]
 						}, { transaction });
-            console.log('All Previous costs for currentprojectid', currentProjectId, '\n\n', JSON.stringify(prevCostOfProject));
+            console.log('All Previous costs for currentprojectid', currentProjectId, '\n\n with where: ', {
+              project_id: currentProjectId,
+              is_active: true,
+              code_cost_type_id: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
+            }, '\n', JSON.stringify(prevCostOfProject));
 						// create new projectcosts for the new board project copying values of the previous ones but changing the project_partner_id to the new one
 						let mainModifiedDate = new Date();
 
@@ -1523,16 +1574,21 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
 								},
                 transaction: transaction
 							});
-              console.log(JSON.stringify(prevCostOfSponsor),'\n previou board project cost' ,JSON.stringify(prevBoardProjectCost));
-							const newBoardProjectCost = await BoardProjectCost.create({
-								board_project_id: newBoardProjectId,
-								project_cost_id: newProjectCost.project_cost_id,
-								created_by: creator,
-								last_modified_by: creator,
-								req_position: prevBoardProjectCost.req_position,
-								sort_order: prevBoardProjectCost.sort_order
-							}, { transaction: transaction });
-              console.log('new project cost created', newProjectCost, '\n with boardprojectcost \n', newBoardProjectCost);
+              if (prevBoardProjectCost) {
+                console.log(JSON.stringify(prevCostOfSponsor),'\n previou board project cost' ,JSON.stringify(prevBoardProjectCost));
+                const newBoardProjectCost = await BoardProjectCost.create({
+                  board_project_id: newBoardProjectId,
+                  project_cost_id: newProjectCost.project_cost_id,
+                  created_by: creator,
+                  last_modified_by: creator,
+                  req_position: prevBoardProjectCost.req_position,
+                  sort_order: prevBoardProjectCost.sort_order
+                }, { transaction: transaction });
+                console.log('new project cost created', newProjectCost, '\n with boardprojectcost \n', newBoardProjectCost);
+              } else {
+                logger.error(`prevBoardProjectCost not found ${prevCostOfSponsor.project_cost_id} in board project cost`);
+              }
+              
 						}
 					}
 
