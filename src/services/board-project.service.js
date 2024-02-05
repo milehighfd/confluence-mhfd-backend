@@ -56,7 +56,7 @@ export const determineStatusChange = async (wasOnWorkspace, boardProject, board_
   logger.info('YY2 determineStatusChange');
   let statusHasChanged = false;
   const board = await Board.findOne({
-    attributes: ['type'],
+    attributes: ['type', 'status'],
     where: { board_id }
   });
   const previous_code_status_type_id = boardProject.code_status_type_id;
@@ -73,7 +73,12 @@ export const determineStatusChange = async (wasOnWorkspace, boardProject, board_
       if (hasParentBoardProject) {
         code_status_type = 2;
       } else {
-        code_status_type = 3;
+        const currentStatusOfBoard = board.status;
+        if (currentStatusOfBoard === 'Approved') {
+          code_status_type = 3;
+        } else {
+          code_status_type = 2;
+        }
       }
     }
     logger.info('determineStatusChange wasOnWorkspace && !onWorkspace' + wasOnWorkspace +' '+ onWorkspace);
