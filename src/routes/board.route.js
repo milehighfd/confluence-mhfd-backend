@@ -1536,7 +1536,8 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
                 as: 'boardProjectCostData',
                 required: true,
                 where: {
-                  board_project_id: bp.board_project_id
+                  board_project_id: bp.board_project_id,
+                  req_position: {[Op.gt]: 0}
                 }
               }]
 						}, { transaction });
