@@ -1,5 +1,6 @@
 import db from 'bc/config/db.js';
 import logger from 'bc/config/logger.js';
+import moment from 'moment';
 
 const BoardProject = db.boardProject;
 const Board = db.board;
@@ -16,7 +17,8 @@ export const isOnWorkspace =  async (boardProject) => {
       where: { is_active: true }
     }]
   });
-  if ((boardProjectCosts.length > 0 && boardProjectCosts[0].dataValues.req_position === 0) || boardProjectCosts.length === 0) {
+  console.log('boardProjectCosts for board updated', JSON.stringify(boardProjectCosts));
+  if ((boardProjectCosts.length > 0 && boardProjectCosts[0] && boardProjectCosts[0].dataValues.req_position === 0) || boardProjectCosts.length === 0) {
     console.log('COST: Is on Workspace', JSON.stringify(boardProjectCosts));
     return true;
   } else {
@@ -51,10 +53,10 @@ export const isOnFirstYear = async (boardProject, isMaintenance, transaction) =>
 };
 
 export const determineStatusChange = async (wasOnWorkspace, boardProject, board_id, creator) => {
-  logger.info('determineStatusChange');
+  logger.info('YY2 determineStatusChange');
   let statusHasChanged = false;
   const board = await Board.findOne({
-    attributes: ['type'],
+    attributes: ['type', 'status'],
     where: { board_id }
   });
   const previous_code_status_type_id = boardProject.code_status_type_id;
@@ -63,21 +65,24 @@ export const determineStatusChange = async (wasOnWorkspace, boardProject, board_
   const hasParentBoardProject = boardProject.parent_board_project_id !== null;
   logger.info(`hasParentProject=${hasParentBoardProject}`);
   const onWorkspace = await isOnWorkspace(boardProject);
+  let code_status_type;
   if (wasOnWorkspace && !onWorkspace) {
-    let code_status_type;
     if (boardType === 'WORK_REQUEST') {
       code_status_type = 2;
     } else if (boardType === 'WORK_PLAN') {
       if (hasParentBoardProject) {
         code_status_type = 2;
       } else {
-        code_status_type = 3;
+        const currentStatusOfBoard = board.status;
+        if (currentStatusOfBoard === 'Approved') {
+          code_status_type = 3;
+        } else {
+          code_status_type = 2;
+        }
       }
     }
-    boardProject.code_status_type_id = code_status_type;
-    logger.info('determineStatusChange wasOnWorkspace && !onWorkspace');
+    logger.info('determineStatusChange wasOnWorkspace && !onWorkspace' + wasOnWorkspace +' '+ onWorkspace);
   } else if (!wasOnWorkspace && onWorkspace) {
-    let code_status_type;
     if (boardType === 'WORK_REQUEST') {
       code_status_type = 1;
     } else if (boardType === 'WORK_PLAN') {
@@ -93,21 +98,16 @@ export const determineStatusChange = async (wasOnWorkspace, boardProject, board_
         code_status_type = 1;
       }
     }
-    boardProject.code_status_type_id = code_status_type;
     logger.info('determineStatusChange !wasOnWorkspace && onWorkspace');
   }
+  boardProject.code_status_type_id = code_status_type;
   statusHasChanged = boardProject.code_status_type_id !== previous_code_status_type_id;
-  console.log('\n --------BC-------- ======== ------------- \n status has changed', statusHasChanged, '\n ---------------- ======== ------------- \n wasONWORKSPACE',wasOnWorkspace,' is now on workspace?', onWorkspace,' \n board project', JSON.stringify(boardProject));
-  // if (onWorkspace) {
-  //   boardProject.rank1 = null;
-  //   boardProject.rank2 = null;
-  //   boardProject.rank3 = null;
-  //   boardProject.rank4 = null;
-  //   boardProject.rank5 = null;
-  // } else {
-  //   boardProject.rank0 = null;
-  // }
+  console.log('Board Project ', JSON.stringify(boardProject), '\n', 'onWorkspace', onWorkspace, '\n', 'wasOnWorkspace', wasOnWorkspace, 'boardid', board_id);
+  console.log(code_status_type, 'codestatusnew' , boardProject.code_status_type_id, 'PREVIOUS ', previous_code_status_type_id, 'statusHasChanged', statusHasChanged);
+  console.log('\n --------BC-------- ======== ------------- \n status has changed', statusHasChanged);
+  boardProject.updatedAt = moment().format('YYYY-MM-DD HH:mm:ss');
   boardProject.last_modified_by = creator;
+  console.log(' \n -------wasONWORKSPACE',wasOnWorkspace,' is now on workspace?', onWorkspace,' \n board project', JSON.stringify(boardProject));
   boardProject = await boardProject.save();
   return [boardProject, statusHasChanged];
 };

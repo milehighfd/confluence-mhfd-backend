@@ -60,7 +60,7 @@ export const moveProjectCostsOnePosition = async (boardProjects, arithmeticOpera
     console.error('FAIL at moveProjectCostsOnePosition ', error);
   }
 }
-const getBoardProjectsValues =  async (boardId, currentColumn, direction, movePosition) => {
+const getBoardProjectsValues =  async (boardId, currentColumn, direction, movePosition, transaction) => {
   const {
     locality,
     projecttype,
@@ -126,7 +126,8 @@ const getBoardProjectsValues =  async (boardId, currentColumn, direction, movePo
           }
         }
       ]
-    }]
+    }],
+    transaction: transaction
   })).map(d => d.dataValues);
   return boardProjects;
 }
@@ -258,7 +259,7 @@ const getBoardProjectsValuesInRange =  async (boardId, currentColumn, movePositi
 }
 export const getSortOrderValue = async (boardId, currentColumn, transaction) => {
   try {
-    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, 'greater',0);
+    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, 'greater',0, transaction);
     // get the max value of sort_order in boardProjects 
     const maxSortOrder = boardProjects.reduce((acc, curr) => {
       const currSortOrder = curr.boardProjectToCostData[0].sort_order;
@@ -299,7 +300,7 @@ export const movePositionInsideColumn = async (boardId, currentColumn, movePosit
 // move the cards from certain positions by 1
 export const moveFromPositionOfColumn = async (boardId, currentColumn, movePosition, transaction) => {
   try {
-    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, 'greater', movePosition);
+    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, 'greater', movePosition, transaction);
     console.log('Move positions of ', boardProjects, currentColumn, movePosition);
     const arithmeticOperation = '+ 1';
     await moveProjectCostsOnePosition(boardProjects, arithmeticOperation, transaction);
@@ -310,7 +311,7 @@ export const moveFromPositionOfColumn = async (boardId, currentColumn, movePosit
 }
 export const deletePositionInColumn = async (boardId, currentColumn, movePosition, transaction) => {
   try {
-    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, 'greater', movePosition);
+    const boardProjects = await getBoardProjectsValues(boardId, currentColumn, 'greater', movePosition, transaction);
     console.log('Delete positions of ', boardProjects, currentColumn, movePosition);
     const arithmeticOperation = '- 1';
     await moveProjectCostsOnePosition(boardProjects, arithmeticOperation, transaction);
