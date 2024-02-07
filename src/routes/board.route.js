@@ -82,10 +82,22 @@ router.get('/reverse-lexorank-update', async (req, res) => {
       },
       {
 				model: BoardProjectCost,
-				as: 'boardProjectToCostData'
+				as: 'boardProjectToCostData',
+        required: true,
+        include: [
+					{
+						model: ProjectCost,
+						as: 'projectCostData',
+            required: true,
+						where: {
+							is_active: true,
+						}
+					}
+				]
       }
     ]
   });
+  console.log('boardProjects', boardProjects.length);
   const positions = ['rank0', 'rank1', 'rank2', 'rank3', 'rank4', 'rank5'];
   const updates = {
     rank0: {},
@@ -144,7 +156,7 @@ router.get('/reverse-lexorank-update', async (req, res) => {
 			for (const board_project_id of updates[position][sortOrderValue]) {
 				c++;				
         // find one boardprojectcost to update
-        const bp = BoardProjectCost.findOne({
+        const bp = await BoardProjectCost.findOne({
           where: {
             req_position: index,
             board_project_id: board_project_id
@@ -167,12 +179,12 @@ router.get('/reverse-lexorank-update', async (req, res) => {
             }
           ));
         } else {
-          console.log('Want to create');
+          console.log('Want to create', board_project_id);
           const currentBP = boardProjects.find((bp) => bp.board_project_id === board_project_id);
           if( currentBP ) {
             const projectPartner = await projectService.getProjectPartner(currentBP.project_id);
             // create project cost before boardprojectcost 
-            console.log(currentBP , 'projectPartner', projectPartner);
+            // console.log(currentBP , 'projectPartner', projectPartner);
           }
         }
 
@@ -725,7 +737,7 @@ router.post('/board-for-positions2', async (req, res) => {
 			include:[{
 				model: BoardProjectCost,
 				as: 'boardProjectToCostData',
-				required: true,
+				// required: true,
 				// order: [['sort_order', 'ASC']],
 				where: {
 					req_position: position
@@ -743,6 +755,7 @@ router.post('/board-for-positions2', async (req, res) => {
 				]
 			}]
 		})).map(d => d.dataValues);
+    console.log(position, 'This are board projects no order \n *********** \n ', boardProjectsNoOrder.map((bpnp) => {return {a: bpnp.boardProjectToCostData.dataValues, b: bpnp.board_project_id}}));
     // as order of sequelize sometimes fails
     // reorder boardProjects based on sort_order value 
     const boardProjects = boardProjectsNoOrder.sort((a, b) => a.boardProjectToCostData.sort_order - b.boardProjectToCostData.sort_order);  
