@@ -68,11 +68,7 @@ function* rankGenerator() {
 }
 
 router.get('/reverse-lexorank-update', async (req, res) => {
-	const boards = await Board.findAll({
-    where: {
-      board_id: 348
-    }
-  });
+	const boards = await Board.findAll();
 	const boardProjects = await BoardProject.findAll({
     include: [
       // add project association to filter it by is_archive
