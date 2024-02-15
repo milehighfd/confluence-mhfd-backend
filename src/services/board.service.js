@@ -705,8 +705,6 @@ const updateAndCreateProjectCostsForAmounts = async (
     })
     if (currentCost !== null && currentCost !== undefined) {
       const hasBeenTouched = (project_partner.code_partner_type_id !== 88) ? true : amountTouched;
-      console.log('-----CNO----------\n\n\n\n ', project_partner, hasBeenTouched, 'amountTouched', amountTouched);
-
       const costToCreate = {
         cost: currentCost,
         project_id: currentProjectId,
@@ -719,7 +717,6 @@ const updateAndCreateProjectCostsForAmounts = async (
         project_partner_id: project_partner.project_partner_id,
         code_data_source_type_id: hasBeenTouched ? CODE_DATA_SOURCE_TYPE.USER: CODE_DATA_SOURCE_TYPE.SYSTEM
       };
-      console.log('About to create this cost ', costToCreate);
       const projectCostCreated = await ProjectCost.create(costToCreate);
       const project_cost_id = projectCostCreated.dataValues.project_cost_id;
       let currentSortOrderInBoard = 0;
@@ -727,18 +724,8 @@ const updateAndCreateProjectCostsForAmounts = async (
         currentSortOrderInBoard = currentSortOrder;   
         if ( currentColumn <= 5 && currentSortOrder === null) {
           currentSortOrderInBoard = await getSortOrderValue(boardId, currentColumn, null );
-          console.log(currentSortOrder,'the maximum value ', currentSortOrderInBoard, currentSortOrder);
         }
       }
-      console.log('\n\n --------------------- \n CREATE Boardproject cost', {
-        board_project_id: board_project_id,
-        project_cost_id: project_cost_id,
-        req_position: currentColumn,
-        created_by: user.email,
-        last_modified_by: user.email,
-        sort_order: currentSortOrderInBoard
-      });
-      console.log('\n\n\n\n HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEY \n\n ', project_partner.code_partner_type_id, currentSortOrderInBoard, currentSortOrder);
       // missing to check sponsor and cosponsor if this is working fine
       const bpcreated = await BoardProjectCost.create({
           board_project_id: board_project_id,

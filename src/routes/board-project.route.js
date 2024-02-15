@@ -19,158 +19,11 @@ const ProjectIndependentAction = db.projectIndependentAction;
 const User = db.user;
 const router = express.Router();
 
-router.get('/:board_project_id/cost/test', async (req, res) => {
-  try {
-    const { board_project_id } = req.params;
-    const boardProject = await BoardProject.findOne({
-      include: [{
-        model: Project,
-        attributes: ['project_id'],
-        as: 'projectData',
-        include: [{
-          model: ProjectCost,
-          attributes: ['cost'],
-          as: 'currentCost',
-          required: false,
-          where: {
-            is_active: true
-          },
-        },
-        {
-          model: ProjectIndependentAction,
-          required: false,
-          separate: true,
-          attributes: [
-            'action_name',
-            'project_id',
-            'cost',
-            'action_status'
-          ]
-        }]
-      },{
-        model: Board,
-        attributes: ['year']
-      }],
-      where: {
-        board_project_id
-      }
-    });
-
-    console.log('yeeeeeeear', boardProject.board.year)
-
-    const projectCostValues = await BoardProjectCost.findAll({
-      attributes: ['req_position', 'board_project_id'],
-      include: [{
-        attributes: ['cost', 'project_cost_id', 'project_partner_id', 'code_cost_type_id'],
-        model: ProjectCost,
-        as: 'projectCostData',
-        required: true,
-        where: {
-          is_active: true,
-          project_id: boardProject.projectData.project_id
-        },
-        include: [{
-          model: ProjectPartner,
-          as: 'projectPartnerData',
-          include: [{
-            model: CodeProjectPartnerType,
-            as: 'projectPartnerTypeData'
-          }, {
-            model: BusinessAssociates,
-            as: 'businessAssociateData'
-          }]
-        }]
-      },{
-        model: BoardProject,
-        as: 'boardProjectData',
-        attributes: ['board_project_id'],
-        required: true,
-        include: [{
-          model: Board,
-          required: true,
-          attributes: ['year','board_id'],
-          where: {
-            year: {
-              [Op.lt]: boardProject.board.year
-            }
-          }
-        }]
-      }],
-      where: {
-        //board_project_id,
-        req_position: 1
-      }
-    });
-    console.log('PROJECT COST VALUES', JSON.stringify(projectCostValues));
-    const returnValues = projectCostValues.map((a)=> ({
-      year: a.boardProjectData?.board?.year,
-      code_cost_type_id: a.projectCostData?.code_cost_type_id,
-      business_associates_id: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData?.projectPartnerData?.businessAssociateData[0].business_associates_id : null,
-      business_name: a.projectCostData?.projectPartnerData?.businessAssociateData ? a.projectCostData?.projectPartnerData?.businessAssociateData[0].business_name : null,
-      code_partner_type_id: a.projectCostData?.projectPartnerData?.projectPartnerTypeData.code_partner_type_id,
-      pos: a.req_position,
-      cost: a.projectCostData.cost,
-      // datainside: JSON.stringify(a.projectCostData)
-    }));
-    console.log('\n\n  ********** \n\n Project Cost \n ', returnValues, '\n\n  ********** \n\n');
-    const priorFunding = {};
-    returnValues.forEach((item) => {
-      if(priorFunding[item.business_name]) {
-        priorFunding[item.business_name] += item.cost;
-      } else {
-        priorFunding[item.business_name] = item.cost;
-      }
-    });
-    console.log('Prior funding', priorFunding);
-    const previousSponsorRelations = await ProjectCost.findAll({
-      where: {
-        project_id: board_project_id,
-        is_active: true,
-        code_cost_type_id: 22
-      },
-      include: [{
-        model: ProjectPartner,
-        as: 'projectPartnerData',
-        include: [
-          {
-            model: CodeProjectPartnerType,
-            as: 'projectPartnerTypeData'
-          },
-          {
-            model: BusinessAssociates,
-            as: 'businessAssociateData'
-          }
-        ]
-      }]
-    });
-    console.log('previous sponsor relations', previousSponsorRelations);
-    // now we need to get all current project partners
-    const currentProjectPartners = await ProjectPartner.findAll({
-      where: {
-        project_id: board_project_id
-      },
-      include: [
-        {
-          model: CodeProjectPartnerType,
-          as: 'projectPartnerTypeData'
-        },
-        {
-          model: BusinessAssociates,
-          as: 'businessAssociateData'
-        }
-      ]
-    });
-    console.log('current project partners', currentProjectPartners);
-    res.send([previousSponsorRelations, currentProjectPartners]);
-  } catch (error) {
-    logger.error('ERROR FROM GET COST ' + error);
-    return res.status(500).send({ error: error });
-  }
-});
 router.get('/:board_project_id/cost', async (req, res) => {
   logger.info('get board project cost by id');
   const { board_project_id } = req.params;
   try {
+    // find the board project of the id
     const boardProject = await BoardProject.findOne({
       include: [{
         model: Project,
@@ -204,7 +57,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         board_project_id
       }
     });
-    console.log('______ \n Board PRoject found', JSON.stringify(boardProject), '\n______');
+    // then find all boardprojectcosts of the project of the boardproject year.
     const projectCostValues = await BoardProjectCost.findAll({
       attributes: ['req_position', 'board_project_id'],
       include: [{
@@ -248,6 +101,7 @@ router.get('/:board_project_id/cost', async (req, res) => {
         }
       }
     });
+    // the prior funding is the sum of all costs of the project through the years
   const priorFunding = await getPriorFunding(boardProject);
   const returnValues = projectCostValues.map((a)=> ({
     code_cost_type_id: a.projectCostData?.code_cost_type_id,
@@ -258,8 +112,6 @@ router.get('/:board_project_id/cost', async (req, res) => {
     cost: a.projectCostData.cost,
     // datainside: JSON.stringify(a.projectCostData)
   }));
-  console.log('\n\n  ********** \n\n Project Cost \n ', returnValues, '\n\n  ********** \n\n');
-  
   const groupedData = returnValues.reduce((x, y) => {
     (x[y.business_name] = x[y.business_name] || []).push(y);
     return x;
@@ -291,7 +143,6 @@ router.get('/:board_project_id/cost', async (req, res) => {
     //TODO: add years if needed
     return returnObject;
   }
-  console.log('Boardproject', boardProject);
     const currentProjectId = boardProject.projectData.project_id;
     const allBusinessNamesRelatedToProject = await ProjectPartner.findAll({
       attributes: ['project_partner_id', 'code_partner_type_id'],
@@ -323,7 +174,6 @@ router.get('/:board_project_id/cost', async (req, res) => {
       const bid = bnnp.business_associates_id;
       const current_code_partner_type_id = bnnp.code_partner_type_id;
       const databyBN = groupedData[bname];
-      // console.log('data filtered for', bname, 'databybn', databyBN, 'current cost type id', databyBN ? databyBN[0].code_cost_type_id: WORK_REQUEST_CODE_COST_TYPE_ID);
       let current_code_cost_type_id; // ALMOST ALL ARE GOING TO BE 22 WORK REQUEST 
       if (current_code_partner_type_id == MHFD_CODE_COST_TYPE_ID || current_code_partner_type_id == SPONSOR_CODE_COST_TYPE_ID) {
         current_code_cost_type_id = WORK_REQUEST_CODE_COST_TYPE_ID;
