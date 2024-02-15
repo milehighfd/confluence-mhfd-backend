@@ -307,23 +307,7 @@ const createCostAndInsertIntoColumn = async (project_id, board_project_id, board
     console.error('Error at insertCostInColumn ', error); 
   }
 }
-const deactivatAllPreviousCosts = async (currentBoardProject, user, isWorkPlanBoolean, transaction) => {
-  const costUpdateData = {
-    is_active: false,
-    last_modified: moment().toDate(),
-    last_modified_by: user.email,
-    code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
-  };
-  await ProjectCost.update(
-    costUpdateData,
-    { where: { 
-      is_active: true,
-      project_id: currentBoardProject.project_id,
-      code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
-    } },
-    { transaction }
-  );
-}
+
 const updateRank = async (req, res) => {
   logger.info('get board project cost by id');
   const transaction = await db.sequelize.transaction();
@@ -352,26 +336,6 @@ const updateRank = async (req, res) => {
   }) || {};
   const wasOnWorkspace = await isOnWorkspace(boardProjectBeforeUpdate);
   const board_id = boardProjectBeforeUpdate.board_id;
-  const columnCountWhere = {
-    board_id,
-    // [rankColumnName]: { [Op.ne]: null }
-  };
-  const count = await BoardProject.count({ where: columnCountWhere }); // count all projects in the destiny column  
-  // if (
-  //   before === null &&
-  //   after === null    /// if before and after are null, it means there is no project in that destiny column
-  //   // count > 0   // but if in DB it exists, is going to fix the error
-  // ) {
-  //   const results = await insertOnColumnAndFixColumn(
-  //     columnNumber,
-  //     board_id,
-  //     targetPosition,
-  //     otherFields,
-  //     board_project_id,
-  //     user
-  //   );
-  //   return res.status(201).send(results);
-  // }
   if (before === null && beforeIndex !== -1) {
     logger.error('before is null but beforeIndex is not -1');
   } else if (after === null && afterIndex !== -1) {
@@ -383,21 +347,16 @@ const updateRank = async (req, res) => {
     // so projectCost has to be deactivated 
     
     const { project_id } = projectData;
-    // await createCostAndInsertIntoColumn(project_id, board_project_id, boardId, columnNumber, sortOrderValue, isWorkPlanBoolean, user);
-    // get the boardproject updated
     let boardProjectUpdated = await BoardProject.findOne({
       where: { board_project_id }
     });
-    // check if now is on workspace
-    const onWorkspace = await isOnWorkspace(boardProjectUpdated);
     const destinyIsWorkspace = columnNumber === 0;
-    console.log('Check if now on Workspace', onWorkspace);
 
 
     if (destinyIsWorkspace) { // ANYWHERE -> WORKSPACE
       console.log('\n ****************************** \n SENDING TO WORKSPACE \n ****************************** \n');
-      await deactivateCostFromPreviousPosition(board_project_id, boardId, previousColumn, isWorkPlanBoolean, user, transaction);
-      await createCostAndInsertIntoColumn(
+      await Promise.all([deactivateCostFromPreviousPosition(board_project_id, boardId, previousColumn, isWorkPlanBoolean, user, transaction), 
+        createCostAndInsertIntoColumn(
         project_id,
         board_project_id,
         boardId,
@@ -407,7 +366,7 @@ const updateRank = async (req, res) => {
         isWorkPlanBoolean,
         user,
         transaction
-      );
+      )]);
     } else {
     // is to add costs in the new column with the previous column cost 
       const previousColumnNumber = previousColumn;
@@ -422,11 +381,13 @@ const updateRank = async (req, res) => {
           await movePositionInsideColumn(boardId, previousColumn, sortOrderValue, (sourcePosition + 1), direction, board_project_id, transaction);
         } else {
           console.log('\n ****************************** \n SENDING TO COLUMN TO DIFF COLUMNs \n ****************************** \n');
-          let originCost = null;
-          let targetCost = null;    
           if (previousColumn && columnNumber) {
-            originCost = await getBoardProjectCostMHFD(board_project_id, previousColumn);
-            targetCost = await getBoardProjectCostMHFD(board_project_id, columnNumber);
+            // could be done with a single query
+            console.log('starting to get costs from previous and target column');
+            console.time();
+            const [originCost, targetCost] = await Promise.all([getBoardProjectCostMHFD(board_project_id, previousColumn), getBoardProjectCostMHFD(board_project_id, columnNumber)]);
+            console.log('finished to get costs from previous and target column');
+            console.timeEnd();
             console.log(previousColumn, 'originCost', originCost, '\n', columnNumber, 'targetCost', targetCost);
             if (originCost && targetCost) {
               console.log('\n ****************************** \n SENDING TO COLUMN WITH COST \n ****************************** \n');
@@ -435,24 +396,32 @@ const updateRank = async (req, res) => {
               const targetCostValue = targetCost ? targetCost.projectCostData.cost : 0;
               const newFinalCost = originCostValue + targetCostValue;
               // update targetCost with the added cost
-              ProjectCost.update(
-                {
-                  cost: newFinalCost,
-                  last_modified: moment().toDate(),
-                  modified_by: user.email
-                },
-                { where: { project_cost_id: targetCost.projectCostData.project_cost_id } }
-              );
+              console.log('starting to update target cost');
+              console.time();
+              await Promise.all([
+                ProjectCost.update(
+                  {
+                    cost: newFinalCost,
+                    last_modified: moment().toDate(),
+                    modified_by: user.email
+                  },
+                  { where: { project_cost_id: targetCost.projectCostData.project_cost_id }, transaction },
+                ),
+                ProjectCost.update(
+                  {
+                    is_active: false,
+                    last_modified: moment().toDate(),
+                    modified_by: user.email,
+                    code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
+                  },
+                  { where: { project_cost_id: originCost.projectCostData.project_cost_id }, transaction },
+                )
+              ])
               // deactivate previous cost of origin column
-              ProjectCost.update(
-                {
-                  is_active: false,
-                  last_modified: moment().toDate(),
-                  modified_by: user.email,
-                  code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
-                },
-                { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
-              );
+              console.log('finished to update target cost');
+              console.timeEnd();
+              console.log('starting the sponsor process');
+              console.time();
               const sponsorAndCosponsor = await getOriginSponsorCosponsor(board_project_id);
               sponsorAndCosponsor.forEach(async (project_partner_id) => {
                 const originSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, previousColumn, project_partner_id);
@@ -465,7 +434,7 @@ const updateRank = async (req, res) => {
                       last_modified: moment().toDate(),
                       modified_by: user.email
                     },
-                    { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
+                    { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id }, transaction }
                   );
                   ProjectCost.update(
                     {
@@ -474,25 +443,31 @@ const updateRank = async (req, res) => {
                       modified_by: user.email,
                       code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
                     },
-                    { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
+                    { where: { project_cost_id: originSecCost.projectCostData.project_cost_id }, transaction }
                   );
                 }
               });
+              console.log('finished the sponsor process');
+              console.timeEnd();
             } else {
               const originCostValue = originCost ? originCost.projectCostData.cost : 0;
               console.log('\n ****************************** \n SENDING TO COLUMN WITHOUT COST \n ****************************** \n');
-              await deactivateCostFromPreviousPosition(board_project_id, boardId, previousColumn, isWorkPlanBoolean, user, transaction);
-              await createCostAndInsertIntoColumn(
-                project_id,
-                board_project_id,
-                boardId,
-                originCostValue,
-                columnNumber,
-                sortOrderValue,
-                isWorkPlanBoolean,
-                user,
-                transaction
-              );
+              console.log('starting to insert cost in column');
+              console.time();
+              await Promise.all([deactivateCostFromPreviousPosition(board_project_id, boardId, previousColumn, isWorkPlanBoolean, user, transaction), 
+                createCostAndInsertIntoColumn(
+                  project_id,
+                  board_project_id,
+                  boardId,
+                  originCostValue,
+                  columnNumber,
+                  sortOrderValue,
+                  isWorkPlanBoolean,
+                  user,
+                  transaction
+                )]);
+              console.log('finished to insert cost in column with no cost THE SLOW POINT');
+              console.timeEnd();
             }
           }
         }
@@ -514,11 +489,20 @@ const updateRank = async (req, res) => {
         );
       }
     }
+    // needs to add transaction
+    console.log('starting to insert on column and fix column');
+    console.time();
+    await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id, user.email, transaction);
+    console.log('finished to insert on column and fix column');
+    console.timeEnd();
+    console.log('starting commit');
+    console.time();
     await transaction.commit();
-    [boardProjectUpdated, ] = await determineStatusChange(wasOnWorkspace, boardProjectUpdated, board_id, user.email);
-    return res.status(200).send(null);
+    console.log('finished commit');
+    console.timeEnd();
+    return res.status(200).send(null); // meanginful response, amazin bro 
   } catch (error) {
-    logger.error('Error at update rank' + error);
+    logger.error('Error at update rank ' + error);
     await transaction.rollback();
     return res.status(500).send({ error: error });
   }

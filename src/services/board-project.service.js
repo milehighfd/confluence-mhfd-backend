@@ -52,7 +52,7 @@ export const isOnFirstYear = async (boardProject, isMaintenance, transaction) =>
   return allNull;
 };
 
-export const determineStatusChange = async (wasOnWorkspace, boardProject, board_id, creator) => {
+export const determineStatusChange = async (wasOnWorkspace, boardProject, board_id, creator, transaction) => {
   logger.info('YY2 determineStatusChange');
   let statusHasChanged = false;
   const board = await Board.findOne({
@@ -108,6 +108,10 @@ export const determineStatusChange = async (wasOnWorkspace, boardProject, board_
   boardProject.updatedAt = moment().format('YYYY-MM-DD HH:mm:ss');
   boardProject.last_modified_by = creator;
   console.log(' \n -------wasONWORKSPACE',wasOnWorkspace,' is now on workspace?', onWorkspace,' \n board project', JSON.stringify(boardProject));
-  boardProject = await boardProject.save();
+  if (transaction) {
+    boardProject = await boardProject.save({ transaction: transaction });
+  } else {
+    boardProject = await boardProject.save();
+  }
   return [boardProject, statusHasChanged];
 };
