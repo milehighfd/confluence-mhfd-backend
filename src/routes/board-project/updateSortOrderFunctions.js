@@ -171,9 +171,6 @@ export const getBoardProjectsOfBoard = async (board_id, isWorkPlan) => {
       model: BoardProjectCost,
       as: 'boardProjectToCostData',
       required: true,
-      // where: {
-      //   req_position: {[Op.gt]: 0 }
-      // },
       include: [
         {
           model: ProjectCost,
@@ -187,7 +184,6 @@ export const getBoardProjectsOfBoard = async (board_id, isWorkPlan) => {
       ]
     }]
   })).map(d => d.dataValues);
-  console.log('\n -------A-------- \n Board Projects of ',board_id, '\n', boardProjects, '\n ---------- \n');
   return boardProjects;
 }
 const getBoardProjectsValuesInRange =  async (boardId, currentColumn, movePosition, sourcePosition) => {

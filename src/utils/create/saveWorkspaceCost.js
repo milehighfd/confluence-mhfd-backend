@@ -46,10 +46,12 @@ export const saveWorkspaceCostInit = async (project_id, board_project_id, code_c
       transaction: transaction,
     });
 
-    let boardIdValue = board.dataValues.board_id;
-    if (!boardIdValue) {
+    let boardIdValue;
+    if (board) {
+      boardIdValue = board.dataValues.board_id;
+    } else {
       const currentDate = moment().format('YYYY-MM-DD');
-      createdBoard = await Board.create(
+      const createdBoard = await Board.create(
         {
           ...boardWhere,
           status: 'Under Review',
@@ -58,7 +60,9 @@ export const saveWorkspaceCostInit = async (project_id, board_project_id, code_c
           createdAt: currentDate,
           updatedAt: currentDate
         }, 
-        { transaction });
+        { transaction }
+      );
+      boardIdValue = createdBoard.dataValues.board_id;
     }
     const firstSortOrder = await BoardProjectCost.findOne({
       attributes: ['sort_order'],

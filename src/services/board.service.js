@@ -26,28 +26,26 @@ const createNewBoard = async (
   substatus,
   transaction = null
 ) => {
-  const t = transaction ? await transaction : null;
-  logger.info('create New Board ' + JSON.stringify(
-    type, 
-    year,
-    locality, 
-    projecttype,
-    status)
-  );
-  const res = await Board.create({
-    type,
-    year,
-    locality,
-    projecttype,
-    status,
-    comment,
-    substatus,
-    createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-    updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-    created_by: creator,
-    last_modified_by: creator
-  }, { transaction: t }); // associate transaction with the database operation
-  return res;
+  try {
+    console.log('create New Board ' + type, year, locality, projecttype, status, creator, comment, substatus);
+    const res = await Board.create({
+      type,
+      year,
+      locality,
+      projecttype,
+      status,
+      comment,
+      substatus,
+      createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+      created_by: creator,
+      last_modified_by: creator
+    }, { transaction }); // associate transaction with the database operation
+    return res;
+  } catch (error) {
+    logger.error("ERROR AT CREATE NEW BOARD", error);
+    throw error;
+  }
 }
 
 const reCalculateSortOrderForColumn = async (board_id, toWorkPlan, column, creator, transaction) => {
