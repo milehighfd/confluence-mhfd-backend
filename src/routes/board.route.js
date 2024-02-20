@@ -60,10 +60,10 @@ const REQUESTED_STATUS = 2;
 const APPROVED_STATUS = 3;
 
 function* rankGenerator() {
-	let num = 1;
+	let num = INITIAL_GAP;
 	while (true) {
 		yield num;
-		num++;
+		num = num + GAP;
 	}
 }
 
