@@ -43,7 +43,7 @@ import { ProjectError, ProjectBoardsError} from '../../errors/project.error.js';
 
 const Project = db.project;
 const BoardProject = db.boardProject;
-
+const Board = db.board;
 
 const getOfficialProjectName = (name) => name + (name === 'Ex: Stream Name @ Location 202X'? ('_' + Date.now()) : '');
 
@@ -321,21 +321,42 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
     );    
     const extra_fields = await extraFields(type, subtype, body, project_id, transaction, user.email);    
     await transaction.commit();
-    const lastProject = Project.findOne({
+    const lastProject = await Project.findOne({
       where : {
         project_id: project_id
       },
     });
     const boardProjectId = await BoardProject.findOne({
       attributes: [
-        'board_project_id'
+        'board_project_id',
+        'board_id'
       ],
       where : {
         project_id: project_id
       },
     });
+    const boardValues = await Board.findOne({
+      attributes: [
+        'type',
+        'year',
+        'locality',
+        'projecttype'
+      ],
+      where: {
+        board_id: boardProjectId.dataValues.board_id
+      }
+    });
     
-    const composeData = { ...data, project_attachments, project_partner, ...geoInfo, extra_fields, lastProject, boardProjectId};
+    const composeData = { 
+      ...data, 
+      project_attachments, 
+      project_partner, 
+      ...geoInfo, 
+      extra_fields, 
+      lastProject, 
+      boardProjectId,
+      boardValues: boardValues.dataValues
+    };
     return composeData;
   } catch (error) {
     await transaction.rollback();

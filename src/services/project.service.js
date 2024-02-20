@@ -2976,12 +2976,13 @@ const globalSearch = async (keyword) => {
 };
 
 const projectSearch = async (keyword) => {  
+  const IS_NOT_ARCHIVED = 0;
   if (keyword.trim() === '') {
     console.log('empty keyword')
     const projects = await Project.findAll({
       where: {
         [Op.or]: [
-          { is_archived: { [Op.ne]: 1 } },
+          { is_archived: { [Op.eq]: IS_NOT_ARCHIVED } },
           { is_archived: { [Op.is]: null } }
         ]
       },
@@ -3016,7 +3017,7 @@ const projectSearch = async (keyword) => {
       [Op.and]: [
         { [Op.or]: conditions },
         { [Op.or]: [
-          { is_archived: { [Op.ne]: 1 } },
+          { is_archived: { [Op.eq]: IS_NOT_ARCHIVED } },
           { is_archived: { [Op.is]: null } }
         ]}
       ]
@@ -3287,6 +3288,12 @@ const getProjectsInBoard = async (locality) => {
   const CODE_SPONSOR = 11;
   return await Project.findAll({
     attributes: ['project_id','project_name'],
+    where: {
+      [Op.or]: [
+        { is_archived: { [Op.ne]: 1 } },
+        { is_archived: null }
+      ]
+    },
     include: [{
       model: ProjectPartner,
       attributes:  ['project_partner_id', 'code_partner_type_id'],
@@ -3327,7 +3334,17 @@ const getProjectsForMHFD = async (filteredProjects) => {
   return await Project.findAll({
     attributes: ['project_id','project_name'],
     where: {
-      project_id: filteredProjects
+      [Op.and]: [
+        {
+          [Op.or]: [
+            { is_archived: { [Op.ne]: 1 } },
+            { is_archived: null }
+          ]
+        },
+        {
+          project_id: filteredProjects
+        }
+      ]
     },
     include: [{
       model: CodeProjectType,

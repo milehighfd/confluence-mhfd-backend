@@ -5,8 +5,20 @@ import { isOnWorkspace, determineStatusChange } from 'bc/services/board-project.
 import sequelize from 'sequelize';
 import { LexoRank } from 'lexorank';
 import moment from 'moment';
-import { OFFSET_MILLISECONDS, CODE_DATA_SOURCE_TYPE, COST_IDS } from 'bc/lib/enumConstants.js';
+import { 
+  COST_IDS,
+  GAP,
+  INITIAL_GAP
+} from 'bc/lib/enumConstants.js';
 import { createCostAndInsertInPosition, deletePositionInColumn, moveFromPositionOfColumn, movePositionInsideColumn } from './updateSortOrderFunctions.js';
+import { 
+  deactivateCosts, 
+  createCostAndInsert,
+  updateSortOrder,
+  getMHFDProjectCost,
+  updateProjectCosts,
+  updateSponsorProjectCosts
+} from './rankFunctions.js';
 
 const BoardProject = db.boardProject;
 const BoardProjectCost = db.boardProjectCost;
@@ -134,118 +146,6 @@ async function getBoardProjectCostSponsorCosponsor(board_project_id, columnNumbe
   return reqExist;
 }
 
-const insertOnColumnAndFixColumn = async (columnNumber, board_id, targetPosition, otherFields, board_project_id, user) => {
-  
-  const reqColumnName = `req${columnNumber}`;
-  // const rankColumnName = `rank${columnNumber}`;
-  const where = { board_id };
-  let reqExist = null;
-  if (`${columnNumber}` !== '0') {
-    reqExist = await getBoardProjectCostMHFD(board_project_id, columnNumber);
-    console.log('reqExist', reqExist)
-    //where[reqColumnName] = { [Op.ne]: null };
-    if (reqExist) {
-      where['board_project_id'] = reqExist.board_project_id;
-    }
-  } else {
-    // where[rankColumnName] = { [Op.ne]: null }
-  }
-  const projects = await BoardProject.findAll({
-    where,
-    // order: [[rankColumnName, 'ASC']],
-  });
-  let lastLexo = null;
-  const proms = projects.map(async (project, index) => {
-    if (lastLexo === null) {
-      lastLexo = LexoRank.middle().toString();
-    } else {
-      lastLexo = LexoRank.parse(lastLexo).genNext().toString();
-    }
-    if (index === targetPosition) {
-      lastLexo = LexoRank.parse(lastLexo).genNext().toString();
-      await BoardProject.update(
-        { ...otherFields, 
-          // [rankColumnName]: lastLexo 
-        },
-        { where: { board_project_id: board_project_id } }
-      );
-      let mainModifiedDate = new Date();
-      let multiplicator = 0;
-      for (const keys in otherFields) {
-        if (keys.includes('req')) {
-          const costToUpdate = otherFields[keys] ? otherFields[keys] : 0;
-          const columnToEdit = keys.match(/[0-9]+/);
-          await boardService.updateAndCreateProjectCosts(
-            columnToEdit,
-            costToUpdate,
-            project.project_id,
-            user,
-            board_project_id,
-            moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS * multiplicator).toDate()
-          );
-          multiplicator++;
-        }
-      }
-    }   
-    // return await BoardProject.update(
-    //   { [rankColumnName]: lastLexo },
-    //   { where: { board_project_id: project.board_project_id } }
-    // );
-  });
-  let originCost = null;
-  let targetCost = null;
-  if (previousColumn && columnNumber) {
-    // originCost = await getBoardProjectCostMHFD(board_project_id, previousColumn);
-    targetCost = await getBoardProjectCostMHFD(board_project_id, columnNumber);
-    if (originCost && targetCost) {
-      const cost = originCost.projectCostData.cost + targetCost.projectCostData.cost;
-      proms.push(ProjectCost.update(
-        { cost: cost },
-        { where: { project_cost_id: targetCost.projectCostData.project_cost_id } }
-      ));
-      proms.push(ProjectCost.update(
-        { is_active: false },
-        { where: { project_cost_id: originCost.projectCostData.project_cost_id } }
-      ));
-      const sponsorAndCosponsor = await getOriginSponsorCosponsor(board_project_id);
-      sponsorAndCosponsor.forEach(async (project_partner_id) => {
-        const originSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, previousColumn, project_partner_id);
-        const targetSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, columnNumber, project_partner_id);
-        if (originSecCost && targetSecCost) {
-          const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
-          proms.push(
-            ProjectCost.update(
-              {
-                cost: cost,
-                last_modified: moment().toDate(),
-                modified_by: user.email,
-              },
-              { where: { project_cost_id: targetSecCost.projectCostData.project_cost_id } }
-            )
-          );
-          
-          proms.push(
-            ProjectCost.update(
-              {
-                is_active: false,
-                last_modified: moment().toDate(),
-                modified_by: user.email,
-                code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED: COST_IDS.WORK_REQUEST_EDITED,
-              },
-              { where: { project_cost_id: originSecCost.projectCostData.project_cost_id } }
-            )
-          );
-        }
-      });
-    }
-  }  
-  try {
-    const results = await Promise.all(proms);
-    console.log('results', results);
-  } catch (error) {
-    console.error(`Error updating ranks: ${error}`);
-  }  
-};
 const deactivateCostFromPreviousPosition = async (board_project_id, boardId, previousColumn, isWorkPlanBoolean, user, transaction) => {
   try {
     const boardProjectCosts = await BoardProjectCost.findAll({
@@ -287,7 +187,17 @@ const deactivateCostFromPreviousPosition = async (board_project_id, boardId, pre
   }
   
 }
-const createCostAndInsertIntoColumn = async (project_id, board_project_id, boardId, cost, columnNumber, sortOrder, isWorkPlan, user, transaction) => {
+const createCostAndInsertIntoColumn = async (
+  project_id,
+  board_project_id,
+  boardId,
+  cost,
+  columnNumber,
+  sortOrder,
+  isWorkPlan,
+  user,
+  transaction
+) => {
   try {
     const projectPartner = await getProjectPartnerMHFD(project_id);
     const projectPartnerId = projectPartner[0].project_partner_id;
@@ -309,6 +219,108 @@ const createCostAndInsertIntoColumn = async (project_id, board_project_id, board
 }
 
 const updateRank = async (req, res) => {
+  const transaction = await db.sequelize.transaction();
+  const { board_project_id } = req.params;
+  const {
+    columnNumber,
+    previousColumn,
+    isWorkPlan,
+    project_id,
+    before,
+    after
+  } = req.body;
+  try {
+    const isWorkPlanBoolean = typeof isWorkPlan === 'boolean' ? isWorkPlan : isWorkPlan === 'true' ? true : false;
+    const user = req.user;
+    const boardProjectBeforeUpdate = await BoardProject.findOne({
+      where: {
+        board_project_id
+      },
+      transaction
+    });
+    let newSortValue;
+    if (after != null && before != null) {
+      newSortValue = (Math.floor(after + before)) / 2;
+    } else if (after != null) {
+      newSortValue = after - GAP;
+    } else if (before != null) {
+      newSortValue = before + GAP;
+    } else {
+      newSortValue = INITIAL_GAP;
+    }
+    if (before === newSortValue) {
+      //recalculate all data
+      console.log(before, after, newSortValue, 'NEEDS TO RECALCULATE')
+      return res.status(200).send({message: 'NEEDS TO RECALCULATE'});
+    }
+    if (columnNumber === 0 || previousColumn === 0) {
+      let defaultValue = null;
+      if (previousColumn === 0 && columnNumber !== 0) {
+        defaultValue = 0;
+      }
+      //From workspace to workspace
+      if (previousColumn === columnNumber) {
+        await updateSortOrder(board_project_id, previousColumn, isWorkPlanBoolean, newSortValue, transaction);
+      } else{
+        //From workspace to column
+        console.log('deactivating cost from column');
+        await deactivateCosts(board_project_id, previousColumn, isWorkPlanBoolean, user, transaction);
+        await createCostAndInsert(
+          project_id,
+          board_project_id,
+          defaultValue,
+          columnNumber,
+          newSortValue,
+          isWorkPlan,
+          user,
+          transaction
+        );
+      }
+    } else if (previousColumn && columnNumber) {
+      if (previousColumn === columnNumber) {
+        //From column to same column
+        await updateSortOrder(board_project_id, previousColumn, isWorkPlanBoolean, newSortValue, transaction);
+      } else {
+        //From column to different column
+        const [originCost, targetCost] = await Promise.all(
+          [
+            getMHFDProjectCost(board_project_id, previousColumn),
+            getMHFDProjectCost(board_project_id, columnNumber)
+          ]
+        );
+        if (originCost && targetCost) {
+          // update targetCost with the added cost
+          await updateProjectCosts(originCost, targetCost, user, transaction, isWorkPlanBoolean);
+          logger.info('Updating Sponsor Costs');
+          console.log('Previous Column: ' + originCost+ targetCost);
+          await updateSponsorProjectCosts(previousColumn, columnNumber, user, isWorkPlanBoolean, board_project_id, transaction);  
+        } else {
+          // insert cost in column
+          const originCostValue = originCost ? originCost.projectCostData.cost : 0;
+          await deactivateCosts(board_project_id, previousColumn, isWorkPlanBoolean, user, transaction);
+          await createCostAndInsert(
+            project_id,
+            board_project_id,
+            originCostValue,
+            columnNumber,
+            newSortValue,
+            isWorkPlan,
+            user,
+            transaction
+          );
+        }
+      }
+    }
+    transaction.commit();
+    return res.status(200).send({message: 'DONE'});
+  } catch (error) {
+    console.error('Error at updateRank2 ', error);
+    transaction.rollback();
+    return res.status(500).send({ error: error });
+  }
+};
+
+const updateRank2 = async (req, res) => {
   logger.info('get board project cost by id');
   const transaction = await db.sequelize.transaction();
   const { board_project_id } = req.params;
@@ -322,7 +334,7 @@ const updateRank = async (req, res) => {
     previousColumn, //   previous rankX, that is going to be deleted
     isWorkPlan,
     boardId,
-    projectData
+    project_id
   } = req.body;
   const isWorkPlanBoolean = typeof isWorkPlan === 'boolean' ? isWorkPlan : isWorkPlan === 'true' ? true : false;
   const user = req.user;
@@ -344,9 +356,7 @@ const updateRank = async (req, res) => {
   let sortOrderValue = targetPosition + 1; // get the value of the destiny position
   try {
     // remove from previous position, previousColumn
-    // so projectCost has to be deactivated 
-    
-    const { project_id } = projectData;
+    // so projectCost has to be deactivated     
     let boardProjectUpdated = await BoardProject.findOne({
       where: { board_project_id }
     });
@@ -380,24 +390,14 @@ const updateRank = async (req, res) => {
           }
           await movePositionInsideColumn(boardId, previousColumn, sortOrderValue, (sourcePosition + 1), direction, board_project_id, transaction);
         } else {
-          console.log('\n ****************************** \n SENDING TO COLUMN TO DIFF COLUMNs \n ****************************** \n');
           if (previousColumn && columnNumber) {
-            // could be done with a single query
-            console.log('starting to get costs from previous and target column');
-            console.time();
             const [originCost, targetCost] = await Promise.all([getBoardProjectCostMHFD(board_project_id, previousColumn), getBoardProjectCostMHFD(board_project_id, columnNumber)]);
-            console.log('finished to get costs from previous and target column');
-            console.timeEnd();
-            console.log(previousColumn, 'originCost', originCost, '\n', columnNumber, 'targetCost', targetCost);
-            if (originCost && targetCost) {
-              console.log('\n ****************************** \n SENDING TO COLUMN WITH COST \n ****************************** \n');
-              
+       
+            if (originCost && targetCost) {              
               const originCostValue = originCost ? originCost.projectCostData.cost : 0;
               const targetCostValue = targetCost ? targetCost.projectCostData.cost : 0;
               const newFinalCost = originCostValue + targetCostValue;
-              // update targetCost with the added cost
-              console.log('starting to update target cost');
-              console.time();
+              // update targetCost with the added cost              
               await Promise.all([
                 ProjectCost.update(
                   {
@@ -417,11 +417,7 @@ const updateRank = async (req, res) => {
                   { where: { project_cost_id: originCost.projectCostData.project_cost_id }, transaction },
                 )
               ])
-              // deactivate previous cost of origin column
-              console.log('finished to update target cost');
-              console.timeEnd();
-              console.log('starting the sponsor process');
-              console.time();
+              // deactivate previous cost of origin column              
               const sponsorAndCosponsor = await getOriginSponsorCosponsor(board_project_id);
               sponsorAndCosponsor.forEach(async (project_partner_id) => {
                 const originSecCost = await getBoardProjectCostSponsorCosponsor(board_project_id, previousColumn, project_partner_id);
@@ -447,8 +443,6 @@ const updateRank = async (req, res) => {
                   );
                 }
               });
-              console.log('finished the sponsor process');
-              console.timeEnd();
             } else {
               const originCostValue = originCost ? originCost.projectCostData.cost : 0;
               console.log('\n ****************************** \n SENDING TO COLUMN WITHOUT COST \n ****************************** \n');
@@ -500,7 +494,7 @@ const updateRank = async (req, res) => {
     await transaction.commit();
     console.log('finished commit');
     console.timeEnd();
-    return res.status(200).send(null); // meanginful response, amazin bro 
+    return res.status(200).send({message: 'DONE'});
   } catch (error) {
     logger.error('Error at update rank ' + error);
     await transaction.rollback();

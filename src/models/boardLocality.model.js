@@ -16,6 +16,9 @@ export default (sequelize, DataType) => {
     email: {
       type: DataType.STRING,
     }
+  },{
+    freezeTableName: true,
+    tableName: 'boardLocalities'
   });
   return boardLocality;
 }

@@ -1310,16 +1310,16 @@ const getOriginSortOrderOfBoards = (boardProject) => {
 	const columns = [0, 1, 2, 3, 4, 5];
 	const originPositionMap = {};
 	columns.forEach(columnNumber => {
-		// make an array of origin position with key of project_id, with sort_order values of each reqposition 
 		const currentReqPosition = columnNumber;
-		for ( let i = 0 ; i < boardProject.length ; i++) {
+		let index = 1; // Initialize index counter
+		for (let i = 0; i < boardProject.length; i++) {
 			let bp = boardProject[i];
 			let bpReqPosition = bp.boardProjectToCostData.find((bpc) => bpc.req_position === currentReqPosition);
 			if (bpReqPosition) {
 				if (!originPositionMap[bp.project_id]) {
 					originPositionMap[bp.project_id] = {};
 				}
-				originPositionMap[bp.project_id][currentReqPosition] = bpReqPosition.sort_order;
+				originPositionMap[bp.project_id][currentReqPosition] = index++;
 			}
 		}
 	});

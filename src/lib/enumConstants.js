@@ -165,6 +165,11 @@ export const PROJECT_TYPES_AND_NAME = [
   WORK_REQUEST_CODE_COST_TYPE_ID: 22,
   WORK_PLAN_CODE_COST_TYPE_ID: 21,
   WORK_REQUEST_EDITED: 42,
-  WORK_PLAN_EDITED: 41
- }
- export const MAINTENANCE_IDS = [7, 8, 9, 11, 17];
+   WORK_PLAN_EDITED: 41
+}
+export const MAINTENANCE_IDS = [7, 8, 9, 11, 17];
+
+export const SPONSOR_COSPONSOR_CODE = [11, 12];
+
+export const GAP = 1_000_000;
+export const INITIAL_GAP = 10 * GAP;

@@ -3,8 +3,9 @@ import logger from 'bc/config/logger.js';
 import moment from 'moment';
 import sequelize, { col } from 'sequelize';
 import { LexoRank } from 'lexorank';
-import { CODE_DATA_SOURCE_TYPE } from 'bc/lib/enumConstants.js';
+import { CODE_DATA_SOURCE_TYPE, INITIAL_GAP } from 'bc/lib/enumConstants.js';
 import { getBoardProjectsOfBoardOfColumn, getSortOrderValue } from 'bc/routes/board-project/updateSortOrderFunctions.js';
+import { getSortOrderForUpdate } from 'bc/routes/board-project/rankFunctions.js';
 
 const BoardProject = db.boardProject;
 const ProjectCost = db.projectCost;
@@ -340,6 +341,8 @@ async function getNextLexoRankValue(boardId, rankColumnName) {
   }
 }
 
+
+
 async function getPrevLexoRankValue(boardId, rankColumnName) {
   const existingBoardProject = await getFirstBoardProjectById(boardId, rankColumnName);
   if (existingBoardProject && existingBoardProject[rankColumnName]) {
@@ -609,6 +612,7 @@ async function updateProjectCostOfWorkspace (activeValue, user, currentBusinessA
     return Promise.resolve(projectCostUpdated);
   } catch (error){
     logger.error("ERROR at Workspace update", error)
+    throw error;
   }
 }
 async function updateProjectCostEntries(project_id, userData, code_cost_type_id, projectPartnerId, transaction) {
@@ -719,16 +723,17 @@ const updateAndCreateProjectCostsForAmounts = async (
       };
       const projectCostCreated = await ProjectCost.create(costToCreate);
       const project_cost_id = projectCostCreated.dataValues.project_cost_id;
-      let currentSortOrderInBoard = 0;
+      let currentSortOrderInBoard = INITIAL_GAP;
       if ( project_partner.code_partner_type_id === 88) {
         currentSortOrderInBoard = currentSortOrder;   
         if ( currentColumn <= 5 && currentSortOrder === null) {
-          currentSortOrderInBoard = await getSortOrderValue(boardId, currentColumn, null );
+          console.log('sent parameteres ' , boardId, board_project_id, currentColumn, isWorkPlan, null)
+          currentSortOrderInBoard = await getSortOrderForUpdate(board_project_id, boardId, currentColumn, isWorkPlan, null);
         }
       }
       // missing to check sponsor and cosponsor if this is working fine
       const bpcreated = await BoardProjectCost.create({
-          board_project_id: board_project_id,
+          board_project_id: board_project_id, 
           project_cost_id: project_cost_id,
           req_position: currentColumn,
           created_by: user.email,

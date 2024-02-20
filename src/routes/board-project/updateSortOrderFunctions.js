@@ -321,7 +321,18 @@ export const deletePositionInColumn = async (boardId, currentColumn, movePositio
   }
 }
 
-export const createCostAndInsertInPosition = async (project_id, board_project_id, code_cost_type_id, project_partner_id, creator, boardId, currentColumn, movePosition, cost, transaction) => { 
+export const createCostAndInsertInPosition = async (
+  project_id,
+  board_project_id,
+  code_cost_type_id,
+  project_partner_id,
+  creator,
+  boardId,
+  currentColumn,
+  movePosition,
+  cost,
+  transaction
+) => {
   try {
     const dataProjectCost = {
       project_id: project_id,
@@ -356,6 +367,5 @@ export const createCostAndInsertInPosition = async (project_id, board_project_id
   } catch (error) {
     console.error('FAIL at SAVE and create cost in position', error);
     throw new Error('UPDATE SORT ORDER');
-  }
-  
+  }  
 };
