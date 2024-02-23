@@ -718,6 +718,7 @@ const getProjectStreams = async (req, res) => {
           project_id: project_id
         },
         include: [{
+          required: true,
           model: Stream,
           attributes: ['stream_name', 'stream_id']
         }]
@@ -927,6 +928,7 @@ const updateActiveDetails = async (req, res) => {
           await PrimaryStream.update({ 
             is_active: false, 
             last_update_by: creator,
+            modified_date: date,
             last_modified_by: date
           }, {
             where: { primary_stream_id: lastProjectDetails.lastPrimaryStreamId },
@@ -938,6 +940,8 @@ const updateActiveDetails = async (req, res) => {
           code_data_source_update_type_id: CONF_USER,
           created_by: creator,
           last_modified_by: creator,
+          created_date: date,
+          modified_date: date,
           is_active: true
         }, {
           transaction: transaction
