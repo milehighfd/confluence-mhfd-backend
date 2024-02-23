@@ -251,7 +251,7 @@ async function createBoardProjectsMaintenance(allYears, year, type, locality, pr
     // if (rankColumnName === `rank${subtype}`) {
     //   rank[amountColumnName] = extraYearsAmounts[amountIndex];
     // }    
-    createdBoardProjects.push(createBoardProjectEntry(boardNextYear, rank, project_id, 2, userData));
+    createdBoardProjects.push(createBoardProjectEntry(boardNextYear, project_id, 2, userData));
   }  
   const currentYearEntry = createdBoardProjects.find(entry => +entry.year === +year);  
   if (currentYearEntry) {
@@ -271,55 +271,15 @@ async function createBoardProjectsMaintenance(allYears, year, type, locality, pr
 async function createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, transaction) {
   try {
     const createdBoardProjects = [];
-    const boardRanks = {};    
     const statusBoardProject = extraYears.length > 0 ? 2 : 1;
     if (extraYears.includes(year)) {
       extraYears = extraYears.filter(eYear => eYear !== year);
       extraYearsAmounts.shift();
     }
-    if (extraYears.length > 0 && Math.min(...extraYears) - year > 1) {
-      const nextYear = year + 1;
-      const boardNextYear = await getBoardForYear(nextYear, type, locality, project_type, transaction);
-      if (boardNextYear) {
-        const ranks = {};
-        const amounts = {};
-        for (let i = 0; i < extraYears.length; i++) {
-          // const rankNumber = extraYears[i] - year;
-          // const rankColumnName = `rank${rankNumber}`;
-          // const amountColumnName = `req${rankNumber}`;
-          // ranks[rankColumnName] = await getNextLexoRankValue(boardNextYear.board_id, rankColumnName);
-          amounts[amountColumnName] = extraYearsAmounts[i];
-        }
-        createdBoardProjects.push(createBoardProjectEntry(boardNextYear, { 
-          // ...ranks, 
-          ...amounts }, project_id, statusBoardProject, userData));
-      }
-    }
-    else if (extraYears.length === 0 || (extraYears.length === 1 && extraYears[0] === year)) {
-      const boardNextYear = await getBoardForYear(year + 1, type, locality, project_type, transaction);
-      // if (boardNextYear) {
-      //   const rank = { rank0: await getNextLexoRankValue(boardNextYear.board_id, 'rank0') };
-      //   createdBoardProjects.push(createBoardProjectEntry(boardNextYear, rank, project_id, statusBoardProject, userData));
-      // }
-    }
-    else {
-      const nextYear = year + 1;
-      const boardNextYear = await getBoardForYear(nextYear, type, locality, project_type, transaction);
-      // if (boardNextYear) {
-      //   let ranks = {};
-      //   let amounts = {};
-      //   let rankNumber = 1;
-      //   for (let extraYear of extraYears) {
-      //     if (extraYear >= nextYear) {
-      //       const rankColumnName = `rank${rankNumber}`;
-      //       const amountColumnName = `req${rankNumber}`;
-      //       ranks[rankColumnName] = await getNextLexoRankValue(boardNextYear.board_id, rankColumnName);
-      //       amounts[amountColumnName] = extraYearsAmounts[extraYears.indexOf(extraYear)];
-      //       rankNumber++;
-      //     }
-      //   }
-      //   createdBoardProjects.push(createBoardProjectEntry(boardNextYear, { ...ranks, ...amounts }, project_id, statusBoardProject));
-      // }
+    const nextYear = year + 1;
+    const boardNextYear = await getBoardForYear(nextYear, type, locality, project_type, transaction);
+    if (boardNextYear) {
+      createdBoardProjects.push(createBoardProjectEntry(boardNextYear, project_id, statusBoardProject, userData));
     }
     return createdBoardProjects;
   } catch (error) {
@@ -352,7 +312,7 @@ async function getPrevLexoRankValue(boardId, rankColumnName) {
   }
 }
 
-function createBoardProjectEntry(board, rank, project_id, statusBoardProject, userData, year1 = null, year2 = null) {
+function createBoardProjectEntry(board, project_id, statusBoardProject, userData, year1 = null, year2 = null) {
   let email = userData?.email;
   return {
     year: board.year,
@@ -365,8 +325,7 @@ function createBoardProjectEntry(board, rank, project_id, statusBoardProject, us
     created_by: email,
     last_modified_by: email,
     year1: year1,
-    year2: year2,
-    ...rank
+    year2: year2
   };
 }
 

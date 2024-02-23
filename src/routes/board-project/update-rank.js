@@ -297,8 +297,8 @@ const updateRank = async (req, res) => {
         } else {
           // insert cost in column
           const originCostValue = originCost ? originCost.projectCostData.cost : 0;
-          await deactivateCosts(board_project_id, previousColumn, isWorkPlanBoolean, user, transaction);
-          await createCostAndInsert(
+          await deactivateCosts(board_project_id, previousColumn, isWorkPlanBoolean, user, transaction);                   
+          const costCreated = await createCostAndInsert(
             project_id,
             board_project_id,
             originCostValue,
@@ -308,6 +308,8 @@ const updateRank = async (req, res) => {
             user,
             transaction
           );
+          
+          await updateSponsorProjectCosts(previousColumn, columnNumber, user, isWorkPlanBoolean, costCreated.board_project_id, transaction);  
         }
       }
     }
