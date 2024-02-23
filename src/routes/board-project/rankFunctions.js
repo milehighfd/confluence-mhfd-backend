@@ -340,7 +340,6 @@ export async function updateSponsorProjectCosts(
         && cost.projectCostData.project_partner_id === project_partner_id);
       const targetSecCost = boardCostsData.find(cost => cost.req_position === columnNumber
         && cost.projectCostData.project_partner_id === project_partner_id);
-
       if (originSecCost && targetSecCost) {
         const cost = originSecCost.projectCostData.cost + targetSecCost.projectCostData.cost;
         let targetPromise = ProjectCost.update(
@@ -364,6 +363,41 @@ export async function updateSponsorProjectCosts(
 
         targetPromises.push(targetPromise);
         originPromises.push(originPromise);
+      } else if (originSecCost) {        
+        let originPromise = ProjectCost.update(
+          {
+            is_active: false,
+            last_modified: moment().toDate(),
+            modified_by: user.email,
+            code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_EDITED : COST_IDS.WORK_REQUEST_EDITED,
+          },
+          { where: { project_cost_id: originSecCost.projectCostData.project_cost_id }, transaction }
+        );
+        let targetPromise = ProjectCost.create({
+          cost: originSecCost.projectCostData.cost,
+          code_cost_type_id: isWorkPlanBoolean ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID : COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID,
+          created_by: user.email,
+          modified_by: user.email,
+          createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+          updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+          is_active: true,
+          code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER,
+          project_partner_id: originSecCost.projectCostData.project_partner_id,
+          project_id: originSecCost.projectCostData.project_id
+        }, { transaction }).then((projectCost) => {
+          return BoardProjectCost.create({
+            board_project_id,
+            project_cost_id: projectCost.project_cost_id,
+            req_position: columnNumber,
+            created_by: user.email,
+            last_modified_by: user.email,
+            sort_order: originSecCost.sort_order,
+            createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+            updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+          }, { transaction });
+        });        
+        originPromises.push(originPromise);
+        targetPromises.push(targetPromise);
       }
     });
     await Promise.all([...targetPromises, ...originPromises]);
