@@ -279,6 +279,7 @@ const updateRank = async (req, res) => {
     } else if (previousColumn && columnNumber) {
       if (previousColumn === columnNumber) {
         //From column to same column
+        console.log(newSortValue, 'UPDATING SORT ORDER')
         await updateSortOrder(board_project_id, previousColumn, isWorkPlanBoolean, newSortValue, transaction);
       } else {
         //From column to different column

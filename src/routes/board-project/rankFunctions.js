@@ -155,7 +155,7 @@ export async function updateSortOrder(board_project_id, previousColumn, isWorkPl
       ],
       transaction
     });
-
+    console.log('projectCostToUpdate', projectCostToUpdate)
     if (projectCostToUpdate) {
       await BoardProjectCost.update(
         { sort_order: newSortOrder },

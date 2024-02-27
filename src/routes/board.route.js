@@ -887,7 +887,12 @@ router.post('/board-for-positions2', async (req, res) => {
 			return boardProject;
 		})
 		logger.info(`Finished endpoint for board/board-for-positions2`);
-		res.send(boardProjectsWithData.filter(r => r.projectData));
+		const projectSorted = boardProjectsWithData.sort((a, b) => {
+			if (a.boardProjectToCostData[0].sort_order === null) return 1;
+			if (b.boardProjectToCostData[0].sort_order === null) return -1;
+			return a.boardProjectToCostData[0].sort_order - b.boardProjectToCostData[0].sort_order;
+		});
+		res.send(projectSorted.filter(r => r.projectData));
 	} catch (error) {
 		logger.error('ERROR AT POSITIONS2 ' + error);
 		return res.status(500).send({ error });
