@@ -10,7 +10,7 @@ import {
 	getProjectData
 } from 'bc/services/mapgallery.service.js';
 import { sendBoardNotification } from 'bc/services/user.service.js';
-import boardService from 'bc/services/board.service.js';
+import boardService, { deactivateCosts } from 'bc/services/board.service.js';
 import projectService from 'bc/services/project.service.js';
 import moment from 'moment';
 import { isOnWorkspace, isOnFirstYear } from 'bc/services/board-project.service.js';
@@ -1279,7 +1279,8 @@ const getOriginSortOrderOfBoards = (boardProject) => {
 		let index = 1; // Initialize index counter
 		for (let i = 0; i < boardProject.length; i++) {
 			let bp = boardProject[i];
-			let bpReqPosition = bp.boardProjectToCostData.find((bpc) => bpc.req_position === currentReqPosition);
+			let sortedBoardProjectToCostData = bp.boardProjectToCostData.sort((a, b) => a.sort_order - b.sort_order);
+			let bpReqPosition = sortedBoardProjectToCostData.find((bpc) => bpc.req_position === currentReqPosition);
 			if (bpReqPosition) {
 				if (!originPositionMap[bp.project_id]) {
 					originPositionMap[bp.project_id] = {};
@@ -1394,7 +1395,7 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
     })).map(d => d.dataValues);
 
     const boardIds = allBoards.map((board) => board.board_id);
-    const costId = COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID; // replace with your actual cost ID
+    const costId = COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID;
 
     const query =
       `SELECT
@@ -1744,7 +1745,7 @@ const sendMails = async (board, fullName) => {
 		sendBoardNotification(email, board.type, board.locality, board.year, fullName)
 	});
 }
-// Approve a board 
+// Approve a board
 router.put('/', [auth], async (req, res) => {
   const transaction = await db.sequelize.transaction();
 	try {
@@ -1898,9 +1899,10 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
 		const code_cost_type_id = sponsor === 'MHFD' ? 21 : 22;
 		const allRelevantBoards = await boardService.getRelevantBoards(type, year, locality, project_type);
 		let createdBoards = {};
-		if (allRelevantBoards) {
+		if (!allRelevantBoards) {
 			createdBoards = await boardService.createMissingBoards(year, type, locality, project_type, userData, transaction); 
 		}
+		console.log(createdBoards, 'createdBoards')
 		let allYears = new Set();
 		if (extraYears.includes(year + 1)) {
 			allYears.add(year + 1);
@@ -1909,100 +1911,80 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
 		allYears = [...allYears];
 		allYears = [...allYears].sort((a, b) => a - b);
 		let createdBoardProject = {};
-		if (!subTypeIndex && project_type !== 'Maintenance') {
-			createdBoardProject = await boardService.createBoardProjects(
-				allYears,
-				year,
-				type,
-				locality,
-				project_type,
-				project_id,
-				extraYears,
-				extraYearsAmounts,
-				userData,
-				transaction
-			);
-		} else {
-			createdBoardProject = await boardService.createBoardProjectsMaintenance(
-				allYears,
-				year,
-				type,
-				locality,
-				project_type,
-				project_id,
-				extraYears,
-				extraYearsAmounts,
-				userData,
-				subTypeIndex,
-				transaction
-			);
-		}
-		console.log(createdBoardProject)
+		createdBoardProject = await boardService.createBoardProjects(
+			allYears,
+			year,
+			type,
+			locality,
+			project_type,
+			project_id,
+			extraYears,
+			extraYearsAmounts,
+			userData,
+			transaction
+		);
+		console.log(createdBoardProject, 'createdBoardProject')
 		const existingEntry = await BoardProject.findOne({
 			where: {
 				project_id: project_id,
-				board_id: createdBoardProject[0].board_id
+				board_id: createdBoardProject.board_id
 			},
 			transaction
 		});
 
 		let result;
+		console.log('here create board project', existingEntry)
 		if (existingEntry) {
 			const updatedEntry = await BoardProject.findOne({
 				where: {
 					project_id: project_id,
-					board_id: createdBoardProject[0].board_id
+					board_id: createdBoardProject.board_id
 				},
 				transaction
 			});
 			result = updatedEntry;
 		} else {
-			result = await BoardProject.create(createdBoardProject[0], { transaction });
+			console.log('here create board project')
+			console.log(createdBoardProject)
+			result = await BoardProject.create(
+				{
+					...createdBoardProject,
+				},
+				{ transaction }
+			)
+			console.log('CREATED!', result)
 		}
-		const createdBoardProjectsArray = Object.values(createdBoardProject[0]);
-		const projectCostsToCreate = [];
-		const boardProjectsCostsToConstruct = [];
+		const createdBoardProjectsArray = Object.values(createdBoardProject);
 		const projectPartnerId = await boardService.findProjectPartner(project_id);
 
 		let mainModifiedDate = new Date();
-		if (allYears.length === 1 && allYears[0] === year) {
-			mainModifiedDate = moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS).toDate();
-			const boardProjectCosts = await BoardProjectCost.findOne({
+		console.log(allYears, year, 'years')
+		const allNextBoardProjectCosts = await BoardProjectCost.findAll({
+			attributes: ['sort_order', 'req_position', 'board_project_id'],
+			include: [{
+				model: BoardProject,
+				required: true,
+				as: 'boardProjectData',
 				where: {
-					board_project_id: result.board_project_id,
-				},
-				include: [
-					{
-						attibutes: ['project_cost_id'],
-						model: ProjectCost,
-						as: 'projectCostData',
-						required: true,
-						where: {
-							is_active: true,
-							code_cost_type_id: sponsor === 'MHFD' ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID : COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
-						}
-					}
-				],
-				transaction
-			});
-			if (boardProjectCosts) {
-				const projectCostId = boardProjectCosts.projectCostData.project_cost_id;
-				const costUpdateData = {
-					is_active: false,
-					last_modified: moment().toDate(),
-					modified_by: userData.email,
-					code_cost_type_id: sponsor === 'MHFD' ? COST_IDS.WORK_PLAN_EDITED : COST_IDS.WORK_REQUEST_EDITED,
-				};
-				await ProjectCost.update(
-					costUpdateData,
-					{
-						where: {
-							project_cost_id: projectCostId
-						},
-						transaction
-					}
-				);
-			}
+					board_id: createdBoardProject.board_id
+				}
+			}, {
+				model: ProjectCost,
+				required: true,
+				as: 'projectCostData',
+				where: {
+					is_active: true,
+					code_cost_type_id: [COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID, COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID]
+				}
+			}],
+			order: [['sort_order', 'DESC']],
+			transaction
+		});
+		if (!allYears.length || (allYears.length === 1 && (allYears[0] === year || allYears[0] + 1 === year))) {
+			//disable the previous entries
+			mainModifiedDate = moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS).toDate();
+			deactivateCosts(result, sponsor, userData, transaction);
+			console.log('creating ws project cost')
 			const createdCost = await ProjectCost.create({
 				project_id,
 				cost: null,
@@ -2014,88 +1996,62 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
 				is_active: 1,
 				code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
 			}, { transaction });
+
+			const lastSortOrder = allNextBoardProjectCosts.find(cost =>
+				cost.req_position === 0 && cost.projectCostData.code_cost_type_id === code_cost_type_id &&
+				cost.boardProjectData.board_id === createdBoardProject.board_id
+			);			
+			console.log('creating ws board project cost')
 			const createdBoardProjectCost = await BoardProjectCost.create({
 				board_project_id: result.board_project_id,
 				project_cost_id: createdCost.project_cost_id,
 				created_by: userData.email,
 				last_modified_by: userData.email,
 				req_position: 0,
-				sort_order: 0
+				sort_order: lastSortOrder ? lastSortOrder.sort_order + GAP : INITIAL_GAP
 			}, { transaction });
+		} else if (allYears.length) {
+			if (!subTypeIndex) {
+				deactivateCosts(result, sponsor, userData, transaction);
+				for (const currentYear of allYears) {
+					const position = currentYear - year;
+					const index = currentYear - allYears[0];
+					console.log(position, 'positionx')
+					console.log(currentYear, index, 'extraYearsAmounts')
+					mainModifiedDate = moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS).toDate();
+					if (position > 0) {
+						const createdCost = await ProjectCost.create({
+							project_id,
+							cost: extraYearsAmounts[index],
+							code_cost_type_id,
+							created_by: userData.email,
+							modified_by: userData.email,
+							created: mainModifiedDate,
+							last_modified: mainModifiedDate,
+							project_partner_id: projectPartnerId,
+							is_active: 1,
+							code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
+						}, { transaction });
+
+						const lastSortOrder = allNextBoardProjectCosts.find(cost =>
+							cost.req_position === position &&
+							cost.projectCostData.code_cost_type_id === code_cost_type_id &&
+							cost.boardProjectData.board_id === createdBoardProject.board_id
+						);
+
+						const createdBoardProjectCost = await BoardProjectCost.create({
+							board_project_id: result.board_project_id,
+							project_cost_id: createdCost.project_cost_id,
+							created_by: userData.email,
+							last_modified_by: userData.email,
+							req_position: position,
+							sort_order: lastSortOrder ? lastSortOrder.sort_order + GAP : INITIAL_GAP
+						}, { transaction });
+					}
+				}
+			}
 		}
-		// for (const boardProject of createdBoardProjects) {
-		// 	const boardType = await boardService.getBoardTypeById(boardProject.board_id);
-		// 	for (let reqPosition = 1; reqPosition <= 5; reqPosition++) {
-		// 		const dateToAvoidRepeated = moment(mainModifiedDate)
-		// 		.subtract(OFFSET_MILLISECONDS * reqPosition)
-		// 		.toDate()
-		// 		if (boardProject[`req${reqPosition}`]) {
-		// 			const projectCost = boardService.constructProjectCost(boardProject, reqPosition, userData, projectPartnerId, boardType, dateToAvoidRepeated);
-		// 			projectCostsToCreate.push(projectCost);
-		// 		}
-		// 	}
-		// 	if (project_type === 'Maintenance' && extraYears[2] && extraYearsAmounts[2]) {
-		// 		const dateToAvoidRepeated = moment(mainModifiedDate)
-		// 		.subtract(OFFSET_MILLISECONDS * 6)
-		// 		.toDate()
-		// 		const yearprojectCost = {
-		// 			project_id: boardProject.project_id,
-		// 			cost: extraYearsAmounts[2],
-		// 			code_cost_type_id: code_cost_type_id,
-		// 			cost_description: '',
-		// 			project_partner_id: projectPartnerId,
-		// 			cost_project_partner_contribution: null,
-		// 			created_by: userData.email,
-		// 			modified_by: userData.email,
-		// 			created: dateToAvoidRepeated,
-		// 			last_modified: dateToAvoidRepeated,
-		// 			agreement_number: '',
-		// 			amendment_number: '',
-		// 			code_phase_type_id: null,
-		// 			code_scope_of_work_type_id: 20,
-		// 			is_active: 1,
-		// 			effective_date: '',
-		// 			code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
-		// 		}
-		// 		projectCostsToCreate.push(yearprojectCost);
-		// 	}
-		// }
-		// await boardService.updateProjectCostEntries(project_id, userData, code_cost_type_id, projectPartnerId, transaction)
-		// const createdProjectCosts = await boardService.createAllProjectCosts(projectCostsToCreate, transaction);
-		// const createdProjectCostIds = createdProjectCosts.map(entry => entry.project_cost_id);
-		// let index = 0;
-		// for (let i = 0; i < createdBoardProjects.length; i++) {
-		// 	const boardProject = createdBoardProjects[i];
-		// 	const boardProjectId = [...results][i].board_project_id;
-		// 	for (let reqPosition = 1; reqPosition <= 5; reqPosition++) {
-		// 		if (boardProject[`req${reqPosition}`]) {
-		// 			const boardProjectsCost = boardService.constructBoardProjectsCost(boardProject, createdProjectCostIds[index], reqPosition, userData, boardProjectId);
-		// 			boardProjectsCostsToConstruct.push(boardProjectsCost);
-		// 			index++;
-		// 		}
-		// 	}
-		// 	if (project_type === 'Maintenance' && extraYears[2] && extraYearsAmounts[2]) {
-		// 		const yearBoardProjectCost = {
-		// 			board_project_id: boardProjectId,
-		// 			project_cost_id: createdProjectCostIds[index],
-		// 			created_by: userData.email,
-		// 			last_modified_by: userData.email,
-		// 			req_position: 11,
-		// 		}
-		// 		boardProjectsCostsToConstruct.push(yearBoardProjectCost);
-		// 		index++;
-		// 	}
-		// }
-		// await boardService.createAllBoardProjectsCost(boardProjectsCostsToConstruct, transaction);
-		// //await boardService.cascadeDelete(project_id, createdBoardProjects, type, startYear, locality, project_type, transaction);
-		// await transaction.commit();
-		// res.send({
-		// 	createdBoardProjects: createdBoardProjectsArray,
-		// 	createdBoards,
-		// 	projectCostsToCreate,
-		// 	boardProjectsCostsToConstruct,
-		// 	allRelevantBoards
-		// });
+		await transaction.commit();
 		res.send({
 			createdBoards,
 			allYears
