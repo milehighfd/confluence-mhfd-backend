@@ -3,7 +3,7 @@ import logger from 'bc/config/logger.js';
 import moment from 'moment';
 import sequelize, { col } from 'sequelize';
 import { LexoRank } from 'lexorank';
-import { CODE_DATA_SOURCE_TYPE, INITIAL_GAP } from 'bc/lib/enumConstants.js';
+import { CODE_DATA_SOURCE_TYPE, COST_IDS, INITIAL_GAP } from 'bc/lib/enumConstants.js';
 import { getBoardProjectsOfBoardOfColumn, getSortOrderValue } from 'bc/routes/board-project/updateSortOrderFunctions.js';
 import { getSortOrderForUpdate } from 'bc/routes/board-project/rankFunctions.js';
 
@@ -238,19 +238,11 @@ async function createBoardProjectsMaintenance(allYears, year, type, locality, pr
   const targetYear = year + 1;
   const boardNextYear = await getBoardForYear(targetYear, type, locality, project_type, transaction);
   if (boardNextYear) {
-    // let rankColumnName = 'rank0';
     let amountColumnName = `req0`;    
     let amountIndex = 1;
     if (extraYears.includes(year)) {
-      // rankColumnName = `rank${subtype}`;
       amountColumnName = `req${subtype}`;
-    }    
-    const rank = {
-      // [rankColumnName]: await getNextLexoRankValue(boardNextYear.board_id, rankColumnName)
-    };    
-    // if (rankColumnName === `rank${subtype}`) {
-    //   rank[amountColumnName] = extraYearsAmounts[amountIndex];
-    // }    
+    } 
     createdBoardProjects.push(createBoardProjectEntry(boardNextYear, project_id, 2, userData));
   }  
   const currentYearEntry = createdBoardProjects.find(entry => +entry.year === +year);  
@@ -270,18 +262,16 @@ async function createBoardProjectsMaintenance(allYears, year, type, locality, pr
 
 async function createBoardProjects(allYears, year, type, locality, project_type, project_id, extraYears, extraYearsAmounts, userData, transaction) {
   try {
-    const createdBoardProjects = [];
     const statusBoardProject = extraYears.length > 0 ? 2 : 1;
     if (extraYears.includes(year)) {
       extraYears = extraYears.filter(eYear => eYear !== year);
-      extraYearsAmounts.shift();
     }
     const nextYear = year + 1;
     const boardNextYear = await getBoardForYear(nextYear, type, locality, project_type, transaction);
     if (boardNextYear) {
-      createdBoardProjects.push(createBoardProjectEntry(boardNextYear, project_id, statusBoardProject, userData));
+      return createBoardProjectEntry(boardNextYear, project_id, statusBoardProject, userData);
     }
-    return createdBoardProjects;
+    return null;
   } catch (error) {
     console.error("Error creating board projects:", error);
     throw error;
@@ -310,6 +300,49 @@ async function getPrevLexoRankValue(boardId, rankColumnName) {
     console.log(initialLexoRankValue(), 'INITIAL LEXO RANK VALUE');
     return initialLexoRankValue();
   }
+}
+
+export async function deactivateCosts(result, sponsor, userData, transaction) {
+  const boardProjectCosts = await BoardProjectCost.findAll({
+    where: {
+      board_project_id: result.board_project_id,
+    },
+    include: [
+      {
+        attibutes: ['project_cost_id'],
+        model: ProjectCost,
+        as: 'projectCostData',
+        required: true,
+        where: {
+          is_active: true,
+          code_cost_type_id: sponsor === 'MHFD' ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID : COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
+        }
+      }
+    ],
+    transaction
+  });
+
+  let promises = boardProjectCosts.map(boardProjectCost => {
+    const projectCostId = boardProjectCost.projectCostData.project_cost_id;
+    const costUpdateData = {
+      is_active: false,
+      last_modified: moment().toDate(),
+      modified_by: userData.email,
+      code_cost_type_id: sponsor === 'MHFD' ? COST_IDS.WORK_PLAN_EDITED : COST_IDS.WORK_REQUEST_EDITED,
+    };
+    return ProjectCost.update(
+      costUpdateData,
+      {
+        where: {
+          project_cost_id: projectCostId
+        },
+        transaction
+      }
+    );
+  });
+
+  await Promise.all(promises);
+  return;
 }
 
 function createBoardProjectEntry(board, project_id, statusBoardProject, userData, year1 = null, year2 = null) {
