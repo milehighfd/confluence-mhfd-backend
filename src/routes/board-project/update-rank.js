@@ -264,6 +264,9 @@ const updateRank = async (req, res) => {
       } else{
         //From workspace to column
         console.log('deactivating cost from column');
+        const STATUS_REQUESTED = 2;
+        const STATUS_DRAFT = 1;
+        const statusToUse = columnNumber === 0 ? STATUS_DRAFT : STATUS_REQUESTED;
         await deactivateCosts(board_project_id, previousColumn, isWorkPlanBoolean, user, transaction);
         await createCostAndInsert(
           project_id,
@@ -274,6 +277,17 @@ const updateRank = async (req, res) => {
           isWorkPlan,
           user,
           transaction
+        );
+        await BoardProject.update(
+          {
+            updatedAt: moment().toDate(),
+            last_modified_by: user.email,
+            code_status_type_id: statusToUse
+          },
+          {
+            where: { board_project_id },
+            transaction
+          }
         );
       }
     } else if (previousColumn && columnNumber) {
