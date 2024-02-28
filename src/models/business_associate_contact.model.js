@@ -26,7 +26,11 @@ export default (sequelize, DataType) => {
     },
     last_modified_by: {
       type: DataType.STRING,
-    }
+    },
+    code_contact_type_id: {
+      type: DataType.INTEGER,
+      allowNull: false
+    },
   }, {
     freezeTableName: true,
     tableName: 'business_associate_contact',

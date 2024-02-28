@@ -4,6 +4,7 @@ import logger from 'bc/config/logger.js';
 import auth from 'bc/auth/auth.js';
 import moment from 'moment';
 import sequelize from 'sequelize';
+import { OPERATIONS_CODE } from 'bc/lib/enumConstants.js';
 const { Op } = sequelize;
 
 const BusinessContact = db.businessAssociateContact;
@@ -115,7 +116,9 @@ router.post('/business-address/:idcontact', [auth], async (req, res) => {
       contact_name: body.contact_name,
       contact_email: body.contact_email,
       contact_phone_number: body.contact_phone_number,
+      code_contact_type_id: OPERATIONS_CODE
     };
+    console.log('update contact', businessContact)
     const updateBusinessContact = await BusinessContact.update(businessContact, { where: { business_associate_contact_id: id }, transaction: t });
     const updatedUser = await updateUserBusinessContact(body.user_id, id, t);
     await t.commit();
@@ -148,10 +151,17 @@ router.put('/business-address-and-contact/:idaddress/:idcontact', [auth], async 
       contact_name: body.contact_name,
       contact_email: body.contact_email,
       contact_phone_number: body.contact_phone_number,
+      code_contact_type_id: OPERATIONS_CODE
     };
+    console.log('insert contact', businessContact)
     let contact = await BusinessContact.findOne({ where: { contact_email }, transaction: t });
     if (contact) {
-      contact = await contact.update({ business_address_id : idAddress, contact_name: body.contact_name, contact_phone_number: body.contact_phone_number }, { transaction: t });
+      contact = await contact.update({ 
+        business_address_id : idAddress, 
+        contact_name: body.contact_name, 
+        contact_phone_number: body.contact_phone_number,
+        code_contact_type_id: OPERATIONS_CODE
+      }, { transaction: t });
     } else {
       contact = await BusinessContact.update(businessContact, { where: { business_associate_contact_id: idContact }, transaction: t });
     }
@@ -193,7 +203,9 @@ router.post('/business-address-and-contact/:id', [auth], async (req, res) => {
       contact_phone_number: body.contact_phone_number || 'No number provided',
       created_by: user.email,
       last_modified_by: user.email,
+      code_contact_type_id: OPERATIONS_CODE
     };
+    console.log('insert contact', businessContact)
     const contact_email = body.contact_email;
     let contact = await BusinessContact.findOne({ where: { contact_email }, transaction: t });
     if (contact) {
@@ -264,7 +276,12 @@ router.post('/create-contact/:idaddress', [auth], async (req, res) => {
     updateBusinessAddress = await BusinessAdress.update(businessAdress, { where: { business_address_id: idAddress }, transaction: t });    
     let contact = await BusinessContact.findOne({ where: { contact_email }, transaction: t });
     if (contact) {
-      contact = await contact.update({ idAddress, contact_name, contact_phone_number }, { transaction: t });
+      contact = await contact.update({
+        idAddress,
+        contact_name,
+        contact_phone_number,
+        code_contact_type_id: OPERATIONS_CODE
+      }, { transaction: t });
     } else {
       contact = await BusinessContact.create({
         idAddress,
@@ -274,8 +291,10 @@ router.post('/create-contact/:idaddress', [auth], async (req, res) => {
         business_address_id: idAddress,
         created_by: user.email,
         last_modified_by: user.email,
+        code_contact_type_id: OPERATIONS_CODE
       }, { transaction: t });
     }
+    console.log('create contact', contact)
     const updatedUser =  await updateUserBusinessContact(user_id, contact.business_associate_contact_id, t);
     await t.commit();
     res.status(200).send({ message: 'SUCCESS', contact, updatedUser });

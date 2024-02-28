@@ -173,3 +173,6 @@ export const SPONSOR_COSPONSOR_CODE = [11, 12];
 
 export const GAP = 1_000_000;
 export const INITIAL_GAP = 10 * GAP;
+
+//code_contact_type_id for business associate contact
+export const OPERATIONS_CODE = 4;
