@@ -678,10 +678,6 @@ router.post('/board-for-positions2', async (req, res) => {
 				filters.projecttype = [maintenanceSubtype];
 			}
 		}
-		// THIS is going to be replaced with MHFD owner in PROJECT COST 
-		// if (`${position}` !== '0') {
-		// attributes.push(reqColumnName);
-		// }
 		if (project_priorities && project_priorities.length > 0) {
 			const conditions = [];
 			const lessThan3Priorities = project_priorities.filter(r => r < 3);
@@ -700,42 +696,13 @@ router.post('/board-for-positions2', async (req, res) => {
 			where.code_status_type_id = status_board;
 		}
 		console.log('where', where, boardWhere, boardIds);
-    // const MHFD_Partner = await ProjectPartner.findAll({
-    //   where: {
-    //     project_id: { [Op.in]: projectIds },
-    //     code_partner_type_id: COST_IDS.MHFD_CODE_COST_TYPE_ID
-    //   }
-    // });
-
-    // const Mhfd_ids = MHFD_Partner.map((mhfd) => mhfd.project_partner_id);
-    // const projectCostValues = await BoardProjectCost.findAll({
-    //   attributes: ['req_position', 'board_project_id'],
-    //   include: [{
-    //     attributes: ['cost', 'project_cost_id', 'project_partner_id', 'project_id'],
-    //     model: ProjectCost,
-    //     as: 'projectCostData',
-    //     where: {
-    //       is_active: true,
-    //       project_partner_id: { [Op.in]: Mhfd_ids },
-    //       code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
-    //     }
-    //   }],
-    //   where: {
-    //     board_project_id: boardProjectIds,
-    //     req_position: position
-    //   }
-    // });
-    // const projectPartner = await projectService.getProjectPartner(projectsIds);
 		const boardProjectsNoOrder = (await BoardProject.findAll({
 			attributes,
 			where,
 			order: [[{model: BoardProjectCost, as: 'boardProjectToCostData'},'sort_order', 'ASC']],
-			// [{ model: BoardProjectCost, as: 'boardProjectToCostData' }, 'sort_order', 'ASC']
 			include:[{
 				model: BoardProjectCost,
 				as: 'boardProjectToCostData',
-				// required: true,
-				// order: [['sort_order', 'ASC']],
 				where: {
 					req_position: position
 				},
@@ -1279,22 +1246,50 @@ const updateProjectStatus = async (boards, creator, isWorkPlan, transaction) => 
 const getOriginSortOrderOfBoards = (boardProject) => {
 	const columns = [0, 1, 2, 3, 4, 5];
 	const originPositionMap = {};
+	
+	console.log(boardProject.length, 'This is the board project')
 	columns.forEach(columnNumber => {
 		const currentReqPosition = columnNumber;
-		let index = 1; // Initialize index counter
 		for (let i = 0; i < boardProject.length; i++) {
 			let bp = boardProject[i];
-			let sortedBoardProjectToCostData = bp.boardProjectToCostData.sort((a, b) => a.sort_order - b.sort_order);
-			let bpReqPosition = sortedBoardProjectToCostData.find((bpc) => bpc.req_position === currentReqPosition);
+			let bpReqPosition = bp.boardProjectToCostData.find((bpc) => bpc.req_position === currentReqPosition);
 			if (bpReqPosition) {
 				if (!originPositionMap[bp.project_id]) {
 					originPositionMap[bp.project_id] = {};
 				}
-				originPositionMap[bp.project_id][currentReqPosition] = index++;
+				originPositionMap[bp.project_id][currentReqPosition] = bpReqPosition.sort_order;
 			}
 		}
 	});
-	return originPositionMap;
+	const convertedData = globallySortAndNumber(originPositionMap);
+	return convertedData;
+}
+
+function globallySortAndNumber(data) {
+	const positionValues = {};
+	Object.values(data).forEach(subObj => {
+			Object.entries(subObj).forEach(([key, value]) => {
+					if (!positionValues[key]) {
+							positionValues[key] = [];
+					}
+					positionValues[key].push(value);
+			});
+	});
+
+	Object.keys(positionValues).forEach(position => {
+			positionValues[position] = Array.from(new Set(positionValues[position].sort((a, b) => a - b)));
+	});
+
+	const result = {};
+	Object.keys(data).forEach(key => {
+			result[key] = {};
+			Object.entries(data[key]).forEach(([position, value]) => {
+					const rank = positionValues[position].indexOf(value) + 1;
+					result[key][position] = rank;
+			});
+	});
+
+	return result;
 }
 
 const getOriginPositionMap = (boardProjects) => {
@@ -1343,6 +1338,7 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
   try {
     const allBoardProjectType = boards.map((board) => board.projecttype);
     const allBoardProjectTypeSet = new Set(allBoardProjectType);
+		const locality = boards[0].locality;
     const getYear = boards[0].year;
     const getAllBoards = await Board.findAll({
       where: {
@@ -1354,10 +1350,8 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
       transaction
     });
     const allBoards = [];
-		console.time('create Missing Boards');
     for (const allProjectType of allBoardProjectTypeSet) {
       if (!getAllBoards.find((board) => board.projecttype === allProjectType)) {
-        console.log('sendData', allProjectType, getYear, creator, 'MHFD District Work Plan')
         const newBoard = await boardService.createNewBoard(
           'WORK_PLAN',
           getYear,
@@ -1374,8 +1368,6 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
         allBoards.push(getAllBoards.find((board) => board.projecttype === allProjectType));
       }
     }
-		console.timeEnd('create Missing Boards');
-		console.time('findSortOrder');
     const allBoardProjects = (await BoardProject.findAll({
       where: {
         board_id: { [Op.in]: boards.map((board) => board.board_id) }
@@ -1396,9 +1388,11 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
             }
           }
         ]
-      }]
+      },{
+				model: Board,
+				required: true
+			}]
     })).map(d => d.dataValues);
-
     const boardIds = allBoards.map((board) => board.board_id);
     const costId = COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID;
 
@@ -1423,24 +1417,25 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
         bp.projecttype, bpc.req_position, b.projecttype`;
 
     const result = await db.sequelize.query(query, { type: db.sequelize.QueryTypes.SELECT, transaction });
-    for (let board of boards) {
-      let destinyBoard = allBoards.find((b) => b.projecttype === board.projecttype);
-      const boardProjects = allBoardProjects.filter((bp) => bp.board_id === board.board_id);
+    for (let projectTypeSet of allBoardProjectTypeSet) {
+      let destinyBoard = allBoards.find((b) => b.projecttype === projectTypeSet);
+      const boardProjects = allBoardProjects.filter((bp) => bp.board.projecttype === projectTypeSet
+			 && bp.board.locality === locality
+			 && bp.board.year === getYear);
       const originSortOrders = getOriginSortOrderOfBoards(boardProjects);
       const projectIdsInOrder = [];
-      
       let sortValuesForBoard = [];
-
+			
       // Iterate over req_positions from 1 to 5
       for (let i = 1; i <= 5; i++) {
-        const foundEntry = result.find(r => r.projecttype === board.projecttype && r.req_position === i);
+        const foundEntry = result.find(r => r.projecttype === projectTypeSet && r.req_position === i);
         if (foundEntry) {
           sortValuesForBoard.push(foundEntry.max_sort_order || INITIAL_GAP);
         } else {
           sortValuesForBoard.push(INITIAL_GAP);
         }
       }
-			console.time('createBoardProjects for ' + board.projecttype + board.board_id); 
+			console.log(sortValuesForBoard, 'This is the sort values for board')
 			const createAllBoardProjects = boardProjects.map((bp) => {
 				return BoardProject.create({
 					board_id: destinyBoard.board_id,
@@ -1451,19 +1446,16 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
 					originPosition3: originSortOrders[bp.project_id][3],
 					originPosition4: originSortOrders[bp.project_id][4],
 					originPosition5: originSortOrders[bp.project_id][5],
-					origin: board.locality,
+					origin: locality,
 					code_status_type_id: bp.code_status_type_id,
 					parent_board_project_id: bp.board_project_id,
 					created_by: creator,
 					last_modified_by: creator,
-					transaction
-				});
+				}, { transaction });
 			});
 			const createdBoardProjects = await Promise.all(createAllBoardProjects);
 			const createdBoardProjectIds = createdBoardProjects.map(bp => bp.parent_board_project_id);
-			const createdProjectIds = createdBoardProjects.map(bp => bp.project_id);			
-			console.timeEnd('createBoardProjects for ' + board.projecttype + board.board_id);
-			console.time('getCosts for ' + board.projecttype + board.board_id);
+			const createdProjectIds = createdBoardProjects.map(bp => bp.project_id);		
 			// Get all project costs related to the created projects
 			const allProjectCosts = await ProjectCost.findAll({
 				attributes: ['project_cost_id', 'project_id', 'cost', 'code_cost_type_id'],
@@ -1506,14 +1498,13 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
 				where: {
 					project_cost_id: projectCostIds,
 				},
+				order: [['sort_order', 'ASC']],
 				transaction
 			});
 			const indexedPrevBoardProjectCosts = prevBoardProjectCostRecords.reduce((acc, cost) => {
 				acc[cost.project_cost_id] = cost;
 				return acc;
 			}, {});
-			console.timeEnd('getCosts for ' + board.projecttype + board.board_id);
-			console.time('createCosts for ' + board.projecttype + board.board_id);
 			let newProjectCostsMap = new Map();
 
 			const projectCostPromises = [];
@@ -1548,20 +1539,19 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
 
 			// Wait for all ProjectCost creation promises to resolve
 			await Promise.all(projectCostPromises);
-			console.timeEnd('createCosts for ' + board.projecttype + board.board_id);
-			console.time('createProjectCosts for ' + board.projecttype + board.board_id);
 			const boardProjectCostPromises = [];
 
 			for (const bp of createdBoardProjects) {
 				const newBoardProjectId = bp.board_project_id;
 				const prevCostOfProject = allProjectCosts.filter(cost => cost.project_id === bp.project_id);
-
-				for (let j = 0; j < prevCostOfProject.length; j++) {
-					const prevCostOfSponsor = prevCostOfProject[j];
+				const sortPrevCostOfProject = prevCostOfProject.sort((a, b) => a.boardProjectCostData.sort_order - b.boardProjectCostData.sort_order);				
+				for (let j = 0; j < sortPrevCostOfProject.length; j++) {
+					const prevCostOfSponsor = sortPrevCostOfProject[j];
+					console.log('This is the prev cost of sponsor', prevCostOfSponsor.boardProjectCostData.sort_order, 'This is the sort order');
 					const newProjectCost = newProjectCostsMap.get(prevCostOfSponsor.project_cost_id);
-
 					if (!newProjectCost) continue;
 					const prevBoardProjectCost = indexedPrevBoardProjectCosts[prevCostOfSponsor.project_cost_id];
+					const originMultiplier = originSortOrders[bp.project_id][prevBoardProjectCost.req_position];
 					if (prevBoardProjectCost) {
 						const promise = BoardProjectCost.create({
 							board_project_id: newBoardProjectId,
@@ -1569,10 +1559,8 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
 							created_by: creator,
 							last_modified_by: creator,
 							req_position: prevBoardProjectCost.req_position,
-							sort_order: sortValuesForBoard[prevBoardProjectCost.req_position - 1] + GAP,
-						}, { transaction }).then(() => {
-							sortValuesForBoard[prevBoardProjectCost.req_position] += GAP;
-						}).catch(error => {
+							sort_order: sortValuesForBoard[prevBoardProjectCost.req_position - 1] + (GAP * originMultiplier),
+						}, { transaction }).catch(error => {
 							console.error(`Error creating BoardProjectCost for new project_cost_id ${newProjectCost.project_cost_id}:`, error);
 							// Handle error appropriately
 						});
@@ -1585,10 +1573,7 @@ const sendBoardProjectsToDistrict = async (boards, creator, transaction) => {
 			}
 			// Wait for all BoardProjectCost creation promises to resolve
 			await Promise.all(boardProjectCostPromises);
-			console.timeEnd('createProjectCosts for ' + board.projecttype + board.board_id);
 		}
-		logger.info(`Finished function findAll for board/`);
-    logger.info('success on sendBoardProjectsToDistrict');
     return {};
   } catch (error) {
     console.log('ERROR AT BOARD ROUTE ->', error);
@@ -1611,8 +1596,9 @@ const moveCardsToNextLevel = async (currentBoard, creator, transaction) => {
     logger.info(`Finished function findAll for board/`);
     console.log('Board Find All with', currentBoard.type, currentBoard.year, currentBoard.locality, '\n\n ', JSON.stringify(boards));
     if (currentBoard.type === 'WORK_REQUEST') {
-      // SOME CODE DELETED FOR APPROVEING BOARDS with year < 2024
-      logger.info(`Sending ${boards.length} to district`);
+			// SOME CODE DELETED FOR APPROVEING BOARDS with year < 2024
+			logger.info(`Sending ${boards.length} to district ->`);
+			console.log(boards.map(b => b.board_id), 'boards.map(b => b.board_id)');
       await sendBoardProjectsToDistrict(boards, creator, transaction);
       const boardIds = boards.map(board => board.board_id);
       await boardService.updateSubmissionDate(boardIds, creator, transaction);
