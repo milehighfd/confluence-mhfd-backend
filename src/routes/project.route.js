@@ -586,11 +586,11 @@ const searchImport = async (req, res) => {
           return regex.test(project.project_name);
         });
       });
-      const getProjectsBySponsor = await projectService.getProjectsBySponsor(keyword);
+      // const getProjectsBySponsor = await projectService.getProjectsBySponsor(keyword);
       const projectsIds = filteredProjects.map(p => p.project_id);
-      const projectsBySponsorIds = getProjectsBySponsor.map(p => p.project_id);
-      const mergedProjects = [...projectsIds, ...projectsBySponsorIds];
-      filteredProjects = mergedProjects
+      // const projectsBySponsorIds = getProjectsBySponsor.map(p => p.project_id);
+      // const mergedProjects = [...projectsIds, ...projectsBySponsorIds];
+      filteredProjects = projectsIds;
     }
     let projectsInBoard = [];
     if (locality !== 'MHFD District Work Plan') {
