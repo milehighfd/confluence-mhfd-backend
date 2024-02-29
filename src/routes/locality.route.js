@@ -140,7 +140,9 @@ router.get('/', [auth2, getData],  (req, res) => {
 
 router.get('/:type', [getData2], async (req, res) => {
   logger.info(`Starting endpoint locality.route/:type with params ${JSON.stringify(req.params, null, 2)}`);
+  const MHFD_LOCALITY_CODE = 9999;
   let localities = res.locals.data;
+  localities = localities.filter(locality => locality.id !== MHFD_LOCALITY_CODE);
   res.send({ localities });
 })
 
