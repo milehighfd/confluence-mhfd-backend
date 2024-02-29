@@ -1381,25 +1381,27 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
 			  where: where
 			},
 		  }]
-    }));
-  } else {
-    let where = {};
-    where = { code_status_type_id: defaultStatus };
-    conditions.push(//STATUS
-      Project.findAll({
-        attributes: ["project_id", "code_project_type_id", "project_name"],
-        include: [{
+	  }));
+	} else {
+    if(status.length===0 && originFunction === 'listProjects') {
+      let where = {};
+      where = { code_status_type_id: defaultStatus };
+      conditions.push(//STATUS
+        Project.findAll({
+          attributes: ["project_id","code_project_type_id", "project_name"],
+          include: [{
           model: ProjectStatus,
           attributes: [],
           as: 'currentId',
-          required: true,
+          required:true ,
           include: {
             model: CodePhaseType,
-            required: true,
+            required:true ,
             where: where
           },
-        }]
-      }));
+  		    }]
+  	  }));
+    }
   }
   if (phase.length) {	  
 	  conditions.push(//PHASE
@@ -2974,13 +2976,12 @@ const globalSearch = async (keyword) => {
 };
 
 const projectSearch = async (keyword) => {  
-  const IS_NOT_ARCHIVED = 0;
   if (keyword.trim() === '') {
     console.log('empty keyword')
     const projects = await Project.findAll({
       where: {
         [Op.or]: [
-          { is_archived: { [Op.eq]: IS_NOT_ARCHIVED } },
+          { is_archived: { [Op.ne]: 1 } },
           { is_archived: { [Op.is]: null } }
         ]
       },
@@ -3015,7 +3016,7 @@ const projectSearch = async (keyword) => {
       [Op.and]: [
         { [Op.or]: conditions },
         { [Op.or]: [
-          { is_archived: { [Op.eq]: IS_NOT_ARCHIVED } },
+          { is_archived: { [Op.ne]: 1 } },
           { is_archived: { [Op.is]: null } }
         ]}
       ]
@@ -3064,14 +3065,14 @@ const getBoardProjectDataCount = async (project_id, type) => {
   const count = await BoardProject.count({
     where: {
       project_id: project_id,
-      // [Op.or]: [
-      //   { rank0: { [Op.not]: null } },
-      //   { rank1: { [Op.not]: null } },
-      //   { rank2: { [Op.not]: null } },
-      //   { rank3: { [Op.not]: null } },
-      //   { rank4: { [Op.not]: null } },
-      //   { rank5: { [Op.not]: null } },
-      // ]
+      [Op.or]: [
+        { rank0: { [Op.not]: null } },
+        { rank1: { [Op.not]: null } },
+        { rank2: { [Op.not]: null } },
+        { rank3: { [Op.not]: null } },
+        { rank4: { [Op.not]: null } },
+        { rank5: { [Op.not]: null } },
+      ]
     },
     include: [{
       model: Board,
@@ -3102,14 +3103,14 @@ const getBoardProjectData = async (project_id, type) => {
   const boardProject = await BoardProject.findAll({
     where: {
       project_id: project_id,
-      // [Op.or]: [
-      //   { rank0: { [Op.not]: null } },
-      //   { rank1: { [Op.not]: null } },
-      //   { rank2: { [Op.not]: null } },
-      //   { rank3: { [Op.not]: null } },
-      //   { rank4: { [Op.not]: null } },
-      //   { rank5: { [Op.not]: null } },
-      // ]
+      [Op.or]: [
+        { rank0: { [Op.not]: null } },
+        { rank1: { [Op.not]: null } },
+        { rank2: { [Op.not]: null } },
+        { rank3: { [Op.not]: null } },
+        { rank4: { [Op.not]: null } },
+        { rank5: { [Op.not]: null } },
+      ]
     },
     attributes: [
       'board_project_id',
@@ -3286,12 +3287,6 @@ const getProjectsInBoard = async (locality) => {
   const CODE_SPONSOR = 11;
   return await Project.findAll({
     attributes: ['project_id','project_name'],
-    where: {
-      [Op.or]: [
-        { is_archived: { [Op.ne]: 1 } },
-        { is_archived: null }
-      ]
-    },
     include: [{
       model: ProjectPartner,
       attributes:  ['project_partner_id', 'code_partner_type_id'],
@@ -3332,17 +3327,7 @@ const getProjectsForMHFD = async (filteredProjects) => {
   return await Project.findAll({
     attributes: ['project_id','project_name'],
     where: {
-      [Op.and]: [
-        {
-          [Op.or]: [
-            { is_archived: { [Op.ne]: 1 } },
-            { is_archived: null }
-          ]
-        },
-        {
-          project_id: filteredProjects
-        }
-      ]
+      project_id: filteredProjects
     },
     include: [{
       model: CodeProjectType,
