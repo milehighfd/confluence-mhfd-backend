@@ -1,4 +1,5 @@
 import { saveProjectStream } from 'bc/utils/create';
+import moment from 'moment';
 
 export const updateStreams = async (project_id, streams, creator = 'conf_db_user', transaction) => {
   try {
@@ -6,7 +7,8 @@ export const updateStreams = async (project_id, streams, creator = 'conf_db_user
       const streamId = stream.stream && stream.stream.stream_id
         ? stream.stream.stream_id
         : stream.stream[0].stream_id;
-        console.log('Stream at update', stream);
+      console.log('Stream at update', stream);
+      const date = moment().format('YYYY-MM-DD HH:mm:ss');
       return saveProjectStream({
         project_id: project_id,
         stream_id: streamId,
@@ -18,6 +20,8 @@ export const updateStreams = async (project_id, streams, creator = 'conf_db_user
             : 0,
         created_by: creator,
         last_modified_by: creator,
+        created_date: stream.created_date,
+        modified_date: date
       }, transaction);
     });
     const responses = await Promise.all(promises);

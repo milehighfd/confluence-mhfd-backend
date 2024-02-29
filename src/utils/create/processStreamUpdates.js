@@ -4,6 +4,7 @@ import {
   saveProjectStream,
 } from 'bc/utils/create';
 import db from 'bc/config/db.js';
+import moment from 'moment';
 
 const ProjectStream = db.project_stream;
 const PrimaryStream = db.primaryStream;
@@ -53,7 +54,7 @@ export const processStreamUpdates = async (project_id, newStreams, creator, tran
           transaction: transaction
         });
       }
-
+      const date = moment().format('YYYY-MM-DD HH:mm:ss');
       if (newIds.length > 0) {
         const newData = newStreamsObj.filter(stream => newIds.includes(
           stream.stream && stream.stream.stream_id
@@ -75,6 +76,8 @@ export const processStreamUpdates = async (project_id, newStreams, creator, tran
                 : 0,
             created_by: creator,
             last_modified_by: creator,
+            created_date: date,
+            modified_date: date
           }, transaction);
         });
         await Promise.all(promises);

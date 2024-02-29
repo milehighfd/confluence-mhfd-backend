@@ -45,8 +45,12 @@ router.post('/', async (req, res) => {
   if(table.includes('mep_outfalls') || table.includes('mep_channels')){
     sql = `SELECT the_geom, the_geom_webmercator, cartodb_id, objectid, globalid, onbaseid, mhfd_projectid, mhfd_projectname, mhfd_projecttype, mhfd_servicearea, mhfd_referringagency, mhfd_alternativenames, mhfd_summarynotes, mhfd_projectstatus, mhfd_designapprovaldate::text, mhfd_constructionapprovaldate::text, mhfd_finalacceptancedate::text, mhfd_ineligibledate::text, mhfd_eligibilitystatus, mhfd_eligibilitystatusnotes FROM ${table}`
   }
-  if(table.includes('mep_detentionbasins')){
+  if(table.includes('mep_detentionbasins_1')){
     sql = `SELECT the_geom, the_geom_webmercator, cartodb_id, objectid, globalid, onbaseid, mhfd_projectid, mhfd_projectname, mhfd_projecttype, mhfd_servicearea, mhfd_referringagency, mhfd_alternativenames, mhfd_summarynotes, mhfd_detentionname, mhfd_projectstatus, mhfd_designapprovaldate::text, mhfd_constructionapprovaldate::text, mhfd_finalacceptancedate::text, mhfd_ineligibledate::text, mhfd_eligibilitystatus, mhfd_eligibilitystatusnotes, shape_area, shape_length FROM ${table}` ;
+  }
+  if(table.includes('mep_detentionbasins')){
+    sql = `SELECT cartodb_id, the_geom, the_geom_webmercator, objectid, globalid, pondname, projectno, projectname, projectpartner, partnercaseno, mep_eligibilitystatus, mep_date_designapproval::text, mep_date_constructionapproval::text, mep_date_finalacceptance::text, mep_date_ineligible::text
+         FROM ${table}` ;
   }
   if (table === 'bcz_prebles_meadow_jumping_mouse' || table === 'bcz_ute_ladies_tresses_orchid') {
     sql = `SELECT the_geom, the_geom_webmercator, expiration_date::text, website, letter, map FROM ${table}`;

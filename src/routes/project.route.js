@@ -769,6 +769,7 @@ const getProjectStaff = async (req, res) => {
 const getMhfdStaffUsingCode = async () => {
   const MHFD_ADDRESS_CODE = 4742;
   const INACTIVE_DELETED_CODE = [5, 6];
+  const AVOID_MHFD_SERVICES = 'MHFD Services';
   const mhfdStaff = await BusinessAssociateContact.findAll({
     where: {
       business_address_id: MHFD_ADDRESS_CODE,
@@ -788,7 +789,7 @@ const getMhfdStaffUsingCode = async () => {
     return { value: data?.contact_name, id: data?.business_associate_contact_id };
   });
   let uniqueGroups = [...new Map(groups.map(item => [item['id'], item])).values()];
-  uniqueGroups = uniqueGroups.filter(obj => Object.keys(obj).length !== 0);
+  uniqueGroups = uniqueGroups.filter(obj => Object.keys(obj).length !== 0 && obj.value !== AVOID_MHFD_SERVICES);
   uniqueGroups.sort((a, b) => {
     return a.value.localeCompare(b.value);
   });
@@ -943,6 +944,8 @@ const updateActiveDetails = async (req, res) => {
           last_modified_by: creator,
           is_active: true,
           drainage_area_in_acres: 0,
+          created_date: date,
+          modified_date: date
         }, {
           transaction: transaction
         });
