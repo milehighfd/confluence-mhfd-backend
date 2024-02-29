@@ -684,7 +684,6 @@ const getProjectStreams = async (req, res) => {
       }));
     } else {
       uniqueProjectStreams = projectStreams.reduce((unique, ps) => {
-        console.log(ps)
         if (!unique.find(item => item.stream_id === ps.stream_id)) {
           unique.push({
             project_stream_id: ps.project_stream_id,
@@ -725,14 +724,15 @@ const getProjectStreams = async (req, res) => {
       }]
     });
     let flatPrimaryStream;
-    
+    console.log('streams')
+    console.log(JSON.stringify(primaryStream, null, 2));
     if (primaryStream) {
       flatPrimaryStream = {
         primary_stream_id: primaryStream.primary_stream_id,
-        project_stream_id: primaryStream.ProjectStream.project_stream_id,
-        project_id: primaryStream.ProjectStream.project_id,
-        stream_id: primaryStream.ProjectStream.stream_id,
-        stream_name: primaryStream.ProjectStream.Stream.stream_name,
+        project_stream_id: primaryStream.project_stream.project_stream_id,
+        project_id: primaryStream.project_stream.project_id,
+        stream_id: primaryStream.project_stream.stream_id,
+        stream_name: primaryStream.project_stream.stream.stream_name,
       };
     }
 
@@ -758,12 +758,41 @@ const getProjectStaff = async (req, res) => {
         required: true,
       }],
     });
-    const mhfdStaff = await groupService.getMhfdStaff();
+    const mhfdStaff = await getMhfdStaffUsingCode();
     return ({ mhfdLead: mhfdLead, mhfdStaff: mhfdStaff });
   } catch (e) {
     console.error(e);
     res.status(500).send({message: 'Error getting project staff'});
   }
+}
+
+const getMhfdStaffUsingCode = async () => {
+  const MHFD_ADDRESS_CODE = 4742;
+  const INACTIVE_DELETED_CODE = [5, 6];
+  const mhfdStaff = await BusinessAssociateContact.findAll({
+    where: {
+      business_address_id: MHFD_ADDRESS_CODE,
+      code_contact_type_id: {
+        [Op.or]: [
+          { [Op.is]: null },
+          { [Op.notIn]: INACTIVE_DELETED_CODE }
+        ]
+      }
+    },
+    include: [{
+      model: User,
+      required: false,
+    }]
+  });
+  const groups = mhfdStaff.map((data) => {
+    return { value: data?.contact_name, id: data?.business_associate_contact_id };
+  });
+  let uniqueGroups = [...new Map(groups.map(item => [item['id'], item])).values()];
+  uniqueGroups = uniqueGroups.filter(obj => Object.keys(obj).length !== 0);
+  uniqueGroups.sort((a, b) => {
+    return a.value.localeCompare(b.value);
+  });
+  return uniqueGroups;
 }
 
 const getProjectLocation = async (req, res) => {
