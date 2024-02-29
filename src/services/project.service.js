@@ -1381,27 +1381,25 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
 			  where: where
 			},
 		  }]
-	  }));
-	} else {
-    if(status.length===0 && originFunction === 'listProjects') {
-      let where = {};
-      where = { code_status_type_id: defaultStatus };
-      conditions.push(//STATUS
-        Project.findAll({
-          attributes: ["project_id","code_project_type_id", "project_name"],
-          include: [{
+    }));
+  } else {
+    let where = {};
+    where = { code_status_type_id: defaultStatus };
+    conditions.push(//STATUS
+      Project.findAll({
+        attributes: ["project_id", "code_project_type_id", "project_name"],
+        include: [{
           model: ProjectStatus,
           attributes: [],
           as: 'currentId',
-          required:true ,
+          required: true,
           include: {
             model: CodePhaseType,
-            required:true ,
+            required: true,
             where: where
           },
-  		    }]
-  	  }));
-    }
+        }]
+      }));
   }
   if (phase.length) {	  
 	  conditions.push(//PHASE
