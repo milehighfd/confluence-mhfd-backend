@@ -1,8 +1,10 @@
 import { saveProjectStream } from 'bc/utils/create';
+import moment from 'moment';
 
 export const saveProjectStreams = async (project_id, streams, creator = 'conf_db_user', transaction = null) => {
   try {
     const promises = [];
+    const date = moment().format('YYYY-MM-DD HH:mm:ss');
     for (const stream of JSON.parse(streams)) {
       const promise = saveProjectStream({
         project_id: project_id,
@@ -15,6 +17,8 @@ export const saveProjectStreams = async (project_id, streams, creator = 'conf_db
             : 0,
         created_by: creator,
         last_modified_by: creator,
+        created_date: date,
+        modified_date: date
       }, transaction);
       promises.push(promise);
     }

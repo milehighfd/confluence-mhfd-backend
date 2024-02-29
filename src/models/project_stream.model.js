@@ -32,6 +32,14 @@ export default (sequelize, DataType) => {
     created_by: {
       type: DataType.STRING,
       allowNull: false
+    },
+    created_date: {
+      type: DataType.DATE,
+      allowNull: false
+    },
+    modified_date: {
+      type: DataType.DATE,
+      allowNull: false
     }
   }, {
     freezeTableName: true,
