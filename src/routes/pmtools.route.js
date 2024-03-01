@@ -323,7 +323,7 @@ const listProjects = async (req, res) => {
 const getDataForGroupFilters = async (req, res) => {
   try {
     logger.info(`Starting endpoint pmtools/groups/:groupname/:filtervalue with params`);
-    const { groupname, filtervalue } = req.params;
+    const { groupname, filtervalue, origin = '' } = req.params;
     const { page = 1, limit = 20, sortby, sortorder, code_project_type_id } = req.query;
     const { body } = req;
     const extraFilters = {};
@@ -335,7 +335,7 @@ const getDataForGroupFilters = async (req, res) => {
     logger.info(`page=${page} limit=${limit}`);
     logger.info(`Starting function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
     logger.info(`Filtering by lgmanager ${groupname, filtervalue, code_project_type_id}...`);
-    const group = await projectService.filterProjectsBy(body, groupname, filtervalue, code_project_type_id);
+    const group = await projectService.filterProjectsBy(body, groupname, filtervalue, code_project_type_id, origin);
     logger.info(`Finished function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
     logger.info(`Starting function getProjects for endpoint project/`);
     let projects = await projectService.getProjects(null, null, group, page, limit, body);
@@ -356,14 +356,14 @@ const getDataForGroupFilters = async (req, res) => {
 const countDataForGroupFilters = async (req, res) => {
   try {
     logger.info(`Starting endpoint pmtools/groups/:groupname/:filtervalue with params`);
-    const { groupname, filtervalue } = req.params;
+    const { groupname, filtervalue, origin = '' } = req.params;
     const filtervalue2 = filtervalue.split('&').filter((f) => !f.includes('sortby') && !f.includes('sortorder')).join('&');
     const { page = 1, limit = 20, code_project_type_id } = req.query;
     const { body } = req;
     logger.info(`page=${page} limit=${limit}`);
     logger.info(`Starting function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
-    logger.info(`Filtering by lgmanager ${JSON.stringify(filtervalue2)}...`);
-    const group = await projectService.filterProjectsBy(body, groupname, filtervalue2, code_project_type_id);
+    console.log(body, 'FILTER VALUE 2')
+    const group = await projectService.filterProjectsBy(body, groupname, filtervalue2, code_project_type_id, origin);
     logger.info(`Finished function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
     logger.info(`Starting function getProjects for endpoint project/`);    
     const set = new Set(group.map((p) => p?.project_id));
@@ -378,7 +378,7 @@ const countDataForGroupFilters = async (req, res) => {
 
 router.post('/list', listProjects);
 router.get('/groups/:groupname', getGroup);
-router.post('/groupsFilter/:groupname/:filtervalue', getDataForGroupFilters);
-router.post('/groupsFilter/count/:groupname/:filtervalue', countDataForGroupFilters);
+router.post('/groupsFilter/:groupname/:filtervalue/:origin', getDataForGroupFilters);
+router.post('/groupsFilter/count/:groupname/:filtervalue/:origin', countDataForGroupFilters);
 
 export default router;

@@ -1015,7 +1015,7 @@ const getLightDetails = async (project_id) => {
   return project;
 }
 
-const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) => {  
+const filterProjectsBy = async (filter, groupname, filtervalue, type_id, origin) => {  
   const CONSULTANT_ID = 3;  
   const CIVIL_CONTRACTOR_ID = 8;
   const ESTIMATED_ID = 1;
@@ -1383,7 +1383,9 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
 		  }]
 	  }));
 	} else {
-    if(status.length===0 && originFunction === 'listProjects') {
+    const ORIGIN_PM_TOOLS = 'pm_tools';
+    if(originFunction === 'listProjects' || originFunction === ORIGIN_PM_TOOLS) {
+      console.log('listProjects')
       let where = {};
       where = { code_status_type_id: defaultStatus };
       conditions.push(//STATUS
@@ -1475,70 +1477,75 @@ const filterProjectsBy = async (filter, groupname, filtervalue,type_id, origin) 
   }
   if (conditions.length === 0) {
     conditions.push(Project.findAll({
-      attributes: ["project_id","code_project_type_id", "project_name"],
+      attributes: ["project_id", "code_project_type_id", "project_name"],
     }));
   }
-  let projects = await Promise.all(conditions);
-  projects = projects.map(project => project.map(p => p.toJSON()));
-  // projects = projects?.filter(project => project.length > 0);
-  const counterObject = {};
-  projects?.forEach(project => {
-    project.forEach(p => {
-      counterObject[p.project_id] = counterObject[p.project_id] ? counterObject[p.project_id] + 1 : 1;
-    });
-  });
-  const intersection = Object.keys(counterObject).filter(key => counterObject[key] === projects.length)
-    .map(key => +key);
-  let intersectedProjects = [];
-  intersection.forEach(project_id => {
-    let found = false;
-    projects.forEach(project => {
-      if (!found) {
-        const foundProject = project.find(p => p.project_id === project_id);
-        if (foundProject) {
-          intersectedProjects.push(foundProject);
-          found = true;
-        }
-      }
-    });
-  });
-  const isNumeric = /^\d+$/.test(filterName);
-  if (filterName || filterBase) {
-    if (isNumeric) {
-      intersectedProjects = intersectedProjects;
-    } else {
-      const words = filterName.split(' ').filter(word => word.trim() !== '');
-      intersectedProjects = intersectedProjects.filter(project => {
-        // console.log(project)
-        return words.every(word => {
-          let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
-          const regex = new RegExp(regexPattern, 'i');
-          return regex.test(project.project_name);
-        });
+  try {
+    let projects = await Promise.all(conditions);
+    projects = projects.map(project => project.map(p => p.toJSON()));
+    // projects = projects?.filter(project => project.length > 0);
+    const counterObject = {};
+    projects?.forEach(project => {
+      project.forEach(p => {
+        counterObject[p.project_id] = counterObject[p.project_id] ? counterObject[p.project_id] + 1 : 1;
       });
-    }
-  }    
-  let intersectedProjectsSorted = [];
-  if (sortby) {
-    projectsSorted.forEach((project) => {
-      let found = false;
-      if (!found) {
-        
-        const foundProject = intersectedProjects.find(p => {
-          return p.project_id === project.project_id
-        });
-        if (foundProject) {
-          intersectedProjectsSorted.push(foundProject);
-          found = true;
-        }
-      }
     });
-  } else {
-    intersectedProjectsSorted = intersectedProjects;
+    const intersection = Object.keys(counterObject).filter(key => counterObject[key] === projects.length)
+      .map(key => +key);
+    let intersectedProjects = [];
+    intersection.forEach(project_id => {
+      let found = false;
+      projects.forEach(project => {
+        if (!found) {
+          const foundProject = project.find(p => p.project_id === project_id);
+          if (foundProject) {
+            intersectedProjects.push(foundProject);
+            found = true;
+          }
+        }
+      });
+    });
+    const isNumeric = /^\d+$/.test(filterName);
+    if (filterName || filterBase) {
+      if (isNumeric) {
+        intersectedProjects = intersectedProjects;
+      } else {
+        const words = filterName.split(' ').filter(word => word.trim() !== '');
+        intersectedProjects = intersectedProjects.filter(project => {
+          // console.log(project)
+          return words.every(word => {
+            let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
+            const regex = new RegExp(regexPattern, 'i');
+            return regex.test(project.project_name);
+          });
+        });
+      }
+    }
+    let intersectedProjectsSorted = [];
+    if (sortby) {
+      projectsSorted.forEach((project) => {
+        let found = false;
+        if (!found) {
+
+          const foundProject = intersectedProjects.find(p => {
+            return p.project_id === project.project_id
+          });
+          if (foundProject) {
+            intersectedProjectsSorted.push(foundProject);
+            found = true;
+          }
+        }
+      });
+    } else {
+      intersectedProjectsSorted = intersectedProjects;
+    }
+    // console.log('intersectedProjects', intersectedProjectsSorted.map(p => ({id: p.project_id, cost: JSON.stringify(p)})));
+    console.log('lengthFinal', intersectedProjects.length, 'sorted', intersectedProjectsSorted.length, 'bf inter', projectsSorted.length);
+    return intersectedProjectsSorted;
+  } catch (error) {
+    logger.error(error);
+    throw error;
   }
-  // console.log('intersectedProjects', intersectedProjectsSorted.map(p => ({id: p.project_id, cost: JSON.stringify(p)})));
-  console.log('lengthFinal', intersectedProjects.length,'sorted', intersectedProjectsSorted.length, 'bf inter', projectsSorted.length);
-  return intersectedProjectsSorted;
 }
 
 let cache = null;
