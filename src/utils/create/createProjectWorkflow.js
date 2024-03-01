@@ -357,7 +357,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
       extra_fields, 
       lastProject, 
       boardProjectId,
-      boardValues: boardValues.dataValues
+      boardValues: boardValues
     };
     return composeData;
   } catch (error) {
