@@ -138,7 +138,8 @@ const addToBoard = async (body, user, type, subtype, transaction, project_id) =>
     splitedJurisdiction,
     splitedCounty,
     splitedServicearea,
-    sponsorId
+    sponsorId,
+    sponsor
   );
   try {
     const localNames = await getLocalitiesNames(localitiesBoard, transaction);

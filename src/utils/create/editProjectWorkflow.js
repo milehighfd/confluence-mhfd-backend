@@ -243,7 +243,8 @@ const editWRBoard = async (body, user, type, subtype, transaction, project_id) =
     [],
     [],
     [],
-    sponsorId
+    sponsorId,
+    sponsor
   );
   try {
     const localNames = await getLocalitiesNames(localitiesBoard, transaction);

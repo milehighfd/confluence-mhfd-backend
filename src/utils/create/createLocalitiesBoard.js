@@ -1,4 +1,14 @@
-export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, splitedJurisdiction, splitedCounty, splitedServicearea, sponsorId) => {
+export const createLocalitiesBoard = (
+  isWorkPlan,
+  sendToWR,
+  year,
+  PROJECT_TYPE,
+  splitedJurisdiction,
+  splitedCounty,
+  splitedServicearea,
+  sponsorId,
+  sponsor = null
+) => {
   const localitiesBoard = [];
   const typesList = [];
   const YEAR_WORKPLAN_V1 = 2021;
@@ -11,12 +21,10 @@ export const createLocalitiesBoard = (isWorkPlan, sendToWR, year, PROJECT_TYPE, 
       typesList.push('WORK_REQUEST');
     }
   } else {
-    if (sendToWR === 'true') {
-      if (sponsorIdChech) {
-        localitiesBoard.push(sponsorId);
-        console.log('AQUI ANADE WORK_REQUEST 2 ', sendToWR);
-        typesList.push('WORK_REQUEST');
-      }
+    if (sponsorIdChech && sponsor && sponsor !== 'MHFD') {
+      localitiesBoard.push(sponsorId);
+      console.log('AQUI ANADE WORK_REQUEST 2 ', sendToWR);
+      typesList.push('WORK_REQUEST');
     }
     if (year <= YEAR_WORKPLAN_V1) {
       if (PROJECT_TYPE === 'capital' || PROJECT_TYPE === 'maintenance') {
