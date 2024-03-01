@@ -359,7 +359,9 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
     };
     return composeData;
   } catch (error) {
-    await transaction.rollback();
+    if (transaction) {
+      await transaction.rollback();
+    }
     logger.error(error);
     throw error;
   }
