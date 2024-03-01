@@ -345,7 +345,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
         'projecttype'
       ],
       where: {
-        board_id: boardProjectId.dataValues.board_id
+        board_id: boardProjectId.board_id
       }
     });
     
