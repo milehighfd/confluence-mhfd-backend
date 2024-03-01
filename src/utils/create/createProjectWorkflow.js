@@ -306,6 +306,7 @@ const extraFields = async(type, subtype, body, project_id, transaction, creator)
 };
 export const createProjectWorkflow = async (body, user, files, type, subtype) => {
   const transaction = await db.sequelize.transaction();
+  let isCommitted = false;
   try {    
     const data = await createProjects(body, transaction, type, user.email, subtype);
     const { project_id } = data;
@@ -321,6 +322,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
     );    
     const extra_fields = await extraFields(type, subtype, body, project_id, transaction, user.email);    
     await transaction.commit();
+    isCommitted = true;
     const lastProject = await Project.findOne({
       where : {
         project_id: project_id
@@ -359,7 +361,7 @@ export const createProjectWorkflow = async (body, user, files, type, subtype) =>
     };
     return composeData;
   } catch (error) {
-    if (transaction) {
+    if (transaction && !isCommitted) {
       await transaction.rollback();
     }
     logger.error(error);
