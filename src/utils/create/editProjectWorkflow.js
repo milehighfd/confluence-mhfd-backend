@@ -346,7 +346,7 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
     console.log('XB');
     const updateBoardWR = await editWRBoard(body, user, type, subtype, transaction, project_id);
     console.log('XX');
-    const boardData = await updateProjectsInBoard(project_id, projectname, type, subtype, transaction);
+    // const boardData = await updateProjectsInBoard(project_id, projectname, type, subtype, transaction);
     console.log('XD');
     const geoInfo = await parseGeographicInfoAndUpdate(body, project_id, user, transaction);
     console.log('XE');
