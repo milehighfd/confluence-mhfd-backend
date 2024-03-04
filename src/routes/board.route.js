@@ -2278,16 +2278,10 @@ router.post('/import-project', [auth], async (req, res) => {
 			);
 		}
 		const boardId = boardData.dataValues.board_id;
-		const rankValue = await boardService.getPrevLexoRankValue(boardId, 'rank0');
-		const initialBoardProject = await BoardProject.findOne({
-			where: {
-				project_id: project_id
-			}
-		});
 		const newProjectBoard = await BoardProject.create({
 			board_id: boardId,
 			project_id,
-			rank0: rankValue,
+			rank0: null,
 			rank1: null,
 			rank2: null,
 			rank3: null,
@@ -2300,7 +2294,7 @@ router.post('/import-project', [auth], async (req, res) => {
 			req5: null,
 			year1: null,
 			year2: null,
-			origin: initialBoardProject?.origin || 'MHFD District Work Plan',
+			origin: locality || 'MHFD District Work Plan',
 			code_status_type_id: DRAFT_STATUS,
 			created_by: creator,
 			last_modified_by: creator,

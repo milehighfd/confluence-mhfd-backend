@@ -3354,12 +3354,25 @@ const getProjectsToAvoid = async (year) => {
 };
 
 const getProjectsForMHFD = async (filteredProjects) => {
+  const CODE_SPONSOR = 11;
   return await Project.findAll({
     attributes: ['project_id','project_name'],
     where: {
       project_id: filteredProjects
     },
     include: [{
+      model: ProjectPartner,
+      attributes:  ['project_partner_id', 'code_partner_type_id'],
+      where: {
+        code_partner_type_id: CODE_SPONSOR
+      },
+      required: true,
+      include: [{
+        model: BusinessAssociates,
+        attributes: ['business_name'],
+        required: true
+      }]
+    },{
       model: CodeProjectType,
       required: true,
     }]
