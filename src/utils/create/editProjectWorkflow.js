@@ -359,7 +359,7 @@ export const editProjectWorkflow = async (body, user, files, type, subtype, proj
     );
     console.log('************* \n\n\n about to call extra fields');
     const extra_fields = await updateExtraFields(type, subtype, body, project_id, transaction, user.email, isWorkPlan);
-    const composeData = { project_update: data, project_attachments, project_partner, boardData, ...geoInfo, ...extra_fields, updateBoardWR};   
+    const composeData = { project_update: data, project_attachments, project_partner, ...geoInfo, ...extra_fields, updateBoardWR};   
     await transaction.commit();
     return composeData;
   } catch (error) {    
