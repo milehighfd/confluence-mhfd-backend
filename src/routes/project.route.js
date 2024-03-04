@@ -7,7 +7,7 @@ import projectService from 'bc/services/project.service.js';
 import { projectsByFiltersForIds, getIdsInBbox } from 'bc/utils/functionsProjects.js';
 import auth from 'bc/auth/auth.js';
 import { CARTO_URL, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
-import sequelize from 'sequelize';
+import sequelize, { where } from 'sequelize';
 import groupService from 'bc/services/group.service.js';
 
 const Op = sequelize.Op;
@@ -161,6 +161,7 @@ const listOfCosts = async (req, res) => {
 const completeListOfCosts = async (req, res) => {
   logger.info(`Starting endpoint project/projectCost/:project_id with params `);
   const project_id = req.params['project_id'];
+  console.time('completeListOfCosts');
   let projectCost = await ProjectCost.findAll({
     attributes: ['project_cost_id', 'cost', 'modified_by', 'last_modified', 'code_cost_type_id','created'],
     where: {
@@ -194,18 +195,31 @@ const completeListOfCosts = async (req, res) => {
     }],
     order: [['created', 'DESC']]
   });
+  console.timeEnd('completeListOfCosts');
+  console.time('completeListOfCostsUser')
+  const emails = [...new Set(projectCost.filter((pc) => pc.codeSourceData?.code_data_source_type_id === 1)
+    .map((pc) => pc.modified_by))];
+  const allUsers = await getAllUsersByModifiedBy(emails);
   for(let element of projectCost) {
     if(element.codeSourceData?.code_data_source_type_id === 1) {
       const modifiedUser = element.modified_by;
-      let userModified = await User.findOne({
-          attributes: ['firstName', 'lastName'],
-          where: { email: modifiedUser }
-      });
+      let userModified = allUsers.find((u) => u.email === modifiedUser);
       element.dataValues.userModified = userModified;
     } 
   }
+  console.timeEnd('completeListOfCostsUser')
   res.send(projectCost);
 };
+
+function getAllUsersByModifiedBy(emails) {
+  return User.findAll({
+    attributes: ['email', 'firstName', 'lastName'],
+    where: {
+      email: emails
+    }
+  });
+}
+
 const completeListOfEditCosts = async (req, res) => {
   logger.info(`Starting endpoint project/projectCost/:project_id with params `);
   const project_id = req.params['project_id'];
@@ -253,13 +267,13 @@ const completeListOfEditCosts = async (req, res) => {
     }],
     order: [['created', 'DESC']]
   });
+  const emails = [...new Set(projectCost.filter((pc) => pc.codeSourceData?.code_data_source_type_id === 1)
+    .map((pc) => pc.modified_by))];
+  const allUsers = await getAllUsersByModifiedBy(emails);
   for(let element of projectCost) {
     if(element.codeSourceData?.code_data_source_type_id === 1) {
       const modifiedUser = element.modified_by;
-      let userModified = await User.findOne({
-          attributes: ['firstName', 'lastName'],
-          where: { email: modifiedUser }
-      });
+      let userModified = allUsers.find((u) => u.email === modifiedUser);
       element.dataValues.userModified = userModified;
     } 
   }
@@ -274,12 +288,11 @@ const independentActionHistory = async (req, res) => {
     attributes: ['action_name', 'cost', 'modified_date', 'last_modified_by', 'created_date'],
     order: [['created_date', 'DESC']]
   });
+  const emails = [...new Set(independentActions.map((ia) => ia.last_modified_by))];
+  const allUsers = await getAllUsersByModifiedBy(emails);
   for(let element of independentActions) {
       const modifiedUser = element.last_modified_by;
-      let userModified = await User.findOne({
-          attributes: ['firstName', 'lastName'],
-          where: { email: modifiedUser }
-      });
+      let userModified = allUsers.find((u) => u.email === modifiedUser);
       element.dataValues.userModified = userModified;
   }
   
@@ -295,12 +308,11 @@ const proposedActionHistory = async(req, res) => {
     attributes: ['modified_date', 'last_modified_by', 'created_date'],
     order: [['created_date', 'DESC']]
   });
+  const emails = [...new Set(proposedActionHist.map((pa) => pa.last_modified_by))];
+  const allUsers = await getAllUsersByModifiedBy(emails);
   for(let element of proposedActionHist) {
     const modifiedUser = element.last_modified_by;
-    let userModified = await User.findOne({
-        attributes: ['firstName', 'lastName'],
-        where: { email: modifiedUser }
-    });
+    let userModified = allUsers.find((u) => u.email === modifiedUser);
     element.dataValues.userModified = userModified;
   }
   res.send(proposedActionHist);
@@ -316,12 +328,11 @@ const projectStaffHistory = async(req, res) => {
       attributes: ['last_modified_date'],
       order: [['last_modified_date', 'DESC']]
     });
+    const emails = [...new Set(projectStaffHist.map((ps) => ps.last_modified_by))];
+    const allUsers = await getAllUsersByModifiedBy(emails);
     for(let element of projectStaffHist) {
       const modifiedUser = element.last_modified_by;
-      let userModified = await User.findOne({
-          attributes: ['firstName', 'lastName'],
-          where: { email: modifiedUser }
-      });
+      let userModified = allUsers.find((u) => u.email === modifiedUser);
       element.dataValues.userModified = userModified;
     }
     res.send(projectStaffHist);
@@ -345,12 +356,11 @@ const primaryStreamsHistory = async (req, res) => {
       }],
     });
     const primaryStream = projectStream.map(ps => ps.primaryStream).filter(ps => ps);
+    const emails = [...new Set(primaryStream.map((ps) => ps.last_modified_by))];
+    const allUsers = await getAllUsersByModifiedBy(emails);
     for (let element of primaryStream) {
       const modifiedUser = element.primaryStream.last_modified_by;
-      let userModified = await User.findOne({
-        attributes: ['firstName', 'lastName'],
-        where: { email: modifiedUser }
-      });
+      let userModified = allUsers.find((u) => u.email === modifiedUser);
       element.dataValues.userModified = userModified;
     }
     res.send(primaryStream);
@@ -369,12 +379,11 @@ const projectHistory = async(req, res) => {
     attributes: ['modified_date', 'last_modified_by', 'created_date'],
     order: [['created_date', 'DESC']]
   });
+  const emails = [...new Set(projectHistory.map((ph) => ph.last_modified_by))];
+  const allUsers = await getAllUsersByModifiedBy(emails);
   for(let element of projectHistory) {
     const modifiedUser = element.last_modified_by;
-    let userModified = await User.findOne({
-        attributes: ['firstName', 'lastName'],
-        where: { email: modifiedUser }
-    });
+    let userModified = allUsers.find((u) => u.email === modifiedUser);
     element.dataValues.userModified = userModified;
   }
   res.send(projectHistory);
@@ -389,12 +398,11 @@ const detailHistory = async (req, res) => {
     attributes: ['last_modified_by', 'modified_date', 'created_date'],
     order: [['created_date', 'DESC']]
   });
+  const emails = [...new Set(projectDetail.map((pd) => pd.last_modified_by))];
+  const allUsers = await getAllUsersByModifiedBy(emails);
   for(let element of projectDetail) {
     const modifiedUser = element.last_modified_by;
-    let userModified = await User.findOne({
-        attributes: ['firstName', 'lastName'],
-        where: { email: modifiedUser }
-    });
+    let userModified = allUsers.find((u) => u.email === modifiedUser);
     element.dataValues.userModified = userModified;
   }
   res.send(projectDetail);
@@ -409,12 +417,11 @@ const attachmentHistory = async (req, res) => {
     attributes: ['attachment_reference_key', 'created_by','created_date','last_modified_by', 'last_modified_date'],
     order: [['created_date', 'DESC']]
   });
+  const emails = [...new Set(attachments.map((a) => a.last_modified_by))];
+  const allUsers = await getAllUsersByModifiedBy(emails);
   for(let element of attachments) {
       const modifiedUser = element.created_by;
-      let userModified = await User.findOne({
-          attributes: ['firstName', 'lastName'],
-          where: { email: modifiedUser }
-      });
+      let userModified = allUsers.find((u) => u.email === modifiedUser);
       element.dataValues.userModified = userModified;
   }
   res.send(attachments);
