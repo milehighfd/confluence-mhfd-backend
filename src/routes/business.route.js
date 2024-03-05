@@ -259,7 +259,7 @@ router.get('/sponsor-list', async (req, res) => {
 });
 
 router.post('/create-contact/:idaddress', [auth], async (req, res) => {
-  const { business_address_id, contact_name, contact_email, contact_phone_number, user_id } = req.body;
+  const { business_associate_contact_id, contact_name, contact_email, contact_phone_number, user_id } = req.body;
   const { full_address, state, city, zip } = req.body;
   const user = req.user;
   const idAddress = req.params['idaddress'];
@@ -274,13 +274,22 @@ router.post('/create-contact/:idaddress', [auth], async (req, res) => {
       zip,
     };
     updateBusinessAddress = await BusinessAdress.update(businessAdress, { where: { business_address_id: idAddress }, transaction: t });    
-    let contact = await BusinessContact.findOne({ where: { contact_email }, transaction: t });
+    let contact = await BusinessContact.findOne({ 
+      where: { 
+        [Op.or]: [
+          { contact_email: contact_email },
+          { business_associate_contact_id: business_associate_contact_id }
+        ]
+      }, 
+      transaction: t 
+    });
     if (contact) {
       contact = await contact.update({
         idAddress,
         contact_name,
         contact_phone_number,
-        code_contact_type_id: OPERATIONS_CODE
+        code_contact_type_id: OPERATIONS_CODE,
+        contact_email
       }, { transaction: t });
     } else {
       contact = await BusinessContact.create({
