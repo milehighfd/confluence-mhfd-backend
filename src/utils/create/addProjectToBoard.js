@@ -32,8 +32,11 @@ export const addProjectToBoard = async (
       transaction: transaction,
     });
     year = +configuration.value;
+  }  
+  let _projecttype = projecttype.charAt(0).toUpperCase() + projecttype.slice(1);
+  if (projecttype.toLowerCase() === 'research and development') {
+    _projecttype = 'Research and Development';
   }
-  const _projecttype = projecttype.charAt(0).toUpperCase() + projecttype.slice(1);
   let board = await Board.findOne({
     where: {
       type,
