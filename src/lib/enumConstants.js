@@ -176,3 +176,5 @@ export const INITIAL_GAP = 10 * GAP;
 
 //code_contact_type_id for business associate contact
 export const OPERATIONS_CODE = 4;
+
+export const MHFD_CODE = 9999;

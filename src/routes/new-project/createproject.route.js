@@ -7,6 +7,7 @@ import {
 } from 'bc/utils/create';
 import auth from 'bc/auth/auth.js';
 import db from 'bc/config/db.js';
+import { MHFD_CODE } from 'bc/lib/enumConstants.js';
 
 const ServiceArea = db.codeServiceArea;
 const LocalGovernment = db.codeLocalGoverment;
@@ -73,9 +74,10 @@ router.post('/countydata', auth, async (req, res) => {
     JOIN CODE_STATE_COUNTY_CLIP_4326 c ON (lg.Shape.STWithin(c.Shape) = 1 OR (lg.Shape.STIntersection(c.Shape).STArea() / lg.Shape.STArea())> .1)
     WHERE c.state_county_id IN (${stateString})
     `;
-    const result1 = await db.sequelize.query(sqlQuery1, { type: db.sequelize.QueryTypes.SELECT});
-    const result2 = await db.sequelize.query(sqlQuery2, { type: db.sequelize.QueryTypes.SELECT});    
-    res.send({ serviceArea: result1, localGovernment: result2 });
+    const result1 = await db.sequelize.query(sqlQuery1, { type: db.sequelize.QueryTypes.SELECT });
+    const result2 = await db.sequelize.query(sqlQuery2, { type: db.sequelize.QueryTypes.SELECT });
+    let localGovernment = result2.filter(item => item.code_local_government_id !== MHFD_CODE);
+    res.send({ serviceArea: result1, localGovernment });
   } catch (error) {
     console.error('ERROR', error);
     res.status(500).send(error);
