@@ -2002,7 +2002,7 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
 				sort_order: lastSortOrder ? lastSortOrder.sort_order + GAP : INITIAL_GAP
 			}, { transaction });
 		} else if (allYears.length) {
-			if (!subTypeIndex) {
+			if (project_type !== 'Maintenance') {
 				await deactivateCosts(result, sponsor, userData, transaction);
 				for (const currentYear of allYears) {
 					const position = currentYear - year;

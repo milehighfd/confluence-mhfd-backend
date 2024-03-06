@@ -3,7 +3,7 @@ import logger from 'bc/config/logger.js';
 import moment from 'moment';
 import sequelize, { col } from 'sequelize';
 import { LexoRank } from 'lexorank';
-import { CODE_DATA_SOURCE_TYPE, COST_IDS, INITIAL_GAP } from 'bc/lib/enumConstants.js';
+import { CODE_DATA_SOURCE_TYPE, COST_IDS, INITIAL_GAP, OFFSET_MILLISECONDS } from 'bc/lib/enumConstants.js';
 import { getBoardProjectsOfBoardOfColumn, getSortOrderValue } from 'bc/routes/board-project/updateSortOrderFunctions.js';
 import { getSortOrderForUpdate } from 'bc/routes/board-project/rankFunctions.js';
 
@@ -322,11 +322,14 @@ export async function deactivateCosts(result, sponsor, userData, transaction) {
     transaction
   });
 
+  let mainModifiedDate = new Date();
+  
   let promises = boardProjectCosts.map(boardProjectCost => {
+    mainModifiedDate = moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS).toDate();
     const projectCostId = boardProjectCost.projectCostData.project_cost_id;
     const costUpdateData = {
       is_active: false,
-      last_modified: moment().toDate(),
+      last_modified: mainModifiedDate,
       modified_by: userData.email,
       code_cost_type_id: sponsor === 'MHFD' ? COST_IDS.WORK_PLAN_EDITED : COST_IDS.WORK_REQUEST_EDITED,
     };
