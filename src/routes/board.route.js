@@ -1974,7 +1974,7 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
 		if (!allYears.length || (allYears.length === 1 && (allYears[0] === year || allYears[0] + 1 === year))) {
 			//disable the previous entries
 			mainModifiedDate = moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS).toDate();
-			deactivateCosts(result, sponsor, userData, transaction);
+			await deactivateCosts(result, sponsor, userData, transaction);
 			console.log('creating ws project cost')
 			const createdCost = await ProjectCost.create({
 				project_id,
@@ -2003,7 +2003,7 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
 			}, { transaction });
 		} else if (allYears.length) {
 			if (!subTypeIndex) {
-				deactivateCosts(result, sponsor, userData, transaction);
+				await deactivateCosts(result, sponsor, userData, transaction);
 				for (const currentYear of allYears) {
 					const position = currentYear - year;
 					const index = currentYear - allYears[0];
