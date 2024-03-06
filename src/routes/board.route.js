@@ -2006,10 +2006,12 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
 				await deactivateCosts(result, sponsor, userData, transaction);
 				for (const currentYear of allYears) {
 					const position = currentYear - year;
-					const index = currentYear - allYears[0];
+					const index = allYears.indexOf(currentYear);
 					console.log(position, 'positionx')
 					console.log(currentYear, index, 'extraYearsAmounts')
 					mainModifiedDate = moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS).toDate();
+					console.log(extraYearsAmounts)
+					console.log(extraYearsAmounts[index], 'extraYearsAmounts')
 					if (position > 0) {
 						const createdCost = await ProjectCost.create({
 							project_id,
@@ -2039,6 +2041,50 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
 							sort_order: lastSortOrder ? lastSortOrder.sort_order + GAP : INITIAL_GAP
 						}, { transaction });
 					}
+				}
+			} else {
+				await deactivateCosts(result, sponsor, userData, transaction);
+				const yearIndex = allYears.indexOf(year);
+				if (yearIndex !== -1) {
+					allYears.splice(yearIndex, 1);
+					extraYearsAmounts.splice(yearIndex, 1);
+				}
+				mainModifiedDate = moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS).toDate();
+				let isFirstIteration = true;
+				console.log(allYears, extraYearsAmounts, 'allYearsz')
+				for (const currentYear of allYears) {
+					const position = currentYear - year;
+					const index = allYears.indexOf(currentYear);
+					const createdCost = await ProjectCost.create({
+						project_id,
+						cost: extraYearsAmounts[index],
+						code_cost_type_id,
+						created_by: userData.email,
+						modified_by: userData.email,
+						created: mainModifiedDate,
+						last_modified: mainModifiedDate,
+						project_partner_id: projectPartnerId,
+						is_active: 1,
+						code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
+					}, { transaction });
+
+					const lastSortOrder = allNextBoardProjectCosts.find(cost =>
+						cost.req_position === position &&
+						cost.projectCostData.code_cost_type_id === code_cost_type_id &&
+						cost.boardProjectData.board_id === createdBoardProject.board_id
+					);
+					const reqPosition = isFirstIteration ? subTypeIndex : position + 9;
+					console.log(reqPosition, 'reqPositionz')
+					const createdBoardProjectCost = await BoardProjectCost.create({
+						board_project_id: result.board_project_id,
+						project_cost_id: createdCost.project_cost_id,
+						created_by: userData.email,
+						last_modified_by: userData.email,
+						req_position: reqPosition,
+						sort_order: lastSortOrder ? lastSortOrder.sort_order + GAP : INITIAL_GAP
+					}, { transaction });
+
+					isFirstIteration = false;
 				}
 			}
 		}
