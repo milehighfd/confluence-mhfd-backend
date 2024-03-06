@@ -2048,8 +2048,8 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
 			allYears
 		});
 	} catch (error) {
-		await transaction.rollback();
 		console.error(error);
+		if (transaction) await transaction.rollback();		
 		res.status(500).send({
 			error,
 			message: 'An error occurred while updating the boards',
