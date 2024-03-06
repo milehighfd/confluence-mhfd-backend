@@ -2095,8 +2095,57 @@ router.post('/send-to-workplan', [auth], async (req, res) => {
 			last_modified_by: userData.email,
 			created_by: userData.email
 		}, { transaction });
+		const newProjectCost = await ProjectCost.create({
+			project_id: boardProject.project_id,
+			cost: null,
+			code_cost_type_id: COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID,
+			created: moment().format('YYYY-MM-DD HH:mm:ss'),
+			last_modified: moment().format('YYYY-MM-DD HH:mm:ss'),
+			created_by: userData.email,
+			modified_by: userData.email,
+			is_active: 1,
+			code_data_source_type_id: CODE_DATA_SOURCE_TYPE.USER
+		}, { transaction });
+		const firstSortOrder = await BoardProjectCost.findOne({
+      attributes: ['sort_order'],
+      include: [{
+        model: BoardProject,
+        required: true,
+        as: 'boardProjectData',
+        where: {
+          board_id: targetBoardId
+        }
+      }, {
+        model: ProjectCost,
+        required: true,
+        as: 'projectCostData',
+        where: {
+          is_active: true,
+          code_cost_type_id: COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID
+        }
+      }],
+      where: {
+        req_position: 0
+      },
+      order: [['sort_order', 'ASC']],
+      transaction
+    });
+		const createdBoardProjectCost = await BoardProjectCost.create({
+			board_project_id: newBoardProject.board_project_id,
+			project_cost_id: newProjectCost.project_cost_id,
+			created_by: userData.email,
+			last_modified_by: userData.email,
+			req_position: 0,
+			sort_order: firstSortOrder ? firstSortOrder.sort_order - GAP : INITIAL_GAP
+		}, { transaction });
 		await transaction.commit();
-		return res.json({ message: 'Boards created successfully', MhfdBoard, newBoardProject });
+		return res.json({
+			message: 'Boards created successfully',
+			MhfdBoard,
+			newBoardProject,
+			newProjectCost,
+			createdBoardProjectCost
+		});
 	} catch (error) {
 		await transaction.rollback();
 		console.error(`Error creating boards: ${error}`);
