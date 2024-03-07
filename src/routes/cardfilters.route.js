@@ -49,18 +49,21 @@ const getFilters = async (req, res) => {
   data.phaseName = resolvedPromises[10];
   logger.info(`Starting function filterProjectsBy for cardfilters.route/`);
   const origin = body?.origin;
+  console.time('filterProjectsBy');
   let projectsFilterId = await projectService.filterProjectsBy(body, null, null, null, origin);
-  let projects = await projectService.getProjects(null, null, projectsFilterId, 1, 10000000);
-  
+  console.timeEnd('filterProjectsBy');
+  console.time('getProjectsForFilter');
+  let projects = await projectService.getProjectsForFilter(null, null, projectsFilterId, 1, 10000000);
+  console.timeEnd('getProjectsForFilter');
   // projects = await projectsByFilters(projects, body);
-
+  console.log(projects.length, 'projects length')
   if (bounds) {
     logger.info(`Starting function getIdsInBbox for cardfilters.route/`);
     const ids = await getIdsInBbox(bounds);
     const dataIds = ids.map((item) => item.project_id);
     projects = projects.filter((p) => { return dataIds.includes(p.dataValues.project_id)});
   }
-
+  console.log(projects.length, 'projects length2')
 
   const toMatch = [];
   const toCount = {};
@@ -78,14 +81,6 @@ const getFilters = async (req, res) => {
       finalProjects.push(key);
     }
   }
-  // data.status.forEach((d) => {
-  //   d.counter = projects.reduce((pre, current) => {
-  //     if (current?.project_status?.code_phase_type?.code_status_type?.code_status_type_id === d.id) {
-  //       return pre + 1;
-  //     }
-  //     return pre;
-  //   }, 0);
-  // });
   const matchingStatus = data.status.filter(status => {
     return projects.some(project => {
       return project.currentId[0]?.code_phase_type?.code_status_type?.code_status_type_id === status.id;
@@ -98,10 +93,6 @@ const getFilters = async (req, res) => {
       if (current?.project_local_governments?.some( pc => pc?.CODE_LOCAL_GOVERNMENT?.code_local_government_id === +d.id)) {
         return pre + 1;
       }
-
-      // if (current?.localGoverment?.codeLocalGoverment?.code_local_government_id === d.id) {
-      //   return pre + 1;
-      // }
       return pre;
     }, 0);
   });

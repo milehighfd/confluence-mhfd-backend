@@ -2075,6 +2075,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
     if (cache) {
       return JSON.parse(JSON.stringify(cache));
     }
+    console.time('projects123');
     let projects = await Project.findAll({
       where: where,
       // limit: limitRange,
@@ -2201,7 +2202,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
           'LANDSCAPING_AREA',
         ],
       ],  
-      
+
       include: [
         {
           model: ProjectAttachment,
@@ -2221,7 +2222,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
             model: CodeRuleActionItem,
             required: false,
           },
-          where : {
+          where: {
             phase_ordinal_position: {
               [Op.not]: -1
             },
@@ -2244,8 +2245,8 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
           ],
           include: [{
             model: BusinessAssociateContact,
-            required: false,           
-          },{
+            required: false,
+          }, {
             model: CodeProjectStaffRole,
             required: false,
           }]
@@ -2264,8 +2265,8 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
           },
           attributes: [
             'project_service_area_id'
-          ] 
-        },        
+          ]
+        },
         {
           model: ProjectCounty,
           separate: true,
@@ -2408,8 +2409,8 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
               'business_name',
             ]
           },],
-        } 
-        ,{
+        }
+        , {
           model: CodeProjectType,
           required: false,
           attributes: [
@@ -2557,9 +2558,9 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
             model: BusinessAssociate,
             required: false,
             attributes: [
-                'business_name',
-              ]
-            },],
+              'business_name',
+            ]
+          },],
         },
         {
           model: ProjectStaff,
@@ -2577,7 +2578,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
           include: [{
             model: BusinessAssociateContact,
             required: false,
-          },{
+          }, {
             model: CodeProjectStaffRole,
             required: true,
             where: {
@@ -2587,6 +2588,7 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
         }
       ],
     });
+    console.timeEnd('projects123');
     logger.info(`projects found: ${projects.length}`);
     /*
       projects = projects.map(project => {
@@ -2599,6 +2601,163 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
       projects = await sortProjectsByAttrib(projects, project_ids_array, filters);
     }
     return projects;
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+}
+
+const getProjectsForFilter = async (include, bounds, project_ids, page = 1, limit = 20, filters) => {
+  try {
+    let where = {};
+    const offset = (+page - 1) * +limit;
+    const toRange = +offset + +limit;
+    let project_ids_array = project_ids.map(project => project.project_id);
+    project_ids_array = project_ids_array.slice(offset, toRange);
+    where = { project_id: project_ids_array };
+    let limitRange = filters?.sortby ? undefined : limit;
+    let offsetRange = filters?.sortby ? undefined : offset;
+    const includeModels = [
+      {
+        model: CodePhaseType,
+        required: false,
+        include: {
+          model: CodeRuleActionItem,
+          required: false,
+        },
+        where: {
+          phase_ordinal_position: {
+            [Op.not]: -1
+          },
+          code_phase_type_id: {
+            [Op.gt]: 4
+          }
+        },
+      },{
+        model: ProjectServiceArea,
+        separate: true,
+        required: false,
+        include: {
+          model: CodeServiceArea,
+          required: false,
+          attributes: [
+            'service_area_name',
+            'code_service_area_id'
+          ]
+        },
+      },{
+        model: ProjectCounty,
+        separate: true,
+        include: {
+          model: CodeStateCounty,
+          required: false,
+          attributes: [
+            'county_name',
+            'state_county_id'
+          ]
+        },
+      }, {
+        model: ProjectLocalGovernment,
+        separate: true,
+        required: false,
+        include: {
+          model: CodeLocalGoverment,
+          required: false,
+          attributes: [
+            'local_government_name',
+            'code_local_government_id'
+          ]
+        },
+      }, {
+        model: CodeProjectType,
+        required: false,
+        attributes: [
+          'code_project_type_id',
+          'project_type_name'
+        ]
+      }, {
+          model: ProjectStatus,
+          separate: true,
+          required: false,
+          attributes: [
+            'code_phase_type_id'
+          ],
+          as: 'currentId',
+          include: {
+            model: CodePhaseType,
+            required: false,
+            attributes: [
+              'code_phase_type_id',
+              'phase_name',
+            ],
+            include: [{
+              model: CodeStatusType,
+              required: false,
+              attributes: [
+                'status_name',
+                'code_status_type_id'
+              ]
+            }]
+          }
+        }
+    ]    
+
+    const batchSize = 100;
+    const batches = [];
+
+    for (let i = 0; i < project_ids_array.length; i += batchSize) {
+      batches.push(project_ids_array.slice(i, i + batchSize));
+    }
+
+    const promises = includeModels.map(async (model) => {
+      const batchPromises = batches.map(async (batch) => {
+        const batchWhere = { ...where, project_id: batch };
+        return Project.findAll({
+          where: batchWhere,
+          separate: true,
+          attributes: ["project_id"],
+          include: [model],
+        });
+      });
+  
+      const results = await Promise.all(batchPromises);
+      return results.flat();
+    });
+
+    const allResults = await Promise.all(promises);
+    const mergedProjectsById = allResults.reduce((acc, result) => {
+      result.forEach((project) => {
+        const projectId = project.project_id;
+        if (!acc[projectId]) {
+          acc[projectId] = { project_id: projectId };
+        }
+        acc[projectId] = { ...acc[projectId], ...project };
+      });
+      return acc;
+    }, {});
+
+    const mergedResults = Object.values(mergedProjectsById).map((project) => {
+      const currentId = project.currentId?.[0] || null;
+      const codePhaseType = currentId ? currentId.code_phase_type : null;
+      const codeStatusType = codePhaseType ? codePhaseType.code_status_type : null;
+      return {
+        ...project,
+        currentId: currentId
+          ? [
+              {
+                ...currentId,
+                code_phase_type: {
+                  ...codePhaseType,
+                  code_status_type: codeStatusType,
+                  phase_name: codePhaseType.phase_name,
+                },
+              },
+            ]
+          : [],
+      };
+    });
+
+    return mergedResults;
   } catch (error) {
     logger.error(error);
     throw error;
@@ -3416,4 +3575,5 @@ export default {
   getProjectsInBoard,
   getProjectsToAvoid,
   getProjectsForMHFD,
+  getProjectsForFilter
 };
