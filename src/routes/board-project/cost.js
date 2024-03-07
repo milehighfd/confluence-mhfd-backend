@@ -310,7 +310,7 @@ const updateCostNew = async (req, res) => {
                 currentProjectId,
                 board_project_id,
                 moment(mainModifiedDate)
-                    .subtract(OFFSET_MILLISECONDS)
+                    .subtract(OFFSET_MILLISECONDS * i)
                     .toDate(),
                 isWorkPlan,
                 amount.code_cost_type_id
