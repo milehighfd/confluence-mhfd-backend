@@ -592,6 +592,7 @@ async function updateProjectCostOfWorkspace (activeValue, user, currentBusinessA
     });
     const projectsCostsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
     // DESACTIVAR LOS ANTERIORES PROJECT COSTS
+    console.log('last Modified Date', lastModifiedDate);
     const projectCostUpdated = await ProjectCost.update({
       is_active: activeValue,
       code_cost_type_id: isWorkPlan? WP_CODE_COST_TYPE_EDITED: WR_CODE_COST_TYPE_EDITED,
