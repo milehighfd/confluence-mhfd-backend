@@ -2702,28 +2702,15 @@ const getProjectsForFilter = async (include, bounds, project_ids, page = 1, limi
         }
     ]    
 
-    const batchSize = 100;
-    const batches = [];
-
-    for (let i = 0; i < project_ids_array.length; i += batchSize) {
-      batches.push(project_ids_array.slice(i, i + batchSize));
-    }
-
-    const promises = includeModels.map(async (model) => {
-      const batchPromises = batches.map(async (batch) => {
-        const batchWhere = { ...where, project_id: batch };
-        return Project.findAll({
-          where: batchWhere,
-          separate: true,
-          attributes: ["project_id"],
-          include: [model],
-        });
+    const promises = includeModels.map((model) => {
+      return Project.findAll({
+        where: where,
+        separate: true,
+        attributes: ["project_id"],
+        include: [model],
       });
-  
-      const results = await Promise.all(batchPromises);
-      return results.flat();
     });
-
+    
     const allResults = await Promise.all(promises);
     const mergedProjectsById = allResults.reduce((acc, result) => {
       result.forEach((project) => {
@@ -2735,7 +2722,7 @@ const getProjectsForFilter = async (include, bounds, project_ids, page = 1, limi
       });
       return acc;
     }, {});
-
+    
     const mergedResults = Object.values(mergedProjectsById).map((project) => {
       const currentId = project.currentId?.[0] || null;
       const codePhaseType = currentId ? currentId.code_phase_type : null;
