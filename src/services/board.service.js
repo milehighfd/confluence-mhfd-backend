@@ -593,17 +593,28 @@ async function updateProjectCostOfWorkspace (activeValue, user, currentBusinessA
     const projectsCostsIdsToUpdate = currentBoardProjectCosts.map((cbpc) => cbpc.dataValues.project_cost_id);
     // DESACTIVAR LOS ANTERIORES PROJECT COSTS
     console.log('last Modified Date', lastModifiedDate);
-    const projectCostUpdated = await ProjectCost.update({
-      is_active: activeValue,
-      code_cost_type_id: isWorkPlan? WP_CODE_COST_TYPE_EDITED: WR_CODE_COST_TYPE_EDITED,
-      last_modified: lastModifiedDate,
-      modified_by: user.email,
-    }, {
-      where: {
-        project_cost_id: { [Op.in]: projectsCostsIdsToUpdate }
-      }
-    });
-    return Promise.resolve(projectCostUpdated);
+    const updatePromises = [];
+
+    for (let index = 1; index < projectsCostsIdsToUpdate.length + 1; index++) {
+      const projectCostId = projectsCostsIdsToUpdate[index];
+      const updatePromise = ProjectCost.update({
+        is_active: activeValue,
+        code_cost_type_id: isWorkPlan ? WP_CODE_COST_TYPE_EDITED : WR_CODE_COST_TYPE_EDITED,
+        last_modified: moment(lastModifiedDate)
+        .subtract(OFFSET_MILLISECONDS * index)
+        .toDate(),
+        modified_by: user.email,
+      }, {
+        where: {
+          project_cost_id: projectCostId
+        }
+      });
+
+      updatePromises.push(updatePromise);
+    }
+
+    const projectCostUpdated = await Promise.all(updatePromises);
+    return projectCostUpdated;
   } catch (error){
     logger.error("ERROR at Workspace update", error)
     throw error;
