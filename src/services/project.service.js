@@ -2375,11 +2375,33 @@ const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, f
               'code_partner_type_id',
               'partner_type'
             ],
-          }],
-          // where: {
-          //   code_partner_type_id: [3, 8, 11]
-          // }
-        }, {
+          }],          
+        }, 
+        {
+          model: ProjectPartner,
+          as: 'currentPrimeConsultant',
+          attributes: [
+            'project_partner_id',
+            'code_partner_type_id'
+          ],
+          required: false,
+          separate: true,
+          include: [{
+            model: CodeProjectPartnerType,
+            required: true,
+            attributes: [
+              'code_partner_type_id',
+            ],
+            where: { code_partner_type_id: PRIME_CONSULTANT }
+          }, {
+            model: BusinessAssociate,
+            required: false,
+            attributes: [
+              'business_name',
+            ]
+          },],
+        },
+        {
           model: CodeProjectType,
           required: false,
           attributes: [
