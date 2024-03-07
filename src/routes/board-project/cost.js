@@ -275,6 +275,7 @@ const updateCostNew = async (req, res) => {
               const reqColumnName = `req${currentColumn}`;
               const currentReqAmount = amount.values[reqColumnName] ?? null;
               const currentCost = currentReqAmount;
+              mainModifiedDate = moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS * pos).toDate();
               console.log(' COST: About to update boardprojectcosts', amount, currentColumn, currentCost, currentProjectId, board_project_id, currentPartnerTypeId);
               allPromises.push(
                 boardService.updateAndCreateProjectCostsForAmounts(
@@ -285,9 +286,7 @@ const updateCostNew = async (req, res) => {
                   currentPartnerTypeId,
                   user,
                   board_project_id,
-                  moment(mainModifiedDate)
-                    .subtract(OFFSET_MILLISECONDS * pos)
-                    .toDate(),
+                  mainModifiedDate,
                   amount.code_cost_type_id,
                   isWorkPlan,
                   amountsTouched ? amountsTouched[`req${currentColumn}`] : true,
@@ -310,7 +309,9 @@ const updateCostNew = async (req, res) => {
                 currentPartnerTypeId,
                 currentProjectId,
                 board_project_id,
-                moment().toDate(),
+                moment(mainModifiedDate)
+                    .subtract(OFFSET_MILLISECONDS)
+                    .toDate(),
                 isWorkPlan,
                 amount.code_cost_type_id
               )
