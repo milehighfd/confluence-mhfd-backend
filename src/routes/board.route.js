@@ -2043,17 +2043,19 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
 					}
 				}
 			} else {
+				//this offset is to set the cost to 11 and 12
+				const OFFSET_FOR_MAINTENANCE_YEARS = 9;
 				await deactivateCosts(result, sponsor, userData, transaction);
 				const yearIndex = allYears.indexOf(year);
 				if (yearIndex !== -1) {
 					allYears.splice(yearIndex, 1);
 					extraYearsAmounts.splice(yearIndex, 1);
 				}
-				mainModifiedDate = moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS).toDate();
 				let isFirstIteration = true;
 				console.log(allYears, extraYearsAmounts, 'allYearsz')
 				for (const currentYear of allYears) {
 					const position = currentYear - year;
+					mainModifiedDate = moment(mainModifiedDate).subtract(OFFSET_MILLISECONDS * position).toDate();
 					const index = allYears.indexOf(currentYear);
 					const createdCost = await ProjectCost.create({
 						project_id,
@@ -2073,7 +2075,7 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
 						cost.projectCostData.code_cost_type_id === code_cost_type_id &&
 						cost.boardProjectData.board_id === createdBoardProject.board_id
 					);
-					const reqPosition = isFirstIteration ? subTypeIndex : position + 9;
+					const reqPosition = isFirstIteration ? subTypeIndex : position + OFFSET_FOR_MAINTENANCE_YEARS;
 					console.log(reqPosition, 'reqPositionz')
 					const createdBoardProjectCost = await BoardProjectCost.create({
 						board_project_id: result.board_project_id,
@@ -2091,7 +2093,7 @@ router.post('/update-boards-approved', [auth], async (req, res) => {
 		await transaction.commit();
 		res.send({
 			createdBoards,
-			allYears
+			allYears,
 		});
 	} catch (error) {
 		console.error(error);
