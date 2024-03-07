@@ -1284,7 +1284,7 @@ function globallySortAndNumber(data) {
 	Object.keys(data).forEach(key => {
 			result[key] = {};
 			Object.entries(data[key]).forEach(([position, value]) => {
-					const rank = positionValues[position].indexOf(value) + 1;
+					const rank = positionValues[position].indexOf(value);
 					result[key][position] = rank;
 			});
 	});
