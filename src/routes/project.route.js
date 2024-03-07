@@ -494,17 +494,29 @@ const countGlobalSearch = async (req, res) => {
     const { keyword } = req.body;
     const projects = await projectService.globalSearch(keyword);
     let filteredProjects = [];
+
     const isNumeric = /^\d+$/.test(keyword);
     if (isNumeric) {
       filteredProjects = projects;
     } else {
       const words = keyword.split(' ').filter(word => word.trim() !== '');
+      const shortWords = words.filter(word => word.length === 4);
+      const longWords = words.filter(word => word.length !== 4);
+
       filteredProjects = projects.filter(project => {
-        return words.every(word => {
+        const projectName = project.project_name;
+        const matchesShortWords = shortWords.some(word => {
+          const regex = new RegExp(word, 'i');
+          return regex.test(projectName);
+        });
+
+        const matchesLongWords = longWords.every(word => {
           let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
           const regex = new RegExp(regexPattern, 'i');
-          return regex.test(project.project_name);
+          return regex.test(projectName);
         });
+
+        return matchesShortWords || matchesLongWords;
       });
     }
     const projectsIds = filteredProjects.map(p => p.project_id);
@@ -524,17 +536,29 @@ const globalSearch = async (req, res) => {
     const { keyword, type } = req.body;
     const projects = await projectService.globalSearch(keyword);
     let filteredProjects = [];
+    
     const isNumeric = /^\d+$/.test(keyword);
     if (isNumeric) {
       filteredProjects = projects;
     } else {
       const words = keyword.split(' ').filter(word => word.trim() !== '');
+      const shortWords = words.filter(word => word.length === 4);
+      const longWords = words.filter(word => word.length !== 4);
+    
       filteredProjects = projects.filter(project => {
-        return words.every(word => {
+        const projectName = project.project_name;
+        const matchesShortWords = shortWords.some(word => {
+          const regex = new RegExp(word, 'i');
+          return regex.test(projectName);
+        });
+    
+        const matchesLongWords = longWords.every(word => {
           let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
           const regex = new RegExp(regexPattern, 'i');
-          return regex.test(project.project_name);
+          return regex.test(projectName);
         });
+    
+        return matchesShortWords || matchesLongWords;
       });
     }
     const projectsIds = filteredProjects.map(p => p.project_id);
@@ -581,22 +605,32 @@ const searchImport = async (req, res) => {
   try {
     const projects = await projectService.projectSearch(keyword);
     let filteredProjects = [];
+
     const isNumeric = /^\d+$/.test(keyword);
     if (isNumeric) {
       filteredProjects = projects.map(project => project.project_id);
     } else {
       const words = keyword.split(' ').filter(word => word.trim() !== '');
+      const shortWords = words.filter(word => word.length === 4);
+      const longWords = words.filter(word => word.length !== 4);
+
       filteredProjects = projects.filter(project => {
-        return words.every(word => {
+        const projectName = project.project_name;
+        const matchesShortWords = shortWords.some(word => {
+          const regex = new RegExp(word, 'i');
+          return regex.test(projectName);
+        });
+
+        const matchesLongWords = longWords.every(word => {
           let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
           const regex = new RegExp(regexPattern, 'i');
-          return regex.test(project.project_name);
+          return regex.test(projectName);
         });
+
+        return matchesShortWords || matchesLongWords;
       });
-      // const getProjectsBySponsor = await projectService.getProjectsBySponsor(keyword);
+
       const projectsIds = filteredProjects.map(p => p.project_id);
-      // const projectsBySponsorIds = getProjectsBySponsor.map(p => p.project_id);
-      // const mergedProjects = [...projectsIds, ...projectsBySponsorIds];
       filteredProjects = projectsIds;
     }
     let projectsInBoard = [];
