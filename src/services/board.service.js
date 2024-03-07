@@ -732,7 +732,7 @@ const updateAndCreateProjectCostsForAmounts = async (
           req_position: currentColumn,
           created_by: user.email,
           last_modified_by: user.email,
-          sort_order: currentSortOrderInBoard ?? 0
+          sort_order: currentSortOrderInBoard ?? INITIAL_GAP
       });
       console.log('Board project cost created ',JSON.stringify(bpcreated));
       return Promise.resolve(bpcreated);
