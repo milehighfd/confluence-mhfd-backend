@@ -2057,7 +2057,6 @@ const getUpcomingProjects = async (include, bounds, project_ids, page = 1, limit
 const getProjects = async (include, bounds, project_ids, page = 1, limit = 20, filters) => {  
   const PRIME_CONSULTANT = 13;
   const CONSULTANT = 3;
-  const PRIME_CONSULTANT = 13;
   const LANDSCAPE_CONTRACTOR_ID = 9;
   const CIVIL_CONTRACTOR_ID = 8;
   const LG_LEAD = 10;
