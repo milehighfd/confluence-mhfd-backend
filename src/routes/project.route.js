@@ -496,28 +496,27 @@ const countGlobalSearch = async (req, res) => {
     let filteredProjects = [];
 
     const isNumeric = /^\d+$/.test(keyword);
-    if (isNumeric) {
+   if (isNumeric) {
       filteredProjects = projects;
     } else {
       const words = keyword.split(' ').filter(word => word.trim() !== '');
-      const shortWords = words.filter(word => word.length === 4);
-      const longWords = words.filter(word => word.length !== 4);
 
       filteredProjects = projects.filter(project => {
         const projectName = project.project_name;
-        const matchesShortWords = shortWords.some(word => {
-          const regex = new RegExp(word, 'i');
-          return regex.test(projectName);
+        const matchesWords = words.some(word => {
+          if (word.length >= 4) {
+            const regex = new RegExp(word, 'i');
+            return regex.test(projectName);
+          } else {
+            let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
+            const regex = new RegExp(regexPattern, 'i');
+            return regex.test(projectName);
+          }
         });
 
-        const matchesLongWords = longWords.every(word => {
-          let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
-          const regex = new RegExp(regexPattern, 'i');
-          return regex.test(projectName);
-        });
-
-        return matchesShortWords || matchesLongWords;
+        return matchesWords;
       });
+
     }
     const projectsIds = filteredProjects.map(p => p.project_id);
     logger.info('project name already exists');
@@ -542,24 +541,23 @@ const globalSearch = async (req, res) => {
       filteredProjects = projects;
     } else {
       const words = keyword.split(' ').filter(word => word.trim() !== '');
-      const shortWords = words.filter(word => word.length === 4);
-      const longWords = words.filter(word => word.length !== 4);
-    
+
       filteredProjects = projects.filter(project => {
         const projectName = project.project_name;
-        const matchesShortWords = shortWords.some(word => {
-          const regex = new RegExp(word, 'i');
-          return regex.test(projectName);
+        const matchesWords = words.some(word => {
+          if (word.length >= 4) {
+            const regex = new RegExp(word, 'i');
+            return regex.test(projectName);
+          } else {
+            let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
+            const regex = new RegExp(regexPattern, 'i');
+            return regex.test(projectName);
+          }
         });
-    
-        const matchesLongWords = longWords.every(word => {
-          let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
-          const regex = new RegExp(regexPattern, 'i');
-          return regex.test(projectName);
-        });
-    
-        return matchesShortWords || matchesLongWords;
+
+        return matchesWords;
       });
+
     }
     const projectsIds = filteredProjects.map(p => p.project_id);
     if (projectsIds && (type === 'WORK_REQUEST' || type === 'WORK_PLAN')) {
@@ -609,25 +607,25 @@ const searchImport = async (req, res) => {
     const isNumeric = /^\d+$/.test(keyword);
     if (isNumeric) {
       filteredProjects = projects.map(project => project.project_id);
+    } else if (keyword === '') {
+      filteredProjects = projects.map(project => project.project_id);
     } else {
       const words = keyword.split(' ').filter(word => word.trim() !== '');
-      const shortWords = words.filter(word => word.length === 4);
-      const longWords = words.filter(word => word.length !== 4);
 
       filteredProjects = projects.filter(project => {
         const projectName = project.project_name;
-        const matchesShortWords = shortWords.some(word => {
-          const regex = new RegExp(word, 'i');
-          return regex.test(projectName);
+        const matchesWords = words.some(word => {
+          if (word.length >= 4) {
+            const regex = new RegExp(word, 'i');
+            return regex.test(projectName);
+          } else {
+            let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
+            const regex = new RegExp(regexPattern, 'i');
+            return regex.test(projectName);
+          }
         });
 
-        const matchesLongWords = longWords.every(word => {
-          let regexPattern = word === '@' ? `@` : `\\b${word}\\b`;
-          const regex = new RegExp(regexPattern, 'i');
-          return regex.test(projectName);
-        });
-
-        return matchesShortWords || matchesLongWords;
+        return matchesWords;
       });
 
       const projectsIds = filteredProjects.map(p => p.project_id);
