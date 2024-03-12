@@ -88,6 +88,7 @@ router.get('/reverse-lexorank-update', async (req, res) => {
             required: true,
 						where: {
 							is_active: true,
+							code_cost_type_id: [21, 22]
 						}
 					}
 				]
@@ -163,8 +164,6 @@ router.get('/reverse-lexorank-update', async (req, res) => {
           console.log('update', board_project_id);
           prs.push(BoardProjectCost.update(
             {
-              req_position: index,
-              board_project_id: board_project_id,
               sort_order: sortOrderValue ,
               last_modified_by: 'system',
             },
@@ -189,6 +188,7 @@ router.get('/reverse-lexorank-update', async (req, res) => {
 		}
 	}
 	await Promise.all(prs);
+	console.log('End of update. Counter:', c);
 	res.send({
 		counter: c,
 	});
