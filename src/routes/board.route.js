@@ -872,13 +872,21 @@ router.post('/board-for-positions2', async (req, res) => {
 			const rankValue = project[rankKey];
 		
 			if (reqPosition !== undefined && reqPosition !== null && (rankValue === undefined || rankValue === null)) {
-				return { ...project, inaccuracy: true };
+				return {
+					...project,
+					inaccuracy: true,
+					inaccuracyMessage: `Required position (${reqPosition}) exists but corresponding rank (${rankKey}) is missing.`
+				};
 			} else {
-				return { ...project, inaccuracy: false };
+				return {
+					...project,
+					inaccuracy: false,
+					inaccuracyMessage: ''
+				};
 			}
-		});		
-
-		res.send(projectSortedWithInaccuracy.filter(r => r.projectData));
+		});
+		const filteredProjectsWithInaccuracy = projectSortedWithInaccuracy.filter(project => project.projectData);		
+		res.send(filteredProjectsWithInaccuracy);
 	} catch (error) {
 		logger.error('ERROR AT POSITIONS2 ' + error);
 		return res.status(500).send({ error });
