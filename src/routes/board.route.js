@@ -189,7 +189,7 @@ router.get('/reverse-lexorank-update', async (req, res) => {
 	}
 	await Promise.all(prs);
 	console.log('End of update. Counter:', c);
-	res.send({
+;	res.send({
 		counter: c,
 	});
 });
@@ -706,6 +706,7 @@ router.post('/board-for-positions2', async (req, res) => {
 				where: {
 					req_position: position
 				},
+        required: true,
 				include: [
 					{
 						model: ProjectCost,
@@ -714,7 +715,17 @@ router.post('/board-for-positions2', async (req, res) => {
 						where: {
 							is_active: true,
 							code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
-						}
+						},
+            include: [
+              {
+                model: ProjectPartner,
+                as: 'projectPartnerData',
+                required: true,
+                where: {
+                  code_partner_type_id: COST_IDS.MHFD_CODE_COST_TYPE_ID
+                }
+              }
+            ]
 					}
 				]
 			}]
@@ -730,23 +741,24 @@ router.post('/board-for-positions2', async (req, res) => {
 
 			const projectIds = boardProjects.map((boardProject) => boardProject.project_id);
       console.log('\n \n the project ids', projectIds);
-			const MHFD_Partner = await ProjectPartner.findAll({
-				where: {
-					project_id: { [Op.in]: projectIds },
-					code_partner_type_id: COST_IDS.MHFD_CODE_COST_TYPE_ID
-				}
-			});
+			// const MHFD_Partner = await ProjectPartner.findAll({
+			// 	where: {
+			// 		project_id: { [Op.in]: projectIds },
+			// 		code_partner_type_id: COST_IDS.MHFD_CODE_COST_TYPE_ID
+			// 	}
+			// });
 
-			const Mhfd_ids = MHFD_Partner.map((mhfd) => mhfd.project_partner_id);
+			// const Mhfd_ids = MHFD_Partner.map((mhfd) => mhfd.project_partner_id);
 			const projectCostValues = await BoardProjectCost.findAll({
 				attributes: ['req_position', 'board_project_id'],
 				include: [{
 					attributes: ['cost', 'project_cost_id', 'project_partner_id', 'project_id'],
 					model: ProjectCost,
 					as: 'projectCostData',
+          required: true,
 					where: {
 						is_active: true,
-						project_partner_id: { [Op.in]: Mhfd_ids },
+						// project_partner_id: { [Op.in]: Mhfd_ids },
 						code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
 					}
 				}],
@@ -755,6 +767,7 @@ router.post('/board-for-positions2', async (req, res) => {
 					req_position: position
 				}
 			});
+      console.log('project cost values', projectCostValues);
 			boardProjects.forEach((boardProject) => {
 				const projectCostValue = projectCostValues.find((pcv) => pcv.board_project_id === boardProject.board_project_id);
 				if (projectCostValue) {
@@ -854,12 +867,17 @@ router.post('/board-for-positions2', async (req, res) => {
 			return boardProject;
 		})
 		logger.info(`Finished endpoint for board/board-for-positions2`);
-		const projectSorted = boardProjectsWithData.sort((a, b) => {
-			if (a.boardProjectToCostData[0].sort_order === null) return 1;
-			if (b.boardProjectToCostData[0].sort_order === null) return -1;
-			return a.boardProjectToCostData[0].sort_order - b.boardProjectToCostData[0].sort_order;
-		});
-		res.send(projectSorted.filter(r => r.projectData));
+    try {
+      const projectSorted = boardProjectsWithData.sort((a, b) => {
+        if (a.boardProjectToCostData[0]?.sort_order === null) return 1;
+        if (b.boardProjectToCostData[0]?.sort_order === null) return -1;
+        return a.boardProjectToCostData[0]?.sort_order - b.boardProjectToCostData[0]?.sort_order;
+      });
+      res.send(projectSorted);
+    } catch(errorLast){
+      logger.error('error at sort projects'+ errorLast);
+    }
+		
 	} catch (error) {
 		logger.error('ERROR AT POSITIONS2 ' + error);
 		return res.status(500).send({ error });
