@@ -647,6 +647,12 @@ router.post('/board-for-positions2', async (req, res) => {
 			'origin',
 			originPositionColumnName,
 			'code_status_type_id',
+			'rank0',
+			'rank1',
+			'rank2',
+			'rank3',
+			'rank4',
+			'rank5',
 		];
 		const where = {
 			board_id: {[Op.in]: boardIds},
@@ -859,7 +865,20 @@ router.post('/board-for-positions2', async (req, res) => {
 			if (b.boardProjectToCostData[0].sort_order === null) return -1;
 			return a.boardProjectToCostData[0].sort_order - b.boardProjectToCostData[0].sort_order;
 		});
-		res.send(projectSorted.filter(r => r.projectData));
+
+		const projectSortedWithInaccuracy = projectSorted.map(project => {
+			const reqPosition = project.boardProjectToCostData[0].req_position;
+			const rankKey = `rank${reqPosition}`;
+			const rankValue = project[rankKey];
+		
+			if (reqPosition !== undefined && reqPosition !== null && (rankValue === undefined || rankValue === null)) {
+				return { ...project, inaccuracy: true };
+			} else {
+				return { ...project, inaccuracy: false };
+			}
+		});		
+
+		res.send(projectSortedWithInaccuracy.filter(r => r.projectData));
 	} catch (error) {
 		logger.error('ERROR AT POSITIONS2 ' + error);
 		return res.status(500).send({ error });
