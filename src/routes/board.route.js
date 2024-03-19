@@ -71,6 +71,9 @@ function* rankGenerator() {
 router.get('/reverse-lexorank-update', async (req, res) => {
 	const boards = await Board.findAll();
 	const boardProjects = await BoardProject.findAll({
+    where: {
+      board_project_id: 5485
+    },
     include: [
       // add project association to filter it by is_archive
       {
@@ -180,7 +183,30 @@ router.get('/reverse-lexorank-update', async (req, res) => {
           if( currentBP ) {
             const projectPartner = await projectService.getProjectPartner(currentBP.project_id);
             // create project cost before boardprojectcost 
-            // console.log(currentBP , 'projectPartner', projectPartner);
+            const MHFD_Partner = await ProjectPartner.findAll({
+              where: {
+                project_id: currentBP.project_id,
+                code_partner_type_id: COST_IDS.MHFD_CODE_COST_TYPE_ID
+              }
+            });
+      
+            const Mhfd_ids = MHFD_Partner.map((mhfd) => mhfd.project_partner_id);
+            console.log(currentBP , 'projectPartner' , Mhfd_ids);
+            boardService.updateAndCreateProjectCostsForAmounts(
+              position,
+              currentBP.boardProjectToCostData[0].projectCostData.cost,
+              currentBP.project_id,
+              MHFD_Partner.business_associates_id,
+              COST_IDS.MHFD_CODE_COST_TYPE_ID,
+              'system',
+              board_project_id,
+              now(),
+              amount.code_cost_type_id,
+              isWorkPlan,
+              amountsTouched ? amountsTouched[`req${currentColumn}`] : true,
+              currentSortOrderValue,
+              boardId,
+            )
           }
         }
 
@@ -859,7 +885,9 @@ router.post('/board-for-positions2', async (req, res) => {
 			if (b.boardProjectToCostData[0].sort_order === null) return -1;
 			return a.boardProjectToCostData[0].sort_order - b.boardProjectToCostData[0].sort_order;
 		});
-		res.send(projectSorted.filter(r => r.projectData));
+    //filter project 
+		res.send(projectSorted.filter(r => r.projectData &&  typeof r[`req${position}`] !== 'undefined'));
+    // res.send(projectSorted.filter(r => r.projectData && r[`req${position}`]));
 	} catch (error) {
 		logger.error('ERROR AT POSITIONS2 ' + error);
 		return res.status(500).send({ error });
