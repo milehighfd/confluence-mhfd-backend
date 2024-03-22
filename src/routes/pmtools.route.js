@@ -378,10 +378,31 @@ const countDataForGroupFilters = async (req, res) => {
   }
 };
 
+const allCountersForGroup = async (req, res) => {
+  try {
+    logger.info(`Starting endpoint pmtools/groups/:groupname/:filtervalue with params`);
+    const { groupname } = req.params;
+    const { page = 1, limit = 20, code_project_type_id } = req.query;
+    const { body } = req;
+    logger.info(`page=${page} limit=${limit}`);
+    logger.info(`Starting function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
+    const group = await projectService.filterProjectsBy(body, groupname, filtervalue, code_project_type_id, origin);
+    logger.info(`Finished function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
+    logger.info(`Starting function getProjects for endpoint project/`);    
+    const set = new Set(group.map((p) => p?.project_id));
+    const count = set.size;
+    res.send({count: count});
+  } catch (error) {
+    logger.error(`Error in endpoint pmtools/groups/:groupname/:filtervalue: ${error.message}`);
+    res.status(500).send({ error: error });
+  }
+}
+
 
 router.post('/list', listProjects);
 router.get('/groups/:groupname', getGroup);
 router.post('/groupsFilter/:groupname/:filtervalue/:origin', getDataForGroupFilters);
 router.post('/groupsFilter/count/:groupname/:filtervalue/:origin', countDataForGroupFilters);
+router.post('/groupsFilter/allcount/:groupname', allCountersForGroup);
 
 export default router;
