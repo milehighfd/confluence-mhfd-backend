@@ -173,7 +173,7 @@ export async function updateSortOrder(board_project_id, previousColumn, isWorkPl
   }
 }
 
-export async function getMHFDProjectCost(board_project_id, columnNumber) {
+export async function getMHFDProjectCost(board_project_id, columnNumber, transaction = null) {
   const MHFD_CODE_PARTNER_TYPE = 88;
   try {
     const reqExist = await BoardProjectCost.findOne({
@@ -202,7 +202,8 @@ export async function getMHFDProjectCost(board_project_id, columnNumber) {
             }
           ]
         }
-      ]
+      ],
+      transaction: transaction
     });
     return reqExist;
   } catch (error) {
@@ -210,7 +211,6 @@ export async function getMHFDProjectCost(board_project_id, columnNumber) {
     throw error;
   }  
 }
-
 export async function updateProjectCosts(originCost, targetCost, user, transaction, isWorkPlanBoolean) {
   try {
     const originCostValue = originCost ? originCost.projectCostData.cost : 0;

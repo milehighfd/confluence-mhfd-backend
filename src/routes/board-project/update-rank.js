@@ -293,8 +293,8 @@ const updateRank = async (req, res) => {
         //From column to different column
         const [originCost, targetCost] = await Promise.all(
           [
-            getMHFDProjectCost(board_project_id, previousColumn),
-            getMHFDProjectCost(board_project_id, columnNumber)
+            getMHFDProjectCost(board_project_id, previousColumn, transaction),
+            getMHFDProjectCost(board_project_id, columnNumber, transaction)
           ]
         );
         if (originCost && targetCost) {
