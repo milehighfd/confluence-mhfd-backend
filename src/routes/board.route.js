@@ -69,8 +69,8 @@ function* rankGenerator() {
 }
 
 router.get('/reverse-lexorank-update', async (req, res) => {
-	const boards = await Board.findAll();
-	const boardProjects = await BoardProject.findAll({
+  const boards = await Board.findAll();
+  const boardProjects = await BoardProject.findAll({
     include: [
       // add project association to filter it by is_archive
       {
@@ -133,21 +133,25 @@ router.get('/reverse-lexorank-update', async (req, res) => {
 
 				if (board.board_id === bp.board_id) {
           const rankCost = bp.boardProjectToCostData.find((cost)=> cost.req_position === index);
-					if (bp[position] || (!bp[position] && rankCost)) {
+					if (bp[position]) {
 						const value = lexoRanks[position].next().value;
-            console.log(bp.projecttype, bp.board_id, bp.board_project_id, position, 'value', value);
+            console.log(bp.projectData.code_project_type_id, bp.board_id, bp.board_project_id, position, 'value', value);
 						if (!updates[position][value]) {
 							updates[position][value] = [];
 						}
 						updates[position][value].push(bp.board_project_id);
 						// lexoRanks[position] = lexoRanks[position].next().value;
-					}
+					} else if (!bp[position] && rankCost){
+            const flag = 'Innacuracy';
+            updates[position][flag] = updates[position][flag] || [];
+            updates[position][flag].push(bp.board_project_id);
+          }
 				}
 			}
 		}
 	}
 	let c = 0;
-	// console.log(updates);
+	console.log(updates);
 	const prs = [];
 	for (const [index, position] of positions.entries()) {
 		for (const sortOrderValue in updates[position]) {
@@ -605,6 +609,59 @@ router.post('/get-past-data', async (req, res) => {
 	}
 })
 
+function buildWhereClause({ boardIds, projecttype, position, project_priorities, status_board }) {
+  const where = {
+    board_id: { [Op.in]: boardIds },
+  };
+
+  if (projecttype === 'Maintenance') {
+    let maintenanceSubtype = 0;
+    switch (position) {
+      case 1:
+        maintenanceSubtype = 8;
+        break;
+      case 2:
+        maintenanceSubtype = 11;
+        break;
+      case 3:
+        maintenanceSubtype = 9;
+        break;
+      case 4:
+        maintenanceSubtype = 17;
+        break;
+      case 5:
+        maintenanceSubtype = 7;
+        break;
+      default:
+        break;
+    }
+    if (maintenanceSubtype !== 0) {
+      filters.projecttype = [maintenanceSubtype];
+    }
+  }
+
+  if (project_priorities && project_priorities.length > 0) {
+    const conditions = [];
+    const lessThan3Priorities = project_priorities.filter(r => r < 3);
+    if (lessThan3Priorities.length !== 0) {
+      conditions.push({ [originPositionColumnName]: { [Op.in]: lessThan3Priorities } })
+    }
+    if (project_priorities.includes(3)) {
+      conditions.push({ [originPositionColumnName]: { [Op.gte]: 3 } })
+    }
+    if (project_priorities.includes(4)) {
+      conditions.push({ [originPositionColumnName]: { [Op.eq]: null } })
+    }
+    where[Op.or] = conditions;
+  }
+
+  if (status_board && status_board.length > 0) {
+    where.code_status_type_id = status_board;
+  }
+
+  return where;
+}
+
 router.post('/board-for-positions2', async (req, res) => { 
 	logger.info(`Starting endpoint board/board-for-positions2 with params ${JSON.stringify(req.body, null, 2)}`)
 	try {
@@ -636,14 +693,11 @@ router.post('/board-for-positions2', async (req, res) => {
 		});
 		const boardIds = boards.map(b => b.dataValues.board_id);
 		const isWorkPlan = type === 'WORK_PLAN';
-		// const rankColumnName = `rank${position}`;
-		const reqColumnName = `req${position}`;
 		const originPositionColumnName = `originPosition${position}`;
 		const attributes = [
 			'board_project_id',
 			'project_id',
 			'projectname',
-			// rankColumnName,
 			'origin',
 			originPositionColumnName,
 			'code_status_type_id',
@@ -654,53 +708,7 @@ router.post('/board-for-positions2', async (req, res) => {
 			'rank4',
 			'rank5',
 		];
-		const where = {
-			board_id: {[Op.in]: boardIds},
-			// [rankColumnName]: { [Op.ne]: null }
-		};
-
-		if(projecttype === 'Maintenance') {
-			let maintenanceSubtype = 0;
-			switch (position) {
-				case 1:
-					maintenanceSubtype = 8;
-					break;
-				case 2:
-					maintenanceSubtype = 11;
-					break;
-				case 3:
-					maintenanceSubtype = 9;
-					break;
-				case 4:
-					maintenanceSubtype = 17;
-					break;
-				case 5:
-					maintenanceSubtype = 7;
-					break;
-				default:
-					break;
-			} 
-			if (maintenanceSubtype !== 0) {
-				filters.projecttype = [maintenanceSubtype];
-			}
-		}
-		if (project_priorities && project_priorities.length > 0) {
-			const conditions = [];
-			const lessThan3Priorities = project_priorities.filter(r => r < 3);
-			if (lessThan3Priorities.length !== 0) {
-				conditions.push({ [originPositionColumnName]: {[Op.in]: lessThan3Priorities}})
-			}
-			if (project_priorities.includes(3)) {
-				conditions.push({ [originPositionColumnName]: {[Op.gte]: 3} })
-			}
-			if (project_priorities.includes(4)) {
-				conditions.push({[originPositionColumnName]: {[Op.eq]: null}})
-			}
-			where[Op.or] = conditions;
-		}
-		if (status_board && status_board.length > 0) {
-			where.code_status_type_id = status_board;
-		}
+		const where = buildWhereClause({ boardIds, projecttype, position, project_priorities, status_board });
 		console.log('where', where, boardWhere, boardIds);
 		const boardProjectsNoOrder = (await BoardProject.findAll({
 			attributes,
@@ -725,7 +733,7 @@ router.post('/board-for-positions2', async (req, res) => {
 				]
 			}]
 		})).map(d => d.dataValues);
-    console.log(position, 'This are board projects no order \n *********** \n ', boardProjectsNoOrder.map((bpnp) => {return {a: bpnp.boardProjectToCostData.dataValues, b: bpnp.board_project_id}}));
+    console.log(position, 'This are board projects no order \n *********** \n ', boardProjectsNoOrder.map((bpnp) => {return {a: bpnp.boardProjectToCostData, b: bpnp.board_project_id}}));
     // as order of sequelize sometimes fails
     // reorder boardProjects based on sort_order value 
     const boardProjects = boardProjectsNoOrder.sort((a, b) => a.boardProjectToCostData.sort_order - b.boardProjectToCostData.sort_order);  
@@ -733,39 +741,40 @@ router.post('/board-for-positions2', async (req, res) => {
 		// is not in workspace
 		if (`${position}` !== '0') {
 			const boardProjectIds = boardProjects.map((boardProject) => boardProject.board_project_id);
-
-			const projectIds = boardProjects.map((boardProject) => boardProject.project_id);
-      console.log('\n \n the project ids', projectIds);
-			const MHFD_Partner = await ProjectPartner.findAll({
-				where: {
-					project_id: { [Op.in]: projectIds },
-					code_partner_type_id: COST_IDS.MHFD_CODE_COST_TYPE_ID
-				}
-			});
-
-			const Mhfd_ids = MHFD_Partner.map((mhfd) => mhfd.project_partner_id);
+		
 			const projectCostValues = await BoardProjectCost.findAll({
 				attributes: ['req_position', 'board_project_id'],
-				include: [{
-					attributes: ['cost', 'project_cost_id', 'project_partner_id', 'project_id'],
-					model: ProjectCost,
-					as: 'projectCostData',
-					where: {
-						is_active: true,
-						project_partner_id: { [Op.in]: Mhfd_ids },
-						code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID: COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
+				include: [
+					{
+						attributes: ['cost', 'project_cost_id', 'project_partner_id', 'project_id'],
+						model: ProjectCost,
+						as: 'projectCostData',
+						where: {
+							is_active: true,
+							code_cost_type_id: isWorkPlan ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID : COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID
+						},
+						include: [
+							{
+								model: ProjectPartner,
+								as: 'projectPartnerData',
+								where: {
+									code_partner_type_id: COST_IDS.MHFD_CODE_COST_TYPE_ID
+								}
+							}
+						]
 					}
-				}],
+				],
 				where: {
 					board_project_id: boardProjectIds,
 					req_position: position
 				}
 			});
+		
 			boardProjects.forEach((boardProject) => {
 				const projectCostValue = projectCostValues.find((pcv) => pcv.board_project_id === boardProject.board_project_id);
 				if (projectCostValue) {
 					boardProject[`req${position}`] = projectCostValue.projectCostData.cost;
-          boardProject.boardProjectToCostData = [boardProject.boardProjectToCostData.find((cost) => projectCostValue.projectCostData.project_cost_id === cost.project_cost_id)];
+					boardProject.boardProjectToCostData = [boardProject.boardProjectToCostData.find((cost) => projectCostValue.projectCostData.project_cost_id === cost.project_cost_id)];
 				}
 			});
 		}

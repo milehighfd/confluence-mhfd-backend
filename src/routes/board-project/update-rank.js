@@ -232,12 +232,6 @@ const updateRank = async (req, res) => {
   try {
     const isWorkPlanBoolean = typeof isWorkPlan === 'boolean' ? isWorkPlan : isWorkPlan === 'true' ? true : false;
     const user = req.user;
-    const boardProjectBeforeUpdate = await BoardProject.findOne({
-      where: {
-        board_project_id
-      },
-      transaction
-    });
     let newSortValue;
     if (after != null && before != null) {
       newSortValue = (Math.floor(after + before)) / 2;

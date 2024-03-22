@@ -121,6 +121,15 @@ const getGroup = async (req, res) => {
       console.log('Arrot at', groupname, error);
     }
   }
+  if (groupname === 'phase') {
+    try {
+      const groups = await groupService.getPhase();
+      data.table = 'code_phase_type';
+      data.groups = groups;
+    } catch (error) {
+      console.log('Error at ', groupname, error);
+    }
+  }
   res.send(data);
 }
 const safeGet = (obj, prop, defaultValue) => {
@@ -290,22 +299,16 @@ const listProjects = async (req, res) => {
   logger.info(`Starting endpoint pmtools/list with params ${JSON.stringify(req.params, null, 2)}`);
   const { code_project_type_id } = req.query;
   const {
-    offset = 0,
-    limit = 120000,
-    group,
-    sortby,
-    order,
-    filterby,
     favorites,
-    myprojects,
     _id 
   } = req.query;
   const { body } = req;
   const where = {};
   if (code_project_type_id) {
-    where.code_project_type_id = +code_project_type_id;
+    body.projecttype = +code_project_type_id;
+  } else {
+    body.projecttype = [5, 6, 7, 15, 1, 13];
   }
-  
   if(favorites == 'true'){
     logger.info('Favorites requests', _id);
     logger.info(`Starting function getFavorites for endpoint pmtools/list`);

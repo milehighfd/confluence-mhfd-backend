@@ -43,6 +43,18 @@ const getStatus = async () => {
   return groups;
 }
 
+const getPhase = async () => {
+  const codePhaseType = await CodePhaseType.findAll({
+    order: [
+      ['phase_name', 'ASC']
+    ]
+  });
+  const groups = codePhaseType.map((data) => {
+    return { value: data.phase_name, id: data.code_phase_type_id };
+  });
+  return groups;
+}
+
 const getJurisdiction = async () => {
   const codeLocalGoverment = await CodeLocalGoverment.findAll({
     order: [
@@ -271,5 +283,6 @@ export default {
   getProjectType,
   getMhfdStaff,
   getLGManager,
-  getPhaseName
+  getPhaseName,
+  getPhase
 };
