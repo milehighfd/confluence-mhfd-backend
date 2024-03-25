@@ -609,7 +609,7 @@ router.post('/get-past-data', async (req, res) => {
 	}
 })
 
-function buildWhereClause({ boardIds, projecttype, position, project_priorities, status_board }) {
+function buildWhereClause({ boardIds, projecttype, position, project_priorities, status_board, filters }) {
   const where = {
     board_id: { [Op.in]: boardIds },
   };
@@ -708,7 +708,7 @@ router.post('/board-for-positions2', async (req, res) => {
 			'rank4',
 			'rank5',
 		];
-		const where = buildWhereClause({ boardIds, projecttype, position, project_priorities, status_board });
+		const where = buildWhereClause({ boardIds, projecttype, position, project_priorities, status_board, filters });
 		console.log('where', where, boardWhere, boardIds);
 		const boardProjectsNoOrder = (await BoardProject.findAll({
 			attributes,
