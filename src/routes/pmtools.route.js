@@ -380,18 +380,20 @@ const countDataForGroupFilters = async (req, res) => {
 
 const allCountersForGroup = async (req, res) => {
   try {
-    logger.info(`Starting endpoint pmtools/groups/:groupname/:filtervalue with params`);
+    const { code_project_type_id } = req.query;
     const { groupname } = req.params;
-    const { page = 1, limit = 20, code_project_type_id } = req.query;
     const { body } = req;
-    logger.info(`page=${page} limit=${limit}`);
-    logger.info(`Starting function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
-    const group = await projectService.filterProjectsBy(body, groupname, filtervalue, code_project_type_id, origin);
-    logger.info(`Finished function getProjects for endpoint pmtools/groups/:groupname/:filtervalue`);
-    logger.info(`Starting function getProjects for endpoint project/`);    
-    const set = new Set(group.map((p) => p?.project_id));
-    const count = set.size;
-    res.send({count: count});
+
+    const countersPromises = body.detailGroupIds.map(async detailGroupId => {
+      const group = await projectService.filterProjectsBy(body, groupname, [detailGroupId], code_project_type_id, null);
+      const set = new Set(group.map((p) => p?.project_id));
+      return { detailGroupId, count: set.size };
+    });
+
+    const countersArray = await Promise.all(countersPromises);
+    const counters = Object.fromEntries(countersArray.map(({ detailGroupId, count }) => [detailGroupId, count]));
+
+    res.send(counters);
   } catch (error) {
     logger.error(`Error in endpoint pmtools/groups/:groupname/:filtervalue: ${error.message}`);
     res.status(500).send({ error: error });
