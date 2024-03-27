@@ -399,12 +399,53 @@ const allCountersForGroup = async (req, res) => {
     res.status(500).send({ error: error });
   }
 }
+const groups = [
+  { name: 'status', table: 'code_status_type'},
+  { name: 'jurisdiction', table: 'CODE_LOCAL_GOVERNMENT_4326' },
+  { name: 'county', table: 'CODE_STATE_COUNTY_CLIP_4326' },
+  { name: 'servicearea', table: 'CODE_SERVICE_AREA_4326' },
+  { name: 'consultant', table: 'business_associates'},
+  { name: 'contractor', table: 'business_associates' },
+  { name: 'streams', table: 'streams' },
+  { name: 'projecttype', table: 'projecttype' },
+  { name: 'staff', table: 'staff' },
+  { name: 'lg_lead', table: 'lg_lead' },
+  { name: 'phase', table: 'code_phase_type' }
+];
+const getAllGroups = async (req, res) => {
+  try {
+    const promises = {
+      status: groupService.getStatus(),
+      jurisdiction: groupService.getJurisdiction(),
+      county: groupService.getCounty(),
+      servicearea: groupService.getServiceArea(),
+      consultant: groupService.getConsultant(),
+      contractor: groupService.getContractor(),
+      streams: groupService.getStreams(),
+      projecttype: groupService.getProjectType(),
+      staff: groupService.getMhfdStaff(),
+      lg_lead: groupService.getLGManager(),
+      phase: groupService.getPhase()
+    };
 
+    const data = await Promise.all(Object.entries(promises).map(async ([key, promise]) => {
+      const value = await promise;
+      const table = groups.find(group => group.name === key).table;
+      return { table, groups: value };
+    }));
+
+    res.send(data);
+  } catch (error) {
+    logger.error(`Error in getAllGroups: ${error.message}`);
+    res.status(500).send({ error: error });
+  }
+}
 
 router.post('/list', listProjects);
 router.get('/groups/:groupname', getGroup);
 router.post('/groupsFilter/:groupname/:filtervalue/:origin', getDataForGroupFilters);
 router.post('/groupsFilter/count/:groupname/:filtervalue/:origin', countDataForGroupFilters);
 router.post('/groupsFilter/allcount/:groupname', allCountersForGroup);
+router.get('/all-groups', getAllGroups);
 
 export default router;
