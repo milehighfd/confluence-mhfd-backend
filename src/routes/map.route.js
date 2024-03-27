@@ -21,6 +21,7 @@ router.post('/', async (req, res) => {
   logger.info(`Starting endpoint map.route/ with params ${JSON.stringify(req.body, null, 2)}`);
   const table = req.body.table;
   const cacheEntry = cache[table];
+  
   if (cacheEntry) {
     const currentTime = new Date().getTime();
     if ((currentTime - cacheEntry.time) < (1000 * 60)) {
@@ -33,15 +34,6 @@ router.post('/', async (req, res) => {
     }
   }
   let sql = `SELECT * FROM ${table}`;
-  // if(table.includes('mep_outfalls') || table.includes('mep_channels')){
-    // the original query is commented and, in the second one, mhfd_servicearea was removed cause it was causing the error
-    // sql =  `SELECT cartodb_id, the_geom, the_geom_webmercator, projectname, mep_eligibilitystatus, projectno, mhfd_servicearea, mep_date_designapproval::text,mep_date_constructionapproval::text,mep_date_finalacceptance::text,mep_date_ineligible::text FROM ${table}` ;
-  //   sql =  `SELECT cartodb_id, the_geom, the_geom_webmercator, projectname, mep_eligibilitystatus, projectno, mep_date_designapproval::text,mep_date_constructionapproval::text,mep_date_finalacceptance::text,mep_date_ineligible::text FROM ${table}` ;
-  // } else if(table.includes('mep_projects_temp_locations')) {
-  //   sql = `SELECT cartodb_id, the_geom, the_geom_webmercator FROM ${table}`;
-  // } else if(table.includes('mep')){
-  //   sql =  `SELECT cartodb_id, the_geom, the_geom_webmercator, projectname, mep_eligibilitystatus, projectno, mep_date_designapproval::text,mep_date_constructionapproval::text,mep_date_finalacceptance::text,mep_date_ineligible::text, pondname FROM ${table}` ;
-  // } 
   if(table.includes('mep_outfalls') || table.includes('mep_channels')){
     sql = `SELECT the_geom, the_geom_webmercator, cartodb_id, objectid, globalid, onbaseid, mhfd_projectid, mhfd_projectname, mhfd_projecttype, mhfd_servicearea, mhfd_referringagency, mhfd_alternativenames, mhfd_summarynotes, mhfd_projectstatus, mhfd_designapprovaldate::text, mhfd_constructionapprovaldate::text, mhfd_finalacceptancedate::text, mhfd_ineligibledate::text, mhfd_eligibilitystatus, mhfd_eligibilitystatusnotes FROM ${table}`
   }
@@ -117,6 +109,126 @@ router.post('/', async (req, res) => {
     res.status(500).send(err);
   });
 });
+
+const dataCache = [];
+
+async function getMapTables(req, res) {
+  const tables = req.body.tables;
+  const promises = [];
+
+  for (const table of tables) {
+    const cacheEntry = dataCache.find(entry => entry.table === table);
+
+    if (cacheEntry) {
+      const currentTime = new Date().getTime();
+      if ((currentTime - cacheEntry.time) < (1000 * 60)) {
+        logger.info(`Using cache for ${table}`);
+        if (cacheEntry.error) {
+          promises.push(Promise.resolve({ table, error: cacheEntry.error, statusCode: cacheEntry.statusCode }));
+        } else {
+          promises.push(Promise.resolve({ table, data: cacheEntry.data }));
+        }
+        continue;
+      }
+    }
+
+    let sql = `SELECT * FROM ${table}`;
+    if (table.includes('mep_outfalls') || table.includes('mep_channels')) {
+      sql = `SELECT the_geom, the_geom_webmercator, cartodb_id, objectid, globalid, onbaseid, mhfd_projectid, mhfd_projectname, mhfd_projecttype, mhfd_servicearea, mhfd_referringagency, mhfd_alternativenames, mhfd_summarynotes, mhfd_projectstatus, mhfd_designapprovaldate::text, mhfd_constructionapprovaldate::text, mhfd_finalacceptancedate::text, mhfd_ineligibledate::text, mhfd_eligibilitystatus, mhfd_eligibilitystatusnotes FROM ${table}`
+    }
+    if (table == 'mep_detentionbasins_1') {
+      sql = `SELECT the_geom, the_geom_webmercator, cartodb_id, objectid, globalid, onbaseid, mhfd_projectid, mhfd_projectname, mhfd_projecttype, mhfd_servicearea, mhfd_referringagency, mhfd_alternativenames, mhfd_summarynotes, mhfd_projectstatus, mhfd_designapprovaldate::text, mhfd_constructionapprovaldate::text, mhfd_finalacceptancedate::text, mhfd_ineligibledate::text, mhfd_eligibilitystatus, mhfd_eligibilitystatusnotes FROM ${table}`;
+    }
+    if (table == 'mep_detentionbasins') {
+      sql = `SELECT cartodb_id, the_geom, the_geom_webmercator, objectid, globalid, pondname, projectno, projectname, projectpartner, partnercaseno, mep_eligibilitystatus, mep_date_designapproval::text, mep_date_constructionapproval::text, mep_date_finalacceptance::text, mep_date_ineligible::text
+         FROM ${table}`;
+    }
+    if (table === 'bcz_prebles_meadow_jumping_mouse' || table === 'bcz_ute_ladies_tresses_orchid') {
+      sql = `SELECT the_geom, the_geom_webmercator, expiration_date::text, website, letter, map FROM ${table}`;
+    }
+    if (table.includes('active_lomcs')) {
+      sql = `SELECT cartodb_id, the_geom, the_geom_webmercator, objectid, globalid, shape_area, shape_length, creationdate::text, creator , editdate::text, editor, lomc_case, lomc_type, lomc_identifier, status_date::text, status, notes, effective_date::text FROM ${table}`;
+    }
+
+    const mapConfig = {
+      "version": '1.3.1',
+      "buffersize": { mvt: 8 },
+      "layers": [{
+        "id": "pluto15v1",
+        "type": 'mapnik',
+        "options": {
+          "sql": sql,
+          "vector_extent": 4096,
+          "bufferSize": 8,
+          "version": '1.3.1'
+        }
+      }]
+    };
+
+    mapConfig.config = encodeURIComponent(JSON.stringify(mapConfig));
+    const URL = `${CARTO_URL_MAP}&config=${mapConfig.config}`;
+    logger.info(URL);
+    promises.push(get(URL, table));
+  }
+
+  const responses = await Promise.allSettled(promises);
+  const processedResponses = responses.map(response => {
+    if (response.status === 'fulfilled') {
+      return response.value;
+    } else {
+      return response.reason;
+    }
+  });
+
+  return res.send(processedResponses);
+}
+
+const get = (url, table) => new Promise((resolve, reject) => {
+  https.get(url, response => {
+    logger.info(response.statusCode);
+    logger.info(JSON.stringify(response.headers, null, 2));
+    if (response.statusCode === 200) {
+      let str = '';
+      response.on('data', function (chunk) {
+        str += chunk;
+      });
+      response.on('end', function () {
+        const tiles = JSON.parse(str).metadata.tilejson.vector.tiles;
+        dataCache.push({
+          table,
+          time: new Date().getTime(),
+          data: tiles
+        });
+        resolve({ table, data: tiles });
+      });
+    } else {
+      if (response.statusCode === 404) {
+        const data = [];
+        dataCache.push({
+          table,
+          time: new Date().getTime(),
+          data,
+        });
+        resolve({ table, data });
+      } else {
+        const error = `Error ${response.statusCode}`;
+        dataCache.push({
+          table,
+          time: new Date().getTime(),
+          error,
+          statusCode: response.statusCode
+        });
+        reject({ table, error, statusCode: response.statusCode });
+      }
+    }
+  }).on('error', err => {
+    logger.error(`failed call to ${URL} with error ${err}`);
+    reject({ table, error: err.toString(), statusCode: 500 });
+  });
+});
+
+router.post('/all-tables', getMapTables);
+
 async function getGeojsonCentroids(bounds, body) {
   let sql = `SELECT
             ST_X(ST_Centroid(the_geom)) as lon,
