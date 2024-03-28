@@ -581,21 +581,46 @@ router.post('/get-past-data', async (req, res) => {
 			},
 		});
 		const boardIds = boards.map(b => b.dataValues.board_id);
+		console.log('boards', boardIds, boards.length)
 		const boardProjects = await BoardProject.findAll({
-			attributes: ['project_id', 'req1', 'board_id'],
+			attributes: ['project_id', 'board_id'],
 			where: {
 				board_id: {
 					[Op.in]: boardIds,
 				},
 			},
+			include: [
+				{
+					model: BoardProjectCost,
+					as: 'boardProjectToCostData',
+					where: {
+						req_position: 1,
+					},
+					include: [
+						{
+							model: ProjectCost,
+							as: 'projectCostData',
+							required: true,
+							where: {
+								is_active: true,
+								code_cost_type_id: type === 'WORK_PLAN' ? COST_IDS.WORK_PLAN_CODE_COST_TYPE_ID : COST_IDS.WORK_REQUEST_CODE_COST_TYPE_ID,
+							},
+						},
+					],
+				}
+			]
 		});
 		const result = [];
 		boardProjects.forEach(item => {
+			if (!item.boardProjectToCostData || !item.boardProjectToCostData[0].projectCostData) {
+				return;
+			}
+
 			const existingProject = result.find(proj => proj.project_id === item.project_id);
 			if (existingProject) {
-				existingProject.totalreq += item.req1;
+				existingProject.totalreq += item.boardProjectToCostData[0].projectCostData.cost;
 			} else {
-				result.push({ "project_id": item.project_id, "totalreq": item.req1 });
+				result.push({ "project_id": item.project_id, "totalreq": item.boardProjectToCostData[0].projectCostData.cost });
 			}
 		});
 		return res.send(result);
@@ -2378,17 +2403,6 @@ router.post('/import-project', [auth], async (req, res) => {
 		const newProjectBoard = await BoardProject.create({
 			board_id: boardId,
 			project_id,
-			rank0: null,
-			rank1: null,
-			rank2: null,
-			rank3: null,
-			rank4: null,
-			rank5: null,
-			req1: null,
-			req2: null,
-			req3: null,
-			req4: null,
-			req5: null,
 			year1: null,
 			year2: null,
 			origin: locality || 'MHFD District Work Plan',

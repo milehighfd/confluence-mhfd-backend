@@ -7,7 +7,6 @@ export const saveBoard = async (
   board_id, 
   project_id,
   origin, 
-  // rank0 ,
   projectname,
   creator,
   transaction = null
@@ -18,7 +17,6 @@ export const saveBoard = async (
       board_id: board_id,
       project_id: project_id,
       origin: origin,
-      // rank0: rank0,
       projectname: projectname,
       code_status_type_id: DRAFT_STATUS,
       createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
