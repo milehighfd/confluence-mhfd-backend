@@ -13,6 +13,7 @@ import db from 'bc/config/db.js';
 import { CARTO_URL, MAIN_PROJECT_TABLE } from 'bc/config/config.js';
 
 const Op = sequelize.Op;
+const Configuration = db.configuration;
 
 const router = express.Router();
 const User = db.user;
@@ -185,6 +186,34 @@ router.get('/me', auth, async (req, res) => {
     longitude: -104.9063129121965,
     latitude: 39.768682416183
   };
+  const associateType = user?.business_associate_contact?.business_address?.business_associate?.code_business_associates_type_id;
+  const MHFD_CODE = 6;
+  const CONSULTANT_CODE = 2;
+  const CONTRACTOR_CODE = 4;
+  const LOCAL_GOVERNMENT = 3;
+  let key = 'MHFD_BOARD_YEAR'
+  switch (associateType) {
+    case MHFD_CODE:
+      key = `MHFD_BOARD_YEAR`;
+      break;
+    case CONSULTANT_CODE || CONTRACTOR_CODE:
+      key = `CONS_BOARD_YEAR`;
+      break;
+    case LOCAL_GOVERNMENT:
+      key = `LG_BOARD_YEAR`;
+      break;
+    default:
+      break;
+  }
+  let configuration = await Configuration.findAll({
+    attributes: ['value', 'key', 'description', 'type'],
+    where: {
+      key
+    }
+  });
+  if (configuration.length) {
+    result1['board_year'] = configuration;
+  }
   //console.log('USER ME', user);
   result1['user_id'] = user.user_id;
   result1['firstName'] = user.firstName;
