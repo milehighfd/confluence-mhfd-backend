@@ -64,22 +64,7 @@ export default (sequelize, DataType) => {
     },
     originPosition5: {
       type: DataType.INTEGER
-    },
-    req1: {
-      type: DataType.DOUBLE,
-    },
-    req2: {
-      type: DataType.DOUBLE,
-    },
-    req3: {
-      type: DataType.DOUBLE,
-    },
-    req4: {
-      type: DataType.DOUBLE,
-    },
-    req5: {
-      type: DataType.DOUBLE,
-    },
+    },   
     year1: {
       type: DataType.DOUBLE,
     },

@@ -242,23 +242,6 @@ router.post('/getCostsMaintenance', async (req, res) => {
   const WORK_REQUEST_CODE_COST_TYPE_ID = 22;
   const WORK_PLAN_CODE_COST_TYPE_ID = 21;
   try {
-    // const boardProject = await BoardProject.findAll({
-    //   attributes: [
-    //     'board_project_id',
-    //     'req1',
-    //     'req2',
-    //     'req3',
-    //     'req4',
-    //     'req5',
-    //     'year1',
-    //     'year2'
-    //   ],
-    //   where: {
-    //     board_project_id
-    //   }
-    // });
-    // return res.status(200).send(boardProject);
-
     const boardProject = await BoardProject.findAll({
       include: [{
         model: Project,

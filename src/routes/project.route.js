@@ -55,21 +55,19 @@ const listProjects = async (req, res) => {
   const { body } = req;
   logger.info(`Calling projects endpoint with body: ${JSON.stringify(body)}, page: ${page}, limit: ${limit}`);
   const bounds = body?.bounds;
-  let ids = [];
+  let ids = null;
   if (bounds) {
-
     logger.info(`Starting function getIdsInBox for endpoint project/`);
     ids = await getIdsInBbox(bounds);
     logger.info(`Finished function getIdsInBox for endpoint project/`);
-  } else {
-    let defaultBounds = `${-105.3236683149282},${39.274174328991904},${-104.48895750946532},${40.26156304805423}`;
-    ids = await getIdsInBbox(defaultBounds);
   }
+
   logger.info(`Starting function filterProjectsBy for endpoint project/`);
   let projectsFilterId = await projectService.filterProjectsBy(body, null, null, null, 'listProjects');
   logger.info(`Finished function filterProjectsBy for endpoint project/`);
-  projectsFilterId = projectsFilterId.map(pf => ({ project_id: pf.project_id})).filter(pid => {
-    return (ids.some(boundsids => pid.project_id === boundsids.project_id));
+
+  projectsFilterId = projectsFilterId.map(pf => ({ project_id: pf.project_id })).filter(pid => {
+    return ids ? ids.some(boundsids => pid.project_id === boundsids.project_id) : true;
   });
   logger.info(`Starting function getProjects for endpoint project/`);
   let projects = await projectService.getProjects(null, bounds, projectsFilterId, page, limit, body);

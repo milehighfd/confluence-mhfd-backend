@@ -387,7 +387,6 @@ const updateCostNew = async (req, res) => {
           // UPDATE PROJECTCOST WITH ALL NEW VALUES
           const boardProjectHasBeenUpdated = await BoardProject.update(
             {
-              // rank0, req1, req2, req3, req4, req5, year1, year2,
               ...updateFields,
               last_modified_by: user.email
             },
