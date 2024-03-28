@@ -726,12 +726,6 @@ router.post('/board-for-positions2', async (req, res) => {
 			'origin',
 			originPositionColumnName,
 			'code_status_type_id',
-			'rank0',
-			'rank1',
-			'rank2',
-			'rank3',
-			'rank4',
-			'rank5',
 		];
 		const where = buildWhereClause({ boardIds, projecttype, position, project_priorities, status_board, filters });
 		console.log('where', where, boardWhere, boardIds);
